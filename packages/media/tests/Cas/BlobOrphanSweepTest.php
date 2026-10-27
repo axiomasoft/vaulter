@@ -42,7 +42,7 @@ beforeEach(function (): void {
 // ─────────────────────────────────────────────────────────────────────────────
 it('обнаруживает настоящий orphan и пропускает закоммиченный объект (report-only)', function (): void {
     // A real committed blob (row + bytes) — must be SKIPPED as owned.
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('owned bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('owned bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     // A genuine orphan: valid canonical key, no row, aged past grace.
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'orphan bytes', scope: 't-1', ageHours: 48);

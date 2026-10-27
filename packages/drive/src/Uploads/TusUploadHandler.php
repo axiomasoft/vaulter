@@ -10,10 +10,13 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\LoadTier;
 
@@ -45,6 +48,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private DriveConfig $driveConfig,
+        private UploadSessionReadRepository $reads,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -58,7 +62,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
      *
      * @return array<string, mixed>
      */
-    public function initialise(UploadSession $session): array
+    public function initialise(UploadSessionSnapshot $session): array
     {
         return [];
     }
@@ -189,18 +193,26 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
      * total is null is complete once it has received at least one byte and the client
      * marks it done — surfaced here as "received == total" only when total is set.
      */
-    public function isComplete(UploadSession $session): bool
+    public function isComplete(UploadSessionSnapshot $session): bool
     {
-        return $this->reachedTotal($session, $session->received_bytes);
+        $current = $this->current($session);
+
+        return $this->reachedTotal($current, $current->received_bytes);
     }
 
     /**
      * tus has no server-side multipart state to reclaim — the staged temp discard is
      * done by the manager. No-op.
      */
-    public function abort(UploadSession $session): void
+    public function abort(UploadSessionSnapshot $session): void
     {
         // Nothing protocol-side to release for tus.
+    }
+
+    /** The current session behind a snapshot: its status, totals and offset are the ones decided on. */
+    private function current(UploadSessionSnapshot $session): UploadSession
+    {
+        return $this->reads->find($session->id) ?? throw NodeNotFoundException::forId('upload');
     }
 
     private function reachedTotal(UploadSession $session, int $received): bool

@@ -20,21 +20,21 @@ beforeEach(function (): void {
 });
 
 it('refuses pin, unpin and releaseOwner outside a transaction', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('outside'), BlobScope::tenant('1'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('outside'), BlobScope::tenant('1')));
     $pins = app(BlobPins::class);
     expect(app(VaulterDatabase::class)->connection()->transactionLevel())->toBe(0);
 
-    expect(fn () => $pins->pin($blob, CasTestHelpers::OWNER, 'r'))->toThrow(LogicException::class, 'must run inside')
-        ->and(fn () => $pins->unpin($blob, CasTestHelpers::OWNER, 'r'))->toThrow(LogicException::class, 'must run inside')
+    expect(fn () => $pins->pin($blob->getKey(), CasTestHelpers::OWNER, 'r'))->toThrow(LogicException::class, 'must run inside')
+        ->and(fn () => $pins->unpin($blob->getKey(), CasTestHelpers::OWNER, 'r'))->toThrow(LogicException::class, 'must run inside')
         ->and(fn () => $pins->releaseOwner(CasTestHelpers::OWNER))->toThrow(LogicException::class, 'must run inside')
         ->and(CasTestHelpers::pins($blob))->toBe(0);
 });
 
 it('pins inside a transaction and loses the pin with its rolled-back owner transaction', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('rolled back'), BlobScope::tenant('1'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('rolled back'), BlobScope::tenant('1')));
 
     expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($blob): void {
-        app(BlobPins::class)->pin($blob, CasTestHelpers::OWNER, 'r');
+        app(BlobPins::class)->pin($blob->getKey(), CasTestHelpers::OWNER, 'r');
         throw new RuntimeException('owner row failed');
     }))->toThrow(RuntimeException::class, 'owner row failed')
         ->and(CasTestHelpers::pins($blob))->toBe(0);

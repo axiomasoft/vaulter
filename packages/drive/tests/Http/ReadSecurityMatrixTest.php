@@ -116,7 +116,7 @@ function rsmdrvWorld(): array
         '{drive}' => (string) $handle->model()->getKey(),
         '{file}' => $file->id,
         '{rev}' => (string) DriveTestHelpers::model($file)->file()->firstOrFail()->versions()->orderBy('number')->firstOrFail()->getKey(),
-        '{upload}' => $handle->actingAs(V1::user(1))->uploads()->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetName: 'matrix.bin', totalSizeBytes: 3))->upload_id,
+        '{upload}' => $handle->actingAs(V1::user(1))->uploads()->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetName: 'matrix.bin', totalSizeBytes: 3))->uploadId,
         '{token}' => $handle->shares()->create($file->id, new ShareLinkInput)->token,
     ];
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Snapshots\Mapping;
 
+use DateTimeImmutable;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,6 +32,8 @@ use Vaulter\ValueObjects\Access\ActorRef;
 /**
  * Models to NodeSnapshot, in batches: one query for the file heads, one for
  *           the viewer's stars and one for document heads, whatever the page size.
+ *
+ * @phpstan-type NodeFacts array{id: string, driveId: string, parentId: ?string, kind: NodeKind, name: string, mimeType: ?string, extension: ?string, sizeBytes: int, sequence: int, inheritsAccess: bool, properties: array<string, array<string, string>>, createdAt: DateTimeImmutable, createdBy: ?string, updatedAt: DateTimeImmutable, updatedBy: ?string, contentModifiedAt: ?DateTimeImmutable, contentModifiedBy: ?string, trashedAt: ?DateTimeImmutable, trashedBy: ?string, trashRoot: bool, file: ?FileHeadSnapshot, accessVersion: int}
  */
 #[Internal]
 final readonly class NodeSnapshotMapper
@@ -63,43 +66,74 @@ final readonly class NodeSnapshotMapper
         }
         $this->loadHeads($nodes);
         $stars = $this->stars($nodes, $viewer);
-        $fragments = $this->fragments($nodes);
         $keys = $this->syncKeys($nodes, $viewer);
+        $facts = $this->factsOf($nodes);
+        $fragments = $this->fragments(array_map(static fn (array $fact): NodeSnapshot => new NodeSnapshot(...$fact, document: null, viewer: null), $facts));
 
         $snapshots = [];
-        foreach ($nodes as $node) {
-            $id = SnapshotValue::id($node->getKey());
+        foreach ($facts as $fact) {
+            $id = $fact['id'];
             $snapshots[] = new NodeSnapshot(
-                id: $id,
-                driveId: SnapshotValue::id($node->drive_id),
-                parentId: SnapshotValue::nullableId($node->parent_id),
-                kind: $node->kind,
-                name: $node->name,
-                mimeType: $node->mime_type,
-                extension: $node->extension,
-                sizeBytes: $node->size_bytes,
-                sequence: $node->sequence,
-                inheritsAccess: (bool) $node->inherit_grants,
-                properties: self::properties($node->properties),
-                createdAt: SnapshotValue::requiredTime($node->created_at),
-                createdBy: SnapshotValue::nullableId($node->getAttribute('created_by')),
-                updatedAt: SnapshotValue::requiredTime($node->updated_at),
-                updatedBy: SnapshotValue::nullableId($node->getAttribute('updated_by')),
-                contentModifiedAt: SnapshotValue::time($node->content_modified_at),
-                contentModifiedBy: SnapshotValue::nullableId($node->content_modified_by),
-                trashedAt: SnapshotValue::time($node->trashed_at),
-                trashedBy: SnapshotValue::nullableId($node->trashed_by),
-                trashRoot: $node->trashed_at !== null && $node->trash_root_id !== null
-                    && SnapshotValue::id($node->trash_root_id) === $id,
-                file: $node->kind === NodeKind::File ? $this->fileHead($node) : null,
+                ...$fact,
                 document: $fragments[self::DOCUMENT][$id] ?? null,
                 viewer: $stars === null ? null : new ViewerStateSnapshot(starred: isset($stars[$id])),
-                accessVersion: self::version($node->getAttribute('access_version')),
                 syncKey: $keys[$id] ?? null,
             );
         }
 
         return $snapshots;
+    }
+
+    /**
+     * The point-in-time facts of one row, without fragments, viewer state or a reader key: what an event keeps, what a
+     * guard, a lifecycle or a contributor reads. No contribution runs, so capturing them inside a write is side-effect free.
+     */
+    public function facts(Node $node): NodeSnapshot
+    {
+        $this->loadHeads([$node]);
+
+        return new NodeSnapshot(...$this->factsOf([$node])[0], document: null, viewer: null);
+    }
+
+    /**
+     * The facts of each row once, heads already loaded.
+     *
+     * @param  list<Node>      $nodes
+     * @return list<NodeFacts>
+     */
+    private function factsOf(array $nodes): array
+    {
+        $facts = [];
+        foreach ($nodes as $node) {
+            $id = SnapshotValue::id($node->getKey());
+            $facts[] = [
+                'id' => $id,
+                'driveId' => SnapshotValue::id($node->drive_id),
+                'parentId' => SnapshotValue::nullableId($node->parent_id),
+                'kind' => $node->kind,
+                'name' => $node->name,
+                'mimeType' => $node->mime_type,
+                'extension' => $node->extension,
+                'sizeBytes' => $node->size_bytes,
+                'sequence' => $node->sequence,
+                'inheritsAccess' => (bool) $node->inherit_grants,
+                'properties' => self::properties($node->properties),
+                'createdAt' => SnapshotValue::requiredTime($node->created_at),
+                'createdBy' => SnapshotValue::nullableId($node->getAttribute('created_by')),
+                'updatedAt' => SnapshotValue::requiredTime($node->updated_at),
+                'updatedBy' => SnapshotValue::nullableId($node->getAttribute('updated_by')),
+                'contentModifiedAt' => SnapshotValue::time($node->content_modified_at),
+                'contentModifiedBy' => SnapshotValue::nullableId($node->content_modified_by),
+                'trashedAt' => SnapshotValue::time($node->trashed_at),
+                'trashedBy' => SnapshotValue::nullableId($node->trashed_by),
+                'trashRoot' => $node->trashed_at !== null && $node->trash_root_id !== null
+                    && SnapshotValue::id($node->trash_root_id) === $id,
+                'file' => $node->kind === NodeKind::File ? $this->fileHead($node) : null,
+                'accessVersion' => self::version($node->getAttribute('access_version')),
+            ];
+        }
+
+        return $facts;
     }
 
     /**
@@ -239,13 +273,15 @@ final readonly class NodeSnapshotMapper
      * The fragments of the active contributors, one batch call each (no N+1): key => node id => fragment.
      * A reserved or duplicate key, or a fragment of the wrong shape, is an error, never a silent skip.
      *
-     * @param  list<Node>                                         $nodes
+     * Each contributor gets the reader-free facts of the page (no viewer state, no sync key, no fragment), never a row.
+     *
+     * @param  list<NodeSnapshot>                                 $nodes
      * @return array<string, array<string, DocumentHeadSnapshot>>
      */
     private function fragments(array $nodes): array
     {
         $fragments = [];
-        $ids = array_map(static fn (Node $node): string => SnapshotValue::id($node->getKey()), $nodes);
+        $ids = array_map(static fn (NodeSnapshot $node): string => $node->id, $nodes);
         foreach ($this->container->make(Kernel::class)->extensions()->resolve(NodeSnapshotContributor::class) as $contributor) {
             $key = $contributor->key();
             if ($key !== self::DOCUMENT) {

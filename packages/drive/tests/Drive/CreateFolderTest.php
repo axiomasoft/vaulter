@@ -69,7 +69,7 @@ it('диспатчит NodeCreated при создании папки', function
 
     Event::assertDispatched(
         FolderCreated::class,
-        fn (FolderCreated $event): bool => (string) $event->node->getKey() === $folder->id,
+        fn (FolderCreated $event): bool => $event->node->id === $folder->id,
     );
 });
 

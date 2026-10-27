@@ -28,7 +28,7 @@ function revisionBlobsMigration(): Migration
 it('releases the drive pins and only them before the revision edge table is dropped (D23, P7)', function (): void {
     DriveTestHelpers::drive()->files()->upload(UploadSource::fromString('rolled back', 'a.txt'));
     $blob = Blob::query()->firstOrFail();
-    app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob, 'documents.attachment', 'keep-me'));
+    app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob->getKey(), 'documents.attachment', 'keep-me'));
     expect(app(BlobPins::class)->countByOwner())->toBe(['documents.attachment' => 1, RevisionBlobLinks::OWNER_TYPE => 1]);
 
     revisionBlobsMigration()->down();

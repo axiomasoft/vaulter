@@ -7,8 +7,12 @@ namespace Vaulter\Documents\Events\Revisions;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
@@ -27,10 +31,18 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class DocumentRevisionCreated extends DriveEvent
 {
+    public NodeSnapshot $node;
+
+    private Node $nodeRow;
+
+    public DocumentRevisionSnapshot $version;
+
+    private DocumentRevision $versionRow;
+
     #[Internal]
     public function __construct(
-        public Node $node,
-        public DocumentRevision $version,
+        Node $node,
+        DocumentRevision $version,
         public int $stateVersion,
         public int $epoch,
         public bool $restored,
@@ -39,6 +51,11 @@ final readonly class DocumentRevisionCreated extends DriveEvent
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->nodeRow = $node;
+        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->versionRow = $version;
+        $this->version = app(DocumentSnapshotMapper::class)->revision($version, $version->document()->firstOrFail());
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -49,18 +66,18 @@ final readonly class DocumentRevisionCreated extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->node);
+        return self::nodeScope($this->nodeRow);
     }
 
     public function subject(): EventSubject
     {
-        return self::nodeSubject($this->node);
+        return self::nodeSubject($this->nodeRow);
     }
 
     public function data(): array
     {
         return [
-            'revision_id' => self::id($this->version->getKey()),
+            'revision_id' => self::id($this->versionRow->getKey()),
             'state_version' => $this->stateVersion,
             'epoch' => $this->epoch,
             'restored' => $this->restored,
@@ -70,16 +87,16 @@ final readonly class DocumentRevisionCreated extends DriveEvent
     public function activityContext(): array
     {
         return [
-            'revision_id' => Identity::stringify($this->version->getKey()),
-            'number' => $this->version->number,
-            'label' => $this->version->label,
-            'keep_forever' => $this->version->keep_forever,
+            'revision_id' => Identity::stringify($this->versionRow->getKey()),
+            'number' => $this->versionRow->number,
+            'label' => $this->versionRow->label,
+            'keep_forever' => $this->versionRow->keep_forever,
             'restored' => $this->restored,
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->node);
+        return ActivityTarget::of($this->nodeRow);
     }
 }

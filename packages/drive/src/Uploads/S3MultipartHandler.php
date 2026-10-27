@@ -11,10 +11,13 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\AssembleSizeBucket;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
@@ -51,7 +54,14 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private DriveConfig $driveConfig,
+        private UploadSessionReadRepository $reads,
     ) {}
+
+    /** The current session behind a snapshot: its status, totals and parts are the ones decided on. */
+    private function current(UploadSessionSnapshot $session): UploadSession
+    {
+        return $this->reads->find($session->id) ?? throw NodeNotFoundException::forId('upload');
+    }
 
     public function protocol(): UploadProtocol
     {
@@ -66,10 +76,10 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      *
      * @return array<string, mixed>
      */
-    public function initialise(UploadSession $session): array
+    public function initialise(UploadSessionSnapshot $session): array
     {
         return [
-            'chunk_size' => $session->chunk_size,
+            'chunk_size' => $this->current($session)->chunk_size,
         ];
     }
 
@@ -288,8 +298,9 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      * the parts cover received_bytes). Reads received_bytes which complete() set from
      * the stitched length.
      */
-    public function isComplete(UploadSession $session): bool
+    public function isComplete(UploadSessionSnapshot $snapshot): bool
     {
+        $session = $this->current($snapshot);
         $total = $session->total_size_bytes;
 
         if ($total === null) {
@@ -305,8 +316,9 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      * AbortMultipartUpload; in the proxied default we delete the per-part objects. The
      * assembled staged temp is discarded by the manager. Idempotent.
      */
-    public function abort(UploadSession $session): void
+    public function abort(UploadSessionSnapshot $snapshot): void
     {
+        $session = $this->current($snapshot);
         foreach ($this->parts->forSession($session) as $part) {
             $this->driver->delete($this->partKey($session, $part->part_no), $this->staged->diskName($session));
         }

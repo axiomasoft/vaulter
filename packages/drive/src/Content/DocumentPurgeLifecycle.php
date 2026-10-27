@@ -10,9 +10,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 
 /**
@@ -32,18 +32,18 @@ final readonly class DocumentPurgeLifecycle implements NodeContentLifecycle, Pur
         return NodeKind::Document;
     }
 
-    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, NodeSnapshot $source, NodeSnapshot $copy): CopyResult
     {
         throw UnsupportedNodeKindException::forKind($this->kind());
     }
 
-    public function purge(DriveContext $context, Node $node): void
+    public function purge(DriveContext $context, NodeSnapshot $node): void
     {
         // NodeStoreRepository::purgeSubtree physically deletes the aggregate and its
         // checkpoints by FK cascade. MySQL checks the RESTRICT head FK while that
         // cascade deletes the checkpoints, so the head pointer goes first.
         $this->database->connection()->table($this->databaseConfig->table('documents'))
-            ->where('node_id', $node->getKey())
+            ->where('node_id', $node->id)
             ->update(['current_revision_id' => null]);
     }
 }

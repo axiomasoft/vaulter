@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Tests\Content\Fixtures;
 
 use Throwable;
 use Vaulter\Drive\Contracts\DownloadGuard;
-use Vaulter\Drive\Models\FileRevision;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Sharing\ShareContext;
 
 /** Records every check; the second guard throws what a test sets. */
 abstract class RecordingDownloadGuard implements DownloadGuard
@@ -19,9 +19,13 @@ abstract class RecordingDownloadGuard implements DownloadGuard
 
     public static ?Throwable $failure = null;
 
-    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void
+    /** @var list<array{0: class-string, 1: string, 2: string}> the context class and the node and revision ids each check saw */
+    public static array $inputs = [];
+
+    public function check(DriveContext|ShareLinkSnapshot $context, NodeSnapshot $node, FileRevisionSnapshot $revision): void
     {
         self::$calls[] = static::class;
+        self::$inputs[] = [$context::class, $node->id, $revision->id];
         if ($this->throws() && self::$failure !== null) {
             throw self::$failure;
         }

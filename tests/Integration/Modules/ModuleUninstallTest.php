@@ -68,7 +68,7 @@ function uninstallPinnedBlob(string $bytes, string ...$ownerTypes): Blob
         }
     });
 
-    return $blob;
+    return Blob::query()->findOrFail($blob->id);
 }
 
 /** @return array<string, int> */

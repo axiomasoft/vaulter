@@ -92,7 +92,7 @@ it('records exact mark metrics and suppresses zero-row batch metrics', function 
         ->and($emptyMetrics->emissions()[0]['name'])->toBe('vaulter_gc_duration_seconds')
         ->and($emptyMetrics->emissions()[0]['labels'])->toBe(['phase' => 'mark']);
 
-    $blob = app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('mark metric one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('mark metric one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $metrics = new FakeMetricsRecorder;
 
     expect(r18Collector($metrics)->mark(graceHours: 24))->toBe([
@@ -163,10 +163,10 @@ it('records exact sweep metrics including the zero deletion counter', function (
 
 it('adds skipped candidates from both collect phases', function (): void {
     $store = app(BlobStoreContract::class);
-    $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $markSkipped = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     CasTestHelpers::pin($markSkipped, CasTestHelpers::reference('mark skipped edge'));
 
-    $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $sweepSkipped = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     CasTestHelpers::pin($sweepSkipped, CasTestHelpers::reference('sweep skipped edge'));
     $sweepSkipped->forceFill([
         'status' => BlobStatus::Tombstoned,
@@ -331,9 +331,9 @@ it('locks the parsed orphan scope and digest while pruning on PostgreSQL', funct
 it('uses the explicit blob disk instead of the configured default', function (): void {
     Storage::fake('archive');
 
-    $blob = app(BlobStoreContract::class)->commit(
+    $blob = CasTestHelpers::row(app(BlobStoreContract::class)->commit(
         CasTestHelpers::streamFor('explicit archive disk'),
-        disk: 'archive', scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+        disk: 'archive', scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     expect($blob->disk)->toBe('archive');
     Storage::disk('archive')->assertExists($blob->storage_key);
@@ -341,8 +341,8 @@ it('uses the explicit blob disk instead of the configured default', function ():
 });
 
 it('takes the tenant advisory lock when committing on PostgreSQL', function (): void {
-    $blob = app(BlobStoreContract::class)->commit(
-        CasTestHelpers::streamFor('commit advisory lock'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 314159, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStoreContract::class)->commit(
+        CasTestHelpers::streamFor('commit advisory lock'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 314159, 'unused')));
 
     expect(r18PgAdvisoryLockIsHeld('tenant:314159', $blob->sha256))->toBeTrue();
 })->skip(

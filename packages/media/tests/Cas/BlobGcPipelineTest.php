@@ -29,7 +29,7 @@ it('реальный конвейер: detach→reconcile→mark томбств�
     $gc = app(BlobGarbageCollector::class);
 
     // Коммитим блоб и навешиваем настоящее ребро — блоб живой.
-    $blob = $store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 
@@ -56,7 +56,7 @@ it('реальный конвейер: за время grace sweep не трог
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('full-pipeline'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('full-pipeline'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
     CasTestHelpers::unpin($blob, $version);
@@ -88,7 +88,7 @@ it('реальный конвейер: всё ещё ссылающийся бл
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('still-referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('still-referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 

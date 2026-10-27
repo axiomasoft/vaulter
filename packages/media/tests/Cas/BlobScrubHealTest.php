@@ -31,7 +31,7 @@ beforeEach(function (): void {
 
 function healCommit(string $bytes, string $tenant = '1'): Blob
 {
-    return app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant($tenant));
+    return CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant($tenant)));
 }
 
 /** A driver over the real one whose put() and delete() can be replaced. */
@@ -183,7 +183,7 @@ it('keeps the mark when the rewrite fails', function (): void {
         app(MediaConfig::class),
     );
 
-    expect(fn () => $store->commit(CasTestHelpers::streamFor('rewrite fails'), BlobScope::tenant('1')))->toThrow(RuntimeException::class, 'disk full')
+    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('rewrite fails'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class, 'disk full')
         ->and($blob->fresh()->isIntact())->toBeFalse();
 });
 
@@ -232,7 +232,7 @@ it('keeps the mark when the driver reports a failed write and the object is not 
         app(MediaConfig::class),
     );
 
-    expect(fn () => $store->commit(CasTestHelpers::streamFor('write reports false'), BlobScope::tenant('1')))->toThrow(RuntimeException::class)
+    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('write reports false'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class)
         ->and($blob->fresh()->integrity_failed_at)->not->toBeNull()
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->exists($blob->storage_key))->toBeFalse();
@@ -244,7 +244,7 @@ it('keeps the mark when the store does not remove the bad object', function (): 
     // bad object stays, and the conditional promote keeps it.
     $store = healStore(healDriver(delete: static function (): void {}));
 
-    expect(fn () => $store->commit(CasTestHelpers::streamFor('undeletable'), BlobScope::tenant('1')))
+    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('undeletable'), BlobScope::tenant('1'))))
         ->toThrow(RuntimeException::class, 'was not healed')
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad object!');
@@ -270,7 +270,7 @@ it('leaves the object alone when the mark was lifted after the commit read the r
         CasTestHelpers::write(static fn () => $blob->newQuery()->whereKey($blob->getKey())->update(['integrity_failed_at' => null, 'integrity_checked_at' => null]));
     });
 
-    $committed = $store->commit(CasTestHelpers::streamFor('healed by another'), BlobScope::tenant('1'));
+    $committed = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('healed by another'), BlobScope::tenant('1')));
 
     expect($lifted)->toBeTrue()
         ->and($deletes)->toBe(0)

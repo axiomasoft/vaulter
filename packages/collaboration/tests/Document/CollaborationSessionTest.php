@@ -13,6 +13,7 @@ use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Presentation\DocumentPresenter;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Kernel;
@@ -50,7 +51,7 @@ it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', functi
     config()->set('vaulter-collaboration.hub.token_ttl', 240);
 
     $node = documentNode();
-    $presentation = app(DocumentPresenter::class)->present($node);
+    $presentation = app(DocumentPresenter::class)->present(app(NodeSnapshotMapper::class)->map($node));
     expect($presentation->capabilities->editable)->toBeTrue()
         ->and($presentation->capabilities->collaborative)->toBeTrue();
     $before = time();

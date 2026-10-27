@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Testing\Contracts;
 
+use DateTimeImmutable;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\App;
 use PHPUnit\Framework\Assert;
@@ -14,7 +15,8 @@ use Vaulter\Documents\Exceptions\DuplicateDocumentExporterException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
 
 /**
  * What a document exporter must keep, for the host's own exporters as well as the
@@ -72,8 +74,8 @@ final class ExporterContractTests
 
     private function assertFilename(DocumentExporter $exporter): void
     {
-        $node = new Node;
-        $node->name = 'Quarterly report.draft';
+        $now = new DateTimeImmutable('2026-01-01T00:00:00Z');
+        $node = new NodeSnapshot(id: '1', driveId: '1', parentId: null, kind: NodeKind::Document, name: 'Quarterly report.draft', mimeType: null, extension: null, sizeBytes: 0, sequence: 1, inheritsAccess: true, properties: [], createdAt: $now, createdBy: null, updatedAt: $now, updatedBy: null, contentModifiedAt: null, contentModifiedBy: null, trashedAt: null, trashedBy: null, trashRoot: false, file: null, document: null, viewer: null);
 
         $filename = App::make(ExportFilenameResolver::class)->resolve($node, $exporter->extension());
 

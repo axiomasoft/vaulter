@@ -45,8 +45,8 @@ it('is ok when no blob is marked', function (): void {
 
 it('warns about the marked blobs and names the way to heal them', function (): void {
     $store = app(BlobStore::class);
-    $first = $store->commit(CasTestHelpers::streamFor('first damaged'), BlobScope::tenant('1'));
-    $second = $store->commit(CasTestHelpers::streamFor('second damaged'), BlobScope::tenant('1'));
+    $first = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('first damaged'), BlobScope::tenant('1')));
+    $second = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('second damaged'), BlobScope::tenant('1')));
     $store->commit(CasTestHelpers::streamFor('third is fine'), BlobScope::tenant('1'));
     Storage::disk('local')->delete($first->storage_key);
     Storage::disk('local')->put($second->storage_key, 'x');
@@ -65,7 +65,7 @@ it('warns about the marked blobs and names the way to heal them', function (): v
 it('lists no more blobs than the sample limit', function (): void {
     $store = app(BlobStore::class);
     foreach (['a damaged', 'b damaged', 'c damaged'] as $bytes) {
-        Storage::disk('local')->delete($store->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant('1'))->storage_key);
+        Storage::disk('local')->delete(CasTestHelpers::row($store->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant('1')))->storage_key);
     }
     app(BlobScrubber::class)->scrub();
 
@@ -77,7 +77,7 @@ it('lists no more blobs than the sample limit', function (): void {
 
 it('goes back to ok after the ingest heals the blobs, and changes nothing it reports on', function (): void {
     $store = app(BlobStore::class);
-    $blob = $store->commit(CasTestHelpers::streamFor('heal then ok'), BlobScope::tenant('1'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('heal then ok'), BlobScope::tenant('1')));
     Storage::disk('local')->delete($blob->storage_key);
     app(BlobScrubber::class)->scrub();
     $before = DB::table((new Blob)->getTable())->get()->all();

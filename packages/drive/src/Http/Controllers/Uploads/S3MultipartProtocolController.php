@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
-use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -43,7 +43,6 @@ final class S3MultipartProtocolController
         private readonly HttpResourceResolver $resolver,
         private readonly HttpOperationContextFactory $contexts,
         private readonly NodeResponses $nodes,
-        private readonly NodeSnapshotMapper $snapshots,
         private readonly DriveConfig $driveConfig,
     ) {}
 
@@ -89,7 +88,7 @@ final class S3MultipartProtocolController
     public function complete(Request $request, string $upload): JsonResponse
     {
         [$drive, $session] = $this->session($request, $upload);
-        $node = $this->snapshots->map(UploadsOf::handle($drive)->complete($session), $drive->actor()->ref());
+        $node = UploadsOf::handle($drive)->complete(UploadSessionSnapshot::fromModel($session));
 
         return $this->nodes->respond($drive, $node, 201);
     }

@@ -6,11 +6,11 @@ namespace Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule;
 
 use RuntimeException;
 use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
-use Vaulter\Drive\Models\FileRevision;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Sharing\ShareContext;
 
 /** Vetoes a delivery by throwing: allow | deny | explode (an exception that is not a problem). */
 final class AcmeDownloadGuard implements DownloadGuard
@@ -24,7 +24,7 @@ final class AcmeDownloadGuard implements DownloadGuard
         AcmeProbe::resolved(self::class);
     }
 
-    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void
+    public function check(DriveContext|ShareLinkSnapshot $context, NodeSnapshot $node, FileRevisionSnapshot $revision): void
     {
         self::$checks++;
 

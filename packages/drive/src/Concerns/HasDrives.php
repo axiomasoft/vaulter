@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
@@ -51,7 +52,13 @@ trait HasDrives
         return self::vaulter(Vaulter::class)->drive($this, $profile);
     }
 
-    /** @return MorphMany<Drive, $this> */
+    /**
+     * The owner's drive rows, for the drive's own owner bookkeeping. A host lists the drives it may see through
+     * `Vaulter::drives($actor)`, which answers with DriveSnapshot pages; this relation hands out the domain model.
+     *
+     * @return MorphMany<Drive, $this>
+     */
+    #[Internal]
     public function drives(): MorphMany
     {
         return $this->morphMany(self::vaulter(DriveConfig::class)->model('drive'), 'owner');

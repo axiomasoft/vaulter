@@ -29,7 +29,7 @@ beforeEach(function (): void {
 
 function gcCriteriaCommit(string $bytes, BlobScope $scope): Blob
 {
-    return app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope);
+    return CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope));
 }
 
 /** Commit the bytes and pin what comes back in one owner transaction, as an owner ingests. */
@@ -37,7 +37,7 @@ function gcCriteriaIngest(string $bytes, BlobScope $scope, string $reference): B
 {
     return app(VaulterDatabase::class)->transaction(function () use ($bytes, $scope, $reference): Blob {
         $blob = gcCriteriaCommit($bytes, $scope);
-        app(BlobPins::class)->pin($blob, CasTestHelpers::OWNER, $reference);
+        app(BlobPins::class)->pin($blob->getKey(), CasTestHelpers::OWNER, $reference);
 
         return $blob;
     });
@@ -153,7 +153,7 @@ it('collects only the unpinned copy of bytes that a disabled drive pins in anoth
     $driveCopy = gcCriteriaCommit('same bytes, two scopes', BlobScope::storage('9'));
     $tenantCopy = gcCriteriaCommit('same bytes, two scopes', BlobScope::tenant('9'));
     [$kept, $collected] = $drivePinned ? [$driveCopy, $tenantCopy] : [$tenantCopy, $driveCopy];
-    app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($kept, 'drive.revision_blob', '1:data:0'));
+    app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($kept->getKey(), 'drive.revision_blob', '1:data:0'));
     $kept->forceFill(['ref_count' => 0])->save(); // a stale cache: the pins are re-read under the lock
 
     expect($driveCopy->sha256)->toBe($tenantCopy->sha256)
@@ -173,7 +173,7 @@ it('collects only the unpinned copy of bytes that a disabled drive pins in anoth
 it('keeps every blob of a module that is not installed through reconcile, both GC phases and the pending sweep', function (): void {
     $owner = 'archive.legacy_copy'; // no package registers this module
     $committed = gcCriteriaCommit('absent owner, committed', BlobScope::tenant('8'));
-    app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($committed, $owner, 'a'));
+    app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($committed->getKey(), $owner, 'a'));
     // States the protocol never produces, left by an older writer: the re-check under the lock still sees the pin.
     $tombstoned = CasTestHelpers::seedBlobRow('absent owner, tombstoned', BlobStatus::Tombstoned);
     $tombstoned->forceFill(['delete_after_at' => now()->subDay()])->save();

@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Events\Nodes;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
@@ -25,15 +27,28 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class NodeCopied extends DriveEvent
 {
+    public NodeSnapshot $source;
+
+    private Node $sourceRow;
+
+    public NodeSnapshot $copy;
+
+    private Node $copyRow;
+
     #[Internal]
     public function __construct(
-        public Node $source,
-        public Node $copy,
+        Node $source,
+        Node $copy,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->sourceRow = $source;
+        $this->source = app(NodeSnapshotMapper::class)->facts($source);
+        $this->copyRow = $copy;
+        $this->copy = app(NodeSnapshotMapper::class)->facts($copy);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -44,42 +59,42 @@ final readonly class NodeCopied extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->copy);
+        return self::nodeScope($this->copyRow);
     }
 
     public function subject(): EventSubject
     {
-        return self::nodeSubject($this->copy);
+        return self::nodeSubject($this->copyRow);
     }
 
     public function sequence(): int
     {
-        return $this->copy->sequence;
+        return $this->copyRow->sequence;
     }
 
     public function journal(): JournalEffect
     {
-        return self::nodeUpsert($this->copy, subtree: true, sequence: $this->copy->sequence);
+        return self::nodeUpsert($this->copyRow, subtree: true, sequence: $this->copyRow->sequence);
     }
 
     public function data(): array
     {
         return [
-            'source_id' => self::id($this->source->getKey()),
-            'destination_id' => self::id($this->copy->parent_id),
+            'source_id' => self::id($this->sourceRow->getKey()),
+            'destination_id' => self::id($this->copyRow->parent_id),
         ];
     }
 
     public function activityContext(): array
     {
         return [
-            'source_id' => Identity::stringify($this->source->getKey()),
-            'name' => $this->copy->name,
+            'source_id' => Identity::stringify($this->sourceRow->getKey()),
+            'name' => $this->copyRow->name,
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->copy);
+        return ActivityTarget::of($this->copyRow);
     }
 }

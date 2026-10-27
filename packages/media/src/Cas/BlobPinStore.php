@@ -11,8 +11,10 @@ use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
 use Vaulter\Media\Models\Cas\Blob;
@@ -51,14 +53,19 @@ final readonly class BlobPinStore implements BlobPins
         private ContentStore $content,
         private DatabaseConfig $databaseConfig,
         private IdStrategyResolver $ids,
+        private MediaConfig $mediaConfig,
     ) {}
 
-    public function pin(Blob $blob, string $ownerType, string $referenceKey): void
+    public function pin(BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void
     {
         $this->assertReference(method: 'pin', ownerType: $ownerType, referenceKey: $referenceKey);
 
-        $this->lock->acquire(scope: $blob->scope_key, sha256: $blob->sha256);
-        $fresh = $this->blobs->lockRow($blob);
+        // The address to lock comes from the current row, never from the supplied snapshot.
+        $model = $this->mediaConfig->blobModel();
+        $current = $model::query()->whereKey($blob instanceof BlobSnapshot ? $blob->id : $blob)->firstOrFail();
+
+        $this->lock->acquire(scope: $current->scope_key, sha256: $current->sha256);
+        $fresh = $this->blobs->lockRow($current);
 
         match ($fresh->status) {
             BlobStatus::Committed => null,
@@ -87,12 +94,12 @@ final readonly class BlobPinStore implements BlobPins
         $this->query()->insert($id === null ? $row : ['id' => $id, ...$row]);
     }
 
-    public function unpin(Blob|int|string $blob, string $ownerType, string $referenceKey): void
+    public function unpin(BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void
     {
         $this->assertReference(method: 'unpin', ownerType: $ownerType, referenceKey: $referenceKey);
 
         $this->query()
-            ->where('blob_id', $blob instanceof Blob ? $blob->getKey() : $blob)
+            ->where('blob_id', $blob instanceof BlobSnapshot ? $blob->id : $blob)
             ->where('owner_type', $ownerType)
             ->where('reference_key', $referenceKey)
             ->delete();

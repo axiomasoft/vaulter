@@ -53,7 +53,7 @@ final readonly class RevisionBlobLinks
     public function attach(FileRevision $revision, Blob $blob, array $attributes = []): void
     {
         $this->pins->pin(
-            blob: $blob,
+            blob: Identity::stringify($blob->getKey()),
             ownerType: self::OWNER_TYPE,
             referenceKey: self::referenceKey($revision->getKey(), $attributes['role'] ?? 'data', $attributes['ordinal'] ?? 0),
         );
@@ -63,7 +63,7 @@ final readonly class RevisionBlobLinks
     /** Delete the pin and the edge. */
     public function detach(FileRevision $revision, Blob|int|string $blob, string $role = 'data', int $ordinal = 0): void
     {
-        $this->pins->unpin(blob: $blob, ownerType: self::OWNER_TYPE, referenceKey: self::referenceKey($revision->getKey(), $role, $ordinal));
+        $this->pins->unpin(blob: $blob instanceof Blob ? Identity::stringify($blob->getKey()) : $blob, ownerType: self::OWNER_TYPE, referenceKey: self::referenceKey($revision->getKey(), $role, $ordinal));
         $this->edges->detach(version: $revision, blob: $blob, role: $role, ordinal: $ordinal);
     }
 

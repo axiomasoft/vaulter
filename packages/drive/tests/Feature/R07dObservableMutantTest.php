@@ -225,7 +225,7 @@ it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'one.bin',
         totalSizeBytes: 2,
         mimeType: 'application/octet-stream',
@@ -246,7 +246,7 @@ it('records an assemble duration of a few seconds, not the nanosecond product', 
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'asm.bin',
         totalSizeBytes: 4,
         mimeType: 'application/octet-stream',

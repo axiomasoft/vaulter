@@ -57,7 +57,9 @@ $drive = Vaulter::drive($project, 'project_drive'); // a named profile
 
 `findDrive()` and `findDriveById()` return a handle for a drive that already exists and `null` otherwise. `drives()` lists
 the drives an actor may open as snapshots in key order with an opaque cursor; the visibility decision is made before
-the page is cut.
+the page is cut. This is how a host lists its drives: the `HasDrives::drives()` relation on an owner model is
+`#[Internal]` — it stays for the drive's own owner bookkeeping and hands out the domain `Drive` model, so it is not part
+of the supported surface.
 
 See [`DriveHandle`](/concepts/nodes-and-revisions) for the handle's full method surface. Every operation of the handle
 returns immutable snapshots and `Page<T>` lists (`$drive->snapshot()`, `$drive->quota()`,
@@ -718,7 +720,9 @@ interface NodeOperations
 
 `Vaulter\Drive\Contracts\NodeSnapshotContributor` is the `drive` slot (Contributor) the documents module
 fills with `documents.heads` to supply `NodeSnapshot::$document`; without an active contributor a document node
-has no head in its snapshot. `Vaulter\Drive\Contracts\DriveExtension` marks the operations a module adds to a
+has no head in its snapshot. `contribute(array $nodes)` receives the page as `list<NodeSnapshot>` — the facts of each
+node before any fragment, viewer state or reader-scoped `syncKey` is added, never a node row — and answers
+`node id => fragment`; a contributor reads its own aggregates by the node ids. `Vaulter\Drive\Contracts\DriveExtension` marks the operations a module adds to a
 drive handle, declared in the `drive` slot under the operations' FQCN and resolved by `DriveHandle::extension()`.
 
 ## The supported surface

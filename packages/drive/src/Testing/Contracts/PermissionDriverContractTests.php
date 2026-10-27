@@ -13,6 +13,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Node;
@@ -76,7 +77,10 @@ final class PermissionDriverContractTests
         try {
             $resolver = App::make(AccessResolver::class);
             $decisions = [];
-            foreach (['parent' => $fixture->parent, 'child' => $fixture->child] as $label => $node) {
+            // The fixture names its nodes by snapshot; the resolver decides on the current rows, read by id here.
+            $nodes = App::make(DriveConfig::class)->model('node');
+            foreach (['parent' => $fixture->parent, 'child' => $fixture->child] as $label => $snapshot) {
+                $node = $nodes::query()->findOrFail($snapshot->id);
                 foreach (Ability::cases() as $ability) {
                     $decisions[$label.'.'.$ability->value] = $resolver->can($fixture->actor, $ability, $node);
                 }

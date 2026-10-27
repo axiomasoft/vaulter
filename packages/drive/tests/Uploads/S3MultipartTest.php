@@ -45,7 +45,7 @@ function initiateS3(int $totalBytes, string $name = 'multi.bin', ?Drive $storage
 
     return app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: $name,
         totalSizeBytes: $totalBytes,
         mimeType: 'application/octet-stream',

@@ -16,6 +16,7 @@ use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Activity\Activity;
@@ -94,12 +95,12 @@ trait InteractsWithVaulter
         Assert::assertTrue($this->vaulterEvents($type)->isEmpty(), sprintf('A "%s" event was recorded.', $type->value));
     }
 
-    public function assertNodeVisibleTo(Authorizable $user, Node|string $node): void
+    public function assertNodeVisibleTo(Authorizable $user, NodeSnapshot|int|string $node): void
     {
         Assert::assertTrue($this->vaulterNodeVisibleTo($user, $node), 'The node is not visible to the actor.');
     }
 
-    public function assertNodeNotVisibleTo(Authorizable $user, Node|string $node): void
+    public function assertNodeNotVisibleTo(Authorizable $user, NodeSnapshot|int|string $node): void
     {
         Assert::assertFalse($this->vaulterNodeVisibleTo($user, $node), 'The node is visible to the actor.');
     }
@@ -116,9 +117,11 @@ trait InteractsWithVaulter
      * Whether $user can see the node, asked through the drive's Operations: a node the
      * actor cannot view is reported as absent, exactly as a request would see it.
      */
-    private function vaulterNodeVisibleTo(Authorizable $user, Node|string $node): bool
+    private function vaulterNodeVisibleTo(Authorizable $user, NodeSnapshot|int|string $node): bool
     {
-        $row = $node instanceof Node ? $node : Vaulter::withoutTenancy(static fn () => App::make(DriveConfig::class)->model('node')::query()->find($node));
+        // The current row by id (a snapshot names it): an absent node has no visibility to assert.
+        $key = $node instanceof NodeSnapshot ? $node->id : $node;
+        $row = Vaulter::withoutTenancy(static fn () => App::make(DriveConfig::class)->model('node')::query()->find($key));
         Assert::assertInstanceOf(Node::class, $row, 'The node does not exist, so its visibility is not defined.');
 
         try {

@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Events\Access;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Access\NodeGrant;
@@ -24,14 +26,21 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class NodeGrantCreated extends DriveEvent
 {
+    public GrantSnapshot $grant;
+
+    private NodeGrant $grantRow;
+
     #[Internal]
     public function __construct(
-        public NodeGrant $grant,
+        NodeGrant $grant,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->grantRow = $grant;
+        $this->grant = app(AccessSnapshotMapper::class)->grant($grant);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -42,44 +51,44 @@ final readonly class NodeGrantCreated extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->grant->node);
+        return self::nodeScope($this->grantRow->node);
     }
 
     public function subject(): EventSubject
     {
-        return self::nodeSubject($this->grant->node);
+        return self::nodeSubject($this->grantRow->node);
     }
 
     public function journal(): JournalEffect
     {
-        return self::nodeUpsert($this->grant->node, subtree: true);
+        return self::nodeUpsert($this->grantRow->node, subtree: true);
     }
 
     public function data(): array
     {
         return [
-            'grant_id' => self::id($this->grant->getKey()),
-            'subject' => ['type' => $this->grant->subject_type, 'id' => self::id($this->grant->subject_id)],
-            'role' => $this->grant->role_key,
-            'role_version' => $this->grant->role_version,
-            'scope' => $this->grant->scope->value,
+            'grant_id' => self::id($this->grantRow->getKey()),
+            'subject' => ['type' => $this->grantRow->subject_type, 'id' => self::id($this->grantRow->subject_id)],
+            'role' => $this->grantRow->role_key,
+            'role_version' => $this->grantRow->role_version,
+            'scope' => $this->grantRow->scope->value,
         ];
     }
 
     public function activityContext(): array
     {
         return [
-            'grant_id' => Identity::stringify($this->grant->getKey()),
-            'subject_type' => $this->grant->subject_type,
-            'subject_id' => Identity::stringify($this->grant->subject_id),
-            'role' => $this->grant->role_key,
-            'role_version' => $this->grant->role_version,
-            'scope' => $this->grant->scope->value,
+            'grant_id' => Identity::stringify($this->grantRow->getKey()),
+            'subject_type' => $this->grantRow->subject_type,
+            'subject_id' => Identity::stringify($this->grantRow->subject_id),
+            'role' => $this->grantRow->role_key,
+            'role_version' => $this->grantRow->role_version,
+            'scope' => $this->grantRow->scope->value,
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->grant->node);
+        return ActivityTarget::of($this->grantRow->node);
     }
 }

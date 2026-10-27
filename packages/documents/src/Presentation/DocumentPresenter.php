@@ -15,7 +15,6 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
@@ -38,7 +37,7 @@ final readonly class DocumentPresenter implements KindPresenter
         return NodeKind::Document;
     }
 
-    public function present(Node|NodeSnapshot $node): NodePresentation
+    public function present(NodeSnapshot $node): NodePresentation
     {
         [$key, $schemaVersion, $protocol, $format, $hasCheckpoint] = $this->head($node);
         $type = $this->decoder->type($key);
@@ -73,10 +72,9 @@ final readonly class DocumentPresenter implements KindPresenter
     }
 
     /** @return array{string, int, ?string, ?string, bool} */
-    private function head(Node|NodeSnapshot $node): array
+    private function head(NodeSnapshot $node): array
     {
-        $id = $node instanceof NodeSnapshot ? $node->id : $node->getKey();
-        $document = Document::query()->where('node_id', $id)->first(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'collab_state_size']);
+        $document = Document::query()->where('node_id', $node->id)->first(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'collab_state_size']);
 
         return $document === null ? ['', 1, null, null, false] : [$document->type, $document->schema_version, $document->collab_protocol, $document->collab_state_format, $document->collab_state_size !== null];
     }

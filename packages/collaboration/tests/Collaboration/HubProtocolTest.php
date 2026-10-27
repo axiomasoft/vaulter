@@ -191,7 +191,7 @@ it('fences off an append from the room opened before a restore (V12)', function 
     expect($restored->collab_epoch)->toBe(1)
         ->and($restored->content['content'][0]['content'][0]['text'])->toBe('Draft');
     Event::assertDispatched(DocumentRestored::class, static fn (DocumentRestored $event): bool => $event->epoch === 1
-        && $event->restoredFrom->is($first)
+        && $event->restoredFrom->id === (string) $first->getKey()
         && $event->stateVersion === $restored->state_version);
 
     // The old room's pending update arrives late: refused, nothing changes.

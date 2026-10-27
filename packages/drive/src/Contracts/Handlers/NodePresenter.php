@@ -7,7 +7,6 @@ namespace Vaulter\Drive\Contracts\Handlers;
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 
 /**
@@ -29,5 +28,5 @@ use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 #[Spi(SpiKind::Implement)]
 interface NodePresenter
 {
-    public function present(Node|NodeSnapshot $node): NodePresentation;
+    public function present(NodeSnapshot $node): NodePresentation;
 }

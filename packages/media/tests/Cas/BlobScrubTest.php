@@ -36,7 +36,7 @@ beforeEach(function (): void {
 
 function scrubCommit(string $bytes, string $tenant = '1'): Blob
 {
-    return app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant($tenant));
+    return CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant($tenant)));
 }
 
 /** Set columns of a blob row as the scrub (or an operator) would have left them. */

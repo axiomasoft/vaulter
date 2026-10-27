@@ -15,6 +15,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -24,7 +25,6 @@ use Vaulter\Drive\Events\Uploads\UploadInitiated;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Drive;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
@@ -82,8 +82,8 @@ final readonly class UploadSessionManager
                 'tenant_id' => $context->drive->tenant_id,
                 'drive_id' => $context->driveId(),
                 'upload_id' => (string) Str::uuid(),
-                'target_node_id' => $data->targetNode instanceof Node ? $data->targetNode->getKey() : ($data->targetNode instanceof NodeSnapshot ? $data->targetNode->id : $data->targetNode),
-                'target_parent_id' => $data->targetParent instanceof Node ? $data->targetParent->getKey() : ($data->targetParent instanceof NodeSnapshot ? $data->targetParent->id : $data->targetParent),
+                'target_node_id' => $data->targetNode instanceof NodeSnapshot ? $data->targetNode->id : $data->targetNode,
+                'target_parent_id' => $data->targetParent instanceof NodeSnapshot ? $data->targetParent->id : $data->targetParent,
                 'target_name' => $data->targetName,
                 'protocol' => $data->protocol,
                 'status' => UploadStatus::Initiated,
@@ -97,7 +97,7 @@ final readonly class UploadSessionManager
                 'created_by' => $context->actor->ref()->id,
             ]);
 
-            $this->handlerFor($session)->initialise($session);
+            $this->handlerFor($session)->initialise(UploadSessionSnapshot::fromModel($session));
             $session = $session->refresh();
             $this->recorder->record(new UploadInitiated(session: $session, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
@@ -286,7 +286,7 @@ final readonly class UploadSessionManager
                 return $locked;
             }
 
-            $this->handlerFor($locked)->abort($locked);
+            $this->handlerFor($locked)->abort(UploadSessionSnapshot::fromModel($locked));
             $this->staged->discard($locked);
 
             $reclaimed = $this->sessions->transition($locked, $terminal);

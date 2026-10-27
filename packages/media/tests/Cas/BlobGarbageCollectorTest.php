@@ -25,7 +25,7 @@ it('фаза 1: помечает unreferenced committed-блоб tombstoned с g
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('garbage'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('garbage'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     // The mark scan keys on committed ∧ ref_count(cache)<=0 — exactly what
     // reconciliation leaves on a blob whose last edge was detached. No grace is
     // pre-armed; tombstone() sets delete_after_at when it marks.
@@ -42,7 +42,7 @@ it('фаза 1: НЕ трогает блоб с живым ребром (livenes
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 
@@ -61,7 +61,7 @@ it('фаза 2: sweep удаляет байты только у tombstoned past-
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('sweep me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('sweep me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $key = $blob->storage_key;
     $blob->forceFill([
         'status' => BlobStatus::Tombstoned,
@@ -83,7 +83,7 @@ it('фаза 2: НЕ удаляет tombstoned внутри grace-окна', fun
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('still in grace'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('still in grace'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $blob->forceFill([
         'status' => BlobStatus::Tombstoned,
         'delete_after_at' => now()->addHour(),
@@ -101,7 +101,7 @@ it('воскрешение: коммит на tombstoned-блоб разтомб
     $store = app(BlobStore::class);
 
     // A blob got tombstoned (GC phase 1) — bytes still on disk during grace.
-    $blob = $store->commit(CasTestHelpers::streamFor('phoenix'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('phoenix'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $blob->forceFill([
         'status' => BlobStatus::Tombstoned,
         'delete_after_at' => now()->addHour(),
@@ -109,7 +109,7 @@ it('воскрешение: коммит на tombstoned-блоб разтомб
 
     // A concurrent upload of the SAME bytes arrives. It must un-tombstone, not
     // create a second row (this is what makes online GC safe — H.3).
-    $resurrected = $store->commit(CasTestHelpers::streamFor('phoenix'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $resurrected = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('phoenix'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     expect($resurrected->getKey())->toBe($blob->getKey())
         ->and($resurrected->status)->toBe(BlobStatus::Committed)
@@ -122,7 +122,7 @@ it('воскрешение перед sweep спасает байты: посл�
     $gc = app(BlobGarbageCollector::class);
 
     // Tombstoned past grace — a sweep candidate.
-    $blob = $store->commit(CasTestHelpers::streamFor('saved'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('saved'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $blob->forceFill([
         'status' => BlobStatus::Tombstoned,
         'delete_after_at' => now()->subMinute(),
@@ -130,7 +130,7 @@ it('воскрешение перед sweep спасает байты: посл�
 
     // Ordering we simulate (SQLite single-writer): the commit WINS first and
     // resurrects the blob...
-    $store->commit(CasTestHelpers::streamFor('saved'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('saved'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     // ...so when the sweep then runs, it re-reads under the lock, sees committed,
     // and refuses to delete — the bytes survive.
@@ -146,7 +146,7 @@ it('идемпотентность: повторный sweep по deleted-бло
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('twice swept'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('twice swept'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subMinute()])->save();
 
     $gc->sweep();

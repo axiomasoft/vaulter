@@ -42,6 +42,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -187,7 +188,8 @@ final readonly class IngestFileAction
                     $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
                     (string) $storageId,
                 );
-                $commit = fn (): Blob => $this->blobs->commitStaged(staged: $staged, scope: $scope, disk: $data->storage->disk);
+                // The store answers with a snapshot; the row it describes is read back by id in this transaction to be linked.
+                $commit = fn (): Blob => $this->committedRow($this->blobs->commitStaged(staged: $staged, scope: $scope, disk: $data->storage->disk));
                 $blob = $commit();
 
                 return $file instanceof File
@@ -209,6 +211,13 @@ final readonly class IngestFileAction
                 $prepared->discard();
             }
         }
+    }
+
+    private function committedRow(BlobSnapshot $blob): Blob
+    {
+        $model = $this->mediaConfig->blobModel();
+
+        return $model::query()->whereKey($blob->id)->firstOrFail();
     }
 
     /**

@@ -6,10 +6,10 @@ use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 
 function registryLifecycle(NodeKind $kind, bool $purgeOnly = false): NodeContentLifecycle
@@ -28,12 +28,12 @@ class RegistryTestLifecycle implements NodeContentLifecycle
         return $this->kind;
     }
 
-    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, NodeSnapshot $source, NodeSnapshot $copy): CopyResult
     {
         return new CopyResult(addedBytes: 0);
     }
 
-    public function purge(DriveContext $context, Node $node): void {}
+    public function purge(DriveContext $context, NodeSnapshot $node): void {}
 }
 
 it('resolves the registered lifecycle of a kind', function (): void {

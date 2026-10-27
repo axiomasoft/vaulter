@@ -9,6 +9,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Nodes\NodeCopied;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
@@ -41,6 +42,7 @@ final readonly class CopyNodeAction
         private NameConflictResolver $names,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $snapshots,
     ) {}
 
     public function execute(DriveContext $context, CopyNodeInput $data): Node
@@ -181,7 +183,8 @@ final readonly class CopyNodeAction
             'sequence' => 0,
         ]);
         if ($source->kind !== NodeKind::Folder) {
-            $addedBytes += $this->lifecycles->forKind($source->kind)->copy(context: $context, source: $source, copy: $copy)->addedBytes;
+            // Both rows are held in this lock transaction; the lifecycle reads their facts, its own aggregates by id.
+            $addedBytes += $this->lifecycles->forKind($source->kind)->copy(context: $context, source: $this->snapshots->facts($source), copy: $this->snapshots->facts($copy))->addedBytes;
         } else {
             foreach ($sources as $child) {
                 if ((string) $child->parent_id === (string) $source->id && $child->trashed_at === null) {

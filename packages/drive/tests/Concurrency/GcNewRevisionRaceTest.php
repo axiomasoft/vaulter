@@ -100,7 +100,7 @@ function gcRevisionRaceAssertKept(Blob $blob, string $bytes, int $pins = 1): voi
         ->and($fresh->status)->toBe(BlobStatus::Committed)
         ->and($fresh->delete_after_at)->toBeNull()
         ->and(app(ContentStore::class)->exists($fresh->storage_key, $fresh->disk))->toBeTrue()
-        ->and(stream_get_contents(app(BlobStore::class)->read($fresh)))->toBe($bytes);
+        ->and(stream_get_contents(app(BlobStore::class)->read($fresh->getKey())))->toBe($bytes);
 }
 
 it('(a) pins a new revision with the bytes a sweep paused between the unlink and its end is collecting', function (bool $sweepCommits): void {
@@ -185,7 +185,7 @@ it('(c) keeps the bytes for a new revision and the retained pin while a collecto
     $bytes = 'gc race (c) '.($gcFirst ? 'gc first' : 'revision first');
     // Another holder keeps the blob: a module that is neither registered nor enabled in this application.
     [$drive, $target, $blob] = gcRevisionRaceSetup($bytes, static function (Blob $blob): void {
-        app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob, GC_REVISION_RACE_RETAINED_OWNER, 'copy-1'));
+        app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob->getKey(), GC_REVISION_RACE_RETAINED_OWNER, 'copy-1'));
     });
     $blob->forceFill(['ref_count' => 0])->save(); // a stale cache: GC reads the pins under the lock
 

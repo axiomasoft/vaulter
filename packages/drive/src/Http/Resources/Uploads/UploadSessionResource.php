@@ -6,16 +6,17 @@ namespace Vaulter\Drive\Http\Resources\Uploads;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
-use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 
 /**
  * A resumable-upload session: the status a client polls and the server-side offset it
  * resumes from. Neither the staged bytes, their storage key nor the blob the bytes were
  * committed to are part of it.
  *
- * @mixin UploadSession
+ * @mixin UploadSessionSnapshot
  */
 #[Internal]
 final class UploadSessionResource extends JsonResource
@@ -26,20 +27,25 @@ final class UploadSessionResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
+        $session = $this->resource;
+        if (!$session instanceof UploadSessionSnapshot) {
+            throw new LogicException('[Vaulter] An upload session resource renders an UploadSessionSnapshot.');
+        }
+
         return [
-            'upload_id' => $this->upload_id,
-            'drive_id' => SnapshotValue::id($this->drive_id),
-            'protocol' => $this->protocol->value,
-            'status' => $this->status->value,
+            'upload_id' => $session->uploadId,
+            'drive_id' => $session->driveId,
+            'protocol' => $session->protocol->value,
+            'status' => $session->status->value,
             // The resume point is always the server's offset, never the client's guess.
-            'received_bytes' => $this->received_bytes,
-            'total_size_bytes' => $this->total_size_bytes,
-            'chunk_size' => $this->chunk_size,
-            'mime_type' => $this->mime_type,
-            'node_id' => SnapshotValue::nullableId($this->target_node_id),
-            'target_parent_id' => SnapshotValue::nullableId($this->target_parent_id),
-            'target_name' => $this->target_name,
-            'expires_at' => SnapshotValue::iso($this->expires_at),
+            'received_bytes' => $session->receivedBytes,
+            'total_size_bytes' => $session->totalSizeBytes,
+            'chunk_size' => $session->chunkSize,
+            'mime_type' => $session->mimeType,
+            'node_id' => $session->targetNodeId,
+            'target_parent_id' => $session->targetParentId,
+            'target_name' => $session->targetName,
+            'expires_at' => SnapshotValue::iso($session->expiresAt),
         ];
     }
 }

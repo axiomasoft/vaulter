@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
@@ -153,7 +154,7 @@ it('[r07bS3] isComplete returns true when exactly one byte is assembled after co
     $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('X'));
     $handler->complete($session->refresh());
 
-    expect($handler->isComplete($session->refresh()))->toBeTrue();
+    expect($handler->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeTrue();
 });
 
 // Kills: S3MultipartHandler L326 TernaryNegated/GreaterToGreaterOrEqual/Increment

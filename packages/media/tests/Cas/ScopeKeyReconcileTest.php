@@ -27,7 +27,7 @@ it('collects a post-promote SQL rollback only after grace under the lossless loc
     app()->instance(ContentStore::class, new FailingPromoteContentStore($content, after: true));
     $scope = BlobScope::tenant('019a0000-1234-7000-8000-123456789abc');
     $bytes = 'promoted then rollback';
-    expect(fn () => app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope))->toThrow(RuntimeException::class);
+    expect(fn () => CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope)))->toThrow(RuntimeException::class);
     expect(Blob::query()->count())->toBe(0);
     app()->instance(ContentStore::class, $content);
     $key = $content->keyFor($scope, hash('sha256', $bytes));
@@ -45,7 +45,7 @@ it('collects a post-promote SQL rollback only after grace under the lossless loc
 it('serializes GC against a writer of the same scope and keeps reachable bytes', function (): void {
     $scope = BlobScope::storage('01ARZ3NDEKTSV4RRFFQ69G5FAV');
     $bytes = 'race bytes';
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope);
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope));
     $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subDay()])->save();
     $version = CasTestHelpers::reference();
     $outcomes = ForkRace::run([
@@ -53,7 +53,7 @@ it('serializes GC against a writer of the same scope and keeps reachable bytes',
         function () use ($scope, $bytes, $version): string {
             return app(VaulterDatabase::class)->transaction(function () use ($scope, $bytes, $version): string {
                 $store = app(BlobStore::class);
-                $fresh = $store->commit(CasTestHelpers::streamFor($bytes), $scope);
+                $fresh = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor($bytes), $scope));
                 CasTestHelpers::pin($fresh, $version);
 
                 return (string) $fresh->getKey();
@@ -65,5 +65,5 @@ it('serializes GC against a writer of the same scope and keeps reachable bytes',
     }
     expect($blob->fresh()->status)->toBe(BlobStatus::Committed);
     Storage::disk('local')->assertExists($blob->storage_key);
-    expect(stream_get_contents(app(BlobStore::class)->read($blob)))->toBe($bytes);
+    expect(stream_get_contents(app(BlobStore::class)->read($blob->getKey())))->toBe($bytes);
 });

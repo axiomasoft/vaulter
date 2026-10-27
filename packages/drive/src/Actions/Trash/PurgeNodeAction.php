@@ -10,6 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\NodeKind;
@@ -40,6 +41,7 @@ final readonly class PurgeNodeAction
         private NodeSequence $sequence,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $snapshots,
     ) {}
 
     public function execute(DriveContext $context, PurgeNodeInput $data): void
@@ -74,7 +76,8 @@ final readonly class PurgeNodeAction
             }
             foreach ($locked as $member) {
                 if ($member->kind !== NodeKind::Folder) {
-                    $this->lifecycles->forKind($member->kind)->purge(context: $context, node: $member);
+                    // The member is locked in this transaction; the lifecycle reads its facts, its own aggregates by id.
+                    $this->lifecycles->forKind($member->kind)->purge(context: $context, node: $this->snapshots->facts($member));
                 }
             }
             // Physical deletion in this same transaction preserves all payload FK cascades.

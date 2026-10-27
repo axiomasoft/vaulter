@@ -39,7 +39,7 @@ it('reports the configured GC grace when no override is supplied', function (): 
 });
 
 it('reports the exact pending sweep totals', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('pending command contract'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('pending command contract'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $blob->forceFill([
         'status' => BlobStatus::Pending,
         'first_seen_at' => now()->subHours(8),
@@ -61,8 +61,8 @@ it('reports exact reconcile totals and the clean-row verdict', function (): void
 });
 
 it('reports every dangling row identity', function (): void {
-    $first = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $second = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling second'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $first = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
+    $second = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling second'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     Storage::disk('local')->delete([$first->storage_key, $second->storage_key]);
 
     $exit = Artisan::call('vaulter:blobs:reconcile');

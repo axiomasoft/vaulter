@@ -13,6 +13,7 @@ use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
@@ -115,10 +116,10 @@ it('commitStaged keeps the temp file reusable across an outer SQL rollback', fun
         }))->toThrow(RuntimeException::class, 'metadata rollback');
         expect(Blob::query()->count())->toBe(0)
             ->and(is_file($staged->path()))->toBeTrue();
-        $blob = app(BlobStore::class)->commitStaged($staged, $scope);
+        $blob = CasTestHelpers::row(app(BlobStore::class)->commitStaged($staged, $scope));
         expect(is_file($staged->path()))->toBeTrue()
-            ->and(stream_get_contents(app(BlobStore::class)->read($blob)))->toBe('reusable staged bytes');
-        expect(app(BlobStore::class)->commitStaged($staged, $scope)->id)->toBe($blob->id);
+            ->and(stream_get_contents(app(BlobStore::class)->read($blob->getKey())))->toBe('reusable staged bytes');
+        expect(CasTestHelpers::row(app(BlobStore::class)->commitStaged($staged, $scope))->id)->toBe($blob->id);
     } finally {
         $staged->discard();
     }

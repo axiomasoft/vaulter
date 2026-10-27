@@ -7,6 +7,10 @@ namespace Vaulter\Drive\Events\Drives;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Drive;
@@ -24,15 +28,28 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class DriveCreated extends DriveEvent
 {
+    public DriveSnapshot $storage;
+
+    private Drive $storageRow;
+
+    public NodeSnapshot $root;
+
+    private Node $rootRow;
+
     #[Internal]
     public function __construct(
-        public Drive $storage,
-        public Node $root,
+        Drive $storage,
+        Node $root,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->storageRow = $storage;
+        $this->storage = app(DriveSnapshotMapper::class)->map($storage);
+        $this->rootRow = $root;
+        $this->root = app(NodeSnapshotMapper::class)->facts($root);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -43,34 +60,34 @@ final readonly class DriveCreated extends DriveEvent
 
     public function scope(): EventScope
     {
-        return new EventScope(tenantId: $this->storage->tenant_id, driveId: $this->storage->getKey(), profile: $this->storage->profile);
+        return new EventScope(tenantId: $this->storageRow->tenant_id, driveId: $this->storageRow->getKey(), profile: $this->storageRow->profile);
     }
 
     public function subject(): EventSubject
     {
-        return new EventSubject(type: 'drive', id: $this->storage->getKey());
+        return new EventSubject(type: 'drive', id: $this->storageRow->getKey());
     }
 
     public function data(): array
     {
         return [
-            'root_node_id' => self::id($this->root->getKey()),
-            'profile' => $this->storage->profile,
+            'root_node_id' => self::id($this->rootRow->getKey()),
+            'profile' => $this->storageRow->profile,
         ];
     }
 
     public function activityContext(): array
     {
         return [
-            'drive_id' => Identity::stringify($this->storage->getKey()),
-            'owner_type' => $this->storage->owner_type,
-            'owner_id' => Identity::stringify($this->storage->owner_id),
-            'name' => $this->storage->name,
+            'drive_id' => Identity::stringify($this->storageRow->getKey()),
+            'owner_type' => $this->storageRow->owner_type,
+            'owner_id' => Identity::stringify($this->storageRow->owner_id),
+            'name' => $this->storageRow->name,
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->root);
+        return ActivityTarget::of($this->rootRow);
     }
 }

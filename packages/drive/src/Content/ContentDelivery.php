@@ -25,6 +25,7 @@ use Vaulter\Drive\Sharing\ShareResolver;
 use Vaulter\Media\Content\SignedContentUrl;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
+use Vaulter\Support\Identity;
 
 /** Every new byte or capability request enters fresh authorization and availability. */
 #[Internal]
@@ -82,7 +83,7 @@ final readonly class ContentDelivery
     private function open(Node $node, FileRevision $revision): FileStream
     {
         [$node, $revision, , $blob] = $this->availability->selection($node, $revision);
-        $stream = $this->blobs->read($blob);
+        $stream = $this->blobs->read(Identity::stringify($blob->getKey()));
         if (!is_resource($stream)) {
             throw NodeNotFoundException::forId($node->id);
         }

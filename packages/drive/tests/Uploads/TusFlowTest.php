@@ -40,7 +40,7 @@ function initiateTus(int $totalBytes, string $name = 'big.bin'): UploadSession
 
     return app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: $name,
         totalSizeBytes: $totalBytes,
         mimeType: 'application/octet-stream',
@@ -170,7 +170,7 @@ it('лживый client sha256 отклоняется до записи верс
 
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'x.bin',
         expectedSha256: str_repeat('f', 64), // a lie
         totalSizeBytes: strlen($bytes),
@@ -190,7 +190,7 @@ it('квота: сборка сверх квоты отклоняется на c
 
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'x.bin',
         totalSizeBytes: strlen($bytes),
     ));
@@ -212,7 +212,7 @@ it('over-size: initiate сверх max_bytes отклоняется ДО при�
 
     expect(fn () => app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'x.bin',
         totalSizeBytes: 9_999,
     )))->toThrow(ValidationException::class);
@@ -239,7 +239,7 @@ it('новая версия: резюмируемая загрузка на су
     $storage = UploadTestHelpers::storage();
     $v1 = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'doc.txt',
         totalSizeBytes: 2,
     ));
@@ -252,7 +252,7 @@ it('новая версия: резюмируемая загрузка на су
     // A NEW-VERSION resumable upload onto that node.
     $v2 = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetNode: $node,
+        targetNode: $node->getKey(),
         totalSizeBytes: 12,
     ));
     app(TusUploadHandler::class)->patch($v2->refresh(), UploadTestHelpers::streamFor('version two!'), 0);

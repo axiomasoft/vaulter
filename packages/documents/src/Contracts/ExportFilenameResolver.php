@@ -8,7 +8,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 
 /**
  * The export filename scheme for {@see ExportDocumentAction}.
@@ -20,5 +20,5 @@ use Vaulter\Drive\Models\Node;
 #[Spi(SpiKind::Implement)]
 interface ExportFilenameResolver
 {
-    public function resolve(Node $node, string $extension): string;
+    public function resolve(NodeSnapshot $node, string $extension): string;
 }

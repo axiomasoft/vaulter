@@ -7,8 +7,12 @@ namespace Vaulter\Documents\Events\Revisions;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
@@ -28,11 +32,23 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class DocumentRestored extends DriveEvent
 {
+    public NodeSnapshot $node;
+
+    private Node $nodeRow;
+
+    public DocumentRevisionSnapshot $version;
+
+    private DocumentRevision $versionRow;
+
+    public DocumentRevisionSnapshot $restoredFrom;
+
+    private DocumentRevision $restoredFromRow;
+
     #[Internal]
     public function __construct(
-        public Node $node,
-        public DocumentRevision $version,
-        public DocumentRevision $restoredFrom,
+        Node $node,
+        DocumentRevision $version,
+        DocumentRevision $restoredFrom,
         public int $epoch,
         public int $stateVersion,
         ActorRef $actor,
@@ -40,6 +56,13 @@ final readonly class DocumentRestored extends DriveEvent
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->nodeRow = $node;
+        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->versionRow = $version;
+        $this->version = app(DocumentSnapshotMapper::class)->revision($version, $version->document()->firstOrFail());
+        $this->restoredFromRow = $restoredFrom;
+        $this->restoredFrom = app(DocumentSnapshotMapper::class)->revision($restoredFrom, $restoredFrom->document()->firstOrFail());
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -49,7 +72,7 @@ final readonly class DocumentRestored extends DriveEvent
     #[Api]
     public function documentId(): int|string
     {
-        return Identity::key($this->version->document_id)
+        return Identity::key($this->versionRow->document_id)
             ?? throw new \LogicException('A document event carries a revision without a document key.');
     }
 
@@ -60,24 +83,24 @@ final readonly class DocumentRestored extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->node);
+        return self::nodeScope($this->nodeRow);
     }
 
     public function subject(): EventSubject
     {
-        return self::nodeSubject($this->node);
+        return self::nodeSubject($this->nodeRow);
     }
 
     public function journal(): JournalEffect
     {
-        return self::nodeUpsert($this->node);
+        return self::nodeUpsert($this->nodeRow);
     }
 
     public function data(): array
     {
         return [
-            'from_revision_id' => self::id($this->restoredFrom->getKey()),
-            'revision_id' => self::id($this->version->getKey()),
+            'from_revision_id' => self::id($this->restoredFromRow->getKey()),
+            'revision_id' => self::id($this->versionRow->getKey()),
             'state_version' => $this->stateVersion,
             'epoch' => $this->epoch,
         ];
@@ -86,14 +109,14 @@ final readonly class DocumentRestored extends DriveEvent
     public function activityContext(): array
     {
         return [
-            'from_revision_id' => Identity::stringify($this->restoredFrom->getKey()),
-            'from_number' => $this->restoredFrom->number,
-            'revision_id' => Identity::stringify($this->version->getKey()),
+            'from_revision_id' => Identity::stringify($this->restoredFromRow->getKey()),
+            'from_number' => $this->restoredFromRow->number,
+            'revision_id' => Identity::stringify($this->versionRow->getKey()),
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->node);
+        return ActivityTarget::of($this->nodeRow);
     }
 }

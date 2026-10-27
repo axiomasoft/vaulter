@@ -52,12 +52,12 @@ final readonly class LifecycleBoundaryFailingFile implements NodeContentLifecycl
         return NodeKind::File;
     }
 
-    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, NodeSnapshot $source, NodeSnapshot $copy): CopyResult
     {
         return $this->actual->copy($context, $source, $copy);
     }
 
-    public function purge(DriveContext $context, Node $node): void
+    public function purge(DriveContext $context, NodeSnapshot $node): void
     {
         $this->actual->purge($context, $node);
         if ((string) $node->id === (string) $this->failedNodeId) {

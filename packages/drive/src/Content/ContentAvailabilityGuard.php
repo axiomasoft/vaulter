@@ -8,6 +8,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
@@ -29,11 +32,27 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
     public function __construct(private DriveConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
 
-    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void
+    /**
+     * The slot entry: the snapshots name the selected node and revision, the current rows are read by their ids and
+     * judged as they are now, never as the snapshot remembers them (a quarantine or a trash after it still denies).
+     */
+    public function check(DriveContext|ShareLinkSnapshot $context, NodeSnapshot $node, FileRevisionSnapshot $revision): void
     {
-        $context instanceof ShareContext
-            ? $this->assertAvailableForShare($context, $node, $revision)
-            : $this->assertAvailable($context, $node, $revision);
+        $nodeClass = $this->config->model('node');
+        $revisionClass = $this->config->model('file_revision');
+        $nodeRow = $nodeClass::query()->whereKey($node->id)->first() ?? throw NodeNotFoundException::forId($node->id);
+        $revisionRow = $revisionClass::query()->whereKey($revision->id)->first() ?? throw NodeNotFoundException::forId($node->id);
+        if (!$context instanceof ShareLinkSnapshot) {
+            $this->assertAvailable($context, $nodeRow, $revisionRow);
+
+            return;
+        }
+
+        // The share is read again by id: its current target bounds the delivery, not the snapshot's.
+        $shareClass = $this->config->model('node_share');
+        $share = $shareClass::query()->whereKey($context->id)->first() ?? throw NodeNotFoundException::forId($node->id);
+        $target = $share->node()->first() ?? throw NodeNotFoundException::forId($node->id);
+        $this->assertAvailableForShare(new ShareContext($share, $target, $share->role()), $nodeRow, $revisionRow);
     }
 
     public function assertAvailable(DriveContext $context, Node $node, FileRevision $revision): void

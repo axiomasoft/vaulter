@@ -12,6 +12,7 @@ use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -41,7 +42,7 @@ final readonly class BlobStore implements BlobStoreContract
     /**
      * @param resource $stream
      */
-    public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob
+    public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): BlobSnapshot
     {
         $staged = $this->content->stage($stream);
 
@@ -52,7 +53,17 @@ final readonly class BlobStore implements BlobStoreContract
         }
     }
 
-    public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob
+    public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): BlobSnapshot
+    {
+        return BlobSnapshot::fromModel($this->commitStagedRow($staged, $scope, $disk));
+    }
+
+    /**
+     * commitStaged() for the media and drive internals that go on with the committed row in their own transaction
+     * (link it, pin it): the row is the one the snapshot of commitStaged() is taken from.
+     */
+    #[Internal]
+    public function commitStagedRow(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob
     {
         $disk ??= $this->mediaConfig->disk();
         $storageKey = $this->content->keyFor(scope: $scope, sha256: $staged->sha256());
@@ -114,9 +125,12 @@ final readonly class BlobStore implements BlobStoreContract
     /**
      * @return resource|null
      */
-    public function read(Blob $blob): mixed
+    public function read(BlobSnapshot|int|string $blob): mixed
     {
-        return $this->content->get($blob->storage_key, $blob->disk);
+        $model = $this->mediaConfig->blobModel();
+        $row = $model::query()->whereKey($blob instanceof BlobSnapshot ? $blob->id : $blob)->first();
+
+        return $row instanceof Blob ? $this->content->get($row->storage_key, $row->disk) : null;
     }
 
     /** Whether the object of $blob, streamed back, has the size and sha256 of the staged bytes. */

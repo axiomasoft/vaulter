@@ -6,8 +6,10 @@ namespace Vaulter\Drive\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
@@ -27,6 +29,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         private CopyDestinationAdmission $admission,
         private ScanAdmission $scans,
         private ContentAvailabilityGuard $availability,
+        private DriveConfig $config,
     ) {}
 
     public function kind(): NodeKind
@@ -94,8 +97,11 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         return $pairs;
     }
 
-    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, NodeSnapshot $source, NodeSnapshot $copy): CopyResult
     {
+        // The drive took both snapshots inside its lock transaction; the rows are read by id for the copy itself.
+        $source = $this->row($source);
+        $copy = $this->row($copy);
         $sourceFile = $source->file()->first();
         $head = $sourceFile?->currentRevision()->first();
         if (!$sourceFile instanceof File || !$head instanceof FileRevision) {
@@ -146,9 +152,17 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         return new CopyResult(addedBytes: $copy->size_bytes);
     }
 
-    public function purge(DriveContext $context, Node $node): void
+    /** The current row behind a snapshot the drive took inside its lock transaction. */
+    private function row(NodeSnapshot $node): Node
     {
-        $file = $node->file()->first();
+        $class = $this->config->model('node');
+
+        return $class::query()->whereKey($node->id)->firstOrFail();
+    }
+
+    public function purge(DriveContext $context, NodeSnapshot $node): void
+    {
+        $file = $this->row($node)->file()->first();
         if (!$file instanceof File) {
             return;
         }

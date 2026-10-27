@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Events\Drives;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Drive;
@@ -19,14 +21,21 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class DriveUnarchived extends DriveEvent
 {
+    public DriveSnapshot $drive;
+
+    private Drive $driveRow;
+
     #[Internal]
     public function __construct(
-        public Drive $drive,
+        Drive $drive,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->driveRow = $drive;
+        $this->drive = app(DriveSnapshotMapper::class)->map($drive);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -37,12 +46,12 @@ final readonly class DriveUnarchived extends DriveEvent
 
     public function scope(): EventScope
     {
-        return new EventScope(tenantId: $this->drive->tenant_id, driveId: $this->drive->getKey(), profile: $this->drive->profile);
+        return new EventScope(tenantId: $this->driveRow->tenant_id, driveId: $this->driveRow->getKey(), profile: $this->driveRow->profile);
     }
 
     public function subject(): EventSubject
     {
-        return new EventSubject(type: 'drive', id: $this->drive->getKey());
+        return new EventSubject(type: 'drive', id: $this->driveRow->getKey());
     }
 
     public function data(): array
@@ -52,6 +61,6 @@ final readonly class DriveUnarchived extends DriveEvent
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->drive);
+        return ActivityTarget::of($this->driveRow);
     }
 }

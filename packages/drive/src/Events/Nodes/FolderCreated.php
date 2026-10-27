@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Events\Nodes;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
@@ -23,14 +25,21 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class FolderCreated extends DriveEvent
 {
+    public NodeSnapshot $node;
+
+    private Node $nodeRow;
+
     #[Internal]
     public function __construct(
-        public Node $node,
+        Node $node,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->nodeRow = $node;
+        $this->node = app(NodeSnapshotMapper::class)->facts($node);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -41,40 +50,40 @@ final readonly class FolderCreated extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->node);
+        return self::nodeScope($this->nodeRow);
     }
 
     public function subject(): EventSubject
     {
-        return self::nodeSubject($this->node);
+        return self::nodeSubject($this->nodeRow);
     }
 
     public function sequence(): int
     {
-        return $this->node->sequence;
+        return $this->nodeRow->sequence;
     }
 
     public function journal(): JournalEffect
     {
-        return self::nodeUpsert($this->node, sequence: $this->node->sequence);
+        return self::nodeUpsert($this->nodeRow, sequence: $this->nodeRow->sequence);
     }
 
     public function data(): array
     {
-        return ['parent_id' => self::id($this->node->parent_id)];
+        return ['parent_id' => self::id($this->nodeRow->parent_id)];
     }
 
     public function activityContext(): array
     {
         return [
-            'kind' => $this->node->kind->value,
-            'name' => $this->node->name,
-            'parent_id' => Identity::stringify($this->node->parent_id),
+            'kind' => $this->nodeRow->kind->value,
+            'name' => $this->nodeRow->name,
+            'parent_id' => Identity::stringify($this->nodeRow->parent_id),
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->node);
+        return ActivityTarget::of($this->nodeRow);
     }
 }

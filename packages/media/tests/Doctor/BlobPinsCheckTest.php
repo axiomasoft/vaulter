@@ -39,7 +39,7 @@ it('reports no pins on an empty store', function (): void {
 });
 
 it('prints the pins per owner type and warns only about an owner whose module is not active', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('doctor'), BlobScope::tenant('1'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('doctor'), BlobScope::tenant('1')));
     CasTestHelpers::pin($blob, '1:data:0', 'drive.revision_blob');
     CasTestHelpers::pin($blob, '2:data:0', 'drive.revision_blob');
     CasTestHelpers::pin($blob, 'own', 'media.preview');
@@ -58,7 +58,7 @@ it('prints the pins per owner type and warns only about an owner whose module is
 });
 
 it('changes nothing it reports on', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('read only'), BlobScope::tenant('1'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('read only'), BlobScope::tenant('1')));
     CasTestHelpers::pin($blob, 'k', 'ghost.owner');
 
     blobPinsFindings();

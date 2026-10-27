@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\AssertionFailedError;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
@@ -43,7 +45,7 @@ it('judges visibility through Operations', function (): void {
     $this->assertNodeVisibleTo($fixture->actor, $fixture->parent);
     $this->assertNodeNotVisibleTo($fixture->actor, $fixture->child);
     $this->assertNodeNotVisibleTo($stranger, $fixture->parent);
-    $this->assertNodeVisibleTo($fixture->actor, (string) $fixture->parent->getKey());
+    $this->assertNodeVisibleTo($fixture->actor, $fixture->parent->id);
     expect(fn () => $this->assertNodeVisibleTo($stranger, $fixture->parent))->toThrow(AssertionFailedError::class);
 });
 
@@ -51,8 +53,10 @@ it('opens drives as an actor', function (): void {
     $fixture = PermissionFixture::build();
     $open = $this->vaulterActingAs($fixture->actor);
 
-    $handle = $open($fixture->drive);
+    $handle = $open(Drive::query()->findOrFail($fixture->drive->id));
 
     expect($handle->actor()->isSystem())->toBeFalse()
-        ->and($handle->nodes()->find($fixture->parent->getKey())->id)->toBe((string) $fixture->parent->getKey());
+        ->and($handle->nodes()->find($fixture->parent->id)->id)->toBe($fixture->parent->id)
+        // The fixture a host inspects is model-free: snapshots of the drive and both nodes.
+        ->and([$fixture->drive::class, $fixture->parent::class, $fixture->child::class])->toBe([DriveSnapshot::class, NodeSnapshot::class, NodeSnapshot::class]);
 });

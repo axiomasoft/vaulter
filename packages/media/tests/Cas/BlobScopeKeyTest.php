@@ -28,8 +28,8 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     $aVersion = CasTestHelpers::reference();
     $bVersion = CasTestHelpers::reference();
     $store = app(BlobStore::class);
-    $a = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $aStorage, $aStorage));
-    $b = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $bStorage, $bStorage));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $aStorage, $aStorage)));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $bStorage, $bStorage)));
     CasTestHelpers::pin($a, $aVersion);
     CasTestHelpers::pin($b, $bVersion);
     expect($a->scope_key)->not->toBe($b->scope_key)
@@ -54,7 +54,7 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     $a->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subHour()])->save();
     app(BlobGarbageCollector::class)->sweep();
     Storage::disk($b->disk)->assertExists($b->storage_key);
-    expect(stream_get_contents($store->read($b)))->toBe('same bytes');
+    expect(stream_get_contents($store->read($b->getKey())))->toBe('same bytes');
 })->with([
     ['bigint', 'off'], ['bigint', 'tenant'], ['bigint', 'drive'],
     ['ulid', 'off'], ['ulid', 'tenant'], ['ulid', 'drive'],

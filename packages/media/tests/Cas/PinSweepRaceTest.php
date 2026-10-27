@@ -41,7 +41,7 @@ function pinRaceScope(): BlobScope
 
 function pinRaceBlob(string $bytes, BlobStatus $status = BlobStatus::Committed): Blob
 {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), pinRaceScope());
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), pinRaceScope()));
     $blob->forceFill([
         'status' => $status,
         'ref_count' => 0,
@@ -61,7 +61,7 @@ function pinRaceAssertPinnedHasBytes(Blob $blob, string $bytes): void
 
     expect($fresh->status)->toBe(BlobStatus::Committed)
         ->and(app(ContentStore::class)->exists($fresh->storage_key, $fresh->disk))->toBeTrue()
-        ->and(stream_get_contents(app(BlobStore::class)->read($fresh)))->toBe($bytes);
+        ->and(stream_get_contents(app(BlobStore::class)->read($fresh->getKey())))->toBe($bytes);
 }
 
 it('orders an ingest of the same bytes after a sweep paused between the unlink and its end', function (bool $sweepCommits): void {
@@ -84,8 +84,8 @@ it('orders an ingest of the same bytes after a sweep paused between the unlink a
 
             // The owner's transaction: commit the bytes (waits for the sweep's lock), then pin what it got.
             return app(VaulterDatabase::class)->transaction(function () use ($bytes): string {
-                $fresh = app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), pinRaceScope());
-                app(BlobPins::class)->pin($fresh, CasTestHelpers::OWNER, 'ingest');
+                $fresh = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), pinRaceScope()));
+                app(BlobPins::class)->pin($fresh->getKey(), CasTestHelpers::OWNER, 'ingest');
 
                 return (string) $fresh->getKey();
             });
@@ -118,13 +118,13 @@ it('refuses a reference-only pin after a paused sweep and recovers by a re-commi
             usleep(PIN_RACE_HEAD_START_US);
             try {
                 // Waits for the sweep's lock, then reads deleted (commit) or tombstoned without bytes (rollback).
-                app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob, CasTestHelpers::OWNER, 'reference'));
+                app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob->getKey(), CasTestHelpers::OWNER, 'reference'));
 
                 return 'pinned';
             } catch (BlobUnavailableException) {
                 app(VaulterDatabase::class)->transaction(function () use ($bytes): void {
-                    $again = app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), pinRaceScope());
-                    app(BlobPins::class)->pin($again, CasTestHelpers::OWNER, 'reference');
+                    $again = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), pinRaceScope()));
+                    app(BlobPins::class)->pin($again->getKey(), CasTestHelpers::OWNER, 'reference');
                 });
 
                 return 'recovered';
@@ -145,7 +145,7 @@ it('lets a sweep that comes second see the pin and keep the bytes', function ():
     $outcomes = ForkRace::run([
         function () use ($blob): string {
             app(VaulterDatabase::class)->transaction(function () use ($blob): void {
-                app(BlobPins::class)->pin($blob, CasTestHelpers::OWNER, 'first');
+                app(BlobPins::class)->pin($blob->getKey(), CasTestHelpers::OWNER, 'first');
                 usleep(PIN_RACE_PAUSE_US);
             });
 
@@ -188,7 +188,7 @@ it('orders a pin and a mark of the same committed blob in either direction', fun
             usleep(PIN_RACE_HEAD_START_US);
         }
         app(VaulterDatabase::class)->transaction(function () use ($blob, $markFirst): void {
-            app(BlobPins::class)->pin($blob, CasTestHelpers::OWNER, 'racer');
+            app(BlobPins::class)->pin($blob->getKey(), CasTestHelpers::OWNER, 'racer');
             if (!$markFirst) {
                 usleep(PIN_RACE_PAUSE_US);
             }
@@ -235,7 +235,7 @@ it('keeps a blob a concurrent detach leaves pinned by another owner', function (
                 usleep(PIN_RACE_HEAD_START_US);
             }
             app(VaulterDatabase::class)->transaction(function () use ($blob, $markFirst): void {
-                app(BlobPins::class)->unpin($blob, CasTestHelpers::OWNER, 'detached');
+                app(BlobPins::class)->unpin($blob->getKey(), CasTestHelpers::OWNER, 'detached');
                 if (!$markFirst) {
                     usleep(PIN_RACE_PAUSE_US);
                 }
@@ -266,7 +266,7 @@ it('tombstones a blob whose last pin a concurrent detach removes only when the m
         },
         function () use ($blob): string {
             app(VaulterDatabase::class)->transaction(function () use ($blob): void {
-                app(BlobPins::class)->unpin($blob, CasTestHelpers::OWNER, 'last');
+                app(BlobPins::class)->unpin($blob->getKey(), CasTestHelpers::OWNER, 'last');
                 usleep(PIN_RACE_PAUSE_US);
             });
 

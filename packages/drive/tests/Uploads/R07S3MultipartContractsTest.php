@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Facades\Vaulter;
@@ -29,7 +30,7 @@ function r07InitiateS3(int $totalBytes, string $name = 'contract.bin'): UploadSe
 {
     return app(UploadSessionManager::class)->initiate(context: DriveContext::system(UploadTestHelpers::storage(), 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
-        targetParent: UploadTestHelpers::storage()->rootNode()->first(),
+        targetParent: UploadTestHelpers::storage()->rootNode()->first()->getKey(),
         targetName: $name,
         totalSizeBytes: $totalBytes,
         mimeType: 'application/octet-stream',
@@ -39,7 +40,7 @@ function r07InitiateS3(int $totalBytes, string $name = 'contract.bin'): UploadSe
 it('initialise returns only the session chunk_size hint', function (): void {
     $session = r07InitiateS3(totalBytes: 64);
 
-    expect(app(S3MultipartHandler::class)->initialise($session->refresh()))->toEqual([
+    expect(app(S3MultipartHandler::class)->initialise(UploadSessionSnapshot::fromModel($session->refresh())))->toEqual([
         'chunk_size' => $session->chunk_size,
     ]);
 });
@@ -106,7 +107,7 @@ it('complete returns the stitched byte length and advances received_bytes to mat
 
     expect($assembled)->toBe(9)
         ->and($session->refresh()->received_bytes)->toBe(9)
-        ->and(app(S3MultipartHandler::class)->isComplete($session->refresh()))->toBeTrue();
+        ->and(app(S3MultipartHandler::class)->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeTrue();
 });
 
 it('isComplete is false while parts exist but the staged assembly is missing', function (): void {
@@ -116,7 +117,7 @@ it('isComplete is false while parts exist but the staged assembly is missing', f
     $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('12345'));
 
     expect($session->refresh()->received_bytes)->toBe(5)
-        ->and($handler->isComplete($session->refresh()))->toBeFalse();
+        ->and($handler->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeFalse();
 });
 
 it('rejects complete when a staged part object is missing', function (): void {

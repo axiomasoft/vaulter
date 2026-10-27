@@ -216,7 +216,7 @@ function smdrvWorld(string $route): array
         $ids['{trashed}'] = $trashed->id;
     }
     if ($uses('upload')) {
-        $ids['{upload}'] = $handle->actingAs(V1::user(1))->uploads()->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetName: 'matrix.bin', totalSizeBytes: 3))->upload_id;
+        $ids['{upload}'] = $handle->actingAs(V1::user(1))->uploads()->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetName: 'matrix.bin', totalSizeBytes: 3))->uploadId;
     }
     if ($route === 'drives.unarchive') {
         $handle->archive();

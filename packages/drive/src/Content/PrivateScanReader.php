@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Support\Identity;
 
 #[Internal]
 final readonly class PrivateScanReader
@@ -28,6 +29,6 @@ final readonly class PrivateScanReader
             return null;
         }
 
-        return $this->blobs->read($snapshot['blob']);
+        return $this->blobs->read(Identity::stringify($snapshot['blob']->getKey()));
     }
 }

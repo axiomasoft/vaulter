@@ -53,7 +53,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
 
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::for(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 42])), correlationId: (string) Str::ulid()), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $folder,
+        targetParent: $folder->getKey(),
         targetName: 'shape.bin',
         expectedSha256: str_repeat('a', 64),
         totalSizeBytes: 128,
@@ -101,7 +101,7 @@ it('initiate stores server owner identity even when client metadata is empty', f
 
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'empty-meta.bin',
         totalSizeBytes: 4,
         metadata: [],
@@ -115,7 +115,7 @@ it('initiate leaves a tus session ready for PATCH after handler initialise', fun
 
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'init.bin',
         totalSizeBytes: 4,
     ));
@@ -140,7 +140,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
 
     $exact = $manager->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $root,
+        targetParent: $root->getKey(),
         targetName: 'exact.bin',
         totalSizeBytes: 10,
     ));
@@ -149,7 +149,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
 
     expect(fn () => $manager->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $root,
+        targetParent: $root->getKey(),
         targetName: 'over.bin',
         totalSizeBytes: 11,
     )))->toThrow(ValidationException::class);
@@ -162,7 +162,7 @@ it('active-session cap allows max minus one and rejects at the ceiling', functio
     $manager = app(UploadSessionManager::class);
     $data = fn (string $name): InitiateUploadInput => new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $root,
+        targetParent: $root->getKey(),
         targetName: $name,
         totalSizeBytes: 4,
     );

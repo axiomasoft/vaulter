@@ -63,7 +63,7 @@ it('диспатчит StorageCreated с корнем при провижене'
     $drive = DriveTestHelpers::drive();
 
     Event::assertDispatched(DriveCreated::class, function (DriveCreated $event) use ($drive): bool {
-        return $event->storage->getKey() === $drive->model()->getKey()
+        return $event->storage->id === (string) $drive->model()->getKey()
             && $event->root->kind === NodeKind::Folder;
     });
 });

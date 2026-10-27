@@ -6,19 +6,17 @@ namespace Vaulter\Drive\Testing\Contracts;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 use InvalidArgumentException;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
 use Vaulter\Drive\Facades\Vaulter;
-use Vaulter\Drive\Models\Drive;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Fixtures\FixtureActor;
 use Vaulter\Testing\Fixtures\FixtureOwner;
 
@@ -32,9 +30,9 @@ final readonly class PermissionFixture
 {
     #[Internal]
     public function __construct(
-        public Drive $drive,
-        public Node $parent,
-        public Node $child,
+        public DriveSnapshot $drive,
+        public NodeSnapshot $parent,
+        public NodeSnapshot $child,
         public Authorizable $actor,
     ) {}
 
@@ -60,12 +58,10 @@ final readonly class PermissionFixture
         ));
         $drive->access()->restrictInheritance($child->id, InheritanceRestriction::Empty);
 
-        $nodes = App::make(DriveConfig::class)->model('node');
-
         return new self(
-            drive: $drive->model(),
-            parent: $nodes::query()->findOrFail($parent->id),
-            child: $nodes::query()->findOrFail($child->id),
+            drive: $drive->snapshot(),
+            parent: $parent,
+            child: $child,
             actor: $actor,
         );
     }

@@ -19,6 +19,7 @@ use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
 use Vaulter\Media\Models\Cas\Blob;
@@ -177,23 +178,23 @@ it('re-commits the staged bytes when the pin finds the blob swept between the co
     {
         public function __construct(private BlobStore $inner, private stdClass $calls) {}
 
-        public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob
+        public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): BlobSnapshot
         {
             return $this->inner->commit($stream, $scope, $disk);
         }
 
-        public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob
+        public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): BlobSnapshot
         {
             $blob = $this->inner->commitStaged($staged, $scope, $disk);
             if (++$this->calls->count === 1) {
-                app(ContentStore::class)->delete($blob->storage_key, $blob->disk);
-                $blob->forceFill(['status' => BlobStatus::Deleted])->save();
+                app(ContentStore::class)->delete($blob->storageKey, $blob->disk);
+                Blob::query()->findOrFail($blob->id)->forceFill(['status' => BlobStatus::Deleted])->save();
             }
 
             return $blob;
         }
 
-        public function read(Blob $blob): mixed
+        public function read(BlobSnapshot|int|string $blob): mixed
         {
             return $this->inner->read($blob);
         }

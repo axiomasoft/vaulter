@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DateTimeImmutable;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
@@ -15,12 +16,15 @@ use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Content\DownloadGuards;
 use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Drive\Contracts\NodeSnapshotContributor;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\DriveModule;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\ScanStatus;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Models\Drive;
-use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -246,7 +250,12 @@ function acmeDeliver(Kernel $kernel): void
     $drive->exists = true;
     $drive->setRawAttributes(['id' => 1], true);
 
-    (new DownloadGuards($kernel))->check(DriveContext::system($drive, 'acme contract'), new Node, new FileRevision);
+    // The facts of a node and revision the database does not hold: the guards see snapshots, the drive's own guard denies them.
+    $now = new DateTimeImmutable('2026-01-01T00:00:00Z');
+    $node = new NodeSnapshot(id: '901', driveId: '1', parentId: null, kind: NodeKind::File, name: 'model-only.txt', mimeType: 'text/plain', extension: 'txt', sizeBytes: 1, sequence: 1, inheritsAccess: true, properties: [], createdAt: $now, createdBy: null, updatedAt: $now, updatedBy: null, contentModifiedAt: null, contentModifiedBy: null, trashedAt: null, trashedBy: null, trashRoot: false, file: null, document: null, viewer: null);
+    $revision = new FileRevisionSnapshot(id: '902', fileNodeId: '901', number: 1, sizeBytes: 1, sha256: str_repeat('0', 64), mimeType: 'text/plain', declaredMimeType: null, scanStatus: ScanStatus::Clean, keepForever: false, isHead: true, restoredFromRevisionId: null, clientModifiedAt: null, createdAt: $now, createdBy: null);
+
+    app()->makeWith(DownloadGuards::class, ['kernel' => $kernel])->checkSnapshots(DriveContext::system($drive, 'acme contract'), $node, $revision);
 }
 
 it('lets a guard of the module veto a delivery, and treats any other failure of it as a denial too', function (): void {

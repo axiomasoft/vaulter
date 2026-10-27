@@ -26,9 +26,9 @@ it('global больше не строится: нет общей области 
 it('tenant без тенанта: одинаковые байты в разных дисках → ДВА блоба', function (): void {
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10));
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 20));
-    $c = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10)));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 20)));
+    $c = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10)));
 
     expect($b->getKey())->not->toBe($a->getKey())
         ->and($c->getKey())->toBe($a->getKey())
@@ -39,8 +39,8 @@ it('tenant без тенанта: одинаковые байты в разны�
 it('off: одинаковые байты одного диска → ДВА блоба', function (): void {
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10));
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10)));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10)));
 
     expect($b->getKey())->not->toBe($a->getKey())
         ->and($a->dedup_scope)->toBe('off')
@@ -52,8 +52,8 @@ it('tenant: одинаковые байты в разных тенантах →
     config()->set('vaulter-media.dedup.scope', 'tenant');
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, 'unused'));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, 'unused')));
 
     expect($b->getKey())->not->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(2)
@@ -68,8 +68,8 @@ it('storage: одинаковые байты в разных хранилища�
     config()->set('vaulter-media.dedup.scope', 'drive');
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, (string) 10));
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, (string) 20));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, (string) 10)));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, (string) 20)));
 
     expect($b->getKey())->not->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(2)
@@ -88,8 +88,8 @@ it('storage-scope ключит на drive_id, не на tenant_id', function ():
 
     // Same storage, different tenants → still ONE blob (tenant is irrelevant in
     // storage scope).
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, (string) 10));
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, (string) 10));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, (string) 10)));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, (string) 10)));
 
     expect($b->getKey())->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(1);

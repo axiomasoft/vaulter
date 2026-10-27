@@ -96,6 +96,6 @@ it('permanently deletes a comment and dispatches CommentDeleted', function (): v
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 
     Event::assertDispatched(CommentDeleted::class, function (CommentDeleted $e) use ($id): bool {
-        return $e->comment->getKey() === $id && $e->actor->id === 5;
+        return $e->comment->id === (string) $id && $e->actor->id === 5;
     });
 });

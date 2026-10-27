@@ -14,6 +14,7 @@ use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -48,9 +49,9 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
      * revision. History, the collaboration epoch and comments stay with the source: a
      * copy is a new document, not a fork of the old one's timeline.
      */
-    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, NodeSnapshot $source, NodeSnapshot $copy): CopyResult
     {
-        $original = Document::query()->where('node_id', $source->getKey())->sharedLock()->first();
+        $original = Document::query()->where('node_id', $source->id)->sharedLock()->first();
         if (!$original instanceof Document) {
             throw new LogicException('[Vaulter] A document node has no document aggregate.');
         }
@@ -58,13 +59,14 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         $this->pending->assertSettled($original);
         $actorId = $context->actor->ref()->id;
         $document = $this->documents->create([
-            'node_id' => $copy->getKey(),
+            'node_id' => $copy->id,
             'type' => $original->type,
             'schema_version' => $original->schema_version,
             'created_by' => $actorId,
             'updated_by' => $actorId,
         ]);
-        $document->setRelation('node', $copy);
+        // The copy's node row was written by the drive in this transaction; the document keeps it for its events.
+        $document->setRelation('node', Node::query()->whereKey($copy->id)->firstOrFail());
 
         // The payload is carried verbatim as opaque JSON: the copy must keep content of a
         // type that is not registered (any more) instead of failing or decaying it.
@@ -84,9 +86,9 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         return new CopyResult(addedBytes: 0);
     }
 
-    public function purge(DriveContext $context, Node $node): void
+    public function purge(DriveContext $context, NodeSnapshot $node): void
     {
-        $document = Document::query()->where('node_id', $node->getKey())->lockForUpdate()->first();
+        $document = Document::query()->where('node_id', $node->id)->lockForUpdate()->first();
         if (!$document instanceof Document) {
             return;
         }

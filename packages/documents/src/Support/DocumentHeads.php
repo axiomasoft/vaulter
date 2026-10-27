@@ -9,8 +9,8 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Drive\Data\Snapshots\DocumentHeadSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Drive\Models\Node;
 
 /**
  * The `documents.heads` contribution to the drive's node snapshots: the `document` fragment of
@@ -29,18 +29,18 @@ final readonly class DocumentHeads implements NodeSnapshotContributor
     }
 
     /**
-     * @param  list<Node>                          $nodes
+     * @param  list<NodeSnapshot>                  $nodes
      * @return array<string, DocumentHeadSnapshot>
      */
     public function contribute(array $nodes): array
     {
-        $documents = array_values(array_filter($nodes, static fn (Node $node): bool => $node->kind === NodeKind::Document));
+        $documents = array_values(array_filter($nodes, static fn (NodeSnapshot $node): bool => $node->kind === NodeKind::Document));
         if ($documents === []) {
             return [];
         }
 
         $heads = [];
-        $rows = Document::query()->whereIn('node_id', array_map(static fn (Node $node): int|string => $node->id, $documents))->get();
+        $rows = Document::query()->whereIn('node_id', array_map(static fn (NodeSnapshot $node): string => $node->id, $documents))->get();
         foreach ($rows as $row) {
             $heads[(string) $row->node_id] = new DocumentHeadSnapshot(
                 type: $row->type,

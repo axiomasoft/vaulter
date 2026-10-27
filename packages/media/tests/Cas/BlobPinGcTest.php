@@ -28,7 +28,7 @@ beforeEach(function (): void {
 
 function pinGcBlob(string $bytes): Blob
 {
-    return app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant('3'));
+    return CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant('3')));
 }
 
 it('rebuilds ref_count from the pins of every owner type', function (): void {
@@ -112,7 +112,7 @@ it('never lets a pin outlive the bytes: a pin after the sweep is refused and a r
 
     app(VaulterDatabase::class)->transaction(function (): void {
         $again = pinGcBlob('swept then wanted');
-        app(BlobPins::class)->pin($again, CasTestHelpers::OWNER, 'late');
+        app(BlobPins::class)->pin($again->getKey(), CasTestHelpers::OWNER, 'late');
     });
 
     expect($blob->fresh()->status)->toBe(BlobStatus::Committed)

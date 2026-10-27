@@ -1070,6 +1070,7 @@
                         "packages/drive/tests/Http/InheritanceV1Test.php",
                         "packages/drive/tests/Http/ListQueryTest.php",
                         "packages/drive/tests/Http/NodeEtagRepresentationTest.php",
+                        "packages/drive/tests/Http/NodeSnapshotContributorTest.php",
                         "packages/drive/tests/Http/NodesV1Test.php",
                         "packages/drive/tests/Http/NotModifiedAfterAuthorizationTest.php",
                         "packages/drive/tests/Http/NotModifiedV1Test.php",

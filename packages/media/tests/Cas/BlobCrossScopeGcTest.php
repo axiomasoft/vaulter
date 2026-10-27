@@ -24,8 +24,8 @@ it('sweep одного scope не трогает байты другого scope
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $b = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, 'unused'));
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, 'unused')));
 
     // Two distinct physical objects despite identical bytes.
     expect($a->storage_key)->not->toBe($b->storage_key);

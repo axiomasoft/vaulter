@@ -5,8 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
+use LogicException;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Drive\Data\Snapshots\FileHeadSnapshot;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\File;
@@ -26,17 +33,36 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class FileRevisionAdded extends DriveEvent
 {
+    public NodeSnapshot $node;
+
+    private Node $nodeRow;
+
+    public FileHeadSnapshot $file;
+
+    public FileRevisionSnapshot $version;
+
+    private FileRevision $versionRow;
+
     #[Internal]
     public function __construct(
-        public Node $node,
-        public File $file,
-        public FileRevision $version,
+        Node $node,
+        File $file,
+        FileRevision $version,
         public int $versionNo,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->nodeRow = $node;
+        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $head = $this->node->file;
+        $this->file = $head !== null && $head->fileId === SnapshotValue::id($file->getKey())
+            ? $head
+            : throw new LogicException('[Vaulter] A file event names a node whose file head is not the file of the event.');
+        $this->versionRow = $version;
+        $this->version = app(FileRevisionSnapshotMapper::class)->map($version, $file);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -47,30 +73,30 @@ final readonly class FileRevisionAdded extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->node);
+        return self::nodeScope($this->nodeRow);
     }
 
     public function subject(): EventSubject
     {
-        return self::nodeSubject($this->node);
+        return self::nodeSubject($this->nodeRow);
     }
 
     public function sequence(): int
     {
-        return $this->node->sequence;
+        return $this->nodeRow->sequence;
     }
 
     public function journal(): JournalEffect
     {
-        return self::nodeUpsert($this->node, sequence: $this->node->sequence);
+        return self::nodeUpsert($this->nodeRow, sequence: $this->nodeRow->sequence);
     }
 
     public function data(): array
     {
         return [
-            'revision_id' => self::id($this->version->getKey()),
+            'revision_id' => self::id($this->versionRow->getKey()),
             'number' => $this->versionNo,
-            'size' => $this->version->size_bytes,
+            'size' => $this->versionRow->size_bytes,
         ];
     }
 
@@ -78,13 +104,13 @@ final readonly class FileRevisionAdded extends DriveEvent
     {
         return [
             'number' => $this->versionNo,
-            'version_id' => Identity::stringify($this->version->getKey()),
-            'size_bytes' => $this->version->size_bytes,
+            'version_id' => Identity::stringify($this->versionRow->getKey()),
+            'size_bytes' => $this->versionRow->size_bytes,
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->node);
+        return ActivityTarget::of($this->nodeRow);
     }
 }

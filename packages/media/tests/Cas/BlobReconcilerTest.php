@@ -23,7 +23,7 @@ beforeEach(function (): void {
 it('пересчитывает ref_count из числа рёбер', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('counted'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('counted'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     $v1 = CasTestHelpers::reference('a');
     $v2 = CasTestHelpers::reference('b');
@@ -44,7 +44,7 @@ it('пересчитывает ref_count из числа рёбер', function (
 it('сбрасывает ref_count к 0, когда все рёбра удалены', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('orphaned'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('orphaned'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 
@@ -60,7 +60,7 @@ it('сбрасывает ref_count к 0, когда все рёбра удале
 it('помечает dangling-строку: committed-блоб без объекта на диске', function (): void {
     $store = app(BlobReconciler::class);
 
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('vanished'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('vanished'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     // Simulate a botched delete: the row stays committed but the object is gone.
     Storage::disk('local')->delete($blob->storage_key);
@@ -71,7 +71,7 @@ it('помечает dangling-строку: committed-блоб без объек
 });
 
 it('читает строки блобов (берёт lock) раньше, чем считает пины', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('lock first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('lock first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     CasTestHelpers::pin($blob, CasTestHelpers::reference('a'));
 
     // sqlite takes no row lock, so the order of the two reads is what is checked here: the

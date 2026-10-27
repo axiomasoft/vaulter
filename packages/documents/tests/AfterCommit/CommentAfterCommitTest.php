@@ -99,7 +99,7 @@ it('outside any outer transaction one add raises exactly one event', function ()
 
     expect(count($seen))->toBe(1)
         ->and($seen[0])->toBeInstanceOf(CommentAdded::class)
-        ->and((string) $seen[0]->comment->getKey())->toBe($comment->id)
+        ->and($seen[0]->comment->id)->toBe($comment->id)
         ->and($seen[0]->eventId)->not->toBe('');
 });
 

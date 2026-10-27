@@ -36,7 +36,7 @@ it('records tus upload bytes and chunk duration on PATCH', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'chunk.bin',
         totalSizeBytes: 10,
         mimeType: 'application/octet-stream',
@@ -62,7 +62,7 @@ it('records tus upload conflict on offset mismatch', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'conflict.bin',
         totalSizeBytes: 20,
         mimeType: 'application/octet-stream',
@@ -91,7 +91,7 @@ it('records s3 upload bytes, chunk duration, and assemble metrics on complete', 
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
-        targetParent: $storage->rootNode()->first(),
+        targetParent: $storage->rootNode()->first()->getKey(),
         targetName: 'multi.bin',
         totalSizeBytes: strlen($whole),
         mimeType: 'application/octet-stream',

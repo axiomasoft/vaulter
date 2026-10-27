@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Orchestra\Testbench\TestCase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
@@ -138,4 +144,30 @@ it('refuses resumable uploads with 403 profile_restriction when the feature is o
     $this->actingAs(V1::user(2));
     $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), ['name' => 'off.bin', 'total_size_bytes' => 4])->assertNotFound();
     expect(DriveTestHelpers::model($this->drive->root())->exists)->toBeTrue();
+});
+
+it('answers the public upload API with snapshots: the session id is not the protocol handle and a stale snapshot never moves the session', function (): void {
+    $uploads = $this->drive->actingAs(V1::user(1))->uploads();
+    $session = $uploads->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetName: 'snap.bin', totalSizeBytes: 4));
+    $row = UploadSession::query()->where('upload_id', $session->uploadId)->sole();
+
+    expect($session)->toBeInstanceOf(UploadSessionSnapshot::class)
+        ->and($session->id)->toBe((string) $row->getKey())
+        ->and($session->id)->not->toBe($session->uploadId)
+        ->and([$session->driveId, $session->status, $session->receivedBytes, $session->totalSizeBytes])->toBe([$this->driveId, UploadStatus::Initiated, 0, 4])
+        ->and($session->tenantId)->toBe($row->tenant_id === null ? null : (string) $row->tenant_id);
+
+    $uploads->patch(session: $session, chunk: fopen('data://text/plain,abcd', 'rb'), offset: 0);
+    $node = $uploads->complete($session);
+    $again = $uploads->complete($session->id);
+
+    expect($node)->toBeInstanceOf(NodeSnapshot::class)
+        ->and($node->name)->toBe('snap.bin')
+        ->and($again->id)->toBe($node->id)
+        ->and($again->file?->revisionId)->toBe($node->file?->revisionId)
+        ->and($session->status)->toBe(UploadStatus::Initiated);
+
+    // The snapshot still says Initiated; abort() reads the committed session under its lock and leaves it committed.
+    $uploads->abort($session);
+    expect($row->fresh()?->status)->toBe(UploadStatus::Committed);
 });

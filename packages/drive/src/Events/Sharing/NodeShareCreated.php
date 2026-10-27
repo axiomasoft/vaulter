@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Events\Sharing;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Sharing\NodeShare;
@@ -24,14 +26,21 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class NodeShareCreated extends DriveEvent
 {
+    public ShareLinkSnapshot $share;
+
+    private NodeShare $shareRow;
+
     #[Internal]
     public function __construct(
-        public NodeShare $share,
+        NodeShare $share,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->shareRow = $share;
+        $this->share = app(AccessSnapshotMapper::class)->share($share);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -42,40 +51,40 @@ final readonly class NodeShareCreated extends DriveEvent
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->share->node);
+        return self::nodeScope($this->shareRow->node);
     }
 
     public function subject(): EventSubject
     {
-        return new EventSubject(type: 'share', id: $this->share->getKey());
+        return new EventSubject(type: 'share', id: $this->shareRow->getKey());
     }
 
     public function data(): array
     {
         return [
-            'node_id' => self::id($this->share->node_id),
-            'role' => $this->share->role_key,
-            'role_version' => $this->share->role_version,
-            'audience' => $this->share->audience->value,
-            'scope' => $this->share->scope->value,
-            'expires_at' => $this->share->expires_at?->clone()->utc()->format('Y-m-d\TH:i:s\Z'),
+            'node_id' => self::id($this->shareRow->node_id),
+            'role' => $this->shareRow->role_key,
+            'role_version' => $this->shareRow->role_version,
+            'audience' => $this->shareRow->audience->value,
+            'scope' => $this->shareRow->scope->value,
+            'expires_at' => $this->shareRow->expires_at?->clone()->utc()->format('Y-m-d\TH:i:s\Z'),
         ];
     }
 
     public function activityContext(): array
     {
         return [
-            'share_id' => Identity::stringify($this->share->getKey()),
-            'token_prefix' => $this->share->token_prefix,
-            'role' => $this->share->role_key,
-            'role_version' => $this->share->role_version,
-            'audience' => $this->share->audience->value,
-            'scope' => $this->share->scope->value,
+            'share_id' => Identity::stringify($this->shareRow->getKey()),
+            'token_prefix' => $this->shareRow->token_prefix,
+            'role' => $this->shareRow->role_key,
+            'role_version' => $this->shareRow->role_version,
+            'audience' => $this->shareRow->audience->value,
+            'scope' => $this->shareRow->scope->value,
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->share->node);
+        return ActivityTarget::of($this->shareRow->node);
     }
 }

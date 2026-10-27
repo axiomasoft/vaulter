@@ -11,7 +11,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
-use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
@@ -56,7 +56,6 @@ final class TusProtocolController
         private readonly HttpResourceResolver $resolver,
         private readonly HttpOperationContextFactory $contexts,
         private readonly NodeResponses $nodes,
-        private readonly NodeSnapshotMapper $snapshots,
         private readonly DriveConfig $driveConfig,
         private readonly RoutesConfig $routesConfig,
     ) {}
@@ -119,7 +118,7 @@ final class TusProtocolController
             ]);
         }
 
-        $node = $this->snapshots->map($uploads->complete($session), $drive->actor()->ref());
+        $node = $uploads->complete(UploadSessionSnapshot::fromModel($session));
 
         return $this->nodes->respond($drive, $node, 201)->withHeaders([
             'Tus-Resumable' => self::TUS_VERSION,
@@ -132,7 +131,7 @@ final class TusProtocolController
     {
         [$drive, $session] = $this->session($request, $upload);
         $this->assertTusResumableHeader($request);
-        UploadsOf::handle($drive)->abort($session);
+        UploadsOf::handle($drive)->abort(UploadSessionSnapshot::fromModel($session));
 
         return new Response(status: 204, headers: ['Tus-Resumable' => self::TUS_VERSION]);
     }
@@ -163,7 +162,7 @@ final class TusProtocolController
     {
         [, $session] = $this->session($request, $upload);
 
-        return new UploadSessionResource($session);
+        return new UploadSessionResource(UploadSessionSnapshot::fromModel($session));
     }
 
     /**
@@ -270,9 +269,9 @@ final class TusProtocolController
         }
     }
 
-    private function locationFor(Request $request, UploadSession $session): string
+    private function locationFor(Request $request, UploadSessionSnapshot $session): string
     {
-        return $request->getSchemeAndHttpHost().'/'.$this->routesConfig->versionedPrefix().'/uploads/'.$session->upload_id;
+        return $request->getSchemeAndHttpHost().'/'.$this->routesConfig->versionedPrefix().'/uploads/'.$session->uploadId;
     }
 
     /**

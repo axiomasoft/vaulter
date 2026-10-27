@@ -11,6 +11,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Drive\Events\DriveEvent;
@@ -28,14 +30,21 @@ use Vaulter\ValueObjects\Events\EventSubject;
 #[Api]
 final readonly class CommentResolved extends DriveEvent implements ShouldBroadcast
 {
+    public CommentSnapshot $comment;
+
+    private NodeComment $commentRow;
+
     #[Internal]
     public function __construct(
-        public NodeComment $comment,
+        NodeComment $comment,
         ActorRef $actor,
         string $correlationId,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
+        // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
+        $this->commentRow = $comment;
+        $this->comment = app(DocumentSnapshotMapper::class)->comment($comment);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
@@ -46,25 +55,25 @@ final readonly class CommentResolved extends DriveEvent implements ShouldBroadca
 
     public function scope(): EventScope
     {
-        return self::nodeScope($this->comment->node);
+        return self::nodeScope($this->commentRow->node);
     }
 
     public function subject(): EventSubject
     {
-        return new EventSubject(type: 'comment', id: $this->comment->getKey());
+        return new EventSubject(type: 'comment', id: $this->commentRow->getKey());
     }
 
     public function data(): array
     {
         return [
-            'comment_id' => self::id($this->comment->getKey()),
-            'node_id' => self::id($this->comment->node_id),
+            'comment_id' => self::id($this->commentRow->getKey()),
+            'node_id' => self::id($this->commentRow->node_id),
         ];
     }
 
     public function activityTarget(): ActivityTarget
     {
-        return ActivityTarget::of($this->comment->node);
+        return ActivityTarget::of($this->commentRow->node);
     }
 
     /**
@@ -73,7 +82,7 @@ final readonly class CommentResolved extends DriveEvent implements ShouldBroadca
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(app(DocumentsConfig::class)->channelPrefix().'.'.Identity::stringify($this->comment->node_id)),
+            new PrivateChannel(app(DocumentsConfig::class)->channelPrefix().'.'.Identity::stringify($this->commentRow->node_id)),
         ];
     }
 
@@ -88,10 +97,10 @@ final readonly class CommentResolved extends DriveEvent implements ShouldBroadca
     public function broadcastWith(): array
     {
         return [
-            'id' => $this->comment->getKey(),
-            'node_id' => $this->comment->node_id,
-            'resolved_at' => $this->comment->resolved_at,
-            'resolved_by' => $this->comment->resolved_by,
+            'id' => $this->commentRow->getKey(),
+            'node_id' => $this->commentRow->node_id,
+            'resolved_at' => $this->commentRow->resolved_at,
+            'resolved_by' => $this->commentRow->resolved_by,
         ];
     }
 }

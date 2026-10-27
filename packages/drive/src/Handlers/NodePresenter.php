@@ -10,7 +10,6 @@ use Vaulter\Drive\Contracts\Handlers\NodePresenter as NodePresenterContract;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Handlers\Capability;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 use Vaulter\Kernel;
 
@@ -32,7 +31,7 @@ final class NodePresenter implements NodePresenterContract
         private readonly Container $container,
     ) {}
 
-    public function present(Node|NodeSnapshot $node): NodePresentation
+    public function present(NodeSnapshot $node): NodePresentation
     {
         $presenters = $this->container->make(Kernel::class)->extensions();
         if (in_array($node->kind->value, $presenters->handlerKeys(KindPresenter::class), true)) {

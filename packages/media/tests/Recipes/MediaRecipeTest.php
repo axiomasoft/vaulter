@@ -24,9 +24,9 @@ it('keeps tenants apart under the documented dedup scope (troubleshooting guide)
     $store = app(BlobStore::class);
     $scope = (string) config('vaulter-media.dedup.scope');
 
-    $first = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload($scope, '1', '10'));
-    $again = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload($scope, '1', '11'));
-    $other = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload($scope, '2', '20'));
+    $first = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload($scope, '1', '10')));
+    $again = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload($scope, '1', '11')));
+    $other = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload($scope, '2', '20')));
 
     expect($scope)->toBe('tenant')
         ->and($again->getKey())->toBe($first->getKey())

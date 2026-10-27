@@ -31,7 +31,7 @@ it('presents a document node by its document type, not by a file handler', funct
         parent: DriveTestHelpers::model($drive->root()),
     ));
 
-    $descriptor = app(NodePresenter::class)->present($node);
+    $descriptor = app(NodePresenter::class)->present(app(NodeSnapshotMapper::class)->map($node->refresh()));
 
     expect($descriptor->id)->toBeNull()
         ->and($descriptor->documentType)->toBe('vaulter/rich-text')
@@ -43,13 +43,13 @@ it('presents a document node by its document type, not by a file handler', funct
 
     app(VaulterDatabase::class)->write(fn () => Document::query()
         ->where('node_id', $node->getKey())->update(['schema_version' => 99]));
-    $future = app(NodePresenter::class)->present($node);
+    $future = app(NodePresenter::class)->present(app(NodeSnapshotMapper::class)->map($node->refresh()));
     expect($future->capabilities->editable)->toBeFalse()
         ->and($future->capabilities->collaborative)->toBeFalse();
 
     app(VaulterDatabase::class)->write(fn () => Document::query()
         ->where('node_id', $node->getKey())->update(['type' => 'host/missing', 'schema_version' => 1]));
-    $missing = app(NodePresenter::class)->present($node);
+    $missing = app(NodePresenter::class)->present(app(NodeSnapshotMapper::class)->map($node->refresh()));
     expect($missing->typeAvailable)->toBeFalse()
         ->and($missing->capabilities->editable)->toBeFalse()
         ->and($missing->ui->key)->toBe('vaulter/unsupported');
@@ -104,7 +104,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
         'size_bytes' => 10,
     ])->save());
 
-    $descriptor = app(NodePresenter::class)->present($node);
+    $descriptor = app(NodePresenter::class)->present(app(NodeSnapshotMapper::class)->map($node->refresh()));
 
     expect($descriptor->id)->toBe('vaulter/preview')
         ->and($descriptor->documentType)->toBeNull()
@@ -127,7 +127,7 @@ it('presents docx, md and xlsx FILES as preview/download, never editable (V34)',
         'size_bytes' => 10,
     ])->save());
 
-    $presentation = app(NodePresenter::class)->present($node);
+    $presentation = app(NodePresenter::class)->present(app(NodeSnapshotMapper::class)->map($node->refresh()));
 
     expect($presentation->id)->toBeIn(['vaulter/preview', 'vaulter/download'])
         ->and($presentation->documentType)->toBeNull()

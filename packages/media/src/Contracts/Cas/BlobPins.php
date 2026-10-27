@@ -7,8 +7,8 @@ namespace Vaulter\Media\Contracts\Cas;
 use Closure;
 use Vaulter\Attributes\Api;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
-use Vaulter\Media\Models\Cas\Blob;
 
 /**
  * The pins of a blob (D23): the liveness truth the garbage collector reads. An owner — a module that keeps
@@ -24,17 +24,17 @@ use Vaulter\Media\Models\Cas\Blob;
 interface BlobPins
 {
     /**
-     * Pin $blob for the owner reference; a repeated pin of the same reference is a no-op. A committed blob is
-     * pinned; a tombstoned one only while its bytes still exist (it is then committed again); a deleting or
-     * deleted one never.
+     * Pin $blob (a snapshot or its key) for the owner reference; a repeated pin of the same reference is a no-op.
+     * The current row is locked and read by id, whatever the snapshot says: a committed blob is pinned; a
+     * tombstoned one only while its bytes still exist (it is then committed again); a deleting or deleted one never.
      *
      * @throws BlobUnavailableException when the blob's bytes are gone: commit them again (BlobStore::commitStaged
      *                                  promotes the bytes and resurrects the row) and pin the returned blob
      */
-    public function pin(Blob $blob, string $ownerType, string $referenceKey): void;
+    public function pin(BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void;
 
-    /** Remove the owner reference from $blob (a model or its key); a missing pin is a no-op. */
-    public function unpin(Blob|int|string $blob, string $ownerType, string $referenceKey): void;
+    /** Remove the owner reference from $blob (a snapshot or its key); a missing pin is a no-op. */
+    public function unpin(BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void;
 
     /**
      * Release the pins of an owner type — only for the owner's own purge or rollback, never for another

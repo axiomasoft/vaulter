@@ -31,7 +31,7 @@ beforeEach(function (): void {
 
 function pinStatusBlob(string $bytes): Blob
 {
-    return app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant('7'));
+    return CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant('7')));
 }
 
 /** @return list<object> */
@@ -110,6 +110,24 @@ it('decides on the row read under the lock, not on the caller\'s stale model', f
         ->and(fn () => CasTestHelpers::pin($stale, 'stale'))->toThrow(BlobUnavailableException::class);
 });
 
+it('pins by a commit snapshot or its id, and a stale snapshot never outranks the current row', function (): void {
+    $snapshot = app(BlobStore::class)->commit(CasTestHelpers::streamFor('stale snapshot'), BlobScope::tenant('7'));
+    $row = CasTestHelpers::row($snapshot);
+
+    app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin($snapshot, CasTestHelpers::OWNER, 'by-snapshot'));
+    app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin($snapshot->id, CasTestHelpers::OWNER, 'by-id'));
+    expect(CasTestHelpers::pins($row))->toBe(2);
+
+    app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->unpin($snapshot, CasTestHelpers::OWNER, 'by-snapshot'));
+    app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->unpin($snapshot->id, CasTestHelpers::OWNER, 'by-id'));
+    $row->forceFill(['status' => BlobStatus::Deleting])->save();
+
+    expect($snapshot->status)->toBe(BlobStatus::Committed)
+        ->and(fn () => app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin($snapshot, CasTestHelpers::OWNER, 'stale')))->toThrow(BlobUnavailableException::class)
+        ->and(CasTestHelpers::pins($row))->toBe(0)
+        ->and($row->fresh()?->status)->toBe(BlobStatus::Deleting);
+});
+
 it('answers a refusal as the never-cached problem blob_unavailable without leaking the storage key', function (): void {
     $blob = pinStatusBlob('problem');
     $blob->forceFill(['status' => BlobStatus::Deleted])->save();
@@ -136,15 +154,15 @@ it('recovers a refused pin by committing the bytes again: the row is resurrected
 
     // The owner still holds the bytes: commit them again in the same scope and pin what comes back.
     app(VaulterDatabase::class)->transaction(function () use ($blob): void {
-        $again = app(BlobStore::class)->commit(CasTestHelpers::streamFor('recover me'), BlobScope::tenant('7'));
+        $again = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('recover me'), BlobScope::tenant('7')));
         expect((string) $again->getKey())->toBe((string) $blob->getKey());
-        app(BlobPins::class)->pin($again, CasTestHelpers::OWNER, 'owner-row');
+        app(BlobPins::class)->pin($again->getKey(), CasTestHelpers::OWNER, 'owner-row');
     });
 
     expect($blob->fresh()->status)->toBe(BlobStatus::Committed)
         ->and(CasTestHelpers::pins($blob))->toBe(1)
         ->and(app(ContentStore::class)->exists($blob->storage_key, $blob->disk))->toBeTrue()
-        ->and(stream_get_contents(app(BlobStore::class)->read($blob->fresh())))->toBe('recover me');
+        ->and(stream_get_contents(app(BlobStore::class)->read($blob->fresh()->getKey())))->toBe('recover me');
 })->with([
     'tombstoned, object gone (rolled-back sweep)' => [BlobStatus::Tombstoned, true],
     'deleting, object gone' => [BlobStatus::Deleting, true],

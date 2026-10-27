@@ -115,7 +115,7 @@ it('aborts open upload sessions of the drive', function (): void {
     $drive = DriveTestHelpers::drive();
     $model = $drive->model();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($model, 'test fixture'), data: new InitiateUploadInput(
-        protocol: UploadProtocol::Tus, targetParent: $model->rootNode()->first(), targetName: 'big.bin', totalSizeBytes: 10, mimeType: 'application/octet-stream',
+        protocol: UploadProtocol::Tus, targetParent: $model->rootNode()->first()->getKey(), targetName: 'big.bin', totalSizeBytes: 10, mimeType: 'application/octet-stream',
     ));
     $drive->delete();
 

@@ -21,7 +21,7 @@ beforeEach(function (): void {
 it('vaulter:blobs:gc прогоняет обе фазы', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('via command'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('via command'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     // Already tombstoned past grace → the sweep phase removes it.
     $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subDay()])->save();
 
@@ -34,7 +34,7 @@ it('vaulter:blobs:gc прогоняет обе фазы', function (): void {
 it('vaulter:blobs:gc --pending подметает упавший staging', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     // A crashed staging: pending, older than the orphan grace (24h by default, P6.8), no edge.
     $blob->forceFill(['status' => BlobStatus::Pending, 'first_seen_at' => now()->subDays(2)])->save();
 
@@ -47,7 +47,7 @@ it('vaulter:blobs:gc --pending подметает упавший staging', funct
 it('vaulter:blobs:reconcile корректирует ref_count и сообщает', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('reconcile cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('reconcile cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 
@@ -58,7 +58,7 @@ it('vaulter:blobs:reconcile корректирует ref_count и сообщае
 });
 
 it('vaulter:blobs:reconcile падает, когда есть dangling-строка', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     Storage::disk('local')->delete($blob->storage_key);
 

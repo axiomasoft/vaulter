@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -62,9 +64,9 @@ it('SEC-R19-retry completes after one concurrency failure by retrying the outerm
     $calls = 0;
     flakyBlobStore(failures: 1, calls: $calls);
 
-    $node = retryUploadOperations($session)->complete($session);
+    $node = retryUploadOperations($session)->complete(UploadSessionSnapshot::fromModel($session));
 
-    expect($calls)->toBe(2)->and($node->exists)->toBeTrue()
+    expect($calls)->toBe(2)->and($node)->toBeInstanceOf(NodeSnapshot::class)
         ->and($session->refresh()->status)->toBe(UploadStatus::Committed)
         ->and(FileRevision::query()->count())->toBe(1)
         ->and(app(StagedUpload::class)->size($session))->toBe(0);
@@ -77,7 +79,7 @@ it('SEC-R19-retry-exhausted maps the persistent failure to a retryable problem a
 
     $caught = null;
     try {
-        retryUploadOperations($session)->complete($session);
+        retryUploadOperations($session)->complete(UploadSessionSnapshot::fromModel($session));
     } catch (ConcurrentUpdateException $exception) {
         $caught = $exception;
     }
@@ -104,6 +106,6 @@ it('does not retry a non-concurrency failure', function (): void {
     }
     app()->instance(BlobStore::class, $store);
 
-    expect(fn () => retryUploadOperations($session)->complete($session))->toThrow(RuntimeException::class, 'disk full')
+    expect(fn () => retryUploadOperations($session)->complete(UploadSessionSnapshot::fromModel($session)))->toThrow(RuntimeException::class, 'disk full')
         ->and($calls)->toBe(1);
 });

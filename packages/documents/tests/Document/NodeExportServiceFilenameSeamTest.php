@@ -9,7 +9,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
@@ -40,8 +40,13 @@ it('binds ExportFilenameResolver to the default scheme', function (): void {
 it('lets a host rebind ExportFilenameResolver to override the export filename scheme', function (): void {
     $custom = new class implements ExportFilenameResolver
     {
-        public function resolve(Node $node, string $extension): string
+        /** @var list<class-string> */
+        public array $seen = [];
+
+        public function resolve(NodeSnapshot $node, string $extension): string
         {
+            $this->seen[] = $node::class;
+
             return 'custom-'.$node->name.'.'.$extension;
         }
     };
@@ -53,7 +58,9 @@ it('lets a host rebind ExportFilenameResolver to override the export filename sc
 
     $export = app(ExportDocumentAction::class)->execute(DriveContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
-    expect($export->filename)->toBe('custom-Report.html');
+    // The custom resolver names the file after the authorized node's immutable facts, never its row.
+    expect($export->filename)->toBe('custom-Report.html')
+        ->and($custom->seen)->toBe([NodeSnapshot::class]);
 });
 
 it('keeps ExportDocumentAction final — the seam is DI-based, not inheritance-based', function (): void {

@@ -13,6 +13,7 @@ use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Documents\ValueObjects\DocumentExport;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
@@ -37,6 +38,7 @@ final readonly class ExportDocumentAction
         private ExportFilenameResolver $filenames,
         private MetricsRecorder $metrics,
         private PendingStateGuard $pending,
+        private NodeSnapshotMapper $nodes,
     ) {}
 
     /**
@@ -74,7 +76,8 @@ final readonly class ExportDocumentAction
 
                 return new DocumentExport(
                     bytes: $exporter->export($read->content, $type),
-                    filename: $this->filenames->resolve($data->node, $exporter->extension()),
+                    // The authorized node, seen once as the facts a custom resolver names the file after.
+                    filename: $this->filenames->resolve($this->nodes->facts($data->node), $exporter->extension()),
                     mimeType: $exporter->mimeType(),
                     format: $exporter->format(),
                     // Checkpoints carry no epoch of their own: this is the document's epoch at export time (see DocumentExport).

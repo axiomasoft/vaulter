@@ -11,10 +11,12 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\Support\Identity;
 
 /**
  * Shared builders for the CAS slice tests (M1b): pins of an opaque test owner (D23 —
@@ -35,16 +37,22 @@ final class CasTestHelpers
         return $name.'#'.$sequence;
     }
 
+    /** The current row a commit snapshot describes: these tests go on with the row (GC, reconcile, scrub states). */
+    public static function row(BlobSnapshot $blob): Blob
+    {
+        return Blob::query()->findOrFail($blob->id);
+    }
+
     /** Pin $blob through the pin protocol (BlobPins), in a transaction of its own as an owner would. */
     public static function pin(Blob $blob, string $reference = 'ref', string $ownerType = self::OWNER): void
     {
-        app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin($blob, $ownerType, $reference));
+        app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin(Identity::stringify($blob->getKey()), $ownerType, $reference));
     }
 
     /** Remove a pin through the protocol. */
     public static function unpin(Blob $blob, string $reference = 'ref', string $ownerType = self::OWNER): void
     {
-        app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->unpin($blob, $ownerType, $reference));
+        app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->unpin(Identity::stringify($blob->getKey()), $ownerType, $reference));
     }
 
     /**

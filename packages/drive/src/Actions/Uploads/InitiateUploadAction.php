@@ -12,6 +12,7 @@ use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\NotAFileException;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
@@ -51,10 +52,18 @@ final readonly class InitiateUploadAction
             ? NodeName::normalize($input->targetName ?? $node->name)
             : $this->policy->name(drive: $context->drive, name: $input->targetName ?? 'upload.bin');
 
+        // The located rows were authorized above; the session records their keys.
         return $this->manager->initiate(context: $context, data: new InitiateUploadInput(
-            protocol: $input->protocol, targetParent: $parent, targetName: $name,
-            targetNode: $node, expectedSha256: $input->expectedSha256, totalSizeBytes: $input->totalSizeBytes,
+            protocol: $input->protocol, targetParent: $parent === null ? null : self::key($parent), targetName: $name,
+            targetNode: $node === null ? null : self::key($node), expectedSha256: $input->expectedSha256, totalSizeBytes: $input->totalSizeBytes,
             mimeType: $input->mimeType, metadata: $input->metadata, expectedSequence: $input->expectedSequence,
         ));
+    }
+
+    private static function key(Node $node): int|string
+    {
+        $key = $node->getRawOriginal($node->getKeyName());
+
+        return is_int($key) || is_string($key) ? $key : throw NodeNotFoundException::forId('node');
     }
 }

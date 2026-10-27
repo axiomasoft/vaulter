@@ -8,7 +8,6 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 
 /**
@@ -21,5 +20,5 @@ interface KindPresenter
 {
     public function kind(): NodeKind;
 
-    public function present(Node|NodeSnapshot $node): NodePresentation;
+    public function present(NodeSnapshot $node): NodePresentation;
 }

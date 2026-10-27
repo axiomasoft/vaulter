@@ -55,7 +55,7 @@ it('creates a kind=document node with its aggregate and checkpoint #1', function
         ->and($first->status)->toBe('committed')
         ->and($first->content)->toBe($document->content);
 
-    Event::assertDispatched(DocumentCreated::class, fn (DocumentCreated $event): bool => $event->version->is($first));
+    Event::assertDispatched(DocumentCreated::class, fn (DocumentCreated $event): bool => $event->version->id === (string) $first->getKey());
 });
 
 it('round-trips the content through TipTapRenderer', function (): void {
