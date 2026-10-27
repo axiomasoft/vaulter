@@ -55,6 +55,7 @@ function smdocMatrix(): array
 
     return [
         'documents.store' => $row(),
+        'documents.collaboration.session' => array_replace($row($noReceipt('natural')), ['R4' => 'View suffices for a read session; editor and reader modes are checked by CollaborationSessionV1Test']),
         'documents.content.update' => $row($noReceipt('conditional')),
         'documents.revisions.store' => $row(),
         'documents.revisions.restore' => $row(),
@@ -112,6 +113,7 @@ const SMDOC_GHOST = ['{drive}' => 'ghost-drive', '{doc}' => 'ghost-doc', '{rev}'
 function smdocRoute(string $route): array
 {
     return match ($route) {
+        'documents.collaboration.session' => ['POST', 'documents/{doc}/collaboration/session', []],
         'documents.store' => ['POST', 'drives/{drive}/documents', ['name' => 'Matrix new']],
         'documents.content.update' => ['PUT', 'documents/{doc}/content', ['content' => Docs::doc('changed')]],
         'documents.revisions.store' => ['POST', 'documents/{doc}/revisions', ['label' => 'v2']],
@@ -308,7 +310,9 @@ it('covers every mutating route of the package, with a reason for each row that 
         }
         // R1–R4 and R6 apply to every route; R9 to every route that stores a receipt; R5 only to share routes, R7/R8 only to moves.
         foreach (['R1', 'R2', 'R3', 'R4', 'R6'] as $row) {
-            expect($rows[$row])->toBeNull($route.' '.$row.' applies to every route');
+            if ($route !== 'documents.collaboration.session' || $row !== 'R4') {
+                expect($rows[$row])->toBeNull($route.' '.$row.' applies to every route');
+            }
         }
         expect($rows['R9'] === null)->toBe(in_array($route, $receipts, true), $route.' R9 is for the receipt routes');
     }

@@ -339,3 +339,16 @@ describe('createVaulterClient — API version guard', () => {
     await expect(client.drives.get('7')).rejects.toMatchObject({ code: 'api_version_mismatch' })
   })
 })
+
+
+it('preserves a protocol-neutral session and sends the supported schema without importing an adapter', async () => {
+  const session = {
+    protocol: 'acme-ot', version: 'acme-ot/1', endpoint: null, token: 'opaque', expires_at: 1300,
+    mode: 'read', node_id: '42', generation: 7, schema_version: 1, options: { channel: 'board' },
+  }
+  const fetchMock = fetchSequence(() => jsonResponse({ data: session }, 201))
+  const client = createVaulterClient({ fetch: fetchMock })
+  expect(await client.documents.collaborationSession('42', { schemaVersion: 0 })).toEqual(session)
+  expect(call(fetchMock).url).toBe('/api/vaulter/v1/documents/42/collaboration/session')
+  expect(JSON.parse(call(fetchMock).body as string)).toEqual({ schema_version: 0 })
+})

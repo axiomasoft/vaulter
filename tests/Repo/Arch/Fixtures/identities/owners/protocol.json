@@ -626,6 +626,26 @@
             "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}} | {type: redelivered, redelivered: {id, endpoint_id}}; a deletion keeps the id and the scope the right was proven in, never the endpoint; a redelivery keeps the ids of the delivery and its endpoint, never the payload",
             "owner": "webhooks",
             "why": "D25, D47, ID2, ID5: the stored receipt of webhooks.endpoints.register, update, deactivate, rotate_secret, delete and redeliver; a replay is authorized by the manage ability now, on the recorded scope (the tenant) when the endpoint is gone"
+        },
+        {
+            "id": "format:collaboration-session",
+            "owner": "documents",
+            "format": "201 no-store data envelope: protocol, version, endpoint string|null, opaque token, expires_at Unix seconds, mode read|write, node_id, generation, schema_version, options object<string,string|integer|boolean|null>. Session issued metric vaulter_collab_session_issued_total is documents-owned with protocol and ability labels.",
+            "source": {
+                "file": "packages/documents/src/Http/Resources/CollaborationSessionResource.php",
+                "symbol": "Vaulter\\Documents\\Http\\Resources\\CollaborationSessionResource::toArray"
+            },
+            "why": "PLAN4-D5 P3.3 neutral session wire and public ownership; provider-specific options do not enter the public client API."
+        },
+        {
+            "id": "format:collaboration-session-aggregate",
+            "owner": "documents",
+            "format": "Operation collaboration.sessions.create uses documents.collaboration_session aggregate with Natural concurrency and Natural idempotency; route documents.collaboration.session.",
+            "source": {
+                "file": "packages/documents/src/Operations/DocumentsOperationPolicies.php",
+                "symbol": "Vaulter\\Documents\\Operations\\DocumentsOperationPolicies::policies"
+            },
+            "why": "PLAN4-D38: aggregate changes from historical collaboration.session to documents.collaboration_session to match the declaring module; operation key, route and wire remain stable."
         }
     ]
 }

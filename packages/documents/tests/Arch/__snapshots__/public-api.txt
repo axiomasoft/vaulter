@@ -44,6 +44,7 @@ Vaulter\Documents\Contracts\UpgradesSchema
 Vaulter\Documents\Configuration\DocumentsConfig
   channelPrefix(): string
   checkpointIntervalSeconds(): int
+  collaborationSessionTtl(): int
   commentsEnabled(): bool
   defaultType(): string
   exporters(): array
@@ -206,6 +207,7 @@ Vaulter\Documents\DocumentsManager
   types(): \Vaulter\Documents\Types\DocumentTypeRegistry
 
 Vaulter\Documents\Operations\DocumentOperations
+  collaborationSession(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   content(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Drive\Data\CreateFolderOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
   export(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport

@@ -5909,6 +5909,27 @@
             "change": "added",
             "decision": "PLAN4-D16",
             "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
+        },
+        {
+            "kind": "http",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "change": "redefined",
+            "decision": "PLAN4-D5",
+            "reason": "P3.3 moves session ownership/controller/request/resource to documents; route identity and 201 preserved, neutral protocol/version/endpoint/token/expires_at/mode/node_id/generation/schema_version/options wire."
+        },
+        {
+            "kind": "protocol",
+            "id": "format:collaboration-session",
+            "change": "added",
+            "decision": "PLAN4-D5",
+            "reason": "P3.3 neutral session response shape, documents ownership and protocol metric label."
+        },
+        {
+            "kind": "protocol",
+            "id": "format:collaboration-session-aggregate",
+            "change": "added",
+            "decision": "PLAN4-D38",
+            "reason": "P3.3 preserves collaboration.sessions.create and documents.collaboration.session; internal aggregate moves from collaboration.session to documents.collaboration_session to satisfy the declaring module ownership invariant."
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

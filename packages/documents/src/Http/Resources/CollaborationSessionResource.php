@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Collaboration\Http\Resources;
+namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 
 /**
  * What a client needs to join a document's room: the room of this generation, its mode
- * (`rw` or `ro`) and the short-lived token the hub checks again on every call. The
+ * (`write` or `read`) and the short-lived token the hub checks again on every call. The
  * token is shown once, so the response is never stored.
  */
 #[Internal]
@@ -32,10 +31,6 @@ final class CollaborationSessionResource extends JsonResource
         /** @var CollaborationSession $session */
         $session = $this->resource;
 
-        return ['driver' => $session->protocol === 'yjs' ? 'hocuspocus' : $session->protocol, 'room' => $session->options['room'] ?? null,
-            'node_id' => $session->nodeId, 'drive_id' => $session->options['drive_id'] ?? null,
-            'epoch' => $session->generation, 'schema_version' => $session->schemaVersion,
-            'mode' => $session->mode === CollaborationMode::Read ? 'ro' : 'rw',
-            'token' => $session->token, 'url' => $session->endpoint];
+        return [...$session->toArray(), 'options' => (object) $session->options];
     }
 }

@@ -1,3 +1,4 @@
+import { validateCollaborationSession } from './session'
 import { ref, type Ref } from 'vue'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import type { Doc as YDoc } from 'yjs'
@@ -82,7 +83,7 @@ export interface CollaborationTransportOptions {
 export interface CollaborationTransportHandle {
   /** The session this handle was built from. */
   session: CollaborationSession
-  /** Whether writes are disallowed (`mode: 'ro'`). */
+  /** Whether writes are disallowed (`mode: 'read'`). */
   readOnly: boolean
   /** Reactive: a live first-handshake/connection flag. */
   connected: Ref<boolean>
@@ -198,10 +199,11 @@ export function openCollaborationTransport(
   session: CollaborationSession,
   options: CollaborationTransportOptions,
 ): CollaborationTransportHandle {
+  const validated = validateCollaborationSession(session)
   const factory = options.createHocuspocusProvider ?? defaultHocuspocusProvider
   const handle = factory({
-    url: session.url ?? '',
-    name: session.room,
+    url: validated.endpoint,
+    name: validated.room,
     token: session.token,
     document: options.doc,
   })
@@ -248,7 +250,7 @@ export function openCollaborationTransport(
 
   return {
     session,
-    readOnly: session.mode !== 'rw',
+    readOnly: session.mode === 'read',
     connected,
     collaborators,
     provider: handle,

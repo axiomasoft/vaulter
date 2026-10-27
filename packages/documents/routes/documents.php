@@ -8,6 +8,7 @@ use Vaulter\Documents\Http\Controllers\Comments\AddCommentController;
 use Vaulter\Documents\Http\Controllers\Comments\DeleteCommentController;
 use Vaulter\Documents\Http\Controllers\Comments\ListCommentsController;
 use Vaulter\Documents\Http\Controllers\Comments\ResolveCommentController;
+use Vaulter\Documents\Http\Controllers\Documents\CreateCollaborationSessionController;
 use Vaulter\Documents\Http\Controllers\Documents\CreateDocumentController;
 use Vaulter\Documents\Http\Controllers\Documents\ExportDocumentController;
 use Vaulter\Documents\Http\Controllers\Documents\ShowDocumentContentController;
@@ -27,8 +28,7 @@ use Vaulter\Http\Middleware\ReadIdempotencyKey;
 | ids: each controller resolves the drive through HttpResourceResolver (tenant-scoped)
 | and calls the operations, which authorize. The routes are always registered while the
 | module is active; a disabled feature (comments) is refused by the operations, so
-| `route:cache` never freezes a feature flag. The realtime session and the hub endpoints are
-| the collaboration package's routes.
+| `route:cache` never freezes a feature flag. Session issuance is protocol-neutral.
 |
 | Operations on the content of a document live under documents/{node}; the operations
 | every node kind shares (comments) live under nodes/{node}, so this package never
@@ -43,6 +43,7 @@ Route::prefix($routes->versionedPrefix())
     ->middleware($routes->authenticatedMiddleware())
     ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'comment' => $id, 'format' => '[A-Za-z0-9._-]+'])
     ->group(static function (): void {
+        Route::post('documents/{node}/collaboration/session', CreateCollaborationSessionController::class)->name('documents.collaboration.session');
         Route::post('drives/{drive}/documents', CreateDocumentController::class)->name('documents.store')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('documents/{node}/content', ShowDocumentContentController::class)->name('documents.content.show');

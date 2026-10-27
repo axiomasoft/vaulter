@@ -23,11 +23,11 @@ it('issues a read-write session to an editor and never lets it be cached', funct
 
     $response = $this->postJson(Docs::url('documents/'.$node->getKey().'/collaboration/session'))
         ->assertCreated()
-        ->assertJsonPath('data.mode', 'rw')
-        ->assertJsonPath('data.epoch', 0)
+        ->assertJsonPath('data.mode', 'write')
+        ->assertJsonPath('data.generation', 0)
         ->assertJsonPath('data.node_id', (string) $node->getKey())
-        ->assertJsonPath('data.room', Hub::room($node))
-        ->assertJsonStructure(['data' => ['driver', 'room', 'node_id', 'drive_id', 'epoch', 'schema_version', 'mode', 'token', 'url']]);
+        ->assertJsonPath('data.options.room', Hub::room($node))
+        ->assertJsonStructure(['data' => ['protocol', 'version', 'options', 'node_id', 'generation', 'schema_version', 'mode', 'token', 'endpoint', 'expires_at']]);
 
     expect($response->headers->get('Cache-Control'))->toContain('no-store');
 });
@@ -35,12 +35,12 @@ it('issues a read-write session to an editor and never lets it be cached', funct
 it('issues a read-only session to a reader and to an editor whose client speaks another schema', function (): void {
     $node = Hub::document(level: RoleRegistry::READER, actorId: 1);
     $this->actingAs(AccessTestHelpers::user(1));
-    $this->postJson(Docs::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated()->assertJsonPath('data.mode', 'ro');
+    $this->postJson(Docs::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated()->assertJsonPath('data.mode', 'read');
 
     $editor = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
     $this->postJson(Docs::url('documents/'.$editor->getKey().'/collaboration/session'), ['schema_version' => 99])
         ->assertCreated()
-        ->assertJsonPath('data.mode', 'ro');
+        ->assertJsonPath('data.mode', 'read');
     $this->postJson(Docs::url('documents/'.$editor->getKey().'/collaboration/session'), ['schema_version' => 'x'])
         ->assertStatus(422)
         ->assertJsonValidationErrors('schema_version');

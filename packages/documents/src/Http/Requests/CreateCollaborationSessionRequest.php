@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Collaboration\Http\Requests;
+namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;

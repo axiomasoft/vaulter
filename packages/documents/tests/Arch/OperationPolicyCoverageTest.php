@@ -51,7 +51,8 @@ function opcRoutes(): array
 /** @return list<string> */
 function opcOperationNames(): array
 {
-    $names = [];
+    // Session issuance has no write/receipt and names its route in the policy.
+    $names = ['collaboration.sessions.create'];
     foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src')->name('*.php') as $file) {
         $source = $file->getContents();
         if (preg_match_all("/new OperationSpec\\('([a-z_.]+)'(?!\\s*\\.)/", $source, $literal) > 0) {
@@ -78,6 +79,9 @@ it('(a) declares every operation name of the documents sources in the catalog', 
     expect($names)->toContain('documents.documents.create', 'documents.documents.update', 'documents.documents.update_content', 'documents.documents.snapshot', 'documents.documents.restore', 'documents.comments.add', 'documents.comments.resolve', 'documents.comments.delete');
     $missing = array_values(array_filter($names, static fn (string $name): bool => $catalog->policy($name) === null || $catalog->module($name) !== 'documents'));
     expect($missing)->toBe([])
+        ->and($catalog->module('collaboration.sessions.create'))->toBe('documents')
+        ->and($catalog->policy('collaboration.sessions.create')->aggregate)->toBe('documents.collaboration_session')
+        ->and($catalog->policy('collaboration.sessions.create')->routes)->toBe(['documents.collaboration.session'])
         // The catalog lists no operation the sources do not run.
         ->and(array_values(array_diff(array_keys(opcPolicies()), $names)))->toBe([]);
 });

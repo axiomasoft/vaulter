@@ -805,6 +805,13 @@
             "id": "route:vaulter.v1.collaboration.hub.append",
             "kind": "http",
             "reason": "P5.10: the ack carries permissions_stale: true when the token predates a change of its drive's or the global permission version; the rights are checked on every append regardless"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D5",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "kind": "http",
+            "reason": "P3.3 moves session ownership/controller/request/resource to documents; route identity and 201 preserved, neutral protocol/version/endpoint/token/expires_at/mode/node_id/generation/schema_version/options wire."
         }
     ],
     "flags": {
@@ -1358,15 +1365,15 @@
             "uri": "api/vaulter/v1/nodes/{node}/comments"
         },
         {
-            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
-            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
-            "default_registered": false,
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateCollaborationSessionController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateCollaborationSessionController",
+            "default_registered": true,
             "id": "route:vaulter.v1.documents.collaboration.session",
             "methods": [
                 "POST"
             ],
             "middleware": [
-                "vaulter.module:collaboration",
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1379,13 +1386,11 @@
                 "operation_id": "documents.collaboration.session",
                 "path": "/documents/{node}/collaboration/session"
             },
-            "owner": "collaboration",
-            "requires": [
-                "vaulter.modules.collaboration"
-            ],
+            "owner": "documents",
+            "requires": [],
             "source": {
-                "file": "packages/collaboration/src/Http/Controllers/Collaboration/CreateCollaborationSessionController.php",
-                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController"
+                "file": "packages/documents/src/Http/Controllers/Documents/CreateCollaborationSessionController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateCollaborationSessionController"
             },
             "uri": "api/vaulter/v1/documents/{node}/collaboration/session"
         },

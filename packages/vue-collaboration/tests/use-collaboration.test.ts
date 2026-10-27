@@ -40,7 +40,7 @@ describe('openCollaborationTransport', () => {
 
   it('is read-only for a ro session', () => {
     const factory = vi.fn().mockReturnValue({ awareness: null, destroy: vi.fn() })
-    const handle = openCollaborationTransport(hocuspocusSession({ mode: 'ro' }), {
+    const handle = openCollaborationTransport(hocuspocusSession({ mode: 'read' }), {
       doc: new YDoc(), createHocuspocusProvider: factory,
     })
     expect(handle.readOnly).toBe(true)
@@ -78,7 +78,7 @@ describe('useCollaboration', () => {
     expect(token).toHaveBeenCalledWith('42', undefined)
     expect(provider).toHaveBeenCalledOnce()
     expect(provider.mock.calls[0][0].document).toBe(vm.doc.value)
-    expect(vm.session.value).toMatchObject({ room: 'vaulter.documents.7.42.0', epoch: 0 })
+    expect(vm.session.value).toMatchObject({ options: { room: 'vaulter.documents.7.42.0', drive_id: '7' }, generation: 0 })
     expect(vm.readOnly.value).toBe(false)
     expect(vm.connected.value).toBe(true)
 
@@ -88,7 +88,7 @@ describe('useCollaboration', () => {
   })
 
   it('is read-only for a ro session', async () => {
-    const token = vi.fn().mockResolvedValue(hocuspocusSession({ mode: 'ro' }))
+    const token = vi.fn().mockResolvedValue(hocuspocusSession({ mode: 'read' }))
     const provider = vi.fn().mockReturnValue({ awareness: null, destroy: vi.fn() })
 
     const vm = collaboration(token, { providers: { createHocuspocusProvider: provider } })
@@ -102,7 +102,7 @@ describe('useCollaboration', () => {
     const second = fakeProvider()
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
-      .mockResolvedValueOnce(hocuspocusSession({ epoch: 1, room: 'vaulter.documents.7.42.1', token: 'jwt-2' }))
+      .mockResolvedValueOnce(hocuspocusSession({ generation: 1, options: { room: 'vaulter.documents.7.42.1', drive_id: '7' }, token: 'jwt-2' }))
     const provider = vi.fn().mockReturnValueOnce(first.handle).mockReturnValueOnce(second.handle)
 
     const vm = collaboration(token, { providers: { createHocuspocusProvider: provider } })
@@ -120,7 +120,7 @@ describe('useCollaboration', () => {
     expect(vm.doc.value.getText('t').toString()).toBe('')
     expect(provider.mock.calls[1][0]).toMatchObject({ name: 'vaulter.documents.7.42.1', token: 'jwt-2' })
     expect(provider.mock.calls[1][0].document).toBe(vm.doc.value)
-    expect(vm.session.value?.epoch).toBe(1)
+    expect(vm.session.value?.generation).toBe(1)
   })
 
   it('on token expiry renews the session and keeps the Y.Doc of the same room', async () => {
@@ -147,7 +147,7 @@ describe('useCollaboration', () => {
     const second = fakeProvider()
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
-      .mockResolvedValueOnce(hocuspocusSession({ mode: 'ro', token: 'jwt-ro' }))
+      .mockResolvedValueOnce(hocuspocusSession({ mode: 'read', token: 'jwt-ro' }))
     const provider = vi.fn().mockReturnValueOnce(first.handle).mockReturnValueOnce(second.handle)
 
     const vm = collaboration(token, { providers: { createHocuspocusProvider: provider } })
@@ -207,7 +207,7 @@ describe('useCollaboration', () => {
     const second = fakeProvider()
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
-      .mockResolvedValueOnce(hocuspocusSession({ epoch: 1, room: 'vaulter.documents.7.42.1' }))
+      .mockResolvedValueOnce(hocuspocusSession({ generation: 1, options: { room: 'vaulter.documents.7.42.1', drive_id: '7' } }))
     const provider = vi.fn().mockReturnValueOnce(first.handle).mockReturnValueOnce(second.handle)
     let docAtCallback: YDoc | null = null
     let holder: { doc: { value: YDoc } } | null = null
@@ -234,7 +234,7 @@ describe('useCollaboration', () => {
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
       .mockReturnValueOnce(new Promise<CollaborationSession>((resolve) => { releaseReopen = resolve }))
-      .mockResolvedValueOnce(hocuspocusSession({ room: 'vaulter.documents.7.42.2', epoch: 2 }))
+      .mockResolvedValueOnce(hocuspocusSession({ options: { room: 'vaulter.documents.7.42.2', drive_id: '7' }, generation: 2 }))
     const provider = vi.fn()
       .mockReturnValueOnce(first.handle)
       .mockReturnValueOnce(viaConnect.handle)
@@ -246,14 +246,14 @@ describe('useCollaboration', () => {
     first.end('epoch_changed')          // the reopen starts and waits for its session…
     await flush()
     await vm.connect()                  // …while the host connects again and wins
-    releaseReopen(hocuspocusSession({ room: 'vaulter.documents.7.42.1', epoch: 1 }))
+    releaseReopen(hocuspocusSession({ options: { room: 'vaulter.documents.7.42.1', drive_id: '7' }, generation: 1 }))
     await flush()
 
     expect(provider).toHaveBeenCalledTimes(2)
     expect(viaConnect.destroy).not.toHaveBeenCalled()
     expect(viaReopen.destroy).not.toHaveBeenCalled()
     expect(vm.handle.value).toBe(vm.handle.value)
-    expect(vm.session.value?.room).toBe('vaulter.documents.7.42.2')
+    expect(vm.session.value?.options.room).toBe('vaulter.documents.7.42.2')
   })
 
   it('disconnect() during a reopen cancels it: no provider is opened afterwards', async () => {
@@ -303,7 +303,7 @@ describe('useCollaboration — connect() that supersedes an epoch reopen', () =>
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
       .mockReturnValueOnce(new Promise<CollaborationSession>((resolve) => { releaseReopen = resolve }))
-      .mockResolvedValueOnce(hocuspocusSession({ room: 'vaulter.documents.7.42.2', epoch: 2 }))
+      .mockResolvedValueOnce(hocuspocusSession({ options: { room: 'vaulter.documents.7.42.2', drive_id: '7' }, generation: 2 }))
     const provider = vi.fn().mockReturnValueOnce(first.handle).mockReturnValueOnce(viaConnect.handle)
     const onEpochChanged = vi.fn()
 
@@ -315,7 +315,7 @@ describe('useCollaboration — connect() that supersedes an epoch reopen', () =>
     first.end('epoch_changed')
     await flush()
     await vm.connect()
-    releaseReopen(hocuspocusSession({ room: 'vaulter.documents.7.42.1', epoch: 1 }))
+    releaseReopen(hocuspocusSession({ options: { room: 'vaulter.documents.7.42.1', drive_id: '7' }, generation: 1 }))
     await flush()
 
     expect(vm.doc.value).not.toBe(oldDoc)
@@ -434,7 +434,7 @@ describe('useCollaboration — update envelopes', () => {
     const provider = vi.fn().mockReturnValueOnce(first.handle).mockReturnValueOnce(second.handle)
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
-      .mockResolvedValueOnce(hocuspocusSession({ epoch: 1, room: 'vaulter.documents.7.42.1' }))
+      .mockResolvedValueOnce(hocuspocusSession({ generation: 1, options: { room: 'vaulter.documents.7.42.1', drive_id: '7' } }))
     const vm = collaboration(token, { providers: { createHocuspocusProvider: provider } })
     await vm.connect()
     first.setConnected(true)
@@ -518,5 +518,37 @@ describe('useCollaboration — update envelopes', () => {
 
     expect(hub.destroy).toHaveBeenCalledOnce()
     expect(hub.sent).toEqual([])
+  })
+})
+
+
+describe('neutral session preflight', () => {
+  it.each([
+    { protocol: 'acme-ot' }, { version: 'yjs/999' }, { endpoint: null }, { endpoint: '' },
+    { endpoint: 'https://hub.test' }, { options: {} }, { options: { room: null } },
+    { options: { room: [] } }, { options: { room: '   ', drive_id: '7' } },
+    { options: { room: 'valid', drive_id: 7 } }, { mode: 'rw' }, { generation: 0.5 },
+    { schema_version: 0 },
+  ])('refuses invalid wire before constructing a provider: %j', async (invalid) => {
+    const session = { ...hocuspocusSession(), ...invalid } as CollaborationSession
+    const factory = vi.fn()
+    const vm = collaboration(vi.fn().mockResolvedValue(session), { providers: { createHocuspocusProvider: factory } })
+    await expect(vm.connect()).rejects.toThrow()
+    expect(factory).not.toHaveBeenCalled()
+    expect(vm.error.value).toBeInstanceOf(Error)
+    expect(vm.connected.value).toBe(false)
+    vm.dispose()
+  })
+
+  it('replaces the document when generation changes even if a backend keeps the room option', async () => {
+    const token = vi.fn().mockResolvedValueOnce(hocuspocusSession())
+      .mockResolvedValueOnce(hocuspocusSession({ generation: 1 }))
+    const provider = fakeProvider()
+    const vm = collaboration(token, { providers: { createHocuspocusProvider: () => provider.handle } })
+    await vm.connect()
+    const first = vm.doc.value
+    await vm.connect()
+    expect(vm.doc.value).not.toBe(first)
+    vm.dispose()
   })
 })

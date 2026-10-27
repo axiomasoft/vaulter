@@ -12,7 +12,6 @@ use Vaulter\Collaboration\Drain\HubDrainer;
 use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\Http\Support\CollaborationRouteLabels;
 use Vaulter\Collaboration\Operations\CollaborationOperationPolicies;
-use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Persistence\GenerationCloser;
 use Vaulter\Collaboration\Providers\CollaborationRegistrar;
 use Vaulter\Collaboration\Revocation\ControlConsumer;
@@ -22,7 +21,6 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\State\PendingStateDrainer;
-use Vaulter\Drive\Contracts\DriveExtension;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Modules\Activation;
@@ -89,8 +87,6 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
             ->schedule(CollaborationSchedule::class)
             ->slot(RouteLabelSource::class, CollaborationRouteLabels::class, 'collaboration.routes')
             ->slot(DoctorCheck::class, CollaborationCheck::class, 'collaboration.hub', key: 'collaboration.hub')
-            // The session is an operation of the documents handle's drive: `$drive->extension(CollaborationOperations::class)`.
-            ->slot(DriveExtension::class, CollaborationOperations::class, 'collaboration.operations', key: CollaborationOperations::class)
             // A restore or REST replace that moves a document's generation on closes the old generation's log in its transaction.
             ->slot(EventSink::class, GenerationCloser::class, 'collaboration.generations')
             // A change of effective permissions counts in the version of its drive (or the global one) in its transaction (D46)…

@@ -1484,6 +1484,20 @@
             "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
             "kind": "protocol",
             "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D5",
+            "id": "format:collaboration-session",
+            "kind": "protocol",
+            "reason": "P3.3 neutral session response shape, documents ownership and protocol metric label."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D38",
+            "id": "format:collaboration-session-aggregate",
+            "kind": "protocol",
+            "reason": "P3.3 preserves collaboration.sessions.create and documents.collaboration.session; internal aggregate moves from collaboration.session to documents.collaboration_session to satisfy the declaring module ownership invariant."
         }
     ],
     "items": [
@@ -2131,6 +2145,26 @@
             "source": {
                 "file": "packages/drive/src/Changes/ChangeCursor.php",
                 "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
+            }
+        },
+        {
+            "format": "201 no-store data envelope: protocol, version, endpoint string|null, opaque token, expires_at Unix seconds, mode read|write, node_id, generation, schema_version, options object<string,string|integer|boolean|null>. Session issued metric vaulter_collab_session_issued_total is documents-owned with protocol and ability labels.",
+            "id": "format:collaboration-session",
+            "manual": true,
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/Http/Resources/CollaborationSessionResource.php",
+                "symbol": "Vaulter\\Documents\\Http\\Resources\\CollaborationSessionResource::toArray"
+            }
+        },
+        {
+            "format": "Operation collaboration.sessions.create uses documents.collaboration_session aggregate with Natural concurrency and Natural idempotency; route documents.collaboration.session.",
+            "id": "format:collaboration-session-aggregate",
+            "manual": true,
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/Operations/DocumentsOperationPolicies.php",
+                "symbol": "Vaulter\\Documents\\Operations\\DocumentsOperationPolicies::policies"
             }
         },
         {

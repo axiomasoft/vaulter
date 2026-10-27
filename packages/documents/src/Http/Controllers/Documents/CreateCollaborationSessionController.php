@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Collaboration\Http\Controllers\Collaboration;
+namespace Vaulter\Documents\Http\Controllers\Documents;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Http\Requests\CreateCollaborationSessionRequest;
-use Vaulter\Collaboration\Http\Resources\CollaborationSessionResource;
-use Vaulter\Collaboration\Operations\CollaborationOperations;
+use Vaulter\Documents\Http\Requests\CreateCollaborationSessionRequest;
+use Vaulter\Documents\Http\Resources\CollaborationSessionResource;
+use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
@@ -25,7 +25,7 @@ final readonly class CreateCollaborationSessionController
     public function __invoke(CreateCollaborationSessionRequest $request, string $node): JsonResponse
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        $session = $drive->extension(CollaborationOperations::class)->session($node, $request->clientSchemaVersion());
+        $session = $drive->extension(DocumentOperations::class)->collaborationSession($node, $request->clientSchemaVersion());
 
         return (new CollaborationSessionResource($session))->response()->setStatusCode(201);
     }

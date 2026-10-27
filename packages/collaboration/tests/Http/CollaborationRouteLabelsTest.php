@@ -9,6 +9,7 @@ use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
 
 it('labels only routes the collaboration module mounts, so a renamed route cannot leave a stale label', function (): void {
     $labels = new CollaborationRouteLabels;
+    expect($labels->operations())->not->toHaveKey('vaulter.v1.documents.collaboration.session');
 
     foreach ([...array_keys($labels->operations()), ...array_keys($labels->throttled())] as $name) {
         expect(Route::has($name))->toBeTrue($name);

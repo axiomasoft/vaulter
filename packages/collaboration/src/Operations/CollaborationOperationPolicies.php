@@ -21,7 +21,6 @@ final class CollaborationOperationPolicies implements OperationPolicySource
     public function policies(): array
     {
         return [
-            'collaboration.sessions.create' => new OperationPolicy('collaboration.session', ConcurrencyPolicy::Natural, IdempotencyPolicy::Natural, ['documents.collaboration.session']),
             'collaboration.hub.protocol' => new OperationPolicy('collaboration.document_log', ConcurrencyPolicy::Generation, IdempotencyPolicy::Protocol, [
                 'collaboration.hub.authenticate',
                 'collaboration.hub.load',

@@ -21,6 +21,8 @@ final class DocumentsOperationPolicies implements OperationPolicySource
     public function policies(): array
     {
         return [
+            'collaboration.sessions.create' => new OperationPolicy('documents.collaboration_session', ConcurrencyPolicy::Natural, IdempotencyPolicy::Natural, ['documents.collaboration.session']),
+
             'documents.documents.create' => new OperationPolicy('documents.document', ConcurrencyPolicy::Append, IdempotencyPolicy::Receipt, ['documents.store']),
             'documents.documents.update' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt),
             'documents.documents.update_content' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Conditional, ['documents.content.update']),

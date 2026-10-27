@@ -203,7 +203,7 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
 
   function open(resolved: CollaborationSession): CollaborationTransportHandle {
     const live = openCollaborationTransport(resolved, { doc: doc.value, ...options.providers })
-    const updates = queueFor(resolved.epoch)
+    const updates = queueFor(resolved.generation)
 
     updates.bind({ send: live.sendStateless, remoteOrigin: live.provider.remoteOrigin })
     handle.value = live
@@ -226,7 +226,8 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
   }
 
   async function reopen(end: CollaborationEnd): Promise<void> {
-    const previousRoom = session.value?.room
+    const previousRoom = session.value?.options.room
+    const previousGeneration = session.value?.generation
     const mine = ++generation
     teardown()
     if (end === 'epoch_changed') {
@@ -247,7 +248,7 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
       }
       const epochReset = freshDocPending
       freshDocPending = false
-      if (epochReset || resolved.room !== previousRoom) {
+      if (epochReset || (resolved.options.room !== previousRoom || resolved.generation !== previousGeneration)) {
         resetDoc()
       }
       open(resolved)
@@ -261,7 +262,8 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
 
   async function connect(): Promise<CollaborationTransportHandle> {
     const mine = ++generation
-    const previousRoom = session.value?.room
+    const previousRoom = session.value?.options.room
+    const previousGeneration = session.value?.generation
     teardown()
     const resolved = await resolveSession(mine)
     if (resolved === null) {
@@ -272,7 +274,7 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
     const epochReset = freshDocPending
     freshDocPending = false
     refused.value = false
-    if (epochReset || (previousRoom !== undefined && resolved.room !== previousRoom)) {
+    if (epochReset || (previousRoom !== undefined && (resolved.options.room !== previousRoom || resolved.generation !== previousGeneration))) {
       resetDoc()
     }
     const live = open(resolved)

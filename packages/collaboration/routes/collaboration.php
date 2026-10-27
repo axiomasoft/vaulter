@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Vaulter\Collaboration\Http\Controllers\Collaboration\CreateCollaborationSessionController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubAppendController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubAuthenticateController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCheckpointController;
@@ -30,16 +29,6 @@ use Vaulter\Configuration\RoutesConfig;
 */
 
 $routes = app(RoutesConfig::class);
-$id = '[A-Za-z0-9_-]+';
-
-Route::prefix($routes->versionedPrefix())
-    ->name('vaulter.v1.')
-    ->middleware($routes->authenticatedMiddleware())
-    ->where(['node' => $id])
-    ->group(static function (): void {
-        Route::post('documents/{node}/collaboration/session', CreateCollaborationSessionController::class)->name('documents.collaboration.session');
-    });
-
 Route::prefix($routes->versionedPrefix())
     ->name('vaulter.v1.')
     ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])

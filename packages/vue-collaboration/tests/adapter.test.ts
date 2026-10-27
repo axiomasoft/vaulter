@@ -34,7 +34,7 @@ describe('createCollaborationAdapter', () => {
   })
 
   it('opens a ro session read-only, so the editor must be editable: false', async () => {
-    const { adapter, client } = adapterOver(vi.fn().mockResolvedValue(hocuspocusSession({ mode: 'ro' })), [fakeProvider()])
+    const { adapter, client } = adapterOver(vi.fn().mockResolvedValue(hocuspocusSession({ mode: 'read' })), [fakeProvider()])
 
     const handle = await adapter.open('42', { client })
 
@@ -103,7 +103,7 @@ describe('createCollaborationAdapter', () => {
     const second = fakeProvider()
     const token = vi.fn()
       .mockResolvedValueOnce(hocuspocusSession())
-      .mockResolvedValueOnce(hocuspocusSession({ epoch: 1, room: 'vaulter.documents.7.42.1' }))
+      .mockResolvedValueOnce(hocuspocusSession({ generation: 1, options: { room: 'vaulter.documents.7.42.1', drive_id: '7' } }))
     const { adapter, client } = adapterOver(token, [first, second])
     const onEpochChanged = vi.fn()
     const handle = await adapter.open('42', { client, onEpochChanged })

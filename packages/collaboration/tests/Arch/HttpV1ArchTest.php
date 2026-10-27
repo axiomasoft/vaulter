@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Route;
 use Symfony\Component\Finder\Finder;
+use Vaulter\Documents\Http\Controllers\Documents\CreateCollaborationSessionController;
 use Vaulter\Drive\Access\AccessResolver;
 
 /**
- * The shape of the collaboration HTTP layer: single-action controllers; the session goes through the operations of the
- * drive handle, the hub's three through the collaboration hub, the one service that re-checks a room on every call.
+ * The private collaboration HTTP layer owns only hub controllers. The public session belongs to documents.
  */
 const COLLABORATION_V1_CONTROLLER_NAMESPACES = ['Vaulter\Collaboration\Http\Controllers\Collaboration'];
 
@@ -44,8 +44,15 @@ it('names every collaboration route vaulter.v1.* under the versioned prefix', fu
     );
 
     expect($routes)->not->toBeEmpty();
+    $names = array_map(static fn (Route $route): string => (string) $route->getName(), $routes);
+    expect(array_values($names))->toHaveCount(7)
+        ->toContain('vaulter.v1.collaboration.hub.authenticate', 'vaulter.v1.collaboration.hub.load', 'vaulter.v1.collaboration.hub.renew', 'vaulter.v1.collaboration.hub.append', 'vaulter.v1.collaboration.hub.compaction.lease', 'vaulter.v1.collaboration.hub.checkpoint', 'vaulter.v1.collaboration.hub.recheck');
     foreach ($routes as $route) {
-        expect($route->getName())->toStartWith('vaulter.v1.')
-            ->and($route->uri())->toStartWith('api/vaulter/v1/');
+        expect($route->getName())->toStartWith('vaulter.v1.collaboration.hub.')
+            ->and($route->uri())->toStartWith('api/vaulter/v1/collaboration/hub/');
     }
+    $session = app('router')->getRoutes()->getByName('vaulter.v1.documents.collaboration.session');
+    expect($session)->toBeInstanceOf(Route::class)
+        ->and($session->getActionName())->toBe(CreateCollaborationSessionController::class)
+        ->and($session->uri())->toBe('api/vaulter/v1/documents/{node}/collaboration/session');
 });

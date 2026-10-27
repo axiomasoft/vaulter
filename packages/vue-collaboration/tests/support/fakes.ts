@@ -5,8 +5,8 @@ import type { CollaborationEnd, CollaborationProviderHandle } from '../../src/tr
 
 export function hocuspocusSession(overrides: Partial<CollaborationSession> = {}): CollaborationSession {
   return {
-    driver: 'hocuspocus', room: 'vaulter.documents.7.42.0', node_id: '42', drive_id: '7',
-    epoch: 0, schema_version: 1, mode: 'rw', token: 'jwt-token', url: 'ws://hub:1234',
+    protocol: 'yjs', version: 'yjs/2', options: { room: 'vaulter.documents.7.42.0', drive_id: '7' }, node_id: '42',
+    generation: 0, schema_version: 1, mode: 'write', token: 'jwt-token', endpoint: 'ws://hub:1234', expires_at: 1300,
     ...overrides,
   }
 }

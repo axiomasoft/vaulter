@@ -162,7 +162,7 @@ it('never serves or leases old bytes under a newly installed type schema or form
     }
     if ($changed === 'schema') {
         $this->actingAs(AccessTestHelpers::user(1));
-        $this->postJson(DocumentsV1::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated()->assertJsonPath('data.mode', 'ro')->assertJsonPath('data.schema_version', 1);
+        $this->postJson(DocumentsV1::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated()->assertJsonPath('data.mode', 'read')->assertJsonPath('data.schema_version', 1);
         Hub::call('load', ['room' => Hub::room($node)], $token)->assertOk()->assertJsonPath('schema_version', 1);
         Hub::callV2('append', Hub::appendBody($node, 'disallowed-write'), $token)->assertForbidden();
         $lease = Compaction::leaseOf($node);
@@ -184,7 +184,7 @@ it('serves Markdown session load lease checkpoint and drain for both checkpoint 
     $node = Hub::document(type: 'vaulter/markdown');
     config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
     $this->actingAs(AccessTestHelpers::user(1));
-    $this->postJson(DocumentsV1::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated()->assertJsonPath('data.mode', 'rw');
+    $this->postJson(DocumentsV1::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated()->assertJsonPath('data.mode', 'write');
     $token = Hub::token($node);
     Hub::call('load', ['room' => Hub::room($node)], $token)->assertOk()->assertJsonPath('type', 'vaulter/markdown');
     Hub::callV2('append', Hub::seedBody($node, 'markdown-seed'), $token)->assertOk();

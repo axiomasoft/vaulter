@@ -17,7 +17,6 @@ use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Drain\BackoffDrainWaiter;
 use Vaulter\Collaboration\Drain\DrainWaiter;
 use Vaulter\Collaboration\HostUserResolver as DefaultHostUserResolver;
-use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Revocation\ControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\HttpControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\NoControlTransport;
@@ -48,9 +47,6 @@ final class CollaborationRegistrar implements ModuleBindings
             (new ScheduleConfig($app->make('config')))->frequencies('vaulter-collaboration', CollaborationSchedule::KEYS);
         });
         $app->tag('vaulter.config_validator.collaboration', ConfigValidCheck::TAG);
-
-        // Operations carry the handle's context, so every resolution is a new instance.
-        $app->bind(CollaborationOperations::class);
 
         // The host-user resolver seam: the collaboration webhook resolves the
         // acting user by id through the host's auth user-provider. Bound to the

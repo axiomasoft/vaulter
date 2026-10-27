@@ -19,7 +19,7 @@ const emitOn = (provider: unknown, event: string, payload: unknown): void => {
   (provider as { emit: (name: string, data: unknown) => void }).emit(event, payload)
 }
 
-const unroutable = () => hocuspocusSession({ url: 'ws://127.0.0.1:1' })
+const unroutable = () => hocuspocusSession({ endpoint: 'ws://127.0.0.1:1' })
 
 describe('defaultHocuspocusProvider against the real @hocuspocus/provider v4', () => {
   it('builds a live session through the default (non-mocked) path', () => {

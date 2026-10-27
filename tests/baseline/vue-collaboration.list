@@ -36,6 +36,20 @@ tests/status.test.ts > save status > is pending before the first sync
 tests/status.test.ts > save status > is pending while a local update has no ack, synced or not
 tests/status.test.ts > save status > is saved only after an ack with an empty queue
 tests/status.test.ts > save status > is synchronized when the provider synced and nothing of ours is in flight
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"endpoint":""}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"endpoint":"https://hub.test"}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"endpoint":null}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"generation":0.5}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"mode":"rw"}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"options":{"room":"   ","drive_id":"7"}}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"options":{"room":"valid","drive_id":7}}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"options":{"room":[]}}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"options":{"room":null}}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"options":{}}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"protocol":"acme-ot"}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"schema_version":0}
+tests/use-collaboration.test.ts > neutral session preflight > refuses invalid wire before constructing a provider: {"version":"yjs/999"}
+tests/use-collaboration.test.ts > neutral session preflight > replaces the document when generation changes even if a backend keeps the room option
 tests/use-collaboration.test.ts > openCollaborationTransport > builds a hocuspocus session with mapped params and lifts awareness
 tests/use-collaboration.test.ts > openCollaborationTransport > is read-only for a ro session
 tests/use-collaboration.test.ts > openCollaborationTransport > reads the hub's terminal closes

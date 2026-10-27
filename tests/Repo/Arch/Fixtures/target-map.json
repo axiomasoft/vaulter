@@ -792,20 +792,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/CollaborationSessionService.php",
-            "fqcn": "Vaulter\\Collaboration\\CollaborationSessionService",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\CollaborationSessionService"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/collaboration/src/Configuration/CollaborationConfig.php",
             "fqcn": "Vaulter\\Collaboration\\Configuration\\CollaborationConfig",
             "kind": "final-class",
@@ -1114,20 +1100,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/Http/Controllers/Collaboration/CreateCollaborationSessionController.php",
-            "fqcn": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubAppendController.php",
             "fqcn": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAppendController",
             "kind": "final-class",
@@ -1268,34 +1240,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/Http/Requests/CreateCollaborationSessionRequest.php",
-            "fqcn": "Vaulter\\Collaboration\\Http\\Requests\\CreateCollaborationSessionRequest",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\Http\\Requests\\CreateCollaborationSessionRequest"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/collaboration/src/Http/Resources/CollaborationSessionResource.php",
-            "fqcn": "Vaulter\\Collaboration\\Http\\Resources\\CollaborationSessionResource",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\Http\\Resources\\CollaborationSessionResource"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/collaboration/src/Http/Support/CollaborationRouteLabels.php",
             "fqcn": "Vaulter\\Collaboration\\Http\\Support\\CollaborationRouteLabels",
             "kind": "final-class",
@@ -1348,20 +1292,6 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Operations\\CollaborationOperationPolicies"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/collaboration/src/Operations/CollaborationOperations.php",
-            "fqcn": "Vaulter\\Collaboration\\Operations\\CollaborationOperations",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Collaboration\\Operations\\CollaborationOperations"
         },
         {
             "action": "keep",
@@ -3956,6 +3886,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Http/Controllers/Documents/CreateCollaborationSessionController.php",
+            "fqcn": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateCollaborationSessionController",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateCollaborationSessionController"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Http/Controllers/Documents/CreateDocumentController.php",
             "fqcn": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateDocumentController",
             "kind": "final-class",
@@ -4110,6 +4054,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Http/Requests/CreateCollaborationSessionRequest.php",
+            "fqcn": "Vaulter\\Documents\\Http\\Requests\\CreateCollaborationSessionRequest",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Http\\Requests\\CreateCollaborationSessionRequest"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Http/Requests/CreateDocumentRequest.php",
             "fqcn": "Vaulter\\Documents\\Http\\Requests\\CreateDocumentRequest",
             "kind": "final-class",
@@ -4162,6 +4120,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Http\\Requests\\UpdateDocumentRevisionRequest"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Http/Resources/CollaborationSessionResource.php",
+            "fqcn": "Vaulter\\Documents\\Http\\Resources\\CollaborationSessionResource",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Http\\Resources\\CollaborationSessionResource"
         },
         {
             "action": "keep",

@@ -8,7 +8,9 @@ use Closure;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Page;
+use Vaulter\Documents\Access\CollaborationAccessPolicy;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
@@ -17,7 +19,9 @@ use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\ContentDecoder;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
@@ -27,6 +31,7 @@ use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
+use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
@@ -58,6 +63,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Idempotency\IdempotentWrite;
+use Vaulter\Kernel;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
@@ -112,7 +118,26 @@ final readonly class DocumentOperations implements DriveExtension
         private NodeSnapshotMapper $nodes,
         private OperationRunner $runner,
         private PendingStateGuard $pending,
+        private CollaborationAccessPolicy $collaborationPolicy,
+        private Kernel $kernel,
+        private MetricsRecorder $metrics,
     ) {}
+
+    /** Issue a protocol-neutral session after the shared live access policy. */
+    public function collaborationSession(NodeSnapshot|string|int $document, ?int $clientSchemaVersion = null): CollaborationSession
+    {
+        $decision = $this->collaborationPolicy->evaluate($this->context, $document, clientSchemaVersion: $clientSchemaVersion);
+        $grant = $decision->grant;
+        $driver = $this->kernel->extensions()->handler(CollaborationProtocolDriver::class, $grant->protocol);
+        if ($driver->protocol() !== $grant->protocol) {
+            throw new CollaborationProtocolContractException;
+        }
+        $session = $driver->issueSession($grant);
+        $session->assertGrant($grant, $driver->version());
+        $this->metrics->counter(name: 'vaulter_collab_session_issued_total', labels: ['protocol' => $grant->protocol, 'ability' => $decision->ability->value]);
+
+        return $session;
+    }
 
     /**
      * Create a document of $type (vaulter-documents.default_type when null) under

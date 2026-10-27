@@ -14,7 +14,6 @@ final class CollaborationRouteLabels implements RouteLabelSource
     public function operations(): array
     {
         return [
-            'vaulter.v1.documents.collaboration.session' => 'collab_issue',
             'vaulter.v1.collaboration.hub.append' => 'collab_append',
             'vaulter.v1.collaboration.hub.compaction.lease' => 'collab_lease',
             'vaulter.v1.collaboration.hub.checkpoint' => 'collab_checkpoint',
@@ -26,7 +25,6 @@ final class CollaborationRouteLabels implements RouteLabelSource
     public function operationPaths(): array
     {
         return [
-            ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/collaboration/session', 'operation' => 'collab_issue'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/append', 'operation' => 'collab_append'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/compaction/lease', 'operation' => 'collab_lease'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/checkpoint', 'operation' => 'collab_checkpoint'],

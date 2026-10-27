@@ -3453,7 +3453,7 @@ paths:
       operationId: documents.collaboration.session
       tags:
       - collaboration
-      summary: Open a collaboration session (room token)
+      summary: Open a protocol-neutral collaboration session
       parameters:
       - $ref: '#/components/parameters/Node'
       requestBody:
@@ -5957,42 +5957,35 @@ components:
           pattern: Z$
     CollaborationSession:
       type: object
-      required:
-      - driver
-      - room
-      - node_id
-      - drive_id
-      - epoch
-      - schema_version
-      - mode
-      - token
-      - url
+      required: [protocol, version, endpoint, token, expires_at, mode, node_id, generation, schema_version, options]
       properties:
-        driver:
+        protocol:
           type: string
-        room:
+        version:
           type: string
+        endpoint:
+          type: [string, 'null']
+          description: Websocket URL; null when the host configured none.
+        token:
+          type: string
+          description: Short-lived session token; never log it.
+        expires_at:
+          type: integer
+          description: Unix seconds.
+        mode:
+          type: string
+          enum: [read, write]
         node_id:
           type: string
-        drive_id:
-          type: string
-        epoch:
+        generation:
           type: integer
         schema_version:
           type: integer
-        mode:
-          type: string
-          enum:
-          - ro
-          - rw
-        token:
-          type: string
-          description: Short-lived room token; never log it.
-        url:
-          type:
-          - string
-          - 'null'
-          description: Hub websocket URL; null when the host configured none.
+        options:
+          type: object
+          additionalProperties:
+            type: [string, integer, boolean, 'null']
+          description: Nonsecret protocol options; yjs provides room and drive_id.
     HubAuthenticated:
       type: object
       required:

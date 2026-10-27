@@ -14,6 +14,7 @@ final class DocumentsRouteLabels implements RouteLabelSource
     public function operations(): array
     {
         return [
+            'vaulter.v1.documents.collaboration.session' => 'collab_issue',
             'vaulter.v1.documents.store' => 'doc_write',
             'vaulter.v1.documents.content.show' => 'doc_read',
             'vaulter.v1.documents.content.update' => 'doc_write',
@@ -33,6 +34,7 @@ final class DocumentsRouteLabels implements RouteLabelSource
     public function operationPaths(): array
     {
         return [
+            ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/collaboration/session', 'operation' => 'collab_issue'],
             ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/content', 'operation' => 'doc_read'],
             ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/revisions', 'operation' => 'doc_read'],
             ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/revisions/{id}', 'operation' => 'doc_read'],

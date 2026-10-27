@@ -1036,7 +1036,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Open a collaboration session (room token) */
+        /** Open a protocol-neutral collaboration session */
         post: operations["documents.collaboration.session"];
         delete?: never;
         options?: never;
@@ -1690,18 +1690,23 @@ export interface components {
             created_at: string;
         };
         CollaborationSession: {
-            driver: string;
-            room: string;
-            node_id: string;
-            drive_id: string;
-            epoch: number;
-            schema_version: number;
-            /** @enum {string} */
-            mode: "ro" | "rw";
-            /** @description Short-lived room token; never log it. */
+            protocol: string;
+            version: string;
+            /** @description Websocket URL; null when the host configured none. */
+            endpoint: string | null;
+            /** @description Short-lived session token; never log it. */
             token: string;
-            /** @description Hub websocket URL; null when the host configured none. */
-            url: string | null;
+            /** @description Unix seconds. */
+            expires_at: number;
+            /** @enum {string} */
+            mode: "read" | "write";
+            node_id: string;
+            generation: number;
+            schema_version: number;
+            /** @description Nonsecret protocol options; yjs provides room and drive_id. */
+            options: {
+                [key: string]: string | number | boolean | null;
+            };
         };
         HubAuthenticated: {
             allowed: boolean;

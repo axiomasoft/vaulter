@@ -72,7 +72,7 @@ it('(b) puts every mutating v1 route of the package in exactly one policy, the s
     }
     $routes = cpcRoutes();
 
-    expect(array_keys($routes))->toContain('documents.collaboration.session', 'collaboration.hub.authenticate', 'collaboration.hub.load', 'collaboration.hub.renew', 'collaboration.hub.append', 'collaboration.hub.compaction.lease', 'collaboration.hub.checkpoint', 'collaboration.hub.recheck')
+    expect(array_keys($routes))->toContain('collaboration.hub.authenticate', 'collaboration.hub.load', 'collaboration.hub.renew', 'collaboration.hub.append', 'collaboration.hub.compaction.lease', 'collaboration.hub.checkpoint', 'collaboration.hub.recheck')
         ->and(array_values(array_diff(array_keys($routes), array_keys($owners))))->toBe([])
         ->and(array_values(array_diff(array_keys($owners), array_keys($routes))))->toBe([])
         ->and(array_values(array_filter($owners, static fn (array $names): bool => count($names) !== 1)))->toBe([]);
@@ -93,9 +93,7 @@ it('(c) reads the Idempotency-Key on no route of the package: none of its polici
 it('(d) declares the session natural and the hub a protocol fenced by the generation, on no If-Match route', function (): void {
     $policies = cpcPolicies();
 
-    expect($policies['collaboration.sessions.create']->idempotency)->toBe(IdempotencyPolicy::Natural)
-        ->and($policies['collaboration.sessions.create']->concurrency)->toBe(ConcurrencyPolicy::Natural)
-        ->and($policies['collaboration.hub.protocol']->idempotency)->toBe(IdempotencyPolicy::Protocol)
+    expect($policies['collaboration.hub.protocol']->idempotency)->toBe(IdempotencyPolicy::Protocol)
         ->and($policies['collaboration.hub.protocol']->concurrency)->toBe(ConcurrencyPolicy::Generation)
         ->and($policies['collaboration.hub.protocol']->aggregate)->toBe('collaboration.document_log')
         ->and(array_values(array_filter($policies, static fn (OperationPolicy $policy): bool => $policy->concurrency === ConcurrencyPolicy::IfMatch)))->toBe([]);

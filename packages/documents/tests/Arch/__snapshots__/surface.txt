@@ -544,6 +544,7 @@ Vaulter\Documents\Operations\CommentOperations api since 1.0 final readonly clas
   public function resolve(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment, ?int $expectedVersion = null): Vaulter\Documents\Data\Snapshots\CommentSnapshot
 
 Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\DriveExtension
+  public function collaborationSession(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationSession
   public function content(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function create(string $name, ?string $type = null, ?array $content = null, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Drive\Data\CreateFolderOptions $options = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
   public function export(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\ValueObjects\DocumentExport

@@ -100,9 +100,6 @@ Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException api since 
   public function problemCode(): string
   public function problemDetails(): array
 
-Vaulter\Collaboration\Operations\CollaborationOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\DriveExtension
-  public function session(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationSession
-
 Vaulter\Collaboration\Persistence\AppendResult api since 1.0 final readonly class
   public string $documentId
   public bool $duplicate

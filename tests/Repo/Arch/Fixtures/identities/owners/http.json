@@ -106,8 +106,8 @@
         {
             "match": "prefix",
             "value": "route:vaulter.v1.documents.collaboration.",
-            "owner": "collaboration",
-            "why": "the session endpoint of the realtime implementation: its controller is collaboration's in the type-map (Documents\\Http\\Controllers\\Collaboration, P5)"
+            "owner": "documents",
+            "why": "PLAN4-D5 P3.3: protocol-neutral session endpoint belongs to documents."
         }
     ]
 }
