@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Tests\Support;
 
+use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
-use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
 
 require_once dirname(__DIR__, 4).'/tests/Repo/Arch/Support/ReleaseOpenApi.php';
 

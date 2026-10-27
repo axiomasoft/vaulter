@@ -21,6 +21,12 @@
         },
         {
             "match": "prefix",
+            "value": "config:vaulter.security.",
+            "owner": "core",
+            "why": "ADR-0036: production invariants and their accepted risks are the kernel's"
+        },
+        {
+            "match": "prefix",
             "value": "config:vaulter.observability.",
             "owner": "core",
             "why": "kernel Observability: metrics and traces (architecture#kernel)"

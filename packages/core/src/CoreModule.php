@@ -20,6 +20,7 @@ use Vaulter\Console\RelayCommand;
 use Vaulter\Console\RelayReplayCommand;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Routing\RouteLabelSource;
+use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Doctor\Checks\CacheCheck;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Doctor\Checks\DatabaseConnectionCheck;
@@ -29,6 +30,7 @@ use Vaulter\Doctor\Checks\OutboxDeadLettersCheck;
 use Vaulter\Doctor\Checks\OutboxLagCheck;
 use Vaulter\Doctor\Checks\OutboxLeasesCheck;
 use Vaulter\Doctor\Checks\OutboxSettleWindowCheck;
+use Vaulter\Doctor\Checks\ProductionInvariantsCheck;
 use Vaulter\Doctor\Checks\QueueCheck;
 use Vaulter\Doctor\Checks\SchedulerCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
@@ -52,6 +54,7 @@ use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\EventsRegistrar;
 use Vaulter\Schema\KernelSchema;
+use Vaulter\Security\TenancyInvariant;
 
 /**
  * The kernel's own module (ADR-0027): the `vaulter` config root, the schema of every create-migration
@@ -80,6 +83,7 @@ final class CoreModule implements OwnsSchema, VaulterModule
         'core.outbox.leases' => OutboxLeasesCheck::class,
         'core.outbox.consumer_gaps' => OutboxConsumerGapCheck::class,
         'core.outbox.settle_window' => OutboxSettleWindowCheck::class,
+        'core.production_invariants' => ProductionInvariantsCheck::class,
     ];
 
     public static function ownedSchema(): string
@@ -138,6 +142,8 @@ final class CoreModule implements OwnsSchema, VaulterModule
             ->defineSlot(EventSink::class, SlotKind::EventSink, Cardinality::Many)
             ->defineSlot(OutboxConsumer::class, SlotKind::OutboxConsumer, Cardinality::Many)
             ->defineSlot(RouteLabelSource::class, SlotKind::Contributor, Cardinality::Many)
+            ->defineSlot(ProductionInvariant::class, SlotKind::Handler, Cardinality::Many)
+            ->slot(ProductionInvariant::class, TenancyInvariant::class, 'core.tenancy', key: 'core.tenancy')
             ->slot(OperationMiddleware::class, TelemetryMiddleware::class, 'core.telemetry');
 
         foreach (self::DOCTOR_CHECKS as $key => $check) {

@@ -422,10 +422,10 @@ describe('committed fixtures', function (): void {
             ->and($items['route:vaulter.v1.collaboration.hub.load']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.grants.index'])->toMatchArray(['methods' => ['GET'], 'owner' => 'drive', 'openapi' => ['path' => '/nodes/{node}/grants', 'operation_id' => 'grants.index']])
             ->and($items['route:vaulter.v1.grants.index']['requires'] ?? [])->toBe([])
-            ->and($items['route:vaulter.v1.documents.collaboration.session']['owner'])->toBe('collaboration')
+            ->and($items['route:vaulter.v1.documents.collaboration.session']['owner'])->toBe('documents')
             ->and($items['route:vaulter.v1.documents.collaboration.session'])->not->toHaveKey('class_owner')
             ->and($items['route:vaulter.v1.uploads.tus.head']['methods'])->toBe(['HEAD'])
-            ->and(array_filter($http['items'], static fn (array $i): bool => str_starts_with($i['id'], 'openapi:') || ($i['route_only'] ?? false)))->toBe([]);
+            ->and(array_values(array_filter(array_column($http['items'], 'id'), static fn (string $id): bool => !str_starts_with($id, 'route:vaulter.v1.collaboration.hub.') && (str_starts_with($id, 'openapi:') || ($items[$id]['route_only'] ?? false)))))->toBe([]);
     });
 
     it('list the event types, problem codes, queues, casts and hand-written formats', function (): void {
@@ -434,7 +434,7 @@ describe('committed fixtures', function (): void {
 
         expect($count('event:'))->toBe(33)
             ->and($items['event:drive.access.effective_permissions_changed'])->toMatchArray(['owner' => 'drive', 'subject' => 'access', 'sinks' => ['activity' => false, 'external' => false, 'journal' => null]])
-            ->and($count('problem:'))->toBe(85)
+            ->and($count('problem:'))->toBe(86)
             ->and($items['problem:stale_write'])->toMatchArray(['status' => 412, 'owner' => 'core', 'retryable' => 'after_refetch', 'receipt' => 'cacheable'])
             ->and($items['problem:collaboration_draining'])->toMatchArray(['status' => 503, 'owner' => 'collaboration', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:collaboration_checkpoint_conflict'])->toMatchArray(['status' => 409, 'owner' => 'collaboration', 'retryable' => 'after_refetch', 'receipt' => 'never'])

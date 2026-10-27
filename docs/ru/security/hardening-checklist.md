@@ -24,3 +24,4 @@ php artisan vaulter:doctor --production
 - [ ] `vaulter-drive.downloads.direct_ttl_seconds` как можно короче, либо `delivery_mode` равен `strict`.
 - [ ] Устаревших ключей конфигурации не осталось (`core.config.deprecated_keys`).
 - [ ] БД — PostgreSQL, MySQL или MariaDB; SQLite только для разработки.
+- [ ] `vaulter doctor` не показывает непринятых production-инвариантов (`core.production_invariants`: `drive.permission-driver`, `collaboration.secrets`, `collaboration.hub-url`, `webhooks.schemes`, `webhooks.blocked-ranges`, `core.tenancy`); каждая запись `vaulter.security.accepted_risks` содержит непустую причину ([ADR-0036](/adr/0036-secure-production-defaults)).

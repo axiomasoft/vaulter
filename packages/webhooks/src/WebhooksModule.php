@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
@@ -17,6 +18,8 @@ use Vaulter\Webhooks\Console\RedeliverWebhooksCommand;
 use Vaulter\Webhooks\Console\RetryWebhooksCommand;
 use Vaulter\Webhooks\Doctor\Checks\WebhooksDeliveriesCheck;
 use Vaulter\Webhooks\Schema\WebhooksSchema;
+use Vaulter\Webhooks\Security\BlockedRangesInvariant;
+use Vaulter\Webhooks\Security\SchemesInvariant;
 
 /**
  * The webhooks module (D22): the manifest of the vaulter-webhooks package, offered by its provider. Opt-in,
@@ -69,6 +72,8 @@ final class WebhooksModule implements OwnsSchema, VaulterModule
             ->bindings(WebhooksBindings::class)
             // Its outbox consumer turns external events into deliveries (D29).
             ->slot(OutboxConsumer::class, WebhookFanoutConsumer::class, WebhookFanoutConsumer::ID)
-            ->slot(DoctorCheck::class, WebhooksDeliveriesCheck::class, 'core.webhooks.deliveries', key: 'core.webhooks.deliveries');
+            ->slot(DoctorCheck::class, WebhooksDeliveriesCheck::class, 'core.webhooks.deliveries', key: 'core.webhooks.deliveries')
+            ->slot(ProductionInvariant::class, SchemesInvariant::class, 'webhooks.schemes', key: 'webhooks.schemes')
+            ->slot(ProductionInvariant::class, BlockedRangesInvariant::class, 'webhooks.blocked-ranges', key: 'webhooks.blocked-ranges');
     }
 }

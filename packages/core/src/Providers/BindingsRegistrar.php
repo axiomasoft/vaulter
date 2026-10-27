@@ -38,6 +38,7 @@ use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSources;
 use Vaulter\Operations\OperationsReference;
 use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\Security\ProductionInvariants;
 use Vaulter\Support\EnumCaseAttributeResolver;
 use Vaulter\Tenancy\TenancyBypass;
 
@@ -54,6 +55,11 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(DatabaseConfig::class);
         $app->singleton(IdsConfig::class);
         $app->singleton(TenancyConfig::class);
+        $app->singleton(ProductionInvariants::class, static function (Application $app): ProductionInvariants {
+            $risks = $app->make('config')->get('vaulter.security.accepted_risks', []);
+
+            return new ProductionInvariants($app->make(Kernel::class)->extensions(), is_array($risks) ? $risks : []);
+        });
         $app->scoped(TenancyBypass::class);
         $app->scoped(TenantResolver::class, static function (Application $app): TenantResolver {
             $resolver = $app->make($app->make(TenancyConfig::class)->resolver());

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Operations\OperationsReference;
 use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
@@ -127,7 +128,7 @@ it('detects a private response mutation in a temp contract report while actual p
 });
 
 it('validates an actual unsigned hub refusal against its private owner contract', function (): void {
-    $this->postJson('/'.app(\Vaulter\Configuration\RoutesConfig::class)->versionedPrefix().'/collaboration/hub/authenticate', [], ['X-Vaulter-Collab-Protocol' => '2'])
+    $this->postJson('/'.app(RoutesConfig::class)->versionedPrefix().'/collaboration/hub/authenticate', [], ['X-Vaulter-Collab-Protocol' => '2'])
         ->assertStatus(401)
         ->assertJsonPath('code', 'actor_required');
 });

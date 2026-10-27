@@ -9,7 +9,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
-use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Drive\Profiles\ProfilePolicy;
@@ -50,9 +49,6 @@ final readonly class DriveConfigValidator
             throw new InvalidConfigurationException('[Vaulter] Unknown '.AccessConfig::PERMISSION_DRIVER_KEY.' "'.$key.'".');
         }
         ConfigValidator::assertImplements(AccessConfig::PERMISSION_DRIVERS_KEY.'.'.$key, $drivers[$key], PermissionDriver::class);
-        if ($app->environment('production') && is_a($drivers[$key], NonProductionPermissionDriver::class, true)) {
-            throw new InvalidConfigurationException('[Vaulter] Non-production permission driver "'.$key.'" is forbidden in production.');
-        }
         $config->changes()->retentionDays();
         $config->changes()->maxPageSize();
         $config->sharing()->tokenGenerator();
@@ -76,9 +72,6 @@ final readonly class DriveConfigValidator
                 $policy->validate($profile);
                 $profileKey = $profile->getPermissionDriver() ?? $access->permissionDriver();
                 ConfigValidator::assertImplements(AccessConfig::PERMISSION_DRIVERS_KEY.'.'.$profileKey, $drivers[$profileKey] ?? '', PermissionDriver::class);
-                if ($app->environment('production') && is_a($drivers[$profileKey], NonProductionPermissionDriver::class, true)) {
-                    throw new InvalidConfigurationException('[Vaulter] Non-production profile permission driver "'.$profileKey.'" is forbidden in production.');
-                }
             }
             (new ScanConfig($this->repository))->scanner();
         } catch (InvalidProfileException $exception) {

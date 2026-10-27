@@ -10,6 +10,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Configuration\DriveConfigValidator;
 use Vaulter\Drive\DriveModule;
+use Vaulter\Drive\Security\PermissionDriverInvariant;
 use Vaulter\Drive\Testing\Fixtures\Panels\OverrideDefaultProfile;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
@@ -46,17 +47,22 @@ it('fails boot for malformed security configuration', function (string $key, mix
     ['vaulter-drive.profiles.providers', [OverrideDefaultProfile::class]],
 ])->throws(InvalidConfigurationException::class);
 
-it('rejects the null permission driver at production boot', function (): void {
+it('reports the null permission driver as the drive.permission-driver invariant, not as a structural error', function (): void {
     $repository = driveConfigRepository();
     $repository->set('vaulter-drive.access.permission_driver', 'null');
     $application = Mockery::mock(Application::class);
-    $application->shouldReceive('environment')->with('production')->andReturn(true);
+    $application->shouldReceive('resolved')->andReturn(false);
     $kernel = new Kernel($application);
     $kernel->seal((new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule], []));
     $application->shouldReceive('make')->with(Kernel::class)->andReturn($kernel);
+    $application->shouldReceive('environment')->andReturn(true);
 
-    (new DriveConfigValidator($repository))->validate(new DriveConfig($repository), $application);
-})->throws(InvalidConfigurationException::class, 'forbidden in production');
+    $invariant = new PermissionDriverInvariant(new DriveConfig($repository), $application);
+
+    expect($invariant->id())->toBe('drive.permission-driver')
+        ->and($invariant->violation())->toContain('"null"')
+        ->and(fn () => (new DriveConfigValidator($repository))->validate(new DriveConfig($repository), $application))->not->toThrow(InvalidConfigurationException::class);
+});
 
 it('reports a malformed drive configuration under the doctor check of the kernel', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'missing');

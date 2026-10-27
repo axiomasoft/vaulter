@@ -10,6 +10,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationSchedule;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
@@ -65,8 +66,13 @@ final class CollaborationRegistrar implements ModuleBindings
     public function boot(Application $app): void
     {
         $config = $app->make(CollaborationConfig::class);
+        // Structural validation first, in every environment, before any production-risk classifier runs.
         $config->assertDistinctHubSecrets();
-        $config->assertSecrets($app);
+        $config->hubTokenTtl();
+        $config->hubClockSkew();
+        if (!$app->environment('production') && ($config->hubJwtSecret() === null || $config->hubWebhookSecret() === null)) {
+            Log::warning('[Vaulter] Collaboration requires nonempty, different JWT and webhook secrets.');
+        }
 
         self::registerBroadcastChannel();
     }

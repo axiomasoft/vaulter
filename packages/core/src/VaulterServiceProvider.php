@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter;
 
 use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -21,6 +22,7 @@ use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\OffersModules;
 use Vaulter\Providers\HttpRegistrar;
+use Vaulter\Security\ProductionInvariants;
 
 /**
  * The core provider offers the core manifest and runs the module kernel:
@@ -84,6 +86,19 @@ final class VaulterServiceProvider extends PackageServiceProvider
                 return;
             }
             $applier->register($kernel->compiled());
+        });
+        $this->app->booted(function (): void {
+            if ($this->app->runningInConsole() || !$this->app->environment('production') || !$this->app->make(Kernel::class)->isValid()) {
+                return;
+            }
+            $this->app->make(ProductionInvariants::class)->assertSecure();
+        });
+        // One listener for the canonical Symfony command name: global options, aliases and Artisan::call() resolve first.
+        $this->app->make('events')->listen(CommandStarting::class, function (CommandStarting $event): void {
+            if (!$this->app->environment('production') || !ProductionInvariants::guards($event->command) || !$this->app->make(Kernel::class)->isValid()) {
+                return;
+            }
+            $this->app->make(ProductionInvariants::class)->assertSecure();
         });
     }
 

@@ -5930,6 +5930,62 @@
             "change": "added",
             "decision": "PLAN4-D38",
             "reason": "P3.3 preserves collaboration.sessions.create and documents.collaboration.session; internal aggregate moves from collaboration.session to documents.collaboration_session to satisfy the declaring module ownership invariant."
+        },
+        {
+            "change": "added",
+            "decision": "D10",
+            "id": "config:vaulter.security.accepted_risks",
+            "kind": "config",
+            "reason": "P5.1: accepted_risks maps a known production invariant id to a nonempty reason; the risk is logged once per boot, structural configuration errors are never accepted"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.append",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.checkpoint",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.compaction.lease",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.recheck",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.renew",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

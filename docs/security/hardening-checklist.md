@@ -24,3 +24,4 @@ It must end without errors. Then confirm each item:
 - [ ] `vaulter-drive.downloads.direct_ttl_seconds` is as short as clients allow, or `delivery_mode` is `strict`.
 - [ ] No deprecated config keys remain (`core.config.deprecated_keys`).
 - [ ] Database is PostgreSQL, MySQL or MariaDB — SQLite only for development.
+- [ ] `vaulter doctor` reports no unaccepted production invariant (`core.production_invariants`: `drive.permission-driver`, `collaboration.secrets`, `collaboration.hub-url`, `webhooks.schemes`, `webhooks.blocked-ranges`, `core.tenancy`); any `vaulter.security.accepted_risks` entry carries a nonempty reason ([ADR-0036](/adr/0036-secure-production-defaults)).

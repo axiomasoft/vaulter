@@ -6,7 +6,6 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
   public const int MAX_TOKEN_TTL = 300
   public const int RETRY_HORIZON_SECONDS = 10
   public function assertDistinctHubSecrets(): void
-  public function assertSecrets(Illuminate\Contracts\Foundation\Application $app): void
   public function channelPrefix(): string
   public function checkpointRequestBytes(): int
   public function compactionLeaseTtl(): int

@@ -145,7 +145,8 @@
                 "packages/core/tests/Console/CommandsReferenceCommandTest.php",
                 "packages/core/tests/Doctor/DoctorJsonSchemaTest.php",
                 "packages/core/tests/Doctor/DoctorRunnerTest.php",
-                "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php"
+                "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
+                "packages/core/tests/Security/ProductionInvariantsTest.php"
             ],
             "uses": [
                 "core-kernel",

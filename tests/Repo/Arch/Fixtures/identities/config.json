@@ -1305,6 +1305,13 @@
             "id": "config:vaulter-documents.collaboration.session_ttl",
             "kind": "config",
             "reason": "P3.7 documents policy bounds grant lifetime to 1..300 seconds."
+        },
+        {
+            "change": "added",
+            "decision": "D10",
+            "id": "config:vaulter.security.accepted_risks",
+            "kind": "config",
+            "reason": "P5.1: accepted_risks maps a known production invariant id to a nonempty reason; the risk is logged once per boot, structural configuration errors are never accepted"
         }
     ],
     "items": [
@@ -3959,6 +3966,17 @@
         {
             "default": "everyMinute",
             "id": "config:vaulter.schedule.outbox_relay",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter.security.accepted_risks",
             "owner": "core",
             "registered_defaults": true,
             "root": "vaulter",

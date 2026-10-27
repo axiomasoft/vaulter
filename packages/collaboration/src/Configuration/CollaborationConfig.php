@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Support\Facades\Log;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Data\RoomRef;
@@ -310,24 +308,6 @@ final readonly class CollaborationConfig
                 .'Fix: set VAULTER_COLLAB_SECRET (JWT key, Laravel only) and VAULTER_COLLAB_WEBHOOK_SECRET (shared with the hub) to different values.',
             );
         }
-    }
-
-    /**
-     * An active collaboration module needs a nonempty JWT secret and a different nonempty webhook secret: production
-     * refuses to boot without them, any other environment logs a warning.
-     */
-    public function assertSecrets(Application $app): void
-    {
-        $jwt = $this->hubJwtSecret();
-        $webhook = $this->hubWebhookSecret();
-        if ($jwt !== null && $webhook !== null && $jwt !== $webhook) {
-            return;
-        }
-        $message = '[Vaulter] Collaboration requires nonempty, different JWT and webhook secrets.';
-        if ($app->environment('production')) {
-            throw new InvalidConfigurationException($message);
-        }
-        Log::warning($message);
     }
 
     /** A positive integer setting; anything else reads as the default. */

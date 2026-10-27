@@ -23,7 +23,8 @@ use Vaulter\Webhooks\WebhooksSchedule;
 #[Api]
 final readonly class WebhooksConfig
 {
-    private const array DEFAULT_BLOCKED_IP_RANGES = [
+    /** @internal Floor of the webhooks.blocked-ranges production invariant. */
+    public const array DEFAULT_BLOCKED_IP_RANGES = [
         '0.0.0.0/8',
         '10.0.0.0/8',
         '100.64.0.0/10',

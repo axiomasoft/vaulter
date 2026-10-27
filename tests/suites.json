@@ -31,6 +31,7 @@
                         "packages/core/tests/Modules/CapabilitiesTest.php",
                         "packages/core/tests/Modules/ExtensionRegistryTest.php",
                         "packages/core/tests/Modules/SealTest.php",
+                        "packages/core/tests/Security/ProductionInvariantsTest.php",
                         "packages/core/tests/Unit/StorageAdapterRemovedGuardTest.php"
                     ]
                 },
@@ -1276,7 +1277,8 @@
                         "packages/webhooks/tests/Arch/ArchTest.php",
                         "packages/webhooks/tests/Arch/ConfigurationBoundaryTest.php",
                         "packages/webhooks/tests/Arch/PublicApiSnapshotTest.php",
-                        "packages/webhooks/tests/Arch/TestingBoundaryTest.php"
+                        "packages/webhooks/tests/Arch/TestingBoundaryTest.php",
+                        "packages/webhooks/tests/Security/WebhooksInvariantsTest.php"
                     ]
                 },
                 {
@@ -1982,6 +1984,7 @@
                         "serial"
                     ],
                     "files": [
+                        "packages/collaboration/tests/Configuration/CollaborationBootMatrixTest.php",
                         "packages/collaboration/tests/Configuration/CollaborationConfigTest.php",
                         "packages/collaboration/tests/Configuration/CollaborationSecretsTest.php",
                         "packages/collaboration/tests/Configuration/CollaborationWiringBoundaryTest.php",

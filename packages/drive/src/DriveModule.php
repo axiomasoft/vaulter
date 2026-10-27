@@ -7,6 +7,7 @@ namespace Vaulter\Drive;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Routing\RouteLabelSource;
+use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Doctor\Checks\RoutesAuthCheck;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
@@ -67,6 +68,7 @@ use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Providers\DriveSliceRegistrar;
 use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Drive\Schema\DriveSchema;
+use Vaulter\Drive\Security\PermissionDriverInvariant;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
 use Vaulter\Drive\Uploads\Inspection\MimeConsistencyInspector;
 use Vaulter\Drive\Uploads\Inspection\ScanDispatchInspector;
@@ -147,6 +149,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
             ->operations(DriveOperationPolicies::class)
             // The drive's event types and its two event sinks.
             ->events(DriveEventType::class)
+            ->slot(ProductionInvariant::class, PermissionDriverInvariant::class, 'drive.permission-driver', key: 'drive.permission-driver')
             ->slot(EventSink::class, ActivitySink::class, 'drive.activity')
             ->slot(EventSink::class, ChangeJournalSink::class, 'drive.changes')
             ->slot(RouteLabelSource::class, DriveRouteLabels::class, 'drive.routes')

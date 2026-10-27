@@ -20,6 +20,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Security\ProductionInvariants;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
@@ -380,3 +381,45 @@ function insertOutboxRow(array $event, array $delivery = []): void
         ...$delivery,
     ]);
 }
+
+it('reports production invariants as unaccepted, accepted or satisfied under the core.production_invariants check', function (): void {
+    app()->forgetInstance(ProductionInvariants::class);
+    config()->set('vaulter-webhooks.delivery.allowed_schemes', ['http', 'https']);
+    config()->set('vaulter.security.accepted_risks', []);
+
+    $unaccepted = coreFindings('core.production_invariants', production: true);
+    expect(collect($unaccepted)->map(fn (DoctorFinding $f) => $f->evidence['status'] ?? null)->all())->toContain('not_accepted')
+        ->and(collect($unaccepted)->pluck('message')->implode(' '))->toContain('webhooks.schemes');
+
+    // Without --production the same unaccepted violation is only a warning.
+    $default = coreFindings('core.production_invariants');
+    expect(collect($default)->map(fn (DoctorFinding $f) => $f->evidence['status'] ?? null)->all())->toContain('not_accepted')
+        ->and(collect($default)->firstWhere('code', 'core.production_invariants.violated')->severity)->toBe(DoctorSeverity::Warning);
+
+    app()->forgetInstance(ProductionInvariants::class);
+    config()->set('vaulter.security.accepted_risks', ['webhooks.schemes' => 'internal receivers over a private network']);
+
+    $accepted = coreFindings('core.production_invariants', production: true);
+    expect(collect($accepted)->map(fn (DoctorFinding $f) => $f->evidence['status'] ?? null)->all())->toContain('accepted');
+
+    app()->forgetInstance(ProductionInvariants::class);
+    config()->set('vaulter.security.accepted_risks', ['webhooks.schemes' => '  ']);
+
+    $empty = coreFindings('core.production_invariants', production: true);
+    expect(collect($empty)->pluck('message')->implode(' '))->toContain('empty reason')
+        ->and(collect($empty)->map(fn (DoctorFinding $f) => $f->evidence['status'] ?? null)->all())->toContain('invalid_risk_metadata', 'not_accepted')
+        ->and(collect($empty)->map(fn (DoctorFinding $f) => $f->evidence['status'] ?? null)->all())->not->toContain('structural')
+        ->and(collect($empty)->firstWhere('code', 'core.production_invariants.violated')->severity)->toBe(DoctorSeverity::Error)
+        ->and(collect($empty)->firstWhere('code', 'core.production_invariants.accepted_risks_invalid')->severity)->toBe(DoctorSeverity::Warning);
+
+    app()->forgetInstance(ProductionInvariants::class);
+    config()->set('vaulter.security.accepted_risks', ['webhooks.schemes' => 'reason', 'no.such-id' => 'reason']);
+    $unknown = coreFindings('core.production_invariants', production: true);
+    expect(collect($unknown)->map(fn (DoctorFinding $f) => $f->evidence['status'] ?? null)->all())->toContain('accepted', 'invalid_risk_metadata')
+        ->and(collect($unknown)->firstWhere('code', 'core.production_invariants.accepted')->severity)->toBe(DoctorSeverity::Warning);
+
+    app()->forgetInstance(ProductionInvariants::class);
+    config()->set('vaulter-webhooks.delivery.allowed_schemes', ['https']);
+    config()->set('vaulter.security.accepted_risks', []);
+    expect(collect(coreFindings('core.production_invariants', production: true))->pluck('message')->implode(' '))->not->toContain('webhooks.schemes');
+});

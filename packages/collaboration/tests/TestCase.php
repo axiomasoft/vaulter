@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Tests;
 
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Vaulter\Collaboration\Tests\Support\ValidateReleaseOpenApiResponses;
 use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
@@ -44,10 +46,15 @@ abstract class TestCase extends OrchestraTestCase
     /**
      * @param Application $app
      */
+    /** @var array<string, mixed> */
+    public static array $configOverrides = [];
+
+    public static ?string $environmentOverride = null;
+
     protected function defineEnvironment($app): void
     {
         if ((string) env('VAULTER_OPENAPI_VALIDATE') === '1') {
-            $app->make(\Illuminate\Contracts\Http\Kernel::class)->pushMiddleware(\Vaulter\Collaboration\Tests\Support\ValidateReleaseOpenApiResponses::class);
+            $app->make(Kernel::class)->pushMiddleware(ValidateReleaseOpenApiResponses::class);
         }
 
         $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
@@ -69,6 +76,18 @@ abstract class TestCase extends OrchestraTestCase
 
         // Pin the auto-increment strategy: the tests assert integer keys on the drive chain they build.
         $app['config']->set('vaulter.ids.strategy', 'bigint');
+
+        // A whole-application scenario (CollaborationBootMatrixTest) sets these before refreshing the application; empty otherwise.
+        foreach (self::$configOverrides as $key => $value) {
+            $app['config']->set($key, $value);
+        }
+        if (self::$environmentOverride !== null) {
+            $environment = self::$environmentOverride;
+            // Testbench pins `testing` after this hook; production guards read the environment only when they run.
+            $app->booting(static function () use ($app, $environment): void {
+                $app['env'] = $environment;
+            });
+        }
     }
 
     protected function defineDatabaseMigrations(): void

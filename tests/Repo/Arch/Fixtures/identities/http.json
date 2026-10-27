@@ -812,6 +812,55 @@
             "id": "route:vaulter.v1.documents.collaboration.session",
             "kind": "http",
             "reason": "P3.3 moves session ownership/controller/request/resource to documents; route identity and 201 preserved, neutral protocol/version/endpoint/token/expires_at/mode/node_id/generation/schema_version/options wire."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.append",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.checkpoint",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.compaction.lease",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.recheck",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D38",
+            "id": "route:vaulter.v1.collaboration.hub.renew",
+            "kind": "http",
+            "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
         }
     ],
     "flags": {
@@ -1026,14 +1075,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.append",
-            "openapi": {
-                "operation_id": "collaboration.hub.append",
-                "path": "/collaboration/hub/append"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubAppendController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAppendController"
@@ -1059,14 +1105,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.authenticate",
-            "openapi": {
-                "operation_id": "collaboration.hub.authenticate",
-                "path": "/collaboration/hub/authenticate"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubAuthenticateController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAuthenticateController"
@@ -1093,14 +1136,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
             ],
             "name": "vaulter.v1.collaboration.hub.checkpoint",
-            "openapi": {
-                "operation_id": "collaboration.hub.checkpoint",
-                "path": "/collaboration/hub/checkpoint"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubCheckpointController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCheckpointController"
@@ -1127,14 +1167,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
             ],
             "name": "vaulter.v1.collaboration.hub.compaction.lease",
-            "openapi": {
-                "operation_id": "collaboration.hub.compaction.lease",
-                "path": "/collaboration/hub/compaction/lease"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubCompactionLeaseController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCompactionLeaseController"
@@ -1160,14 +1197,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.load",
-            "openapi": {
-                "operation_id": "collaboration.hub.load",
-                "path": "/collaboration/hub/load"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubLoadController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController"
@@ -1194,14 +1228,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
             ],
             "name": "vaulter.v1.collaboration.hub.recheck",
-            "openapi": {
-                "operation_id": "collaboration.hub.recheck",
-                "path": "/collaboration/hub/recheck"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubRecheckController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRecheckController"
@@ -1227,14 +1258,11 @@
                 "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.renew",
-            "openapi": {
-                "operation_id": "collaboration.hub.renew",
-                "path": "/collaboration/hub/renew"
-            },
             "owner": "collaboration",
             "requires": [
                 "vaulter.modules.collaboration"
             ],
+            "route_only": true,
             "source": {
                 "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubRenewController.php",
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRenewController"
