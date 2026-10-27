@@ -453,18 +453,6 @@
             ]
         },
         {
-            "path": "packages/core/tests/Concerns",
-            "zones": [
-                "core"
-            ]
-        },
-        {
-            "path": "packages/core/tests/E2E",
-            "zones": [
-                "core"
-            ]
-        },
-        {
             "path": "packages/core/tests/Fixtures",
             "zones": [
                 "core"

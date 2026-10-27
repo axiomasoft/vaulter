@@ -2470,6 +2470,16 @@
         {
             "call": "getMorphClass",
             "calls": 1,
+            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser::getMorphClass#getMorphClass",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/src/Testing/Fixtures/CollaborationTestUser.php",
+                "symbol": "Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser::getMorphClass"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
             "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
             "owner": "collaboration",
             "source": {

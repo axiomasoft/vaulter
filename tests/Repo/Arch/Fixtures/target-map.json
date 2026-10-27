@@ -1687,6 +1687,20 @@
         },
         {
             "action": "keep",
+            "eloquent": true,
+            "file": "packages/collaboration/src/Testing/Fixtures/CollaborationTestUser.php",
+            "fqcn": "Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser"
+        },
+        {
+            "action": "keep",
             "eloquent": false,
             "file": "packages/collaboration/src/Testing/Fixtures/FakeHostUserResolver.php",
             "fqcn": "Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver",
@@ -15136,7 +15150,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\GuardsRemoval",
-            "surface": "Internal",
+            "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Modules\\GuardsRemoval"
         },
         {
@@ -15346,7 +15360,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\OwnsSchema",
-            "surface": "Internal",
+            "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Modules\\OwnsSchema"
         },
         {
@@ -15360,7 +15374,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\RemovalGuard",
-            "surface": "Internal",
+            "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Modules\\RemovalGuard"
         },
         {
@@ -15766,7 +15780,7 @@
             "package": "core",
             "phase": "P3",
             "rule": "core-kernel:fqcn:Vaulter\\Providers\\SchedulingRegistrar",
-            "surface": "Internal",
+            "surface": "Spi:Call",
             "target_fqcn": "Vaulter\\Providers\\SchedulingRegistrar"
         },
         {
@@ -15850,7 +15864,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Schema\\ModuleSchema",
-            "surface": "Internal",
+            "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Schema\\ModuleSchema"
         },
         {
@@ -15920,7 +15934,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Schema\\ValueObjects\\KeyColumnExpectation",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Schema\\ValueObjects\\KeyColumnExpectation"
         },
         {
@@ -16046,7 +16060,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Support\\LoadTier",
-            "surface": "Internal",
+            "surface": "Spi:Call",
             "target_fqcn": "Vaulter\\Support\\LoadTier"
         },
         {

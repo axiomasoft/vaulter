@@ -2304,6 +2304,7 @@
                         "tests/Repo/Arch/InventoryHarnessTest.php",
                         "tests/Repo/Arch/KernelBudgetTest.php",
                         "tests/Repo/Arch/MoveTypesTest.php",
+                        "tests/Repo/Arch/PrivateConsumerBoundaryTest.php",
                         "tests/Repo/Arch/SurfaceManifestTest.php",
                         "tests/Repo/Arch/SurfaceRulesTest.php",
                         "tests/Repo/Arch/TargetMapTest.php",

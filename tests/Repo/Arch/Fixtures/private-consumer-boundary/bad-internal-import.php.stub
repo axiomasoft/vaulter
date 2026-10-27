@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; use Vaulter\Drive\Models\Node; final class X { public function f(Node $n): void {} }

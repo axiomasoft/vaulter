@@ -1,0 +1,19 @@
+{
+    "roots": [
+        "packages/collaboration/src"
+    ],
+    "dynamic": [
+        {
+            "consumer": "packages/collaboration/src/Providers/CollaborationRegistrar.php",
+            "target": "config"
+        },
+        {
+            "consumer": "packages/collaboration/src/Providers/CollaborationRegistrar.php",
+            "target": "vaulter.config_validator.collaboration"
+        },
+        {
+            "consumer": "packages/collaboration/src/Providers/CollaborationRegistrar.php",
+            "target": "vaulter.config_validators"
+        }
+    ]
+}

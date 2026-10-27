@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; use Vaulter\Support\LoadTier as Tier; final class X { public function f(): void { Tier::set("M"); } }

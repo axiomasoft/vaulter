@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; use Vaulter\Attributes\Api; use Vaulter\Drive\Models\Node; #[Api] final class X { public function f(): Node { throw new \LogicException; } }

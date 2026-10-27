@@ -324,6 +324,12 @@
             "value": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
             "owner": "collaboration",
             "why": "P3.7 trusted provider morph identity for typed principal resolution; PLAN4-D16/D17."
+        },
+        {
+            "match": "exact",
+            "value": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser::getMorphClass#getMorphClass",
+            "owner": "collaboration",
+            "why": "P3.8 addon-owned test user keeps the morph identity the host grants its test users under; PLAN4-D17."
         }
     ],
     "formats": [
