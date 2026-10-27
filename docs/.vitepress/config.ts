@@ -69,8 +69,7 @@ const guideSidebar = [
     text: 'Realtime & UI',
     collapsed: false,
     items: [
-      { text: 'Realtime Collaboration', link: '/guides/collaboration' },
-      { text: 'Collaboration hub (Docker)', link: '/guides/hub' },
+      { text: 'Collaboration adapters', link: '/extending/collaboration-protocols' },
       { text: 'Vue package (@vaulter/vue)', link: '/guides/vue' },
       { text: 'Filament admin plugin', link: '/guides/filament' },
     ],
@@ -199,8 +198,7 @@ const ruGuideSidebar = [
     text: 'Realtime и интерфейс',
     collapsed: false,
     items: [
-      { text: 'Совместное редактирование', link: '/ru/guides/collaboration' },
-      { text: 'Хаб коллаборации (Docker)', link: '/ru/guides/hub' },
+      { text: 'Адаптеры коллаборации', link: '/ru/extending/collaboration-protocols' },
       { text: 'Vue-пакет (@vaulter/vue)', link: '/ru/guides/vue' },
       { text: 'Плагин Filament', link: '/ru/guides/filament' },
     ],

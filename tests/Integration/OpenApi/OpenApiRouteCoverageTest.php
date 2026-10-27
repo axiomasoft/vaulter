@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
+
 use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
+
+require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
 
 // The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
 uses(EnablesWebhooksModule::class);
@@ -20,16 +24,7 @@ uses(EnablesWebhooksModule::class);
 /** @return array<string, LaravelRoute> route name without the version prefix => route */
 function v1Routes(): array
 {
-    $routes = [];
-    foreach (Route::getRoutes()->getRoutes() as $route) {
-        $name = (string) $route->getName();
-        if (str_starts_with($name, ValidateOpenApiResponses::PREFIX) && !ValidateOpenApiResponses::isProbe($name)) {
-            $routes[substr($name, strlen(ValidateOpenApiResponses::PREFIX))] = $route;
-        }
-    }
-    ksort($routes);
-
-    return $routes;
+    return ReleaseOpenApi::routes(Route::getRoutes()->getRoutes(), 'public');
 }
 
 it('names an operation for every vaulter.v1 route and a route for every operation', function (): void {
@@ -55,4 +50,24 @@ it('mounts the contract under the documented server url', function (): void {
     $server = OpenApiContract::shared()->document->servers[0]->url;
 
     expect($server)->toBe('/'.app(RoutesConfig::class)->versionedPrefix());
+});
+
+it('assigns every registered endpoint to exactly its owner spec with closed references', function (): void {
+    ReleaseOpenApi::assertContract(OpenApiContract::shared(), v1Routes());
+    ReleaseOpenApi::assertContract(ReleaseOpenApi::privateContract(), ReleaseOpenApi::routes(Route::getRoutes()->getRoutes(), 'private'));
+    ReleaseOpenApi::assertSharedPrimitives(OpenApiContract::shared(), ReleaseOpenApi::privateContract());
+    expect(OpenApiContract::shared()->operation('documents.collaboration.session'))->not->toBeNull();
+});
+
+it('rejects public endpoint loss orphan references and missing problem metadata', function (): void {
+    $source = \Symfony\Component\Yaml\Yaml::parseFile(OpenApiContract::specPath());
+    $missing = $source;
+    unset($missing['paths'][array_key_first($missing['paths'])]);
+    $orphan = $source;
+    $orphan['components']['schemas']['Problem']['properties']['code']['$ref'] = '#/components/schemas/UnownedProblemCode';
+    $metadata = $source;
+    unset($metadata['components']['schemas']['Problem']['x-vaulter-problems']);
+    foreach ([$missing, $orphan, $metadata] as $fixture) {
+        expect(fn () => ReleaseOpenApi::assertContract(OpenApiContract::fromYaml(\Symfony\Component\Yaml\Yaml::dump($fixture, 30)), v1Routes()))->toThrow(LogicException::class);
+    }
 });

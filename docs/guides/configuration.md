@@ -248,12 +248,7 @@ See [Export](/guides/export).
 
 ## Collaboration {#collaboration}
 
-Realtime editing is the separate, opt-in package `axioma-studio/vaulter-collaboration` with the config file
-`config/vaulter-collaboration.php` (publish tag `vaulter-collaboration-config`). It is active only when
-`vaulter.modules.collaboration` is `true`; then the hub URL (`hub.url`) and both secrets (`hub.jwt_secret`,
-`hub.webhook_secret`, present and different) are required — the application does not boot without them. The keys
-(`hub.*`, `control.*`, `mode`, `limits.*`, `compaction.*`, `drain.*`, `retention.*`, `schedule.*`) are listed in
-[Realtime Collaboration → Config](/guides/collaboration#config).
+Commercial add-on operations are documented in its private guide.
 
 ## Typed access
 

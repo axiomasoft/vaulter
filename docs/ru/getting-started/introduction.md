@@ -18,7 +18,7 @@ Vaulter поставляется набором пакетов — подклю�
 - **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::drive()` / `DriveHandle`.
   Автоматически подтягивает `axioma-studio/vaulter-media` (движок CAS).
 - **`axioma-studio/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
-- **`axioma-studio/vaulter-collaboration`** — opt-in редактирование в реальном времени (Yjs) с Node-хабом и квитанциями сохранения.
+- Совместное редактирование доступно как коммерческое дополнение.
 - **`@vaulter/vue`** — компоненты Vue 3 + TypeScript, composable-функции и API-клиент.
 - **`@vaulter/vue-collaboration`** — браузерная часть редактирования в реальном времени (очередь обновлений, статус сохранения).
 

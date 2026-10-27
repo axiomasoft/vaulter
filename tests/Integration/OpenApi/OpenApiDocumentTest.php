@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
+
+require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
+
 
 // The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
 uses(EnablesWebhooksModule::class);
@@ -158,7 +162,7 @@ it('stamps every response with the api version and the request id, and every err
 it('requires the stable fields of a problem and lists every catalog code as an example', function (): void {
     $problem = OpenApiContract::shared()->document->components->schemas->Problem;
     $examples = $problem->properties->code->examples;
-    $catalog = array_keys(app(ProblemCatalog::class)->all());
+    $catalog = array_keys(array_filter(app(ProblemCatalog::class)->all(), static fn (array $row): bool => ReleaseOpenApi::moduleChannel($row['module']) === 'public'));
     sort($catalog);
 
     expect($problem->required)->toBe(['type', 'title', 'status', 'code', 'request_id'])

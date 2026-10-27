@@ -1,0 +1,27 @@
+[
+    {
+        "path": "packages/vue/src/index.ts",
+        "pattern": "// Collaboration seam (the implementation is @vaulter/vue-collaboration)",
+        "reason": "Exact explanatory comment identifying the optional adapter implementation at the public protocol seam; no import or dependency edge."
+    },
+    {
+        "path": "packages/vue/src/plugin.ts",
+        "pattern": "   * Realtime editing: `createCollaborationAdapter()` of `@vaulter/vue-collaboration`. Without it",
+        "reason": "Exact explanatory comment identifying the optional adapter implementation at the public protocol seam; no import or dependency edge."
+    },
+    {
+        "path": "packages/vue/src/components/VaulterDocumentNode.vue",
+        "pattern": "// a collaboration adapter (`@vaulter/vue-collaboration`) and the node's presentation says it is",
+        "reason": "Exact explanatory comment identifying the optional adapter implementation at the public protocol seam; no import or dependency edge."
+    },
+    {
+        "path": "packages/vue/src/collaboration-adapter.ts",
+        "pattern": "// `@vaulter/vue` never imports `yjs` or `@hocuspocus/*`. The implementation is",
+        "reason": "Exact explanatory comment identifying the optional adapter implementation at the public protocol seam; no import or dependency edge."
+    },
+    {
+        "path": "packages/vue/src/collaboration-adapter.ts",
+        "pattern": "// `createCollaborationAdapter()` of `@vaulter/vue-collaboration`; a host without it edits",
+        "reason": "Exact explanatory comment identifying the optional adapter implementation at the public protocol seam; no import or dependency edge."
+    }
+]

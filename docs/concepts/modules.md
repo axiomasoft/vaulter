@@ -22,7 +22,6 @@ module registers nothing at runtime; its database schema is still installed.
 | `azgard` | `vaulter-azgard` | auto (selected with `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (the panel plugin is added to a panel by the host) | `drive` |
 | `webhooks` | `vaulter-webhooks` (installed separately) | **opt-in** | `core`, `drive` |
-| `collaboration` | `vaulter-collaboration` (installed separately) | **opt-in** | `core`, `drive`, `documents` |
 
 *Auto* modules are active unless switched off; *opt-in* modules — the ones that open outbound
 network traffic or need secrets — only when switched on. One config key overrides the policy:

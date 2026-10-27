@@ -903,48 +903,19 @@ reads included, before the id is looked up. See [Webhooks](/guides/webhooks).
 
 ---
 
-## Realtime collaboration
+## Collaboration protocols
 
-TipTap/Yjs collaboration over documents, served by the opt-in `vaulter-collaboration` module
-(`vaulter.modules.collaboration`; the routes exist only while it is active). See
-[Collaboration](/guides/collaboration).
+Public documents owns a neutral session independently of transport implementations. See [collaboration protocols](/extending/collaboration-protocols).
 
 #### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
-Joins the document's room: a session for its current generation, read-write for an editor,
-read-only for everyone else who may view it.
-
-| Field | Rule |
-|---|---|
-| `schema_version` | optional, integer — the schema the client's editor speaks; another version than the type's gets a read-only session |
-
-**Gate:** `view`. **Response:** `201 { "data": { "driver", "room", "node_id", "drive_id", "epoch",
-"schema_version", "mode", "token", "url" } }`, never stored. Switched-off collaboration, or a
-type that cannot collaborate, is `409 collaboration_unavailable`; a route of an inactive module answers `404`.
+The common policy checks access and the stored protocol binding. The `201` response contains `data`:
+`protocol`, `version`, `endpoint`, `token`, `expires_at`, `mode`, `node_id`, `generation`, `schema_version`, `options`.
+Nonsecret `options` are protocol-defined. An unavailable binding answers `409 collaboration_unavailable`.
 
 ### Hub endpoints (server to server)
 
-The hub's calls use the `hub` stack: `throttle:vaulter-public`, the protocol header and the signature checks below. They are
-registered only while the collaboration module is active, never take a user session, and answer refusals as problem+json
-(`401 actor_required` for a call that is not signed). Every call must carry `X-Vaulter-Collab-Protocol: 2`
-(`409 collaboration_protocol_mismatch` otherwise) and every answer repeats it. Room calls require the room JWT **and** the HMAC
-signature of the body (`ResolveCollaborationCall`); the hub's own calls (`compaction/lease`, `checkpoint`, `recheck`) are
-authenticated by the body signature alone. The protocol — room, generation fence, the receipt, the seed,
-`409 collaboration_epoch_mismatch` as a terminal answer — is in [Collaboration](/guides/collaboration#the-hub-protocol-server-to-server).
-
-| Route | Name | Answers |
-|---|---|---|
-| `POST v1/collaboration/hub/authenticate` | `collaboration.hub.authenticate` | `{ allowed, mode, userId, epoch }` |
-| `POST v1/collaboration/hub/load` | `collaboration.hub.load` | `{ generation, schema_version, type, state_version, checkpoint, checkpoint_seq, head_seq, content, tail[] }` |
-| `POST v1/collaboration/hub/append` | `collaboration.hub.append` | the committed receipt `{ generation, update_id, seq, sha256, persisted, permissions_stale }`; `503 collaboration_draining` while a drain runs |
-| `POST v1/collaboration/hub/renew` | `collaboration.hub.renew` | `{ token, room, generation, scope, mode, exp, jti, permissions_version }` |
-| `POST v1/collaboration/hub/recheck` | `collaboration.hub.recheck` | `{ results: [{ id, access, reason, jti }] }` — `none`, `read` or `write` per connection |
-| `POST v1/collaboration/hub/compaction/lease` | `collaboration.hub.compaction.lease` | an array of leases: checkpoint, version, tail and a lease token |
-| `POST v1/collaboration/hub/checkpoint` | `collaboration.hub.checkpoint` | `{ checkpoint_version, marker_cleared }`; `409 collaboration_checkpoint_conflict` |
-
-There is no whole-state store route: a save is an `append` with a receipt.
-
----
+Commercial add-on operations are documented in its private guide.
 
 ## CORS
 
@@ -952,9 +923,7 @@ All routes on this page mount under `config('vaulter.routes.prefix')` (default
 `api/vaulter`), which falls under Laravel's default `config/cors.php` matcher
 `paths => ['api/*']` — even though that file isn't published by default, the
 default `allowed_origins => ['*']` still applies to every route documented here,
-not just the collaboration hub (which has its own, separate
-`VAULTER_COLLAB_ALLOWED_ORIGINS` CSWSH guard — see
-[Collaboration](/guides/collaboration)).
+for the public HTTP contract. Configure any optional transport separately using its private guide.
 
 With `allowed_origins: ['*']` any origin can read responses from this REST surface
 in a browser. The practical exposure depends on how the host authenticates: a

@@ -18,7 +18,7 @@ It must end without errors. Then confirm each item:
 - [ ] The permission driver is a real one — not `null` (`core.access.*`).
 - [ ] Scanning is **required** for uploads and the policy is current (`drive.scan.policy`).
 - [ ] Webhook delivery uses the URL guard; set `vaulter-webhooks.delivery.allowed_ip_ranges` only to what you need.
-- [ ] Collaboration, if enabled: `wss://` hub URL, distinct `jwt_secret` and `webhook_secret`, `token_ttl` ≤ 300 s, a shared `drain.cache_store`, the hub's management port off public networks (`collaboration.hub`).
+- [ ] See the add-on’s hardening guide.
 - [ ] The cache store is shared and supports atomic locks (`core.cache`).
 - [ ] The queue driver is not `sync` (`core.queue`).
 - [ ] `vaulter-drive.downloads.direct_ttl_seconds` is as short as clients allow, or `delivery_mode` is `strict`.

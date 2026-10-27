@@ -18,7 +18,7 @@ Vaulter ships as a set of packages — install the ones your app needs:
 - **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::drive()` / `DriveHandle`.
   Pulls in `axioma-studio/vaulter-media` (the CAS engine) automatically.
 - **`axioma-studio/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
-- **`axioma-studio/vaulter-collaboration`** — opt-in realtime editing (Yjs) with a Node hub and committed save receipts.
+- Realtime editing is available as a commercial add-on.
 - **`@vaulter/vue`** — the Vue 3 + TypeScript components, composables and API client.
 - **`@vaulter/vue-collaboration`** — the browser side of realtime editing (update queue, save status).
 

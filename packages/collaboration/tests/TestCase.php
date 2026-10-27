@@ -46,7 +46,9 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function defineEnvironment($app): void
     {
-        $this->validateOpenApiResponses($app);
+        if ((string) env('VAULTER_OPENAPI_VALIDATE') === '1') {
+            $app->make(\Illuminate\Contracts\Http\Kernel::class)->pushMiddleware(\Vaulter\Collaboration\Tests\Support\ValidateReleaseOpenApiResponses::class);
+        }
 
         $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
         $app['config']->set('database.default', 'testing');

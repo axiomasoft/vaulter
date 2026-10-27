@@ -32,7 +32,7 @@ features:
     details: A Vaulter-owned ACL engine plus swappable role drivers (database, Gate, Spatie, AzGuard).
     link: /concepts/access-model
   - title: Realtime collaboration
-    details: TipTap/Yjs editing through an opt-in package and a Hocuspocus hub, with committed save receipts and bounded revocation.
+    details: Protocol-neutral session and adapter contracts, with realtime editing available as a commercial add-on.
     link: /guides/collaboration
   - title: Vue + Filament
     details: The @vaulter/vue Drive UI and a Filament 5 admin plugin, ready to embed.

@@ -126,7 +126,6 @@ signatures and the binding point you swap it through.
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | returned by `ContentStore::stage()` |
 | Cas | `BlobPins` | the media contract the owner of a blob link (the drive) pins and unpins through |
-| Collaboration | `CollaborationDriver` (documents) | container binding, `config('vaulter-collaboration.driver')` |
 | Collaboration | `HostUserResolver` (collaboration) | container binding |
 | Collaboration | `CollaborativeState` (documents) | the public state contract the collaboration log writes through (API, not an extension point) |
 | Collaboration | `PendingStateDrainer` (documents) | implemented by the collaboration module; documents calls it before it serves or replaces a pending document |
@@ -440,40 +439,9 @@ For a custom byte backend (S3 / local), implement `StorageDriver` and bind it �
 
 ### Collaboration
 
-#### `Vaulter\Documents\Contracts\CollaborationDriver`
+#### Collaboration protocol
 
-The realtime-collaboration transport of the node tree. The contract lives in documents; the implementation is
-`Vaulter\Collaboration\HocuspocusCollaborationDriver` (config `vaulter-collaboration.driver`). Abstracts how
-a document node (`kind=document`, content in the `v_documents` aggregate) is joined for
-realtime editing. The authorization decision is **not** the driver's job — the
-controller resolves it through `AccessResolver` and passes the granted ability in; the
-driver only encodes it into the session descriptor (`readOnly = ability is not Edit`).
-
-```php
-interface CollaborationDriver
-{
-    public function type(): CollaborationDriverType;
-
-    /** @param int|string $actorId the connecting host user's id (the JWT `sub`) */
-    public function issueSession(Node $node, Ability $ability, int|string $actorId): CollaborationSession;
-}
-```
-
-#### `Vaulter\Collaboration\Contracts\HostUserResolver`
-
-Materialises a host user (`Authorizable`) by id, so the server-to-server
-collaboration webhook — which carries only a user id, no session — can run the
-`AccessResolver` against a real actor. Returns `null` when the id resolves to nothing
-(the webhook then answers `allowed=false` rather than failing open). The default
-`Vaulter\Collaboration\HostUserResolver` defers to the configured auth user-provider; bind
-your own to override.
-
-```php
-interface HostUserResolver
-{
-    public function find(int|string $id): ?Authorizable;
-}
-```
+The public `CollaborationProtocolDriver` receives a verified `CollaborationGrant` and returns a neutral session; the common policy checks access. See [collaboration protocols](/extending/collaboration-protocols).
 
 #### `Vaulter\Documents\State\CollaborativeState` and `PendingStateDrainer`
 

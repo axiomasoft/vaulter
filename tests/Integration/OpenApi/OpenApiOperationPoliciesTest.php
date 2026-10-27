@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use Vaulter\Operations\OperationsReference;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
+
+require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
+
 
 /**
  * P6.7: the REST operations of openapi/vaulter-v1.yaml agree with the operation catalogue (D47) of every offered module.
@@ -19,6 +23,9 @@ function policiesByRoute(): array
 {
     $byRoute = [];
     foreach (app(OperationsReference::class)->rows() as $row) {
+        if (ReleaseOpenApi::moduleChannel($row['module']) !== 'public') {
+            continue;
+        }
         foreach ($row['routes'] as $route) {
             $byRoute[$route][] = ['operation' => $row['operation'], 'concurrency' => $row['concurrency'], 'idempotency' => $row['idempotency']];
         }

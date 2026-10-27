@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Symfony\Component\Yaml\Yaml;
 use Vaulter\Http\Problems\ErrorsReference;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
+
+require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
+
 
 require_once dirname(__DIR__).'/Http/Problems/ProblemCatalogHelpers.php';
 
@@ -12,12 +16,18 @@ require_once dirname(__DIR__).'/Http/Problems/ProblemCatalogHelpers.php';
  * P6.7: the Problem schema of openapi/vaulter-v1.yaml carries the machine table of the codes
  * (`x-vaulter-problems`: status, retryable, receipt, module) and the sorted list of codes as the examples of `code`. The
  * source of truth is the catalogue of the full installation; the document is regenerated, never edited by hand:
- * `UPDATE_OPENAPI_PROBLEMS=1 scripts/t sqlite -p core packages/core/tests/OpenApi/OpenApiProblemsTableTest.php`
+ * `UPDATE_OPENAPI_PROBLEMS=1 scripts/t sqlite -p integration tests/Integration/OpenApi/OpenApiProblemsTableTest.php`
  * rewrites the two blocks from `vaulter:errors:reference --openapi`.
  */
 function openApiProblemsReference(): ErrorsReference
 {
-    return new ErrorsReference(fullProblemCatalog());
+    return new ErrorsReference(new \Vaulter\Http\Problems\ProblemCatalog(
+        static fn (): array => array_map(
+            static fn (array $classes): array => array_map(static fn (string $class) => new $class, $classes),
+            array_filter(monorepoProblemSources(), static fn (string $module): bool => ReleaseOpenApi::moduleChannel($module) === 'public', ARRAY_FILTER_USE_KEY),
+        ),
+        app('translator'),
+    ));
 }
 
 /** @return array{'x-vaulter-problems': array<string, array<string, mixed>>, examples: list<string>} */
@@ -80,7 +90,7 @@ it('declares the table of the full installation in x-vaulter-problems', function
 });
 
 it('lists the sorted codes as the examples of the code property', function (): void {
-    $codes = array_keys(fullProblemCatalog()->all());
+    $codes = array_keys(array_filter(fullProblemCatalog()->all(), static fn (array $row): bool => ReleaseOpenApi::moduleChannel($row['module']) === 'public'));
     $sorted = $codes;
     sort($sorted, SORT_STRING);
 

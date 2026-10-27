@@ -21,7 +21,7 @@ HTML/Markdown, see [Export](./export.md).
 ::: info Documents are enabled by installing the package
 Install `axioma-studio/vaulter-documents`. Editing, revisions and document routes
 are available without a `document_versions` flag. Real-time collaboration is the separate, opt-in package
-`axioma-studio/vaulter-collaboration` ([Realtime Collaboration](/guides/collaboration)).
+a commercial add-on; the public contract is [collaboration protocols](/extending/collaboration-protocols).
 :::
 
 ## The data model

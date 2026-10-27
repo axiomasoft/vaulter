@@ -35,9 +35,8 @@ Documents owns the **aggregate** that realtime editing needs and nothing of the 
 - the public state contract `Vaulter\Documents\State\CollaborativeState` (`lock`, `markPending`, `publishCheckpoint`,
   `pendingDocuments`) that a transport writes through, and the contracts `CollaborationDriver` and `SupportsCollaboration`.
 
-The transport itself — the hub protocol, the update log, receipts and compaction — is the opt-in package
-[`axioma-studio/vaulter-collaboration`](../collaboration/README.md) ([ADR-0031](../../docs/adr/0031-collaboration-package-and-durability.md)).
-Without it documents are edited one at a time through the content endpoints.
+Realtime editing is available as a commercial add-on. A host registers its transport through the
+public protocol contracts; without a transport, documents use the content endpoints.
 
 ## Development in the monorepo
 

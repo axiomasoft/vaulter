@@ -2144,7 +2144,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 
 ## Additions (current − original)
 
-- `repo`: 300 (introduced P1.3)
+- `repo`: 304 (introduced P1.3)
 - `core`: 65
 - `media`: 148
 - `drive`: 427
@@ -2153,7 +2153,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `filament`: 27
 - `webhooks`: 148
 - `vue`: 31
-- `collaboration`: 354
+- `collaboration`: 360
 - `hub`: 30
 - `vue-collaboration`: 57
-- `integration`: 0
+- `integration`: 2

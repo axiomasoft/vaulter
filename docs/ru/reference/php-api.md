@@ -121,7 +121,6 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | возвращается из `ContentStore::stage()` |
 | Cas | `BlobPins` | контракт media, через который владелец связи с блобом (drive) ставит и снимает пины |
-| Collaboration | `CollaborationDriver` (documents) | привязка в контейнере, `config('vaulter-collaboration.driver')` |
 | Collaboration | `HostUserResolver` (collaboration) | привязка в контейнере |
 | Collaboration | `CollaborativeState` (documents) | публичный контракт состояния, через который пишет журнал коллаборации (API, не точка расширения) |
 | Collaboration | `PendingStateDrainer` (documents) | реализуется модулем коллаборации; documents вызывает его перед выдачей или заменой pending-документа |
@@ -361,39 +360,9 @@ interface BlobPins
 
 ### Collaboration
 
-#### `Vaulter\Documents\Contracts\CollaborationDriver`
+#### Протокол коллаборации
 
-Транспорт совместного редактирования в реальном времени по дереву узлов. Контракт живёт в documents; реализация —
-`Vaulter\Collaboration\HocuspocusCollaborationDriver` (конфиг `vaulter-collaboration.driver`). Абстрагирует то, как узел-документ (`kind=document`, контент в агрегате `v_documents`)
-присоединяется для редактирования в реальном времени. Решение об авторизации — **не** задача
-драйвера: контроллер резолвит его через `AccessResolver` и передаёт выданное право внутрь;
-драйвер лишь кодирует его в дескриптор сессии (`readOnly = право не Edit`).
-
-```php
-interface CollaborationDriver
-{
-    public function type(): CollaborationDriverType;
-
-    /** @param int|string $actorId the connecting host user's id (the JWT `sub`) */
-    public function issueSession(Node $node, Ability $ability, int|string $actorId): CollaborationSession;
-}
-```
-
-#### `Vaulter\Collaboration\Contracts\HostUserResolver`
-
-Материализует пользователя хоста (`Authorizable`) по id, чтобы серверный вебхук совместного
-редактирования (server-to-server) — который несёт лишь id пользователя, без сессии — мог
-прогнать `AccessResolver` относительно реального актора. Возвращает `null`, когда id ни во
-что не резолвится (тогда вебхук отвечает `allowed=false`, а не открывается наружу). По
-умолчанию `Vaulter\Collaboration\HostUserResolver` делегирует настроенному auth user-provider;
-привяжите свой, чтобы переопределить.
-
-```php
-interface HostUserResolver
-{
-    public function find(int|string $id): ?Authorizable;
-}
-```
+Публичный `CollaborationProtocolDriver` получает проверенный `CollaborationGrant` и возвращает нейтральную сессию; доступ проверяет общая policy. См. [протоколы коллаборации](/ru/extending/collaboration-protocols).
 
 #### `Vaulter\Documents\State\CollaborativeState` и `PendingStateDrainer`
 

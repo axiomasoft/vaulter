@@ -11,23 +11,11 @@ npm install @vaulter/vue
 Peers: `vue@^3.4` and `@tiptap/pm@^3`. Node `>=22`. See [Frontend overview](../../docs/guides/vue.md) for the plugin and
 the `createVaulterClient` setup, the composables and the components.
 
-## Realtime collaboration is a separate package
+## Collaboration adapters
 
-`@vaulter/vue` contains **no** `yjs` and no `@hocuspocus/*`. It defines only the seam — `VaulterCollaborationKey`, the
-`CollaborationAdapter`, `CollaborationHandle` and `CollaborationStatus` types — and the REST autosave path used by
-`VaulterDocumentNode`. Realtime editing is
-[`@vaulter/vue-collaboration`](../vue-collaboration/README.md); pass its adapter to the plugin:
-
-```ts
-import { VaulterPlugin } from '@vaulter/vue'
-import { createCollaborationAdapter } from '@vaulter/vue-collaboration'
-
-app.use(VaulterPlugin, { baseUrl: '/api/vaulter', collaboration: createCollaborationAdapter() })
-```
-
-Without the adapter every document uses the autosave path. The backend module is the opt-in
-`axioma-studio/vaulter-collaboration` ([guide](../../docs/guides/collaboration.md),
-[ADR-0031](../../docs/adr/0031-collaboration-package-and-durability.md)).
+The public `VaulterCollaborationKey`, `CollaborationAdapter`, `CollaborationHandle` and
+`CollaborationStatus` contracts let a host supply a protocol adapter. Without an adapter,
+`VaulterDocumentNode` uses the REST autosave path. Realtime editing is available as a commercial add-on.
 
 ## Development in the monorepo
 

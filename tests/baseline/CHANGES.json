@@ -18190,7 +18190,7 @@
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 300,
+      "count": 304,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__all_four_block__I1_and_I2_since_P4_16__the_collaboration_residual_of_D32_emptied_in_P5_1_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -18354,6 +18354,8 @@
         "P\\Tests\\Repo\\Arch\\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones\"('/home/vostrikov/projects/pack…p.stub') #8\"",
         "P\\Tests\\Repo\\Arch\\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones\"('/home/vostrikov/projects/pack…p.stub') #9\"",
         "P\\Tests\\Repo\\Arch\\PrivateConsumerBoundaryTest::__pest_evaluable_it_scans_all_shipped_production_PHP_of_the_private_consumer__src_including_Testing__routes__config__database_and_resources",
+        "P\\Tests\\Repo\\Arch\\ReleaseChannelsTest::__pest_evaluable_it_keeps_manifest_owners_licenses_dependencies_and_shipped_public_files_within_their_channels",
+        "P\\Tests\\Repo\\Arch\\ReleaseChannelsTest::__pest_evaluable_it_rejects_private_edges_metadata_contents_licenses_and_stale_or_namespace_exceptions",
         "P\\Tests\\Repo\\Arch\\SurfaceManifestTest::__pest_evaluable_it_keeps_every_type_of_the_repository_under_exactly_one_surface_attribute",
         "P\\Tests\\Repo\\Arch\\SurfaceManifestTest::__pest_evaluable_it_manifest__a_changed_signature__a_dropped_Internal_or_a_new_member_is_a_visible_difference",
         "P\\Tests\\Repo\\Arch\\SurfaceManifestTest::__pest_evaluable_it_manifest__an_Api_type_with_a_technical_constructor_shows_no_constructor_and_still_shows_its_promoted_properties",
@@ -18405,7 +18407,9 @@
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_the_declared_siblings_of_every_consumer_package_of_the_repository_and_touches_nothing\"('drive')\"",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_the_declared_siblings_of_every_consumer_package_of_the_repository_and_touches_nothing\"('media')\"",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_the_declared_siblings_of_every_consumer_package_of_the_repository_and_touches_nothing\"('webhooks')\"",
+        "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_reads_the_v2_manifest_only__a_v1_manifest_or_an_entry_without_a_known_channel_and_tag__prefix_refuses_before_any_check",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_refuses_an_unknown_package__the_metapackage_and_a_package_that_waits_for_an_upstream_tag",
+        "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_reports_the_channel_and_refuses_a_public_package_that_names_a_class_of_a_private_one",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_stages_the_root_Pest_harness_next_to_core__which_keeps_phpunit_xml_and_tests_Pest_php_at_the_repository_root",
         "P\\Tests\\Repo\\TestGroupsTest::__pest_evaluable_it_declares_only_known_groups_with_paths_that_exist__each_once__in_every_suite",
         "P\\Tests\\Repo\\TestGroupsTest::__pest_evaluable_it_derives_nofast_and_nofull_from_the_group_instead_of_repeating_them_by_hand",
@@ -19782,7 +19786,7 @@
       ]
     },
     "collaboration": {
-      "count": 354,
+      "count": 360,
       "names": [
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_changes_the_pending_marker_of_a_document_only_through_the_documents_state_contract",
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_has_no_full_state_store__the_hub_store_route_and_its_action_are_gone",
@@ -19933,6 +19937,12 @@
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"a route without seeds\"\"",
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"another header value\"\"",
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"no seed header\"\"",
+        "P\\Tests\\Http\\HubOpenApiBoundaryTest::__pest_evaluable_it_covers_every_private_owned_route_with_closed_references_and_synchronized_shared_primitives",
+        "P\\Tests\\Http\\HubOpenApiBoundaryTest::__pest_evaluable_it_covers_private_catalog_policies_without_receipt_or_If_Match_bypasses",
+        "P\\Tests\\Http\\HubOpenApiBoundaryTest::__pest_evaluable_it_declares_exactly_the_private_owner_problem_codes_and_current_retry_receipt_and_status_policies",
+        "P\\Tests\\Http\\HubOpenApiBoundaryTest::__pest_evaluable_it_detects_a_private_response_mutation_in_a_temp_contract_report_while_actual_public_generation_is_byte_identical",
+        "P\\Tests\\Http\\HubOpenApiBoundaryTest::__pest_evaluable_it_rejects_a_missing_endpoint_an_orphan_ref_and_missing_problem_metadata_in_isolated_fixtures",
+        "P\\Tests\\Http\\HubOpenApiBoundaryTest::__pest_evaluable_it_validates_an_actual_unsigned_hub_refusal_against_its_private_owner_contract",
         "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_names_the_protocol_in_the_mismatch_so_the_hub_can_tell_a_deployment_fault",
         "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"no header\"\"",
         "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"protocol 1\"\"",
@@ -20238,8 +20248,11 @@
       ]
     },
     "integration": {
-      "count": 0,
-      "names": []
+      "count": 2,
+      "names": [
+        "P\\Tests\\Integration\\OpenApi\\OpenApiRouteCoverageTest::__pest_evaluable_it_assigns_every_registered_endpoint_to_exactly_its_owner_spec_with_closed_references",
+        "P\\Tests\\Integration\\OpenApi\\OpenApiRouteCoverageTest::__pest_evaluable_it_rejects_public_endpoint_loss_orphan_references_and_missing_problem_metadata"
+      ]
     }
   },
   "transfers": [

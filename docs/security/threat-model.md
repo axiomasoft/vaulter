@@ -14,7 +14,7 @@ integrity of the event stream that webhooks publish.
 | Boundary | Trust | Main control |
 | --- | --- | --- |
 | HTTP API v1 | caller is untrusted until authenticated | auth middleware of the host; every operation authorized per node ([Access model](/concepts/access-model)) |
-| Collaboration hub | the hub is trusted, its callers are not | signed tokens and calls (`jwt_secret`, `webhook_secret`), timestamp tolerance, protocol 2 header, rights re-checked on every append, `token_ttl` ≤ 300 s ([exposure bound](/guides/collaboration#revocation-and-the-exposure-bound)) |
+| Protocol adapter | transport is trusted, its callers are not | verify principal, binding and generation; check the common policy on every write; fail closed on uncertainty |
 | Webhook egress | the target URL is attacker-chosen | outbound URL guard: allowed schemes, blocked IP ranges, `allowed_ip_ranges`, response size cap |
 | Uploaded bytes | content is untrusted | size/MIME policy, inspectors, durable malware-scan obligation |
 | Direct download URL | a URL is a bearer credential | short TTL; `strict` mode as alternative ([Direct URL limits](/guides/operations/direct-url-limits)) |

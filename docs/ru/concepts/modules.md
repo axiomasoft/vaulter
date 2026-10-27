@@ -22,7 +22,6 @@ outline: deep
 | `azgard` | `vaulter-azgard` | auto (выбирается через `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (плагин панели хост подключает сам) | `drive` |
 | `webhooks` | `vaulter-webhooks` (ставится отдельно) | **opt-in** | `core`, `drive` |
-| `collaboration` | `vaulter-collaboration` (ставится отдельно) | **opt-in** | `core`, `drive`, `documents` |
 
 *Auto*-модули активны, пока их не выключили; *opt-in*-модули — те, что открывают исходящую сеть
 или требуют секретов, — только когда их включили. Политику переопределяет один ключ конфига:

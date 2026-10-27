@@ -9,7 +9,7 @@ the transaction of the operation that caused it — whatever modules are active.
 consumers receive the events after the commit, at least once, each under its own
 delivery rows. The webhooks module is one consumer, `webhooks.fanout`; the collaboration module is another,
 `collaboration.control`, an *ephemeral* one that turns `drive.access.effective_permissions_changed` into a control message to
-the hubs ([Realtime collaboration](/guides/collaboration#revocation-and-the-exposure-bound)); any module can
+the hubs ([Realtime collaboration](/guides/collaboration)); any module can
 contribute its own through the `OutboxConsumer` slot. No event is lost silently: for a
 durable consumer each event is delivered, dead-lettered, or part of an explicit gap.
 

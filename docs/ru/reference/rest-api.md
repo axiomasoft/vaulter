@@ -892,49 +892,19 @@ Bearer-ссылки на узел (`vaulter-drive.features.share_links`). Ссы
 
 ---
 
-## Совместное редактирование в реальном времени
+## Протоколы коллаборации
 
-Совместное редактирование TipTap/Yjs над документами обслуживает opt-in модуль `vaulter-collaboration`
-(`vaulter.modules.collaboration`; маршруты существуют, только пока он активен). См.
-[Совместное редактирование](/ru/guides/collaboration).
+Публичный documents обслуживает нейтральную сессию независимо от реализации транспорта. См. [протоколы коллаборации](/ru/extending/collaboration-protocols).
 
 #### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
-Вход в комнату документа: сессия для его текущего поколения, read-write для редактора и
-read-only для остальных, кто может его видеть.
-
-| Поле | Правило |
-|---|---|
-| `schema_version` | опционально, integer — схема, которую понимает редактор клиента; иная, чем у типа, даёт read-only сессию |
-
-**Гейт:** `view`. **Ответ:** `201 { "data": { "driver", "room", "node_id", "drive_id", "epoch",
-"schema_version", "mode", "token", "url" } }`, не кэшируется. Выключенная коллаборация или тип,
-который не умеет совместную работу, — `409 collaboration_unavailable`; маршрут неактивного модуля отвечает `404`.
+Общая policy проверяет доступ и привязку документа к протоколу. Ответ `201` содержит `data`:
+`protocol`, `version`, `endpoint`, `token`, `expires_at`, `mode`, `node_id`, `generation`, `schema_version`, `options`.
+Не секретные `options` определяются протоколом. При недоступной привязке возвращается `409 collaboration_unavailable`.
 
 ### Эндпоинты хаба (сервер-к-серверу)
 
-Вызовы хаба идут через стек `hub`: `throttle:vaulter-public`, заголовок протокола и проверки подписи ниже. Они
-регистрируются, только пока активен модуль коллаборации, не принимают пользовательскую сессию и отвечают отказами как
-problem+json (`401 actor_required` на неподписанный вызов). Каждый вызов обязан нести `X-Vaulter-Collab-Protocol: 2`
-(иначе `409 collaboration_protocol_mismatch`), и каждый ответ его повторяет. Вызовы комнаты требуют room-JWT **и**
-HMAC-подпись тела (`ResolveCollaborationCall`); собственные вызовы хаба (`compaction/lease`, `checkpoint`, `recheck`)
-аутентифицирует одна подпись тела. Протокол — комната, ограждение по поколению, квитанция, seed,
-`409 collaboration_epoch_mismatch` как терминальный ответ — описан в
-[Совместном редактировании](/ru/guides/collaboration#протокол-хаба-сервер-сервер).
-
-| Маршрут | Имя | Ответ |
-|---|---|---|
-| `POST v1/collaboration/hub/authenticate` | `collaboration.hub.authenticate` | `{ allowed, mode, userId, epoch }` |
-| `POST v1/collaboration/hub/load` | `collaboration.hub.load` | `{ generation, schema_version, type, state_version, checkpoint, checkpoint_seq, head_seq, content, tail[] }` |
-| `POST v1/collaboration/hub/append` | `collaboration.hub.append` | зафиксированная квитанция `{ generation, update_id, seq, sha256, persisted, permissions_stale }`; `503 collaboration_draining`, пока идёт drain |
-| `POST v1/collaboration/hub/renew` | `collaboration.hub.renew` | `{ token, room, generation, scope, mode, exp, jti, permissions_version }` |
-| `POST v1/collaboration/hub/recheck` | `collaboration.hub.recheck` | `{ results: [{ id, access, reason, jti }] }` — `none`, `read` или `write` по каждому соединению |
-| `POST v1/collaboration/hub/compaction/lease` | `collaboration.hub.compaction.lease` | массив lease: чекпоинт, версия, хвост и токен lease |
-| `POST v1/collaboration/hub/checkpoint` | `collaboration.hub.checkpoint` | `{ checkpoint_version, marker_cleared }`; `409 collaboration_checkpoint_conflict` |
-
-Маршрута сохранения всего состояния нет: сохранение — это `append` с квитанцией.
-
----
+Эксплуатация коммерческого дополнения описана в его приватном руководстве.
 
 ## OpenAPI и совместимость
 

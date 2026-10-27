@@ -29,7 +29,7 @@ Vaulter — это строго типизированный слоистый La
 
 ```
 @vaulter/vue  ──HTTP/JSON──►  Controllers ─► FormRequests ─► DTOs (Data\*)
-              ──WebSocket──►  CollaborationDriver (Hocuspocus)
+              ──WebSocket──►  CollaborationProtocolDriver
        │
   AccessResolver (Vaulter-owned)  ◄── PermissionDriver (host, swappable)
        │                              + v_node_grants ACL
@@ -141,17 +141,15 @@ Vaulter никогда не ссылается на конкретный кла�
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | `v_blobs` и `v_blob_references` (пины), контракты и движок CAS (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` и `vaulter:blobs:reconcile`. |
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | Точка входа `Vaulter\Drive\Vaulter` (фасад `Vaulter\Drive\Facades\Vaulter`, алиас `Vaulter`), `DriveHandle`, Actions и события, доступ (`AccessResolver`, драйверы прав), sharing, активность, журнал изменений, квоты, загрузки, состояние сканирования, профили, обработчики файлов, а также таблицы, маршруты, команды и doctor-проверки drive. |
 | `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/события/модели документных узлов, реестр типов документов (`Types\*`), презентер документов, экспорт, контракты коллаборации (`CollaborationDriver`, `SupportsCollaboration`) и нейтральный контракт состояния `State\CollaborativeState` с pending-маркером, формы контента (`Content\OpaqueContent`, `Content\TipTap\*`). |
-| `axioma-studio/vaulter-collaboration` | `Vaulter\Collaboration\` | Совместное редактирование в реальном времени: эндпоинт сессии и room-токен, протокол хаба 2 (`authenticate`, `load`, `append`, `renew`, `recheck`, lease и checkpoint компактации), журнал обновлений, квитанции и версии прав (`v_collaboration_*`), команды drain и prune, control-consumer. Node-хаб `@vaulter/collaboration-hub` живёт в `packages/collaboration/hub`. Opt-in. |
 | `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Исходящие вебхуки: эндпоинты, `WebhookFanoutConsumer` (outbox-потребитель `webhooks.fanout`), `WebhookSigner`, URL-guard, повторы, админский HTTP и команды `vaulter:webhooks:*`. Opt-in. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Admin-плагин Filament 5 поверх авторизованных Operations drive. |
 | `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | Драйвер прав AzGuard, контракт guard, карта прав, реальный адаптер и тестовый fake. |
-| `@vaulter/vue-collaboration` | — | Браузерная часть коллаборации (npm): конверты обновлений, очередь повторов, статус сохранения; подключается к `@vaulter/vue` через его адаптер `collaboration`. Единственный пакет с `yjs` и `@hocuspocus/provider`. |
 | `@vaulter/vue` | — | UI Drive + composables (npm). `src/api` не импортирует Vue, редактор и realtime-пакеты и ничего из `src/` вне `src/api` (arch-тест `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
 Метапакет `axioma-studio/vaulter` ставит core, media, drive и documents; webhooks, collaboration, azgard и filament
 ставятся отдельно (см. [Установку](/ru/getting-started/installation)). Каждый пакет поставляет свои миграции
 (не публикуются), свой файл конфига (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
-`vaulter-webhooks`, `vaulter-collaboration`, `vaulter-azgard`, `vaulter-filament`) и свой тестовый кит.
+`vaulter-webhooks`, `vaulter-azgard`, `vaulter-filament`) и свой тестовый кит.
 
 ## Drive-хэндл
 
@@ -313,14 +311,7 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 
 ## Совместное редактирование в реальном времени
 
-Источник истины — Yjs-обновления; JSON TipTap — проекция чекпоинта. Коллаборация — opt-in пакет `vaulter-collaboration`
-([ADR-0031](/adr/0031-collaboration-package-and-durability); выбор транспорта —
-[ADR-0001](/adr/0001-collaboration-transport)); documents хранит агрегат и контракт `CollaborationDriver`:
-
-- **`hocuspocus`** — Node-хаб `@vaulter/collaboration-hub`. Клиент подключается с подписанным room JWT; хаб обращается в
-  эндпоинты протокола 2 (`v1/collaboration/hub/{authenticate,load,append,renew,recheck}` и `lease`/`checkpoint`
-  компактации). Сохранение — это `append`, возвращающий зафиксированную квитанцию; хаб сворачивает журнал в чекпоинт.
-  Ни drive, ни documents от него не зависят. См. [Совместное редактирование](/ru/guides/collaboration).
+Эксплуатация коммерческого дополнения описана в его приватном руководстве.
 
 ## Точки расширения
 
@@ -331,7 +322,6 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 | `Vaulter\Drive\Contracts\Access\PermissionDriver` | `config('vaulter-drive.access.permission_driver')` | [Рецепты — кастомный драйвер прав](/ru/guides/recipes#permission-driver) |
 | `Vaulter\Azgard\Contracts\AzgardGuard` | ключ конфига `vaulter-azgard.guard` (по умолчанию — адаптер моста) | [Устранение неполадок — морфы Azgard](/ru/guides/troubleshooting#azgard-morphs) |
 | `Vaulter\Media\Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Рецепты — переход на S3](/ru/guides/recipes#s3-disk) |
-| `Vaulter\Documents\Contracts\CollaborationDriver` | `config('vaulter-collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport), [ADR-0031](/adr/0031-collaboration-package-and-durability) |
 | `Vaulter\Drive\Contracts\Handlers\FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` | [Рецепты — кастомный обработчик формата](/ru/guides/recipes#format-handler) |
 | `Vaulter\Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
 | `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` | `config('vaulter-drive.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
@@ -346,7 +336,7 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 
 | ADR | Что решает | Статус |
 |---|---|---|
-| [0001](/adr/0001-collaboration-transport) | Транспорт совместного редактирования — `CollaborationDriver`, Hocuspocus и room-JWT; транспорт Yjs через Reverb удалён. | accepted |
+| [0001](/adr/0001-collaboration-transport) | Историческое решение о транспорте коллаборации. | accepted |
 | [0002](/adr/0002-authorization-delegation) | Авторизация делегирована хосту (`PermissionResolver`). | refined by 0007 |
 | [0003](/adr/0003-embeddability-data-model) | Встраиваемость через сменяемые модели + двойной тип ключа. | superseded by 0009 / 0011 |
 | [0004](/adr/0004-content-format) | Контент в TipTap JSON + append-only ограниченная история версий. | accepted |

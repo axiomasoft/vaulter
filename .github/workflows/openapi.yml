@@ -3,10 +3,10 @@ name: OpenAPI
 on:
   push:
     branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
-    paths: ['openapi/**', '.github/workflows/openapi.yml']
+    paths: ['openapi/**', 'packages/collaboration/openapi/**', '.github/workflows/openapi.yml']
   pull_request:
     branches: [main]
-    paths: ['openapi/**', '.github/workflows/openapi.yml']
+    paths: ['openapi/**', 'packages/collaboration/openapi/**', '.github/workflows/openapi.yml']
   workflow_dispatch:
 
 concurrency:
@@ -23,6 +23,16 @@ jobs:
     name: Breaking changes (oasdiff)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - contract: openapi/vaulter-v1.yaml
+            tags: v*
+            channel: public
+          - contract: packages/collaboration/openapi/hub.yaml
+            tags: collaboration-v*
+            channel: private
 
     steps:
       - name: Checkout
@@ -37,30 +47,34 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
+          CONTRACT: ${{ matrix.contract }}
+          RELEASE_TAGS: ${{ matrix.tags }}
         run: |
           mkdir -p "$RUNNER_TEMP/base"
-          tag="$(git tag --list 'v*' --sort=-v:refname | head -n 1)"
+          tag="$(git tag --list "$RELEASE_TAGS" --sort=-v:refname | head -n 1)"
           source=""
-          if [ -n "$tag" ] && git cat-file -e "$tag:openapi/vaulter-v1.yaml" 2>/dev/null; then
+          if [ -n "$tag" ] && git cat-file -e "$tag:$CONTRACT" 2>/dev/null; then
             source="$tag"
-          elif [ "$EVENT_NAME" = "pull_request" ] && git cat-file -e "origin/$BASE_REF:openapi/vaulter-v1.yaml" 2>/dev/null; then
+          elif [ "$EVENT_NAME" = "pull_request" ] && git cat-file -e "origin/$BASE_REF:$CONTRACT" 2>/dev/null; then
             source="origin/$BASE_REF"
           fi
 
           if [ -z "$source" ]; then
             echo "found=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No released or base-branch openapi/vaulter-v1.yaml yet; nothing to compare."
+            echo "::notice::No released or base-branch contract yet; nothing to compare."
             exit 0
           fi
 
-          git show "$source:openapi/vaulter-v1.yaml" > "$RUNNER_TEMP/base/vaulter-v1.yaml"
+          git show "$source:$CONTRACT" > "$RUNNER_TEMP/base/contract.yaml"
           echo "found=true" >> "$GITHUB_OUTPUT"
           echo "Comparing against $source"
 
       - name: oasdiff breaking
         if: steps.base.outputs.found == 'true'
+        env:
+          CONTRACT: ${{ matrix.contract }}
         run: |
           docker run --rm \
             -v "$RUNNER_TEMP/base:/base:ro" \
-            -v "$PWD/openapi:/w/openapi:ro" \
-            "$OASDIFF_IMAGE" breaking /base/vaulter-v1.yaml /w/openapi/vaulter-v1.yaml --fail-on ERR
+            -v "$PWD:/candidate:ro" \
+            "$OASDIFF_IMAGE" breaking /base/contract.yaml "/candidate/$CONTRACT" --fail-on ERR
