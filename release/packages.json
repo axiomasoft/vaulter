@@ -1,21 +1,155 @@
 {
-    "schema": "vaulter.release/v1",
+    "schema": "vaulter.release/v2",
     "php": [
-        {"name": "axioma-studio/vaulter-core", "path": "packages/core", "split": "axioma-studio/vaulter-core"},
-        {"name": "axioma-studio/vaulter-media", "path": "packages/media", "split": "axioma-studio/vaulter-media"},
-        {"name": "axioma-studio/vaulter-drive", "path": "packages/drive", "split": "axioma-studio/vaulter-drive"},
-        {"name": "axioma-studio/vaulter-documents", "path": "packages/documents", "split": "axioma-studio/vaulter-documents"},
-        {"name": "axioma-studio/vaulter-webhooks", "path": "packages/webhooks", "split": "axioma-studio/vaulter-webhooks"},
-        {"name": "axioma-studio/vaulter-collaboration", "path": "packages/collaboration", "split": "axioma-studio/vaulter-collaboration"},
-        {"name": "axioma-studio/vaulter-filament", "path": "packages/filament", "split": "axioma-studio/vaulter-filament"},
-        {"name": "axioma-studio/vaulter-azgard", "path": "packages/azgard", "split": "axioma-studio/vaulter-azgard", "requires_tag": "axiomasoft/azguard", "excluded_unless_tagged": true},
-        {"name": "axioma-studio/vaulter", "path": "packages/vaulter", "split": "axioma-studio/vaulter", "metapackage": true}
+        {
+            "name": "axioma-studio/vaulter-core",
+            "path": "packages/core",
+            "split": "axioma-studio/vaulter-core",
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter-media",
+            "path": "packages/media",
+            "split": "axioma-studio/vaulter-media",
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter-drive",
+            "path": "packages/drive",
+            "split": "axioma-studio/vaulter-drive",
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter-documents",
+            "path": "packages/documents",
+            "split": "axioma-studio/vaulter-documents",
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter-webhooks",
+            "path": "packages/webhooks",
+            "split": "axioma-studio/vaulter-webhooks",
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter-collaboration",
+            "path": "packages/collaboration",
+            "split": "axioma-studio/vaulter-collaboration",
+            "channel": "private",
+            "release_line": "php-collaboration",
+            "tag_prefix": "collaboration-v",
+            "license": "proprietary",
+            "access": "restricted",
+            "tested_ranges": {
+                "axioma-studio/vaulter-core": "^1.0",
+                "axioma-studio/vaulter-drive": "^1.0",
+                "axioma-studio/vaulter-documents": "^1.0",
+                "axioma-studio/vaulter-media": "^1.0"
+            }
+        },
+        {
+            "name": "axioma-studio/vaulter-filament",
+            "path": "packages/filament",
+            "split": "axioma-studio/vaulter-filament",
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter-azgard",
+            "path": "packages/azgard",
+            "split": "axioma-studio/vaulter-azgard",
+            "requires_tag": "axiomasoft/azguard",
+            "excluded_unless_tagged": true,
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        },
+        {
+            "name": "axioma-studio/vaulter",
+            "path": "packages/vaulter",
+            "split": "axioma-studio/vaulter",
+            "metapackage": true,
+            "channel": "public",
+            "release_line": "php-public",
+            "tag_prefix": "v"
+        }
     ],
     "npm": [
-        {"name": "@vaulter/vue", "path": "packages/vue", "api": "1"},
-        {"name": "@vaulter/vue-collaboration", "path": "packages/vue-collaboration", "api": "1"}
+        {
+            "name": "@vaulter/vue",
+            "path": "packages/vue",
+            "api": "1",
+            "channel": "public",
+            "release_line": "npm-vue",
+            "tag_prefix": "@vaulter/vue@",
+            "registry": "https://registry.npmjs.org",
+            "access": "public"
+        },
+        {
+            "name": "@vaulter/vue-collaboration",
+            "path": "packages/vue-collaboration",
+            "api": "1",
+            "channel": "private",
+            "release_line": "npm-vue-collaboration",
+            "tag_prefix": "@vaulter/vue-collaboration@",
+            "registry": "https://registry.npmjs.org",
+            "access": "restricted",
+            "tested_ranges": {
+                "@vaulter/vue": "^1.0"
+            }
+        }
     ],
     "images": [
-        {"name": "ghcr.io/axiomasoft/vaulter-collaboration-hub", "path": "packages/collaboration/hub"}
-    ]
+        {
+            "name": "ghcr.io/axiomasoft/vaulter-collaboration-hub",
+            "path": "packages/collaboration/hub",
+            "channel": "private",
+            "release_line": "image-collaboration-hub",
+            "tag_prefix": "collaboration-hub-v",
+            "registry": "ghcr.io",
+            "access": "restricted",
+            "legacy_tag_prefix_rejected": "vaulter-collaboration-hub-v"
+        }
+    ],
+    "compatibility": {
+        "collaboration": {
+            "protocol": "yjs",
+            "version": "yjs/2",
+            "accepted": [
+                {
+                    "document_type": "vaulter/markdown",
+                    "state_format": "yjs-update-v1",
+                    "schema_version": 1
+                },
+                {
+                    "document_type": "vaulter/rich-text",
+                    "state_format": "yjs-update-v1",
+                    "schema_version": 1
+                }
+            ],
+            "produced": [
+                {
+                    "document_type": "vaulter/markdown",
+                    "state_format": "yjs-update-v1",
+                    "schema_version": 1
+                },
+                {
+                    "document_type": "vaulter/rich-text",
+                    "state_format": "yjs-update-v1",
+                    "schema_version": 1
+                }
+            ]
+        }
+    }
 }

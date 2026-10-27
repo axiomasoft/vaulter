@@ -334,9 +334,54 @@ def check_split(doc: dict) -> list[str]:
     for stale in ('Laravel Pint', 'Larastan', 'PHP 8.4 /', '@vaulter/vue (Node'):
         if stale in runs:
             errors.append(f'{name}: verify-release-sha still requires the pre-P1.6 check {stale!r}')
+    route_needs = (jobs.get('route') or {}).get('needs')
+    if route_needs != 'verify-release-sha' and route_needs != ['verify-release-sha']:
+        errors.append(f'{name}: route must need verify-release-sha')
     split_needs = (jobs.get('split') or {}).get('needs')
-    if split_needs != 'verify-release-sha' and split_needs != ['verify-release-sha']:
-        errors.append(f'{name}: split must need verify-release-sha')
+    if split_needs != 'route' and split_needs != ['route']:
+        errors.append(f'{name}: split must need route (routing + qualification before the split credential)')
+    errors += check_route_before_credentials(name, doc, 'split', 'route', ('GH_ACCESS_TOKEN',))
+    return errors
+
+
+# D18 (PLAN4 P4.1): every publisher routes the tag and checks the qualification evidence in a job that holds no
+# publishing credential; the credentialed job needs that job.
+PUBLISHERS = {
+    'release-npm.yml': ('release', ('NPM_TOKEN',)),
+    'collaboration-hub-image.yml': ('image', ('docker/login-action', 'attest-build-provenance', 'build-push-action')),
+}
+
+
+def check_route_before_credentials(name: str, doc: dict, publisher: str, route: str, credentials: tuple[str, ...]) -> list[str]:
+    errors: list[str] = []
+    jobs = doc.get('jobs') or {}
+    route_job = jobs.get(route)
+    publish_job = jobs.get(publisher)
+    if not isinstance(route_job, dict) or not isinstance(publish_job, dict):
+        return [f'{name}: needs a {route} job (routing + qualification) and a {publisher} job']
+    commands = ' '.join(str(step.get('run', '')) for step in route_job.get('steps') or [])
+    if 'scripts/release/route-release.php' not in commands:
+        errors.append(f'{name}: {route} must run scripts/release/route-release.php')
+    if 'evidence-dir' not in commands and '--evidence' not in commands:
+        errors.append(f'{name}: {route} must pass the qualification evidence to route-release.php')
+    dumped = json.dumps(route_job)
+    for credential in credentials:
+        if credential in dumped:
+            errors.append(f'{name}: {route} must not hold the publisher credential {credential}')
+    needs = publish_job.get('needs') or []
+    needs = [needs] if isinstance(needs, str) else list(needs)
+    if route not in needs:
+        errors.append(f'{name}: {publisher} must need {route} (no credential before routing + qualification)')
+    if not any(credential in json.dumps(publish_job) for credential in credentials):
+        errors.append(f'{name}: {publisher} no longer shows the credential this policy guards {credentials}')
+    return errors
+
+
+def check_publisher(name: str, doc: dict) -> list[str]:
+    publisher, credentials = PUBLISHERS[name]
+    errors = check_route_before_credentials(name, doc, publisher, 'route', credentials)
+    if name == 'release-npm.yml' and 'NPM_TOKEN' in json.dumps((doc.get('jobs') or {}).get('version-pr', {})):
+        errors.append(f'{name}: version-pr must not hold the registry token')
     return errors
 
 
@@ -364,6 +409,8 @@ def check_dir(directory: Path) -> list[str]:
             errors += check_weekly(doc, root)
         elif path.name == 'monorepo-split.yml':
             errors += check_split(doc)
+        elif path.name in PUBLISHERS:
+            errors += check_publisher(path.name, doc)
     return errors
 
 

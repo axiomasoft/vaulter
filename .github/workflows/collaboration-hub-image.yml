@@ -6,12 +6,12 @@ name: Collaboration hub image (GHCR)
 # docs/guides/hub.md. Uses the built-in GITHUB_TOKEN (no extra secret needed);
 # the first successful run creates the package, which an org admin can then make public.
 #
-# Trigger: push a tag like `vaulter-collaboration-hub-v1.2.3` (independent of the PHP/npm release
+# Trigger: push a tag like `collaboration-hub-v1.2.3` (independent of the PHP/npm release
 # tags). workflow_dispatch builds (without pushing) for a manual smoke.
 on:
   push:
     tags:
-      - 'vaulter-collaboration-hub-v*'
+      - 'collaboration-hub-v*'
   workflow_dispatch:
 
 permissions:
@@ -25,7 +25,33 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/vaulter-collaboration-hub
 
 jobs:
+  # Routing + D18 qualification before the GHCR login: the tag must select the image line, the evidence of this SHA must
+  # carry the OCI digest, and the GHCR package must be probed private. No registry credential is used here.
+  route:
+    if: github.event_name != 'workflow_dispatch'
+    name: Route and qualify the tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      qualified: ${{ steps.route.outputs.qualified }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the qualification evidence of this SHA
+        uses: actions/download-artifact@v4
+        with:
+          name: release-qualification
+          path: release-evidence
+      - id: route
+        run: |
+          php scripts/release/route-release.php --tag="${GITHUB_REF_NAME}" --sha="${GITHUB_SHA}" \
+            --evidence-dir=release-evidence --github-output="${GITHUB_OUTPUT}"
+
   image:
+    needs: route
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.route.outputs.qualified == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -54,9 +80,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Strip the `vaulter-collaboration-hub-v` tag prefix → bare semver for the image tags.
+      # Strip the `collaboration-hub-v` tag prefix → bare semver for the image tags.
       - id: ver
-        run: echo "version=${GITHUB_REF_NAME#vaulter-collaboration-hub-v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${GITHUB_REF_NAME#collaboration-hub-v}" >> "$GITHUB_OUTPUT"
 
       - id: meta
         uses: docker/metadata-action@v5

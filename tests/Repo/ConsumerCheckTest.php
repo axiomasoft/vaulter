@@ -76,13 +76,14 @@ function c_run(array $args, array $env = []): array
 function c_fixture(array $files = [], array $requires = []): string
 {
     $root = c_tmp();
-    $manifest = ['schema' => 'vaulter.release/v1', 'php' => [
-        ['name' => 'acme/vaulter-core', 'path' => 'packages/core', 'split' => 'acme/vaulter-core'],
-        ['name' => 'acme/vaulter-alpha', 'path' => 'packages/alpha', 'split' => 'acme/vaulter-alpha'],
-        ['name' => 'acme/vaulter-beta', 'path' => 'packages/beta', 'split' => 'acme/vaulter-beta'],
-        ['name' => 'acme/vaulter-gamma', 'path' => 'packages/gamma', 'split' => 'acme/vaulter-gamma'],
-        ['name' => 'acme/vaulter-waiting', 'path' => 'packages/waiting', 'split' => 'acme/vaulter-waiting', 'requires_tag' => 'acme/upstream', 'excluded_unless_tagged' => true],
-        ['name' => 'acme/vaulter', 'path' => 'packages/meta', 'split' => 'acme/vaulter', 'metapackage' => true],
+    $entry = static fn (array $e): array => $e + ['channel' => 'public', 'release_line' => 'php-public', 'tag_prefix' => 'v'];
+    $manifest = ['schema' => 'vaulter.release/v2', 'php' => [
+        $entry(['name' => 'acme/vaulter-core', 'path' => 'packages/core', 'split' => 'acme/vaulter-core']),
+        $entry(['name' => 'acme/vaulter-alpha', 'path' => 'packages/alpha', 'split' => 'acme/vaulter-alpha']),
+        $entry(['name' => 'acme/vaulter-beta', 'path' => 'packages/beta', 'split' => 'acme/vaulter-beta']),
+        $entry(['name' => 'acme/vaulter-gamma', 'path' => 'packages/gamma', 'split' => 'acme/vaulter-gamma']),
+        $entry(['name' => 'acme/vaulter-waiting', 'path' => 'packages/waiting', 'split' => 'acme/vaulter-waiting', 'requires_tag' => 'acme/upstream', 'excluded_unless_tagged' => true]),
+        $entry(['name' => 'acme/vaulter', 'path' => 'packages/meta', 'split' => 'acme/vaulter', 'metapackage' => true]),
     ]];
     c_write($root, 'release/packages.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
@@ -197,6 +198,43 @@ it('refuses an unknown package, the metapackage and a package that waits for an 
     expect($code)->toBe(2);
     [$code] = c_run(['alpha', 'beta', '--dry-run', "--root={$root}"]);
     expect($code)->toBe(2);
+
+    c_rmdir($root);
+});
+
+it('reads the v2 manifest only: a v1 manifest or an entry without a known channel and tag_prefix refuses before any check', function (): void {
+    foreach ([
+        'v1 schema' => static fn (array $m): array => ['schema' => 'vaulter.release/v1'] + $m,
+        'unknown channel' => static function (array $m): array {
+            $m['php'][1]['channel'] = 'beta';
+
+            return $m;
+        },
+        'no tag_prefix' => static function (array $m): array {
+            unset($m['php'][2]['tag_prefix']);
+
+            return $m;
+        },
+    ] as $case => $mutate) {
+        $root = c_fixture();
+        $manifest = $mutate(json_decode((string) file_get_contents($root.'/release/packages.json'), true));
+        file_put_contents($root.'/release/packages.json', json_encode($manifest));
+        [$code, , $err] = c_run(['alpha', '--dry-run', "--root={$root}"]);
+        expect($code)->toBe(2, "{$case}: {$err}")->and($err)->toContain('vaulter.release/v2');
+        c_rmdir($root);
+    }
+});
+
+it('reports the channel and refuses a public package that names a class of a private one', function (): void {
+    $root = c_fixture(['packages/alpha/src/Uses.php' => "<?php\n\nnamespace Vaulter\\Alpha;\n\nuse Vaulter\\Gamma\\Support\\Marker;\n\nfinal class Uses { public Marker \$m; }\n"], ['alpha' => ['acme/vaulter-gamma' => 'self.version']]);
+    $manifest = json_decode((string) file_get_contents($root.'/release/packages.json'), true);
+    $manifest['php'][3] = ['channel' => 'private', 'release_line' => 'php-gamma', 'tag_prefix' => 'gamma-v', 'access' => 'restricted'] + $manifest['php'][3];
+    file_put_contents($root.'/release/packages.json', json_encode($manifest));
+
+    [$code, $out, $err] = c_run(['alpha', '--dry-run', "--root={$root}"]);
+    expect($code)->toBe(1)->and($out.$err)->toContain('public package names Vaulter\\Gamma\\Support\\Marker of the private acme/vaulter-gamma');
+    [$code, $out] = c_run(['gamma', '--dry-run', "--root={$root}"]);
+    expect($code)->toBe(0)->and($out)->toContain('channel=private, tag_prefix=gamma-v');
 
     c_rmdir($root);
 });

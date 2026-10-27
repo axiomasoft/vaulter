@@ -125,7 +125,20 @@ def split_doc():
             'qualification': {'uses': './.github/workflows/weekly-full.yml'},
             'verify-release-sha': {'needs': 'qualification', 'timeout-minutes': 20, 'steps': [
                 {'env': {'RELEASE_SHA': '${{ github.sha }}'}, 'run': "required_checks=(\n 'CI gate'\n)\ngh api checks"}]},
-            'split': {'needs': 'verify-release-sha', 'timeout-minutes': 20, 'steps': []},
+            'route': {'needs': 'verify-release-sha', 'timeout-minutes': 10, 'steps': [
+                {'run': 'php scripts/release/route-release.php --tag="$T" --evidence-dir=release-evidence'}]},
+            'split': {'needs': 'route', 'timeout-minutes': 20, 'steps': [{'env': {'T': '${{ secrets.GH_ACCESS_TOKEN }}'}}]},
+        },
+    }
+
+
+def publisher_doc(publisher, credential):
+    return {
+        'on': {'push': {'tags': ['*']}},
+        'jobs': {
+            'route': {'timeout-minutes': 10, 'steps': [
+                {'run': 'php scripts/release/route-release.php --tag="$T" --evidence-dir=release-evidence'}]},
+            publisher: {'needs': 'route', 'timeout-minutes': 20, 'steps': [{'uses': credential}]},
         },
     }
 
@@ -264,8 +277,42 @@ class SingleCiTest(unittest.TestCase):
         self.assertTrue(any('pre-P1.6' in e for e in errors))
 
         doc = split_doc()
-        doc['jobs']['split']['needs'] = 'qualification'
-        self.assertTrue(any('split must need verify-release-sha' in e for e in policy.check_split(doc)))
+        doc['jobs']['split']['needs'] = 'verify-release-sha'
+        self.assertTrue(any('split must need route' in e for e in policy.check_split(doc)))
+
+        doc = split_doc()
+        doc['jobs']['route']['needs'] = 'qualification'
+        self.assertTrue(any('route must need verify-release-sha' in e for e in policy.check_split(doc)))
+
+        doc = split_doc()
+        doc['jobs']['route']['steps'] = [{'run': 'echo ok'}]
+        self.assertTrue(any('must run scripts/release/route-release.php' in e for e in policy.check_split(doc)))
+
+        doc = split_doc()
+        doc['jobs']['route']['steps'][0]['env'] = {'T': '${{ secrets.GH_ACCESS_TOKEN }}'}
+        self.assertTrue(any('must not hold the publisher credential GH_ACCESS_TOKEN' in e for e in policy.check_split(doc)))
+
+    def test_npm_and_image_publishers_route_before_any_credential(self):
+        for name, (publisher, credentials) in policy.PUBLISHERS.items():
+            doc = publisher_doc(publisher, credentials[0])
+            self.assertEqual([], policy.check_publisher(name, doc), name)
+
+            missing = publisher_doc(publisher, credentials[0])
+            missing['jobs'][publisher]['needs'] = []
+            self.assertTrue(any('must need route' in e for e in policy.check_publisher(name, missing)), name)
+
+            leaking = publisher_doc(publisher, credentials[0])
+            leaking['jobs']['route']['steps'].append({'uses': credentials[0]})
+            self.assertTrue(any('must not hold the publisher credential' in e for e in policy.check_publisher(name, leaking)), name)
+
+            bare = publisher_doc(publisher, credentials[0])
+            bare['jobs']['route']['steps'] = [{'run': 'echo ok'}]
+            self.assertTrue(any('route-release.php' in e for e in policy.check_publisher(name, bare)), name)
+
+    def test_repository_publishers_hold_credentials_only_after_route(self):
+        workflows = ROOT / '.github' / 'workflows'
+        for name in policy.PUBLISHERS:
+            self.assertEqual([], policy.check_publisher(name, policy.load_workflow(workflows / name)), name)
 
     # -- plan: selector JSON -> job outputs -----------------------------------------------------------------------
 
@@ -488,12 +535,13 @@ class SingleCiTest(unittest.TestCase):
         workflows = ROOT / '.github' / 'workflows'
         self.assertFalse((workflows / 'hocuspocus-image.yml').exists())
         doc = policy.load_workflow(workflows / 'collaboration-hub-image.yml')
-        self.assertEqual(['vaulter-collaboration-hub-v*'], doc['on']['push']['tags'])
+        self.assertEqual(['collaboration-hub-v*'], doc['on']['push']['tags'])
         self.assertTrue(doc['env']['IMAGE_NAME'].endswith('/vaulter-collaboration-hub'))
         steps = doc['jobs']['image']['steps']
         self.assertIn('./packages/collaboration/hub', [(s.get('with') or {}).get('context') for s in steps])
         manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
-        self.assertEqual([{'name': 'ghcr.io/axiomasoft/vaulter-collaboration-hub', 'path': 'packages/collaboration/hub'}], manifest['images'])
+        self.assertEqual(['ghcr.io/axiomasoft/vaulter-collaboration-hub'], [i['name'] for i in manifest['images']])
+        self.assertEqual(('private', 'collaboration-hub-v'), (manifest['images'][0]['channel'], manifest['images'][0]['tag_prefix']))
 
     def test_release_manifest_lists_collaboration_once_and_the_npm_package(self):
         manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
@@ -501,12 +549,15 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual(1, len(entries))
         self.assertEqual('axioma-studio/vaulter-collaboration', entries[0]['name'])
         self.assertEqual(entries[0]['name'], entries[0]['split'])
-        self.assertEqual([{'name': '@vaulter/vue-collaboration', 'path': 'packages/vue-collaboration', 'api': '1'}],
-                         [p for p in manifest['npm'] if p['name'] == '@vaulter/vue-collaboration'])
+        npm = [p for p in manifest['npm'] if p['name'] == '@vaulter/vue-collaboration']
+        self.assertEqual([('packages/vue-collaboration', '1', 'private', 'restricted')],
+                         [(p['path'], p['api'], p['channel'], p['access']) for p in npm])
+        self.assertEqual('private', entries[0]['channel'])
         meta = json.loads((ROOT / 'packages' / 'vaulter' / 'composer.json').read_text(encoding='utf-8'))
         self.assertEqual([], [name for name in meta.get('require', {}) if 'collaboration' in name], 'D6: the metapackage does not include collaboration')
         split = policy.load_workflow(ROOT / '.github' / 'workflows' / 'monorepo-split.yml')
-        self.assertEqual(1, split['jobs']['split']['strategy']['matrix']['package'].count('collaboration'))
+        self.assertEqual('${{ fromJSON(needs.route.outputs.matrix) }}', split['jobs']['split']['strategy']['matrix']['package'])
+        self.assertEqual('collaboration-v', entries[0]['tag_prefix'])
 
     # -- the release manifest and the split matrix carry webhooks -----------------------------------------------------
 
@@ -520,9 +571,10 @@ class SingleCiTest(unittest.TestCase):
         self.assertFalse(entries[0].get('excluded_unless_tagged', False))
 
         split = policy.load_workflow(ROOT / '.github' / 'workflows' / 'monorepo-split.yml')
-        cells = split['jobs']['split']['strategy']['matrix']['package']
-        self.assertEqual(1, cells.count('webhooks'))
-        self.assertEqual(sorted(Path(p['path']).name for p in manifest['php']), sorted(cells))
+        # the matrix is computed from the manifest by route-release.php; webhooks is a public php entry of the v1 line
+        self.assertEqual('${{ fromJSON(needs.route.outputs.matrix) }}', split['jobs']['split']['strategy']['matrix']['package'])
+        self.assertEqual(['v'], [e['tag_prefix'] for e in json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))['php'] if e['name'] == 'axioma-studio/vaulter-webhooks'])
+        self.assertIn('packages/webhooks', [p['path'] for p in manifest['php']])
 
     def test_consumer_packages_are_releasable_php_packages(self):
         manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))

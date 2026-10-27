@@ -5,12 +5,22 @@
 # Usage: verify-split-tags.sh <tag> [expected-splits.json]
 #        verify-split-tags.sh --excluded     # split repositories left out of this release
 #   expected-splits.json: {"axioma-studio/vaulter-core": "<commit sha>", ...}
+#   The manifest is schema vaulter.release/v2: every php entry needs a public|private channel and a tag_prefix, otherwise
+#   this refuses (exit 2). The tag selects the entries whose tag_prefix + strict SemVer it is, so `collaboration-v1.0.2`
+#   checks only the private split and `v1.2.3` only the public ones; a tag no prefix fits is refused.
 # Env:   SPLIT_REMOTE_BASE (default https://github.com), RELEASE_MANIFEST (default release/packages.json)
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 manifest="${RELEASE_MANIFEST:-$root/release/packages.json}"
 base="${SPLIT_REMOTE_BASE:-https://github.com}"
+
+# Refuse a manifest that is not v2 or has a php entry without channel/tag_prefix, before any filtering.
+manifest_ok="$(jq -r '(.schema == "vaulter.release/v2") and ([.php[] | ((.channel == "public" or .channel == "private") and (.tag_prefix | type == "string") and (.tag_prefix != ""))] | all)' "$manifest")"
+if [[ "$manifest_ok" != "true" ]]; then
+    echo "verify-split-tags: ${manifest} is not a valid vaulter.release/v2 manifest (channel/tag_prefix)" >&2
+    exit 2
+fi
 
 # A package flagged excluded_unless_tagged ships only once the upstream it requires has a tag,
 # i.e. while its composer.json still pins that upstream to a dev constraint it is left out.
@@ -35,6 +45,13 @@ fi
 tag="${1:?usage: verify-split-tags.sh <tag> [expected-splits.json]}"
 expected_file="${2:-}"
 excluded="$(excluded_splits)"
+
+# Splits of the release line this tag belongs to (strict SemVer after the entry's own prefix).
+routed_splits="$(jq -r --arg t "$tag" '.php[] | select(.tag_prefix as $p | ($t | startswith($p)) and ($t[($p | length):] | test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))) | .split' "$manifest")"
+if [[ -z "$routed_splits" ]]; then
+    echo "verify-split-tags: tag ${tag} fits no php tag_prefix of ${manifest}" >&2
+    exit 2
+fi
 
 failures=()
 checked=0
@@ -68,7 +85,7 @@ while IFS= read -r split; do
             failures+=("${split}: tag ${tag} points at ${actual}, expected ${expected}")
         fi
     fi
-done < <(jq -r '.php[].split' "$manifest")
+done <<<"$routed_splits"
 
 if ((${#failures[@]})); then
     echo "verify-split-tags: ${#failures[@]} problem(s) for ${tag}:" >&2

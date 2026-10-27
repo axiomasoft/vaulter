@@ -2,7 +2,7 @@
     "name": "axioma-studio/vaulter-collaboration",
     "description": "Real-time collaboration for Vaulter — Hocuspocus/Yjs document rooms, signed room tokens and the hub endpoints over the vaulter-documents module.",
     "type": "library",
-    "license": "MIT",
+    "license": "proprietary",
     "keywords": [
         "laravel",
         "collaboration",
@@ -24,16 +24,16 @@
     },
     "require": {
         "php": "^8.4",
-        "axioma-studio/vaulter-core": "self.version",
-        "axioma-studio/vaulter-drive": "self.version",
-        "axioma-studio/vaulter-documents": "self.version",
+        "axioma-studio/vaulter-core": "^1.0",
+        "axioma-studio/vaulter-drive": "^1.0",
+        "axioma-studio/vaulter-documents": "^1.0",
         "firebase/php-jwt": "^7.0",
         "spatie/laravel-package-tools": "^1.92"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
-        "axioma-studio/vaulter-media": "self.version",
+        "axioma-studio/vaulter-media": "^1.0",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
         "orchestra/testbench": "^10.0|^11.0",
@@ -60,7 +60,7 @@
             ]
         },
         "branch-alias": {
-            "dev-main": "0.1.x-dev"
+            "dev-main": "1.0.x-dev"
         }
     },
     "repositories": [

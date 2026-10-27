@@ -53,6 +53,9 @@ done
 command -v jq >/dev/null || die "jq is required" 2
 manifest="${RELEASE_MANIFEST:-$root/release/packages.json}"
 [[ -f "$manifest" ]] || die "release manifest not found: ${manifest}" 2
+# v2 manifest: every php entry carries a known channel and a tag_prefix, otherwise nothing is checked.
+[[ "$(jq -r '(.schema == "vaulter.release/v2") and ([.php[] | ((.channel == "public" or .channel == "private") and ((.tag_prefix // "") != ""))] | all)' "$manifest")" == "true" ]] \
+    || die "${manifest} is not a vaulter.release/v2 manifest with channel and tag_prefix on every php entry" 2
 
 # --- resolve the package in the manifest ------------------------------------------------------------------------
 
@@ -74,6 +77,15 @@ declare -A sibling_path=()
 while IFS=$'\t' read -r sibling_name sibling_dir; do
     sibling_path["$sibling_name"]="$sibling_dir"
 done < <(jq -r '.php[] | select(.metapackage // false | not) | [.name, .path] | @tsv' "$manifest")
+
+# v2: the channel and release line of every package. They never relax the isolation rules below; they add one: a public
+# package must not name anything of a private one.
+declare -A channel_of=()
+while IFS=$'\t' read -r sibling_name sibling_channel; do
+    channel_of["$sibling_name"]="$sibling_channel"
+done < <(jq -r '.php[] | [.name, .channel] | @tsv' "$manifest")
+channel="${channel_of[$(jq -r .name <<<"$entry")]}"
+tag_prefix="$(jq -r .tag_prefix <<<"$entry")"
 
 declared_names() { # <composer.json> <sections...>: sibling packages named in those sections
     local file="$1" section dep
@@ -129,6 +141,9 @@ check_reference() { # <file> <line> <match>
     local file="$1" line="$2" match="$3" segment owner relative
     segment="$(sed -E 's/^\\?Vaulter\\+//' <<<"$match" | sed -E 's/\\.*$//')"
     owner="${segment_owner[$segment]:-$core_name}"
+    if [[ "$channel" == public && "${channel_of[$owner]:-}" == private ]]; then
+        violations+=("${file#"$root/$path/"}:${line}: public package names ${match} of the private ${owner}")
+    fi
     relative="${file#"$root/$path/"}"
     if [[ "$segment" == "Integration" || ( "$segment" == "Tests" && "$name" != "$core_name" ) ]]; then
         violations+=("${relative}:${line}: ${match} is the kernel's test namespace; a split package has no packages/core/tests (D14: own TestCase)")
@@ -183,7 +198,7 @@ fi
 
 # --- plan -----------------------------------------------------------------------------------------------------------
 
-echo "consumer-check: ${name} (${path}), layout=${layout}"
+echo "consumer-check: ${name} (${path}), layout=${layout}, channel=${channel}, tag_prefix=${tag_prefix}"
 echo "  work dir:     ${work}"
 echo "  declared:     ${declared[*]:-(none)}"
 echo "  repositories: ${closure[*]:-(none)}"

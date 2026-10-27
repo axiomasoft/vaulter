@@ -2,7 +2,7 @@
   "name": "@vaulter/vue-collaboration",
   "version": "0.0.0",
   "description": "Realtime collaboration (Yjs over Hocuspocus) for @vaulter/vue: update envelopes, a bounded queue with acks, and save statuses.",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "vaulter": {
     "api": "1"
   },
@@ -26,7 +26,7 @@
     "directory": "packages/vue-collaboration"
   },
   "publishConfig": {
-    "access": "public",
+    "access": "restricted",
     "provenance": false
   },
   "files": [
@@ -48,7 +48,7 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "peerDependencies": {
-    "@vaulter/vue": "*",
+    "@vaulter/vue": "^1.0",
     "vue": "^3.4",
     "yjs": "^13.6"
   },
@@ -56,7 +56,7 @@
     "@hocuspocus/provider": "^4.3"
   },
   "devDependencies": {
-    "@vaulter/vue": "*",
+    "@vaulter/vue": "^1.0",
     "happy-dom": "^20.10.6",
     "typescript": "^5.6.0",
     "vite": "^6.0.0",

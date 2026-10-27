@@ -1,6 +1,6 @@
 {
   "name": "@vaulter/vue",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Vue 3 + TypeScript components, composables and API client for Vaulter.",
   "license": "MIT",
   "engines": {

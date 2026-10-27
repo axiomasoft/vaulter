@@ -22,8 +22,8 @@ name: Monorepo split (PHP)
 #      it again, and an abandoned empty package under the old name would outrank nothing but
 #      confuse everyone.
 #
-# The matrix below mirrors release/packages.json (scripts/release/check-versions.php fails on a
-# mismatch). vaulter-azgard is skipped while its AzGuard require is a dev constraint, and the
+# The matrix is computed by scripts/release/route-release.php from release/packages.json (check-versions.php proves the
+# workflow consumes it). vaulter-azgard is skipped while its AzGuard require is a dev constraint, and the
 # verify-tags job then proves every other split repo carries the tag on the commit just pushed.
 #
 # Release handshake (PLAN3 P1.6): a tag first runs the full qualification (weekly-full.yml as a reusable workflow)
@@ -33,7 +33,8 @@ name: Monorepo split (PHP)
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
+      - 'collaboration-v*'
 
 permissions:
   contents: read
@@ -87,25 +88,60 @@ jobs:
 
           exit "${failed}"
 
+  # Routing + D18 qualification happen HERE, in a job that holds no publisher credential: the tag selects exactly one
+  # release line, the evidence of this very SHA must carry the exact artifact identity of every routed package, and a
+  # private split repository must be probed private through the API (an API error refuses). Only then does split run.
+  # The artifact `release-qualification` is delivered by the canonical producers (PLAN4 P7.2-P7.5/P8.2); until it exists
+  # this job fails and nothing is split - there is no SHA-only fallback.
+  route:
+    name: Route and qualify the tag
+    needs: verify-release-sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      qualified: ${{ steps.route.outputs.qualified }}
+      channel: ${{ steps.route.outputs.channel }}
+      matrix: ${{ steps.route.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download the qualification evidence of this SHA
+        uses: actions/download-artifact@v4
+        with:
+          name: release-qualification
+          path: release-evidence
+
+      - name: Probe the visibility of the private split repositories
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_VISIBILITY_TOKEN }}
+        run: |
+          # Read-only metadata probe; an API failure leaves the destination out and the route refuses it.
+          echo '{}' > release-evidence/visibility.json
+          while IFS= read -r split; do
+            state="$(gh api "/repos/${split}" --jq 'if .private then "private" else "public" end')" || continue
+            jq --arg k "${split}" --arg v "${state}" '.[$k] = $v' release-evidence/visibility.json > visibility.next && mv visibility.next release-evidence/visibility.json
+          done < <(jq -r '.php[] | select(.channel == "private") | .split' release/packages.json)
+
+      - name: Route the tag and require the qualification
+        id: route
+        run: |
+          php scripts/release/route-release.php --tag="${GITHUB_REF_NAME}" --sha="${GITHUB_SHA}" \
+            --evidence-dir=release-evidence --github-output="${GITHUB_OUTPUT}"
+
   split:
     name: Split packages/${{ matrix.package }}
-    needs: verify-release-sha
+    needs: route
+    if: needs.route.outputs.qualified == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - core
-          - media
-          - drive
-          - documents
-          - webhooks
-          - collaboration
-          - filament
-          - azgard
-          - vaulter
+        package: ${{ fromJSON(needs.route.outputs.matrix) }}
 
     steps:
       - name: Checkout
@@ -113,19 +149,14 @@ jobs:
 
       # The repository name comes from release/packages.json: the metapackage is axioma-studio/vaulter,
       # not axioma-studio/vaulter-vaulter. A manifest or probe error fails the job instead of shipping.
-      - name: Decide whether packages/${{ matrix.package }} ships in this release
+      - name: Resolve the split repository of packages/${{ matrix.package }}
         id: plan
         run: |
           split="$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .split' release/packages.json)"
-          excluded="$(scripts/release/verify-split-tags.sh --excluded)"
+          echo "channel=${{ needs.route.outputs.channel }}" >> "$GITHUB_OUTPUT"
           echo "split=${split}" >> "$GITHUB_OUTPUT"
           echo "name=${split#axioma-studio/}" >> "$GITHUB_OUTPUT"
-          if grep -qxF "${split}" <<<"${excluded}"; then
-            echo "excluded=true" >> "$GITHUB_OUTPUT"
-            echo "packages/${{ matrix.package }} is excluded from this release (upstream not tagged)"
-          else
-            echo "excluded=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "excluded=false" >> "$GITHUB_OUTPUT"
 
       # F-P2.1-06 (VLT-REMED P4.7): the subtree split below copies ONLY
       # packages/<name>, so a split repo (what Packagist is registered against, D15/
@@ -134,7 +165,7 @@ jobs:
       # changelog history. Copy the root CHANGELOG.md into the package directory
       # BEFORE the split step so it becomes part of the split commit/subtree.
       - name: Copy root CHANGELOG.md into packages/${{ matrix.package }} (F-P2.1-06)
-        if: steps.plan.outputs.excluded != 'true'
+        if: steps.plan.outputs.excluded != 'true' && steps.plan.outputs.channel == 'public'
         run: cp CHANGELOG.md packages/${{ matrix.package }}/CHANGELOG.md
 
       - name: Split packages/${{ matrix.package }} → ${{ steps.plan.outputs.split }}
@@ -195,7 +226,7 @@ jobs:
           path: expected-splits
           merge-multiple: true
 
-      - name: Every split repository carries the tag on the pushed commit
+      - name: Every split repository of the routed line carries the tag on the pushed commit
         env:
           TAG: ${{ github.ref_name }}
         run: |

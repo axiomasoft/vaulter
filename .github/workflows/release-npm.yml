@@ -1,9 +1,9 @@
 name: Release (npm)
 
-# Publishes the npm packages (@vaulter/vue, @vaulter/vue-collaboration, later @vaulter/client) via Changesets.
-# On push to main this either opens/updates the "Version Packages" PR (when pending
-# changesets exist) or, once that PR is merged, publishes the bumped packages with
-# a registry token. The source repository is currently private, so npm provenance
+# Prepares (version-pr) and publishes the npm packages (@vaulter/vue, @vaulter/vue-collaboration, later @vaulter/client).
+# The Version Packages PR is opened without any registry credential. Publishing is a separate job that runs only after
+# `route` has selected the channel/line from the manifest and found the qualification evidence of this exact SHA
+# (D18): no evidence, no publish, no SHA-only fallback. The registry token is read by the publish job alone. The source repository is currently private, so npm provenance
 # cannot be generated. The PHP packages are released separately by monorepo-split.yml.
 on:
   push:
@@ -20,11 +20,64 @@ permissions:
   pull-requests: write  # ...and the PR itself
 
 jobs:
-  release:
-    # Publishing and the Version Packages PR belong to the canonical repository.
-    # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not open that PR.
+  # Versioning only: opens/updates the Version Packages PR. No registry credential is available here.
+  version-pr:
     if: github.repository == 'axiomasoft/vaulter'
-    name: Changesets release
+    name: Version Packages PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - uses: changesets/action@v1
+        with:
+          version: npm run version
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Channel/line routing and qualification of every npm line whose package.json version is about to be published.
+  # A line is routed from the tag Changesets would create (`<tag_prefix><version>`); a malformed version, an unknown
+  # channel, evidence for another SHA or a missing tgz identity refuses. This job holds no registry token.
+  route:
+    if: github.repository == 'axiomasoft/vaulter'
+    name: Route and qualify npm lines
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      qualified: ${{ steps.route.outputs.qualified }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the qualification evidence of this SHA
+        uses: actions/download-artifact@v4
+        with:
+          name: release-qualification
+          path: release-evidence
+      - name: Route every npm line and require its qualification
+        id: route
+        run: |
+          while IFS=$'\t' read -r prefix path; do
+            version="$(jq -er .version "${path}/package.json")"
+            php scripts/release/route-release.php --tag="${prefix}${version}" --sha="${GITHUB_SHA}" \
+              --evidence-dir=release-evidence
+          done < <(jq -r '.npm[] | [.tag_prefix, .path] | @tsv' release/packages.json)
+          echo "qualified=true" >> "${GITHUB_OUTPUT}"
+
+  release:
+    # Publishing belongs to the canonical repository, after routing + qualification.
+    # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not publish.
+    if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
+    needs: route
+    name: Changesets publish
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -32,7 +85,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Full history so Changesets can compare against baseBranch (main).
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -44,7 +96,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Build the publishable workspaces BEFORE publish — dist/ is gitignored and
+      # Build the publishable workspaces BEFORE publish - dist/ is gitignored and
       # each package ships "files": ["dist"], so an unbuilt dist would publish empty.
       - name: Build npm workspaces
         run: npm run build
@@ -52,16 +104,10 @@ jobs:
       - name: Test npm workspaces
         run: npm test
 
-      - name: Create release PR or publish
+      - name: Publish the qualified packages
         uses: changesets/action@v1
         with:
-          # `npm run release` runs `changeset publish` (build already done above);
-          # the action only publishes when there are no pending changesets left —
-          # i.e. right after the Version Packages PR is merged.
           publish: npm run release
-          version: npm run version
-          commit: 'chore(release): version packages'
-          title: 'chore(release): version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
