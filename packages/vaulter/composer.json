@@ -21,6 +21,11 @@
         "axioma-studio/vaulter-drive": "self.version",
         "axioma-studio/vaulter-documents": "self.version"
     },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }

@@ -2,7 +2,7 @@
   "name": "@vaulter/collaboration-hub",
   "version": "0.1.0",
   "description": "Vaulter collaboration hub: real-time server (Hocuspocus + Yjs). Loads a room from its update log and appends every update through the Laravel backend (collaboration protocol 2).",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "private": true,
   "main": "src/index.js",

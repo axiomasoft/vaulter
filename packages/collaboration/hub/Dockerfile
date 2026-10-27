@@ -52,7 +52,7 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
 LABEL org.opencontainers.image.title="Vaulter Hocuspocus hub" \
       org.opencontainers.image.description="Reusable, env-configured Hocuspocus collaboration server for Vaulter (Yjs realtime document editing)." \
       org.opencontainers.image.source="https://github.com/axiomasoft/vaulter" \
-      org.opencontainers.image.licenses="MIT"
+      org.opencontainers.image.licenses="LicenseRef-Proprietary"
 
 # The hub's command line (src/cli.js, package bin vaulter-collaboration-hub). By default the image
 # serves (WebSocket hub + compaction worker); the same image runs the offline recovery one-shot:

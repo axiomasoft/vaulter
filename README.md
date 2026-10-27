@@ -42,18 +42,37 @@ $file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), 
 | `axioma-studio/vaulter-media` | content-addressed storage and the blob pins |
 | `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3), access, sharing, activity; the `Vaulter` entry point |
 | `axioma-studio/vaulter-documents` | editor, versions, comments, export |
-| `axioma-studio/vaulter-collaboration` | realtime editing with committed save receipts (opt-in module); the Node hub lives in `packages/collaboration/hub` |
+| `axioma-studio/vaulter-collaboration` | commercial realtime editing with committed save receipts (opt-in module); the Node hub lives in `packages/collaboration/hub` |
 | `axioma-studio/vaulter-webhooks` | outbound webhooks (opt-in module) |
 | `axioma-studio/vaulter-azgard` | AzGuard permission resolver |
 | `axioma-studio/vaulter-filament` | Filament admin (optional, Laravel 13) |
 | `axioma-studio/vaulter` | metapackage: core, media, drive and documents |
 | `@vaulter/vue` | TypeScript / Vue 3 client and components |
-| `@vaulter/vue-collaboration` | the browser side of realtime editing: update queue and save status |
+| `@vaulter/vue-collaboration` | commercial browser client for realtime editing: update queue and save status |
 
 Each package owns its tables, models and config file (`vaulter-<package>`); webhooks, collaboration, azgard and
 filament are installed separately. See [ADR-0030](docs/adr/0030-package-ownership-and-schema.md) and
 [ADR-0031](docs/adr/0031-collaboration-package-and-durability.md). The optional collaboration hub (Node, Docker image
 `ghcr.io/axiomasoft/vaulter-collaboration-hub`) lives in `packages/collaboration/hub/`.
+
+## Release channels and versions
+
+The public channel contains the MIT-licensed PHP packages listed above except collaboration,
+and `@vaulter/vue`. The `axioma-studio/vaulter` metapackage requires only core, media, drive and
+documents. AzGuard remains excluded from release artifacts until its upstream has a stable tag.
+
+Realtime co-editing is a commercial add-on (`axioma-studio/vaulter-collaboration`). Its PHP
+package uses a private split and Private Packagist for Vendors; `@vaulter/vue-collaboration`
+uses restricted npm access with provenance disabled. Both the hub and the Vue add-on declare
+`UNLICENSED`; the hub is a private, image-only workspace distributed through private GHCR.
+The PHP add-on declares `proprietary`. Their LICENSE placeholders grant no license; the
+commercial agreement and final legal license text must be supplied separately by Axioma Studio.
+Third-party dependency licenses continue to apply to their respective code.
+
+Public PHP siblings use `self.version` and `dev-main` aliases of `1.0.x-dev`. Private PHP,
+Vue add-on and hub releases have independent version lines. The PHP add-on requires public
+core, drive and documents at `^1.0` (and media at `^1.0` for development); the Vue add-on requires
+`@vaulter/vue` at `^1.0`. Matching version numbers do not require releases to happen together.
 
 ## Documentation
 
@@ -102,4 +121,5 @@ Every public class is strictly typed and covered by tests; see [CONTRIBUTING.md]
 
 ## License
 
-[MIT](LICENSE) © Axioma Studio.
+Public packages: [MIT](LICENSE) © Axioma Studio. Commercial collaboration artifacts use
+the private licensing channel described above and their own LICENSE placeholders.

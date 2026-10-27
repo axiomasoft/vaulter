@@ -3,6 +3,31 @@
 Thanks for your interest in Vaulter! This is a monorepo containing a Laravel package,
 Vue components, a Node collaboration hub (`packages/collaboration/hub`) and the documentation site.
 
+## Package channels and local development
+
+The public MIT channel includes core, media, drive, documents, webhooks, filament, the
+`axioma-studio/vaulter` metapackage and `@vaulter/vue`. The AzGuard bridge is public but remains
+excluded from release artifacts until its upstream has a stable tag. The metapackage requires
+only core, media, drive and documents; commercial collaboration is installed separately.
+
+The private channel contains `axioma-studio/vaulter-collaboration` (`proprietary`, private split
+and Private Packagist for Vendors), `@vaulter/vue-collaboration` (`UNLICENSED`, restricted npm,
+provenance disabled), and the collaboration hub (`UNLICENSED`, `private: true`, image-only,
+private GHCR). Their own LICENSE files are placeholders that grant no license. Axioma Studio
+must supply the commercial agreement and final legal text separately. Preserve third-party
+licenses and notices when working on these artifacts.
+
+Public PHP packages share a version line, use `self.version` for siblings and expose
+`dev-main` as `1.0.x-dev`. Private artifacts have independent release lines: the PHP add-on
+requires public core, drive and documents at `^1.0`, with media at `^1.0` for development;
+the Vue add-on depends on `@vaulter/vue` at `^1.0`. The private PHP branch alias does not
+couple its release schedule to the public line.
+
+Package-local Composer `path` repositories and `minimum-stability: dev` remain for monorepo
+development. Composer reads these settings from the root package of an installation; they
+are ignored when that package is installed as a dependency. Monorepo contributors need
+access to the private source; public consumers can install the public packages independently.
+
 ## Prerequisites
 
 - PHP `^8.4` with `composer`
@@ -221,10 +246,14 @@ npm run docs:dev     # VitePress docs dev server
 
 The release set lives in `release/packages.json`; `monorepo-split.yml` splits exactly those packages
 (`scripts/release/check-versions.php` fails when the matrix and the manifest disagree).
+Each artifact declares its public or private channel, independent release line and tag prefix.
+Public PHP tags use `v`, private PHP tags use `collaboration-v`, npm lines use their package
+names followed by `@`, and hub image tags use `collaboration-hub-v`.
 
-- `scripts/php84 scripts/release/check-versions.php` — siblings are required only as `self.version`, nothing shipped
-  requires a `dev-*` constraint (the excluded AzGuard bridge may pin its untagged upstream), and `@vaulter/vue` declares
-  the REST API line.
+- `scripts/php84 scripts/release/check-versions.php` — public siblings use `self.version`, private dependencies
+  match their declared public compatibility ranges, and channels and tag prefixes match the manifest. Nothing
+  shipped requires a `dev-*` constraint (the excluded AzGuard bridge may pin its untagged upstream), and
+  `@vaulter/vue` declares the REST API line.
 - `scripts/php84 scripts/release/build-artifacts.php --version=X.Y.Z --out=DIR` — one zip per package from `git archive`
   (so `export-ignore` applies), with the version written into `composer.json`. No network. A package whose upstream is a
   dev require (`vaulter-azgard` until AzGuard is tagged) is skipped with the reason.
