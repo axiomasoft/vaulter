@@ -29,9 +29,12 @@ final readonly class ListPublicShareNodesController
             throw ShareNotFoundException::opaque();
         }
 
-        return PageResponse::fromPaginator(
-            $this->nodes->children($context, PageResponse::cursor($request), PageResponse::perPage($request)),
+        $perPage = PageResponse::perPage($request);
+
+        return PageResponse::make(
+            $this->nodes->children($context, PageResponse::cursor($request), $perPage),
             static fn (Node $node): SharedNodeResource => new SharedNodeResource($node),
+            $perPage,
         );
     }
 }

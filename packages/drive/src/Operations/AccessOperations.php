@@ -7,10 +7,11 @@ namespace Vaulter\Drive\Operations;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Data\Page;
 use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Actions\Access\GrantNodeAccessAction;
@@ -44,7 +45,7 @@ use Vaulter\Operations\OperationSpec;
 final readonly class AccessOperations implements Contract
 {
     #[Internal]
-    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private DriveConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private DriveConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner, private ExactListing $cursors) {}
 
     /** @return list<GrantSnapshot> */
     public function grants(NodeSnapshot|string|int $node): array
@@ -147,17 +148,27 @@ final readonly class AccessOperations implements Contract
         }, $idempotency);
     }
 
-    /** @internal Existing HTTP list pagination.
-     * @return CursorPaginator<int, GrantSnapshot>
+    /**
+     * @internal HTTP list pagination: one bounded page of the node's direct grants, newest first. The cursor is the
+     *           sealed continuation of an earlier page of this same node and actor; the public {@see self::grants()}
+     *           is unchanged.
+     *
+     * @return Page<GrantSnapshot>
      */
     #[Internal]
-    public function paginate(NodeSnapshot|string|int $node, int $perPage = 50): CursorPaginator
+    public function paginate(NodeSnapshot|string|int $node, int $perPage = 50, ?string $cursor = null): Page
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
         $class = $this->config->model('grant');
+        $scope = [(string) $this->context->driveId(), $this->context->drive->tenant_id, (string) $node->id, $this->context->actor->ref()];
+        $position = $this->cursors->openCursor($cursor, 'grants-list', $scope, ['created_at', 'id']);
+        $page = $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage, cursor: $position);
 
-        return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage)->through(fn (NodeGrant $grant): GrantSnapshot => $this->grantMapper->grant($grant));
+        return new Page(
+            items: array_values(array_map(fn (NodeGrant $grant): GrantSnapshot => $this->grantMapper->grant($grant), $page->items())),
+            nextCursor: $this->cursors->sealCursor($page->nextCursor(), 'grants-list', $scope),
+        );
     }
 
     /**

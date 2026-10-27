@@ -39,9 +39,11 @@ paths:
       tags:
       - access
       summary: List grants of a node
-      description: 'The grants set directly on the node. `etag` is the access tag of the node (in the body only: a list is never stored): its id and access version, which every grant, revoke and inheritance change raises (the node sequence and the node ETag do not move). Send it as If-Match of a revoke or an inheritance change.'
+      description: 'One page (default 50, max 200) of the grants set directly on the node, newest first. `etag` is the access tag of the node (in the body only: a list is never stored): its id and access version, which every grant, revoke and inheritance change raises (the node sequence and the node ETag do not move). Send it as If-Match of a revoke or an inheritance change.'
       parameters:
       - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
       responses:
         '200':
           description: OK
@@ -62,6 +64,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
         '500':
           $ref: '#/components/responses/Problem500'
     post:
@@ -275,8 +279,11 @@ paths:
       tags:
       - sharing
       summary: List share links of a node
+      description: 'One page (default 50, max 200) of the share links of the node, newest first. Tokens are never listed.'
       parameters:
       - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
       responses:
         '200':
           description: OK
@@ -297,6 +304,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
         '500':
           $ref: '#/components/responses/Problem500'
     post:
@@ -5579,6 +5588,7 @@ components:
       required:
       - etag
       - data
+      - meta
       properties:
         etag:
           type: string
@@ -5587,6 +5597,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Grant'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
     ShareEnvelope:
       type: object
       required:
@@ -5598,11 +5610,14 @@ components:
       type: object
       required:
       - data
+      - meta
       properties:
         data:
           type: array
           items:
             $ref: '#/components/schemas/Share'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
     MintedShareEnvelope:
       type: object
       required:

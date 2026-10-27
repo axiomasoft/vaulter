@@ -7,9 +7,10 @@ namespace Vaulter\Drive\Operations;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Encryption\Encrypter;
-use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Data\Page;
+use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\RevokeShareLinkAction;
@@ -43,7 +44,7 @@ use Vaulter\Operations\OperationSpec;
 final readonly class ShareOperations implements Contract
 {
     #[Internal]
-    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private DriveConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner, private Encrypter $encrypter) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private DriveConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner, private Encrypter $encrypter, private ExactListing $cursors) {}
 
     /** @return list<ShareLinkSnapshot> */
     public function list(NodeSnapshot|string|int $node): array
@@ -114,16 +115,26 @@ final readonly class ShareOperations implements Contract
         }, $idempotency);
     }
 
-    /** @internal Existing HTTP list pagination.
-     * @return CursorPaginator<int, ShareLinkSnapshot>
+    /**
+     * @internal HTTP list pagination: one bounded page of the node's live share links, newest first. The cursor is
+     *           the sealed continuation of an earlier page of this same node and actor; the public {@see self::list()}
+     *           is unchanged.
+     *
+     * @return Page<ShareLinkSnapshot>
      */
     #[Internal]
-    public function paginate(NodeSnapshot|string|int $node, int $perPage = 50): CursorPaginator
+    public function paginate(NodeSnapshot|string|int $node, int $perPage = 50, ?string $cursor = null): Page
     {
         $node = $this->authorized($node, mutation: false);
         $class = $this->config->model('node_share');
+        $scope = [(string) $this->context->driveId(), $this->context->drive->tenant_id, (string) $node->id, $this->context->actor->ref()];
+        $position = $this->cursors->openCursor($cursor, 'shares-list', $scope, ['created_at', 'id']);
+        $page = $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage, cursor: $position);
 
-        return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage)->through(fn (NodeShare $share): ShareLinkSnapshot => $this->mapper->share($share));
+        return new Page(
+            items: array_values(array_map(fn (NodeShare $share): ShareLinkSnapshot => $this->mapper->share($share), $page->items())),
+            nextCursor: $this->cursors->sealCursor($page->nextCursor(), 'shares-list', $scope),
+        );
     }
 
     /**

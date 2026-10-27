@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Support;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Internal;
+use Vaulter\Data\Page;
+use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Drive\Http\Resources\Sharing\SharedNodeResource;
@@ -34,6 +35,7 @@ final readonly class SharedNodeResolver
         private NodeReadRepository $nodes,
         private FileRevisionReadRepository $revisions,
         private ShareTenantContext $tenant,
+        private ExactListing $cursors,
     ) {}
 
     /** The shared node itself, or one of its listed children by opaque id. */
@@ -59,21 +61,26 @@ final readonly class SharedNodeResolver
     }
 
     /**
-     * The direct children of the shared folder that are inside the link, name order.
+     * The direct children of the shared folder that are inside the link, name order. The cursor is the sealed
+     * continuation of an earlier page of this same link: the raw Laravel cursor parameters stay inside the encrypted
+     * payload, bound to the link, its node, drive, tenant, reach and role.
      *
-     * @return CursorPaginator<int, Node>
+     * @return Page<Node>
      */
-    public function children(ShareContext $context, ?string $cursor, int $perPage): CursorPaginator
+    public function children(ShareContext $context, ?string $cursor, int $perPage): Page
     {
         $drive = $this->drive($context);
-        /** @var CursorPaginator<int, Node> $page */
+        $scope = [Identity::key($context->share->getKey()), Identity::key($context->node->getKey()), Identity::key($drive->getKey()), $drive->tenant_id, $context->scope()->value, $context->role->key, $context->role->version];
+        $position = $this->cursors->openCursor($cursor, 'share-children', $scope, ['name', 'id']);
         $page = $this->tenant->evaluate($drive, fn (): CursorPaginator => $this->nodes->children($drive, $context->node)
-            ->cursorPaginate(perPage: $perPage, cursor: $cursor));
+            ->cursorPaginate(perPage: $perPage, cursor: $position));
+
         // Every row is a direct child of an in-scope folder; checking again keeps a
         // misshaped tree from ever listing a node outside the link.
-        $page->setCollection((new Collection($page->items()))->filter(static fn (Node $child): bool => $context->containsNode($child))->values());
-
-        return $page;
+        return new Page(
+            items: array_values(array_filter($page->items(), static fn (Node $child): bool => $context->containsNode($child))),
+            nextCursor: $this->cursors->sealCursor($page->nextCursor(), 'share-children', $scope),
+        );
     }
 
     /** The file's current revision, as the link sees it. */

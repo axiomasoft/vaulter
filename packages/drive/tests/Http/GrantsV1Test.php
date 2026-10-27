@@ -39,7 +39,7 @@ it('creates, lists and revokes a grant with string ids and no permission bits', 
 
     $list = $this->getJson($this->url)->assertOk();
     expect(array_column($list->json('data'), 'id'))->toContain($created->json('data.id'))
-        ->and($list->json())->not->toHaveKey('meta')
+        ->and($list->json('meta'))->toBe(['next_cursor' => null, 'per_page' => 50])
         ->and($list->headers->has('ETag'))->toBeFalse()
         ->and($list->json('etag'))->toBe('"access.'.$this->folder->id.'.1"');
 
