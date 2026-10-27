@@ -218,21 +218,21 @@ php artisan vaulter:make:document-type Kanban
 
 ## Тесты вашего расширения
 
-Кроме контрактного набора выше, `Document::factory()` создаёт документы через
-`DocumentOperations`, поэтому у фикстуры есть узел, кодек её типа и первый чекпоинт:
+Используйте контрактный набор выше и публичные Operations: они возвращают readonly `NodeSnapshot`, включая фрагмент документа. Нативный `Document::factory()` — внутренняя ORM-фикстура репозитория; его `create()`/`make()` возвращают модели и не входят в поддерживаемый host API.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Facades\Documents;
 
-$document = Document::factory()->richText('Hello')->in($drive)->create();
-$board = Document::factory()->ofType('acme/kanban')->named('Roadmap')->in($folder)->create();
+$board = Documents::in($drive)->create(
+    name: 'Roadmap',
+    type: 'acme/kanban',
+    parent: $folder,
+);
 ```
 
-`richText()` наполняет rich-text-документ, `ofType()` создаёт документ любого установленного
-типа с содержимым этого типа по умолчанию, `in()` принимает драйв (его корень) или папку.
-Другой тенант вместо текущего выбирается через `forTenant()`.
+`$drive` — авторизованный `DriveHandle`, `$folder` — snapshot папки или её id; содержимое по умолчанию задаёт зарегистрированный тип.
 
 Типы документов используют `Vaulter\Documents\Data\Types\DocumentViewer` и
 `Vaulter\Documents\Data\Types\DocumentFeatures`. Тип без клиентского редактора

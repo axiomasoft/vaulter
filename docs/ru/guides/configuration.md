@@ -284,12 +284,14 @@ $connection = $database->connection();
 ```
 
 `VaulterConfig` (ядро) даёт секции `database()`, `ids()`, `tenancy()`, `routes()`, `outbox()`,
-`observability()` и `outboxModel()`. Остальное читает класс владельца: `DriveConfig` — `access()`, `sharing()`,
+`observability()`. Остальное читает класс владельца: `DriveConfig` — `access()`, `sharing()`,
 `listing()`, `downloads()`, `changes()`, `scan()`, `model(string)`, `featureEnabled(string)`,
 `profileProviders()`, `defaultProfile()`, `handlers()`; `MediaConfig` — диск, дедупликацию и GC;
 `WebhooksConfig` — таймауты, повторы и URL guard; `DocumentsConfig` — документы.
 Каждый вызов заново читает репозиторий: `config()->set()` в тестах сразу меняет результат.
 Код пакетов читает ключи Vaulter только в `Configuration`; границу проверяют arch-тесты.
+
+Ключи настройки моделей в опубликованных config-файлах остаются действующими. ORM-геттеры `VaulterConfig::outboxModel()`, `DriveConfig::model()`, `MediaConfig::blobModel()`, `DocumentsConfig::model()` и `WebhooksConfig::model()` помечены `#[Internal]`: их вызывает инфраструктура пакетов. Хост настраивает ключи, а данные читает через Operations и snapshots.
 
 ## Ключи, которых нет
 

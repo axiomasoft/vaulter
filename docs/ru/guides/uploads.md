@@ -408,12 +408,9 @@ Schedule::command('vaulter:uploads:sweep')->hourly();
 Набор для тестов поставляется внутри пакетов (`Vaulter\Testing`, `Vaulter\Drive\Testing`);
 production-код его не импортирует.
 
-**Данные — через Operations.** `Drive::factory()->for($owner)`, `Node::factory()->file('bytes')->in($drive)`
-и `FileRevision::factory()->for($file)->bytes('v2')` создают данные теми же Actions, что и запрос,
-от имени system-актора, поэтому квота, sequence, блобы и scan-работа остаются согласованными.
-Тенант выбирается через `forTenant()`. `InteractsWithVaulter` добавляет `vaulterFakeStorage()`,
-`vaulterActingAs($user)`, `assertVaulterEventRecorded()` / `assertVaulterEventNotRecorded()` и
-проверки видимости.
+**Данные — через Operations.** Получите авторизованный `DriveHandle` через `Vaulter::drive($owner)`, затем вызывайте `$drive->files()->upload($source)`: результат — readonly `NodeSnapshot`. Нативные `Drive::factory()`, `Node::factory()` и `FileRevision::factory()` остаются внутренними ORM-фикстурами репозитория; их `create()`/`make()` не входят в поддерживаемый host API. `InteractsWithVaulter` предоставляет `vaulterFakeStorage()`, `vaulterActingAs($user)` и проверки событий/видимости.
+
+`$drive->uploads()->initiate($input)` возвращает readonly `UploadSessionSnapshot`; `complete($session)` — `NodeSnapshot`. Для возобновления используйте `uploadId`, для передачи сессии Operations — snapshot или её `id`. Конструктор и model-mapping методы snapshot внутренние.
 
 **Сканер содержимого.** `ContentScannerContractTests::assertContentScannerContract($scanner, $samples)`
 принимает байты, на которых ваш сканер выдаёт каждый исход (`clean` обязателен; `infected`,

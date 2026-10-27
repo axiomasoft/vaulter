@@ -418,11 +418,9 @@ by `vaulter-drive.uploads.resumable.enabled`.
 The testing kit ships inside the packages (`Vaulter\Testing`, `Vaulter\Drive\Testing`); nothing
 in production code imports it.
 
-**Create data through Operations.** `Drive::factory()->for($owner)`, `Node::factory()->file('bytes')->in($drive)`
-and `FileRevision::factory()->for($file)->bytes('v2')` provision through the same Actions a request
-uses, as a system actor, so quota, sequences, blobs and scan work hold. `forTenant()` picks the tenant.
-`InteractsWithVaulter` adds `vaulterFakeStorage()`, `vaulterActingAs($user)`,
-`assertVaulterEventRecorded()` / `assertVaulterEventNotRecorded()` and the visibility assertions.
+**Create data through Operations.** Obtain an authorized `DriveHandle` with `Vaulter::drive($owner)`, then call `$drive->files()->upload($source)` for a readonly `NodeSnapshot`. Native `Drive::factory()`, `Node::factory()` and `FileRevision::factory()` remain internal repository ORM fixtures; their `create()`/`make()` are outside the supported host API. `InteractsWithVaulter` supplies `vaulterFakeStorage()`, `vaulterActingAs($user)` and event/visibility assertions.
+
+`$drive->uploads()->initiate($input)` returns a readonly `UploadSessionSnapshot`; `complete($session)` returns a `NodeSnapshot`. Resume by `uploadId`; pass the snapshot or its `id` to Operations. Snapshot construction and model mapping are internal.
 
 **Content scanner.** `ContentScannerContractTests::assertContentScannerContract($scanner, $samples)` takes
 bytes that make your scanner produce each outcome (`clean` is required; `infected`, `unsupported`,

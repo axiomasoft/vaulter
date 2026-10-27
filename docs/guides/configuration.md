@@ -281,13 +281,15 @@ $connection = $database->connection();
 ```
 
 `VaulterConfig` (the kernel) exposes `database()`, `ids()`, `tenancy()`, `routes()`, `outbox()`,
-`observability()` and `outboxModel()`. Everything else is read by the class of its owner: `DriveConfig` has
+`observability()`. Everything else is read by the class of its owner: `DriveConfig` has
 `access()`, `sharing()`, `listing()`, `downloads()`, `changes()`, `scan()`, `model(string)`,
 `featureEnabled(string)`, `profileProviders()`, `defaultProfile()` and `handlers()`; `MediaConfig` the disk,
 deduplication and GC; `WebhooksConfig` the timeouts, retries and URL guard; `DocumentsConfig` the documents.
 Values are read on every call: changing the repository with `config()->set()` in tests is
 visible immediately. Package code reads Vaulter keys only within `Configuration` classes;
 architecture checks enforce this boundary.
+
+Model configuration keys in the published config files remain valid. The ORM getters `VaulterConfig::outboxModel()`, `DriveConfig::model()`, `MediaConfig::blobModel()`, `DocumentsConfig::model()` and `WebhooksConfig::model()` are `#[Internal]` package plumbing. Hosts configure the keys and read data through Operations and snapshots.
 
 ## Keys that do not exist
 

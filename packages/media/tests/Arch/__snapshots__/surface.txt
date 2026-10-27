@@ -2,9 +2,9 @@
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
 Vaulter\Media\Cas\BlobStore api since 1.0 final readonly class implements Vaulter\Media\Contracts\Cas\BlobStore
-  public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
-  public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
-  public function read(Vaulter\Media\Models\Cas\Blob $blob): mixed
+  public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Data\Snapshots\BlobSnapshot
+  public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Data\Snapshots\BlobSnapshot
+  public function read(Vaulter\Media\Data\Snapshots\BlobSnapshot|int|string $blob): mixed
 
 Vaulter\Media\Configuration\DedupScope api since 1.0 enum: string
   case Drive = 'drive'
@@ -12,7 +12,6 @@ Vaulter\Media\Configuration\DedupScope api since 1.0 enum: string
   case Tenant = 'tenant'
 
 Vaulter\Media\Configuration\MediaConfig api since 1.0 final readonly class
-  public function blobModel(): string
   public function blobStore(): string
   public function contentStore(): string
   public function dedupScope(): Vaulter\Media\Configuration\DedupScope
@@ -63,14 +62,14 @@ Vaulter\Media\Content\SignedContentUrl api since 1.0 final readonly class
 
 Vaulter\Media\Contracts\Cas\BlobPins api since 1.0 interface
   public function countByOwner(): array
-  public function pin(Vaulter\Media\Models\Cas\Blob $blob, string $ownerType, string $referenceKey): void
+  public function pin(Vaulter\Media\Data\Snapshots\BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void
   public function releaseOwner(string $ownerType, ?Closure $keys = null): int
-  public function unpin(Vaulter\Media\Models\Cas\Blob|int|string $blob, string $ownerType, string $referenceKey): void
+  public function unpin(Vaulter\Media\Data\Snapshots\BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void
 
 Vaulter\Media\Contracts\Cas\BlobStore api since 1.0 interface
-  public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
-  public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
-  public function read(Vaulter\Media\Models\Cas\Blob $blob): mixed
+  public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Data\Snapshots\BlobSnapshot
+  public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Data\Snapshots\BlobSnapshot
+  public function read(Vaulter\Media\Data\Snapshots\BlobSnapshot|int|string $blob): mixed
 
 Vaulter\Media\Contracts\Cas\ContentScanner spi:implement since 1.0 interface
   public function key(): string
@@ -110,6 +109,19 @@ Vaulter\Media\Contracts\Cas\StorageDriver spi:implement since 1.0 interface
   public function get(string $key, ?string $disk = null): mixed
   public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
   public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
+
+Vaulter\Media\Data\Snapshots\BlobSnapshot api since 1.0 final readonly class
+  public bool $chunked
+  public string $disk
+  public string $id
+  public bool $intact
+  public string $scopeKey
+  public string $sha256
+  public int $sizeBytes
+  public Vaulter\Media\Enums\Cas\BlobStatus $status
+  public ?string $storageId
+  public string $storageKey
+  public ?string $tenantId
 
 Vaulter\Media\Enums\Cas\BlobStatus api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
   case Committed = 'committed'

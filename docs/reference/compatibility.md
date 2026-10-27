@@ -37,6 +37,12 @@ for a repeat.
 
 The budget is enforceable only on a local staging disk. Resumable completion (`tus`, `s3-multipart`; the names are protocols, not storage capabilities) on a remote, S3 or opaque custom disk is **unsupported**: it is refused with `upload_conflict` (409) before any storage I/O. Upgrade note: stage resumable uploads on a local disk; single-shot `direct` upload and the content-addressed store on S3 are unaffected. A session already committed before this change may still run its pending staged cleanup on the staged disk without a hard deadline (known limitation, owner runbook P8.2).
 
+### I13: current PHP surface
+
+After P6.3 the PHP API/SPI catalog follows the current source: I13 uses block mode with zero temporary exceptions and zero permanent host-input entries. Readonly results include `UploadSessionSnapshot`, change pages and nested snapshot facts; events carry snapshots and scalar facts instead of domain ORM models.
+
+`NodeSnapshotContributor` remains a supported implement-SPI: `contribute()` receives model-free `list<NodeSnapshot>` before fragments, viewer state or reader keys are added. Load owned aggregates by node id. `HasDrives` remains an available trait, with an internal ORM `drives()` relation; supported listing uses `Vaulter::drives($actor)` returning `Page<DriveSnapshot>`. ORM configuration getters and native factories are internal; configuration keys remain valid. Shared BC qualification and the common guard/corpus belong to P6.2; this catalog update does not claim they passed.
+
 ## Packages and versions
 
 Every PHP package is released with one version and one tag, and each split repository
@@ -291,7 +297,7 @@ Each `TestCase` migrates its own schema on start, so run one schema group per in
 
 ## Public contract catalog
 
-> Preliminary until P6.3 (I13 closure) and P6.2 (BC gate). No row is a passed BC check; "not_checked" means no machine snapshot exists and none is invented.
+> PHP source inputs refreshed by P6.3 I13 closure; preliminary until P6.2 (BC gate). No row is a passed BC check; "not_checked" means no machine snapshot exists and none is invented.
 
 | Surface | Machine source | 1.x promise | Detection | Qualification |
 |:--|:--|:--|:--|:--|

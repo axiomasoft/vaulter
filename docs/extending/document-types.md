@@ -218,21 +218,21 @@ and never edits your config. An existing file is kept unless you pass `--force`.
 
 ## Testing your extension
 
-Besides the contract suite above, `Document::factory()` creates documents through
-`DocumentOperations`, so a fixture has its node, its type's codec and its first checkpoint:
+Use the contract suite above and public Operations, which return a readonly `NodeSnapshot` including its document fragment. Native `Document::factory()` is an internal repository ORM fixture: its `create()`/`make()` return models and are outside the supported host API.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Facades\Documents;
 
-$document = Document::factory()->richText('Hello')->in($drive)->create();
-$board = Document::factory()->ofType('acme/kanban')->named('Roadmap')->in($folder)->create();
+$board = Documents::in($drive)->create(
+    name: 'Roadmap',
+    type: 'acme/kanban',
+    parent: $folder,
+);
 ```
 
-`richText()` fills a rich-text document, `ofType()` starts a document of any installed type with
-that type's default content, and `in()` takes a drive (its root) or a folder. A tenant other than
-the current one is chosen with `forTenant()`.
+`$drive` is an authorized `DriveHandle`; `$folder` is a folder snapshot or its id. The registered type supplies the default content.
 
 Document types use `Vaulter\Documents\Data\Types\DocumentViewer` and
 `Vaulter\Documents\Data\Types\DocumentFeatures`. A backend-only type returns

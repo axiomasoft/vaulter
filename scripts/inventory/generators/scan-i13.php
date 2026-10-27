@@ -10,5 +10,9 @@ use Vaulter\Inventory\Surface;
 require_once dirname(__DIR__).'/lib/Scans/ScanGenerator.php';
 require_once dirname(__DIR__).'/lib/Surface.php';
 
-/** I13 against tests/Repo/Arch/Fixtures/allowlists/i13.json (report mode until P7). */
-return new ScanGenerator(Surface::INVARIANT, static fn (Repo $repo): array => Surface::violations(Surface::read($repo), SourceIndex::forRepo($repo)));
+/** I13 blocks signature and extended surface leaks against the exact source-backed allowlist. */
+return new ScanGenerator(Surface::INVARIANT, static function (Repo $repo): array {
+    $classified = Surface::classify(Surface::read($repo), SourceIndex::forRepo($repo));
+
+    return [...$classified['signature'], ...$classified['extended']];
+});

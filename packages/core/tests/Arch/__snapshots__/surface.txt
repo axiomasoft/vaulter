@@ -104,7 +104,6 @@ Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
   public function ids(): Vaulter\Configuration\IdsConfig
   public function observability(): Vaulter\Configuration\ObservabilityConfig
   public function outbox(): Vaulter\Configuration\OutboxConfig
-  public function outboxModel(): string
   public function routes(): Vaulter\Configuration\RoutesConfig
   public function tenancy(): Vaulter\Configuration\TenancyConfig
 
@@ -281,7 +280,6 @@ Vaulter\Events\Outbox\OutboxEnvelope spi:call since 1.0 final readonly class
   public string $type
   public function __construct(string $eventId, int $outboxSeq, string $type, bool $external, ?string $tenantId, string $scopeKind, ?string $scopeId, ?string $aggregateType, ?string $aggregateId, ?int $sequence, Carbon\CarbonImmutable $createdAt, array $payload)
   public static function body(Vaulter\Events\DomainEvent $event, ?int $changeSeq = null): array
-  public static function fromModel(Vaulter\Events\Outbox\Models\OutboxEvent $row): self
 
 Vaulter\Events\SinkResult spi:call since 1.0 enum: string
   case Replayed = 'replayed'
@@ -475,7 +473,6 @@ Vaulter\Kernel api since 1.0 final class
 
 Vaulter\Models\Concerns\GuardsWrites api since 1.0 trait
   protected function newBaseQueryBuilder(): Illuminate\Database\Query\Builder
-  protected function vaulterWriteScope(): Vaulter\Database\WriteScope
 
 Vaulter\Models\Concerns\HasVaulterKeys api since 1.0 trait
   public static function bootHasVaulterKeys(): void
@@ -523,8 +520,6 @@ Vaulter\Modules\ModuleBuilder api since 1.0 final class
   public function __construct(Vaulter\Modules\ModuleId $module)
   public function bindingClasses(): array
   public function bindings(string $bindings): self
-  public function capabilityDefinitions(): array
-  public function capabilityProviders(): array
   public function commandClasses(): array
   public function commands(string ...$commands): self
   public function config(string $root, string $defaultsFile): self
@@ -552,7 +547,6 @@ Vaulter\Modules\ModuleBuilder api since 1.0 final class
   public function schema(string $migrationsDir): self
   public function schemaPaths(): array
   public function slot(string $contract, string $implementation, string $id, int $priority = 0, ?string $key = null): self
-  public function slotDefinitions(): array
   public function translationDirs(): array
   public function translations(string $dir, string $namespace): self
 

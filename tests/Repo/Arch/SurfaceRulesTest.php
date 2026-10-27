@@ -10,7 +10,7 @@ use Vaulter\Inventory\SourceIndex;
 use Vaulter\Inventory\Surface;
 
 /*
- * I13 (D27, report mode until P7): a type without a surface attribute is unclassified, and a supported (Api or Spi) signature
+ * I13 (D27, block mode after P6.3): a type without a surface attribute is unclassified, and a supported (Api or Spi) signature
  * must not name a type marked Internal or an Eloquent model of the domain. Today's findings are listed in
  * tests/Repo/Arch/Fixtures/allowlists/i13.json and must match exactly; the `rules:` tests run the scan on synthetic sources.
  * Seed or refresh: scripts/php84 php scripts/inventory/inventory.php scan-i13 --report --proposals=<path>
@@ -108,6 +108,13 @@ it('rules: I13 entries may be removed in P7, and only a host input stays for eve
 function sr_extended(array $sources): array
 {
     $classified = Surface::classify(Surface::fromSources($sources), SourceIndex::fromSources($sources, SR_PSR4, []));
+
+    // Every independent extended negative fixture must also fail the blocking scan evaluator.
+    if ($classified['extended'] !== []) {
+        $blocked = ScanGenerator::evaluate('I13', [...$classified['signature'], ...$classified['extended']], Allowlist::fromArray(['invariant' => 'I13', 'mode' => 'block', 'entries' => []]));
+        expect($blocked['code'])->toBe(1)
+            ->and(implode('\n', $blocked['lines']))->toContain('new   extended|');
+    }
 
     return array_map(static fn (array $v): string => $v['symbol'].' '.$v['kind'].' '.$v['target'].' '.$v['category'], $classified['extended']);
 }
@@ -341,7 +348,8 @@ it('keeps every committed I13 entry reasoned, in report mode and never a type wi
     $allowlist = Allowlist::load(Repo::discover(), ScanGenerator::allowlistPath('I13'));
     ScanGenerator::assertReasons($allowlist);
 
-    expect($allowlist->mode)->toBe('report')
-        ->and(array_unique(array_column($allowlist->entries(), 'view')))->toBe(['signature'])
-        ->and(array_unique(array_column($allowlist->entries(), 'removed_in')))->toBe(['P7']);
+    // Keep the original test identity; the former report baseline is now closed by P6.3/U4.
+    expect($allowlist->mode)->toBe('block')
+        ->and($allowlist->invariant)->toBe('I13')
+        ->and($allowlist->entries())->toBe([]);
 });
