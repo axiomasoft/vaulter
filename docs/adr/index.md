@@ -37,3 +37,5 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0033 — Kernel budget and dependency rules](/adr/0033-kernel-budget-and-dependency-rules) — accepted.
 
 - [ADR-0034 — Document SPI v2 and collaboration protocols](/adr/0034-document-spi-v2-and-collaboration-protocols) — accepted; amends ADR-0031.
+
+- [ADR-0035 — Product boundary and release channels](/adr/0035-product-boundary-and-release-channels) — accepted; amends ADR-0010 and ADR-0031.

@@ -90,7 +90,7 @@ npm --prefix packages/vue-collaboration run typecheck && npm --prefix packages/v
 
 The scenarios that need real processes — `scripts/collab-e2e.sh` (one hub) and `scripts/collab-stand.sh` (PostgreSQL, Redis,
 two hubs: kill after retry, two hubs, `SIGTERM` drain) — need Docker and are not part of a pull request; see
-[Collaboration hub](docs/guides/hub.md#local-development-and-the-stands).
+[Collaboration hub](packages/collaboration/docs/guides/hub.md#local-development-and-the-stands).
 
 ### Concurrency tests
 
