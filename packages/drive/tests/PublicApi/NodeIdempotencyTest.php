@@ -6,7 +6,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\MoveOptions;
 use Vaulter\Drive\Data\RestoreOptions;
@@ -18,14 +21,19 @@ use Vaulter\Drive\Events\Nodes\NodeMoved;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
 use Vaulter\Idempotency\IdempotencyStore;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * P6.2 (D25, D47, ID1–ID4): every receipt operation of nodes, trash, files and uploads answers a repeat under its
@@ -54,6 +62,13 @@ function nodeRevokeUser(DriveHandle $system, int|string $id): void
             $system->access()->revoke($root->id, $grant->id);
         }
     }
+}
+
+/** Gives user `$id` only `$role` on the drive's root (a downgrade that keeps View). */
+function nodeRegrantUser(DriveHandle $system, int|string $id, string $role): void
+{
+    nodeRevokeUser($system, $id);
+    $system->access()->grant($system->root()->id, new GrantInput(subject: Subject::ofModel(V1::user((int) $id)), role: $role));
 }
 
 /** Whether `$write` is refused like a new request of an actor without the right. */
@@ -197,6 +212,36 @@ it('replays an emptied trash with its count and does not empty a later one', fun
     expect($first)->toBe(2)->and($second)->toBe(2)->and(Node::query()->whereKey($later->id)->exists())->toBeTrue()
         ->and(nodeEvents(DriveEventType::NodePurged))->toBe(2);
     expect($this->actor->trash()->empty())->toBe(1);
+});
+
+it('refuses the count of an emptied trash once Delete on the root is gone, and keeps it for the owner', function (string $role): void {
+    $this->actor->nodes()->trash(V1::folder($this->system, 'a')->id);
+    expect(($this->keyed)('empty-owner')->trash()->empty())->toBe(1)
+        ->and(($this->keyed)('empty-owner')->trash()->empty())->toBe(1);
+    $this->actor->nodes()->trash(V1::folder($this->system, 'b')->id);
+    expect(($this->keyed)('empty-lost')->trash()->empty())->toBe(1);
+    $this->actor->nodes()->trash(V1::folder($this->system, 'later')->id);
+    nodeRegrantUser($this->system, 1, $role);
+
+    expect(fn () => ($this->keyed)('empty-lost')->trash()->empty())->toThrow(PermissionDeniedException::class)
+        ->and($this->actor->trash()->empty())->toBe(0)
+        ->and($this->actor->nodes()->find($this->system->root()->id)->id)->toBe($this->system->root()->id)
+        ->and(nodeEvents(DriveEventType::NodePurged))->toBe(2);
+    nodeRevokeUser($this->system, 1);
+    expect(fn () => ($this->keyed)('empty-lost')->trash()->empty())->toThrow(NodeNotFoundException::class);
+})->with([RoleRegistry::READER, RoleRegistry::WRITER, RoleRegistry::ORGANIZER]);
+
+it('refuses the count of an emptied trash once the drive profile shuts its owner out', function (): void {
+    $this->actor->nodes()->trash(V1::folder($this->system, 'a')->id);
+    expect(($this->keyed)('empty-profile')->trash()->empty())->toBe(1);
+    $registry = new ProfileRegistry;
+    $registry->register((new Profile)->key($this->system->model()->profile)->owners(TestUser::class));
+    $registry->freeze();
+    app()->instance(ProfileRegistry::class, $registry);
+    app()->forgetInstance(ProfilePolicy::class);
+
+    expect(fn () => ($this->keyed)('empty-profile')->trash()->empty())->toThrow(ProfileRestrictionException::class)
+        ->and(nodeEvents(DriveEventType::NodePurged))->toBe(1);
 });
 
 it('replays a restored revision and a deleted revision', function (): void {

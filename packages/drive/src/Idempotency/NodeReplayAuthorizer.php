@@ -24,7 +24,8 @@ use Vaulter\Idempotency\ResourceRef;
  * actor cannot see any more, a revoked grant or a gone drive answers like a new request would.
  *
  * Create (`folders.create`) needs Create in the folder that holds the node now; any other write needs `$ability`
- * on the node itself, or on the scope when the node is gone.
+ * on the node itself, or on the scope when the node is gone. The emptied trash (`trash.empty`) is about the whole
+ * drive: its count needs Delete (as a purge) on the drive's root now, before the receipt is decoded.
  */
 #[Internal]
 final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
@@ -38,7 +39,6 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         private OperationKind $kind = OperationKind::Mutation,
         private bool $includeTrashed = false,
         private bool $alsoCreate = false,
-        private bool $driveOnly = false,
     ) {}
 
     /** A replay of folders.create: Create in the folder that holds the created node now (`$parent` for a refusal). */
@@ -59,10 +59,15 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         return new self($context, $locator, $guard, $ability, $node, $kind, $includeTrashed, $alsoCreate);
     }
 
-    /** A replay of a write that is about the drive's visible trash as a whole (trash.empty): the receipt's tuple already binds actor and drive. */
+    /**
+     * A replay of a write that is about the drive's trash as a whole (trash.empty): the receipt has no node, so it
+     * needs Delete as a purge on the drive's root now, the same fallback as a purge whose scope is gone. A fresh empty
+     * filters by Delete per trashed root instead; an actor who may delete only in a subtree gets a fresh count, but
+     * is refused the stored one, since the aggregate count is not split by root.
+     */
     public static function forDrive(DriveContext $context, NodeLocator $locator, OperationGuard $guard): self
     {
-        return new self($context, $locator, $guard, null, null, driveOnly: true);
+        return new self($context, $locator, $guard, Ability::Delete, null, OperationKind::Purge);
     }
 
     public function scope(mixed $result): ResourceRef
@@ -82,9 +87,6 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
 
     public function authorize(?ResourceRef $resource, ?ResourceRef $scope): void
     {
-        if ($this->driveOnly) {
-            return;
-        }
         $node = $resource?->kind === 'node' ? $this->find($resource->id) : null;
         if ($node !== null) {
             if ($this->ability === null) {

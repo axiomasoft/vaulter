@@ -131,8 +131,9 @@ final readonly class TrashOperations implements Contract
     public function empty(): int
     {
         // Idempotent by key (D25): the keyed call is one operation of its own that holds every root purge, so its
-        // receipt is the count and a retry never purges what a later upload put into the trash. Without a key every
-        // root stays its own atomic operation, as before.
+        // receipt is the count and a retry never purges what a later upload put into the trash. A replay returns the
+        // count only to an actor who may still purge on the drive's root. Without a key every root stays its own
+        // atomic operation, as before.
         if ($this->context->idempotencyKey !== null) {
             $idempotency = new IdempotentWrite(
                 codec: new PurgeReceiptCodec,

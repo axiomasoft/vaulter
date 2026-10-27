@@ -298,7 +298,8 @@ it('authorizes a replay now, before the receipt is decoded, and answers the hist
     $live = 'v2';
     $probe->deny = true;
     expect(fn () => icRun(icRunner(), icContext($actor, 'K'), $attempt, $probe->write(['name' => 'a'])))->toThrow(RuntimeException::class, 'denied now');
-    expect($probe->decodes)->toBe(0);
+    expect($probe->decodes)->toBe(0)
+        ->and(app(IdempotencyOutcome::class)->replayed())->toBeFalse();
 
     $probe->deny = false;
     app()->forgetScopedInstances();

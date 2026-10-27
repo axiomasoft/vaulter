@@ -95,7 +95,12 @@ The policy of each operation is declared in the [operation catalogue](/reference
 
 A move replays against the **new** place: the right on the node and the right to create where it is now.
 A purge or a delete stores the authorization scope it was done under (the drive, the parent), and a replay
-checks the actor's current right on that scope. The receipt of `trash.empty` holds a count.
+checks the actor's current right on that scope. The receipt of `trash.empty` holds a count for the whole drive,
+so its replay needs Delete on the drive's root now: an actor who lost Delete there gets `403` (a profile that now
+excludes the drive's owner answers its own refusal), an actor who cannot see the root any more gets `404`, and
+neither gets the old count. This is stricter than a new empty, which skips each trashed node the actor may not
+delete and can answer `0`: an actor with Delete only in a subtree empties their part fresh, but a keyed retry of
+it is refused rather than given the stored count.
 
 ## Operations that return a secret
 
