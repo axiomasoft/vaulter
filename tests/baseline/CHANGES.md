@@ -1177,7 +1177,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_marks_the_delivery_delivered_and_sends_the_signed_POST_on_a_2xx` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_marks_the_delivery_delivered_and_sends_the_signed_POST_on_a_2xx` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
 - `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_marks_the_delivery_failed_and_arms_a_future_retry_on_a_non_2xx` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_marks_the_delivery_failed_and_arms_a_future_retry_on_a_non_2xx` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
 - `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_parks_the_delivery_dead_after_the_last_scheduled_retry_and_extends_the_endpoint_failing_run` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_parks_the_delivery_dead_after_the_last_scheduled_retry_and_extends_the_endpoint_failing_run` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
-- `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_records_the_transport_error_message_when_the_POST_throws` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_records_the_transport_error_message_when_the_POST_throws` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
+- `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_records_the_transport_error_message_when_the_POST_throws` → [`webhooks`] replacement `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_records_a_safe_transport_classification_when_the_POST_throws"dataset "connection failure""`, `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_records_a_safe_transport_classification_when_the_POST_throws"dataset "other transport failure""` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move); PLAN4 P5.5 then records a safe transport classification instead of the raw error message, one case per failure class (D6)
 - `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_retains_a_recoverable_claim_when_custom_model_settlement_throws_and_rolls_back` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_retains_a_recoverable_claim_when_custom_model_settlement_throws_and_rolls_back` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
 - `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_sends_an_empty_data_as_an_object__signed_over_the_exact_bytes` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_sends_an_empty_data_as_an_object__signed_over_the_exact_bytes` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
 - `core` `P\Packages\core\tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_sends_one_POST_when_a_duplicate_job_overlaps_the_HTTP_attempt"(200)"` → [`webhooks`] `P\Tests\Webhooks\DeliverWebhookTest::__pest_evaluable_it_sends_one_POST_when_a_duplicate_job_overlaps_the_HTTP_attempt"(200)"` — the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move) (D6)
@@ -2145,13 +2145,13 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 ## Additions (current − original)
 
 - `repo`: 304 (introduced P1.3)
-- `core`: 112
+- `core`: 126
 - `media`: 148
-- `drive`: 512
-- `documents`: 277
+- `drive`: 517
+- `documents`: 280
 - `azgard`: 9
 - `filament`: 27
-- `webhooks`: 207
+- `webhooks`: 208
 - `vue`: 37
 - `collaboration`: 461
 - `hub`: 30

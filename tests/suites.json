@@ -113,6 +113,8 @@
                         "packages/core/tests/Doctor/DoctorRunnerTest.php",
                         "packages/core/tests/Feature/NodeCommentFeatureOffTest.php",
                         "packages/core/tests/Http/PreconditionsTest.php",
+                        "packages/core/tests/Idempotency/IdempotencyContractTest.php",
+                        "packages/core/tests/Operations/OperationRunnerContractTest.php",
                         "packages/core/tests/Providers/BindingsRegistrarTest.php",
                         "packages/core/tests/Providers/EventsRegistrarTest.php",
                         "packages/core/tests/Support/TenantFootgunGuardTest.php"
@@ -2317,6 +2319,7 @@
                         "tests/Repo/Arch/InventoryHarnessTest.php",
                         "tests/Repo/Arch/KernelBudgetTest.php",
                         "tests/Repo/Arch/MoveTypesTest.php",
+                        "tests/Repo/Arch/MutationContractCoverageTest.php",
                         "tests/Repo/Arch/PrivateConsumerBoundaryTest.php",
                         "tests/Repo/Arch/ReleaseChannelsTest.php",
                         "tests/Repo/Arch/SurfaceManifestTest.php",

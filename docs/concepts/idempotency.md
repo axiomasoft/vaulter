@@ -53,7 +53,8 @@ first response had while the node is still visible to you (the abilities in the 
 trashed node they are all off, so the tag differs); it does not satisfy a later `If-Match` by itself.
 
 The key is scoped to the actor, the tenant, the drive and the operation: another user, or the same user on
-another drive, never sees your receipt.
+another drive, never sees your receipt. The actor is its type and its id, encoded so that a separator inside a morph
+alias or an id cannot make two actors one; a system actor is one actor whatever its reason.
 
 ## Authorization on every replay
 

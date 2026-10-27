@@ -269,3 +269,22 @@ it('replays a refused keyed redelivery as the same 409', function (): void {
 
     Bus::assertNotDispatched(DeliverWebhook::class);
 });
+
+it('fingerprints a keyed update by its request: reordered keys replay, an omitted and a sent field are two requests', function (): void {
+    $endpoint = endpointFixture();
+    $headers = ['If-Match' => webhookTag($endpoint->getKey()), 'Idempotency-Key' => 'upd-shape'];
+    $url = V1::url('webhook-endpoints/'.$endpoint->getKey());
+
+    $first = $this->patchJson($url, ['url' => 'https://new.test/hook', 'events' => ['folder.created']], $headers)->assertOk();
+    $this->patchJson($url, ['events' => ['folder.created'], 'url' => 'https://new.test/hook'], $headers)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.version', $first->json('data.version'));
+
+    // The endpoint is active already, yet a sent is_active is another request than an omitted one.
+    $this->patchJson($url, ['url' => 'https://new.test/hook', 'events' => ['folder.created'], 'is_active' => true], $headers)
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'idempotency_key_reused');
+
+    expect($endpoint->fresh()->version)->toBe(1);
+});

@@ -1498,6 +1498,13 @@
             "id": "format:collaboration-session-aggregate",
             "kind": "protocol",
             "reason": "P3.3 preserves collaboration.sessions.create and documents.collaboration.session; internal aggregate moves from collaboration.session to documents.collaboration_session to satisfy the declaring module ownership invariant."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D19",
+            "id": "format:idempotency-scope-digest",
+            "kind": "protocol",
+            "reason": "P5.8: actor_id prefixes the byte length of the actor type (<len>:<type>|<id>) instead of <type>|<id>, so a type or id holding the delimiter (type a|b, id c vs type a, id b|c) is no longer one actor; no column changes, receipts keyed under the old form are not migrated and expire with their TTL before 1.0"
         }
     ],
     "items": [
@@ -2268,7 +2275,7 @@
             }
         },
         {
-            "format": "lowercase hex SHA-256 over tenant_kind, tenant_id, scope_kind, scope_id, actor_kind, actor_id, operation, key, each as <byte length>:<bytes> and a null as ~; request hash = hex SHA-256 of the canonical JSON fingerprint (keys sorted, unescaped slashes/unicode)",
+            "format": "lowercase hex SHA-256 over tenant_kind, tenant_id, scope_kind, scope_id, actor_kind, actor_id, operation, key, each as <byte length>:<bytes> and a null as ~; a user actor_id is <byte length of type>:<type>|<id> (sha256:<hex> of it beyond 191 bytes), a system actor_id null; request hash = hex SHA-256 of the canonical JSON fingerprint (keys sorted, unescaped slashes/unicode)",
             "id": "format:idempotency-scope-digest",
             "manual": true,
             "owner": "core",

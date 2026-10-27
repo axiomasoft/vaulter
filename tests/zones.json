@@ -76,7 +76,10 @@
                 "packages/core/src/Operations",
                 "packages/core/src/Idempotency"
             ],
-            "tests": [],
+            "tests": [
+                "packages/core/tests/Idempotency/IdempotencyContractTest.php",
+                "packages/core/tests/Operations/OperationRunnerContractTest.php"
+            ],
             "uses": [
                 "core-kernel",
                 "core-modules",
@@ -790,6 +793,8 @@
         "packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php",
         "tests/Integration/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php",
         "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php",
+        "packages/core/tests/Idempotency/IdempotencyContractTest.php",
+        "packages/core/tests/Operations/OperationRunnerContractTest.php",
         "tests/Integration/Schema/HostKeyColumnsSchemaTest.php",
         "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php",
         "packages/documents/tests/Concurrency",

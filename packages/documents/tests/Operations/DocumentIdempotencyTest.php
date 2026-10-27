@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
@@ -231,4 +232,50 @@ it('round-trips the receipts and decodes only the version it knows', function ()
         ->and(fn () => $documents->encode($comment))->toThrow(InvalidArgumentException::class)
         ->and(fn () => $comments->encode($document))->toThrow(InvalidArgumentException::class);
     expect($document)->toBeInstanceOf(DocumentSnapshot::class);
+});
+
+it('keeps the content hash, the state version and the node sequence apart', function (): void {
+    [$system] = idempotentDocuments();
+    $node = Documents::in($system)->create('Spec', content: DocumentTestHelpers::content('same')->toArray());
+    $before = Documents::in($system)->content($node->id);
+    $sequence = Node::query()->findOrFail($node->id)->sequence;
+
+    // A metadata change moves the node sequence and leaves the content hash and the state version.
+    $system->nodes()->rename($node->id, 'Renamed spec');
+    $renamed = Documents::in($system)->content($node->id);
+    expect(Node::query()->findOrFail($node->id)->sequence)->toBe($sequence + 1)
+        ->and($renamed->contentHash)->toBe($before->contentHash)
+        ->and($renamed->stateVersion)->toBe($before->stateVersion);
+
+    // A save of the same bytes is a new state of the same hash: the version moves, the hash does not.
+    $saved = Documents::in($system->withIdempotencyKey('same-bytes'))->update($node->id, DocumentTestHelpers::content('same')->toArray(), $before->stateVersion);
+    expect($saved->contentHash)->toBe($before->contentHash)
+        ->and($saved->stateVersion)->toBe($before->stateVersion + 1);
+});
+
+it('treats an omitted expected state version and an explicit null as one request, and a given version as another', function (): void {
+    [$system] = idempotentDocuments();
+    $node = Documents::in($system)->create('Spec', content: DocumentTestHelpers::content('first')->toArray());
+    $state = Documents::in($system)->content($node->id)->stateVersion;
+    $keyed = Documents::in($system->withIdempotencyKey('null-1'));
+
+    $saved = $keyed->update($node->id, DocumentTestHelpers::content('second')->toArray());
+    expect($keyed->update($node->id, DocumentTestHelpers::content('second')->toArray(), null))->toEqual($saved)
+        ->and(fn () => $keyed->update($node->id, DocumentTestHelpers::content('second')->toArray(), $state))->toThrow(IdempotencyKeyReusedException::class)
+        ->and(Document::query()->where('node_id', $node->id)->firstOrFail()->state_version)->toBe($state + 1);
+});
+
+it('keeps the raw receipt of a document update semantic: state version and hash, no tag or sync key', function (): void {
+    [$system] = idempotentDocuments();
+    $node = Documents::in($system)->create('Spec', content: DocumentTestHelpers::content('first')->toArray());
+    $saved = Documents::in($system->withIdempotencyKey('raw-doc-1'))->update($node->id, DocumentTestHelpers::content('second')->toArray());
+
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->where('idempotency_key', base64_encode('raw-doc-1'))->first();
+    $raw = (string) $row?->receipt_body;
+
+    expect($row?->receipt_headers)->toBeNull()
+        ->and($raw)->toContain((string) $saved->contentHash)
+        ->and($raw)->not->toContain('sync_key')
+        ->and($raw)->not->toContain('etag')
+        ->and($raw)->not->toContain('abilities');
 });

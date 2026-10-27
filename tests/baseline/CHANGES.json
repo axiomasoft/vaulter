@@ -10316,9 +10316,12 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Webhooks\\DeliverWebhookTest::__pest_evaluable_it_records_the_transport_error_message_when_the_POST_throws",
-      "new": "P\\Tests\\Webhooks\\DeliverWebhookTest::__pest_evaluable_it_records_the_transport_error_message_when_the_POST_throws",
+      "replacement": [
+        "P\\Tests\\Webhooks\\DeliverWebhookTest::__pest_evaluable_it_records_a_safe_transport_classification_when_the_POST_throws\"dataset \"connection failure\"\"",
+        "P\\Tests\\Webhooks\\DeliverWebhookTest::__pest_evaluable_it_records_a_safe_transport_classification_when_the_POST_throws\"dataset \"other transport failure\"\""
+      ],
       "new_suite": "webhooks",
-      "reason": "the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move)",
+      "reason": "the test file moved to packages/webhooks/tests/Webhooks/DeliverWebhookTest.php (P4 ownership move); PLAN4 P5.5 then records a safe transport classification instead of the raw error message, one case per failure class",
       "decision": "D6"
     },
     {
@@ -18636,7 +18639,7 @@
       ]
     },
     "core": {
-      "count": 112,
+      "count": 126,
       "names": [
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_has_no_accessor_of_a_module_section__the_drive_reads_its_own_through_DriveConfig",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_keeps_no_drive_and_no_webhooks_section_in_the_kernel_config_root__P4_11__P4_13_",
@@ -18664,6 +18667,14 @@
         "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"blank\"\"",
         "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"missing\"\"",
         "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"wildcard\"\"",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_authorizes_a_replay_now__before_the_receipt_is_decoded__and_answers_the_historical_result__not_the_live_one",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_bounds_a_long_actor_id_by_its_digest_and_keeps_two_long_actors_apart",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_gives_a_delimiter_colliding_actor_its_own_attempt__never_the_receipt_of_the_other",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_hashes_the_request_canonically_and_keeps_a_missing_field__an_explicit_null_and_the_string__null__apart",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_keeps_actors_whose_type_or_id_holds_the_delimiter_apart__in_the_tuple_and_in_the_scope_digest",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_refuses_a_reused_key_with_another_request_as_422_idempotency__key__reused__without_the_stored_result",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_runs_a_write_without_a_key_as_an_ordinary_attempt_that_claims_nothing",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_separates_tenant__scope__operation__key_and_actor_kind__and_leaves_the_correlation_out_of_the_tuple",
         "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_drops_the_provider_of_an_inactive_module",
         "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_has_no_capability_that_no_active_module_defines",
         "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_reads_a_config_chosen_provider_when_resolved__falling_back_to_its_default",
@@ -18699,6 +18710,12 @@
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_refuses_reads_before_the_graph_is_compiled",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_reports_an_invalid_graph_on_every_read",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_seals_the_kernel_once",
+        "P\\Packages\\core\\tests\\Operations\\OperationRunnerContractTest::__pest_evaluable_it_refuses_a_key_on_a_write_without_an_IdempotentWrite_before_its_attempt",
+        "P\\Packages\\core\\tests\\Operations\\OperationRunnerContractTest::__pest_evaluable_it_refuses_a_mutating_operation_no_module_declares_before_any_claim_or_attempt",
+        "P\\Packages\\core\\tests\\Operations\\OperationRunnerContractTest::__pest_evaluable_it_rolls_the_claim_back_with_a_failure_that_is_not_a_cached_refusal__so_a_retry_runs_again",
+        "P\\Packages\\core\\tests\\Operations\\OperationRunnerContractTest::__pest_evaluable_it_runs_a_composed_write_in_the_root_transaction_with_the_one_receipt_of_its_root",
+        "P\\Packages\\core\\tests\\Operations\\OperationRunnerContractTest::__pest_evaluable_it_runs_a_write_without_a_key_with_no_claim_and_no_receipt",
+        "P\\Packages\\core\\tests\\Operations\\OperationRunnerContractTest::__pest_evaluable_it_surfaces_a_failed_after_commit_callback_as_itself_and_never_repeats_the_committed_attempt__the_key_replays_it",
         "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_kernel_config__database_and_observability_seams",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_accepts_a_risk_only_with_a_nonempty_reason",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_boots_HTTP_in_production_only_without_an_unaccepted_violation",
@@ -18906,7 +18923,7 @@
       ]
     },
     "drive": {
-      "count": 512,
+      "count": 517,
       "names": [
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_keeps_the_event_out_of_the_activity_feed_and_away_from_webhooks__with_the_access_policy_as_its_subject",
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_records_a_drive_wide_change_when_the_drive_is_archived__unarchived_and_deleted",
@@ -19056,7 +19073,10 @@
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_rename_of_a_node_that_is_in_the_trash_by_now_instead_of_answering_404",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_rename_whose_If_Match_went_stale_because_the_first_request_committed",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_restored_and_a_deleted_revision_and_an_upload_session",
+        "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_restored_inheritance_and_an_unarchive_under_their_keys_although_their_tags_went_stale__and_answers_a_retried_drive_deletion_drive__not__found",
+        "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_the_historical_snapshot_after_a_later_change__refuses_a_changed_request_and_a_revoked_actor_without_the_stored_name",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_stores_a_stale_rename_under_its_key_and_replays_the_refusal",
+        "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_stores_the_semantic_snapshot_of_a_keyed_rename_in_its_receipt__no_representation_tag__abilities_or_sync_key",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_treats_the_quoted_and_the_plain_spelling_of_one_key_as_the_same_key",
         "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_answers_428_to_If_Match____because_it_would_match_any_representation\"('access.inheritance.restore')\"",
         "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_answers_428_to_If_Match____because_it_would_match_any_representation\"('access.inheritance.restrict')\"",
@@ -19390,9 +19410,11 @@
         "P\\Tests\\PublicApi\\LifecycleBoundaryTest::__pest_evaluable_it_preflights_a_mixed_subtree_before_any_copy_rows_quota_edges_or_events\"(Vaulter\\Drive\\Enums\\NodeKind Enum (Document, 'document'))\"",
         "P\\Tests\\PublicApi\\LifecycleBoundaryTest::__pest_evaluable_it_preflights_a_mixed_subtree_before_any_copy_rows_quota_edges_or_events\"(Vaulter\\Drive\\Enums\\NodeKind Enum (Shortcut, 'shortcut'))\"",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_aborts_an_upload_once__a_repeat_leaves_it_aborted_without_a_second_event",
+        "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_commits_a_keyed_move_once_when_its_after_commit_listener_fails__and_replays_it_without_a_second_event_or_listener_call",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_denies_the_replay_of_a_move_once_the_node_sits_in_a_folder_the_actor_cannot_see",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_denies_the_replay_of_a_purge_to_an_actor_who_may_not_delete_there_any_more",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_denies_the_replay_of_any_receipt_operation_to_an_actor_whose_access_was_revoked",
+        "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_keeps_the_raw_receipt_of_a_move_semantic__the_codec_fields_and_version__no_tag__abilities_or_sync_key",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_leaves_one_effect_and_one_event_for_a_repeated_star__unstar_and_retention",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_refuses_a_move_whose_destination_folder_changed_since_the_caller_read_it",
         "P\\Tests\\PublicApi\\NodeIdempotencyTest::__pest_evaluable_it_refuses_another_request_under_the_key_of_a_move",
@@ -19423,7 +19445,7 @@
       ]
     },
     "documents": {
-      "count": 277,
+      "count": 280,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_",
         "P\\Tests\\Arch\\DocumentStateWriterBoundaryTest::__pest_evaluable_it_writes_the_pending_state_marker_only_in_DocumentStateWriter__D26_",
@@ -19606,6 +19628,8 @@
         "P\\Tests\\Operations\\CollaborationSessionTest::__pest_evaluable_it_retains_generation_on_read_and_fences_restored_sessions_with_a_fresh_generation",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_answers_a_replay_of_a_deletion_with_the_current_authorization__by_the_recorded_basis",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_ask_for_a_version_when_the_caller_gave_none",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_keeps_the_content_hash__the_state_version_and_the_node_sequence_apart",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_keeps_the_raw_receipt_of_a_document_update_semantic__state_version_and_hash__no_tag_or_sync_key",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_refuses_a_resolve_or_a_delete_on_a_version_that_is_gone__whichever_write_came_first",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_refuses_the_replay_of_a_resolution_to_an_actor_who_lost_Comment",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_refuses_the_same_key_for_another_document_and_creates_nothing",
@@ -19616,6 +19640,7 @@
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_stores_a_refused_resolve_or_delete_of_an_author_on_its_authorship__so_the_retry_replays_the_412_to_a_commenter\"('delete')\"",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_stores_a_refused_resolve_or_delete_of_an_author_on_its_authorship__so_the_retry_replays_the_412_to_a_commenter\"('resolve')\"",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_stores_the_stale_state_of_a_keyed_update_as_a_refusal_and_answers_a_retry_the_same_way",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_treats_an_omitted_expected_state_version_and_an_explicit_null_as_one_request__and_a_given_version_as_another",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_contributes_the_document_presenter_and_lifecycle_to_the_drive_slots__and_no_file_handler__PLAN2_P4_3_",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_fills_the_type_and_exporter_registries_from_the_module_contributions__once",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_provides_the_filename_seam_and_leaves_the_optional_collaboration_transport_unselected_without_its_package",
@@ -19751,7 +19776,7 @@
       ]
     },
     "webhooks": {
-      "count": 207,
+      "count": 208,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_domain_exceptions_of_the_webhooks_package_implement_the_HTTP_problem_contract",
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_it_binds_no_route_model_in_the_package",
@@ -19918,6 +19943,7 @@
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_answers_a_keyed_retry_of_a_redelivery_from_its_receipt_and_sends_nothing__even_once_the_delivery_was_delivered_again",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_answers_a_stale_If_Match_with_412_stale__write_and_changes_nothing__under_a_key_too",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_deactivates_once_per_key_and_raises_the_version_once",
+        "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_fingerprints_a_keyed_update_by_its_request__reordered_keys_replay__an_omitted_and_a_sent_field_are_two_requests",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_judges_a_deletion_receipt_on_its_recorded_scope__the_tenant_it_was_proven_in__and_the_manage_ability_now",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_queues_a_redelivery_at_most_once__a_repeat_finds_the_delivery_pending_and_is_refused",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_refuses_the_same_key_for_another_registration",

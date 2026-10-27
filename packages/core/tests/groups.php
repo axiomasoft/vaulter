@@ -12,6 +12,8 @@ return [
         5 => 'IdStrategy/IdStrategyTest.php',
         6 => 'IdStrategy/Ulid/VaulterSchemaUlidTest.php',
         7 => 'IdStrategy/Uuid7/VaulterSchemaUuid7Test.php',
+        8 => 'Idempotency/IdempotencyContractTest.php',
+        9 => 'Operations/OperationRunnerContractTest.php',
     ],
     'engine:server' => [
         0 => 'Concurrency/ForkRaceTest.php',

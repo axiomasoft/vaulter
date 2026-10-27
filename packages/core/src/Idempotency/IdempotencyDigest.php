@@ -12,7 +12,8 @@ use Vaulter\ValueObjects\Access\ActorRef;
 /**
  * The canonical forms of D25. The scope digest is SHA-256 over the tagged tuple (tenant kind/id, scope kind/id,
  * actor kind/id, operation, key), each field length-prefixed (`<len>:<bytes>`, a null as `~`), so no two
- * tuples share an encoding and a null tenant or system actor stays a distinct value. The request hash is
+ * tuples share an encoding and a null tenant or system actor stays a distinct value; the actor id itself prefixes
+ * the length of the actor type, so a type or id holding the delimiter stays apart. The request hash is
  * SHA-256 over the canonical JSON of the fingerprint (keys sorted recursively, unescaped slashes and unicode).
  * Both are stored as lowercase hex (64 characters).
  */
@@ -104,15 +105,16 @@ final class IdempotencyDigest
     }
 
     /**
-     * A user actor is its type and id; a system actor has no id (its reason does not make it another actor).
-     * A tuple longer than a column is stored as its own digest, the scope digest still covers the full value.
+     * A user actor is its type and id, the type length-prefixed (`<byte length>:<type>|<id>`) so a delimiter inside
+     * a morph alias or an id cannot make two actors one; a system actor has no id (its reason does not make it
+     * another actor). A value longer than a column is stored as its own digest, the scope digest still covers it.
      */
     private static function actorId(ActorRef $actor): ?string
     {
-        if ($actor->type === ActorRef::SYSTEM_TYPE || $actor->id === null) {
+        if ($actor->type === null || $actor->type === ActorRef::SYSTEM_TYPE || $actor->id === null) {
             return null;
         }
-        $id = $actor->type.'|'.$actor->id;
+        $id = strlen($actor->type).':'.$actor->type.'|'.$actor->id;
 
         return strlen($id) <= 191 ? $id : 'sha256:'.hash('sha256', $id);
     }

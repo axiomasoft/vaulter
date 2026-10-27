@@ -5,11 +5,18 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Idempotency\IdempotencyStore;
 
 /**
  * Idempotency-Key over v1 (D25, ADR-0029): folders.store and nodes.update read the header — one Structured Field
@@ -309,4 +316,89 @@ it('answers a repeated direct revision by its If-Match: one new revision, then 4
     $this->post(V1::url('files/'.$file->id.'/revisions'), $request(), $headers)->assertStatus(412)->assertJsonPath('code', 'node_sequence_mismatch');
 
     expect(DriveTestHelpers::model($file)->file()->firstOrFail()->versions()->count())->toBe(2);
+});
+
+/** The raw receipt rows of the idempotency table, by key as stored (base64). */
+function ikReceipt(string $key): stdClass
+{
+    /** @var stdClass $row */
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))
+        ->where('idempotency_key', base64_encode($key))->firstOrFail();
+
+    return $row;
+}
+
+it('replays a restored inheritance and an unarchive under their keys although their tags went stale, and answers a retried drive deletion drive_not_found', function (): void {
+    config()->set('vaulter-drive.features.grants', true);
+    $folder = V1::folder($this->drive, 'Inherits');
+    AccessTestHelpers::grant(DriveTestHelpers::model($folder), RoleRegistry::OWNER, subjectId: 1);
+    $access = fn (): array => ['If-Match' => (string) $this->getJson(V1::url('nodes/'.$folder->id.'/grants'))->assertOk()->json('etag')];
+    $this->postJson(V1::url('nodes/'.$folder->id.'/inheritance/restrict'), [], $access())->assertOk();
+    $restore = [...$access(), 'Idempotency-Key' => 'restore-inheritance-1'];
+    $first = $this->postJson(V1::url('nodes/'.$folder->id.'/inheritance/restore'), [], $restore)->assertOk()->assertJsonPath('data.inherits_access', true);
+    $this->postJson(V1::url('nodes/'.$folder->id.'/inheritance/restore'), [], $restore)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.etag', $first->json('data.etag'));
+    expect(DriveTestHelpers::model($folder)->access_version)->toBe(2);
+
+    $tag = fn (): array => ['If-Match' => (string) $this->getJson(V1::url('drives/'.$this->driveId))->assertOk()->json('data.etag')];
+    $this->postJson(V1::url('drives/'.$this->driveId.'/archive'), [], $tag())->assertOk();
+    $unarchive = [...$tag(), 'Idempotency-Key' => 'unarchive-1'];
+    $this->postJson(V1::url('drives/'.$this->driveId.'/unarchive'), [], $unarchive)->assertOk()->assertJsonPath('data.version', 2);
+    $this->postJson(V1::url('drives/'.$this->driveId.'/unarchive'), [], $unarchive)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.version', 2);
+
+    $delete = [...$tag(), 'Idempotency-Key' => 'delete-drive-1'];
+    $this->deleteJson(V1::url('drives/'.$this->driveId), [], $delete)->assertOk()->assertJsonPath('data.status', 'deleting');
+    // A deleting drive is absent before any operation runs (DriveReplayAuthorizer): the retry of the committed delete
+    // answers drive_not_found like any request to it, never a second deletion.
+    $this->deleteJson(V1::url('drives/'.$this->driveId), [], $delete)->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+    expect(Drive::query()->withoutGlobalScopes()->whereKey($this->driveId)->exists())->toBeFalse();
+});
+
+it('stores the semantic snapshot of a keyed rename in its receipt: no representation tag, abilities or sync key', function (): void {
+    $folder = V1::folder($this->drive, 'Before');
+    $sequence = DriveTestHelpers::model($folder)->sequence;
+    $response = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'After'], [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'raw-1'])->assertOk();
+
+    $row = ikReceipt('raw-1');
+    $body = json_decode((string) $row->receipt_body, true, flags: JSON_THROW_ON_ERROR);
+
+    expect($row->receipt_kind)->toBe('drive.node-snapshot')
+        ->and($row->receipt_headers)->toBeNull()
+        ->and($body['id'])->toBe($folder->id)
+        ->and($body['name'])->toBe('After')
+        ->and($body['sequence'])->toBe($sequence + 1)
+        ->and(array_keys($body))->not->toContain('etag', 'abilities', 'sync_key', 'links')
+        ->and((string) $row->receipt_body)->not->toContain((string) $response->headers->get('ETag'))
+        ->and((string) $row->receipt_body)->not->toContain('sync_key');
+});
+
+it('replays the historical snapshot after a later change, refuses a changed request and a revoked actor without the stored name', function (): void {
+    $folder = V1::folder($this->drive, 'Shared');
+    AccessTestHelpers::grant(DriveTestHelpers::model($folder), RoleRegistry::WRITER, subjectId: 2);
+    $this->actingAs(V1::user(2));
+    $sequence = DriveTestHelpers::model($folder)->sequence;
+    $headers = [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'canary-1'];
+    $first = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'canary-name'], $headers)->assertOk();
+
+    // A later change moves the live node on: the replay answers the committed result, not a reread.
+    $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'Later'], V1::ifMatch($folder->id))->assertOk();
+    $replay = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'canary-name'], $headers)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.name', 'canary-name')
+        ->assertJsonPath('data.etag', $first->json('data.etag'));
+    expect((string) $replay->headers->get('ETag'))->toStartWith('"'.$folder->id.'.'.($sequence + 1).'.');
+
+    $changed = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'other-name'], $headers)->assertStatus(422)->assertJsonPath('code', 'idempotency_key_reused');
+    expect((string) $changed->getContent())->not->toContain('canary');
+
+    NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', '2')->delete();
+    $denied = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'canary-name'], $headers)->assertNotFound();
+    expect((string) $denied->getContent())->not->toContain('canary')
+        ->and(Node::query()->findOrFail($folder->id)->name)->toBe('Later');
 });

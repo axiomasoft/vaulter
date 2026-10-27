@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\MoveOptions;
@@ -11,6 +14,7 @@ use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Events\Nodes\NodeMoved;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
@@ -21,6 +25,7 @@ use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
+use Vaulter\Idempotency\IdempotencyStore;
 
 /**
  * P6.2 (D25, D47, ID1–ID4): every receipt operation of nodes, trash, files and uploads answers a repeat under its
@@ -252,4 +257,41 @@ it('aborts an upload once; a repeat leaves it aborted without a second event', f
     }
 
     expect(nodeEvents(DriveEventType::UploadAborted))->toBe(1);
+});
+
+it('commits a keyed move once when its after-commit listener fails, and replays it without a second event or listener call', function (): void {
+    $file = V1::file($this->system, 'a.txt');
+    $folder = V1::folder($this->system, 'Target');
+    $calls = 0;
+    Event::listen(static function (NodeMoved $event) use (&$calls): void {
+        $calls++;
+
+        throw new RuntimeException('listener failed after the commit');
+    });
+
+    $first = ($this->keyed)('after-commit-1')->nodes()->move($file->id, $folder->id);
+    $again = ($this->keyed)('after-commit-1')->nodes()->move($file->id, $folder->id);
+
+    expect($again)->toEqual($first)
+        ->and($calls)->toBe(1)
+        ->and(nodeEvents(DriveEventType::NodeMoved))->toBe(1)
+        ->and(Node::query()->findOrFail($file->id)->sequence)->toBe($first->sequence);
+});
+
+it('keeps the raw receipt of a move semantic: the codec fields and version, no tag, abilities or sync key', function (): void {
+    $file = V1::file($this->system, 'a.txt');
+    $folder = V1::folder($this->system, 'Target');
+    $moved = ($this->keyed)('raw-move-1')->nodes()->move($file->id, $folder->id);
+
+    /** @var stdClass $row */
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->where('idempotency_key', base64_encode('raw-move-1'))->first();
+    $body = json_decode((string) $row->receipt_body, true, flags: JSON_THROW_ON_ERROR);
+
+    expect($row->receipt_kind)->toBe('drive.node-snapshot')
+        ->and((int) $row->codec_version)->toBe(1)
+        ->and($row->receipt_headers)->toBeNull()
+        ->and($body['parent_id'])->toBe($folder->id)
+        ->and($body['sequence'])->toBe($moved->sequence)
+        ->and(array_keys($body))->not->toContain('etag', 'abilities', 'sync_key', 'links')
+        ->and((string) $row->receipt_body)->not->toContain('sync_key');
 });

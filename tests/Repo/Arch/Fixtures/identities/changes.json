@@ -6064,6 +6064,13 @@
             "id": "env:VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS",
             "kind": "config",
             "reason": "P5.6: environment variable of vaulter-drive.uploads.resumable.complete_timeout_seconds"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D19",
+            "id": "format:idempotency-scope-digest",
+            "kind": "protocol",
+            "reason": "P5.8: actor_id prefixes the byte length of the actor type (<len>:<type>|<id>) instead of <type>|<id>, so a type or id holding the delimiter (type a|b, id c vs type a, id b|c) is no longer one actor; no column changes, receipts keyed under the old form are not migrated and expire with their TTL before 1.0"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

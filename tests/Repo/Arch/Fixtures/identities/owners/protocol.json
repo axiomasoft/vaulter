@@ -499,7 +499,7 @@
                 "file": "packages/core/src/Idempotency/IdempotencyDigest.php",
                 "symbol": "Vaulter\\Idempotency\\IdempotencyDigest::scope"
             },
-            "format": "lowercase hex SHA-256 over tenant_kind, tenant_id, scope_kind, scope_id, actor_kind, actor_id, operation, key, each as <byte length>:<bytes> and a null as ~; request hash = hex SHA-256 of the canonical JSON fingerprint (keys sorted, unescaped slashes/unicode)",
+            "format": "lowercase hex SHA-256 over tenant_kind, tenant_id, scope_kind, scope_id, actor_kind, actor_id, operation, key, each as <byte length>:<bytes> and a null as ~; a user actor_id is <byte length of type>:<type>|<id> (sha256:<hex> of it beyond 191 bytes), a system actor_id null; request hash = hex SHA-256 of the canonical JSON fingerprint (keys sorted, unescaped slashes/unicode)",
             "owner": "core",
             "why": "D25: the stored uniqueness key of v_idempotency_keys and the request hash"
         },
