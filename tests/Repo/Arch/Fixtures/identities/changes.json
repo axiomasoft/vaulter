@@ -6071,6 +6071,41 @@
             "id": "format:idempotency-scope-digest",
             "kind": "protocol",
             "reason": "P5.8: actor_id prefixes the byte length of the actor type (<len>:<type>|<id>) instead of <type>|<id>, so a type or id holding the delimiter (type a|b, id c vs type a, id b|c) is no longer one actor; no column changes, receipts keyed under the old form are not migrated and expire with their TTL before 1.0"
+        },
+        {
+            "kind": "config",
+            "id": "config:vaulter-drive.changes.key_generation",
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "reason": "P5.9 U1/U3: positive owner generation; bump on every instance after feature gap or key rotation, cursors expire and sync keys remap."
+        },
+        {
+            "kind": "config",
+            "id": "config:vaulter-drive.changes.cursor_max_age_seconds",
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "reason": "P5.9 U1/U3: default 86400, positive and bounded by 2592000 and retention; original-issued-at deadline only shortens."
+        },
+        {
+            "kind": "protocol",
+            "id": "format:change-cursor",
+            "change": "redefined",
+            "decision": "PLAN4-D20",
+            "reason": "P5.9 U1/U3: signed cursor v2 binds typed reader, generation, issue/deadline plus original drive/tenant/epoch/position; v1 refused."
+        },
+        {
+            "kind": "protocol",
+            "id": "format:reader-sync-key",
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "reason": "P5.9 U1/U2: nine-field length-prefixed reader-specific HMAC identity; remove wire contains only operation and sync_key."
+        },
+        {
+            "kind": "protocol",
+            "id": "format:change-projection",
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "reason": "P5.9 U2: minimal keyed remove versus current node upsert; exact operation/sync_key remove union synchronized with OpenAPI/generated TypeScript and PHP NodeChange."
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

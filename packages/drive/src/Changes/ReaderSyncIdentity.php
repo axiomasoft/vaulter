@@ -70,9 +70,10 @@ final readonly class ReaderSyncIdentity
      * The typed principal of a reader: its type, id bytes (empty for the system) and
      * reason (empty for a user). An anonymous reader has no principal.
      *
-     * @return array{type: string, id: string, reason: string}
      *
      * @throws InvalidArgumentException for an anonymous actor
+     *
+     * @return array{type: string, id: string, reason: string}
      */
     public static function principal(ActorRef $actor): array
     {

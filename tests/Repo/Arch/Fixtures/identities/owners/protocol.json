@@ -396,12 +396,12 @@
         {
             "id": "format:change-cursor",
             "owner": "drive",
-            "format": "base64url(json{v,t,d,e,a}) \".\" base64url(HMAC-SHA256(json, hmac-sha256('vaulter.changes.cursor', app key))); opaque to clients",
+            "format": "format 2: base64url(json{v:2,t,d,pt,pi,pr,g,e,a,i,n}) . base64url(HMAC-SHA256(cursor_subkey,json)); cursor_subkey = HMAC-SHA256(app.key exact bytes, lp(vaulter.changes.cursor.v2)); typed reader/tenant/drive/generation/epoch/position/issued_at/not_after binding; signed, not encrypted",
             "source": {
                 "file": "packages/drive/src/Changes/ChangeCursor.php",
                 "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
             },
-            "why": "position in a drive's change journal"
+            "why": "PLAN4-D20: reader-bound format 2 cursor; original issued_at and monotonically decreasing not_after"
         },
         {
             "id": "format:header-api-version",
@@ -652,6 +652,26 @@
                 "symbol": "Vaulter\\Documents\\Operations\\DocumentsOperationPolicies::policies"
             },
             "why": "PLAN4-D38: aggregate changes from historical collaboration.session to documents.collaboration_session to match the declaring module; operation key, route and wire remain stable."
+        },
+        {
+            "id": "format:reader-sync-key",
+            "owner": "drive",
+            "format": "base64url without padding of HMAC-SHA256(sync_subkey, nine length-prefixed fields: domain, format 2, generation, tagged tenant, drive, actor type, actor id, system reason, node id); sync_subkey = HMAC-SHA256(app.key exact bytes, lp(vaulter.changes.sync_key)||lp(generation)); lp = uint32 big-endian byte length || bytes; 43 chars; anonymous has no key",
+            "source": {
+                "file": "packages/drive/src/Changes/ReaderSyncIdentity.php",
+                "symbol": "Vaulter\\Drive\\Changes\\ReaderSyncIdentity::syncKey"
+            },
+            "why": "PLAN4-D20: reader-specific remove identity without raw hidden node ids"
+        },
+        {
+            "id": "format:change-projection",
+            "owner": "drive",
+            "format": "Change = upsert {operation:upsert,sync_key:string|null,node_id,subtree,node_sequence,node} | remove {operation:remove,sync_key:string}; remove has exactly two fields, no raw node id/reason/node/subtree/sequence; anonymous upsert key null and anonymous removes omitted",
+            "source": {
+                "file": "packages/drive/src/Http/Resources/Changes/ChangeResource.php",
+                "symbol": "Vaulter\\Drive\\Http\\Resources\\Changes\\ChangeResource::toArray"
+            },
+            "why": "PLAN4-D20 U2: disjoint pre-1.0 OpenAPI/PHP/TS projection; current authorization and reader key, neutral receipts"
         }
     ]
 }

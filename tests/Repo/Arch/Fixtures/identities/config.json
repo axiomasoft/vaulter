@@ -1390,6 +1390,20 @@
             "id": "env:VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS",
             "kind": "config",
             "reason": "P5.6: environment variable of vaulter-drive.uploads.resumable.complete_timeout_seconds"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "id": "config:vaulter-drive.changes.key_generation",
+            "kind": "config",
+            "reason": "P5.9 U1/U3: positive owner generation; bump on every instance after feature gap or key rotation, cursors expire and sync keys remap."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "id": "config:vaulter-drive.changes.cursor_max_age_seconds",
+            "kind": "config",
+            "reason": "P5.9 U1/U3: default 86400, positive and bounded by 2592000 and retention; original-issued-at deadline only shortens."
         }
     ],
     "items": [
@@ -2323,6 +2337,28 @@
             },
             "env": "VAULTER_SPATIE_TEAMS",
             "id": "config:vaulter-drive.access.spatie.teams",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 86400,
+            "id": "config:vaulter-drive.changes.cursor_max_age_seconds",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 1,
+            "id": "config:vaulter-drive.changes.key_generation",
             "owner": "drive",
             "registered_defaults": true,
             "root": "vaulter-drive",

@@ -340,7 +340,7 @@ The transactional outbox every event is written to, and its relay (`vaulter:rela
 
 The per-drive [change journal](/concepts/events) syncing clients read through `DriveHandle::changes()`.
 `vaulter-drive.features.changes` (default `true`) switches the writing of entries; the tables always exist.
-Turning it off and on again leaves a gap only a reset closes (`vaulter:changes:reset`).
+Turning it off and on requires an owner bump of `key_generation` on every instance and a full client bootstrap; do not reuse cursors across the gap.
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
@@ -704,3 +704,6 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-webhooks.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
 | `vaulter-webhooks.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
 <!-- vaulter:config-reference:end -->
+
+
+PLAN4-D20: `vaulter-drive.changes.key_generation` = `1` (positive integer); raise on all instances after feature-off/on or key rotation. `vaulter-drive.changes.cursor_max_age_seconds` = `86400`, range 1..min(2592000, retention_days × 86400). The cursor retains its original issue time; paging cannot extend its deadline.

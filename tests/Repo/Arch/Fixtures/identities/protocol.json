@@ -1505,6 +1505,27 @@
             "id": "format:idempotency-scope-digest",
             "kind": "protocol",
             "reason": "P5.8: actor_id prefixes the byte length of the actor type (<len>:<type>|<id>) instead of <type>|<id>, so a type or id holding the delimiter (type a|b, id c vs type a, id b|c) is no longer one actor; no column changes, receipts keyed under the old form are not migrated and expire with their TTL before 1.0"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D20",
+            "id": "format:change-cursor",
+            "kind": "protocol",
+            "reason": "P5.9 U1/U3: signed cursor v2 binds typed reader, generation, issue/deadline plus original drive/tenant/epoch/position; v1 refused."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "id": "format:reader-sync-key",
+            "kind": "protocol",
+            "reason": "P5.9 U1/U2: nine-field length-prefixed reader-specific HMAC identity; remove wire contains only operation and sync_key."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D20",
+            "id": "format:change-projection",
+            "kind": "protocol",
+            "reason": "P5.9 U2: minimal keyed remove versus current node upsert; exact operation/sync_key remove union synchronized with OpenAPI/generated TypeScript and PHP NodeChange."
         }
     ],
     "items": [
@@ -2145,13 +2166,23 @@
             }
         },
         {
-            "format": "base64url(json{v,t,d,e,a}) \".\" base64url(HMAC-SHA256(json, hmac-sha256('vaulter.changes.cursor', app key))); opaque to clients",
+            "format": "format 2: base64url(json{v:2,t,d,pt,pi,pr,g,e,a,i,n}) . base64url(HMAC-SHA256(cursor_subkey,json)); cursor_subkey = HMAC-SHA256(app.key exact bytes, lp(vaulter.changes.cursor.v2)); typed reader/tenant/drive/generation/epoch/position/issued_at/not_after binding; signed, not encrypted",
             "id": "format:change-cursor",
             "manual": true,
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/Changes/ChangeCursor.php",
                 "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
+            }
+        },
+        {
+            "format": "Change = upsert {operation:upsert,sync_key:string|null,node_id,subtree,node_sequence,node} | remove {operation:remove,sync_key:string}; remove has exactly two fields, no raw node id/reason/node/subtree/sequence; anonymous upsert key null and anonymous removes omitted",
+            "id": "format:change-projection",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Http/Resources/Changes/ChangeResource.php",
+                "symbol": "Vaulter\\Drive\\Http\\Resources\\Changes\\ChangeResource::toArray"
             }
         },
         {
@@ -2312,6 +2343,16 @@
             "source": {
                 "file": "packages/core/src/Operations/OperationSpec.php",
                 "symbol": "Vaulter\\Operations\\OperationSpec::__construct"
+            }
+        },
+        {
+            "format": "base64url without padding of HMAC-SHA256(sync_subkey, nine length-prefixed fields: domain, format 2, generation, tagged tenant, drive, actor type, actor id, system reason, node id); sync_subkey = HMAC-SHA256(app.key exact bytes, lp(vaulter.changes.sync_key)||lp(generation)); lp = uint32 big-endian byte length || bytes; 43 chars; anonymous has no key",
+            "id": "format:reader-sync-key",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Changes/ReaderSyncIdentity.php",
+                "symbol": "Vaulter\\Drive\\Changes\\ReaderSyncIdentity::syncKey"
             }
         },
         {

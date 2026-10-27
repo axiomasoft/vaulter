@@ -127,3 +127,11 @@ An operation becomes idempotent by passing an `IdempotentWrite` to `OperationRun
 `ReceiptCodec` of its result, a `ReplayAuthorizer` that repeats its authorization for a replay (a codec is never
 accepted without one), and the fingerprint of its input — resource ids, fields, semantic options and
 preconditions, never a correlation id or a clock. A composed write has the one receipt of its root.
+
+
+PLAN4-D19/D20: receipts preserve the historical semantic outcome, never a reader
+`sync_key` or HTTP representation ETag. After current replay authorization, the response
+projects the current reader and key generation onto that outcome; its representation ETag
+can change after a generation bump. A denied replay leaves the receipt unchanged and
+produces no write, event or webhook. The mutation catalogue and its behavioral links are
+checked by `MutationContractCoverageTest`; this structural join is not runtime qualification.

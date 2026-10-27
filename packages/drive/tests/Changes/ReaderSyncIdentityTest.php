@@ -13,6 +13,7 @@ use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
@@ -243,5 +244,5 @@ describe('committed C0 bootstrap', function (): void {
         'zero max age' => [['vaulter-drive.changes.cursor_max_age_seconds' => 0]],
         'max age over 30 days' => [['vaulter-drive.changes.cursor_max_age_seconds' => 2_592_001]],
         'max age over the retention' => [['vaulter-drive.changes.retention_days' => 1, 'vaulter-drive.changes.cursor_max_age_seconds' => 86_401]],
-    ])->throws(Vaulter\Exceptions\Configuration\InvalidConfigurationException::class);
+    ])->throws(InvalidConfigurationException::class);
 });

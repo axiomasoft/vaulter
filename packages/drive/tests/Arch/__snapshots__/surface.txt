@@ -107,6 +107,8 @@ Vaulter\Drive\Configuration\AccessConfig api since 1.0 final readonly class
   public function spatieTeamsEnabled(): bool
 
 Vaulter\Drive\Configuration\ChangesConfig api since 1.0 final readonly class
+  public function cursorMaxAgeSeconds(): int
+  public function keyGeneration(): int
   public function maxPageSize(): int
   public function retentionDays(): int
 
@@ -568,12 +570,14 @@ Vaulter\Drive\Data\Snapshots\NodeSnapshot api since 1.0 final readonly class
   public array $properties
   public int $sequence
   public int $sizeBytes
+  public ?string $syncKey
   public bool $trashRoot
   public ?DateTimeImmutable $trashedAt
   public ?string $trashedBy
   public DateTimeImmutable $updatedAt
   public ?string $updatedBy
   public ?Vaulter\Drive\Data\Snapshots\ViewerStateSnapshot $viewer
+  public function withSyncKey(?string $syncKey): self
 
 Vaulter\Drive\Data\Snapshots\QuotaSnapshot api since 1.0 final readonly class
   public ?int $limitBytes

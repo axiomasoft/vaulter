@@ -840,34 +840,21 @@ Bearer-ссылки на узел (`vaulter-drive.features.share_links`). Ссы
 
 #### `GET v1/drives/{drive}/changes/start` — `changes.start`
 
-**Ответ:** `200 { "data": { "cursor": "…" } }` — берите его сразу после полного обхода.
+`200 { "data": { "cursor": "…" } }`. Получите C0 **до** рекурсивного обхода,
+затем читайте журнал от C0. См. [Журнал изменений](/ru/concepts/events).
 
 #### `GET v1/drives/{drive}/changes?cursor=&limit=` — `changes.index`
 
-`cursor` обязателен; `limit` — 1–`vaulter-drive.changes.max_page_size`, по умолчанию 100.
-**Ответ:**
-
-```json
-{
-  "data": [
-    {
-      "node_id": "01J…",
-      "operation": "upsert",
-      "reason": null,
-      "subtree": false,
-      "node_sequence": 4,
-      "node": { "id": "01J…", "etag": "\"01J….4.9f86d081884c7d65\"", "…": "…" }
-    }
-  ],
-  "meta": { "next_cursor": "…", "has_more": false }
-}
-```
-
-Применяйте изменения по порядку (для узла побеждает последнее); `remove` (с `reason`:
-`deleted`, `moved_out`, `permission_lost`) приходит с `node: null`, а с `subtree: true`
-удаляет и всё ниже. Сохраняйте `next_cursor` — в отличие от списков он есть всегда — и,
-пока `has_more`, сразу запрашивайте снова. `400 invalid_cursor` — курсор другого drive
-или повреждённый; `410 cursor_expired` — записи после него удалены: обойдите drive заново.
+`cursor` обязателен; `limit` по умолчанию 100, не выше настроенного максимума.
+Envelope: `{ "data": [Change…], "meta": { "next_cursor": "…", "has_more": false } }`.
+Upsert содержит `operation`, `sync_key`, `node_id`, `subtree`, `node_sequence`, `node`.
+Remove содержит ровно `{ "operation": "remove", "sync_key": "…" }`: удалите локальный
+узел и известных потомков по сохранённому ключу читателя. Raw id и причина не выдаются.
+Ответ Node требует `sync_key: string|null`; для анонимного читателя это null.
+Сохраняйте курсор даже пустой страницы; продолжайте при `has_more: true`.
+Чужой, повреждённый или формат 1 даёт `400 invalid_cursor`; deadline, generation,
+epoch или prune — `410 cursor_expired`. Оба требуют нового bootstrap и соответствия.
+Подписанный feed cursor отделён от зашифрованного продолжения списка (PLAN4-D21).
 
 ---
 

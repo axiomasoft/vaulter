@@ -738,3 +738,16 @@ The manifest of each package — the `#[Api]` and `#[Spi]` types with their supp
 `--check` (and `SurfaceManifestTest`) fails when the code and the manifest differ, so a change of the surface is always a visible
 change of a committed file. A supported signature that names an `#[Internal]` type or a domain Eloquent model is reported by the
 I13 scan (`scan-i13`, report mode until the 1.0 freeze).
+
+
+### Reader synchronization identity (PLAN4-D20)
+
+`NodeSnapshot::$syncKey` is `?string`, projected for the current reader; retain it with
+the local node tree. `NodeChange` exposes `operation`, `syncKey`, `nodeId`, `subtree`,
+`node`, `nodeSequence`; the remove projection has no raw id, reason or snapshot.
+`ChangesConfig::keyGeneration()` and `cursorMaxAgeSeconds()` expose validated config.
+`ChangeOperations::startCursor()` must run before the initial listing and outside a host
+transaction; `list()` retains existing in-transaction reads. The internal derivation is
+`ReaderSyncIdentity::cursorSubkey()`; no public `cursorKey` generation API is introduced.
+Shared receipts hold reader-neutral snapshots; keys are projected after current replay
+authorization, including document content. See [Change journal](/concepts/events).

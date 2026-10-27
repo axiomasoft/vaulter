@@ -851,35 +851,21 @@ switched off → `403 profile_restriction`). See [Changes](/concepts/events).
 
 #### `GET v1/drives/{drive}/changes/start` — `changes.start`
 
-**Response:** `200 { "data": { "cursor": "…" } }` — take it right after a full listing.
+`200 { "data": { "cursor": "…" } }`. Take C0 **before** the initial recursive listing,
+then tail from C0. See [Change journal](/concepts/events).
 
 #### `GET v1/drives/{drive}/changes?cursor=&limit=` — `changes.index`
 
-`cursor` is required; `limit` is 1–`vaulter-drive.changes.max_page_size`, default 100.
-**Response:**
-
-```json
-{
-  "data": [
-    {
-      "node_id": "01J…",
-      "operation": "upsert",
-      "reason": null,
-      "subtree": false,
-      "node_sequence": 4,
-      "node": { "id": "01J…", "etag": "\"01J….4.9f86d081884c7d65\"", "…": "…" }
-    }
-  ],
-  "meta": { "next_cursor": "…", "has_more": false }
-}
-```
-
-Apply the changes in order (the last one for a node wins); `remove` (with a `reason`:
-`deleted`, `moved_out`, `permission_lost`) has `node: null`, and with `subtree: true`
-removes everything below too. Store `next_cursor` — unlike a list, it is always set —
-and ask again at once while `has_more` is true. `400 invalid_cursor` for a cursor of
-another drive or a damaged one; `410 cursor_expired` when the entries after it were
-pruned: list the drive again and start over.
+`cursor` is required; `limit` defaults to 100 and is bounded by the configured maximum.
+The envelope is `{ "data": [Change…], "meta": { "next_cursor": "…", "has_more": false } }`.
+Upsert has `operation`, `sync_key`, `node_id`, `subtree`, `node_sequence`, `node`.
+Remove has exactly `{ "operation": "remove", "sync_key": "…" }`; delete the local node
+and its known descendants by the saved reader key. No raw node id or reason is exposed.
+Node responses require `sync_key: string|null`; it is null for anonymous readers.
+Store every returned cursor, even on an empty page. Continue while `has_more` is true.
+A foreign, malformed or format 1 cursor gives `400 invalid_cursor`; deadline, generation,
+epoch or prune expiry gives `410 cursor_expired`. Both require a new bootstrap and mapping.
+The signed feed cursor is distinct from encrypted list continuations (PLAN4-D21).
 
 ---
 

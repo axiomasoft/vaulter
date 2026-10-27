@@ -5860,6 +5860,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Changes/ReaderSyncIdentity.php",
+            "fqcn": "Vaulter\\Drive\\Changes\\ReaderSyncIdentity",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Changes\\ReaderSyncIdentity"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Concerns/HasDrives.php",
             "fqcn": "Vaulter\\Drive\\Concerns\\HasDrives",
             "kind": "trait",

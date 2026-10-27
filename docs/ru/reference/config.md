@@ -312,7 +312,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 
 ## Журнал изменений — `vaulter-drive.changes.*`
 
-[Журнал изменений](/concepts/events) каждого drive, который синхронизирующие клиенты читают через `DriveHandle::changes()`. `vaulter-drive.features.changes` (по умолчанию `true`) включает запись; таблицы существуют всегда. Выключение и повторное включение оставляет пропуск, который закрывает только сброс (`vaulter:changes:reset`).
+[Журнал изменений](/concepts/events) каждого drive, который синхронизирующие клиенты читают через `DriveHandle::changes()`. `vaulter-drive.features.changes` (по умолчанию `true`) включает запись; таблицы существуют всегда. Выключение и повторное включение требует повышения `key_generation` владельцем на всех инстансах и полного bootstrap клиентов; старые курсоры через пропуск не переиспользуются.
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
@@ -675,3 +675,6 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter-webhooks.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
 | `vaulter-webhooks.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
 <!-- vaulter:config-reference:end -->
+
+
+PLAN4-D20: `vaulter-drive.changes.key_generation` = `1` (положительное целое); повышайте на всех инстансах после выключения/включения функции или ротации ключа. `vaulter-drive.changes.cursor_max_age_seconds` = `86400`, диапазон 1..min(2592000, retention_days × 86400). Курсор сохраняет исходное время выпуска; страницы не продлевают deadline.
