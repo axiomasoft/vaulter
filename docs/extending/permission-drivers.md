@@ -53,7 +53,7 @@ grants several roles returns `Decision::union($roles)`. `subjectsFor()` is what 
 
 The active driver is a single config key (and env var):
 
-<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-select -->
+<!-- recipe: tests/Integration/Recipes/PermissionDriverRecipeTest.php#permission-driver-select -->
 
 ```php
 // config/vaulter.php
@@ -72,7 +72,7 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 The key → FQCN map is `vaulter-drive.access.permission_drivers`. Register your own driver by adding an FQCN
 that implements `PermissionDriver` (config-cache safe — FQCNs only, no closures):
 
-<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
+<!-- recipe: tests/Integration/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
 
 ```php
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;

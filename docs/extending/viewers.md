@@ -245,3 +245,5 @@ viewer and capabilities; the REST fields stay unchanged. `collaborative` is comp
 from a writable schema, `SupportsCollaboration`, and an active collaboration driver.
 Without that driver rich text remains locally editable. `DocumentFeatures::readOnly()`
 disables editing and keeps preview enabled. A backend-only type uses `vaulter/unsupported`.
+
+Viewer props describe presentation, not authorization. Select realtime transport from the neutral session protocol/version and validate its options and endpoint before connecting. Local editing does not require a realtime driver. See [collaboration protocols](/extending/collaboration-protocols).

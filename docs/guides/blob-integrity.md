@@ -33,10 +33,12 @@ Consequences:
 
 ## The scrub
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:blobs:scrub                       # up to 100 blobs
 php artisan vaulter:blobs:scrub --limit=500 --max-bytes=5000000000 --max-seconds=600
-php artisan vaulter:blobs:scrub --scope=<scope> --dry-run
+php artisan vaulter:blobs:scrub --scope='tenant:42' --dry-run
 ```
 
 It selects committed, non-chunked blobs by `integrity_checked_at`, never-checked first, then the oldest. Each

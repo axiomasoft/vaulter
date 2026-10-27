@@ -35,3 +35,5 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0032 — The operation catalogue and aggregate concurrency](/adr/0032-operation-catalog-and-concurrency) — _accepted; builds on ADR-0028 and ADR-0029_
 
 - [ADR-0033 — Kernel budget and dependency rules](/adr/0033-kernel-budget-and-dependency-rules) — accepted.
+
+- [ADR-0034 — Document SPI v2 and collaboration protocols](/adr/0034-document-spi-v2-and-collaboration-protocols) — accepted; amends ADR-0031.

@@ -54,7 +54,7 @@ interface PermissionDriver
 
 Активный драйвер — это один config-ключ (и ENV-переменная):
 
-<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-select -->
+<!-- recipe: tests/Integration/Recipes/PermissionDriverRecipeTest.php#permission-driver-select -->
 
 ```php
 // config/vaulter.php
@@ -73,7 +73,7 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 Карта ключ → FQCN лежит в `vaulter-drive.access.permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
 реализующий `PermissionDriver` (безопасно для кэша конфига — только FQCN, без замыканий):
 
-<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
+<!-- recipe: tests/Integration/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
 
 ```php
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;

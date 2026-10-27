@@ -237,3 +237,7 @@ $board = Document::factory()->ofType('acme/kanban')->named('Roadmap')->in($folde
 Типы документов используют `Vaulter\Documents\Data\Types\DocumentViewer` и
 `Vaulter\Documents\Data\Types\DocumentFeatures`. Тип без клиентского редактора
 возвращает `new DocumentViewer(key: 'vaulter/unsupported')`.
+
+## Сохранённая привязка коллаборации
+
+`SupportsCollaboration::collaborationStateFormat()` задаёт формат сохранённых байтов независимо от wire version. Upgrade JSON не конвертирует состояние коллаборации и не меняет binding. Смена протокола, схемы или формата требует явного transition с новой generation; restore также блокирует старые сессии. См. [collaboration protocols](/ru/extending/collaboration-protocols).

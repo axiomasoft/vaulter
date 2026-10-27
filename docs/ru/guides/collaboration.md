@@ -12,14 +12,17 @@ Vaulter редактирует **узлы-документы** (`kind = document
 
 | Часть | Что это |
 |---|---|
-| `axioma-studio/vaulter-collaboration` | Laravel-модуль (`Vaulter\Collaboration\`): эндпоинт сессии, room-токен, протокол хаба, журнал обновлений, команды drain и prune. Opt-in. |
+| `axioma-studio/vaulter-collaboration` | Laravel-модуль (`Vaulter\Collaboration\`): драйвер Yjs, room-токен, протокол хаба, журнал обновлений, команды drain и prune. Opt-in. |
 | `@vaulter/collaboration-hub` | Node-хаб (Hocuspocus + Yjs), поставляется образом `ghcr.io/axiomasoft/vaulter-collaboration-hub` — см. [Хаб коллаборации](/ru/guides/hub). |
 | `@vaulter/vue-collaboration` | Браузерная часть: конверты обновлений, очередь повторов, статус сохранения — [ниже](#обвязка-фронтенда-vaulter-vue-collaboration). |
 
-Пакет documents хранит агрегат и контракт (`CollaborationDriver`, `SupportsCollaboration`); кода хаба в нём нет. Решение и
+Пакет documents хранит агрегат, обслуживает эндпоинт сессии и policy доступа, предоставляет контракты
+(`CollaborationProtocolDriver`, `SupportsCollaboration`); кода хаба в нём нет. Решение и
 его причины — [ADR-0031](/adr/0031-collaboration-package-and-durability).
 
-Reverb для совместного редактирования Yjs удалён: `driver = reverb` даёт `InvalidConfigurationException`. Broadcast-каналы
+Активный модуль collaboration регистрирует драйвер Hocuspocus в типизированном слоте протокола с ключом `yjs`.
+Глобального селектора `driver` и транспорта Reverb нет. Другие адаптеры используют собственные слоты протоколов;
+см. [Протоколы коллаборации](/ru/extending/collaboration-protocols). Broadcast-каналы
 комментариев и их проверки доступа сохраняются.
 
 ## Установка и включение
@@ -61,7 +64,6 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<другое случайное>       # общи
 ```php
 // config/vaulter-collaboration.php
 return [
-    'driver' => 'hocuspocus',
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
         'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
@@ -80,7 +82,6 @@ return [
 
 | Ключ | Env | По умолчанию | Назначение |
 |---|---|---|---|
-| `driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Единственный транспорт; `reverb` отвергается. |
 | `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба для клиента (в продакшне `wss://`). |
 | `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(не задан)* | Ключ HS256 для выпуска и проверки room-токена. Только на стороне Laravel. |
 | `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Ключ HMAC-подписи тела каждого вызова хаба и канала control. Общий с хабом; должен отличаться от `jwt_secret` — одинаковые значения дают `InvalidConfigurationException` при загрузке (этот секрет есть у хаба, и при совпадении он смог бы подписать room-токен любого пользователя). |

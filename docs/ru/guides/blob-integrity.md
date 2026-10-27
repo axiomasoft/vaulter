@@ -30,10 +30,12 @@ outline: deep
 
 ## Scrub
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:blobs:scrub                       # до 100 блобов
 php artisan vaulter:blobs:scrub --limit=500 --max-bytes=5000000000 --max-seconds=600
-php artisan vaulter:blobs:scrub --scope=<scope> --dry-run
+php artisan vaulter:blobs:scrub --scope='tenant:42' --dry-run
 ```
 
 Он выбирает committed-блобы без chunked-хранения по `integrity_checked_at`: сначала ни разу не проверенные, затем

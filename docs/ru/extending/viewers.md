@@ -247,3 +247,5 @@ createApp(App)
 `SupportsCollaboration` и активному драйверу коллаборации. Без драйвера rich text
 остаётся локально редактируемым. `DocumentFeatures::readOnly()` запрещает изменение
 и сохраняет предпросмотр. Тип без клиентского редактора использует `vaulter/unsupported`.
+
+Viewer props описывают представление, а не авторизацию. Выбирайте realtime-транспорт по protocol/version нейтральной сессии, проверяйте options и endpoint до подключения. Локальное редактирование не требует realtime-драйвера. См. [collaboration protocols](/ru/extending/collaboration-protocols).

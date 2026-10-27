@@ -237,3 +237,7 @@ the current one is chosen with `forTenant()`.
 Document types use `Vaulter\Documents\Data\Types\DocumentViewer` and
 `Vaulter\Documents\Data\Types\DocumentFeatures`. A backend-only type returns
 `new DocumentViewer(key: 'vaulter/unsupported')`.
+
+## Stored collaboration binding
+
+`SupportsCollaboration::collaborationStateFormat()` describes stored bytes independently of the wire version. Schema upgrades of JSON do not convert collaboration bytes or change the persisted binding. A protocol/schema/format change requires an explicit state transition with a fresh generation; restore also fences previous sessions. See [collaboration protocols](/extending/collaboration-protocols).

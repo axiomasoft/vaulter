@@ -4,7 +4,7 @@ This is a parking lot for features that are **architecturally scoped but deliber
 scheduled**. Everything here was either explicitly deferred by the maintainer or flagged
 "optional" in the historical working plan (`docs/plan/00-master-plan.md`). It is outside
 the archived evidence and remediation queue in
-[plans/archive/REMAINING-WORK/REMAINING-WORK.md](plans/archive/REMAINING-WORK/REMAINING-WORK.md);
+`plans/archive/REMAINING-WORK/REMAINING-WORK.md` (historical path, no longer present);
 a future owner decision is needed to schedule an idea.
 
 Each entry records the extension seam and historical source. Check both against current code
@@ -108,3 +108,25 @@ Large, mechanical, not release-blocking.
 After the current Alpine-based image proves stable in production, consider a distroless base
 for a smaller attack surface.
 - Source: `docs/plan/00-master-plan.md` Addendum A, closing notes.
+
+## After 1.0 — extension points
+
+These are future extensions, not implemented 1.0 contracts. A concrete second consumer or
+customer request must justify the scope and a separate ADR before introducing a new SPI.
+
+| Candidate | Trigger and owner boundary |
+|---|---|
+| DocumentImporter | A requested file-to-document workflow; documents/add-on stages results with a loss report and sandboxed parsing before committing through existing writes. |
+| DocumentTranscoder | Two concrete format conversion consumers; adapter-owned conversion, no implicit state migration. |
+| DocumentIndexer / DocumentThumbnailer | A second search or preview consumer; asynchronous add-on using authorized document reads. |
+| SchemaMigrationPlan / extension descriptors | A real cross-version consumer requiring a declared conversion; reuse explicit state transitions and keep unknown source state intact. |
+| WOPI / OnlyOffice / Collabora | A customer requiring external office editing; host adapter owns transport, authorization and licensing. |
+| PDF / DOCX exporters | A requested heavy export; isolated asynchronous workers using the existing exporter contract, not a new core exporter framework. |
+| Univer OT | A multi-user spreadsheet customer; existing typed protocol/drainer slots, separate wire and state-format compatibility. |
+| React / Livewire clients | A real non-Vue consumer; neutral public REST/session contracts and host-owned UI. |
+
+Long-running import/export jobs belong to their domain/add-on when a bounded request no longer
+suffices: stable job identity, typed result/error, authorized polling and best-effort cancellation.
+Reuse receipt/outbox mechanisms for retry and recovery. Retention/legal hold, offline replication,
+generic batch and update masks need concrete consumers; no generic resource/IAM/operation
+framework is reserved in core in anticipation of them.

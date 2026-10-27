@@ -12,14 +12,16 @@ is a projection of a checkpoint. Collaboration is a package of its own, three pi
 
 | Piece | What it is |
 |---|---|
-| `axioma-studio/vaulter-collaboration` | The Laravel module (`Vaulter\Collaboration\`): the session endpoint, the room token, the hub protocol, the update log, the drain and prune commands. Opt-in. |
+| `axioma-studio/vaulter-collaboration` | The Laravel module (`Vaulter\Collaboration\`): the Yjs driver, the room token, the hub protocol, the update log, the drain and prune commands. Opt-in. |
 | `@vaulter/collaboration-hub` | The Node hub (Hocuspocus + Yjs), shipped as the image `ghcr.io/axiomasoft/vaulter-collaboration-hub` — see [Collaboration hub](/guides/hub). |
 | `@vaulter/vue-collaboration` | The browser side: update envelopes, the retry queue, the save status — [below](#frontend-wiring-vaulter-vue-collaboration). |
 
-The documents package keeps the aggregate and the contract (`CollaborationDriver`, `SupportsCollaboration`); it contains no hub
-code. The decision and its reasons are [ADR-0031](/adr/0031-collaboration-package-and-durability).
+The documents package owns the aggregate, session endpoint, access policy and contracts
+(`CollaborationProtocolDriver`, `SupportsCollaboration`); it contains no hub code. The decision and its reasons are [ADR-0031](/adr/0031-collaboration-package-and-durability).
 
-Reverb for Yjs collaboration has been removed: `driver = reverb` fails with an `InvalidConfigurationException`.
+The active collaboration module registers its Hocuspocus driver in the typed protocol slot keyed `yjs`.
+There is no global `driver` selector or Reverb transport. Other adapters use their own protocol slots;
+see [Collaboration protocols](/extending/collaboration-protocols).
 Laravel broadcast channels still carry comment events with their existing access checks.
 
 ## Install and enable
@@ -63,7 +65,6 @@ The file is `config/vaulter-collaboration.php` (publish tag `vaulter-collaborati
 ```php
 // config/vaulter-collaboration.php
 return [
-    'driver' => 'hocuspocus',
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
         'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
@@ -82,7 +83,6 @@ return [
 
 | Key | Env | Default | Purpose |
 |---|---|---|---|
-| `driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | The only transport. `reverb` is refused. |
 | `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to (`wss://` in production). |
 | `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints and verifies the room token with. Lives only on Laravel. |
 | `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call and of the control channel. Shared with the hub; must differ from `jwt_secret` — equal values are an `InvalidConfigurationException` at boot (the hub holds this secret, so with the same value it could sign a room token for any user). |
