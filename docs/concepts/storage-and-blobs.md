@@ -515,8 +515,8 @@ resolved per call by `FlysystemStorageDriver::disk()`: a blob's own `disk` colum
 ],
 ```
 
-Because it is just a Flysystem disk, any driver works — `local`, `s3`, or a custom
-one — configured in your app's `config/filesystems.php`. The CAS only does stream
+Because it is just a Flysystem disk, any driver works for the CAS — `local`, `s3`, or a custom
+one (resumable-upload *completion* is the exception: it needs a local staging disk, see [Uploads](/guides/uploads)) — configured in your app's `config/filesystems.php`. The CAS only does stream
 writes plus a few object-store niceties that degrade gracefully:
 
 - **Conditional create.** On an object store, `put()` with `ifNoneMatch` maps to

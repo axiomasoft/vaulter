@@ -1,6 +1,6 @@
 ---
 title: Uploads
-description: Resumable uploads — tus.io core on any disk, S3-style multipart on object stores, and a direct one-shot path, all funnelling through the same race-free CAS commit.
+description: Resumable uploads — the tus.io core and S3-style multipart protocols (completion needs a local staging disk), and a direct one-shot path, all funnelling through the same race-free CAS commit.
 outline: deep
 ---
 
@@ -99,9 +99,9 @@ promotion, the bytes form an orphan collected by `vaulter:blobs:reconcile --orph
 
 | Protocol      | Value           | Works on | How |
 | ------------- | --------------- | -------- | --- |
-| **tus**       | `tus`           | **any** Flysystem disk | tus.io CORE — Creation + `HEAD`(`Upload-Offset`) + `PATCH`(`application/offset+octet-stream`). Each chunk is appended to a staged temp; `received_bytes` is the authoritative offset. |
-| **S3 multipart** | `s3-multipart` | S3-style disks | Numbered parts recorded in `v_upload_parts` (re-upload of a part replaces it), stitched on complete. |
-| **Direct**    | `direct`        | any | A one-shot non-resumable `POST` — the small-file fast path. |
+| **tus**       | `tus`           | protocol; completion on a **local** staging disk only | tus.io CORE — Creation + `HEAD`(`Upload-Offset`) + `PATCH`(`application/offset+octet-stream`). Each chunk is appended to a staged temp; `received_bytes` is the authoritative offset. |
+| **S3 multipart** | `s3-multipart` | protocol; completion on a **local** staging disk only | Numbered parts recorded in `v_upload_parts` (re-upload of a part replaces it), stitched on complete. |
+| **Direct**    | `direct`        | any disk | A one-shot non-resumable `POST` — the small-file fast path. |
 
 The default is **tus** (the disk-agnostic resumable path). The transport is chosen at session
 create time; the `UploadSessionManager` resolves the matching handler (`TusUploadHandler` /
@@ -189,7 +189,11 @@ expectation in the session is planned after 1.0).
 ## tus core flow
 
 The tus handler implements the three CORE operations directly (no heavy tus framework —
-self-contained over Flysystem + the session table) and works on **any disk**.
+self-contained over Flysystem + the session table). Appending chunks works on any Flysystem disk, but **completion** is supported on a local staging disk only.
+
+::: warning Completion is local-disk only
+`tus` and `s3-multipart` are **protocol** names, not storage capabilities. Completing a resumable session needs a bounded staged read (PLAN4-D19), which Flysystem gives only the local adapter: when the staging disk is remote (S3, object stores) or a custom adapter, `complete` is refused with `upload_conflict` (409) before any storage I/O, nothing is published and the session stays assembled. Single-shot `direct` upload and the content-addressed store on S3 are unaffected. Before upgrading, stage resumable uploads on a local disk and see the completion budget in [compatibility](/reference/compatibility).
+:::
 
 1. **Create** — `POST /drives/{drive}/uploads`. The manager mints the session +
    `upload_id` (the tus `Location`) and stamps the TTL. The handler's `initialise()` is a no-op
@@ -291,8 +295,8 @@ curl -X POST https://app.test/api/vaulter/v1/uploads/<upload_id>/complete \
 The per-part `etag` we store is the object-store handle only (for debug / the real
 complete-multipart call) — it is **never** the content address. On `complete` the **stitched
 bytes**, not the multipart ETag, are what `ContentStore.stage` hashes (H.3). The default
-handler proxies parts through the `StorageDriver`, so the same flow works against a faked/local
-disk in tests and a real S3 disk in production; a host wanting true presigned-PUT parts swaps
+handler proxies parts through the `StorageDriver`, so the record/part flow runs against a faked/local
+disk in tests; completion on a remote S3 disk is refused (see the warning above); a host wanting true presigned-PUT parts swaps
 the handler — the record/complete contract is unchanged.
 :::
 

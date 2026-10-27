@@ -35,6 +35,8 @@ integer 1..300, default 60, PLAN4-D19). It bounds one completion request, DB ret
 out the completion is refused with `upload_conflict` (409), nothing is published and the staged bytes stay
 for a repeat.
 
+The budget is enforceable only on a local staging disk. Resumable completion (`tus`, `s3-multipart`; the names are protocols, not storage capabilities) on a remote, S3 or opaque custom disk is **unsupported**: it is refused with `upload_conflict` (409) before any storage I/O. Upgrade note: stage resumable uploads on a local disk; single-shot `direct` upload and the content-addressed store on S3 are unaffected. A session already committed before this change may still run its pending staged cleanup on the staged disk without a hard deadline (known limitation, owner runbook P8.2).
+
 ## Packages and versions
 
 Every PHP package is released with one version and one tag, and each split repository

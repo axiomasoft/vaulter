@@ -75,7 +75,7 @@ final class UploadConflictException extends VaulterException implements ProblemE
     {
         return new self(
             "[Vaulter] Upload session [{$uploadId}] cannot complete: staged storage stream [{$stream}] does not support a bounded transport timeout. ".
-            'Fix: stage resumable uploads on a local or socket-backed disk with finite timeouts. '.
+            'Fix: resumable completion is supported only when the upload staging disk is a local filesystem disk; remote (S3/object-store) and custom disks are unsupported. '.
             'Docs: '.self::docs('upload-conflict'),
         );
     }

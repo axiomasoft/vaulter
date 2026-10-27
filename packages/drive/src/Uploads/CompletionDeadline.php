@@ -29,19 +29,27 @@ final readonly class CompletionDeadline
     /** Socket transports accept stream_set_timeout(). */
     private const array SOCKET_TYPES = ['tcp_socket', 'tcp_socket/ssl', 'udp_socket', 'unix_socket', 'generic_socket'];
 
-    /** @param Closure(): float $clock monotonic seconds */
+    /**
+     * @param Closure(): float                  $clock         monotonic seconds
+     * @param Closure(resource, int, int): bool $timeoutSetter stream_set_timeout() by default
+     */
     private function __construct(
         private Closure $clock,
         private float $expiresAt,
         public int $seconds,
+        private Closure $timeoutSetter,
     ) {}
 
-    /** @param (Closure(): float)|null $clock monotonic seconds; hrtime() by default */
-    public static function start(int $seconds, ?Closure $clock = null): self
+    /**
+     * @param (Closure(): float)|null                  $clock         monotonic seconds; hrtime() by default
+     * @param (Closure(resource, int, int): bool)|null $timeoutSetter test seam observing the transport timeout; native stream_set_timeout() by default
+     */
+    public static function start(int $seconds, ?Closure $clock = null, ?Closure $timeoutSetter = null): self
     {
         $clock ??= static fn (): float => hrtime(true) / 1_000_000_000;
+        $timeoutSetter ??= stream_set_timeout(...);
 
-        return new self($clock, $clock() + max($seconds, 1), max($seconds, 1));
+        return new self($clock, $clock() + max($seconds, 1), max($seconds, 1), $timeoutSetter);
     }
 
     public function remaining(): float
@@ -107,7 +115,7 @@ final readonly class CompletionDeadline
     {
         $left = $this->remaining();
         $seconds = (int) floor($left);
-        if (!stream_set_timeout($stream, $seconds, (int) (($left - $seconds) * 1_000_000))) {
+        if (!($this->timeoutSetter)($stream, $seconds, (int) (($left - $seconds) * 1_000_000))) {
             throw UploadConflictException::forUnboundedStorage(uploadId: $uploadId, stream: stream_get_meta_data($stream)['stream_type']);
         }
     }

@@ -141,9 +141,20 @@ it('D19-transport bounds a socket stream with the remaining budget and reads it'
     [$left, $right] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
     fwrite($right, 'payload');
     fclose($right);
-    $stream = CompletionDeadline::start(seconds: 5, clock: steppingClock(0.01))->bound(stream: $left, uploadId: 'up-socket');
+    $calls = [];
+    $setter = function (mixed $stream, int $seconds, int $micro) use (&$calls): bool {
+        $calls[] = $seconds + $micro / 1_000_000;
 
+        return stream_set_timeout($stream, $seconds, $micro);
+    };
+    $stream = CompletionDeadline::start(seconds: 5, clock: steppingClock(0.01), timeoutSetter: $setter)->bound(stream: $left, uploadId: 'up-socket');
+
+    expect($calls)->toHaveCount(1)
+        ->and($calls[0])->toBeLessThanOrEqual(5.0)->toBeGreaterThan(4.9);
     expect($stream->getContents())->toBe('payload');
+    // Every blocking read re-arms the timeout with what is left, so it only shrinks.
+    expect(count($calls))->toBeGreaterThanOrEqual(2)
+        ->and($calls[1])->toBeLessThan($calls[0]);
     fclose($left);
 });
 
@@ -160,28 +171,38 @@ it('D19-transport refuses a stream without an enforceable timeout as an unsuppor
 });
 
 it('D19-interrupted rejects a staged stream that stops making progress', function (): void {
-    $source = fopen('php://temp', 'r+b');
-    fwrite($source, 'abc');
-    rewind($source);
+    $path = tempnam(sys_get_temp_dir(), 'vaulter-deadline-');
+    $source = fopen($path, 'wb'); // write-only: a read fails with false, the stream stays open
     $stream = CompletionDeadline::start(seconds: 5, clock: steppingClock(0.01))->bound(stream: $source, uploadId: 'up-cut');
-    fclose($source);
-
-    expect(fn () => $stream->read(10))->toThrow(TypeError::class);
+    set_error_handler(static fn (): bool => true);
+    try {
+        expect(fn () => $stream->read(10))->toThrow(RuntimeException::class, 'made no progress');
+    } finally {
+        restore_error_handler();
+        fclose($source);
+        unlink($path);
+    }
 });
 
 it('D19-preflight refuses an unboundable remote disk before any staged open, CAS write or assemble', function (): void {
     $session = assembledDeadlineUpload(bytes: 16);
     $local = Storage::disk('local');
-    // A strict spy adapter: ANY storage call (exists/open/write) would fail the test with a Mockery error instead.
-    $spy = Mockery::mock(FilesystemAdapter::class);
+    $methods = ['fileExists', 'directoryExists', 'read', 'readStream', 'write', 'writeStream', 'delete', 'deleteDirectory', 'createDirectory', 'setVisibility', 'visibility', 'mimeType', 'lastModified', 'fileSize', 'listContents', 'move', 'copy'];
+    // Positive control: the spy really records a call, so the explicit no-call assertions below can fail.
+    $control = Mockery::spy(FilesystemAdapter::class);
+    $control->fileExists('probe');
+    $control->shouldHaveReceived('fileExists')->once();
+    $spy = Mockery::spy(FilesystemAdapter::class);
     Storage::set('local', new LaravelDisk(new Flysystem($spy), $spy));
     $reads = 0;
     app()->instance(CompletionClock::class, new CompletionClock(app(DriveConfig::class), steppingClock(0.001, $reads)));
 
     $uploads = app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('upload test')->uploads();
     expect(fn () => $uploads->complete($session))->toThrow(UploadConflictException::class, 'does not support a bounded transport timeout');
-    $spy->shouldNotHaveReceived();
     Storage::set('local', $local);
+    foreach ($methods as $method) {
+        $spy->shouldNotHaveReceived($method);
+    }
     expect($reads)->toBe(2)
         ->and($session->refresh()->status)->toBe(UploadStatus::Assembled)
         ->and(FileRevision::query()->count())->toBe(0)
