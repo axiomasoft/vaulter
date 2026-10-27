@@ -215,6 +215,12 @@ final readonly class ProblemRenderer
     {
         $clean = [];
         foreach ($value as $key => $item) {
+            // Input keys can carry the message too; never retain or log their path.
+            if (is_string($key) && $message !== '' && str_contains($key, $message)) {
+                $removed[] = '[redacted]';
+
+                continue;
+            }
             $here = $path === '' ? (string) $key : $path.'.'.$key;
             if (is_string($key) && in_array(strtolower($key), self::FORBIDDEN_META_KEYS, true)) {
                 $removed[] = $here;

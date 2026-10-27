@@ -512,7 +512,8 @@
                         "tests/Integration/Modules/ModuleUninstallCommandTest.php",
                         "tests/Integration/Observability/P83/P83UploadSessionActiveMetricsTest.php",
                         "tests/Integration/Operations/ModuleReadinessTest.php",
-                        "tests/Integration/Schema/HostKeyColumnsSchemaTest.php"
+                        "tests/Integration/Schema/HostKeyColumnsSchemaTest.php",
+                        "tests/Integration/Security/RedactionTest.php"
                     ]
                 },
                 {

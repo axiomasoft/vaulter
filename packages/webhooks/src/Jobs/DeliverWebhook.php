@@ -124,7 +124,7 @@ final class DeliverWebhook implements ShouldQueue
                     $response = $this->post(signer: $signer, urlGuard: $urlGuard, delivery: $delivery, endpoint: $endpoint);
                 } catch (Throwable $throwable) {
                     $outcome = $throwable instanceof ConnectionException ? 'timeout' : 'failure';
-                    if ($this->settle(delivery: $delivery, endpoint: $endpoint, operation: fn (WebhookEndpoint $locked) => $this->recordFailure(delivery: $delivery, endpoint: $locked, error: $throwable->getMessage()))) {
+                    if ($this->settle(delivery: $delivery, endpoint: $endpoint, operation: fn (WebhookEndpoint $locked) => $this->recordFailure(delivery: $delivery, endpoint: $locked, error: $throwable instanceof ConnectionException ? 'connection_error' : 'transport_error'))) {
                         $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: $outcome);
                     }
 

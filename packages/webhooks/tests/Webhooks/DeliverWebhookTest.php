@@ -126,8 +126,15 @@ it('marks the delivery failed and arms a future retry on a non-2xx', function ()
         ->and($endpoint->is_active)->toBeTrue();
 });
 
-it('records the transport error message when the POST throws', function (): void {
-    Http::fake(fn () => throw new ConnectionException('connection refused'));
+it('records a safe transport classification when the POST throws', function (string $exceptionClass, string $classification): void {
+    $secret = 'private-transport-secret-'.bin2hex(random_bytes(24));
+    $content = 'private-payload +/='.bin2hex(random_bytes(24));
+    $exception = new $exceptionClass('Bearer '.$secret.'?payload='.rawurlencode($content));
+    $calls = 0;
+    Http::fake(function () use ($exception, &$calls): never {
+        $calls++;
+        throw $exception;
+    });
 
     $endpoint = WebhookTestHelpers::endpoint();
     $delivery = WebhookTestHelpers::delivery($endpoint);
@@ -136,11 +143,17 @@ it('records the transport error message when the POST throws', function (): void
 
     $delivery->refresh();
 
-    expect($delivery->status)->toBe('failed')
+    expect($calls)->toBe(1)
+        ->and($delivery->status)->toBe('failed')
         ->and($delivery->attempts)->toBe(1)
-        ->and($delivery->last_error)->toBe('connection refused')
-        ->and($delivery->next_retry_at->isFuture())->toBeTrue();
-});
+        ->and($delivery->last_error)->toBe($classification)
+        ->and($delivery->last_error)->not->toContain($secret)->not->toContain(rawurlencode($content))
+        ->and($delivery->next_retry_at->isFuture())->toBeTrue()
+        ->and($endpoint->fresh()->failure_count)->toBe(1);
+})->with([
+    'connection failure' => [ConnectionException::class, 'connection_error'],
+    'other transport failure' => [RuntimeException::class, 'transport_error'],
+]);
 
 it('uses the configured retry schedule for next_retry_at', function (): void {
     config()->set('vaulter-webhooks.retry_schedule', [10, 30, 60, 300]);
