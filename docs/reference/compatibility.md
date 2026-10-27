@@ -288,3 +288,35 @@ vendor/bin/pest
 
 Each `TestCase` migrates its own schema on start, so run one schema group per invocation
 (the CI `test-pgsql` job splits them into per-schema steps for exactly this reason).
+
+## Public contract catalog
+
+> Preliminary until P6.3 (I13 closure) and P6.2 (BC gate). No row is a passed BC check; "not_checked" means no machine snapshot exists and none is invented.
+
+| Surface | Machine source | 1.x promise | Detection | Qualification |
+|:--|:--|:--|:--|:--|
+| PHP API (`#[Api]`) | `packages/<p>/tests/Arch/__snapshots__/surface.{txt,json}` | no removal or narrowing of types, methods, parameters (parameter names are API: named arguments), constants, enum cases | machine drift | conservative BREAK-REVIEW guard (P6.2) |
+| PHP SPI (`#[Spi]`) | same snapshots (`surface.json` is created by P6.2; today `surface.txt`) | no new required members on an implement-SPI; extend via a new interface or explicit decision | machine drift | owner qualification |
+| Internal | `#[Internal]` / Internal namespace | none | attribute scan | n/a |
+| REST (public) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR is forbidden; includes confidential cursors and bounded grants/shares pages (paging to `next_cursor=null`, empty page with continuation) | machine drift (P6.2) | consumer-runtime |
+| REST (private hub) | `packages/collaboration/openapi/hub.yaml`; protocol claim `protocol` | version via claim; private, no 1.x promise to hosts | machine drift (P6.2) | owner qualification |
+| Problem codes | `vaulter:errors`, `x-vaulter-problems` | codes not removed, status unchanged | command output | manual / not_checked until P6.3 |
+| Events | event catalog; no machine payload schema yet | fields not removed; new fields optional; envelope versioned | not_checked (no machine snapshot) | manual; no schema path invented |
+| Config / env / publish tags | `tests/Repo/Arch/Fixtures/identities/*` | keys not removed without an alias cycle | identities-config drift | owner qualification |
+| Container bindings / tags | documented provider `register()` bindings/tags plus an explicit container-contract fixture; no universal bindings snapshot (`identities-bindings.json` does not exist) | documented ids and tags stay resolvable | manual / not_checked | owner: `packages/core`, line 1.x; P6.3 |
+| Commands | identities-cli | names, options, exit codes | names/options drift; exit codes not_checked | manual |
+| DB schema | `packages/core/tests/Fixtures/Schema/expected/**` | additive migrations only in 1.x; upgrade fixtures from 1.0 | fixture drift | owner qualification |
+| Operation catalog | `vaulter:operations`, `tests/Repo/Arch/MutationContractCoverageTest.php` | operation names stable; no second manual catalog | machine drift | consumer-runtime |
+| Document type keys, viewer, protocols | identities-protocol / ledger | stable keys | machine drift | owner qualification |
+| Storage key/layout and integrity versions | manual / not_checked (no machine snapshot) | layout and integrity version not changed in 1.x without migration | not_checked | owner: `packages/media` (CAS), line 1.x |
+| Queued job / receipt serialization, retry/drain | manual / not_checked | serialized jobs and receipts from 1.x readable by later 1.x; retry/drain semantics unchanged. A passing signature check does not qualify rolling workers: mixed versions need a drain-old-workers policy or an owner tuple test | not_checked | owner: `packages/drive`/`core`, line 1.x; no BC pass claimed |
+| Persisted document schema, protocol wire versions | manual / not_checked | versions only grow compatibly | not_checked | owner: `packages/documents`/`collaboration`, line 1.x |
+| Hub/image environment variables | `packages/collaboration/hub` source/config and private docs; manual / not_checked, Docker runtime deferred to P8.2 | names not removed without alias | not_checked | owner: `packages/collaboration`, line 1.x |
+| npm `@vaulter/vue` | `etc/*.api.{md,json}`, entrypoints, consumer type fixtures | exports, types, props, events; runtime behavior not machine-protected | machine drift for types | consumer-runtime |
+| Root-only `composer.json` keys (D8) | root `composer.json` | split packages do not inherit root-only keys; not a package promise | not_checked | manual |
+
+Named arguments are part of the API for `#[Api]` types; unstable constructors are `#[Internal]` (D27, `tests/Repo/Arch/SurfaceRulesTest.php`). Attributes do not guarantee behavior.
+
+### Deprecation policy (1.x)
+
+Deprecated items live at least one minor cycle, warn once per process (`E_USER_DEPRECATED` or log, never in the hot path), name the replacement and removal version; a config alias reads the old value and doctor reports the migration. Removal happens only in 2.0, except security exceptions with an advisory. See ADR-0037.

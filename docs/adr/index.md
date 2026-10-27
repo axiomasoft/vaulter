@@ -41,3 +41,5 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0035 — Product boundary and release channels](/adr/0035-product-boundary-and-release-channels) — accepted; amends ADR-0010 and ADR-0031.
 
 - [ADR-0036 — Secure production defaults](/adr/0036-secure-production-defaults) — accepted.
+
+- [ADR-0037 — Public contract, BC gate and deprecation policy](/adr/0037-public-contract-bc-and-deprecation) — accepted.

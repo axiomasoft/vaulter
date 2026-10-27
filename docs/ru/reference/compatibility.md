@@ -215,3 +215,35 @@ vendor/bin/pest
 
 Каждый `TestCase` мигрирует собственную схему на старте, поэтому запускайте по одной
 schema-группе за вызов (задача CI `test-pgsql` именно поэтому разбивает их на шаги по схемам).
+
+## Каталог публичного контракта
+
+> Предварительно до P6.3 (закрытие I13) и P6.2 (BC-gate). Строка — не пройденная BC-проверка; «not_checked» означает, что машинного снимка нет и путь не выдуман.
+
+| Поверхность | Источник | Обещание 1.x | Обнаружение | Квалификация |
+|:--|:--|:--|:--|:--|
+| PHP API (`#[Api]`) | `packages/<p>/tests/Arch/__snapshots__/surface.{txt,json}` | не удалять и не сужать типы, методы, параметры (имена параметров — API: именованные аргументы), константы, кейсы enum | машинный дрейф | консервативный BREAK-REVIEW guard (P6.2) |
+| PHP SPI (`#[Spi]`) | те же снимки (`surface.json` создаёт P6.2; сейчас `surface.txt`) | не добавлять обязательные члены в implement-SPI; расширять новым интерфейсом или явным решением | машинный дрейф | квалификация владельца |
+| Internal | `#[Internal]` / Internal-namespace | без обещаний | скан атрибутов | н/п |
+| REST (публичный) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR запрещён; включает confidential-курсоры и ограниченные страницы grants/shares (пейджинг до `next_cursor=null`, пустая страница с продолжением) | машинный дрейф (P6.2) | consumer-runtime |
+| REST (приватный хаб) | `packages/collaboration/openapi/hub.yaml`; claim `protocol` | версия в claim; приватный, обещаний хостам в 1.x нет | машинный дрейф (P6.2) | квалификация владельца |
+| Problem codes | `vaulter:errors`, `x-vaulter-problems` | коды не удаляются, статус не меняется | вывод команды | вручную / not_checked до P6.3 |
+| События | каталог событий; машинной схемы payload пока нет | поля не удаляются; новые — опциональные; envelope версионируется | not_checked (нет машинного снимка) | вручную; путь схемы не выдуман |
+| Конфиг / env / publish-теги | `tests/Repo/Arch/Fixtures/identities/*` | ключи не удаляются без alias-цикла | дрейф identities-config | квалификация владельца |
+| Container bindings / tags | документированные bindings/теги в `register()` провайдера плюс явная container-contract фикстура; универсального снимка bindings нет (`identities-bindings.json` не существует) | документированные id и теги остаются резолвимыми | вручную / not_checked | владелец: ядро (`packages/core`), линия 1.x; P6.3 |
+| Команды | identities-cli | имена, опции, exit codes | имена/опции — дрейф; exit codes not_checked | вручную |
+| Схема БД | `packages/core/tests/Fixtures/Schema/expected/**` | только аддитивные миграции в 1.x; upgrade-фикстуры от 1.0 | дрейф фикстур | квалификация владельца |
+| Каталог операций | `vaulter:operations`, `tests/Repo/Arch/MutationContractCoverageTest.php` | имена операций стабильны; второго ручного каталога нет | машинный дрейф | consumer-runtime |
+| Ключи типов документов, viewer, протоколов | identities-protocol / ledger | ключи стабильны | машинный дрейф | квалификация владельца |
+| Ключи/layout хранилища и версии целостности | вручную / not_checked (машинного снимка нет) | layout и версия целостности не меняются в 1.x без миграции | not_checked | владелец: `packages/media` (CAS), линия 1.x |
+| Сериализованные задачи/receipt, retry/drain | вручную / not_checked | задачи и receipt из 1.x читаются последующими 1.x; семантика retry/drain неизменна. Прохождение проверки сигнатур не квалифицирует rolling workers: смешанные версии требуют политики drain старых workers или owner tuple-теста | not_checked | владелец: `packages/drive`/`core`, линия 1.x; BC-pass не заявляется |
+| Схема сохранённых документов, wire-версии протокола | вручную / not_checked | версии растут только совместимо | not_checked | владелец: `packages/documents`/`collaboration`, линия 1.x |
+| Env хаба/образа | исходники/конфиг `packages/collaboration/hub` и приватные docs; вручную / not_checked, Docker runtime отложен в P8.2 | имена не удаляются без alias | not_checked | владелец: `packages/collaboration`, линия 1.x |
+| npm `@vaulter/vue` | `etc/*.api.{md,json}`, entrypoints, consumer type fixtures | экспорты, типы, props, events; runtime-поведение машинно не защищено | машинный дрейф типов | consumer-runtime |
+| Root-only ключи `composer.json` (D8) | корневой `composer.json` | split-пакеты не наследуют root-only ключи; не обещание пакета | not_checked | вручную |
+
+Именованные аргументы — часть API для типов `#[Api]`; нестабильные конструкторы — `#[Internal]` (D27, `tests/Repo/Arch/SurfaceRulesTest.php`). Атрибуты не гарантируют поведение.
+
+### Политика deprecation (1.x)
+
+Устаревшее живёт минимум один минорный цикл, предупреждает один раз за процесс (`E_USER_DEPRECATED` или лог, не в hot path), называет замену и версию удаления; конфиг-alias читает старое значение, doctor сообщает миграцию. Удаление — только в 2.0, кроме security-исключений с advisory. См. ADR-0037.
