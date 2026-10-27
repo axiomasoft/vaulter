@@ -147,6 +147,19 @@ it('manifest: an Api type with a technical constructor shows no constructor and 
         ->and($manifest)->not->toContain('__construct');
 });
 
+it('manifest: the classifier facts of a type (facade @method, docblock generics, ancestors) are read beside the manifest lines, not into them', function (): void {
+    $types = Surface::fromSources(sm_sources());
+    $money = array_values(array_filter($types, static fn (array $t): bool => $t['fqcn'] === 'Vaulter\\Money'))[0];
+    $folder = array_values(array_filter($types, static fn (array $t): bool => $t['fqcn'] === 'Vaulter\\Drive\\Folder'))[0];
+    $handler = array_values(array_filter($types, static fn (array $t): bool => $t['fqcn'] === 'Vaulter\\Handler'))[0];
+
+    expect($money['facade'])->toBe(['zero' => ['Vaulter\\Money']])
+        ->and($money['generics'])->toBe([])
+        ->and($handler['ancestors'])->toBe(['Stringable'])
+        ->and($folder['ancestors'])->toBe([])
+        ->and(Surface::manifests($types, ['core'])['core'])->toContain("  @method static Money zero()\n")->not->toContain('facade');
+});
+
 it('matches the committed manifest of every package to the code, exactly', function (): void {
     $generator = require dirname(__DIR__, 3).'/scripts/inventory/generators/surface.php';
     $outcome = $generator->check(Repo::discover());

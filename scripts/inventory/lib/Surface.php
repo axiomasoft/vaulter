@@ -26,7 +26,8 @@ use Throwable;
  * no line numbers.
  *
  * @phpstan-type Member array{group: int, name: string, line: string, types: list<string>, kind: string}
- * @phpstan-type SurfaceType array{fqcn: string, file: string, package: string, surface: string, since: string, header: string, doc: list<string>, members: list<Member>}
+ * @phpstan-type Generic array{member: string, kind: string, target: string}
+ * @phpstan-type SurfaceType array{fqcn: string, file: string, package: string, surface: string, since: string, header: string, doc: list<string>, members: list<Member>, facade?: array<string, list<string>>, generics?: list<Generic>, ancestors?: list<string>}
  */
 final class Surface
 {
@@ -41,6 +42,12 @@ final class Surface
     private const INTERNAL = 'Vaulter\Attributes\Internal';
 
     private const SPI_KIND = 'Vaulter\Attributes\SpiKind';
+
+    /** The native ORM factory root: a supported type built on it hands the host the models it makes. */
+    private const ORM_FACTORY = 'Illuminate\Database\Eloquent\Factories\Factory';
+
+    /** The words of a PHPDoc type that are no class (PHPStan / Psalm pseudo types and keywords). */
+    private const DOC_WORDS = ['int', 'integer', 'string', 'bool', 'boolean', 'float', 'double', 'array', 'list', 'iterable', 'callable', 'object', 'mixed', 'void', 'null', 'true', 'false', 'never', 'static', 'self', 'parent', 'resource', 'scalar', 'numeric', 'array-key', 'positive-int', 'negative-int', 'non-positive-int', 'non-negative-int', 'non-zero-int', 'non-empty-string', 'non-falsy-string', 'truthy-string', 'lowercase-string', 'non-empty-lowercase-string', 'non-empty-array', 'non-empty-list', 'class-string', 'interface-string', 'trait-string', 'enum-string', 'callable-string', 'numeric-string', 'literal-string', 'non-empty-literal-string', 'int-mask', 'int-mask-of', 'key-of', 'value-of', 'pure-callable', 'pure-closure', 'closed-resource', 'open-resource', 'empty', 'noreturn', 'never-return', 'never-returns', 'no-return', 'max', 'min', 'of', 'as', 'is', 'covariant', 'contravariant'];
 
     public static function snapshotPath(string $package): string
     {
@@ -94,8 +101,8 @@ final class Surface
                 throw new InventoryError("{$relative}: {$e->getMessage()}", 0, $e);
             }
             $ast = (new NodeTraverser(new NameResolver))->traverse($ast);
-            foreach (self::classLikes($ast) as $node) {
-                $types[] = self::type($node, $relative, $package);
+            foreach (self::classLikes($ast) as $found) {
+                $types[] = self::type($found['node'], $relative, $package, $found['namespace'], $found['uses']);
             }
         }
         usort($types, static fn (array $a, array $b): int => strcmp($a['fqcn'], $b['fqcn']));
@@ -198,25 +205,312 @@ final class Surface
     }
 
     /**
-     * @param  array<Node>          $nodes
-     * @return list<Stmt\ClassLike>
+     * The I13 classifier (P6.3/U1): the gated signature findings of violations() with the source facts that classify each, and
+     * the findings of the parts of a supported surface the gated reading does not see — the `@method` lines of a facade, the
+     * generic types of the docblocks (`@return`, `@param`, `@var`, `@extends`/`@implements`/`@use`), the members a supported
+     * type inherits from an Internal ancestor, and a supported type built on the native ORM factory. A name the classifier
+     * cannot resolve (a Vaulter type it does not know, an ancestor outside the sources) is `review`, never a pass. No category
+     * is exempted: an Eloquent model is a finding wherever it appears, and `host-input` is only ever granted by an allowlist.
+     *
+     * @param  list<SurfaceType>                                                                                                     $types
+     * @return array{signature: list<array<string, mixed>>, extended: list<array{invariant: string, view: string, file: string, symbol: string, kind: string, target: string, target_owner: string, count: int, category: string}>}
      */
-    private static function classLikes(array $nodes): array
+    public static function classify(array $types, SourceIndex $index): array
+    {
+        $by = [];
+        foreach ($types as $type) {
+            $by[$type['fqcn']] = $type;
+        }
+
+        $signature = [];
+        foreach (self::violations($types, $index) as $violation) {
+            $declaring = $by[explode('::', $violation['symbol'])[0]] ?? null;
+            $target = $by[$violation['target']] ?? null;
+            $signature[] = [
+                ...$violation,
+                'key' => Allowlist::key($violation),
+                'declaring_surface' => $declaring['surface'] ?? 'unknown',
+                'target_surface' => $target['surface'] ?? 'unknown',
+                'target_is_eloquent' => $index->isEloquent($violation['target']),
+                'rule' => $violation['view'] === 'unclassified' ? 'D27: exactly one surface attribute' : 'D27: a supported signature names no Internal type and no Eloquent model of the domain',
+            ];
+        }
+
+        $found = [];
+        $report = static function (array $type, string $symbol, string $kind, string $target, ?string $category = null) use (&$found, $by, $index): void {
+            $category ??= match (true) {
+                !isset($by[$target]) => str_starts_with($target, 'Vaulter\\') ? 'review' : null,
+                $index->isEloquent($target) => 'domain-model',
+                $by[$target]['surface'] === 'Internal' => 'internal-type',
+                default => null,
+            };
+            if ($category !== null) {
+                $found[] = ['invariant' => self::INVARIANT, 'view' => 'extended', 'file' => $type['file'], 'symbol' => $symbol, 'kind' => $kind, 'target' => $target, 'target_owner' => $by[$target]['package'] ?? (SourceIndex::packageOfFile($type['file']) ?? ''), 'count' => 1, 'category' => $category];
+            }
+        };
+        foreach ($types as $type) {
+            if (!in_array($type['surface'], ['Api', 'Spi:Implement', 'Spi:Call'], true)) {
+                continue;
+            }
+            foreach ($type['facade'] ?? [] as $method => $targets) {
+                foreach ($targets as $target) {
+                    $report($type, $type['fqcn'].'::'.$method.'()', 'facade-method', $target);
+                }
+            }
+            foreach ($type['generics'] ?? [] as $generic) {
+                $report($type, $type['fqcn'].($generic['member'] === '' ? '' : '::'.$generic['member']), $generic['kind'], $generic['target']);
+            }
+            // The ancestors: an Internal one does not hide what the supported child inherits from it; one outside the sources is review.
+            $seen = [$type['fqcn'] => true];
+            foreach ($type['ancestors'] ?? [] as $ancestor) {
+                $queue = [$ancestor];
+                while ($queue !== []) {
+                    $current = array_shift($queue);
+                    if (isset($seen[$current])) {
+                        continue;
+                    }
+                    $seen[$current] = true;
+                    if ($current === self::ORM_FACTORY) {
+                        $report($type, $type['fqcn'], 'ancestor', $current, 'orm-factory');
+
+                        continue;
+                    }
+                    if (!isset($by[$current])) {
+                        str_starts_with($current, 'Vaulter\\') && $report($type, $type['fqcn'], 'ancestor', $current, 'review');
+
+                        continue;
+                    }
+                    $parent = $by[$current];
+                    if ($parent['surface'] === 'Internal') {
+                        foreach ($parent['members'] as $member) {
+                            foreach ($member['types'] as $target) {
+                                $report($type, $type['fqcn'].'::'.$member['name'], 'inherited-'.$member['kind'], $target);
+                            }
+                        }
+                        foreach ($parent['generics'] ?? [] as $generic) {
+                            if ($generic['member'] !== '') {
+                                $report($type, $type['fqcn'].'::'.$generic['member'], 'inherited-'.$generic['kind'], $generic['target']);
+                            }
+                        }
+                    }
+                    array_push($queue, ...($parent['ancestors'] ?? []));
+                }
+            }
+        }
+
+        $merged = [];
+        foreach ($found as $violation) {
+            $key = implode('|', [$violation['view'], $violation['file'], $violation['symbol'], $violation['kind'], $violation['target']]);
+            if (isset($merged[$key])) {
+                $merged[$key]['count']++;
+            } else {
+                $merged[$key] = $violation;
+            }
+        }
+        ksort($merged, SORT_STRING);
+
+        return ['signature' => $signature, 'extended' => array_values($merged)];
+    }
+
+    /**
+     * @param  array<Node>                                                                             $nodes
+     * @param  array<string, string>                                                                   $uses
+     * @return list<array{node: Stmt\ClassLike, namespace: string, uses: array<string, string>}>
+     */
+    private static function classLikes(array $nodes, string $namespace = '', array $uses = []): array
     {
         $found = [];
         foreach ($nodes as $node) {
             if ($node instanceof Stmt\Namespace_) {
-                array_push($found, ...self::classLikes($node->stmts));
+                array_push($found, ...self::classLikes($node->stmts, $node->name?->toString() ?? '', []));
+            } elseif ($node instanceof Stmt\Use_ && $node->type === Stmt\Use_::TYPE_NORMAL) {
+                foreach ($node->uses as $use) {
+                    $uses[strtolower($use->getAlias()->toString())] = $use->name->toString();
+                }
+            } elseif ($node instanceof Stmt\GroupUse) {
+                foreach ($node->uses as $use) {
+                    if (in_array($use->type, [Stmt\Use_::TYPE_NORMAL, Stmt\Use_::TYPE_UNKNOWN], true) && ($node->type === Stmt\Use_::TYPE_NORMAL || $use->type === Stmt\Use_::TYPE_NORMAL || $node->type === Stmt\Use_::TYPE_UNKNOWN)) {
+                        $uses[strtolower($use->getAlias()->toString())] = $node->prefix->toString().'\\'.$use->name->toString();
+                    }
+                }
             } elseif ($node instanceof Stmt\ClassLike && $node->name !== null) {
-                $found[] = $node;
+                $found[] = ['node' => $node, 'namespace' => $namespace, 'uses' => $uses];
             }
         }
 
         return $found;
     }
 
+    /**
+     * @param  array<string, string> $uses lower-case alias => name, the `use` imports of the file
+     * @return SurfaceType
+     */
+    private static function type(Stmt\ClassLike $node, string $file, string $package, string $namespace = '', array $uses = []): array
+    {
+        $type = self::typeOf($node, $file, $package);
+        $classTemplates = self::templates($node->getDocComment()?->getText() ?? '');
+        $resolve = static fn (string $doc, array $templates): array => self::docTypes($doc, $namespace, $uses, [...$classTemplates, ...$templates]);
+
+        $type['facade'] = [];
+        foreach ($type['doc'] as $line) {
+            if (preg_match('/^@method\s+(?:static\s+)?(.*?)\b(\w+)\s*\((.*)\)/', $line, $m) === 1) {
+                $targets = $resolve($m[1].' '.(string) preg_replace('/\$\w+(\s*=\s*[^,]*)?/', '', $m[3]), []);
+                $targets !== [] && $type['facade'][$m[2]] = $targets;
+            }
+        }
+        ksort($type['facade'], SORT_STRING);
+
+        $generics = [];
+        foreach (self::docTags($node->getDocComment()?->getText() ?? '', ['extends', 'implements', 'use', 'mixin']) as [$tag, $doc]) {
+            // `@extends Base<Node>`: the base is an ancestor (walked below), its arguments are what the type hands out.
+            foreach ($resolve((string) preg_replace('/^[^<]*/', '', $doc), []) as $target) {
+                $generics[] = ['member' => '', 'kind' => $tag.'-generic', 'target' => $target];
+            }
+        }
+        foreach ($node->stmts as $stmt) {
+            if (($stmt instanceof Stmt\ClassMethod || $stmt instanceof Stmt\Property || $stmt instanceof Stmt\ClassConst) && !$stmt->isPrivate() && !self::internal($stmt->attrGroups)) {
+                $text = $stmt->getDocComment()?->getText() ?? '';
+                $templates = self::templates($text);
+                $name = match (true) {
+                    $stmt instanceof Stmt\ClassMethod => $stmt->name->toString().'()',
+                    $stmt instanceof Stmt\Property => '$'.$stmt->props[0]->name->toString(),
+                    default => $stmt->consts[0]->name->toString(),
+                };
+                foreach (self::docTags($text, ['return', 'param', 'var']) as [$tag, $doc]) {
+                    foreach ($resolve($doc, $templates) as $target) {
+                        $generics[] = ['member' => $name, 'kind' => 'doc-'.$tag, 'target' => $target];
+                    }
+                }
+            }
+            if ($stmt instanceof Stmt\ClassMethod && $stmt->name->toString() === '__construct') {
+                // A promoted property states its generic type in the constructor docblock (`@param list<Node> $nodes`), whatever the constructor is.
+                $promoted = [];
+                foreach ($stmt->params as $param) {
+                    if ($param->flags !== 0 && ($param->flags & Modifiers::PRIVATE) === 0 && !self::internal($param->attrGroups)) {
+                        $promoted[self::paramName($param)] = true;
+                    }
+                }
+                foreach (self::docTags($stmt->getDocComment()?->getText() ?? '', ['param'], true) as [, $doc, $var]) {
+                    if (isset($promoted[$var])) {
+                        foreach ($resolve($doc, []) as $target) {
+                            $generics[] = ['member' => '$'.$var, 'kind' => 'doc-property', 'target' => $target];
+                        }
+                    }
+                }
+            }
+        }
+        $type['generics'] = $generics;
+
+        $ancestors = match (true) {
+            $node instanceof Stmt\Class_ => $node->extends === null ? [] : [$node->extends->toString()],
+            $node instanceof Stmt\Interface_ => array_map(static fn (Name $n): string => $n->toString(), $node->extends),
+            default => [],
+        };
+        foreach ($node->getTraitUses() as $use) {
+            foreach ($use->traits as $trait) {
+                $ancestors[] = $trait->toString();
+            }
+        }
+        $type['ancestors'] = $ancestors;
+
+        return $type;
+    }
+
+    /** @return list<string> the template names a docblock declares */
+    private static function templates(string $doc): array
+    {
+        preg_match_all('/@(?:phpstan-|psalm-)?template(?:-covariant|-contravariant)?\s+(\w+)/', $doc, $m);
+
+        return $m[1];
+    }
+
+    /**
+     * The tags of a docblock with their type: `@return Collection<int, Node>` => ['return', 'Collection<int, Node>'].
+     *
+     * @param  list<string>                      $tags
+     * @return list<array{0: string, 1: string, 2: string}> tag, type, variable name (of a `@param`)
+     */
+    private static function docTags(string $doc, array $tags, bool $withVariable = false): array
+    {
+        $found = [];
+        $text = (string) preg_replace(['#^\s*/\*\*#', '#\*/\s*$#', '#^\s*\*\s?#m'], '', $doc);
+        $alternatives = implode('|', array_map(static fn (string $t): string => preg_quote($t, '/'), $tags));
+        if (preg_match_all('/@(?:phpstan-|psalm-)?('.$alternatives.')\s+/', $text, $m, PREG_OFFSET_CAPTURE) === 0) {
+            return [];
+        }
+        foreach ($m[0] as $i => [$whole, $offset]) {
+            $tag = $m[1][$i][0];
+            $start = $offset + strlen($whole);
+            $depth = 0;
+            $end = $start;
+            $length = strlen($text);
+            while ($end < $length) {
+                $char = $text[$end];
+                if (str_contains('<{(', $char)) {
+                    $depth++;
+                } elseif (str_contains('>})', $char)) {
+                    $depth--;
+                } elseif ($depth <= 0 && ctype_space($char)) {
+                    // `int | Node`, `array<int, Node> $x`: a space ends the type only outside brackets and not around a union.
+                    $rest = ltrim(substr($text, $end));
+                    if ($rest === '' || !str_contains('|&', $rest[0])) {
+                        if (!str_ends_with(rtrim(substr($text, $start, $end - $start)), '|') && !str_ends_with(rtrim(substr($text, $start, $end - $start)), '&')) {
+                            break;
+                        }
+                    }
+                }
+                $end++;
+            }
+            $type = trim(substr($text, $start, $end - $start));
+            $variable = $withVariable && preg_match('/^\s*(?:\.\.\.)?&?\$(\w+)/', substr($text, $end), $v) === 1 ? $v[1] : '';
+            $found[] = [$tag, $type, $variable];
+        }
+
+        return $found;
+    }
+
+    /**
+     * The class names a PHPDoc type names, resolved against the namespace and the imports of the file.
+     *
+     * @param  array<string, string> $uses
+     * @param  list<string>          $templates
+     * @return list<string>
+     */
+    private static function docTypes(string $doc, string $namespace, array $uses, array $templates): array
+    {
+        $doc = (string) preg_replace([
+            "/'[^']*'|\"[^\"]*\"/", // literal strings
+            '/::\w+\*?/', // constants of a class: the class still counts
+            '/(?<![\w\\\\-])[\w-]+\??\s*:(?!:)/', // the keys of an array shape or the return arrow of a callable
+            '/\$\w+/', // variables of a callable signature
+        ], ['', '', ' ', ' '], $doc);
+        preg_match_all('/\\\\?[A-Za-z_][\w-]*(?:\\\\[A-Za-z_]\w*)*/', $doc, $m);
+        $names = [];
+        foreach ($m[0] as $word) {
+            $lower = strtolower(ltrim($word, '\\'));
+            if (in_array($lower, self::DOC_WORDS, true) || in_array(ltrim($word, '\\'), $templates, true) || str_contains($word, '-') || is_numeric($word)) {
+                continue;
+            }
+            if (str_starts_with($word, '\\')) {
+                $names[] = substr($word, 1);
+
+                continue;
+            }
+            $first = strtolower(explode('\\', $word)[0]);
+            $names[] = match (true) {
+                isset($uses[$first]) => $uses[$first].substr($word, strlen($first)),
+                $namespace === '' => $word,
+                default => $namespace.'\\'.$word,
+            };
+        }
+        $names = array_values(array_unique($names));
+        sort($names, SORT_STRING);
+
+        return $names;
+    }
+
     /** @return SurfaceType */
-    private static function type(Stmt\ClassLike $node, string $file, string $package): array
+    private static function typeOf(Stmt\ClassLike $node, string $file, string $package): array
     {
         $fqcn = ($node->namespacedName ?? $node->name)?->toString() ?? '';
         $surfaces = [];
