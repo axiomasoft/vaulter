@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\State;
 
+use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Connection;
+use Illuminate\Database\DatabaseTransactionRecord;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use LogicException;
@@ -27,6 +30,7 @@ use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\Actor;
+use WeakMap;
 
 /**
  * {@see CollaborativeState} on the documents' own tables: the locks of the content Actions (drive shared, tree and
@@ -38,16 +42,22 @@ use Vaulter\ValueObjects\Access\Actor;
 #[Internal]
 final readonly class DatabaseCollaborativeState implements CollaborativeState
 {
+    /** @var WeakMap<LockedDocumentState, array{Connection, DatabaseTransactionRecord}> */
+    private WeakMap $issued;
+
     #[Internal]
     public function __construct(
         private VaulterDatabase $database,
+        private Container $container,
         private NodeReadRepository $nodes,
         private TreeGuard $tree,
         private DocumentReadRepository $documents,
         private DocumentStateWriter $writer,
         private ContentDecoder $decoder,
         private EventRecorder $recorder,
-    ) {}
+    ) {
+        $this->issued = new WeakMap;
+    }
 
     public function lock(int|string $nodeId): LockedDocumentState
     {
@@ -71,7 +81,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         }
         $document = $this->documents->lockForNode($current) ?? throw NotADocumentException::forNode($key);
 
-        return new LockedDocumentState(
+        $state = new LockedDocumentState(
             documentId: Identity::stringify($document->getKey()),
             nodeId: Identity::stringify($key),
             driveId: Identity::stringify($driveId),
@@ -85,6 +95,9 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             collabState: $document->collab_state,
             content: $document->content ?? [],
         );
+        $this->issued[$state] = [$this->database->connection(), $this->transactionRecord()];
+
+        return $state;
     }
 
     public function markPending(LockedDocumentState $state, CollaborationStateBinding $binding, int $throughSeq): PendingMarker
@@ -240,12 +253,28 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
     /** The row lock() took, read again under that lock. */
     private function relock(LockedDocumentState $state): Document
     {
+        $issued = $this->issued[$state] ?? null;
+        if ($issued === null || $issued[0] !== $this->database->connection() || $issued[1] !== $this->transactionRecord()) {
+            throw new LogicException('[Vaulter] Use the exact state object issued by lock() in this transaction attempt.');
+        }
         $document = Document::query()->whereKey($state->documentId)->lockForUpdate()->first();
         if (!$document instanceof Document || Identity::stringify($document->node_id) !== $state->nodeId) {
             throw new LogicException('[Vaulter] The locked document state does not name a document; take it with CollaborativeState::lock() in this transaction.');
         }
 
         return $document;
+    }
+
+    private function transactionRecord(): DatabaseTransactionRecord
+    {
+        $connection = $this->database->connection();
+        $manager = $this->container->make('db.transactions');
+        $record = $manager->getPendingTransactions()->last(
+            static fn (DatabaseTransactionRecord $record): bool => $record->connection === $connection->getName()
+                && $record->level === $connection->transactionLevel(),
+        );
+
+        return $record ?? throw new LogicException('[Vaulter] No live transaction attempt owns this state lock.');
     }
 
     private function assertTransaction(): void

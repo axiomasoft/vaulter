@@ -74,6 +74,10 @@ final class FakeHub implements DrainWaiter
             $response = self::post('checkpoint', [
                 'document' => $lease['document'],
                 'generation' => $lease['generation'],
+                'protocol' => $lease['protocol'],
+                'state_format' => $lease['state_format'],
+                'schema_version' => $lease['schema_version'],
+                'type' => $lease['type'],
                 'lease_token' => $lease['lease_token'],
                 'covered_from' => $lease['checkpoint_seq'],
                 'covered_through' => $lease['head_seq'],

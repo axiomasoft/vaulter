@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Http\Support\RepresentationTag;
@@ -202,6 +206,10 @@ it('publishes and answers over HTTP with the new checkpoint version and the mark
         'lease_token' => $lease->token,
         'covered_from' => 0,
         'covered_through' => 1,
+        'protocol' => 'yjs',
+        'state_format' => 'yjs-update-v1',
+        'schema_version' => 1,
+        'type' => 'vaulter/rich-text',
         'expected_checkpoint_version' => $lease->checkpointVersion,
         'state' => base64_encode('u1'),
         'content' => Hub::tiptap('Over HTTP'),
@@ -218,4 +226,30 @@ it('publishes and answers over HTTP with the new checkpoint version and the mark
 
     expect(Compaction::marker($this->node))->toBe([null, null])
         ->and(Compaction::seqs($this->node))->toBe([]);
+});
+
+it('binds publication to every leased binding component and preserves complete rows and events on loss', function (string $field, mixed $value): void {
+    Compaction::append($this->node, 'accepted');
+    $lease = Compaction::leaseOf($this->node);
+    $events = [];
+    app('events')->listen(DocumentContentUpdated::class, function ($event) use (&$events): void {
+        $events[] = $event;
+    });
+    $old = $lease->log->binding;
+    $values = ['protocol' => $old->protocol, 'stateFormat' => $old->stateFormat, 'schemaVersion' => $old->schemaVersion, 'generation' => $old->generation];
+    $values[$field] = $value;
+    $foreign = new CollaborationStateBinding(...$values);
+    $snapshot = static fn () => array_map(static fn ($table) => DB::table($table)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions', 'v_collaboration_heads', 'v_collaboration_updates', 'v_collaboration_receipts']);
+    $before = $snapshot();
+    expect(fn () => Compaction::publish($lease, overrides: ['binding' => $foreign]))->toThrow(CollaborationCheckpointConflictException::class);
+    expect($snapshot())->toBe($before)->and($events)->toBe([]);
+})->with(['protocol' => ['protocol', 'acme-ot'], 'format' => ['stateFormat', 'other-format'], 'schema' => ['schemaVersion', 2], 'generation' => ['generation', 9]]);
+
+it('rejects re-labelling the leased document type even when a caller repeats the new current binding', function (): void {
+    Compaction::append($this->node, 'accepted');
+    $lease = Compaction::leaseOf($this->node);
+    app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill(['type' => 'vaulter/markdown'])->save());
+    $before = casState($this->node);
+    expect(fn () => Compaction::publish($lease, overrides: ['documentType' => 'vaulter/markdown']))->toThrow(CollaborationCheckpointConflictException::class);
+    expect(casState($this->node))->toEqual($before);
 });

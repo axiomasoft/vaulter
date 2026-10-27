@@ -7,6 +7,7 @@ namespace Vaulter\Collaboration\Operations;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationSessionService;
+use Vaulter\Collaboration\Persistence\YjsStateCompatibility;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
@@ -44,6 +45,7 @@ final readonly class CollaborationOperations implements DriveExtension
         private ContentDecoder $decoder,
         private DocumentQuery $query,
         private CollaborationSessionService $sessions,
+        private YjsStateCompatibility $compatibility,
     ) {}
 
     /**
@@ -66,6 +68,7 @@ final readonly class CollaborationOperations implements DriveExtension
         if ($type !== null && !$type instanceof SupportsCollaboration) {
             throw CollaborationUnavailableException::unsupportedType($type->key());
         }
+        $this->compatibility->assert($aggregate->type, $aggregate->collaborationBinding());
         $flags = $this->guard->abilities($this->context, $node)->flags;
         $ability = match (true) {
             $flags[Ability::Edit->value] ?? false => Ability::Edit,
@@ -85,7 +88,7 @@ final readonly class CollaborationOperations implements DriveExtension
             node: $node,
             ability: $ability,
             epoch: $aggregate->collab_epoch,
-            schemaVersion: $type?->schemaVersion() ?? $aggregate->schema_version,
+            schemaVersion: $aggregate->schema_version,
             writable: $writable,
             actorId: $actor,
         );

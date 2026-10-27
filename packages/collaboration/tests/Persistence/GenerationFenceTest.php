@@ -8,12 +8,26 @@ use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
+use Vaulter\Documents\Content\OpaqueContent;
+use Vaulter\Documents\Content\OpaqueJsonCodec;
+use Vaulter\Documents\Contracts\DocumentCodec;
+use Vaulter\Documents\Contracts\DocumentContent;
+use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Documents\Types\MarkdownDocumentType;
+use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Models\Node;
 
 /*
@@ -101,3 +115,110 @@ it('refuses an append of a generation the document never reached', function (): 
     expect(fn () => fenceAppend($this->node, 5))->toThrow(CollaborationEpochMismatchException::class)
         ->and(fenceRows('collaboration_heads'))->toBe(0);
 });
+
+it('returns the full stored binding through both load and compaction lease without upgrading metadata', function (): void {
+    $token = Hub::token($this->node);
+    Hub::call('load', ['room' => Hub::room($this->node)], $token)->assertOk()
+        ->assertJsonPath('protocol', 'yjs')->assertJsonPath('state_format', 'yjs-update-v1')->assertJsonPath('schema_version', 1)->assertJsonPath('generation', 0);
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    fenceAppend($this->node, 0);
+    $response = Hub::call('compaction/lease', ['hub_id' => 'binding-fixture'], null)->assertOk();
+    $response->assertJsonPath('0.protocol', 'yjs')->assertJsonPath('0.state_format', 'yjs-update-v1')->assertJsonPath('0.schema_version', 1)->assertJsonPath('0.generation', 0);
+});
+
+it('refuses incompatible stored schema or format on load and lease with or without a checkpoint', function (bool $checkpoint, string $field, mixed $value): void {
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    fenceAppend($this->node, 0);
+    if ($checkpoint) {
+        Compaction::publish(Compaction::leaseOf($this->node));
+        fenceAppend($this->node, 0, 'tail');
+    }
+    app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill([$field => $value])->save());
+    $before = Hub::aggregate($this->node)->getAttributes();
+    Hub::call('load', ['room' => Hub::room($this->node)], Hub::token($this->node))->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
+    expect(fn () => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
+    expect(Hub::aggregate($this->node)->getAttributes())->toBe($before)
+        ->and(fenceRows('collaboration_updates'))->toBe(1);
+})->with(['pre-seed schema' => [false, 'schema_version', 2], 'checkpoint schema' => [true, 'schema_version', 2], 'pre-seed format' => [false, 'collab_state_format', 'unsupported-v2'], 'checkpoint format' => [true, 'collab_state_format', 'unsupported-v2']]);
+
+it('never serves or leases old bytes under a newly installed type schema or format', function (bool $checkpoint, string $changed): void {
+    $type = new class implements DocumentType, SupportsCollaboration
+    {
+        public int $version = 1;
+
+        public string $format = 'yjs-update-v1';
+
+        public function key(): string
+        {
+            return 'acme/yjs-fixture';
+        }
+
+        public function label(): string
+        {
+            return 'Yjs fixture';
+        }
+
+        public function schemaVersion(): int
+        {
+            return $this->version;
+        }
+
+        public function codec(): DocumentCodec
+        {
+            return new OpaqueJsonCodec;
+        }
+
+        public function defaultContent(): DocumentContent
+        {
+            return OpaqueContent::fromArray(['columns' => []]);
+        }
+
+        public function viewer(): DocumentViewer
+        {
+            return new DocumentViewer('acme/yjs-viewer');
+        }
+
+        public function features(): DocumentFeatures
+        {
+            return new DocumentFeatures(editable: true, previewable: true, downloadable: false);
+        }
+
+        public function collaborationProtocol(): string
+        {
+            return 'yjs';
+        }
+
+        public function collaborationStateFormat(): string
+        {
+            return $this->format;
+        }
+
+        public function projectFromState(string $state): ?DocumentContent
+        {
+            return null;
+        }
+    };
+    $registry = new DocumentTypeRegistry(app());
+    foreach ([new RichTextDocumentType, new MarkdownDocumentType, $type] as $registered) {
+        $registry->register($registered);
+    }
+    $registry->freeze();
+    app()->instance(DocumentTypeRegistry::class, $registry);
+    $node = Hub::document(type: $type->key(), content: $type->defaultContent());
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    fenceAppend($node, 0);
+    if ($checkpoint) {
+        Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => ['columns' => []]]);
+        fenceAppend($node, 0, 'accepted-tail');
+    }
+    $token = Hub::token($node);
+    $before = Hub::aggregate($node)->getAttributes();
+    if ($changed === 'schema') {
+        $type->version = 2;
+    } else {
+        $type->format = 'yjs-update-v2';
+    }
+    Hub::call('load', ['room' => Hub::room($node)], $token)->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
+    expect(fn () => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
+    expect(Hub::aggregate($node)->getAttributes())->toBe($before)->and(Hub::aggregate($node)->schema_version)->toBe(1)->and(Hub::aggregate($node)->collab_state_format)->toBe('yjs-update-v1');
+})->with(['pre-seed schema change' => [false, 'schema'], 'checkpoint schema change' => [true, 'schema'], 'pre-seed format change' => [false, 'format'], 'checkpoint format change' => [true, 'format']]);

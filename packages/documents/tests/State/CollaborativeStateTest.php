@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CheckpointPublication;
 use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
+use Vaulter\Documents\State\CollaborativeStateTransition;
 use Vaulter\Documents\State\LockedDocumentState;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /*
  * The state contract of the realtime transport (D26, D27): lock() in the T → N → D order, the pending-state marker
@@ -262,4 +265,95 @@ it('validates a publication before it reaches the document', function (): void {
     expect(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, -1), expectedStateVersion: 0, coveredThrough: 0, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
         ->and(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: -1, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
         ->and(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: 0, collabState: '', content: []))->toThrow(InvalidArgumentException::class);
+});
+
+it('accepts only the issued object of the current transaction attempt for every write', function (): void {
+    collabStateIn(function (CollaborativeState $state): void {
+        $locked = $state->lock($this->node->getKey());
+        $forged = new LockedDocumentState(...get_object_vars($locked));
+        $before = GrantedDocuments::aggregate($this->node)->getAttributes();
+        foreach ([$forged, clone $locked] as $token) {
+            expect(fn () => $state->markPending($token, $locked->binding, 1))->toThrow(LogicException::class)
+                ->and(fn () => $state->publishCheckpoint($token, collabStatePublication($locked, 1)))->toThrow(LogicException::class)
+                ->and(fn () => $state->transition($token, new CollaborativeStateTransition(
+                    $locked->binding, $locked->stateVersion, $locked->type, $locked->schemaVersion,
+                    $locked->binding?->protocol, $locked->binding?->stateFormat,
+                    OpaqueContent::fromArray($locked->content), null,
+                    new ActorRef('staff', '42'), 'forged-token',
+                )))->toThrow(LogicException::class);
+        }
+        expect(GrantedDocuments::aggregate($this->node)->getAttributes())->toBe($before);
+        expect($state->markPending($locked, $locked->binding, 1)->throughSeq)->toBe(1);
+    });
+});
+
+it('expires tokens after commit or rollback and never revives them at the same transaction depth', function (bool $rollback): void {
+    $old = null;
+    try {
+        collabStateIn(function (CollaborativeState $state) use (&$old, $rollback): void {
+            $old = $state->lock($this->node->getKey());
+            if ($rollback) {
+                throw new RuntimeException('abandoned preparation');
+            }
+        });
+    } catch (RuntimeException $e) {
+        expect($e->getMessage())->toBe('abandoned preparation');
+    }
+    collabStateIn(function (CollaborativeState $state) use ($old): void {
+        expect(fn () => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class)
+            ->and(fn () => $state->publishCheckpoint($old, collabStatePublication($old, 1)))->toThrow(LogicException::class);
+        $fresh = $state->lock($this->node->getKey());
+        expect($state->markPending($fresh, $fresh->binding, 2)->throughSeq)->toBe(2);
+    });
+})->with(['committed' => false, 'rolled back' => true]);
+
+it('expires a rolled-back savepoint token while the outer transaction remains live', function (): void {
+    collabStateIn(function (CollaborativeState $state): void {
+        $old = null;
+        try {
+            collabStateIn(function (CollaborativeState $state) use (&$old): void {
+                $old = $state->lock($this->node->getKey());
+                throw new RuntimeException('rollback savepoint');
+            });
+        } catch (RuntimeException) {
+        }
+        expect(fn () => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class);
+        $fresh = $state->lock($this->node->getKey());
+        expect($state->markPending($fresh, $fresh->binding, 1)->throughSeq)->toBe(1);
+    });
+});
+
+it('does not accept an abandoned retry token in the succeeding attempt', function (): void {
+    $old = null;
+    $attempt = 0;
+    app(VaulterDatabase::class)->transaction(function () use (&$old, &$attempt): void {
+        $state = app(CollaborativeState::class);
+        if (++$attempt === 1) {
+            $old = $state->lock($this->node->getKey());
+            throw new PDOException('SQLSTATE[40001]: Serialization failure: deadlock detected', 40001);
+        }
+        expect(fn () => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class);
+        $fresh = $state->lock($this->node->getKey());
+        expect($state->markPending($fresh, $fresh->binding, 1)->throughSeq)->toBe(1);
+    }, attempts: 2);
+    expect($attempt)->toBe(2);
+});
+
+it('refuses a token on another live connection before querying the aggregate', function (): void {
+    collabStateIn(function (CollaborativeState $state): void {
+        $locked = $state->lock($this->node->getKey());
+        $database = app(VaulterDatabase::class);
+        $original = config('vaulter.database.connection');
+        config()->set('database.connections.token_other', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
+        $other = app('db')->connection('token_other');
+        $other->beginTransaction();
+        try {
+            config()->set('vaulter.database.connection', 'token_other');
+            expect($database->connection())->toBe($other);
+            expect(fn () => $state->markPending($locked, $locked->binding, 1))->toThrow(LogicException::class);
+        } finally {
+            config()->set('vaulter.database.connection', $original);
+            $other->rollBack();
+        }
+    });
 });

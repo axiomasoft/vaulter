@@ -18,7 +18,7 @@ use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 final class DocumentsSchema implements ModuleSchema
 {
     /** The pending-state marker is set as a whole or not at all. */
-    private const string PENDING_MARKER_PAIR = '(pending_generation IS NULL AND pending_through_seq IS NULL AND pending_protocol IS NULL AND pending_state_format IS NULL AND pending_schema_version IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL AND pending_protocol IS NOT NULL AND length(pending_protocol) > 0 AND pending_state_format IS NOT NULL AND length(pending_state_format) > 0 AND pending_schema_version IS NOT NULL AND pending_schema_version >= 1)';
+    private const string PENDING_MARKER_PAIR = '(pending_generation IS NULL AND pending_through_seq IS NULL AND pending_protocol IS NULL AND pending_state_format IS NULL AND pending_schema_version IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL AND pending_protocol IS NOT NULL AND length(trim(pending_protocol)) > 0 AND pending_state_format IS NOT NULL AND length(trim(pending_state_format)) > 0 AND pending_schema_version IS NOT NULL AND pending_schema_version >= 1)';
 
     public function __construct(private readonly SchemaHelpers $helpers) {}
 
@@ -157,8 +157,7 @@ final class DocumentsSchema implements ModuleSchema
 
         $table->string('type', 64);
         $table->integer('schema_version');
-        $table->string('collab_protocol')->nullable();
-        $table->string('collab_state_format')->nullable();
+        $this->defineStoredBinding($table);
         $ids->reference(table: $table, column: 'current_revision_id', nullable: true);
         // Monotonic: pruning old checkpoints never hands a number out twice.
         $table->integer('revision_count')->default(0);
@@ -200,6 +199,44 @@ final class DocumentsSchema implements ModuleSchema
      * saved edit; one without the other is refused by a CHECK. SQLite and PostgreSQL take the pair CHECK on the column,
      * MySQL refuses a column CHECK naming another column, so afterCreate() adds it there as a named constraint.
      */
+    private function nonblank(string $column): string
+    {
+        $driver = $this->helpers->dbConnection()->getDriverName();
+        if ($driver === 'mysql') {
+            return "{$column} REGEXP '[^[:space:]]'";
+        }
+        $character = $driver === 'pgsql' ? 'chr' : 'char';
+        $whitespace = "' '||{$character}(9)||{$character}(10)||{$character}(11)||{$character}(12)||{$character}(13)";
+        $trim = $driver === 'pgsql' ? 'btrim' : 'trim';
+
+        return "length({$trim}({$column}, {$whitespace})) > 0";
+    }
+
+    private function storedCheck(): string
+    {
+        $integer = $this->helpers->dbConnection()->getDriverName() === 'sqlite' ? "typeof(schema_version) = 'integer' AND " : '';
+
+        return $integer.'schema_version >= 1 AND ((collab_protocol IS NULL AND collab_state_format IS NULL AND collab_state IS NULL) OR '
+            .'(collab_protocol IS NOT NULL AND collab_state_format IS NOT NULL AND '.$this->nonblank('collab_protocol').' AND '.$this->nonblank('collab_state_format').'))';
+    }
+
+    private function pendingCheck(): string
+    {
+        $check = str_replace(['length(trim(pending_protocol)) > 0', 'length(trim(pending_state_format)) > 0'], [$this->nonblank('pending_protocol'), $this->nonblank('pending_state_format')], self::PENDING_MARKER_PAIR);
+        if ($this->helpers->dbConnection()->getDriverName() === 'sqlite') {
+            $check = str_replace('pending_schema_version >= 1', "typeof(pending_schema_version) = 'integer' AND pending_schema_version >= 1", $check);
+        }
+
+        return $check;
+    }
+
+    private function defineStoredBinding(Blueprint $table): void
+    {
+        $table->string('collab_protocol')->nullable();
+        $constraint = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.$this->storedCheck().')';
+        $table->rawColumn('collab_state_format', 'VARCHAR(255)'.$constraint)->nullable();
+    }
+
     private function definePendingMarker(Blueprint $table): void
     {
         $table->string('pending_protocol')->nullable();
@@ -207,7 +244,7 @@ final class DocumentsSchema implements ModuleSchema
         $table->integer('pending_schema_version')->nullable();
         $sqlite = $this->helpers->dbConnection()->getDriverName() === 'sqlite';
         $type = static fn (string $column): string => $sqlite ? "typeof({$column}) = 'integer' AND " : '';
-        $pair = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.self::PENDING_MARKER_PAIR.')';
+        $pair = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.$this->pendingCheck().')';
 
         $table->rawColumn('pending_generation', 'BIGINT CHECK(pending_generation IS NULL OR ('.$type('pending_generation').'pending_generation >= 0))')->nullable();
         $table->rawColumn('pending_through_seq', 'BIGINT CHECK(pending_through_seq IS NULL OR ('.$type('pending_through_seq').'pending_through_seq >= 1))'.$pair)->nullable();
@@ -229,8 +266,7 @@ final class DocumentsSchema implements ModuleSchema
         $table->string('type', 64);
         $this->helpers->counterColumn(table: $table, column: 'collab_epoch');
         $table->integer('schema_version');
-        $table->string('collab_protocol')->nullable();
-        $table->string('collab_state_format')->nullable();
+        $this->defineStoredBinding($table);
 
         $table->jsonb('content')->nullable();
         $table->char('content_hash', 64)->nullable();
@@ -286,7 +322,13 @@ final class DocumentsSchema implements ModuleSchema
         if ($entity === 'documents' && $this->helpers->dbConnection()->getDriverName() === 'mysql') {
             $name = $this->helpers->table('documents');
             $grammar = $this->helpers->dbConnection()->getQueryGrammar();
-            $this->helpers->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_pending_marker_check').' CHECK('.self::PENDING_MARKER_PAIR.')');
+            $this->helpers->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_pending_marker_check').' CHECK('.$this->pendingCheck().')');
+        }
+
+        if (in_array($entity, ['documents', 'document_revisions'], true) && $this->helpers->dbConnection()->getDriverName() === 'mysql') {
+            $name = $this->helpers->table($entity);
+            $grammar = $this->helpers->dbConnection()->getQueryGrammar();
+            $this->helpers->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_stored_binding_check').' CHECK('.$this->storedCheck().')');
         }
 
         if ($entity === 'document_revisions') {

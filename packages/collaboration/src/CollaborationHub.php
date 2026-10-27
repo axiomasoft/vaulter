@@ -11,6 +11,7 @@ use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Collaboration\Persistence\AppendResult;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
+use Vaulter\Collaboration\Persistence\YjsStateCompatibility;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
@@ -48,6 +49,7 @@ final readonly class CollaborationHub
         private HostUserResolver $users,
         private UpdateLog $log,
         private PermissionVersions $versions,
+        private YjsStateCompatibility $compatibility,
     ) {}
 
     /**
@@ -98,6 +100,10 @@ final readonly class CollaborationHub
         }
         if ($type !== null && $unsupported) {
             throw CollaborationUnavailableException::unsupportedType($type->key());
+        }
+
+        if ($ability !== null) {
+            $this->compatibility->assert($document->type, $document->collaborationBinding());
         }
 
         // The same rule as DocumentOperations::collaborationSession(), re-evaluated now:
@@ -162,14 +168,16 @@ final readonly class CollaborationHub
         // between the two would pair one moment's content with another's state version.
         return [
             'generation' => $log->generation,
-            'schema_version' => $room->type?->schemaVersion() ?? $log->schemaVersion,
+            'schema_version' => $log->binding->schemaVersion,
+            'protocol' => $log->binding->protocol,
+            'state_format' => $log->binding->stateFormat,
             'type' => $log->type,
             'state_version' => $log->stateVersion,
             'checkpoint' => $log->checkpoint === null ? null : base64_encode($log->checkpoint),
             'checkpoint_seq' => $log->checkpointSeq,
             'head_seq' => $log->headSeq,
             'content' => $log->checkpoint === null
-                ? $this->decoder->read($log->type, $log->content, $log->schemaVersion)->content->toArray()
+                ? $log->content
                 : null,
             'tail' => $log->tail,
         ];

@@ -4843,7 +4843,7 @@
                 "sqlite": {
                     "default": null,
                     "nullable": true,
-                    "type": "varchar"
+                    "type": "VARCHAR(255)"
                 }
             },
             "id": "column:v_document_revisions.collab_state_format",
@@ -5688,7 +5688,7 @@
                 "sqlite": {
                     "default": null,
                     "nullable": true,
-                    "type": "varchar"
+                    "type": "VARCHAR(255)"
                 }
             },
             "id": "column:v_documents.collab_state_format",

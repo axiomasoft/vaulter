@@ -24,8 +24,7 @@ use Vaulter\Http\Problems\Retryable;
 
 /**
  * The problem codes of the documents package: a stable public contract, so a code is added
- * here, in lang/{en,ru}/problems.php and in the reference docs together. The `collaboration_*`
- * codes belong to the collaboration module.
+ * here, in lang/{en,ru}/problems.php and in the reference docs together. The collaboration_unavailable refusal is owned here because state transitions also use it.
  */
 #[Internal]
 final class DocumentsProblemCodes implements ProblemCodeSource

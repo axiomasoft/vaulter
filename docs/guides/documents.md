@@ -54,17 +54,18 @@ deleting it (SQLite: see [Database compatibility](/reference/compatibility)).
 | `schema_version` | integer | Version of the content schema of the working state. |
 | `current_revision_id` | ref, nullable | The head checkpoint. |
 | `revision_count` | integer | Monotonic checkpoint counter; pruning never lowers it, so a number is never reused. |
-| `collab_epoch` | BIGINT ≥ 0 | Collaboration generation; moves on restore and on a JSON replace of Yjs state. |
+| `collab_epoch` | BIGINT ≥ 0 | Collaboration generation; moves on every transition, restore and collaborative JSON reseed, including identical JSON and null bytes. |
 | `state_version` | BIGINT ≥ 0 | Content validator; +1 on every effective write of the working state. |
 | `checkpoint_state_version` | BIGINT ≥ 0 | The `state_version` the head captured. |
 | `content`, `content_hash`, `content_size` | json, char(64), integer | The canonical JSON projection, its hash and byte size. |
-| `collab_state`, `collab_state_size` | binary, integer | The Yjs CRDT state (collaboration source of truth) and its size. |
-| `pending_generation`, `pending_through_seq` | BIGINT, nullable | The pending marker (both set or both null): saved collaboration edits of that generation through that log sequence are not in the checkpoint yet. Set and cleared only through the collaboration state contract; while set the content is neither read, exported nor replaced (`409 document_state_pending`). |
+| `collab_state`, `collab_state_size` | binary, integer | Protocol-specific checkpoint and byte size. Null is a Yjs pre-seed or a stateless protocol; it does not remove the binding. |
+| `collab_protocol`, `collab_state_format` | string, nullable | Both absent for noncollaborative state, otherwise nonblank persisted protocol and format, independent of the wire version. |
+| `pending_protocol`, `pending_state_format`, `pending_schema_version`, `pending_generation`, `pending_through_seq` | string/integer, nullable | The pending marker (all set or all null): saved collaboration edits of that generation through that log sequence are not in the checkpoint yet. Set and cleared only through the collaboration state contract; while set the content is neither read, exported nor replaced (`409 document_state_pending`). |
 | `last_checkpoint_at` | timestamp | When the last checkpoint was taken. |
 | `created_by`, `updated_by`, timestamps | | Audit. |
 
 `v_document_revisions` columns: `id`, `tenant_id`, `document_id` (FK, cascade), `number`
-(unique per document), `schema_version`, `content`, `content_hash`, `content_size`, `collab_state`,
+(unique per document), source `type`, `collab_protocol`, `collab_state_format`, `collab_epoch`, `schema_version`, `content`, `content_hash`, `content_size`, `collab_state`,
 `collab_state_size`, `state_version` (the working state version captured), `label`, `is_autosave`,
 `keep_forever`, `status` (`committed`), `restored_from_revision_id` (FK, set null) and
 `created_by`/`created_at`.
@@ -73,6 +74,12 @@ The content validator is **independent of the node**: `v_nodes.sequence` moves o
 and trash, `state_version` on content writes. Renaming a document never invalidates an open
 editor, and saving it never invalidates a rename (PLAN2.D35).
 The full writer matrix and the ETag formats are in [Concurrency](../reference/concurrency.md).
+
+Every generation has an immutable stored `(protocol, state_format, schema_version, generation)` binding. A newly installed type never relabels old bytes. Load and compaction lease return that exact descriptor; incompatible adapters refuse with `collaboration_unavailable`. Checkpoint publication compares the complete leased descriptor and state version, and clears pending only when the same binding covers its sequence.
+
+`CollaborativeState` is the sole binary write port. Its immutable `lock()` object is a write token only in the exact connection and transaction attempt that issued it; constructed, cloned, expired, rolled-back and abandoned retry tokens are refused. A host authorizes the operation, drains the old journal and prepares a lossless conversion outside locks, then obtains a fresh T → N → D lock for `transition()`. The transition compares the source binding/version and pending marker, atomically writes content and metadata, advances state version and generation, and checkpoints even identical JSON. Caller-supplied actor and correlation identify every revision/event; they grant no authority.
+
+Ordinary `Documents::update()` accepts JSON, never binary state. A supported settled collaborative document remains editable without an active driver: replacement preserves its protocol/format/schema and reseeds with null bytes in a new generation. Pending ACKed records must first drain; disabling the adapter never permits dropping them. Restore copies the immutable revision's source type/schema/format/bytes forward into a new current generation; copy creates an independent aggregate without pending records. Historical binding evaluation is nonmutating and refuses ambiguous provenance; server migrations/backfill and real races remain owner qualification P8.2.
 
 ## The PHP API
 
@@ -271,10 +278,10 @@ omits `content` to stay light.
 
 Every content write goes through `DocumentStateWriter`, the only writer of the working state:
 
-- an identical save (same content hash and Yjs state) is a **no-op**: no version bump, no event;
+- an identical noncollaborative save is a **no-op**; a collaborative JSON save is an explicit reseed even with identical JSON or null bytes;
 - otherwise `state_version` grows by exactly one; pass `expectedStateVersion` to refuse a save
   based on a stale read (`412 document_state_mismatch`);
-- replacing the JSON of a document that has Yjs state drops that state and moves
+- replacing collaborative JSON resets the checkpoint to null and moves
   `collab_epoch`, so open collaboration rooms reload instead of merging their old history back.
 
 ::: code-group
@@ -329,7 +336,7 @@ The PUT returns `200` with the new working state and its new `ETag`; `update()` 
 `DocumentSnapshot`. Over HTTP the write needs `If-Match` with the content tag you read: without it
 `428 precondition_required` (so does `*`), with a stale or weak one `412 document_state_mismatch`
 — for instance after the collaboration hub published a newer checkpoint in between. Only the JSON
-`content` travels; the binary Yjs state is written by the hub's checkpoints. When the save changed something the action fires `DocumentContentUpdated` after
+`content` travels; binary state is written only through CollaborativeState. When the save changed something the action fires `DocumentContentUpdated` after
 commit: `version` is the head checkpoint after the save and `created` tells whether this save
 took it. The event's `actorId` is the acting user (null for the system).
 

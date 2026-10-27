@@ -12,8 +12,6 @@ use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\CompactionLease;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
-use Vaulter\Documents\Content\ContentDecoder;
-use Vaulter\Documents\Types\DocumentTypeRegistry;
 
 /**
  * Protocol 2 compaction lease (C12): the hub's compaction worker asks for up to `max` (1..100) document generations
@@ -37,8 +35,6 @@ final readonly class HubCompactionLeaseController
 
     public function __construct(
         private CompactionLeases $leases,
-        private ContentDecoder $decoder,
-        private DocumentTypeRegistry $types,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -84,10 +80,12 @@ final readonly class HubCompactionLeaseController
             'head_seq' => $log->headSeq,
             'checkpoint_version' => $lease->checkpointVersion,
             'type' => $log->type,
-            'schema_version' => $this->types->find($log->type)?->schemaVersion() ?? $log->schemaVersion,
+            'schema_version' => $log->binding->schemaVersion,
+            'protocol' => $log->binding->protocol,
+            'state_format' => $log->binding->stateFormat,
             'checkpoint' => $log->checkpoint === null ? null : base64_encode($log->checkpoint),
             'content' => $log->checkpoint === null
-                ? $this->decoder->read($log->type, $log->content, $log->schemaVersion)->content->toArray()
+                ? $log->content
                 : null,
             'tail' => $log->tail,
         ];

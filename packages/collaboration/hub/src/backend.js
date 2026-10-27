@@ -333,10 +333,14 @@ function pendingReport(response) {
  * lease or the log moved on; the backend changed and deleted nothing). Throws when there is no
  * answer — src/retry.js reads that as retryable.
  */
-export async function publishCheckpoint({ document, generation, leaseToken, coveredFrom, coveredThrough, expectedCheckpointVersion, state, content }, options = {}) {
+export async function publishCheckpoint({ document, generation, protocol, stateFormat, schemaVersion, type, leaseToken, coveredFrom, coveredThrough, expectedCheckpointVersion, state, content }, options = {}) {
   const response = await post('checkpoint', {
     document,
     generation,
+    protocol,
+    state_format: stateFormat,
+    schema_version: schemaVersion,
+    type,
     lease_token: leaseToken,
     covered_from: coveredFrom,
     covered_through: coveredThrough,

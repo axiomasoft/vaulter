@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'collaboration_unavailable' => [
         'title' => 'Collaboration unavailable',
-        'detail' => 'Collaboration is not available for this document.',
+        'detail' => 'The stored collaboration binding, protocol or required converter is unavailable.',
     ],
     'comment_not_found' => [
         'title' => 'Comment not found',

@@ -136,12 +136,15 @@ they are exercised on Postgres in CI so they cannot regress:
 - **`jsonb` containment indexes.** The activity feed's `context` and the document
   version `content` are `jsonb` on Postgres with `gin (… jsonb_path_ops)` indexes for
   containment queries; other engines store plain `json`/text and skip the gin index.
-- **Binary document state.** The Yjs CRDT snapshot (`collab_state`) is a binary column. Vaulter
+- **Binary document state.** The protocol-specific checkpoint (`collab_state`) is a binary column. Vaulter
   stores it so it round-trips losslessly on every engine, including Postgres `bytea` (which
   otherwise truncates binary at the first NUL byte through a plain string bind). The collaboration update log
   (`v_collaboration_updates.payload`) is stored the same way.
 
 None of this needs configuration — point Vaulter at Postgres and it applies automatically.
+
+
+Stored and pending collaboration bindings are whole, nonblank groups with positive integer schema versions. Null checkpoints retain their binding. SQLite CHECK/rollback is covered locally; PostgreSQL/MySQL migration/backfill enforcement and races remain pending owner P8.2 qualification.
 
 ### Id strategy × engine
 

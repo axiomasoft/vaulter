@@ -1506,6 +1506,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/collaboration/src/Persistence/LeaseBinding.php",
+            "fqcn": "Vaulter\\Collaboration\\Persistence\\LeaseBinding",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Persistence\\LeaseBinding"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/collaboration/src/Persistence/LogSnapshot.php",
             "fqcn": "Vaulter\\Collaboration\\Persistence\\LogSnapshot",
             "kind": "final-class",
@@ -1586,6 +1600,20 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Persistence\\UpdateLog"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/collaboration/src/Persistence/YjsStateCompatibility.php",
+            "fqcn": "Vaulter\\Collaboration\\Persistence\\YjsStateCompatibility",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Persistence\\YjsStateCompatibility"
         },
         {
             "action": "keep",
@@ -4610,6 +4638,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\State\\DatabaseCollaborativeState"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/State/LegacyCollaborationBinding.php",
+            "fqcn": "Vaulter\\Documents\\State\\LegacyCollaborationBinding",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\State\\LegacyCollaborationBinding"
         },
         {
             "action": "keep",

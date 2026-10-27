@@ -87,6 +87,9 @@ function checkEntry(entry) {
   const problems = [
     isDocument(entry.document) ? null : 'document',
     isCounter(entry.generation) ? null : 'generation',
+    entry.protocol === 'yjs' ? null : 'protocol',
+    entry.state_format === 'yjs-update-v1' ? null : 'state_format',
+    Number.isInteger(entry.schema_version) && entry.schema_version >= 1 ? null : 'schema_version',
     typeof entry.lease_token === 'string' && entry.lease_token !== '' ? null : 'lease_token',
     isCounter(entry.checkpoint_seq) ? null : 'checkpoint_seq',
     isCounter(entry.head_seq) && entry.head_seq >= entry.checkpoint_seq ? null : 'head_seq',
@@ -181,6 +184,10 @@ export function compactLease(entry) {
     return {
       document: entry.document,
       generation: entry.generation,
+      protocol: entry.protocol,
+      stateFormat: entry.state_format,
+      schemaVersion: entry.schema_version,
+      type: entry.type,
       leaseToken: entry.lease_token,
       coveredFrom: entry.checkpoint_seq,
       coveredThrough: entry.head_seq,

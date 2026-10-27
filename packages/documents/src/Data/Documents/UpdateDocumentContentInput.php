@@ -13,9 +13,8 @@ use Vaulter\Drive\Models\Node;
  * Command for UpdateDocumentContentAction — the autosave path: write
  * the document's working state. An autosave checkpoint follows on its own interval.
  * expectedStateVersion is the content precondition (412 document_state_mismatch).
- * collabState carries the optional binary Yjs CRDT update (the realtime source of
- * truth). content is already decoded by the document's type; it is written in that
- * type's schema version.
+ * content is already decoded by the installed type. Binary state never enters this
+ * ordinary JSON update; a collaborative replace explicitly reseeds a fresh generation.
  */
 #[Api]
 final readonly class UpdateDocumentContentInput

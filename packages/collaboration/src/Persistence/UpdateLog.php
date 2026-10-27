@@ -44,6 +44,7 @@ final readonly class UpdateLog
         private CollaborativeState $state,
         private DrainState $draining,
         private NodeReadRepository $nodes,
+        private YjsStateCompatibility $compatibility,
     ) {}
 
     /**
@@ -65,6 +66,7 @@ final readonly class UpdateLog
 
         return $this->database->transaction(function () use ($nodeId, $update, $sha256): AppendResult {
             $locked = $this->state->lock($nodeId);
+            $this->compatibility->assert($locked->type, $locked->binding);
             if ($locked->trashed) {
                 throw NodeNotFoundException::forId($nodeId);
             }
@@ -139,6 +141,7 @@ final readonly class UpdateLog
      */
     public function read(LockedDocumentState $locked): LogSnapshot
     {
+        $this->compatibility->assert($locked->type, $locked->binding);
         // The row lock() holds, read again under that lock: a plain read would answer from the transaction's
         // snapshot on MySQL (see below).
         $document = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->first();
@@ -178,6 +181,7 @@ final readonly class UpdateLog
             checkpointSeq: $head['checkpoint_seq'],
             headSeq: $head['head_seq'],
             tail: $tail,
+            binding: $locked->binding ?? throw new LogicException('Missing stored binding.'),
         );
     }
 

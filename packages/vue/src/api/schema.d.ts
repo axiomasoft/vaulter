@@ -1763,6 +1763,8 @@ export interface components {
             /** @description The state version the publication must expect (expected_checkpoint_version). */
             checkpoint_version: number;
             type: string;
+            protocol: string;
+            state_format: string;
             schema_version: number;
             /** @description Base64 Yjs checkpoint, null before the first one. */
             checkpoint: string | null;
@@ -1782,6 +1784,8 @@ export interface components {
         /** @description Protocol 2 load: the checkpoint and the committed tail (checkpoint_seq, head_seq] to replay on it. Before the first checkpoint, content is the JSON projection to seed the room from. */
         HubLoadedV2: {
             generation: number;
+            protocol: string;
+            state_format: string;
             schema_version: number;
             type: string;
             state_version: number;
@@ -5620,6 +5624,10 @@ export interface operations {
                     covered_from: number;
                     /** @description The last log sequence the checkpoint holds (H), at most the head_seq the lease reported. */
                     covered_through: number;
+                    protocol: string;
+                    state_format: string;
+                    schema_version: number;
+                    type: string;
                     expected_checkpoint_version: number;
                     /** @description Base64 Yjs state of the merged checkpoint. */
                     state: string;

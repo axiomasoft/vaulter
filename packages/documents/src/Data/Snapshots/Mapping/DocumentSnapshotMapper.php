@@ -26,15 +26,16 @@ final readonly class DocumentSnapshotMapper
      */
     public function document(Document $document, ?DocumentRevision $head, ?DocumentRevision $revision = null): DocumentSnapshot
     {
-        $typeAvailable = $this->decoder->available($document->type);
+        $typeKey = $revision === null ? $document->type : $revision->type;
+        $typeAvailable = $this->decoder->available($typeKey);
         $source = $revision ?? $head;
         $schemaVersion = $revision === null ? $document->schema_version : $revision->schema_version;
-        $read = $this->decoder->read($document->type, $revision === null ? $document->content : $revision->content, $schemaVersion);
+        $read = $this->decoder->read($typeKey, $revision === null ? $document->content : $revision->content, $schemaVersion);
 
         return new DocumentSnapshot(
             nodeId: SnapshotValue::id($document->node_id),
             documentId: SnapshotValue::id($document->getKey()),
-            type: $document->type,
+            type: $typeKey,
             schemaVersion: $schemaVersion,
             typeAvailable: $typeAvailable,
             // Read-only when saving it back would lose something: every change made since
@@ -43,7 +44,7 @@ final readonly class DocumentSnapshotMapper
             editable: $typeAvailable
                 && $revision === null
                 && $read->lossless
-                && $this->decoder->schemaWritable($this->decoder->type($document->type), $schemaVersion),
+                && $this->decoder->schemaWritable($this->decoder->type($typeKey), $schemaVersion),
             epoch: $document->collab_epoch,
             stateVersion: $document->state_version,
             dirty: $document->hasUncheckpointedChanges(),

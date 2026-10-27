@@ -27,7 +27,12 @@ final class CollaborationUnavailableException extends VaulterException implement
         parent::__construct(sprintf(
             '[Vaulter] Collaboration is unavailable (%s). Fix: %s Docs: %s',
             $reason,
-            'edit this document through DocumentOperations::update(); its type does not implement SupportsCollaboration.',
+            match ($reason) {
+                'unsupported_binding' => 'use an adapter that supports the stored protocol, format and schema; preserve the saved state.',
+                'converter_unavailable' => 'provide an explicit lossless host converter before preparing the transition.',
+                'protocol_unavailable' => 'enable the adapter for the stored protocol; pending edits must be drained before replacement.',
+                default => 'use a document type implementing SupportsCollaboration.',
+            },
             self::docs('collaboration-unavailable'),
         ));
     }

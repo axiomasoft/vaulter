@@ -38,6 +38,7 @@ final readonly class Checkpoint
         private LogTables $log,
         private CollaborativeState $state,
         private MetricsRecorder $metrics,
+        private YjsStateCompatibility $compatibility,
     ) {}
 
     /**
@@ -67,12 +68,17 @@ final readonly class Checkpoint
             if ($request->generation !== $locked->generation) {
                 throw new CollaborationEpochMismatchException(expected: $request->generation, actual: $locked->generation);
             }
+            if ($locked->binding === null || !$request->binding->sameAs($locked->binding) || $request->documentType !== $locked->type) {
+                throw new CollaborationCheckpointConflictException(CollaborationCheckpointConflictException::VERSION);
+            }
+            $this->compatibility->assert($locked->type, $locked->binding);
             $now = Carbon::now();
             $head = $this->log->lockHead($locked->documentId, $locked->generation);
             if ($head?->retiredAt !== null) {
                 throw new CollaborationEpochMismatchException(expected: $request->generation, actual: $locked->generation);
             }
-            if ($head === null || !$head->heldBy($request->leaseToken, $now)) {
+            if ($head === null || !$head->heldBy($request->leaseToken, $now)
+                || !LeaseBinding::matches($request->leaseToken, $locked->documentId, $request->documentType, $request->binding, $head->checkpointVersion)) {
                 throw new CollaborationCheckpointConflictException(CollaborationCheckpointConflictException::LEASE);
             }
             if ($request->coveredFrom !== $head->checkpointSeq || $request->coveredThrough < $request->coveredFrom || $request->coveredThrough > $head->headSeq) {
@@ -83,7 +89,7 @@ final readonly class Checkpoint
             }
 
             $outcome = $this->state->publishCheckpoint($locked, new CheckpointPublication(
-                binding: $locked->binding ?? throw new \LogicException('Missing collaboration binding.'),
+                binding: $request->binding,
                 expectedStateVersion: $head->checkpointVersion,
                 coveredThrough: $request->coveredThrough,
                 collabState: $request->state,

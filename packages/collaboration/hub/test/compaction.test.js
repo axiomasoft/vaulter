@@ -67,6 +67,8 @@ function lease(overrides = {}) {
     checkpoint_version: 9,
     type: TYPE,
     schema_version: 1,
+    protocol: 'yjs',
+    state_format: 'yjs-update-v1',
     checkpoint: null,
     content: null,
     tail: [],
@@ -119,6 +121,7 @@ test('merges the checkpoint and three clients\' updates from their own Y.Docs in
     { document: compacted.document, generation: compacted.generation, leaseToken: compacted.leaseToken, coveredFrom: compacted.coveredFrom, coveredThrough: compacted.coveredThrough, expectedCheckpointVersion: compacted.expectedCheckpointVersion, updates: compacted.updates },
     { document: '42', generation: 3, leaseToken: 'lease-token', coveredFrom: 4, coveredThrough: 7, expectedCheckpointVersion: 9, updates: 3 },
   )
+  assert.deepEqual({ protocol: compacted.protocol, stateFormat: compacted.stateFormat, schemaVersion: compacted.schemaVersion, type: compacted.type }, { protocol: 'yjs', stateFormat: 'yjs-update-v1', schemaVersion: 1, type: TYPE })
   assert.equal(compacted.bytes, Buffer.from(compacted.state, 'base64').length)
   expected.destroy()
   actual.destroy()

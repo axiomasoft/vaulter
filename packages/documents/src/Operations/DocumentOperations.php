@@ -197,7 +197,7 @@ final readonly class DocumentOperations implements DriveExtension
     }
 
     /**
-     * The HTTP autosave, which may also carry the binary Yjs state.
+     * The HTTP JSON autosave; binary state is written only through CollaborativeState.
      *
      * @param array<string, mixed> $content
      */

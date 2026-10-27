@@ -96,6 +96,8 @@ it('records vaulter_collab_snapshot_duration_seconds', function (): void {
         coveredThrough: 1,
         expectedCheckpointVersion: $lease->checkpointVersion,
         state: 'binary',
+        binding: $lease->log->binding,
+        documentType: $lease->log->type,
         content: DocumentTestHelpers::content('Body')->toArray(),
     ));
 

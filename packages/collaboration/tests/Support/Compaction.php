@@ -85,6 +85,8 @@ final class Compaction
             'expectedCheckpointVersion' => $lease->checkpointVersion,
             'state' => self::merged($lease, $through),
             'content' => Hub::tiptap('Compacted through '.$through),
+            'binding' => $lease->log->binding,
+            'documentType' => $lease->log->type,
             ...$overrides,
         ]);
     }

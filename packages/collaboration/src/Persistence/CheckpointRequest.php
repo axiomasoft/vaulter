@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Documents\State\CollaborationStateBinding;
 
 /**
  * A checkpoint the hub merged under a compaction lease: the binary Yjs state of the checkpoint (C) the lease read with
@@ -24,5 +25,7 @@ final readonly class CheckpointRequest
         public int $expectedCheckpointVersion,
         public string $state,
         public array $content,
+        public CollaborationStateBinding $binding,
+        public string $documentType,
     ) {}
 }

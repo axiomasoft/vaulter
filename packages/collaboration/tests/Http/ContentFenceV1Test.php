@@ -2,11 +2,22 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
+use Vaulter\Collaboration\CollaborationCallResolver;
+use Vaulter\Collaboration\CollaborationHub;
+use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
+use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Exceptions\DocumentStatePendingException;
+use Vaulter\Documents\Facades\Documents;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Kernel;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleCompiler;
 
 /**
  * The content of a document is a resource with a tag (`"{nodeId}.{epoch}.{stateVersion}"`): an append of the collaboration hub
@@ -63,4 +74,37 @@ it('answers the hub of a document whose generation moved on a JSON replace with 
     Hub::call('append', Hub::appendBody($this->node, 'stale-room', generation: $epoch), Hub::token($this->node, epoch: $epoch))
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_epoch_mismatch');
+});
+
+it('keeps ordinary JSON editing after the adapter is disabled and never drops pending accepted records', function (): void {
+    $settled = $this->node;
+    $pending = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
+    Compaction::append($settled, 'settled record');
+    Compaction::publish(Compaction::leaseOf($settled));
+    Compaction::append($pending, 'accepted pending');
+    $oldToken = Hub::token($settled);
+    $oldRoom = Hub::room($settled);
+    // Compile the real next-deployment module graph against the same database; no capabilities are stubbed.
+    config()->set('vaulter.modules.collaboration', false);
+    $kernel = new Kernel(app());
+    $kernel->seal((new ModuleCompiler)->compileOffered(ModuleCatalog::of(app())->offered(), config('vaulter.modules')));
+    app()->instance(Kernel::class, $kernel);
+    expect($kernel->isActive('collaboration'))->toBeFalse()->and($kernel->capabilities()->has(CollaborationDriver::class))->toBeFalse();
+    $drive = Vaulter::drive($settled->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1));
+    $documents = Documents::in($drive);
+    $before = Hub::aggregate($settled);
+    foreach ([Hub::tiptap('Edited locally'), Hub::tiptap('Edited locally')] as $json) {
+        $snapshot = $documents->update($settled->getKey(), $json);
+        expect($snapshot->epoch)->toBe($before->collab_epoch + 1)->and($snapshot->stateVersion)->toBe($before->state_version + 1)
+            ->and($snapshot->collabProtocol)->toBe('yjs')->and($snapshot->collabStateFormat)->toBe('yjs-update-v1')->and($snapshot->schemaVersion)->toBe(1)->and($snapshot->collabStateSize)->toBeNull();
+        $before = Hub::aggregate($settled);
+    }
+    $tables = ['v_documents', 'v_document_revisions', 'v_collaboration_updates', 'v_collaboration_receipts', 'v_collaboration_heads'];
+    $rows = static fn () => array_map(static fn ($table) => DB::table($table)->get()->toJson(), $tables);
+    $unchanged = $rows();
+    $pendingDocuments = Documents::in(Vaulter::drive($pending->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1)));
+    expect(fn () => $pendingDocuments->update($pending->getKey(), Hub::tiptap('Lose pending edits')))->toThrow(DocumentStatePendingException::class);
+    expect($rows())->toBe($unchanged);
+    $call = app(CollaborationCallResolver::class)->verifyToken($oldToken);
+    expect(fn () => app(CollaborationHub::class)->open($call, $oldRoom))->toThrow(CollaborationEpochMismatchException::class);
 });

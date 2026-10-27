@@ -13,6 +13,7 @@ use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\Checkpoint;
 use Vaulter\Collaboration\Persistence\CheckpointRequest;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Support\Identity;
 
 /**
@@ -45,9 +46,17 @@ final readonly class HubCheckpointController
         $version = $request->input('expected_checkpoint_version');
         $state = $request->input('state');
         $content = $request->input('content');
+        $protocol = $request->input('protocol');
+        $format = $request->input('state_format');
+        $schema = $request->input('schema_version');
+        $type = $request->input('type');
 
         $counter = static fn (mixed $value): bool => is_int($value) && $value >= 0;
         $errors = array_filter([
+            'protocol' => is_string($protocol) && trim($protocol) !== '' ? null : 'The protocol must name the leased binding.',
+            'state_format' => is_string($format) && trim($format) !== '' ? null : 'The state_format must name the leased binding.',
+            'schema_version' => is_int($schema) && $schema >= 1 ? null : 'The schema_version must be a positive integer.',
+            'type' => is_string($type) && $type !== '' ? null : 'The type must name the leased document type.',
             'document' => (is_string($document) && $document !== '') || is_int($document) ? null : 'The document must be a node id.',
             'generation' => $counter($generation) ? null : 'The generation must be a non-negative integer.',
             'lease_token' => is_string($token) && $token !== '' ? null : 'The lease_token must be the token of a compaction lease.',
@@ -59,6 +68,7 @@ final readonly class HubCheckpointController
             'content' => is_array($content) && !array_is_list($content) ? null : 'The content must be the JSON projection of the state.',
         ]);
         if ($errors !== [] || (!is_string($document) && !is_int($document)) || !is_int($generation) || !is_string($token)
+            || !is_string($protocol) || !is_string($format) || !is_int($schema) || !is_string($type)
             || !is_int($from) || !is_int($through) || !is_int($version) || !is_string($state) || !is_array($content)) {
             throw ValidationException::withMessages(array_map(static fn (string $message): array => [$message], $errors));
         }
@@ -72,6 +82,8 @@ final readonly class HubCheckpointController
             expectedCheckpointVersion: $version,
             state: $this->state($state),
             content: array_filter($content, is_string(...), ARRAY_FILTER_USE_KEY),
+            binding: new CollaborationStateBinding($protocol, $format, $schema, $generation),
+            documentType: $type,
         );
     }
 

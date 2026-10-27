@@ -126,7 +126,7 @@ final readonly class CompactionLeases
             } catch (NodeNotFoundException|NotADocumentException) {
                 return false;
             }
-            if ($locked->pending === null || $locked->pending->generation !== $locked->generation) {
+            if ($locked->pending === null || $locked->pending->generation !== $locked->generation || !$locked->pending->binding->sameAs($marker->binding)) {
                 return false;
             }
             $head = $this->log->lockHead($locked->documentId, $locked->generation);
@@ -230,7 +230,8 @@ final readonly class CompactionLeases
                 return false;
             }
 
-            $token = bin2hex(random_bytes(32));
+            $snapshot = $this->updates->read($locked);
+            $token = LeaseBinding::issue($locked->documentId, $snapshot->type, $snapshot->binding, $head->checkpointVersion);
             // The column keeps whole seconds: the lease ends at the second it reports.
             $expiresAt = $now->copy()->addSeconds($this->config->compactionLeaseTtl())->startOfSecond();
             $this->log->rows('collaboration_heads', $locked->documentId, $locked->generation)->update([
@@ -245,7 +246,7 @@ final readonly class CompactionLeases
                 token: $token,
                 expiresAt: $expiresAt,
                 checkpointVersion: $head->checkpointVersion,
-                log: $this->updates->read($locked),
+                log: $snapshot,
             );
         });
     }

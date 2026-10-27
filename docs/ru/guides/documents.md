@@ -55,17 +55,18 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 | `schema_version` | integer | Версия схемы контента рабочего состояния. |
 | `current_revision_id` | ссылка, nullable | Чекпоинт-голова. |
 | `revision_count` | integer | Монотонный счётчик чекпоинтов; прунинг его не уменьшает, номер не переиспользуется. |
-| `collab_epoch` | BIGINT ≥ 0 | Поколение коллаборации; растёт при восстановлении и при замене JSON у документа с Yjs. |
+| `collab_epoch` | BIGINT ≥ 0 | Поколение коллаборации; растёт при transition, восстановлении и reseed JSON коллаборативного документа, даже при одинаковом JSON и null bytes. |
 | `state_version` | BIGINT ≥ 0 | Валидатор контента; +1 на каждую эффективную запись рабочего состояния. |
 | `checkpoint_state_version` | BIGINT ≥ 0 | `state_version`, захваченный головой. |
 | `content`, `content_hash`, `content_size` | json, char(64), integer | Каноническая JSON-проекция, её хеш и размер в байтах. |
-| `collab_state`, `collab_state_size` | binary, integer | Состояние Yjs CRDT (источник истины коллаборации) и его размер. |
-| `pending_generation`, `pending_through_seq` | BIGINT, nullable | Pending-маркер (оба заданы или оба null): сохранённые правки коллаборации этого поколения до этой последовательности журнала ещё не в чекпоинте. Ставится и снимается только через контракт состояния коллаборации; пока он стоит, контент не читается, не экспортируется и не заменяется (`409 document_state_pending`). |
+| `collab_state`, `collab_state_size` | binary, integer | Чекпоинт конкретного протокола и размер bytes. Null означает Yjs pre-seed или stateless-протокол и не отменяет binding. |
+| `collab_protocol`, `collab_state_format` | string, nullable | Оба null у неколлаборативного состояния; иначе непустые сохранённые протокол и формат, независимые от wire version. |
+| `pending_protocol`, `pending_state_format`, `pending_schema_version`, `pending_generation`, `pending_through_seq` | string/integer, nullable | Pending-маркер (все заданы или все null): сохранённые правки коллаборации этого поколения до этой последовательности журнала ещё не в чекпоинте. Ставится и снимается только через контракт состояния коллаборации; пока он стоит, контент не читается, не экспортируется и не заменяется (`409 document_state_pending`). |
 | `last_checkpoint_at` | timestamp | Когда снят последний чекпоинт. |
 | `created_by`, `updated_by`, метки времени | | Аудит. |
 
 Колонки `v_document_revisions`: `id`, `tenant_id`, `document_id` (FK, каскад), `number`
-(уникален в документе), `schema_version`, `content`, `content_hash`, `content_size`, `collab_state`,
+(уникален в документе), исходные `type`, `collab_protocol`, `collab_state_format`, `collab_epoch`, `schema_version`, `content`, `content_hash`, `content_size`, `collab_state`,
 `collab_state_size`, `state_version` (захваченная версия рабочего состояния), `label`, `is_autosave`,
 `keep_forever`, `status` (`committed`), `restored_from_revision_id` (FK, set null) и
 `created_by`/`created_at`.
@@ -74,6 +75,12 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 перемещении и корзине, `state_version` — при записи контента. Переименование документа не
 инвалидирует открытый редактор, а сохранение не инвалидирует переименование (PLAN2.D35).
 Полная матрица писателей и форматы ETag — в [Конкурентности](../reference/concurrency.md).
+
+У каждого поколения неизменяемая сохранённая привязка `(protocol, state_format, schema_version, generation)`. Установка нового типа не переименовывает старые bytes. Load и compaction lease возвращают именно этот descriptor; несовместимый адаптер отказывает с `collaboration_unavailable`. Checkpoint сверяет полный leased descriptor и state version, а pending очищает только при полном совпадении binding и покрытии sequence.
+
+`CollaborativeState` — единственный binary write port. Объект `lock()` разрешает запись только в выдавших его connection и transaction attempt; созданные вручную, клонированные, завершённые, откатанные и оставшиеся от retry токены отвергаются. Хост авторизует операцию, вне locks дренирует старый журнал и готовит lossless conversion, затем получает свежий T → N → D lock для `transition()`. Переход сравнивает source binding/version и pending, атомарно записывает content/metadata, повышает state version и generation и создаёт checkpoint даже при одинаковом JSON. Переданные actor/correlation сохраняются в revision/events, но не дают прав.
+
+Обычный `Documents::update()` принимает только JSON. Поддерживаемый settled коллаборативный документ редактируется без активного драйвера: replace сохраняет protocol/format/schema и выполняет reseed с null bytes в новом поколении. Pending ACKed записи сначала должны пройти drain; отключение адаптера не разрешает их потерю. Restore переносит исходные type/schema/format/bytes неизменяемой revision в новое current generation; copy создаёт независимый aggregate без pending. Historical binding evaluator ничего не меняет и отказывает при неоднозначном provenance; server migrations/backfill и реальные гонки остаются квалификацией владельца P8.2.
 
 ## PHP API
 
@@ -272,11 +279,10 @@ curl -i https://app.test/api/vaulter/v1/documents/77/content
 Каждая запись контента идёт через `DocumentStateWriter` — единственного писателя рабочего
 состояния:
 
-- идентичное сохранение (тот же хеш контента и состояние Yjs) — **no-op**: ни роста версии, ни
-  события;
+- идентичное неколлаборативное сохранение — **no-op**; коллаборативный JSON save выполняет явный reseed даже при одинаковом JSON или null bytes;
 - иначе `state_version` растёт ровно на единицу; передайте `expectedStateVersion`, чтобы
   отказать сохранению по устаревшему чтению (`412 document_state_mismatch`);
-- замена JSON у документа с состоянием Yjs сбрасывает это состояние и двигает `collab_epoch`,
+- замена коллаборативного JSON сбрасывает checkpoint в null и двигает `collab_epoch`,
   поэтому открытые комнаты перезагружаются, а не вливают старую историю обратно.
 
 ::: code-group
@@ -331,7 +337,7 @@ PUT возвращает `200` с новым рабочим состоянием
 `DocumentSnapshot`. По HTTP запись требует `If-Match` с тегом контента, который вы прочитали: без
 него `428 precondition_required` (как и с `*`), с устаревшим или слабым — `412 document_state_mismatch`
 — например, если хаб коллаборации успел опубликовать более новый чекпоинт. Передаётся только JSON
-`content`; бинарное Yjs-состояние пишут чекпоинты хаба. Если сохранение что-то изменило, после коммита выбрасывается
+`content`; binary state записывается только через CollaborativeState. Если сохранение что-то изменило, после коммита выбрасывается
 `DocumentContentUpdated`: `version` — чекпоинт-голова после сохранения, `created` — снят ли он
 этим сохранением. `actorId` события — действующий пользователь (null для системы).
 
@@ -443,7 +449,7 @@ interface DocumentRevision {
 
 ## Восстановление предыдущей версии
 
-Восстановление **копирует вперёд**: исходный чекпоинт не меняется — его контент и Yjs становятся
+Восстановление **копирует вперёд**: исходный чекпоинт не меняется — его исходные type/schema/binding, контент и checkpoint становятся
 рабочим состоянием, а свежий чекпоинт записывает `restored_from_revision_id`, поэтому история
 остаётся неизменяемым аудируемым логом.
 
@@ -523,7 +529,7 @@ PostgreSQL/MySQL голову дополнительно защищает вне
 
 Копирование документа — отдельного или внутри копируемой папки — создаёт **новый документ** с
 рабочим состоянием источника как единственным чекпоинтом: тот же тип и версия схемы, JSON-контент
-и Yjs-состояние источника, `state_version` 1, `collab_epoch` 0, первый чекпоинт не автосохранение.
+и protocol/format с nullable checkpoint источника, `state_version` 1, `collab_epoch` 0, первый чекпоинт не автосохранение.
 История, открытые комнаты совместной работы и **комментарии не копируются**; источник не меняется.
 Документ с незарегистрированным типом копируется как непрозрачный контент, тип сохраняется. Копия
 не меняет `used_bytes` (встроенный контент вне квоты диска). Как и для файлов, вся копия

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Documents\State\CollaborationStateBinding;
 
 /**
  * What a hub replays a room from (protocol 2 load), read under the document and head locks so the parts agree: the
@@ -30,5 +31,6 @@ final readonly class LogSnapshot
         public int $checkpointSeq,
         public int $headSeq,
         public array $tail,
+        public CollaborationStateBinding $binding,
     ) {}
 }
