@@ -23,7 +23,7 @@ final readonly class YjsStateCompatibility
         $type = $this->types->find($documentType);
         if (!$type instanceof SupportsCollaboration || $binding === null || $binding->protocol !== 'yjs'
             || !$this->driver->supportsState($documentType, $binding->stateFormat, $binding->schemaVersion, true, CollaborationMode::Read) || $type->collaborationProtocol() !== $binding->protocol
-            || $type->collaborationStateFormat() !== $binding->stateFormat || $type->schemaVersion() !== $binding->schemaVersion) {
+            || $type->collaborationStateFormat() !== $binding->stateFormat) {
             throw new CollaborationUnavailableException('unsupported_binding', $documentType);
         }
     }

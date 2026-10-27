@@ -2,18 +2,28 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
+use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
+use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
+use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\State\CollaborativeState;
+use Vaulter\Documents\State\CollaborativeStateTransition;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /*
  * DocumentStateWriter is the only writer of the working state (P4-design#WorkingState).
@@ -199,4 +209,31 @@ it('copies the tenant of the aggregate onto its checkpoints', function (): void 
     $checkpoint = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('t'), forceCheckpoint: true))->checkpoint;
 
     expect((string) $checkpoint?->tenant_id)->toBe('tenant-a');
+});
+
+it('rejects rich-text prepared payload after a locked Markdown transition without imposing a version CAS on normal updates', function (): void {
+    $node = writerDocument();
+    $raw = ['type' => 'doc', 'content' => [['type' => 'table', 'content' => [['type' => 'tableRow', 'content' => [['type' => 'tableCell', 'content' => [['type' => 'paragraph']]]]]]]]];
+    $prepared = app(ContentDecoder::class)->decode(new RichTextDocumentType, $raw);
+    app(VaulterDatabase::class)->transaction(function () use ($node): void {
+        $state = app(CollaborativeState::class);
+        $locked = $state->lock($node->getKey());
+        expect($state->transition($locked, new CollaborativeStateTransition(
+            $locked->binding, $locked->stateVersion, 'vaulter/markdown', 1, 'yjs', 'yjs-update-v1',
+            DocumentTestHelpers::content('converted'), null, new ActorRef('staff', '42'), 'prepared-race',
+        ))->published)->toBeTrue();
+    });
+    $events = [];
+    app('events')->listen(DocumentContentUpdated::class, function ($event) use (&$events): void {
+        $events[] = $event;
+    });
+    $snapshot = static fn () => array_map(static fn ($t) => DB::table($t)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions']);
+    $before = $snapshot();
+    $action = app(UpdateDocumentContentAction::class);
+    $context = DocumentTestHelpers::context($node);
+    expect(fn () => $action->execute($context, new UpdateDocumentContentInput($node, $prepared)))
+        ->toThrow(InvalidDocumentContentException::class);
+    expect($snapshot())->toBe($before)->and($events)->toBe([]);
+    $normal = $action->execute($context, new UpdateDocumentContentInput($node, DocumentTestHelpers::content('valid unconditional')));
+    expect($normal->changed)->toBeTrue()->and($normal->document->type)->toBe('vaulter/markdown');
 });

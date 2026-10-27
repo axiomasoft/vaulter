@@ -28,7 +28,7 @@ final readonly class PendingDocuments
         $markers = [];
         $after = null;
         do {
-            $page = $this->database->transaction(fn (): array => $this->state->pendingDocuments(self::PAGE, $after));
+            $page = $this->database->transaction(fn (): array => $this->state->pendingDocuments(self::PAGE, $after, protocol: 'yjs'));
             foreach ($page as $marker) {
                 $markers[] = $marker;
                 $after = Identity::key($marker->documentId);

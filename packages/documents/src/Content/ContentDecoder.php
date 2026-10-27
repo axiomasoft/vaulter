@@ -59,9 +59,9 @@ final readonly class ContentDecoder
      *
      * @throws InvalidDocumentContentException
      */
-    public function decode(DocumentType $type, ?array $raw): DocumentContent
+    public function decode(DocumentType $type, ?array $raw, ?int $schemaVersion = null): DocumentContent
     {
-        $content = $raw === null ? $type->defaultContent() : $type->codec()->decode($raw, $type->schemaVersion());
+        $content = $raw === null ? $type->defaultContent() : $type->codec()->decode($raw, $schemaVersion ?? $type->schemaVersion());
         $limit = $type->codec()->maxSizeBytes() ?? $this->config->maxContentSizeKb() * 1024;
 
         if ($limit > 0 && $content->sizeInBytes() > $limit) {

@@ -30,13 +30,15 @@ final class Compaction
 {
     public const string HUB = 'hub-a';
 
-    public static function append(Node $node, string $payload, ?int $generation = null, ?string $updateId = null): AppendResult
+    public static function append(Node $node, string $payload, ?int $generation = null, ?string $updateId = null, bool $seed = false): AppendResult
     {
         return app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
             generation: $generation ?? Hub::aggregate($node)->collab_epoch,
             updateId: $updateId ?? (string) Str::uuid(),
             payload: $payload,
             claimedSha256: hash('sha256', $payload),
+            origin: $seed ? 'server' : 'client',
+            seedStateVersion: $seed ? Hub::aggregate($node)->state_version : null,
         ));
     }
 

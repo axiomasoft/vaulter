@@ -49,7 +49,7 @@ beforeEach(function (): void {
 });
 
 it('keeps an update committed after the lease read the log, and its marker, when H is published (4)', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     Compaction::append($this->node, 'u2');
     $lease = Compaction::leaseOf($this->node);
     // The hub merges (C, H] = (0, 2] while a third update commits.
@@ -74,7 +74,7 @@ it('keeps an update committed after the lease read the log, and its marker, when
 });
 
 it('compacts the late update with the next lease and clears the marker then', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     Compaction::append($this->node, 'u2');
     $first = Compaction::leaseOf($this->node);
     Compaction::append($this->node, 'u3');
@@ -97,7 +97,7 @@ it('compacts the late update with the next lease and clears the marker then', fu
 
 it('refuses the second publication of the same (C, H) and leaves HS − H updates (5)', function (): void {
     foreach (['u1', 'u2'] as $payload) {
-        Compaction::append($this->node, $payload);
+        Compaction::append($this->node, $payload, seed: $payload === 'u1');
     }
     $lease = Compaction::leaseOf($this->node);
     Compaction::append($this->node, 'u3');
@@ -110,7 +110,7 @@ it('refuses the second publication of the same (C, H) and leaves HS − H update
 });
 
 it('lets only one of two hubs publish (C, H) when the first lease expired under its merge', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     Compaction::append($this->node, 'u2');
     $slow = Compaction::leaseOf($this->node, 'hub-a');
     $this->travel(61)->seconds();
@@ -126,7 +126,7 @@ it('lets only one of two hubs publish (C, H) when the first lease expired under 
 });
 
 it('refuses a publication whose lease, coverage or version lost the CAS, changing and deleting nothing', function (array $overrides, string $reason): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     Compaction::append($this->node, 'u2');
     $lease = Compaction::leaseOf($this->node);
     $before = casState($this->node);
@@ -150,7 +150,7 @@ it('refuses a publication whose lease, coverage or version lost the CAS, changin
 ]);
 
 it('refuses a publication under an expired lease', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
     $before = casState($this->node);
     $this->travel(61)->seconds();
@@ -161,7 +161,7 @@ it('refuses a publication under an expired lease', function (): void {
 });
 
 it('refuses a publication whose checkpoint version no longer is the document\'s state version', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
     // A write of the working state outside the log (the protocol 1 store until P5.7) moved the state version.
     Hub::aggregate($this->node)->forceFill(['state_version' => Hub::aggregate($this->node)->state_version + 1])->save();
@@ -171,7 +171,7 @@ it('refuses a publication whose checkpoint version no longer is the document\'s 
 });
 
 it('refuses a publication of another generation than the document\'s with the epoch conflict', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
 
     expect(fn () => Compaction::publish($lease, overrides: ['generation' => 1]))->toThrow(CollaborationEpochMismatchException::class)
@@ -180,7 +180,7 @@ it('refuses a publication of another generation than the document\'s with the ep
 
 it('answers a REST replace with document_state_pending while the marker of the late update stays (20)', function (): void {
     $this->actingAs(AccessTestHelpers::user(1));
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
     Compaction::append($this->node, 'u2');
     Compaction::publish($lease);
@@ -198,7 +198,7 @@ it('answers a REST replace with document_state_pending while the marker of the l
 });
 
 it('publishes and answers over HTTP with the new checkpoint version and the marker cleared', function (): void {
-    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
     $body = [
         'document' => $lease->nodeId,
@@ -229,7 +229,7 @@ it('publishes and answers over HTTP with the new checkpoint version and the mark
 });
 
 it('binds publication to every leased binding component and preserves complete rows and events on loss', function (string $field, mixed $value): void {
-    Compaction::append($this->node, 'accepted');
+    Compaction::append($this->node, 'accepted', seed: true);
     $lease = Compaction::leaseOf($this->node);
     $events = [];
     app('events')->listen(DocumentContentUpdated::class, function ($event) use (&$events): void {
@@ -246,7 +246,7 @@ it('binds publication to every leased binding component and preserves complete r
 })->with(['protocol' => ['protocol', 'acme-ot'], 'format' => ['stateFormat', 'other-format'], 'schema' => ['schemaVersion', 2], 'generation' => ['generation', 9]]);
 
 it('rejects re-labelling the leased document type even when a caller repeats the new current binding', function (): void {
-    Compaction::append($this->node, 'accepted');
+    Compaction::append($this->node, 'accepted', seed: true);
     $lease = Compaction::leaseOf($this->node);
     app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill(['type' => 'vaulter/markdown'])->save());
     $before = casState($this->node);

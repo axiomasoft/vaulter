@@ -39,7 +39,7 @@ beforeEach(function (): void {
 });
 
 it('refuses the removal while one document is pending, in the dry run and on --force --purge, and keeps its tables and rows', function (): void {
-    Compaction::append($this->pending, 'saved');
+    Compaction::append($this->pending, 'saved', seed: true);
     $before = uninstallGuardRows();
 
     $this->artisan('vaulter:module:uninstall', ['module' => 'collaboration'])
@@ -62,7 +62,7 @@ it('refuses the removal while one document is pending, in the dry run and on --f
 
 it('removes the module once the drain checkpointed every pending document; the documents keep their checkpoint', function (): void {
     FakeHub::install();
-    Compaction::append($this->pending, 'saved');
+    Compaction::append($this->pending, 'saved', seed: true);
 
     $this->artisan('vaulter:collaboration:drain')->assertExitCode(0);
     $this->artisan('vaulter:module:uninstall', ['module' => 'collaboration', '--force' => true, '--purge' => true])
@@ -84,7 +84,7 @@ it('reads the markers again inside the purge transaction: an edit saved after th
         // The plan's read of the markers; the edit commits right after it, as a writer that was not switched off would.
         if (!$late && preg_match('/pending_generation\W+is not null/i', $query->sql) === 1) {
             $late = true;
-            Compaction::append($this->pending, 'late');
+            Compaction::append($this->pending, 'late', seed: true);
         }
     });
 

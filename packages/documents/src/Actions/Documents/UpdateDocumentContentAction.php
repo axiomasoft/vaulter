@@ -106,7 +106,7 @@ final readonly class UpdateDocumentContentAction
             }
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Update,
-                content: $data->content,
+                content: $this->decoder->decode($type, $data->content->toArray()),
                 schemaVersion: $type->schemaVersion(),
                 actorId: $context->actor->ref()->id,
                 expectedStateVersion: $data->expectedStateVersion,

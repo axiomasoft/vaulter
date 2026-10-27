@@ -2140,6 +2140,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `core` `P\Packages\core\tests\Schema\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration"('unknown')"` → [`integration`] `P\Tests\Integration\Schema\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration"('unknown')"` — D28 supplemental runtime dependency, same assertion/case (PLAN4-D6)
 - `core` `P\Packages\core\tests\Schema\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration"(42)"` → [`integration`] `P\Tests\Integration\Schema\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration"(42)"` — D28 supplemental runtime dependency, same assertion/case (PLAN4-D6)
 - `core` `P\Packages\core\tests\Schema\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration"(null)"` → [`integration`] `P\Tests\Integration\Schema\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration"(null)"` — D28 supplemental runtime dependency, same assertion/case (PLAN4-D6)
+- `documents` `P\Tests\Document\DocumentRevisionImmutabilityTest::__pest_evaluable_it_refuses_to_change_any_payload_or_provenance_column_of_a_stored_checkpoint"dataset "yjs_state""` → replacement `P\Tests\Document\DocumentRevisionImmutabilityTest::__pest_evaluable_it_refuses_to_change_any_payload_or_provenance_column_of_a_stored_checkpoint"dataset "collab_state""` — P3.6 neutral state rename; identical immutability payload/provenance dataset, reconciled at P3.2 V91 (PLAN4-D16)
 
 ## Additions (current − original)
 
@@ -2147,12 +2148,12 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `core`: 60
 - `media`: 142
 - `drive`: 427
-- `documents`: 177
+- `documents`: 180
 - `azgard`: 9
 - `filament`: 27
 - `webhooks`: 148
 - `vue`: 30
-- `collaboration`: 276
+- `collaboration`: 282
 - `hub`: 30
 - `vue-collaboration`: 43
 - `integration`: 0

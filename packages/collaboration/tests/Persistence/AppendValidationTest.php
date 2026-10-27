@@ -77,9 +77,10 @@ it('refuses a payload above limits.update_bytes by its base64 length, and takes 
         ->assertJsonPath('code', 'collaboration_update_too_large');
     expect(validRows())->toBe(0);
 
+    Hub::callV2('append', Hub::seedBody($this->node, 'valid-seed'), Hub::token($this->node))->assertOk();
     Hub::callV2('append', Hub::appendBody($this->node, str_repeat('a', 30)), Hub::token($this->node))
         ->assertOk()
-        ->assertJsonPath('seq', 1);
+        ->assertJsonPath('seq', 2);
 });
 
 it('bounds a seed by max_state_bytes, not limits.update_bytes: it carries the whole initial state', function (): void {
@@ -189,4 +190,17 @@ it('answers a hidden document, another tenant and a missing document with the sa
             fn ($third) => $third->toBeArray(),
         )
         ->and(validRows())->toBe(0);
+});
+
+it('requires first seed CAS with no writes then accepts its retry and later ordinary append', function (): void {
+    $token = Hub::token($this->node);
+    $snapshot = static fn () => array_map(static fn ($t) => DB::table($t)->get()->toJson(), ['v_documents', 'v_collaboration_heads', 'v_collaboration_updates', 'v_collaboration_receipts']);
+    $before = $snapshot();
+    Hub::callV2('append', Hub::appendBody($this->node, 'foreign-state'), $token)->assertStatus(409)->assertJsonPath('code', 'collaboration_seed_conflict');
+    expect($snapshot())->toBe($before);
+    $seed = Hub::seedBody($this->node, 'authoritative-seed');
+    Hub::callV2('append', $seed, $token)->assertOk()->assertJsonPath('seq', 1);
+    Hub::callV2('append', $seed, $token)->assertOk()->assertJsonPath('seq', 1);
+    Hub::callV2('append', Hub::appendBody($this->node, 'later'), $token)->assertOk()->assertJsonPath('seq', 2);
+    expect(Compaction::seqs($this->node))->toBe([1, 2])->and(Compaction::rows('collaboration_receipts'))->toBe(2);
 });

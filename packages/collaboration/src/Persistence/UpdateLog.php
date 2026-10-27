@@ -82,6 +82,10 @@ final readonly class UpdateLog
                 return new AppendResult($locked->documentId, $update->generation, $update->updateId, $receipt->seq, $receipt->sha256, duplicate: true);
             }
             $this->assertDriveWritable($locked);
+            $checkpointed = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->value('collab_state_size') !== null;
+            if ($head['head_seq'] === 0 && !$checkpointed && $update->seedStateVersion === null) {
+                throw new CollaborationSeedConflictException($locked->nodeId);
+            }
             if ($update->seedStateVersion !== null) {
                 $this->assertSeedable($locked, $head, $update->seedStateVersion);
             }

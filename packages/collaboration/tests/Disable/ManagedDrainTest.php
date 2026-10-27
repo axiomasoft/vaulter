@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Sleep;
 use Vaulter\Collaboration\Drain\DrainState;
+use Vaulter\Collaboration\Drain\PendingDocuments;
+use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
+use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
@@ -41,7 +44,7 @@ function drainLateAppend(Node $node, string $payload): void
     $since = $store->get(DrainState::KEY);
     $store->forget(DrainState::KEY);
     try {
-        Compaction::append($node, $payload);
+        Compaction::append($node, $payload, seed: true);
     } finally {
         $store->forever(DrainState::KEY, $since);
     }
@@ -56,9 +59,9 @@ beforeEach(function (): void {
 
 it('checkpoints every pending document through the hub and exits 0: no marker, every saved edit in the working state', function (): void {
     FakeHub::install();
-    Compaction::append($this->first, 'a1');
+    Compaction::append($this->first, 'a1', seed: true);
     Compaction::append($this->first, 'a2');
-    Compaction::append($this->second, 'b1');
+    Compaction::append($this->second, 'b1', seed: true);
     $started = Carbon::now();
 
     $this->artisan('vaulter:collaboration:drain')
@@ -88,8 +91,8 @@ it('checkpoints every pending document through the hub and exits 0: no marker, e
 
 it('exits 1 and lists every pending document when the hub does not answer; the markers, receipts and updates stay', function (): void {
     FakeHub::install(online: false);
-    Compaction::append($this->first, 'a1');
-    Compaction::append($this->second, 'b1');
+    Compaction::append($this->first, 'a1', seed: true);
+    Compaction::append($this->second, 'b1', seed: true);
     $started = Carbon::now();
 
     $this->artisan('vaulter:collaboration:drain', ['--deadline' => 2])
@@ -127,7 +130,7 @@ it('refuses every append while the flag is set, over HTTP and on the service, an
         ->expectsOutputToContain('accepts updates again')
         ->assertExitCode(0);
 
-    Hub::callV2('append', Hub::appendBody($this->first, 'accepted'), $token)
+    Hub::callV2('append', Hub::seedBody($this->first, 'accepted'), $token)
         ->assertOk()
         ->assertJsonPath('persisted', true);
     expect(app(DrainState::class)->since())->toBeNull();
@@ -176,7 +179,7 @@ it('never reports success while such a late marker remains: exit 1 with the docu
 });
 
 it('rolls back an append the flag reached inside its transaction: it reads the flag again before the commit, nothing is written', function (): void {
-    Compaction::append($this->first, 'saved');
+    Compaction::append($this->first, 'saved', seed: true);
     // The drain sets the flag after this append read it and wrote its update, before it commits.
     DB::listen(static function (QueryExecuted $query): void {
         if (str_starts_with($query->sql, 'insert') && str_contains($query->sql, 'collaboration_updates') && !Cache::store()->has(DrainState::KEY)) {
@@ -195,7 +198,7 @@ it('exits 1 and asks the hub for nothing when the cache store does not keep the 
     FakeHub::install();
     config()->set('cache.stores.drain-dropped', ['driver' => 'null']);
     config()->set('vaulter-collaboration.drain.cache_store', 'drain-dropped');
-    Compaction::append($this->first, 'a1');
+    Compaction::append($this->first, 'a1', seed: true);
 
     $this->artisan('vaulter:collaboration:drain')
         ->expectsOutputToContain('did not keep the draining flag')
@@ -223,3 +226,32 @@ it('refuses a deadline that is not a whole number of seconds', function (string 
 
     expect(app(DrainState::class)->since())->toBeNull();
 })->with(['0', '-5', 'soon', '1.5']);
+
+it('drains and allows Yjs removal while both pending scanners preserve unrelated Acme markers', function (): void {
+    $acme = Hub::aggregate($this->second);
+    $acme->forceFill(['collab_protocol' => 'acme-ot', 'collab_state_format' => 'acme-json-v1', 'pending_protocol' => 'acme-ot', 'pending_state_format' => 'acme-json-v1', 'pending_schema_version' => 1, 'pending_generation' => 0, 'pending_through_seq' => 1])->save();
+    DB::table('v_collaboration_heads')->insert(['document_id' => $acme->getKey(), 'generation' => 0, 'head_seq' => 1, 'checkpoint_seq' => 0, 'checkpoint_version' => $acme->state_version, 'created_at' => now(), 'updated_at' => now()]);
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    $before = $acme->getAttributes();
+    Hub::callV2('append', Hub::seedBody($this->first, 'saved-yjs'), Hub::token($this->first))->assertOk();
+    expect(array_map(static fn ($m) => $m->nodeId, app(PendingDocuments::class)->all()))->toBe([(string) $this->first->getKey()]);
+    expect(app(CompactionLeases::class)->pending()['total'])->toBe(1);
+    FakeHub::install();
+    $this->artisan('vaulter:collaboration:drain')->assertExitCode(0);
+    expect(app(PendingRemovalGuard::class)->blockers('collaboration'))->toBe([])
+        ->and(Hub::aggregate($this->second)->getAttributes())->toBe($before)
+        ->and(Compaction::marker($this->first))->toBe([null, null]);
+});
+
+it('drains Markdown ACKed history through the hub with null and non-null initial checkpoint', function (bool $checkpoint): void {
+    $node = Hub::document(type: 'vaulter/markdown');
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    Compaction::append($node, 'markdown-seed', seed: true);
+    if ($checkpoint) {
+        Compaction::publish(Compaction::leaseOf($node));
+        Compaction::append($node, 'tail');
+    }
+    FakeHub::install();
+    $this->artisan('vaulter:collaboration:drain')->assertExitCode(0);
+    expect(Compaction::marker($node))->toBe([null, null])->and(Hub::aggregate($node)->collab_state)->toBe($checkpoint ? 'markdown-seedtail' : 'markdown-seed');
+})->with(['null checkpoint' => [false], 'non-null checkpoint' => [true]]);

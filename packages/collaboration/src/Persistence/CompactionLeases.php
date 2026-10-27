@@ -96,7 +96,7 @@ final readonly class CompactionLeases
         $generations = [];
         $after = null;
         do {
-            $page = $this->database->transaction(fn (): array => $this->state->pendingDocuments(self::PAGE, $after));
+            $page = $this->database->transaction(fn (): array => $this->state->pendingDocuments(self::PAGE, $after, protocol: 'yjs'));
             foreach ($page as $marker) {
                 $after = Identity::key($marker->documentId);
                 $head = $this->log->heads($this->log->rows('collaboration_heads', $marker->documentId, $marker->generation))[0] ?? null;
@@ -213,7 +213,7 @@ final readonly class CompactionLeases
                 return null;
             }
             // A generation a restore closed while the module was off is never compacted: the prune retires it (C4).
-            if ($locked->documentId !== $candidate->documentId || $locked->generation !== $candidate->generation) {
+            if ($locked->binding?->protocol !== 'yjs' || $locked->documentId !== $candidate->documentId || $locked->generation !== $candidate->generation) {
                 return null;
             }
             $now = Carbon::now();

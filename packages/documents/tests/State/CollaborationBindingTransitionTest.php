@@ -27,6 +27,7 @@ use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\CopyOptions;
@@ -308,4 +309,65 @@ it('reads an immutable revision through its source type after a prepared cross-t
     $historical = $documents->content($node, $source);
     expect($historical->type)->toBe('vaulter/rich-text')->and($historical->schemaVersion)->toBe($old->schemaVersion)
         ->and($historical->content->toArray())->toBe($old->content->toArray())->and($historical->collabProtocol)->toBe('yjs')->and($historical->collabStateFormat)->toBe('yjs-update-v1');
+});
+
+it('returns unpublished without rows or events when a prepared checkpoint loses to a noncollaborative transition', function (): void {
+    $registry = new DocumentTypeRegistry(app());
+    foreach ([new RichTextDocumentType, new MarkdownDocumentType, new SpreadsheetDocumentType] as $type) {
+        $registry->register($type);
+    }
+    $registry->freeze();
+    app()->instance(DocumentTypeRegistry::class, $registry);
+    $node = GrantedDocuments::document(level: null);
+    $publication = app(VaulterDatabase::class)->transaction(function () use ($node) {
+        $locked = app(CollaborativeState::class)->lock($node->getKey());
+
+        return new CheckpointPublication($locked->binding, $locked->stateVersion, 1, 'old-bytes', $locked->content);
+    });
+    app(VaulterDatabase::class)->transaction(function () use ($node): void {
+        $state = app(CollaborativeState::class);
+        $locked = $state->lock($node->getKey());
+        expect($state->transition($locked, new CollaborativeStateTransition($locked->binding, $locked->stateVersion,
+            'vaulter/spreadsheet', 1, null, null, OpaqueContent::fromArray(['sheets' => []]), null,
+            new ActorRef('staff', '42'), 'noncollab-race'))->published)->toBeTrue();
+    });
+    $before = p36Rows();
+    $events = [];
+    app('events')->listen(DocumentContentUpdated::class, function ($event) use (&$events): void {
+        $events[] = $event;
+    });
+    $outcome = app(VaulterDatabase::class)->transaction(function () use ($node, $publication) {
+        $state = app(CollaborativeState::class);
+
+        return $state->publishCheckpoint($state->lock($node->getKey()), $publication);
+    });
+    expect($outcome->published)->toBeFalse()->and(p36Rows())->toBe($before)->and($events)->toBe([]);
+});
+
+it('publishes an ACKed historical schema checkpoint without upgrading its stored projection', function (): void {
+    $type = new P36StatelessType;
+    $registry = new DocumentTypeRegistry(app());
+    foreach ([new RichTextDocumentType, new MarkdownDocumentType, $type] as $item) {
+        $registry->register($item);
+    }
+    $registry->freeze();
+    app()->instance(DocumentTypeRegistry::class, $registry);
+    $node = GrantedDocuments::document(level: null);
+    app(VaulterDatabase::class)->transaction(function () use ($node): void {
+        $state = app(CollaborativeState::class);
+        $locked = $state->lock($node->getKey());
+        $state->transition($locked, new CollaborativeStateTransition($locked->binding, $locked->stateVersion, 'acme/stateless', 1, 'acme-ot', 'acme-json-v1', OpaqueContent::fromArray(['columns' => []]), null, new ActorRef('staff', '42'), 'historical-schema'));
+        $locked = $state->lock($node->getKey());
+        $state->markPending($locked, $locked->binding, 1);
+    });
+    $before = GrantedDocuments::aggregate($node);
+    $type->version = 2;
+    $result = app(VaulterDatabase::class)->transaction(function () use ($node) {
+        $state = app(CollaborativeState::class);
+        $locked = $state->lock($node->getKey());
+
+        return $state->publishCheckpoint($locked, new CheckpointPublication($locked->binding, $locked->stateVersion, 1, null, ['columns' => ['accepted']]));
+    });
+    $after = GrantedDocuments::aggregate($node);
+    expect($result->published)->toBeTrue()->and($result->pending)->toBeNull()->and($after->schema_version)->toBe(1)->and($after->collab_epoch)->toBe($before->collab_epoch)->and($after->collab_state)->toBeNull()->and($after->content)->toBe(['columns' => ['accepted']]);
 });

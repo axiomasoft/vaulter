@@ -130,7 +130,8 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
 
         $document = $this->relock($state);
         // CAS: a closed generation or a write since the merge started makes the publication lose, untouched.
-        if (!$publication->binding->sameAs($document->collaborationBinding() ?? throw new LogicException('[Vaulter] No stored binding.')) || $publication->expectedStateVersion !== $document->state_version) {
+        $currentBinding = $document->collaborationBinding();
+        if ($currentBinding === null || !$publication->binding->sameAs($currentBinding) || $publication->expectedStateVersion !== $document->state_version) {
             return new CheckpointOutcome(
                 published: false,
                 changed: false,
@@ -145,11 +146,9 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             throw new LogicException('[Vaulter] A document aggregate has no node.');
         }
         $document->setRelation('node', $node);
-        $type = $this->decoder->editableType($document);
-        if ($type->schemaVersion() !== $publication->binding->schemaVersion) {
-            throw new CollaborationUnavailableException('unsupported_binding', $document->type);
-        }
-        $content = $this->decoder->decode($type, $publication->content);
+        // A checkpoint drains ACKed history in its stored schema; it is not a current-schema user write.
+        $type = $this->decoder->writable($document->type);
+        $content = $this->decoder->decode($type, $publication->content, $publication->binding->schemaVersion);
 
         $result = $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Collaboration,

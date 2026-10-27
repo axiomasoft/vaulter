@@ -19,7 +19,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 #[Api]
 final readonly class CheckpointPublication
 {
-    /** @param array<string, mixed> $content the JSON projection of `$collabState` in the document type's current schema */
+    /** @param array<string, mixed> $content the JSON projection of `$collabState` in the immutable stored binding schema */
     public function __construct(
         public CollaborationStateBinding $binding,
         public int $expectedStateVersion,
