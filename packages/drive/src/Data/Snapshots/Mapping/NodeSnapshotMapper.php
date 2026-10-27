@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Snapshots\Mapping;
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Collection;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Drive\Changes\ReaderSyncIdentity;
+use Vaulter\Drive\Configuration\ChangesConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Drive\Data\NodePage;
 use Vaulter\Drive\Data\Snapshots\DocumentHeadSnapshot;
@@ -60,6 +64,7 @@ final readonly class NodeSnapshotMapper
         $this->loadHeads($nodes);
         $stars = $this->stars($nodes, $viewer);
         $fragments = $this->fragments($nodes);
+        $keys = $this->syncKeys($nodes, $viewer);
 
         $snapshots = [];
         foreach ($nodes as $node) {
@@ -90,10 +95,75 @@ final readonly class NodeSnapshotMapper
                 document: $fragments[self::DOCUMENT][$id] ?? null,
                 viewer: $stars === null ? null : new ViewerStateSnapshot(starred: isset($stars[$id])),
                 accessVersion: self::version($node->getAttribute('access_version')),
+                syncKey: $keys[$id] ?? null,
             );
         }
 
         return $snapshots;
+    }
+
+    /**
+     * The reader-scoped sync key of each node (the U1 primitive, the one the change feed names
+     * a remove by); none for a viewer without a sync identity. One query for the drives' tenants.
+     *
+     * @param  list<Node>            $nodes
+     * @return array<string, string> node id => key
+     */
+    private function syncKeys(array $nodes, ?ActorRef $viewer): array
+    {
+        $identity = $this->identity();
+        if ($identity === null || $viewer === null || $viewer->type === null) {
+            return [];
+        }
+        $drives = array_values(array_unique(array_map(static fn (Node $node): string => SnapshotValue::id($node->drive_id), $nodes)));
+        $tenants = $this->tenants($drives);
+        $keys = [];
+        foreach ($nodes as $node) {
+            $driveId = SnapshotValue::id($node->drive_id);
+            $id = SnapshotValue::id($node->getKey());
+            $keys[$id] = $identity->syncKey($tenants[$driveId] ?? null, $driveId, $viewer, $id);
+        }
+
+        return $keys;
+    }
+
+    /**
+     * A snapshot decoded from a receipt carries no key: after the replay was authorized afresh it gets the
+     * key of the reader it is returned to, under the current key generation.
+     */
+    public function withSyncKey(NodeSnapshot $snapshot, ?ActorRef $viewer): NodeSnapshot
+    {
+        $identity = $this->identity();
+        if ($identity === null || $viewer === null || $viewer->type === null) {
+            return $snapshot->withSyncKey(null);
+        }
+
+        return $snapshot->withSyncKey($identity->syncKey($this->tenants([$snapshot->driveId])[$snapshot->driveId] ?? null, $snapshot->driveId, $viewer, $snapshot->id));
+    }
+
+    private function identity(): ?ReaderSyncIdentity
+    {
+        $appKey = $this->container->make(Repository::class)->get('app.key');
+        if (!is_string($appKey) || $appKey === '') {
+            return null;
+        }
+
+        return new ReaderSyncIdentity($appKey, $this->container->make(ChangesConfig::class)->keyGeneration());
+    }
+
+    /**
+     * @param  list<string>           $driveIds
+     * @return array<string, ?string> drive id => tenant
+     */
+    private function tenants(array $driveIds): array
+    {
+        $class = $this->container->make(DriveConfig::class)->model('drive');
+        $tenants = [];
+        foreach ($class::query()->whereKey($driveIds)->get() as $drive) {
+            $tenants[SnapshotValue::id($drive->getKey())] = ReaderSyncIdentity::tenant($drive->getRawOriginal('tenant_id'));
+        }
+
+        return $tenants;
     }
 
     /** @param list<Node> $nodes */

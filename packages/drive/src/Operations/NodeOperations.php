@@ -190,15 +190,13 @@ final readonly class NodeOperations implements Contract
         return $this->guard->abilitiesMany($this->context, $nodes);
     }
 
-    /**
-     * @template T
-     *
-     * @param  Closure(): T $attempt
-     * @return T
-     */
-    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
+    /** @param Closure(): NodeSnapshot $attempt */
+    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): NodeSnapshot
     {
-        return $this->runner->write(new OperationSpec('drive.nodes.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
+        $result = $this->runner->write(new OperationSpec('drive.nodes.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
+
+        // A replay decodes the semantic receipt, which holds no reader key: the authorized replay gets it afresh.
+        return $result->syncKey === null ? $this->mapper->withSyncKey($result, $this->context->actor->ref()) : $result;
     }
 
     private static function idOf(NodeSnapshot|string|int $node): string

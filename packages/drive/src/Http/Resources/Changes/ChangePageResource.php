@@ -25,7 +25,7 @@ final class ChangePageResource
     {
         return new JsonResponse([
             'data' => array_map(
-                static fn (NodeChange $change): array => (new ChangeResource($change, $abilities[$change->nodeId] ?? null))->toArray($request),
+                static fn (NodeChange $change): array => (new ChangeResource($change, $change->nodeId === null ? null : ($abilities[$change->nodeId] ?? null)))->toArray($request),
                 $page->changes,
             ),
             'meta' => ['next_cursor' => $page->cursor, 'has_more' => $page->hasMore],

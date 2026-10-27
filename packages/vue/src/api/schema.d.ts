@@ -1305,6 +1305,8 @@ export interface components {
             /** Format: date-time */
             trashed_at: string | null;
             trashed_by: string | null;
+            /** @description Opaque reader-scoped handle of the node (PLAN4.D20); the change feed names a remove by it. Null for a reader without a sync identity. */
+            sync_key: string | null;
             trash_root: boolean;
             /** @description null for folders. */
             presentation: components["schemas"]["NodePresentation"] | null;
@@ -1464,14 +1466,24 @@ export interface components {
             occurred_at: string;
             data: Record<string, never>;
         };
-        Change: {
-            node_id: string;
+        /** @description Discriminated by operation; the validator of core has no discriminator keyword, the disjoint operation enums tell the branches apart. */
+        Change: components["schemas"]["ChangeUpsert"] | components["schemas"]["ChangeRemove"];
+        /** @description Minimal remove, exactly operation and the reader-scoped sync_key. No node id, reason or snapshot; a key the client does not know is harmless. */
+        ChangeRemove: {
             /** @enum {string} */
-            operation: "upsert" | "remove";
-            reason: ("deleted" | "moved_out" | "permission_lost") | null;
+            operation: "remove";
+            /** @description Opaque reader-scoped handle of the node; matches the sync_key of its Node. */
+            sync_key: string;
+        };
+        ChangeUpsert: {
+            /** @enum {string} */
+            operation: "upsert";
+            /** @description Reader-scoped key of the node; null only for an anonymous reader. */
+            sync_key: string | null;
+            node_id: string;
             subtree: boolean;
             node_sequence: number;
-            node: components["schemas"]["Node"] | null;
+            node: components["schemas"]["Node"];
         };
         Comment: {
             id: string;

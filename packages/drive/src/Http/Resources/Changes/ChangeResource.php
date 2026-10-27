@@ -9,12 +9,13 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Data\Changes\NodeChange;
+use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;
 
 /**
- * One entry of a drive's change journal. `node` is the node as the reader sees it now,
- * or null when it is gone or no longer visible to the reader; a client then drops it
- * (and, with `subtree`, everything below it) from its copy.
+ * One entry of a drive's change journal. An upsert carries the node as the reader sees it
+ * now; a remove is minimal, `operation` and the reader-scoped `sync_key` only, and the
+ * client drops the node it matches by key (and everything below it) from its copy.
  *
  * @mixin NodeChange
  */
@@ -34,12 +35,15 @@ final class ChangeResource extends JsonResource
     {
         /** @var NodeChange $change */
         $change = $this->resource;
+        if ($change->operation === ChangeOperation::Remove) {
+            return ['operation' => $change->operation->value, 'sync_key' => $change->syncKey];
+        }
         $node = $change->node !== null && $this->abilities !== null ? new NodeResource($change->node, $this->abilities) : null;
 
         return [
-            'node_id' => $change->nodeId,
             'operation' => $change->operation->value,
-            'reason' => $change->reason?->value,
+            'sync_key' => $change->syncKey,
+            'node_id' => $change->nodeId,
             'subtree' => $change->subtree,
             'node_sequence' => $change->nodeSequence,
             'node' => $node?->toArray($request),

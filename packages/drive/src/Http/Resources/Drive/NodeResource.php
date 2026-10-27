@@ -23,7 +23,7 @@ use Vaulter\Http\Support\RepresentationTag;
  *
  * Internal pointers (file id, blob, storage key, tenant) are not part of it. The etag
  * is the caller's representation tag: it changes whenever anything below changes for
- * this caller, its abilities and starred flag included.
+ * this caller, its abilities, starred flag and reader-scoped sync key included.
  */
 #[Internal]
 final class NodeResource extends JsonResource
@@ -38,7 +38,7 @@ final class NodeResource extends JsonResource
         parent::__construct($node);
         $base = $this->base($node, $presentation);
         $this->etag = RepresentationTag::node($base, $node->id, $node->sequence);
-        // The tag goes right after `sequence`; it hashes everything else.
+        // The tag goes right after `sequence`; it hashes everything else, the reader-scoped sync key included.
         $this->representation = array_slice($base, 0, 9) + ['etag' => $this->etag] + $base;
     }
 
@@ -117,6 +117,8 @@ final class NodeResource extends JsonResource
                 'collab_epoch' => $node->document->epoch,
                 'revision_id' => $node->document->headRevisionId,
             ],
+            // Reader-scoped (PLAN4.D20): another reader, or the same reader after a key generation bump, gets another tag.
+            'sync_key' => $node->syncKey,
         ];
     }
 

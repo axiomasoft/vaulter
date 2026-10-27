@@ -74,7 +74,7 @@ final readonly class TrashOperations implements Contract
         );
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
-                return $this->write('restore', function () use ($node, $options): NodeSnapshot {
+                $restored = $this->runner->write(new OperationSpec('drive.trash.restore', new ModuleId('drive')), $this->context->operation, function () use ($node, $options): NodeSnapshot {
                     $source = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
                     $this->guard->authorize(context: $this->context, ability: Ability::Restore, node: $source, operation: OperationKind::Mutation);
                     $destination = $this->restoreAction->resolveDestination(context: $this->context, node: $source, explicit: $options->destination);
@@ -87,6 +87,9 @@ final readonly class TrashOperations implements Contract
                     return $this->mapper->map($this->restoreAction->execute(context: $this->context,
                         data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict, expectedSequence: $options->expectedSequence)), $this->context->actor->ref());
                 }, $idempotency);
+
+                // A replayed receipt is semantic and keyless: the authorized replay gets the reader key afresh.
+                return $restored->syncKey === null ? $this->mapper->withSyncKey($restored, $this->context->actor->ref()) : $restored;
             } catch (RestoreDestinationChangedException $exception) {
                 if ($attempt === 2) {
                     throw $exception;

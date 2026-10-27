@@ -76,7 +76,8 @@
                 "mime": "text/plain",
                 "scan_status": "not_required"
             },
-            "document": null
+            "document": null,
+            "sync_key": "mQ3p8Zt0u1Lw6cV9yHn2RkXaB4sJdE7fGoPiTqUvWxY"
         }
     }
 }

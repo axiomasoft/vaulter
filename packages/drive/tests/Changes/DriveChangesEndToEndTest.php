@@ -7,6 +7,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\CopyOptions;
@@ -15,9 +16,11 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A syncing client end to end (PLAN2.D50, D59): it lists the drive once, takes the
@@ -58,6 +61,17 @@ function changesListing(DriveHandle $reader, string $folder): array
     return $nodes;
 }
 
+/** The sync key user 1 is given for $nodeId: a remove names a node by this key only. */
+function changesKey(DriveHandle $reader, string $nodeId): string
+{
+    $user = AccessTestHelpers::user(1);
+    $drive = DriveTestHelpers::model($nodeId)->drive_id;
+    $model = app(config('vaulter-drive.models.drive', Drive::class))->newQuery()->findOrFail($drive);
+
+    return (new ReaderSyncIdentity((string) config('app.key'), 1))
+        ->syncKey($model->getRawOriginal('tenant_id'), $model->getKey(), new ActorRef($user->getMorphClass(), (string) $user->getKey()), $nodeId);
+}
+
 /** @param array<string, array{parent: ?string, name: string}> $replica */
 function changesForget(array &$replica, string $id): void
 {
@@ -80,7 +94,11 @@ function changesApply(DriveHandle $reader, array &$replica, string $cursor): str
         $page = $reader->changes()->list($cursor, limit: 3);
         foreach ($page->changes as $change) {
             if ($change->operation === ChangeOperation::Remove) {
-                changesForget($replica, $change->nodeId);
+                foreach (array_keys($replica) as $id) {
+                    if (changesKey($reader, (string) $id) === $change->syncKey) {
+                        changesForget($replica, (string) $id);
+                    }
+                }
 
                 continue;
             }

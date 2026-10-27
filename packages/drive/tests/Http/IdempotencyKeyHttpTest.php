@@ -46,6 +46,17 @@ it('replays a folder creation for the same key and body', function (string $head
     'plain token' => ['8e03978e-40d5-43e8-bc93-6894a57f9324'],
 ]);
 
+it('gives a replayed folder creation the same reader key as the first answer and as a plain read', function (): void {
+    $first = $this->postJson(V1::url('drives/'.$this->driveId.'/folders'), ['name' => 'Keyed'], ['Idempotency-Key' => 'key-replay-1'])->assertCreated();
+    $second = $this->postJson(V1::url('drives/'.$this->driveId.'/folders'), ['name' => 'Keyed'], ['Idempotency-Key' => 'key-replay-1'])->assertCreated();
+    $read = $this->getJson(V1::url('nodes/'.$first->json('data.id')))->assertOk();
+
+    expect($first->json('data.sync_key'))->toBeString()->toHaveLength(43)
+        ->and($second->headers->get('Idempotent-Replayed'))->toBe('true')
+        ->and($second->json('data.sync_key'))->toBe($first->json('data.sync_key'))
+        ->and($read->json('data.sync_key'))->toBe($first->json('data.sync_key'));
+});
+
 it('treats the quoted and the plain spelling of one key as the same key', function (): void {
     $first = $this->postJson(V1::url('drives/'.$this->driveId.'/folders'), ['name' => 'Same'], ['Idempotency-Key' => '"abc"'])->assertCreated();
 
@@ -309,7 +320,7 @@ it('answers a repeated direct upload by its precondition: one file, 409 node_nam
 
 it('answers a repeated direct revision by its If-Match: one new revision, then 412', function (): void {
     $file = V1::file($this->drive, 'rev.txt', 'one');
-    $headers = ['Accept' => 'application/json', 'If-Match' => V1::tagFor($this->drive, $file->id)];
+    $headers = ['Accept' => 'application/json', ...V1::ifMatch($file->id)];
     $request = fn (): array => ['file' => UploadedFile::fake()->createWithContent('rev.txt', 'two')];
 
     $this->post(V1::url('files/'.$file->id.'/revisions'), $request(), $headers)->assertCreated()->assertJsonPath('data.number', 2);
@@ -401,4 +412,41 @@ it('replays the historical snapshot after a later change, refuses a changed requ
     $denied = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'canary-name'], $headers)->assertNotFound();
     expect((string) $denied->getContent())->not->toContain('canary')
         ->and(Node::query()->findOrFail($folder->id)->name)->toBe('Later');
+});
+
+it('replays a keyed rename after a key generation bump with the old name and the new key and tag, and refuses a revoked actor before any key', function (): void {
+    $folder = V1::folder($this->drive, 'Rotating');
+    AccessTestHelpers::grant(DriveTestHelpers::model($folder), RoleRegistry::WRITER, subjectId: 2);
+    $this->actingAs(V1::user(2));
+    $headers = [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'rotate-1'];
+    $first = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'Rotated-name'], $headers)->assertOk();
+    $stored = (string) ikReceipt('rotate-1')->receipt_body;
+
+    config()->set('vaulter-drive.changes.key_generation', 2);
+    $replay = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'Rotated-name'], $headers)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.name', 'Rotated-name');
+    $read = $this->getJson(V1::url('nodes/'.$folder->id))->assertOk();
+
+    expect($replay->json('data.sync_key'))->toHaveLength(43)->not->toBe($first->json('data.sync_key'))
+        ->and($replay->json('data.etag'))->not->toBe($first->json('data.etag'))
+        ->and($replay->json('data.sync_key'))->toBe($read->json('data.sync_key'))
+        ->and($replay->headers->get('ETag'))->toBe($replay->json('data.etag'))
+        ->and((string) ikReceipt('rotate-1')->receipt_body)->toBe($stored)
+        ->and($stored)->not->toContain((string) $replay->json('data.sync_key'))->not->toContain((string) $first->json('data.sync_key'));
+
+    NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', '2')->delete();
+    $denied = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'Rotated-name'], $headers)->assertNotFound();
+    expect((string) $denied->getContent())->not->toContain('sync_key')->not->toContain((string) $replay->json('data.sync_key'));
+});
+
+it('keys the node a direct upload and a direct revision return like a plain read', function (): void {
+    $upload = $this->post(V1::url('drives/'.$this->driveId.'/files'), ['file' => UploadedFile::fake()->createWithContent('keyed.txt', 'one')], ['Accept' => 'application/json'])->assertCreated();
+    $id = $upload->json('data.id');
+    $read = $this->getJson(V1::url('nodes/'.$id))->assertOk();
+
+    expect($upload->json('data.sync_key'))->toHaveLength(43)
+        ->and($upload->json('data.sync_key'))->toBe($read->json('data.sync_key'))
+        ->and($upload->headers->get('ETag') ?? $read->headers->get('ETag'))->toBe($read->headers->get('ETag'));
 });

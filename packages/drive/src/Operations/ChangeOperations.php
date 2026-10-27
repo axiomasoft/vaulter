@@ -20,7 +20,6 @@ use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
-use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
@@ -41,7 +40,8 @@ use Vaulter\Support\Identity;
  * Entries are filtered by the reader's current access with the same exact resolver the
  * listing uses: an upsert of a node the reader may see carries its current snapshot; an
  * upsert of a node the reader cannot see is a remove when a move or an access change
- * explains why it disappeared, and is skipped otherwise. A remove carries no snapshot.
+ * explains why it disappeared, and is skipped otherwise. A remove carries no snapshot, no
+ * node id and no reason, only the reader-scoped sync key of the node (PLAN4.D20).
  */
 #[Internal]
 final readonly class ChangeOperations
@@ -168,27 +168,27 @@ final readonly class ChangeOperations
             $visible[$snapshot->id] = [$nodes[$index], $snapshot];
         }
 
+        // A remove names no node: only the reader-scoped key of the node it hides.
+        $identity = $this->identity();
+        $actor = $context->actor->ref();
+        $tenant = self::tenant($drive);
+        $driveId = Identity::stringify($drive->getKey());
+        $key = static fn (int|string $nodeId): ?string => $actor->type === null ? null : $identity->syncKey($tenant, $driveId, $actor, $nodeId);
+
         $changes = [];
         foreach ($rows as $row) {
             $nodeId = Identity::stringify($row->node_id);
             if ($row->operation === ChangeOperation::Remove->value) {
-                $changes[] = new NodeChange(
-                    nodeId: $nodeId,
-                    operation: ChangeOperation::Remove,
-                    reason: ChangeReason::tryFrom((string) $row->reason) ?? ChangeReason::Deleted,
-                    subtree: false,
-                    node: null,
-                    nodeSequence: $row->node_sequence === null ? null : (int) $row->node_sequence,
-                );
+                $changes[] = self::remove($key($nodeId));
 
                 continue;
             }
             if (isset($visible[$nodeId])) {
                 [$node, $snapshot] = $visible[$nodeId];
                 $changes[] = new NodeChange(
-                    nodeId: $nodeId,
                     operation: ChangeOperation::Upsert,
-                    reason: null,
+                    syncKey: $key($nodeId),
+                    nodeId: $nodeId,
                     subtree: (bool) $row->subtree,
                     node: $snapshot,
                     nodeSequence: $node->sequence,
@@ -196,13 +196,18 @@ final readonly class ChangeOperations
 
                 continue;
             }
-            $reason = ChangeJournal::invisibilityReason($row->event_type);
-            if ($reason !== null) {
-                $changes[] = new NodeChange(nodeId: $nodeId, operation: ChangeOperation::Remove, reason: $reason, subtree: false, node: null, nodeSequence: null);
+            if (ChangeJournal::invisibilityReason($row->event_type) !== null) {
+                $changes[] = self::remove($key($nodeId));
             }
         }
 
-        return $changes;
+        // An anonymous reader has no key to name a remove by: nothing to tell it.
+        return array_values(array_filter($changes, static fn (NodeChange $change): bool => $change->operation === ChangeOperation::Upsert || $change->syncKey !== null));
+    }
+
+    private static function remove(?string $syncKey): NodeChange
+    {
+        return new NodeChange(operation: ChangeOperation::Remove, syncKey: $syncKey, nodeId: null, subtree: false, node: null, nodeSequence: null);
     }
 
     /** @param array{last_seq: int, pruned_through: int, epoch: int} $head */

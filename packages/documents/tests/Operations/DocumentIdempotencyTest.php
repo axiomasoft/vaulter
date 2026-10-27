@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
@@ -67,6 +68,43 @@ it('replays a document creation once', function (): void {
 
     expect($again)->toEqual($first)
         ->and(Node::query()->where('name', 'Spec')->count())->toBe(1);
+});
+
+it('gives a created document and its replay the same reader key, which the semantic receipt does not store', function (): void {
+    [$system] = idempotentDocuments();
+    $keyed = $system->withIdempotencyKey('create-key-1');
+
+    $first = Documents::in($keyed)->create('Keyed', content: DocumentTestHelpers::content('one')->toArray());
+    $again = Documents::in($keyed)->create('Keyed', content: DocumentTestHelpers::content('one')->toArray());
+    $stored = json_encode(DB::table('v_idempotency_keys')->get()->all(), JSON_THROW_ON_ERROR);
+
+    expect($first->syncKey)->toBeString()->toHaveLength(43)
+        ->and($again->syncKey)->toBe($first->syncKey)
+        ->and($stored)->not->toContain((string) $first->syncKey);
+});
+
+it('enriches a replay after a key generation rotation with the fresh key while the receipt stays the same', function (): void {
+    [$system] = idempotentDocuments();
+    $keyed = $system->withIdempotencyKey('create-rotate-1');
+
+    $first = Documents::in($keyed)->create('Rotated', content: DocumentTestHelpers::content('one')->toArray());
+    config()->set('vaulter-drive.changes.key_generation', 2);
+    $again = Documents::in($keyed)->create('Rotated', content: DocumentTestHelpers::content('one')->toArray());
+
+    expect($again->syncKey)->toBeString()->toHaveLength(43)->not->toBe($first->syncKey)
+        ->and($again->withSyncKey(null))->toEqual($first->withSyncKey(null))
+        ->and(Node::query()->where('name', 'Rotated')->count())->toBe(1);
+});
+
+it('refuses the replay of a document creation, and gives it no key, to an actor who lost access', function (): void {
+    [$system, $node, $keyed] = idempotentThread();
+    $content = DocumentTestHelpers::content('one')->toArray();
+    $first = Documents::in($keyed('create-revoked', 1))->create('Revoked', content: $content, parent: $node);
+    app(VaulterDatabase::class)->write(static fn () => NodeGrant::query()->where('subject_id', 1)->delete());
+
+    expect($first->syncKey)->toBeString()
+        ->and(fn () => Documents::in($keyed('create-revoked', 1))->create('Revoked', content: $content, parent: $node))->toThrow(NodeNotFoundException::class)
+        ->and(Node::query()->where('name', 'Revoked')->count())->toBe(1);
 });
 
 it('refuses the same key for another document and creates nothing', function (): void {

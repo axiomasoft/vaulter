@@ -17,6 +17,10 @@ use Vaulter\Drive\Enums\NodeKind;
  * `sequence` versions the node itself; `accessVersion` versions its access (its
  * grants and inheritance, CC2) — pass it back as the expected access version of
  * a revoke or an inheritance change.
+ *
+ * `syncKey` is the opaque handle of this node for the reader it was mapped for (PLAN4.D20):
+ * the change feed names a removed node by it. It is null for a reader without a sync
+ * identity (anonymous, share) and is never part of a persisted receipt.
  */
 #[Api]
 final readonly class NodeSnapshot
@@ -50,5 +54,17 @@ final readonly class NodeSnapshot
         public ?DocumentHeadSnapshot $document,
         public ?ViewerStateSnapshot $viewer,
         public int $accessVersion = 0,
+        public ?string $syncKey = null,
     ) {}
+
+    /** The same snapshot with the sync key of the reader it is returned to (a replayed receipt has none). */
+    public function withSyncKey(?string $syncKey): self
+    {
+        return new self(
+            $this->id, $this->driveId, $this->parentId, $this->kind, $this->name, $this->mimeType, $this->extension,
+            $this->sizeBytes, $this->sequence, $this->inheritsAccess, $this->properties, $this->createdAt, $this->createdBy,
+            $this->updatedAt, $this->updatedBy, $this->contentModifiedAt, $this->contentModifiedBy, $this->trashedAt,
+            $this->trashedBy, $this->trashRoot, $this->file, $this->document, $this->viewer, $this->accessVersion, $syncKey,
+        );
+    }
 }

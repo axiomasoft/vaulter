@@ -123,12 +123,15 @@ final readonly class AccessOperations implements Contract
             fingerprint: ['node' => $nodeId, 'inherit' => false, 'mode' => $mode->value, 'expected_access_version' => $expectedAccessVersion],
         );
 
-        return $this->write('restrict_inheritance', function () use ($node, $mode, $expectedAccessVersion): NodeSnapshot {
+        $result = $this->runner->write(new OperationSpec('drive.access.restrict_inheritance', new ModuleId('drive')), $this->context->operation, function () use ($node, $mode, $expectedAccessVersion): NodeSnapshot {
             $node = $this->located($node);
             $this->guard->authorize(context: $this->context, ability: Ability::Manage, node: $node, operation: OperationKind::Mutation);
 
             return $this->nodeMapper->map($this->inheritance->execute(context: $this->context, node: $node, inherit: false, mode: $mode, expectedAccessVersion: $expectedAccessVersion), $this->context->actor->ref());
         }, $idempotency);
+
+        // A replayed receipt is semantic and keyless: the authorized replay gets the reader key afresh.
+        return $result->syncKey === null ? $this->nodeMapper->withSyncKey($result, $this->context->actor->ref()) : $result;
     }
 
     public function restoreInheritance(NodeSnapshot|string|int $node, ?int $expectedAccessVersion = null): NodeSnapshot
@@ -140,12 +143,15 @@ final readonly class AccessOperations implements Contract
             fingerprint: ['node' => $nodeId, 'inherit' => true, 'expected_access_version' => $expectedAccessVersion],
         );
 
-        return $this->write('restore_inheritance', function () use ($node, $expectedAccessVersion): NodeSnapshot {
+        $result = $this->runner->write(new OperationSpec('drive.access.restore_inheritance', new ModuleId('drive')), $this->context->operation, function () use ($node, $expectedAccessVersion): NodeSnapshot {
             $node = $this->located($node);
             $this->guard->authorize(context: $this->context, ability: Ability::Manage, node: $node, operation: OperationKind::Mutation);
 
             return $this->nodeMapper->map($this->inheritance->execute(context: $this->context, node: $node, inherit: true, expectedAccessVersion: $expectedAccessVersion), $this->context->actor->ref());
         }, $idempotency);
+
+        // A replayed receipt is semantic and keyless: the authorized replay gets the reader key afresh.
+        return $result->syncKey === null ? $this->nodeMapper->withSyncKey($result, $this->context->actor->ref()) : $result;
     }
 
     /**

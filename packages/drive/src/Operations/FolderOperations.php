@@ -38,11 +38,14 @@ final readonly class FolderOperations implements Contract
             fingerprint: ['parent' => $parentId ?? (string) $this->context->drive->root_node_id, 'name' => $name, 'on_conflict' => $options->onConflict->value],
         );
 
-        return $this->runner->write(new OperationSpec('drive.folders.create', new ModuleId('drive')), $this->context->operation, function () use ($name, $parent, $options): NodeSnapshot {
+        $created = $this->runner->write(new OperationSpec('drive.folders.create', new ModuleId('drive')), $this->context->operation, function () use ($name, $parent, $options): NodeSnapshot {
             $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
             $this->guard->authorizeCreate($this->context, $parent);
 
             return $this->mapper->map($this->createAction->execute($this->context, new CreateFolderInput($this->context->drive, $name, $parent, $options->onConflict)), $this->context->actor->ref());
         }, $idempotency);
+
+        // A replayed receipt is semantic and keyless: the authorized replay gets the reader key afresh.
+        return $created->syncKey === null ? $this->mapper->withSyncKey($created, $this->context->actor->ref()) : $created;
     }
 }

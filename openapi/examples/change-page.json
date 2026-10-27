@@ -10,9 +10,9 @@
     "body": {
         "data": [
             {
-                "node_id": "23",
                 "operation": "upsert",
-                "reason": null,
+                "sync_key": "mQ3p8Zt0u1Lw6cV9yHn2RkXaB4sJdE7fGoPiTqUvWxY",
+                "node_id": "23",
                 "subtree": false,
                 "node_sequence": 0,
                 "node": {
@@ -57,8 +57,13 @@
                     },
                     "scan_status": "not_required",
                     "file": null,
-                    "document": null
+                    "document": null,
+                    "sync_key": "mQ3p8Zt0u1Lw6cV9yHn2RkXaB4sJdE7fGoPiTqUvWxY"
                 }
+            },
+            {
+                "operation": "remove",
+                "sync_key": "Rt5aXc2Vn8KqL0wZyHb3JdUe7sMgPoI9fTvQiAxEu1B"
             }
         ],
         "meta": {

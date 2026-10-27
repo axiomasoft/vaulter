@@ -46,8 +46,8 @@ it('answers a reader and a writer with the same body and the same tag', function
     expect($reader->json())->toBe($writer->json())
         ->and($reader->headers->get('ETag'))->toBe($writer->headers->get('ETag'))
         ->and($writer->headers->get('ETag'))->toBe('"'.$id.'.'.$epoch.'.'.$version.'"')
-        ->and($writer->json('data'))->toHaveKeys(['type', 'schema_version', 'state_version', 'collab_epoch', 'revision_id', 'content'])
-        ->and(array_keys($writer->json('data')))->toHaveCount(6);
+        ->and($writer->json('data'))->toHaveKeys(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'state_version', 'collab_epoch', 'revision_id', 'content'])
+        ->and(array_keys($writer->json('data')))->toHaveCount(8);
 });
 
 it('answers 304 to a matching If-None-Match and a fresh body to a stale one', function (): void {

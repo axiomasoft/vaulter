@@ -4610,6 +4610,7 @@ components:
       - scan_status
       - file
       - document
+      - sync_key
       properties:
         id:
           type: string
@@ -4682,6 +4683,11 @@ components:
           type:
           - string
           - 'null'
+        sync_key:
+          type:
+          - string
+          - 'null'
+          description: Opaque reader-scoped handle of the node (PLAN4.D20); the change feed names a remove by it. Null for a reader without a sync identity.
         trash_root:
           type: boolean
         presentation:
@@ -5156,38 +5162,52 @@ components:
         data:
           type: object
     Change:
+      description: Discriminated by operation; the validator of core has no discriminator keyword, the disjoint operation enums tell the branches apart.
+      oneOf:
+      - $ref: '#/components/schemas/ChangeUpsert'
+      - $ref: '#/components/schemas/ChangeRemove'
+    ChangeRemove:
+      type: object
+      description: Minimal remove, exactly operation and the reader-scoped sync_key. No node id, reason or snapshot; a key the client does not know is harmless.
+      additionalProperties: false
+      required:
+      - operation
+      - sync_key
+      properties:
+        operation:
+          type: string
+          enum:
+          - remove
+        sync_key:
+          type: string
+          description: Opaque reader-scoped handle of the node; matches the sync_key of its Node.
+    ChangeUpsert:
       type: object
       required:
-      - node_id
       - operation
-      - reason
+      - sync_key
+      - node_id
       - subtree
       - node_sequence
       - node
       properties:
-        node_id:
-          type: string
         operation:
           type: string
           enum:
           - upsert
-          - remove
-        reason:
+        sync_key:
           oneOf:
           - type: string
-            enum:
-            - deleted
-            - moved_out
-            - permission_lost
           - type: 'null'
+          description: Reader-scoped key of the node; null only for an anonymous reader.
+        node_id:
+          type: string
         subtree:
           type: boolean
         node_sequence:
           type: integer
         node:
-          oneOf:
-          - $ref: '#/components/schemas/Node'
-          - type: 'null'
+          $ref: '#/components/schemas/Node'
     Comment:
       type: object
       required:

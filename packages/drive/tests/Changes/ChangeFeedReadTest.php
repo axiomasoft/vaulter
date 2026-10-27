@@ -12,9 +12,10 @@ use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\Changes\NodeChange;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
-use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
@@ -24,6 +25,7 @@ use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * Reading the change journal (PLAN2.D50, D59; P5-I15, I17, I18): the reader sees an
@@ -45,10 +47,19 @@ beforeEach(function (): void {
     $this->cursor = $this->reader->changes()->startCursor();
 });
 
-/** @return list<array{string, string, ?string}> node id, operation and reason of each change */
+/** @return list<array{?string, string}> node id (null for a remove, which names none) and operation of each change */
 function changeFeedSummary(ChangePage $page): array
 {
-    return array_map(static fn (NodeChange $change): array => [$change->nodeId, $change->operation->value, $change->reason?->value], $page->changes);
+    return array_map(static fn (NodeChange $change): array => [$change->nodeId, $change->operation->value], $page->changes);
+}
+
+/** The sync key user $user is given for $nodeId of $drive: the U1 primitive over the drive's own tenant. */
+function changeKeyOf(object $drive, int|string $nodeId, int $user = 1): string
+{
+    $actor = AccessTestHelpers::user($user);
+
+    return (new ReaderSyncIdentity((string) config('app.key'), 1))
+        ->syncKey($drive->model()->getRawOriginal('tenant_id'), $drive->model()->getKey(), new ActorRef($actor->getMorphClass(), (string) $actor->getKey()), $nodeId);
 }
 
 it('(a) returns an upsert with the current snapshot of a node the reader may see', function (): void {
@@ -67,18 +78,20 @@ it('(a) returns an upsert with the current snapshot of a node the reader may see
         ->and($page->hasMore)->toBeFalse();
 });
 
-it('(b) turns a move out of the reader\'s view into remove(moved_out) without a snapshot', function (): void {
+it('(b) turns a move out of the reader\'s view into a minimal keyed remove without a snapshot', function (): void {
     $doc = $this->drive->folders()->create('doc', $this->shared);
     $start = $this->reader->changes()->startCursor();
     $this->drive->nodes()->move($doc, $this->hidden);
 
     $page = $this->reader->changes()->list($start);
 
-    expect(changeFeedSummary($page))->toBe([[(string) $doc->id, 'remove', 'moved_out']])
-        ->and($page->changes[0]->node)->toBeNull();
+    expect(changeFeedSummary($page))->toBe([[null, 'remove']])
+        ->and($page->changes[0]->node)->toBeNull()
+        ->and($page->changes[0]->syncKey)->toBe(changeKeyOf($this->drive, $doc->id))
+        ->and($page->changes[0]->syncKey)->not->toContain((string) $doc->id);
 });
 
-it('(c) turns a revoked grant into remove(permission_lost) for the folder', function (): void {
+it('(c) turns a revoked grant into a keyed remove for the folder', function (): void {
     $team = $this->drive->folders()->create('team');
     $grant = $this->drive->access()->grant($team, new GrantInput(subject: Subject::ofModel(AccessTestHelpers::user(1)), role: RoleRegistry::READER));
     $granted = $this->reader->changes()->list($this->cursor);
@@ -86,17 +99,37 @@ it('(c) turns a revoked grant into remove(permission_lost) for the folder', func
 
     $page = $this->reader->changes()->list($granted->cursor);
 
-    expect(changeFeedSummary($granted))->toBe([[(string) $team->id, 'upsert', null]])
+    expect(changeFeedSummary($granted))->toBe([[(string) $team->id, 'upsert']])
         ->and($granted->changes[0]->subtree)->toBeTrue()
-        ->and(changeFeedSummary($page))->toBe([[(string) $team->id, 'remove', 'permission_lost']]);
+        ->and(changeFeedSummary($page))->toBe([[null, 'remove']])
+        ->and($page->changes[0]->syncKey)->toBe(changeKeyOf($this->drive, $team->id))
+        ->and($granted->changes[0]->syncKey)->toBe($page->changes[0]->syncKey);
 });
 
-it('(d) reports a trashed node as remove(deleted)', function (): void {
+it('(d) reports a trashed node as a keyed remove', function (): void {
     $doc = $this->drive->folders()->create('doc', $this->shared);
     $start = $this->reader->changes()->startCursor();
     $this->drive->nodes()->trash($doc);
 
-    expect(changeFeedSummary($this->reader->changes()->list($start)))->toBe([[(string) $doc->id, 'remove', 'deleted']]);
+    $page = $this->reader->changes()->list($start);
+
+    expect(changeFeedSummary($page))->toBe([[null, 'remove']])
+        ->and($page->changes[0]->syncKey)->toBe(changeKeyOf($this->drive, $doc->id));
+});
+
+it('(d) keeps the remove of a trashed node when it is restored into a hidden folder and renamed', function (): void {
+    // The compaction fix that was proposed for this was a false premise: only upserts are
+    // compacted, so the remove survives the later upserts of a node the reader cannot see.
+    $doc = $this->drive->folders()->create('doc', $this->shared);
+    $start = $this->reader->changes()->startCursor();
+    $this->drive->nodes()->trash($doc);
+    $this->drive->trash()->restore($doc, RestoreOptions::make()->destination($this->hidden));
+    $this->drive->nodes()->rename($doc, 'doc-hidden');
+
+    $page = $this->reader->changes()->list($start);
+
+    expect(changeFeedSummary($page))->toBe([[null, 'remove']])
+        ->and($page->changes[0]->syncKey)->toBe(changeKeyOf($this->drive, $doc->id));
 });
 
 it('(e) skips a node created where the reader cannot see, while the system actor sees it', function (): void {
@@ -109,7 +142,8 @@ it('(e) skips a node created where the reader cannot see, while the system actor
 
     expect($page->changes)->toBe([])
         ->and($page->hasMore)->toBeFalse()
-        ->and(changeFeedSummary($system))->toBe([[(string) $secret->id, 'upsert', null]]);
+        ->and(changeFeedSummary($system))->toBe([[(string) $secret->id, 'upsert']])
+        ->and($system->changes[0]->syncKey)->toHaveLength(43)->not->toBe(changeKeyOf($this->drive, $secret->id));
 });
 
 it('(f) expires a cursor whose entries were pruned (410)', function (): void {
@@ -168,7 +202,7 @@ it('(h) expires every cursor after a reset of the journal (410)', function (): v
 
     $fresh = $this->reader->changes()->startCursor();
     $doc = $this->drive->folders()->create('doc', $this->shared);
-    expect(changeFeedSummary($this->reader->changes()->list($fresh)))->toBe([[(string) $doc->id, 'upsert', null]]);
+    expect(changeFeedSummary($this->reader->changes()->list($fresh)))->toBe([[(string) $doc->id, 'upsert']]);
 });
 
 it('(i) pages by limit and advances the cursor over entries the reader cannot see', function (): void {
@@ -205,7 +239,7 @@ it('reads an archived drive and hides a drive being deleted', function (): void 
     $doc = $this->drive->folders()->create('doc', $this->shared);
     $this->drive->archive();
 
-    expect(changeFeedSummary($this->reader->changes()->list($this->cursor)))->toBe([[(string) $doc->id, 'upsert', null]]);
+    expect(changeFeedSummary($this->reader->changes()->list($this->cursor)))->toBe([[(string) $doc->id, 'upsert']]);
 
     $this->drive->model()->forceFill(['status' => DriveStatus::Deleting])->saveQuietly();
     // The handle itself refuses a drive being deleted, before the journal is read.
@@ -217,14 +251,13 @@ it('reads inside a host transaction with the head locked for share', function ()
 
     $page = app(VaulterDatabase::class)->transaction(fn (): ChangePage => $this->reader->changes()->list($this->cursor));
 
-    expect(changeFeedSummary($page))->toBe([[(string) $doc->id, 'upsert', null]]);
+    expect(changeFeedSummary($page))->toBe([[(string) $doc->id, 'upsert']]);
 });
 
 it('maps an expired cursor to 410 cursor_expired', function (): void {
     $exception = CursorExpiredException::pruned();
 
-    expect([$exception->problemCode(), $exception->httpStatus()])->toBe(['cursor_expired', 410])
-        ->and(ChangeReason::cases())->toHaveCount(3);
+    expect([$exception->problemCode(), $exception->httpStatus()])->toBe(['cursor_expired', 410]);
 });
 
 it('starts a reader at the end of the journal', function (): void {
@@ -233,4 +266,22 @@ it('starts a reader at the end of the journal', function (): void {
 
     expect($this->reader->changes()->list($start)->changes)->toBe([])
         ->and(ChangeCursor::decode($start, (new ReaderSyncIdentity((string) config('app.key'), 1))->cursorSubkey())->after)->toBe(3);
+});
+
+it('(e) keys a node per typed system reason and gives an unbound, null or anonymous viewer no key', function (): void {
+    $mapper = app(NodeSnapshotMapper::class);
+    $model = DriveTestHelpers::model($this->shared);
+    $keyFor = static fn (?ActorRef $viewer): ?string => $mapper->map($model, $viewer)->syncKey;
+
+    $audit = $keyFor(new ActorRef(ActorRef::SYSTEM_TYPE, null, 'audit'));
+    $billing = $keyFor(new ActorRef(ActorRef::SYSTEM_TYPE, null, 'billing'));
+    $member = AccessTestHelpers::user(1);
+    $user = $keyFor(new ActorRef($member->getMorphClass(), (string) $member->getKey()));
+
+    expect($audit)->toHaveLength(43)->and($billing)->toHaveLength(43)
+        ->and($audit)->not->toBe($billing)->and($audit)->not->toBe($user)
+        ->and($keyFor(new ActorRef(ActorRef::SYSTEM_TYPE, null, 'audit')))->toBe($audit)
+        // No viewer (a share link, an unbound read) and an actor without a type carry no key at all.
+        ->and($keyFor(null))->toBeNull()
+        ->and($keyFor(new ActorRef(null, null)))->toBeNull();
 });

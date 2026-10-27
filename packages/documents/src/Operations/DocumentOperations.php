@@ -158,7 +158,8 @@ final readonly class DocumentOperations implements DriveExtension
             fingerprint: ['name' => $name, 'type' => $type, 'content' => $content, 'parent' => $parentId, 'on_conflict' => ($options ?? new CreateFolderOptions)->onConflict->value],
         );
 
-        return $this->write('create', function () use ($name, $type, $content, $parent, $options): NodeSnapshot {
+        /** @var NodeSnapshot $created */
+        $created = $this->write('create', function () use ($name, $type, $content, $parent, $options): NodeSnapshot {
             $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
             $this->guard->authorizeCreate($this->context, $parent);
             $documentType = $this->types->get($type ?? $this->config->defaultType());
@@ -176,6 +177,9 @@ final readonly class DocumentOperations implements DriveExtension
 
             return $this->nodes->map($node, $this->context->actor->ref());
         }, $idempotency);
+
+        // The attempt carries the reader key; a replayed receipt (semantic, keyless) gets it once the replay is authorized.
+        return $created->syncKey === null ? $this->nodes->withSyncKey($created, $this->context->actor->ref()) : $created;
     }
 
     /**

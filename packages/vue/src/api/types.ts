@@ -45,6 +45,10 @@ export type Share = Schemas['Share']
 export type MintedShare = Schemas['MintedShare']
 export type Activity = Schemas['Activity']
 export type Change = Schemas['Change']
+/** A change that carries the node as the reader sees it now. */
+export type ChangeUpsert = Schemas['ChangeUpsert']
+/** A minimal remove: the operation and the reader-scoped sync key, nothing else. */
+export type ChangeRemove = Schemas['ChangeRemove']
 export type Comment = Schemas['Comment']
 export type UploadSession = Schemas['UploadSession']
 export type UploadPart = Schemas['UploadPart']
