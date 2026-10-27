@@ -33,6 +33,7 @@ final readonly class DriveContext
     #[Internal]
     public function __construct(
         public OperationContext $operation,
+        #[Internal]
         public Drive $drive,
     ) {
         $key = self::persistedKey($drive);
@@ -45,6 +46,7 @@ final readonly class DriveContext
         $this->idempotencyKey = $operation->idempotencyKey;
     }
 
+    #[Internal]
     public static function for(Drive $drive, Actor $actor, string $correlationId, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
     {
         return new self(
@@ -60,6 +62,7 @@ final readonly class DriveContext
         );
     }
 
+    #[Internal]
     public static function system(Drive $drive, string $reason, ?string $correlationId = null): self
     {
         return self::for(drive: $drive, actor: Actor::system($reason), correlationId: $correlationId ?? (string) Str::ulid());

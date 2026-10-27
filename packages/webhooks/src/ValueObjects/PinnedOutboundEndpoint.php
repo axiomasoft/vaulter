@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\ValueObjects;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 
 /**
  * The result of validating an outbound webhook URL: the scheme,
@@ -14,7 +14,7 @@ use Vaulter\Attributes\Internal;
  * connection lands on the very address the guard vetted — closing the DNS-rebind /
  * TOCTOU window between "resolve + check" and "connect".
  */
-#[Internal]
+#[Api]
 final readonly class PinnedOutboundEndpoint
 {
     public function __construct(

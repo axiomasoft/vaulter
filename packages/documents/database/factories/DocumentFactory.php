@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Database\Factories;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -24,7 +24,7 @@ use Vaulter\Drive\Models\Node;
  *
  * @extends VaulterFactory<Document>
  */
-#[Api]
+#[Internal]
 final class DocumentFactory extends VaulterFactory
 {
     protected $model = Document::class;

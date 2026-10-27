@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\ValueObjects\Events;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Events\DriveEvent;
@@ -18,7 +18,7 @@ use Vaulter\Support\Identity;
  *
  * @see DriveEvent::journal()
  */
-#[Internal]
+#[Api]
 final readonly class JournalEffect
 {
     public string $nodeId;

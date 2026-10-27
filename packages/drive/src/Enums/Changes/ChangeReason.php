@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Changes;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 
 /**
  * Why a node is removed from a reader's view. Only `deleted` is stored;
@@ -17,7 +17,7 @@ use Vaulter\Attributes\Internal;
  *
  * @closed The string values are stored and never change.
  */
-#[Internal]
+#[Api]
 enum ChangeReason: string
 {
     case Deleted = 'deleted';

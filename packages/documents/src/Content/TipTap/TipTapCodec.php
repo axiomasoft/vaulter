@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Content\TipTap;
 
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\ReadContent;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
@@ -33,6 +34,7 @@ final readonly class TipTapCodec implements DocumentCodec
      *
      * @param array<string, mixed> $stored
      */
+    #[Internal]
     public function decodeForRead(array $stored): ReadContent
     {
         if ($stored === []) {

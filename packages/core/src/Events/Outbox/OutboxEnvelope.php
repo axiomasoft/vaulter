@@ -6,6 +6,7 @@ namespace Vaulter\Events\Outbox;
 
 use Carbon\CarbonImmutable;
 use stdClass;
+use Vaulter\Attributes\Internal;
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Events\DomainEvent;
@@ -87,6 +88,7 @@ final readonly class OutboxEnvelope
         ];
     }
 
+    #[Internal]
     public static function fromModel(Models\OutboxEvent $row): self
     {
         return new self(

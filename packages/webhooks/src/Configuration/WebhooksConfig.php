@@ -85,6 +85,7 @@ final readonly class WebhooksConfig
      *
      * @return ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : class-string<WebhookDelivery>)
      */
+    #[Internal]
     public function model(string $key): string
     {
         return match ($key) {

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Revisions;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Node;
@@ -14,7 +13,7 @@ use Vaulter\Drive\Models\Node;
  * out of the prune window (keepForever) or release the pin. The revision is resolved
  * inside the node's own aggregate.
  */
-#[Api]
+#[Internal]
 final readonly class UpdateRevisionRetentionInput
 {
     #[Internal]

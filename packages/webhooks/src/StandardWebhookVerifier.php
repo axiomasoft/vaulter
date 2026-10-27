@@ -20,7 +20,12 @@ use Vaulter\Webhooks\Exceptions\InvalidWebhookSignatureException;
 #[Api]
 final class StandardWebhookVerifier
 {
-    public function __construct(private readonly WebhookSigner $signer = new WebhookSigner) {}
+    private readonly WebhookSigner $signer;
+
+    public function __construct()
+    {
+        $this->signer = new WebhookSigner;
+    }
 
     /**
      * @param array<string, mixed> $headers header name (any case) => value, or a list of values

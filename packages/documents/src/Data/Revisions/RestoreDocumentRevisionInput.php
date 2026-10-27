@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Revisions;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Node;
@@ -15,7 +14,7 @@ use Vaulter\Drive\Models\Node;
  * aggregate under the document lock, so a key of another document never restores.
  * expectedStateVersion is the content precondition (412 document_state_mismatch).
  */
-#[Api]
+#[Internal]
 final readonly class RestoreDocumentRevisionInput
 {
     #[Internal]

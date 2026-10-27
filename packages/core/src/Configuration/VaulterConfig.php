@@ -25,6 +25,7 @@ final readonly class VaulterConfig
      *
      * @return class-string<OutboxEvent>
      */
+    #[Internal]
     public function outboxModel(): string
     {
         $path = 'vaulter.models.outbox';

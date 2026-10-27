@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Exceptions\Nodes;
 
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -21,6 +22,7 @@ final class NodeTrashedByAncestorException extends VaulterException implements P
         parent::__construct($message);
     }
 
+    #[Internal]
     public static function forNode(Node $node, int|string $trashRootId): self
     {
         return new self(

@@ -343,18 +343,21 @@ final class ModuleBuilder
     }
 
     /** @return list<CapabilityDefinition> */
+    #[Internal]
     public function capabilityDefinitions(): array
     {
         return $this->capabilityDefinitions;
     }
 
     /** @return list<CapabilityProvider> */
+    #[Internal]
     public function capabilityProviders(): array
     {
         return $this->capabilityProviders;
     }
 
     /** @return list<SlotDefinition> */
+    #[Internal]
     public function slotDefinitions(): array
     {
         return $this->slotDefinitions;

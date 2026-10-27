@@ -198,6 +198,7 @@ final readonly class DocumentsConfig
     }
 
     /** @return ($key is 'node_comment' ? class-string<NodeComment> : class-string<DocumentRevision>) */
+    #[Internal]
     public function model(string $key): string
     {
         if ($key === 'node_comment') {

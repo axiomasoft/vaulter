@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
 /**
@@ -13,7 +13,7 @@ use Vaulter\Drive\Enums\Sharing\ShareAudience;
  * token never changes (use rotate for that). The role and the scope are fixed at
  * creation: a different grant is a different link.
  */
-#[Internal]
+#[Api]
 final readonly class ShareLinkUpdate
 {
     public function __construct(

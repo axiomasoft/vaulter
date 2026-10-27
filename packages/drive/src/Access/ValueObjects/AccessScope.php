@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
@@ -19,6 +20,7 @@ final readonly class AccessScope
         public int|string|null $tenantId = null,
     ) {}
 
+    #[Internal]
     public static function forDrive(Drive $drive): self
     {
         return new self(

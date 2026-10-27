@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\GuardedBuilder;
 use Vaulter\Database\GuardedCteBuilder;
 use Vaulter\Database\WriteScope;
@@ -40,6 +41,7 @@ trait GuardsWrites
     }
 
     /** The scoped service of the running request, job or Octane tick. */
+    #[Internal]
     protected function vaulterWriteScope(): WriteScope
     {
         return app(WriteScope::class);

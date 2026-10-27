@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\RevisionOptions;
 use Vaulter\Drive\Data\UploadSource;
@@ -24,7 +24,7 @@ use Vaulter\Drive\Models\Node;
  *
  * @extends VaulterFactory<FileRevision>
  */
-#[Api]
+#[Internal]
 final class FileRevisionFactory extends VaulterFactory
 {
     protected $model = FileRevision::class;

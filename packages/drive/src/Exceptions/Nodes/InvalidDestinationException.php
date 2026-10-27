@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Exceptions\Nodes;
 
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -27,6 +28,7 @@ final class InvalidDestinationException extends VaulterException implements Prob
 
     private const int HTTP_STATUS = 409;
 
+    #[Internal]
     public static function notAFolder(Node $destination): self
     {
         $kind = $destination->kind->value;
@@ -39,6 +41,7 @@ final class InvalidDestinationException extends VaulterException implements Prob
         );
     }
 
+    #[Internal]
     public static function trashed(Node $node): self
     {
         return new self(
@@ -49,6 +52,7 @@ final class InvalidDestinationException extends VaulterException implements Prob
         );
     }
 
+    #[Internal]
     public static function otherDrive(Node $destination, int|string $storageId): self
     {
         return new self(
@@ -59,6 +63,7 @@ final class InvalidDestinationException extends VaulterException implements Prob
         );
     }
 
+    #[Internal]
     public static function rootIsImmutable(Node $root, string $operation): self
     {
         return new self(

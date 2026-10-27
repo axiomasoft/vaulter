@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -20,7 +21,7 @@ use Vaulter\Drive\Models\Node;
  * When there is no acting user (an unauthenticated/system context), every flag is
  * false: the client shows a read-only shell rather than mis-advertising actions.
  */
-#[Internal]
+#[Api]
 final readonly class NodeAbilities
 {
     /**
@@ -30,6 +31,7 @@ final readonly class NodeAbilities
         public array $flags,
     ) {}
 
+    #[Internal]
     public static function for(?Authorizable $actor, Node $node, AccessResolver $resolver): self
     {
         if ($actor === null) {
@@ -40,6 +42,7 @@ final readonly class NodeAbilities
     }
 
     /** Reuse the exact batch decision when serializing a listing. */
+    #[Internal]
     public static function fromGrantSet(GrantSet $set): self
     {
         $flags = [];

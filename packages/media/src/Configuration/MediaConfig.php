@@ -149,6 +149,7 @@ final readonly class MediaConfig
      *
      * @return class-string<Blob>
      */
+    #[Internal]
     public function blobModel(): string
     {
         $class = $this->config->get(key: 'vaulter-media.models.blob', default: Blob::class);

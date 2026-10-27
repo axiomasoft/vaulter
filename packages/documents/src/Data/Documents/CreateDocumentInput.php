@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Drive\Enums\OnNameConflict;
@@ -18,7 +17,7 @@ use Vaulter\Drive\Models\Node;
  * resolved and authorized by DocumentOperations; the actor comes from the operation
  * context, never from the input.
  */
-#[Api]
+#[Internal]
 final readonly class CreateDocumentInput
 {
     /**

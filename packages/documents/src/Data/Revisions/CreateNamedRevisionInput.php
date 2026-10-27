@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Revisions;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 
@@ -13,7 +12,7 @@ use Vaulter\Drive\Models\Node;
  * current working state as a NAMED (non-autosave) revision with a label. keepForever
  * pins the snapshot out of the prune window.
  */
-#[Api]
+#[Internal]
 final readonly class CreateNamedRevisionInput
 {
     #[Internal]

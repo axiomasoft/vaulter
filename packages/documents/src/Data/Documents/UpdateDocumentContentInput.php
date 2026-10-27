@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Drive\Models\Node;
@@ -16,7 +15,7 @@ use Vaulter\Drive\Models\Node;
  * content is already decoded by the installed type. Binary state never enters this
  * ordinary JSON update; a collaborative replace explicitly reseeds a fresh generation.
  */
-#[Api]
+#[Internal]
 final readonly class UpdateDocumentContentInput
 {
     #[Internal]

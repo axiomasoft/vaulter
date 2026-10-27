@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -16,7 +15,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
 
-#[Api]
+#[Internal]
 final readonly class NodeLocator
 {
     #[Internal]

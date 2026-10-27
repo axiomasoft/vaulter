@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Database\Factories;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\CreateFolderOptions;
 use Vaulter\Drive\Data\UploadOptions;
@@ -24,7 +24,7 @@ use Vaulter\Drive\Models\Node;
  *
  * @extends VaulterFactory<Node>
  */
-#[Api]
+#[Internal]
 final class NodeFactory extends VaulterFactory
 {
     protected $model = Node::class;

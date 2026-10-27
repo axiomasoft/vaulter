@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Drive;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Drive\Models\Drive;
  *
  * @extends VaulterFactory<Drive>
  */
-#[Api]
+#[Internal]
 final class DriveFactory extends VaulterFactory
 {
     protected $model = Drive::class;

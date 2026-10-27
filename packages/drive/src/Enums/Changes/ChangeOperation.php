@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Changes;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 
 /**
  * What a change-journal entry tells a syncing client to do with a node.
@@ -14,7 +14,7 @@ use Vaulter\Attributes\Internal;
  *
  * @closed The string values are stored and never change.
  */
-#[Internal]
+#[Api]
 enum ChangeOperation: string
 {
     case Upsert = 'upsert';

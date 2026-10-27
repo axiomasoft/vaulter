@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Trash;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 
-#[Api]
+#[Internal]
 final readonly class TrashNodeInput
 {
     #[Internal]

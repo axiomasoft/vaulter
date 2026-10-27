@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
@@ -26,6 +27,7 @@ use Vaulter\Drive\Profiles\ProfileRegistry;
 #[Api]
 final class PermissionDriverContractTests
 {
+    #[Internal]
     public function assertPermissionDriverContract(AccessResolver $resolver, Authorizable $actor, Node $parent, Node $child): void
     {
         Assert::assertTrue($resolver->can($actor, Ability::Edit, $parent));

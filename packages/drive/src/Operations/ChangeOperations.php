@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -47,9 +48,10 @@ use Vaulter\Support\Identity;
  * explains why it disappeared, and is skipped otherwise. A remove carries no snapshot, no
  * node id and no reason, only the reader-scoped sync key of the node (PLAN4.D20).
  */
-#[Internal]
+#[Api]
 final readonly class ChangeOperations
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private ChangeHeadRepository $heads,

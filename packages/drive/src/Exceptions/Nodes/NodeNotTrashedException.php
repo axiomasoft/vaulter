@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Exceptions\Nodes;
 
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -23,6 +24,7 @@ final class NodeNotTrashedException extends VaulterException implements ProblemE
 
     private const int HTTP_STATUS = 409;
 
+    #[Internal]
     public static function forNode(Node $node): self
     {
         return new self(

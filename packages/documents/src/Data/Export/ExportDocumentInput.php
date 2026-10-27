@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Export;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Node;
@@ -14,7 +13,7 @@ use Vaulter\Drive\Models\Node;
  * checkpoint the caller already resolved inside this node's document) or, when null,
  * from the working state.
  */
-#[Api]
+#[Internal]
 final readonly class ExportDocumentInput
 {
     #[Internal]

@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Access;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
@@ -31,7 +32,7 @@ use Vaulter\Drive\Profiles\ProfileRegistry;
  *
  * The default key is 'database' — the standalone {@see DatabasePermissionDriver}.
  */
-#[Internal]
+#[Api]
 final class PermissionDriverManager
 {
     /**
@@ -51,6 +52,7 @@ final class PermissionDriverManager
      */
     private array $resolved = [];
 
+    #[Internal]
     public function __construct(
         private readonly AccessConfig $accessConfig,
         private readonly Container $container,
@@ -91,6 +93,7 @@ final class PermissionDriverManager
     /** @internal
      * @return list<Subject>
      */
+    #[Internal]
     public function subjectsFor(PermissionDriver $driver, Authorizable $actor, AccessScope $scope): array
     {
         return $driver instanceof SpatiePermissionDriver
@@ -117,6 +120,7 @@ final class PermissionDriverManager
      * is inherited unchanged from a base lane that returns just [actor]), never for a
      * working-but-unmarked override.
      */
+    #[Internal]
     public function enumeratesRoleSubjects(PermissionDriver $driver): bool
     {
         if ($driver instanceof EnumeratesRoleSubjects) {
