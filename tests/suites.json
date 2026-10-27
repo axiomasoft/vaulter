@@ -1132,6 +1132,7 @@
                         "packages/drive/tests/Testing/FactoriesTest.php",
                         "packages/drive/tests/Testing/ScanLifecycleContractTest.php",
                         "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php",
+                        "packages/drive/tests/Uploads/P3/CompletionDeadlineTest.php",
                         "packages/drive/tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
                         "packages/drive/tests/Uploads/P3/DestinationScanPolicyTest.php",
                         "packages/drive/tests/Uploads/P3/QuarantineBoundaryTest.php",

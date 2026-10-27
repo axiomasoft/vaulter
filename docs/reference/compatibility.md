@@ -29,6 +29,12 @@ return type a caller may rely on, changes a machine code, or removes an enum cas
 parameter, a method to a result type, a new exception code, a new enum case of an `@extensible` enum, a
 config key or an event is **MINOR**.
 
+A new config key is added this way, for example the upload completion budget
+`vaulter-drive.uploads.resumable.complete_timeout_seconds` (`VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS`,
+integer 1..300, default 60, PLAN4-D19). It bounds one completion request, DB retries included; when it runs
+out the completion is refused with `upload_conflict` (409), nothing is published and the staged bytes stay
+for a repeat.
+
 ## Packages and versions
 
 Every PHP package is released with one version and one tag, and each split repository

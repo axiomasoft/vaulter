@@ -26,6 +26,7 @@ use Vaulter\Drive\Idempotency\UploadSessionCodec;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
+use Vaulter\Drive\Uploads\CompletionClock;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
@@ -53,6 +54,7 @@ final readonly class UploadOperations
         private NodeLocator $locator,
         private OperationGuard $guard,
         private OperationRunner $runner,
+        private CompletionClock $clock,
     ) {
         $drive = $handle->model();
         $key = $drive->getRawOriginal($drive->getKeyName());
@@ -96,13 +98,17 @@ final readonly class UploadOperations
     public function complete(UploadSession|int|string $session): Node
     {
         $session = $this->find($session);
+        // One finite monotonic budget for the whole request (D19), started outside every
+        // DB attempt: a retry spends what is left, it never gets a fresh deadline.
+        $deadline = $this->clock->start();
 
         // The runner repeats the whole completion after a deadlock or serialization
         // failure (bounded): the staged protocol bytes survive a rollback.
-        return $this->write('complete', fn (): Node => $this->manager->withSession($session, function (UploadSession $locked): Node {
+        return $this->write('complete', fn (): Node => $this->manager->withSession($session, function (UploadSession $locked) use ($deadline): Node {
             if ($locked->status === UploadStatus::Committed) {
-                return $this->completion->execute(context: $this->context, session: $locked);
+                return $this->completion->execute(context: $this->context, session: $locked, deadline: $deadline);
             }
+            $this->completion->preflight(session: $locked, deadline: $deadline);
             $this->completion->authorizeSession(context: $this->context, session: $locked);
             $this->assertResumable();
             if ($locked->protocol === UploadProtocol::S3Multipart && $locked->status !== UploadStatus::Assembled) {
@@ -113,7 +119,7 @@ final readonly class UploadOperations
                 throw UploadConflictException::forClosedSession($locked->upload_id);
             }
 
-            return $this->manager->commitAssembled(session: $locked, commit: fn (UploadSession $assembled): Node => $this->completion->execute(context: $this->context, session: $assembled));
+            return $this->manager->commitAssembled(session: $locked, commit: fn (UploadSession $assembled): Node => $this->completion->execute(context: $this->context, session: $assembled, deadline: $deadline));
         }));
     }
 

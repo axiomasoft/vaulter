@@ -56,6 +56,30 @@ final class UploadConflictException extends VaulterException implements ProblemE
         );
     }
 
+    /**
+     * The completion request spent its finite budget (D19) before the commit was
+     * published. Nothing was published; the session stays Assembled with its
+     * staged bytes, so the same completion may be repeated.
+     */
+    public static function forCompletionDeadline(string $uploadId, int $seconds): self
+    {
+        return new self(
+            "[Vaulter] Upload session [{$uploadId}] did not complete within {$seconds}s; nothing was published. ".
+            'Fix: repeat the completion; the staged bytes are kept until the session expires. '.
+            'Docs: '.self::docs('upload-conflict'),
+        );
+    }
+
+    /** The staged storage stream cannot take a transport timeout, so its blocking reads are unbounded (D19). */
+    public static function forUnboundedStorage(string $uploadId, string $stream): self
+    {
+        return new self(
+            "[Vaulter] Upload session [{$uploadId}] cannot complete: staged storage stream [{$stream}] does not support a bounded transport timeout. ".
+            'Fix: stage resumable uploads on a local or socket-backed disk with finite timeouts. '.
+            'Docs: '.self::docs('upload-conflict'),
+        );
+    }
+
     public function problemCode(): string
     {
         return self::PROBLEM_CODE;

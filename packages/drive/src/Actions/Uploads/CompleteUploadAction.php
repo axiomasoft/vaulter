@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Uploads;
 
 use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
@@ -25,6 +26,8 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\NodeName;
+use Vaulter\Drive\Uploads\CompletionClock;
+use Vaulter\Drive\Uploads\CompletionDeadline;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
 
@@ -39,15 +42,19 @@ final readonly class CompleteUploadAction
         private NodeLocator $locator,
         private OperationGuard $guard,
         private UploadCleanupReconciler $cleanup,
+        private CompletionClock $clock,
     ) {}
 
-    public function execute(DriveContext $context, UploadSession $session): Node
+    /** @param CompletionDeadline|null $deadline the caller's request budget; a direct call starts its own */
+    public function execute(DriveContext $context, UploadSession $session, ?CompletionDeadline $deadline = null): Node
     {
+        $deadline ??= $this->clock->start();
+
         // This transaction owns the staged-byte readers, so it never retries itself, and
         // the transactions nested below cannot either (Laravel retries only the outermost
         // level). A deadlock/serialization failure is retried by UploadOperations::complete()
         // through UploadSessionManager::withSession(attempts: 3) once everything rolled back.
-        return $this->database->transaction(function () use ($context, $session): Node {
+        return $this->database->transaction(function () use ($context, $session, $deadline): Node {
             $locked = $this->sessions->acquireForPatch($session);
             $this->assertOwnership(context: $context, session: $locked);
             if ($locked->status === UploadStatus::Committed && $locked->input_fingerprint === null) {
@@ -72,13 +79,16 @@ final readonly class CompleteUploadAction
             if ($locked->status !== UploadStatus::Assembled) {
                 throw UploadConflictException::forClosedSession($locked->upload_id);
             }
+            // The staged disk is also the CAS disk: refuse an unboundable one before opening anything.
+            $this->preflight(session: $locked, deadline: $deadline);
             $stream = $this->staged->readStream($locked);
             $prepared = null;
             try {
                 if (!is_resource($stream)) {
                     throw new RuntimeException("Cannot commit upload session [{$locked->upload_id}]: no staged bytes are present.");
                 }
-                $input = $this->input(context: $context, session: $locked, stream: $stream);
+                // Every staged chunk read is bounded by what is left of the request budget.
+                $input = $this->input(context: $context, session: $locked, stream: $deadline->bound(stream: $stream, uploadId: $locked->upload_id));
                 try {
                     $prepared = $this->ingest->prepare(context: $context, data: $input);
                 } catch (UploadRejectedException $exception) {
@@ -94,6 +104,7 @@ final readonly class CompleteUploadAction
                     throw UploadConflictException::forClosedSession($locked->upload_id);
                 }
                 $fingerprint = $this->fingerprint(session: $locked, sha256: $facts->sha256, size: $facts->size, mime: $facts->detectedMimeType, name: $facts->name);
+                $deadline->assertOpen($locked->upload_id);
                 $receipt = $this->ingest->receipt(context: $context, data: $this->input(context: $context, session: $locked, stream: $stream, prepared: $prepared));
                 $this->sessions->markCommitted(session: $locked, assembledBlobId: $receipt->revision->blob_id ?? throw UploadConflictException::forClosedSession($locked->upload_id), resultNodeId: $receipt->node->id, resultRevisionId: $receipt->revision->id, inputFingerprint: $fingerprint);
                 $this->scheduleCleanup($locked);
@@ -109,6 +120,12 @@ final readonly class CompleteUploadAction
                 }
             }
         }, attempts: 1);
+    }
+
+    /** D19: the session's staged/CAS disk must take a bounded transport timeout before any storage call. */
+    public function preflight(UploadSession $session, CompletionDeadline $deadline): void
+    {
+        $deadline->preflight(disk: $this->staged->diskFor($session), uploadId: $session->upload_id);
     }
 
     /** Authorize freshly reloaded ownership, tenant and the current target. */
@@ -226,7 +243,7 @@ final readonly class CompleteUploadAction
         return $mime === 'image/jpg' ? 'image/jpeg' : $mime;
     }
 
-    /** @param resource $stream */
+    /** @param resource|StreamInterface $stream */
     private function input(DriveContext $context, UploadSession $session, mixed $stream, ?PreparedUpload $prepared = null): IngestFileInput
     {
         $target = $session->target_node_id === null ? null : $this->locator->find(context: $context, key: $session->target_node_id);

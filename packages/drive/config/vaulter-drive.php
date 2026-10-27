@@ -120,6 +120,8 @@ return [
             'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608),
             'max_chunk_size' => env('VAULTER_UPLOAD_MAX_CHUNK_BYTES', 67_108_864),
             'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
+            // Finite monotonic budget of one completion request, DB retries included (1..300 s).
+            'complete_timeout_seconds' => env('VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS', 60),
             'max_active_sessions_per_actor' => env('VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS', 20),
             'metadata' => [
                 'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],

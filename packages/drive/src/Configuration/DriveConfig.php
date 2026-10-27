@@ -317,6 +317,16 @@ final readonly class DriveConfig implements ScanWorkSettings
         return max($bytes, 0);
     }
 
+    /** The finite completion budget (D19): 1..300 s, default 60, across all DB retries of one request. */
+    public function completeTimeoutSeconds(): int
+    {
+        $value = $this->config->get(key: 'vaulter-drive.uploads.resumable.complete_timeout_seconds', default: 60);
+
+        $seconds = is_numeric($value) ? (int) $value : 60;
+
+        return min(max($seconds, 1), 300);
+    }
+
     public function sessionTtlHours(): int
     {
         $value = $this->config->get(key: 'vaulter-drive.uploads.resumable.session_ttl_hours', default: 24);

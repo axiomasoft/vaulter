@@ -6050,6 +6050,20 @@
             "id": "env:VAULTER_COLLAB_SECRET",
             "kind": "config",
             "reason": "P5.4 removes the single room-token secret together with hub.jwt_secret; no legacy fallback before 1.0"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D19",
+            "id": "config:vaulter-drive.uploads.resumable.complete_timeout_seconds",
+            "kind": "config",
+            "reason": "P5.6 D19: finite monotonic completion budget for one upload completion request (typed 1..300 s, default 60), started before the session critical section and shared by its DB retries; staged reads are bounded by the remaining budget."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D19",
+            "id": "env:VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS",
+            "kind": "config",
+            "reason": "P5.6: environment variable of vaulter-drive.uploads.resumable.complete_timeout_seconds"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",
