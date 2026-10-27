@@ -34,6 +34,7 @@ return [
         27 => 'IdStrategy/Ulid/DriveMigrationsUlidTest.php',
         28 => 'IdStrategy/Uuid7/DriveMigrationsUuid7Test.php',
         29 => 'Schema/HostKeyColumnsSchemaTest.php',
+        30 => 'Reliability/PartialFailureTest.php',
     ],
     'engine:server' => [
         0 => 'Concurrency/EventRecorderRollbackPgTest.php',

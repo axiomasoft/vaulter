@@ -18906,7 +18906,7 @@
       ]
     },
     "drive": {
-      "count": 504,
+      "count": 512,
       "names": [
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_keeps_the_event_out_of_the_activity_feed_and_away_from_webhooks__with_the_access_policy_as_its_subject",
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_records_a_drive_wide_change_when_the_drive_is_archived__unarchived_and_deleted",
@@ -19411,7 +19411,15 @@
         "P\\Tests\\Sharing\\ShareIdempotencyTest::__pest_evaluable_it_replays_a_created_link_with_the_same_token_and_keeps_that_token_in_the_receipt_only_as_ciphertext",
         "P\\Tests\\Sharing\\ShareIdempotencyTest::__pest_evaluable_it_replays_a_rotation_with_the_same_new_token_to_the_same_actor__once",
         "P\\Tests\\Sharing\\ShareIdempotencyTest::__pest_evaluable_it_replays_an_update_and_a_revocation_once_each_and_stores_a_stale_refusal_under_its_key",
-        "P\\Tests\\Sharing\\ShareIdempotencyTest::__pest_evaluable_it_runs_a_new_operation_for_another_actor_under_the_same_key_and_never_hands_it_the_first_token"
+        "P\\Tests\\Sharing\\ShareIdempotencyTest::__pest_evaluable_it_runs_a_new_operation_for_another_actor_under_the_same_key_and_never_hands_it_the_first_token",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_config_types_the_completion_budget_as_1__300_seconds_with_a_60_second_default",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_interrupted_rejects_a_staged_stream_that_stops_making_progress",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_preflight_refuses_an_unboundable_remote_disk_before_any_staged_open__CAS_write_or_assemble",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_request_starts_the_budget_once_before_the_session_critical_section_of_UploadOperations__complete",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_retry_shares_one_monotonic_budget_across_attempts_instead_of_resetting_it",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_slow_stream_refuses_a_staged_stream_that_outlives_the_budget_between_chunks_without_publishing",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_transport_bounds_a_socket_stream_with_the_remaining_budget_and_reads_it",
+        "P\\Tests\\Uploads\\P3\\CompletionDeadlineTest::__pest_evaluable_it_D19_transport_refuses_a_stream_without_an_enforceable_timeout_as_an_unsupported_capability"
       ]
     },
     "documents": {
@@ -20560,10 +20568,22 @@
       ]
     },
     "integration": {
-      "count": 2,
+      "count": 14,
       "names": [
+        "P\\Tests\\Integration\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Security_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Integration\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_reports_production_invariants_as_unaccepted__accepted_or_satisfied_under_the_core_production__invariants_check",
         "P\\Tests\\Integration\\OpenApi\\OpenApiRouteCoverageTest::__pest_evaluable_it_assigns_every_registered_endpoint_to_exactly_its_owner_spec_with_closed_references",
-        "P\\Tests\\Integration\\OpenApi\\OpenApiRouteCoverageTest::__pest_evaluable_it_rejects_public_endpoint_loss_orphan_references_and_missing_problem_metadata"
+        "P\\Tests\\Integration\\OpenApi\\OpenApiRouteCoverageTest::__pest_evaluable_it_rejects_public_endpoint_loss_orphan_references_and_missing_problem_metadata",
+        "P\\Tests\\Integration\\Reliability\\PartialFailureTest::__pest_evaluable_it_consumes_an_event_once_when_the_relay_pass_is_repeated_after_the_delivery_completed",
+        "P\\Tests\\Integration\\Reliability\\PartialFailureTest::__pest_evaluable_it_keeps_a_committed_event_durable_when_its_delivery_stage_throws_once__and_delivers_it_on_the_next_pass",
+        "P\\Tests\\Integration\\Reliability\\PartialFailureTest::__pest_evaluable_it_never_resurrects_a_dead_delivery_after_the_clock_moves_forward",
+        "P\\Tests\\Integration\\Reliability\\PartialFailureTest::__pest_evaluable_it_retries_an_accepted_then_timed_out_webhook_delivery_with_the_same_webhook_id",
+        "P\\Tests\\Integration\\Security\\RedactionTest::__pest_evaluable_it_issues_a_session_with_private_document_content_and_rejects_a_bearer_credential_safely",
+        "P\\Tests\\Integration\\Security\\RedactionTest::__pest_evaluable_it_issues_and_replays_a_share_credential_while_keeping_failures_and_validation_clean",
+        "P\\Tests\\Integration\\Security\\RedactionTest::__pest_evaluable_it_issues_and_rotates_webhook_secrets_then_inspects_a_real_transport_failure_persisted_error",
+        "P\\Tests\\Integration\\Security\\RedactionTest::__pest_evaluable_it_keeps_malicious_metadata_keys_out_of_renderer_warnings_and_problem_responses",
+        "P\\Tests\\Integration\\Security\\RedactionTest::__pest_evaluable_it_proves_the_collector_sees_log_messages_recursive_context_and_reported_exception_chains",
+        "P\\Tests\\Integration\\Security\\RedactionTest::__pest_evaluable_it_returns_a_signed_direct_URL_only_in_the_successful_download_contract"
       ]
     }
   },

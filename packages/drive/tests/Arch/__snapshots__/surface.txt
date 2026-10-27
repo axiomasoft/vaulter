@@ -121,6 +121,7 @@ Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class imple
   public function blockedExtensions(): array
   public function changes(): Vaulter\Drive\Configuration\ChangesConfig
   public function chunkSize(): int
+  public function completeTimeoutSeconds(): int
   public function defaultQuota(): ?int
   public function downloads(): Vaulter\Drive\Configuration\DownloadsConfig
   public function featureEnabled(string $feature, ?string $profile = null): bool
@@ -1425,7 +1426,9 @@ Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException api since 1.0 fina
 
 Vaulter\Drive\Exceptions\Uploads\UploadConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function forClosedSession(string $uploadId): self
+  public static function forCompletionDeadline(string $uploadId, int $seconds): self
   public static function forSession(string $uploadId): self
+  public static function forUnboundedStorage(string $uploadId, string $stream): self
   public function httpStatus(): int
   public function problemCode(): string
 

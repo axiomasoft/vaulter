@@ -333,7 +333,8 @@
                         "tests/Integration/Doctor/CoreDoctorChecksTest.php",
                         "tests/Integration/Observability/P85/P85Section53CoreMetricsTest.php",
                         "tests/Integration/Outbox/OutboxRelayTest.php",
-                        "tests/Integration/Outbox/OutboxWriteTest.php"
+                        "tests/Integration/Outbox/OutboxWriteTest.php",
+                        "tests/Integration/Reliability/PartialFailureTest.php"
                     ]
                 },
                 {

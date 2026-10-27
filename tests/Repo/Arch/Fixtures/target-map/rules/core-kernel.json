@@ -1869,6 +1869,46 @@
             "action": "keep",
             "phase": "stay",
             "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Security\\ProductionInvariant",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D10 (P5.7): production-fatal invariant SPI and internal diagnostics of the kernel — stays in core; no public type promotion and no zone reclassification"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\ProductionInvariantsCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D10 (P5.7): production-fatal invariant SPI and internal diagnostics of the kernel — stays in core; no public type promotion and no zone reclassification"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Configuration\\InsecureProductionConfiguration",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D10 (P5.7): production-fatal invariant SPI and internal diagnostics of the kernel — stays in core; no public type promotion and no zone reclassification"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Security\\ProductionInvariants",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D10 (P5.7): production-fatal invariant SPI and internal diagnostics of the kernel — stays in core; no public type promotion and no zone reclassification"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Security\\TenancyInvariant",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D10 (P5.7): production-fatal invariant SPI and internal diagnostics of the kernel — stays in core; no public type promotion and no zone reclassification"
         }
     ]
 }

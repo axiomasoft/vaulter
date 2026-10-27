@@ -264,6 +264,28 @@
             "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::boot",
             "target": "\\Vaulter\\Media\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
+        },
+        {
+            "category": "explicit-adapter",
+            "count": 1,
+            "file": "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
+            "kind": "probe",
+            "reason": "$stream — типизированный PSR-обёрточный поток CompletionDeadline::bound над staged-потоком: адаптер ограничения времени чтения, а не container-bound и не feature-probe ресурса; недоступный/неограничиваемый диск отклоняется fail-closed",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Actions\\Uploads\\CompleteUploadAction::execute",
+            "target": "$stream",
+            "view": "current"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/drive/src/Security/PermissionDriverInvariant.php",
+            "kind": "probe",
+            "reason": "проверка resolved ProfileRegistry (Application::resolved) — состояние жизненного цикла хоста, не class_exists и не выбор модуля; зеркалит запись DriveConfigValidator::validate",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Security\\PermissionDriverInvariant::violation",
+            "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
+            "view": "current"
         }
     ],
     "invariant": "I4",

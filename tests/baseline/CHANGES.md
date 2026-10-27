@@ -2147,7 +2147,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `repo`: 304 (introduced P1.3)
 - `core`: 112
 - `media`: 148
-- `drive`: 504
+- `drive`: 512
 - `documents`: 277
 - `azgard`: 9
 - `filament`: 27
@@ -2156,4 +2156,4 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `collaboration`: 461
 - `hub`: 30
 - `vue-collaboration`: 57
-- `integration`: 2
+- `integration`: 14

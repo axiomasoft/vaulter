@@ -87,7 +87,7 @@ return [
 | Key | Env | Default | Purpose |
 |---|---|---|---|
 | `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to (`wss://` in production). |
-| `hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | *(unset)* | Room-token keys, `kid:secret` pairs (comma-separated in the environment): HS256, each at least 32 bytes and different from the webhook secret. Tokens are verified with any key of the set and signed with `jwt_active_kid`. Lives only on Laravel, never on the hub — see [key rotation](key-rotation.md). |
+| `hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | *(unset)* | Room-token keys, `kid:secret` pairs (comma-separated in the environment): HS256, each at least 32 bytes and different from the webhook secret. Tokens are verified with any key of the set and signed with `jwt_active_kid`. Lives only on Laravel, never on the hub — see [key rotation](../key-rotation.md). |
 | `hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | *(unset)* | The kid of the key that signs new and renewed tokens; it must be in `jwt_keys`. |
 | `hub.issuer` | `VAULTER_COLLAB_ISSUER` | `app.url` | The exact `iss` of a room token, taken from the server configuration (never the request host). |
 | `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call and of the control channel. Shared with the hub; every key must differ from it — an equal value is an `InvalidConfigurationException` at boot (the hub holds this secret, so with the same value it could sign a room token for any user). |

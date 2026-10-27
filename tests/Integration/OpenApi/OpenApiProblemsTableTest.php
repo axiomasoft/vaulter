@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Symfony\Component\Yaml\Yaml;
 use Vaulter\Http\Problems\ErrorsReference;
-use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 
 require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
-
 
 require_once dirname(__DIR__).'/Http/Problems/ProblemCatalogHelpers.php';
 
@@ -21,7 +21,7 @@ require_once dirname(__DIR__).'/Http/Problems/ProblemCatalogHelpers.php';
  */
 function openApiProblemsReference(): ErrorsReference
 {
-    return new ErrorsReference(new \Vaulter\Http\Problems\ProblemCatalog(
+    return new ErrorsReference(new ProblemCatalog(
         static fn (): array => array_map(
             static fn (array $classes): array => array_map(static fn (string $class) => new $class, $classes),
             array_filter(monorepoProblemSources(), static fn (string $module): bool => ReleaseOpenApi::moduleChannel($module) === 'public', ARRAY_FILTER_USE_KEY),

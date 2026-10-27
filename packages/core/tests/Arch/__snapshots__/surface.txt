@@ -135,6 +135,10 @@ Vaulter\Contracts\Routing\RouteLabelSource spi:implement since 1.0 interface
   public function operations(): array
   public function throttled(): array
 
+Vaulter\Contracts\Security\ProductionInvariant spi:implement since 1.0 interface
+  public function id(): string
+  public function violation(): ?string
+
 Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
   public function tenantOf(Illuminate\Database\Eloquent\Model $owner): int|null|string
 
@@ -306,6 +310,9 @@ Vaulter\Exceptions\Concurrency\StaleWriteException api since 1.0 final class ext
   public static function of(string $aggregate, int|string $id): self
   public function problemCode(): string
   public function problemDetails(): array
+
+Vaulter\Exceptions\Configuration\InsecureProductionConfiguration api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function problemCode(): string
 
 Vaulter\Exceptions\Configuration\InvalidConfigurationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
   public function problemCode(): string

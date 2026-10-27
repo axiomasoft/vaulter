@@ -61,6 +61,7 @@ Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException api si
   public function problemDetails(): array
 
 Vaulter\Collaboration\Exceptions\CollaborationConfigException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function missingIssuer(): self
   public static function missingSecret(): self
 
 Vaulter\Collaboration\Exceptions\CollaborationDrainingException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails

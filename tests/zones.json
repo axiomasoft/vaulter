@@ -20,6 +20,7 @@
             "suite": "core",
             "src": [
                 "packages/core/src/VaulterServiceProvider.php",
+                "packages/core/src/Security",
                 "packages/core/src/Attributes",
                 "packages/core/src/Configuration",
                 "packages/core/src/Contracts",
@@ -890,6 +891,7 @@
         "tests/Integration/Modules/ModuleUninstallTest.php",
         "tests/Integration/Outbox/OutboxRelayTest.php",
         "tests/Integration/Outbox/OutboxWriteTest.php",
+        "tests/Integration/Reliability/PartialFailureTest.php",
         "tests/Integration/Schema/BlobDedupIndexTest.php",
         "tests/Integration/Schema/CanonicalSchemaTest.php",
         "tests/Integration/Schema/HotPathIndexesTest.php",

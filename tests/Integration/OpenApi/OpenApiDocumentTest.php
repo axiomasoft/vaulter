@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 
 require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
-
 
 // The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
 uses(EnablesWebhooksModule::class);

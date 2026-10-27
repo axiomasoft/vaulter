@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\Yaml\Yaml;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
-
-use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 
 require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
 
@@ -60,7 +59,7 @@ it('assigns every registered endpoint to exactly its owner spec with closed refe
 });
 
 it('rejects public endpoint loss orphan references and missing problem metadata', function (): void {
-    $source = \Symfony\Component\Yaml\Yaml::parseFile(OpenApiContract::specPath());
+    $source = Yaml::parseFile(OpenApiContract::specPath());
     $missing = $source;
     unset($missing['paths'][array_key_first($missing['paths'])]);
     $orphan = $source;
@@ -68,6 +67,6 @@ it('rejects public endpoint loss orphan references and missing problem metadata'
     $metadata = $source;
     unset($metadata['components']['schemas']['Problem']['x-vaulter-problems']);
     foreach ([$missing, $orphan, $metadata] as $fixture) {
-        expect(fn () => ReleaseOpenApi::assertContract(OpenApiContract::fromYaml(\Symfony\Component\Yaml\Yaml::dump($fixture, 30)), v1Routes()))->toThrow(LogicException::class);
+        expect(fn () => ReleaseOpenApi::assertContract(OpenApiContract::fromYaml(Yaml::dump($fixture, 30)), v1Routes()))->toThrow(LogicException::class);
     }
 });
