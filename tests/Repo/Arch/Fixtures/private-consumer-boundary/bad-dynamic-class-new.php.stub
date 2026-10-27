@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; final class X { public function f(): object { $c = "Vaulter\\Drive\\Models\\Node"; return new $c; } }

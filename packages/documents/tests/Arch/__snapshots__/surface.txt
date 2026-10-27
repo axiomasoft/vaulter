@@ -350,6 +350,7 @@ Vaulter\Documents\Events\Documents\DocumentContentUpdated api since 1.0 final re
   public Vaulter\Documents\Models\Revisions\DocumentRevision $version
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public function data(): array
+  public function documentId(): int|string
   public function isExternal(): bool
   public function journal(): Vaulter\Drive\ValueObjects\Events\JournalEffect
   public function scope(): Vaulter\ValueObjects\Events\EventScope
@@ -379,6 +380,7 @@ Vaulter\Documents\Events\Revisions\DocumentRestored api since 1.0 final readonly
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public function data(): array
+  public function documentId(): int|string
   public function journal(): Vaulter\Drive\ValueObjects\Events\JournalEffect
   public function scope(): Vaulter\ValueObjects\Events\EventScope
   public function subject(): Vaulter\ValueObjects\Events\EventSubject

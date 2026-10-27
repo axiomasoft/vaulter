@@ -13,7 +13,6 @@ use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
-use Vaulter\Support\Identity;
 
 /**
  * Closes the log of a generation a restore or a REST replace left (`collaboration.generations`, an event sink): in the
@@ -34,7 +33,7 @@ final readonly class GenerationCloser implements EventSink
         if ($event instanceof DocumentRestored || $event instanceof DocumentContentUpdated) {
             $now = Carbon::now();
             $writer->connection()->table($this->tables->table('collaboration_heads'))
-                ->where('document_id', Identity::key($event->version->document_id))
+                ->where('document_id', $event->documentId())
                 ->where('generation', '<', $event->epoch)
                 ->whereNull('retired_at')
                 ->update(['retired_at' => $now, 'updated_at' => $now]);

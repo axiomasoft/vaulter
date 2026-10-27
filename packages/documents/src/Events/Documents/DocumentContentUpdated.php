@@ -13,6 +13,7 @@ use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
+use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -43,6 +44,16 @@ final readonly class DocumentContentUpdated extends DriveEvent
         ?CarbonImmutable $occurredAt = null,
     ) {
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    /**
+     * Key of the document this write belongs to: the owner of {@see $version}, as the key column carries it.
+     */
+    #[Api]
+    public function documentId(): int|string
+    {
+        return Identity::key($this->version->document_id)
+            ?? throw new \LogicException('A document event carries a revision without a document key.');
     }
 
     public function type(): DocumentEventType

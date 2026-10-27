@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; use Vaulter\Database\VaulterDatabase; final class X { public function __construct(private VaulterDatabase $d) {} public function f(): mixed { return $this->d->hiddenProperty; } }

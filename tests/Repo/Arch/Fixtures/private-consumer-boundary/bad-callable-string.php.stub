@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; final class X { public function f(): void { call_user_func("Vaulter\\Support\\LoadTier::set", "M"); } }

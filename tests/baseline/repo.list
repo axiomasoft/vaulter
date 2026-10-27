@@ -129,12 +129,29 @@ P\Tests\Repo\Arch\MoveTypesTest::__pest_evaluable_it_selects_the_phase_P5_moves_
 P\Tests\Repo\Arch\MoveTypesTest::__pest_evaluable_it_still_refuses_an_empty_type_selection_when_no_tests_are_given
 P\Tests\Repo\Arch\MoveTypesTest::__pest_evaluable_it_stops_on_a_conflict_before_it_changes_anything
 P\Tests\Repo\Arch\MoveTypesTest::__pest_evaluable_it_stops_on_a_file_that_does_not_parse__with_exit_1_and_no_change
-P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_fails_on_an_empty_scan__a_stale_or_wildcard_declaration_and_an_unreadable_map
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_audits_the_whole_map__an_empty_scan__unscanned_shipped_code__and_a_stale__wildcard__duplicate_or_orphaned_declaration_fail
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_keeps_every_production_and_shipped_Testing_edge_of_the_private_consumer_on_the_published_surface
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_keeps_the_seven_kernel_seams_allowed_while_the_Internal_scheduling_callback__tier_setter_and_constructors_stay_rejected
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_a_private_DTO_leaked_through_a_stable_signature_while_a_published_type_there_is_accepted
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #1"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #10"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #11"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #12"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #13"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #14"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #15"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #16"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #17"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #18"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #19"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #2"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #20"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #21"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #22"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #23"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #24"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #25"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #26"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #3"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #4"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #5"
@@ -142,6 +159,7 @@ P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_n
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #7"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #8"
 P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_rejects_the_negative_fixtures_and_accepts_the_positive_ones"('/home/vostrikov/projects/pack…p.stub') #9"
+P\Tests\Repo\Arch\PrivateConsumerBoundaryTest::__pest_evaluable_it_scans_all_shipped_production_PHP_of_the_private_consumer__src_including_Testing__routes__config__database_and_resources
 P\Tests\Repo\Arch\SurfaceManifestTest::__pest_evaluable_it_keeps_every_type_of_the_repository_under_exactly_one_surface_attribute
 P\Tests\Repo\Arch\SurfaceManifestTest::__pest_evaluable_it_manifest__a_changed_signature__a_dropped_Internal_or_a_new_member_is_a_visible_difference
 P\Tests\Repo\Arch\SurfaceManifestTest::__pest_evaluable_it_manifest__an_Api_type_with_a_technical_constructor_shows_no_constructor_and_still_shows_its_promoted_properties

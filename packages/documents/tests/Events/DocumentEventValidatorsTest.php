@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
+use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -52,4 +53,25 @@ it('puts the writer validators of a checkpointed save into the envelope', functi
     expect($data['state_version'])->toBe($document->state_version)
         ->and($data['epoch'])->toBe($document->collab_epoch)
         ->and($data['checkpoint'])->toBeTrue();
+});
+
+it('exposes the document key of a save and of a restore apart from the node key', function (): void {
+    config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);
+    $documents = Documents::in(DocumentTestHelpers::drive());
+    $seen = [];
+    Event::listen(DocumentContentUpdated::class, static function (DocumentContentUpdated $event) use (&$seen): void {
+        $seen['updated'] = $event->documentId();
+    });
+    Event::listen(DocumentRestored::class, static function (DocumentRestored $event) use (&$seen): void {
+        $seen['restored'] = $event->documentId();
+    });
+    $node = $documents->create('Spec', content: DocumentTestHelpers::content('one')->toArray());
+    $documents->update($node, DocumentTestHelpers::content('two')->toArray());
+    $document = Document::query()->where('node_id', $node->id)->sole();
+    $first = $document->revisions()->orderBy('number')->firstOrFail();
+    $documents->restore($node->id, $first->getKey());
+
+    expect($seen['updated'])->toBe($document->getKey())
+        ->and($seen['restored'])->toBe($document->getKey())
+        ->and($document->getKey())->not->toBe($node->id);
 });

@@ -1,0 +1,1 @@
+<?php namespace Vaulter\Collaboration; use Illuminate\Contracts\Container\Container; final class X { public function f(Container $c): mixed { return $c->get("vaulter.undeclared"); } }

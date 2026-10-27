@@ -43,6 +43,16 @@ final readonly class DocumentRestored extends DriveEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
+    /**
+     * Key of the document this write belongs to: the owner of {@see $version}, as the key column carries it.
+     */
+    #[Api]
+    public function documentId(): int|string
+    {
+        return Identity::key($this->version->document_id)
+            ?? throw new \LogicException('A document event carries a revision without a document key.');
+    }
+
     public function type(): DocumentEventType
     {
         return DocumentEventType::DocumentRestored;

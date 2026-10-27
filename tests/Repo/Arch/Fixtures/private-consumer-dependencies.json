@@ -1,6 +1,10 @@
 {
     "roots": [
-        "packages/collaboration/src"
+        "packages/collaboration/src",
+        "packages/collaboration/routes",
+        "packages/collaboration/config",
+        "packages/collaboration/database",
+        "packages/collaboration/resources"
     ],
     "dynamic": [
         {
@@ -14,6 +18,10 @@
         {
             "consumer": "packages/collaboration/src/Providers/CollaborationRegistrar.php",
             "target": "vaulter.config_validators"
+        },
+        {
+            "consumer": "packages/collaboration/src/HostUserResolver.php",
+            "target": "new $model as Illuminate\\Database\\Eloquent\\Model"
         }
     ]
 }
