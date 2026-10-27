@@ -31,14 +31,36 @@ it('reads the shipped defaults of the vaulter-collaboration root', function (): 
         ->and($config->channelPrefix())->toBe('vaulter.documents');
 });
 
-it('reads the secrets of the hub and treats an empty one as missing', function (): void {
-    $config = config_of(['hub' => ['jwt_secret' => 'jwt', 'webhook_secret' => 'webhook', 'token_ttl' => 120]]);
+it('reads the key set, the active kid, the issuer and the webhook secret of the hub, leaving malformed entries out', function (): void {
+    $config = config_of(['hub' => ['jwt_keys' => ['a' => 'key-a', 'b' => '', 'c' => 5, '' => 'x'], 'jwt_active_kid' => 'a', 'webhook_secret' => 'webhook', 'token_ttl' => 120, 'issuer' => 'https://issuer.test']]);
 
-    expect($config->hubJwtSecret())->toBe('jwt')
+    expect($config->hubJwtKeys())->toBe(['a' => 'key-a'])
+        ->and($config->hubJwtActiveKid())->toBe('a')
+        ->and($config->hubJwtSigningKey())->toBe('key-a')
+        ->and($config->hubIssuer())->toBe('https://issuer.test')
         ->and($config->hubWebhookSecret())->toBe('webhook')
         ->and($config->hubTokenTtl())->toBe(120)
-        ->and(config_of(['hub' => ['jwt_secret' => '', 'webhook_secret' => 5]])->hubJwtSecret())->toBeNull()
-        ->and(config_of(['hub' => ['jwt_secret' => '', 'webhook_secret' => 5]])->hubWebhookSecret())->toBeNull();
+        ->and(config_of(['hub' => ['jwt_keys' => [], 'jwt_active_kid' => '', 'webhook_secret' => 5]])->hubJwtActiveKid())->toBeNull()
+        ->and(config_of(['hub' => ['jwt_keys' => [], 'jwt_active_kid' => 'a']])->hubJwtSigningKey())->toBeNull()
+        ->and(config_of(['hub' => ['webhook_secret' => 5]])->hubWebhookSecret())->toBeNull();
+});
+
+it('takes the issuer from app.url unless hub.issuer is set, and never from empty values', function (): void {
+    $repository = new Repository(['app' => ['url' => 'https://app.test'], 'vaulter-collaboration' => ['hub' => ['issuer' => ' ']], 'vaulter-documents' => []]);
+    $config = new CollaborationConfig($repository, new DocumentsConfig($repository));
+
+    expect($config->hubIssuer())->toBe('https://app.test')
+        ->and(config_of()->hubIssuer())->toBeNull();
+});
+
+it('structurally validates the clock skew to 0..30 seconds with default 30 and no clamping', function (): void {
+    expect(config_of(['hub' => ['clock_skew' => 0]])->hubClockSkew())->toBe(0)
+        ->and(config_of(['hub' => ['clock_skew' => 30]])->hubClockSkew())->toBe(30)
+        ->and(config_of()->hubClockSkew())->toBe(30);
+
+    foreach ([31, 60, -1] as $skew) {
+        expect(fn () => config_of(['hub' => ['clock_skew' => $skew]])->hubClockSkew())->toThrow(InvalidConfigurationException::class, 'between 0 and 30');
+    }
 });
 
 it('round trips room identities under the channel prefix of the documents', function (): void {

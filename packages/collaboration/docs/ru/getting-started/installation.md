@@ -18,7 +18,8 @@
 
 ```dotenv
 VAULTER_COLLAB_URL=wss://collab.example.com
-VAULTER_COLLAB_SECRET=<32+ случайных символа>          # ключ подписи room-токена, только Laravel
+VAULTER_COLLAB_JWT_KEYS=k1:<32+ случайных символа>   # ключи room-токена kid:secret, только Laravel
+VAULTER_COLLAB_JWT_ACTIVE_KID=k1                       # kid ключа подписи
 VAULTER_COLLAB_WEBHOOK_SECRET=<другое случайное>       # общий с хабом
 ```
 

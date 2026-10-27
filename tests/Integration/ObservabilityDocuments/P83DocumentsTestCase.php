@@ -29,6 +29,8 @@ abstract class P83DocumentsTestCase extends TestCase
         parent::defineEnvironment($app);
 
         $app['config']->set('vaulter.modules.collaboration', true);
-        $app['config']->set('vaulter-collaboration.hub.jwt_secret', 'vlt-load-dev-collab-secret-not-for-production');
+        $app['config']->set('vaulter-collaboration.hub.jwt_keys', ['load-1' => 'vlt-load-dev-collab-jwt-key-not-for-production']);
+        $app['config']->set('vaulter-collaboration.hub.jwt_active_kid', 'load-1');
+        $app['config']->set('vaulter-collaboration.hub.webhook_secret', 'vlt-load-dev-collab-webhook-not-for-production');
     }
 }

@@ -9,7 +9,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * A realtime-collaboration operation could not proceed because its configuration is
- * incomplete: no signing/webhook secret set. These
+ * incomplete: no usable signing key set, issuer or webhook secret. These
  * are operator-fixable setup errors, surfaced loud rather than failing open.
  */
 #[Api]
@@ -18,9 +18,19 @@ final class CollaborationConfigException extends VaulterException
     public static function missingSecret(): self
     {
         return new self(
-            '[Vaulter] Missing the Hocuspocus collaboration signing secret. '
-            .'Why: minting/verifying a room JWT needs config(vaulter-collaboration.hub.jwt_secret). '
-            .'Fix: set VAULTER_COLLAB_SECRET in your environment. '
+            '[Vaulter] Missing a usable Hocuspocus collaboration signing key set. '
+            .'Why: minting/verifying a room JWT needs config(vaulter-collaboration.hub.jwt_keys) with a jwt_active_kid of it, every key at least 32 bytes and different from the webhook secret. '
+            .'Fix: set VAULTER_COLLAB_JWT_KEYS and VAULTER_COLLAB_JWT_ACTIVE_KID in your environment. '
+            .'Docs: '.self::docs('missing-collab-secret'),
+        );
+    }
+
+    public static function missingIssuer(): self
+    {
+        return new self(
+            '[Vaulter] Missing the room token issuer. '
+            .'Why: a room JWT names its issuer (iss) and is refused without it. '
+            .'Fix: set VAULTER_COLLAB_ISSUER or the application URL (app.url). '
             .'Docs: '.self::docs('missing-collab-secret'),
         );
     }

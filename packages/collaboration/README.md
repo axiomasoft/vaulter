@@ -33,7 +33,8 @@ php artisan migrate        # creates the four v_collaboration_* tables, active o
 
 ```dotenv
 VAULTER_COLLAB_URL=wss://hub.example.com
-VAULTER_COLLAB_SECRET=...          # signs the room tokens, Laravel only
+VAULTER_COLLAB_JWT_KEYS=k1:...     # room-token keys (kid:secret, >= 32 bytes), Laravel only
+VAULTER_COLLAB_JWT_ACTIVE_KID=k1   # the signing kid
 VAULTER_COLLAB_WEBHOOK_SECRET=...  # shared with the hub; must differ from the signing secret
 ```
 

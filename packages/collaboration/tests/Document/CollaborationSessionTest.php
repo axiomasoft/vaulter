@@ -43,7 +43,9 @@ function documentNode(): Node
 }
 
 it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', function (): void {
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
     config()->set('vaulter-collaboration.hub.url', 'ws://hub:1234');
     config()->set('vaulter-collaboration.hub.token_ttl', 240);
 
@@ -71,7 +73,9 @@ it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', functi
 });
 
 it('encodes the ro mode into the hocuspocus JWT of a read-only session', function (): void {
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
 
     $node = documentNode();
     $session = app(HocuspocusCollaborationDriver::class)->issueSession(sessionGrant($node, 0, false, 1));
@@ -83,7 +87,9 @@ it('encodes the ro mode into the hocuspocus JWT of a read-only session', functio
 });
 
 it('binds the hocuspocus room JWT to a single node', function (): void {
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
 
     $nodeA = documentNode();
     $nodeB = documentNode();
@@ -116,7 +122,9 @@ function sessionGrant(Node $node, int $generation, bool $writable, int $actor): 
 }
 
 it('bounds real JWT expiry by the grant ceiling and supports only exact Yjs state', function (): void {
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
     $grant = sessionGrant(documentNode(), 3, true, 42);
     $grant = new CollaborationGrant(...array_replace(get_object_vars($grant), ['notAfter' => time() + 10]));
     $driver = app(HocuspocusCollaborationDriver::class);

@@ -13,7 +13,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Support\Identity;
 
 /**
- * The typed reader of the `vaulter-collaboration` configuration root: the transport, the hub (URL, secrets,
+ * The typed reader of the `vaulter-collaboration` configuration root: the transport, the hub (URL, JWT key set and issuer, webhook secret,
  * token lifetime and clock skew), the control channel of revocations, the largest Yjs state a store may write, the protocol 2 limits, the compaction triggers and lease,
  * the drain deadline, flag store and append window, and the retention of closed generations. The room channel prefix
  * is the documents package's ({@see DocumentsConfig::channelPrefix()}): the comment events of a document broadcast on
@@ -179,11 +179,125 @@ final readonly class CollaborationConfig
         return is_string($value) && $value !== '' ? $value : null;
     }
 
-    public function hubJwtSecret(): ?string
+    /** The audience every room token names: the hub, nothing else. */
+    public const string JWT_AUDIENCE = 'vaulter-collaboration-hub';
+
+    /** The wire protocol of a room token: the binding protocol `yjs` at revision 2. */
+    public const string JWT_PROTOCOL = 'yjs/2';
+
+    /** The shortest HS256 key (bytes) of the key set, the previous ones included. */
+    public const int MIN_JWT_KEY_BYTES = 32;
+
+    /** The widest clock skew a room token's time claims tolerate (seconds). */
+    public const int MAX_CLOCK_SKEW = 30;
+
+    /**
+     * The local key map `kid => secret` that signs and verifies room tokens; malformed entries are left out here and
+     * reported by {@see self::hubJwtKeysViolation()}. The hub never gets it.
+     *
+     * @return array<string, string>
+     */
+    public function hubJwtKeys(): array
     {
-        $value = $this->config->get('vaulter-collaboration.hub.jwt_secret');
+        $keys = [];
+        foreach ($this->jwtKeyEntries() as $kid => $secret) {
+            if ((string) $kid !== '' && is_string($secret) && $secret !== '') {
+                $keys[(string) $kid] = $secret;
+            }
+        }
+
+        return $keys;
+    }
+
+    /** The kid of the key that signs new and renewed room tokens. */
+    public function hubJwtActiveKid(): ?string
+    {
+        $value = $this->config->get('vaulter-collaboration.hub.jwt_active_kid');
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /** The secret of the active kid, or null while the key set does not name it. */
+    public function hubJwtSigningKey(): ?string
+    {
+        $kid = $this->hubJwtActiveKid();
+
+        return $kid === null ? null : ($this->hubJwtKeys()[$kid] ?? null);
+    }
+
+    /** The exact `iss` of a room token: `hub.issuer`, else the configured `app.url` (never the request host). */
+    public function hubIssuer(): ?string
+    {
+        foreach (['vaulter-collaboration.hub.issuer', 'app.url'] as $key) {
+            $value = $this->config->get($key);
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The raw entries of hub.jwt_keys: the array itself, or the comma-separated "kid:secret" pairs of the environment
+     * string (a pair without a secret or a repeated kid becomes an invalid entry, reported by the violation).
+     *
+     * @return array<int|string, mixed>
+     */
+    private function jwtKeyEntries(): array
+    {
+        $value = $this->config->get('vaulter-collaboration.hub.jwt_keys');
+        if (is_array($value)) {
+            return $value;
+        }
+        $entries = [];
+        foreach (is_string($value) ? explode(',', $value) : [] as $pair) {
+            if (trim($pair) === '') {
+                continue;
+            }
+            $parts = explode(':', trim($pair), 2);
+            $kid = $parts[0];
+            $entries[$kid] = array_key_exists($kid, $entries) ? null : ($parts[1] ?? null);
+        }
+
+        return $entries;
+    }
+
+    /** Whether any room-token key setting exists at all (a fully unset module is reported by the doctor and the invariant). */
+    private function hasJwtKeySettings(): bool
+    {
+        return $this->jwtKeyEntries() !== [] || $this->hubJwtActiveKid() !== null;
+    }
+
+    /**
+     * Why the key set cannot sign and verify room tokens, or null when it can. A reason names no secret and no kid:
+     * the set is nonempty, every entry has a nonempty kid and a string secret of at least 32 bytes, the active kid is
+     * in the set and no key — old ones included — equals the webhook secret.
+     */
+    public function hubJwtKeysViolation(): ?string
+    {
+        $value = $this->jwtKeyEntries();
+        if ($value === []) {
+            return 'hub.jwt_keys is empty';
+        }
+        $webhook = $this->hubWebhookSecret();
+        foreach ($value as $kid => $secret) {
+            if ((string) $kid === '' || (string) $kid !== trim((string) $kid) || !is_string($secret)) {
+                return 'hub.jwt_keys has an entry without a clean kid or a string secret';
+            }
+            if (strlen($secret) < self::MIN_JWT_KEY_BYTES) {
+                return 'hub.jwt_keys has a key shorter than '.self::MIN_JWT_KEY_BYTES.' bytes';
+            }
+            if ($webhook !== null && hash_equals($webhook, $secret)) {
+                return 'hub.jwt_keys has a key equal to hub.webhook_secret';
+            }
+        }
+        $active = $this->hubJwtActiveKid();
+        if ($active === null || !array_key_exists($active, $value)) {
+            return 'hub.jwt_active_kid does not name a key of hub.jwt_keys';
+        }
+
+        return null;
     }
 
     public function hubUrl(): ?string
@@ -229,15 +343,15 @@ final readonly class CollaborationConfig
     /**
      * The clock difference tolerated on the exp of a room token (seconds), by the backend here and by the hub.
      *
-     * @throws InvalidConfigurationException outside 0..60 seconds
+     * @throws InvalidConfigurationException outside 0..30 seconds
      */
     public function hubClockSkew(): int
     {
         $value = $this->config->get(key: 'vaulter-collaboration.hub.clock_skew', default: 30);
         $seconds = is_numeric($value) ? (int) $value : 30;
 
-        if ($seconds < 0 || $seconds > 60) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.clock_skew must be between 0 and 60 seconds.');
+        if ($seconds < 0 || $seconds > self::MAX_CLOCK_SKEW) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.clock_skew must be between 0 and '.self::MAX_CLOCK_SKEW.' seconds.');
         }
 
         return $seconds;
@@ -289,23 +403,23 @@ final readonly class CollaborationConfig
     }
 
     /**
-     * The JWT signing secret and the webhook secret are two different trust boundaries: the
-     * hub owns the webhook secret, so a JWT secret equal to it would let the hub sign any
-     * room token (mode rw, any user). Reusing one value is refused at boot in EVERY
-     * environment — core's ConfigValidator only warns outside production, and a copied
-     * dev value tends to reach production unchanged.
+     * The room-token keys and the webhook secret are two different trust boundaries: the hub owns the webhook secret,
+     * so a JWT key equal to it would let the hub sign any room token (mode rw, any user). A malformed key set — empty,
+     * a short key, a missing active kid, a reused webhook secret — is refused at boot in EVERY environment, because
+     * core's ConfigValidator only warns outside production and a copied dev value tends to reach production unchanged.
+     * A module with no key settings at all is left to the doctor and the `collaboration.secrets` invariant.
      *
-     * @throws InvalidConfigurationException when both secrets are the same value
+     * @throws InvalidConfigurationException when the key set is malformed or reuses the webhook secret
      */
     public function assertDistinctHubSecrets(): void
     {
-        $jwt = $this->hubJwtSecret();
+        $violation = $this->hasJwtKeySettings() ? $this->hubJwtKeysViolation() : null;
 
-        if ($jwt !== null && $jwt === $this->hubWebhookSecret()) {
+        if ($violation !== null) {
             throw new InvalidConfigurationException(
-                '[Vaulter] vaulter-collaboration.hub.jwt_secret and webhook_secret must differ. '
-                .'Why: the hub holds the webhook secret, so with the same value it could sign a room token for any user. '
-                .'Fix: set VAULTER_COLLAB_SECRET (JWT key, Laravel only) and VAULTER_COLLAB_WEBHOOK_SECRET (shared with the hub) to different values.',
+                '[Vaulter] vaulter-collaboration.hub.jwt_keys is unusable: '.$violation.'. '
+                .'Why: the hub holds the webhook secret, so a key equal to it could sign a room token for any user; a short key is brute-forceable. '
+                .'Fix: set VAULTER_COLLAB_JWT_KEYS ("kid:secret", comma-separated, each secret at least 32 bytes and different from VAULTER_COLLAB_WEBHOOK_SECRET) and VAULTER_COLLAB_JWT_ACTIVE_KID to one of its kids.',
             );
         }
     }

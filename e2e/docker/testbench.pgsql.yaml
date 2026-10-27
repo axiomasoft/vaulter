@@ -19,4 +19,5 @@ env:
   # поэтому localhost:1234 (хаб опубликован на хост), а не имя сервиса.
   - VAULTER_COLLAB_DRIVER="hocuspocus"
   - VAULTER_COLLAB_URL="ws://localhost:1234"
-  - VAULTER_COLLAB_SECRET="e2e-collab-jwt-secret-change-me"
+  - VAULTER_COLLAB_JWT_KEYS="e2e-1:e2e-collab-jwt-key-change-me-at-least-32-bytes"
+  - VAULTER_COLLAB_JWT_ACTIVE_KID="e2e-1"

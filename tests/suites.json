@@ -1857,6 +1857,7 @@
                         "packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php",
                         "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
                         "packages/collaboration/tests/Collaboration/NodeCollaborationTokenTest.php",
+                        "packages/collaboration/tests/Collaboration/RoomTokenClaimsTest.php",
                         "packages/collaboration/tests/Collaboration/TipTapSchemaFixtureTest.php",
                         "packages/collaboration/tests/Console/PruneGenerationsTest.php",
                         "packages/collaboration/tests/Doctor/CollaborationCheckTest.php",

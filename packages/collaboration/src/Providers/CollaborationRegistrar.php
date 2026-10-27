@@ -70,8 +70,8 @@ final class CollaborationRegistrar implements ModuleBindings
         $config->assertDistinctHubSecrets();
         $config->hubTokenTtl();
         $config->hubClockSkew();
-        if (!$app->environment('production') && ($config->hubJwtSecret() === null || $config->hubWebhookSecret() === null)) {
-            Log::warning('[Vaulter] Collaboration requires nonempty, different JWT and webhook secrets.');
+        if (!$app->environment('production') && ($config->hubJwtKeysViolation() !== null || $config->hubWebhookSecret() === null)) {
+            Log::warning('[Vaulter] Collaboration requires a usable JWT key set and a different webhook secret.');
         }
 
         self::registerBroadcastChannel();

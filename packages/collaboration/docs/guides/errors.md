@@ -10,14 +10,15 @@ that says so.
 
 ## missing-collab-secret
 
-The Hocuspocus driver needs `VAULTER_COLLAB_SECRET`. Set the shared secret in your
-environment.
+The Hocuspocus driver needs a usable room-token key set: `VAULTER_COLLAB_JWT_KEYS` (`kid:secret` pairs, each secret at
+least 32 bytes and different from the webhook secret) and `VAULTER_COLLAB_JWT_ACTIVE_KID`, plus an issuer
+(`VAULTER_COLLAB_ISSUER` or `app.url`). Set them in your environment; see [key rotation](../key-rotation.md).
 
 
 ## collab-webhook-unconfigured
 
 The hub endpoints (`collaboration/hub/authenticate`, `load`, `append`, `renew` and the rest) need both
-`VAULTER_COLLAB_SECRET` (the room JWT key) and `VAULTER_COLLAB_WEBHOOK_SECRET` (the body
+`VAULTER_COLLAB_JWT_KEYS` (the room JWT keys) and `VAULTER_COLLAB_WEBHOOK_SECRET` (the body
 signature key); with either missing every hub call is `401`. Set both, different from each
 other, on Laravel, and the webhook secret on the hub too.
 

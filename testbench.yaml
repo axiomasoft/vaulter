@@ -17,7 +17,9 @@ env:
   # Коллаборация — Hocuspocus-хаб (packages/collaboration/hub/), драйвер по умолчанию для стенда.
   - VAULTER_COLLAB_DRIVER="hocuspocus"
   - VAULTER_COLLAB_URL="ws://localhost:1234"
-  # HS256-секрет для подписи/проверки room-JWT (минтит Laravel, верифицирует вебхук).
-  - VAULTER_COLLAB_SECRET="e2e-collab-jwt-secret-change-me"
+  # Набор HS256-ключей room-JWT "kid:секрет" (только Laravel, хабу не передаётся) и активный kid;
+  # каждый ключ ≥32 байт и отличается от секрета вебхуков.
+  - VAULTER_COLLAB_JWT_KEYS="e2e-1:e2e-collab-jwt-key-change-me-at-least-32-bytes"
+  - VAULTER_COLLAB_JWT_ACTIVE_KID="e2e-1"
   # Общий секрет вебхуков (X-Vaulter-Collab-Secret) — должен совпасть с хабом.
   - VAULTER_COLLAB_WEBHOOK_SECRET="e2e-collab-webhook-secret"

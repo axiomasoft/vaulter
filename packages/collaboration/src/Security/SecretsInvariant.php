@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Contracts\Security\ProductionInvariant;
 
-/** Nonempty, different JWT and webhook secrets; the values are never part of the message. */
+/** A usable JWT key set (nonempty, active kid, keys of at least 32 bytes) different from the webhook secret; the values are never part of the message. */
 #[Internal]
 final readonly class SecretsInvariant implements ProductionInvariant
 {
@@ -21,12 +21,10 @@ final readonly class SecretsInvariant implements ProductionInvariant
 
     public function violation(): ?string
     {
-        $jwt = $this->config->hubJwtSecret();
-        $webhook = $this->config->hubWebhookSecret();
-        if ($jwt !== null && $webhook !== null && $jwt !== $webhook) {
+        if ($this->config->hubWebhookSecret() !== null && $this->config->hubJwtKeysViolation() === null) {
             return null;
         }
 
-        return 'Collaboration requires nonempty, different vaulter-collaboration.hub.jwt_secret and webhook_secret (VAULTER_COLLAB_SECRET, VAULTER_COLLAB_WEBHOOK_SECRET).';
+        return 'Collaboration requires a nonempty webhook secret and a nonempty, different vaulter-collaboration.hub.jwt_keys set (each key at least 32 bytes, an existing jwt_active_kid; VAULTER_COLLAB_JWT_KEYS, VAULTER_COLLAB_JWT_ACTIVE_KID, VAULTER_COLLAB_WEBHOOK_SECRET).';
     }
 }

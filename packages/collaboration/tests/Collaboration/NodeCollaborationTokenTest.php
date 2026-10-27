@@ -23,7 +23,9 @@ beforeEach(function (): void {
     // Реальная выдача прав из грантов (база), а не открытый null-драйвер.
     config()->set('vaulter-drive.access.permission_driver', 'database');
     config()->set('vaulter-collaboration.driver', 'hocuspocus');
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
 });
 
 function grantedDocumentNode(?string $level, int $actorId = 1): Node
@@ -124,7 +126,9 @@ it('issues a read-only session to an editor whose client speaks another schema v
 
 it('returns a hocuspocus descriptor with url + JWT when that driver is configured', function (): void {
     config()->set('vaulter-collaboration.driver', 'hocuspocus');
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
     config()->set('vaulter-collaboration.hub.url', 'ws://hub:1234');
 
     actAsCollaborator();

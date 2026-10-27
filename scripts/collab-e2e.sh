@@ -32,7 +32,7 @@ trap cleanup EXIT INT TERM
 mkdir -p "$(dirname "$log")"
 : > "$log"
 
-jwt_secret="e2e-collab-jwt-secret-$(date +%s)-at-least-32-bytes"
+jwt_key="e2e-collab-jwt-key-$(date +%s)-at-least-32-bytes"
 webhook_secret="e2e-collab-webhook-secret-$(date +%s)"
 
 # testbench serve hands its child only a curated environment, so the host is configured
@@ -56,7 +56,8 @@ env:
   - CACHE_STORE="file"
   - VAULTER_COLLAB_DRIVER="hocuspocus"
   - VAULTER_COLLAB_URL="ws://127.0.0.1:${hub_port}"
-  - VAULTER_COLLAB_SECRET="${jwt_secret}"
+  - VAULTER_COLLAB_JWT_KEYS="e2e:${jwt_key}"
+  - VAULTER_COLLAB_JWT_ACTIVE_KID="e2e"
   - VAULTER_COLLAB_WEBHOOK_SECRET="${webhook_secret}"
 YAML
 

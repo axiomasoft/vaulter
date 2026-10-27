@@ -21,7 +21,7 @@ function configureHub(array $hub = [], ?string $drainStore = 'file'): void
 {
     config([
         'vaulter-collaboration.hub' => [
-            'url' => 'wss://hub.example.test', 'jwt_secret' => 'jwt-secret-value', 'webhook_secret' => 'webhook-secret-value', 'token_ttl' => 300,
+            'url' => 'wss://hub.example.test', 'jwt_keys' => ['k1' => 'jwt-secret-value-0123456789-0123456789'], 'jwt_active_kid' => 'k1', 'issuer' => 'https://vaulter.test', 'webhook_secret' => 'webhook-secret-value', 'token_ttl' => 300,
             ...$hub,
         ],
         'vaulter-collaboration.drain.cache_store' => $drainStore,
@@ -35,8 +35,8 @@ it('accepts complete collaboration settings and never prints a secret', function
 
     expect($findings)->toHaveCount(1)
         ->and($findings[0]->code)->toBe('collaboration.hub_ok')
-        ->and($findings[0]->evidence)->toBe(['jwt_secret_set' => true, 'webhook_secret_set' => true, 'hub_url_set' => true, 'drain_cache_store' => 'file', 'drain_cache_driver' => 'file'])
-        ->and(json_encode($findings))->not->toContain('jwt-secret-value')->not->toContain('webhook-secret-value');
+        ->and($findings[0]->evidence)->toBe(['jwt_keys_set' => true, 'jwt_active_kid_set' => true, 'issuer_set' => true, 'webhook_secret_set' => true, 'hub_url_set' => true, 'drain_cache_store' => 'file', 'drain_cache_driver' => 'file'])
+        ->and(json_encode($findings))->not->toContain('jwt-secret-value-0123456789')->not->toContain('webhook-secret-value');
 });
 
 it('refuses a draining flag in a cache store no other process sees', function (?string $store, string $driver): void {
@@ -74,15 +74,28 @@ it('warns while the draining flag refuses the appends', function (): void {
         ->and($finding->hint)->toContain('vaulter:collaboration:drain --release');
 });
 
-it('reports missing and equal secrets as errors', function (): void {
-    configureHub(['jwt_secret' => null]);
+it('reports missing, short, unanchored and reused keys, a missing issuer and a wide clock skew as errors', function (): void {
+    configureHub(['jwt_keys' => [], 'jwt_active_kid' => null]);
     expect(collaborationFindings()[0]->code)->toBe('collaboration.hub_secrets_missing');
 
-    configureHub(['jwt_secret' => 'same', 'webhook_secret' => 'same']);
+    configureHub(['jwt_keys' => ['k1' => 'same-0123456789-0123456789-0123456789'], 'webhook_secret' => 'same-0123456789-0123456789-0123456789']);
     $finding = collaborationFindings()[0];
-    expect($finding->code)->toBe('collaboration.hub_secrets_equal')
+    expect($finding->code)->toBe('collaboration.hub_secrets_invalid')
         ->and($finding->severity)->toBe(DoctorSeverity::Error)
-        ->and(json_encode($finding))->not->toContain('"same"');
+        ->and(json_encode($finding))->not->toContain('same-0123456789');
+
+    configureHub(['jwt_keys' => ['k1' => 'short'], 'jwt_active_kid' => 'k1']);
+    expect(collaborationFindings()[0]->code)->toBe('collaboration.hub_secrets_invalid');
+
+    configureHub(['jwt_active_kid' => 'gone']);
+    expect(collaborationFindings()[0]->code)->toBe('collaboration.hub_secrets_invalid');
+
+    configureHub(['issuer' => null]);
+    config(['app.url' => null]);
+    expect(collaborationFindings()[0]->code)->toBe('collaboration.hub_issuer_missing');
+
+    configureHub(['clock_skew' => 31]);
+    expect(collaborationFindings()[0]->code)->toBe('collaboration.hub_clock_skew');
 });
 
 it('requires wss:// in production only', function (): void {
@@ -104,7 +117,7 @@ it('refuses a room token lifetime above an hour', function (): void {
 });
 
 it('lists every collaboration problem, not only the first', function (): void {
-    configureHub(['jwt_secret' => null, 'url' => null, 'token_ttl' => 0]);
+    configureHub(['jwt_keys' => [], 'jwt_active_kid' => null, 'url' => null, 'token_ttl' => 0]);
 
     $codes = array_map(static fn (DoctorFinding $finding): string => $finding->code, collaborationFindings());
 
@@ -112,7 +125,7 @@ it('lists every collaboration problem, not only the first', function (): void {
 });
 
 it('repeats the collaboration configuration validation as one of the config validators', function (): void {
-    configureHub(['jwt_secret' => 'same', 'webhook_secret' => 'same']);
+    configureHub(['jwt_keys' => ['k1' => 'same-0123456789-0123456789-0123456789'], 'webhook_secret' => 'same-0123456789-0123456789-0123456789']);
 
     $finding = app(DoctorRunner::class)->run(new DoctorContext(production: false, probeStorage: false, sampleLimit: 1000, now: CarbonImmutable::now('UTC')), ['core.config.valid'])->checks[0]->findings[0];
 

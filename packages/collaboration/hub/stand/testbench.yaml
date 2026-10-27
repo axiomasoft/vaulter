@@ -22,5 +22,6 @@ env:
   - CACHE_STORE="file"
   - VAULTER_COLLAB_DRIVER="hocuspocus"
   - VAULTER_COLLAB_URL="ws://localhost:18234"
-  - VAULTER_COLLAB_SECRET="stand-collab-jwt-secret-at-least-32-bytes-long"
+  - VAULTER_COLLAB_JWT_KEYS="stand-1:stand-collab-jwt-key-at-least-32-bytes-long"
+  - VAULTER_COLLAB_JWT_ACTIVE_KID="stand-1"
   - VAULTER_COLLAB_WEBHOOK_SECRET="stand-collab-webhook-secret"

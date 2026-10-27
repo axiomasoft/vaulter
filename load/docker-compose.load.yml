@@ -185,7 +185,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       REDIS_CLIENT: phpredis
-      VAULTER_COLLAB_SECRET: "${VAULTER_COLLAB_SECRET:-vlt-load-dev-collab-secret-not-for-production}"
+      VAULTER_COLLAB_JWT_KEYS: "${VAULTER_COLLAB_JWT_KEYS:-load-1:vlt-load-dev-collab-jwt-key-not-for-production}"
+      VAULTER_COLLAB_JWT_ACTIVE_KID: "${VAULTER_COLLAB_JWT_ACTIVE_KID:-load-1}"
+      VAULTER_COLLAB_WEBHOOK_SECRET: "${VAULTER_COLLAB_WEBHOOK_SECRET:-vlt-load-dev-collab-webhook-not-for-production}"
       TESTBENCH_WORKING_PATH: /app
       VAULTER_OBSERVABILITY_ENABLED: "true"
     cpuset: "${CPUSET_APP}"
@@ -303,7 +305,7 @@ services:
       VAULTER_COLLAB_MANAGEMENT_PORT: '1235'
       VAULTER_BACKEND_URL: http://app:8080
       VAULTER_API_PREFIX: api/vaulter
-      VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_SECRET:-vlt-load-dev-collab-secret-not-for-production}
+      VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-vlt-load-dev-collab-webhook-not-for-production}
       VAULTER_COLLAB_ALLOWED_ORIGINS: '*'
     ports:
       - '127.0.0.1:1235:1235'

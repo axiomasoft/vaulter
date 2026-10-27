@@ -1138,12 +1138,20 @@
             }
         },
         {
-            "change": "renamed",
-            "decision": "D1",
+            "change": "removed",
+            "decision": "PLAN4-D10",
             "from": "config:vaulter-documents.collaboration.hub.jwt_secret",
             "id": "config:vaulter-collaboration.hub.jwt_secret",
             "kind": "config",
-            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+            "reason": "P5.4 replaces the single room-token secret with a kid-addressed key set (hub.jwt_keys/hub.jwt_active_kid), no legacy fallback before 1.0; exact prior record retained in previous_change",
+            "previous_change": {
+                "change": "renamed",
+                "decision": "D1",
+                "from": "config:vaulter-documents.collaboration.hub.jwt_secret",
+                "id": "config:vaulter-collaboration.hub.jwt_secret",
+                "kind": "config",
+                "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+            }
         },
         {
             "change": "renamed",
@@ -5986,6 +5994,62 @@
             "id": "route:vaulter.v1.collaboration.hub.renew",
             "kind": "http",
             "reason": "P4.3 private collaboration channel: the hub route stays registered but is route_only (no public OpenAPI operation); surfaced by the P5.1 regeneration of the http identities"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D10",
+            "id": "config:vaulter-collaboration.hub.jwt_keys",
+            "kind": "config",
+            "reason": "P5.4 room tokens: kid-addressed HS256 key set (>= 32 bytes, distinct from the webhook secret), exact issuer from server config, aud/nbf/protocol claims; the hub never receives a key."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D10",
+            "id": "config:vaulter-collaboration.hub.jwt_active_kid",
+            "kind": "config",
+            "reason": "P5.4 room tokens: kid-addressed HS256 key set (>= 32 bytes, distinct from the webhook secret), exact issuer from server config, aud/nbf/protocol claims; the hub never receives a key."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D10",
+            "id": "config:vaulter-collaboration.hub.issuer",
+            "kind": "config",
+            "reason": "P5.4 room tokens: kid-addressed HS256 key set (>= 32 bytes, distinct from the webhook secret), exact issuer from server config, aud/nbf/protocol claims; the hub never receives a key."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "config:vaulter-collaboration.hub.clock_skew",
+            "kind": "config",
+            "reason": "P5.4 narrows the structural validator from 0..60 to 0..30 (default 30 unchanged): 31/60/-1 are rejected in every environment, with no clamp."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D10",
+            "id": "env:VAULTER_COLLAB_JWT_KEYS",
+            "kind": "config",
+            "reason": "P5.4: environment variable of vaulter-collaboration.hub.jwt_keys (kid:secret pairs)"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D10",
+            "id": "env:VAULTER_COLLAB_JWT_ACTIVE_KID",
+            "kind": "config",
+            "reason": "P5.4: environment variable of vaulter-collaboration.hub.jwt_active_kid"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D10",
+            "id": "env:VAULTER_COLLAB_ISSUER",
+            "kind": "config",
+            "reason": "P5.4: environment variable of vaulter-collaboration.hub.issuer"
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D10",
+            "id": "env:VAULTER_COLLAB_SECRET",
+            "kind": "config",
+            "reason": "P5.4 removes the single room-token secret together with hub.jwt_secret; no legacy fallback before 1.0"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

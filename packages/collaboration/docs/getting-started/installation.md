@@ -18,7 +18,8 @@ two different secrets, or the application refuses to boot with it active:
 
 ```dotenv
 VAULTER_COLLAB_URL=wss://collab.example.com
-VAULTER_COLLAB_SECRET=<32+ char random>            # room-token signing key, Laravel only
+VAULTER_COLLAB_JWT_KEYS=k1:<32+ char random>           # room-token keys kid:secret, Laravel only
+VAULTER_COLLAB_JWT_ACTIVE_KID=k1                       # the signing kid
 VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub
 ```
 

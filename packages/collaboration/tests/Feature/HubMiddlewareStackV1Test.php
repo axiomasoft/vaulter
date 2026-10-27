@@ -31,7 +31,9 @@ class HubMiddlewareStackTestCase extends CollaborationEnabledTestCase
         $app['config']->set('vaulter.routes.middleware.authenticated', ['api', 'auth:sanctum']);
         $app['config']->set('vaulter-collaboration.driver', 'hocuspocus');
         $app['config']->set('vaulter-collaboration.hub.webhook_secret', 'middleware-stack-webhook-secret');
-        $app['config']->set('vaulter-collaboration.hub.jwt_secret', 'middleware-stack-jwt-secret-at-least-32-bytes');
+        $app['config']->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'middleware-stack-jwt-secret-at-least-32-bytes']);
+        $app['config']->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+        $app['config']->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
     }
 }
 
@@ -64,10 +66,11 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $body = ['room' => $room];
     $timestamp = time();
     $jwt = JWT::encode([
+        'iss' => 'https://vaulter.test', 'aud' => 'vaulter-collaboration-hub', 'nbf' => $timestamp,
         'room' => $room, 'document_id' => (string) $node->getKey(), 'drive_id' => (string) $node->drive_id, 'tenant' => null,
         'generation' => 0, 'schema_version' => 1, 'scope' => 'write', 'permissions_version' => ['drive' => 0, 'global' => 0],
-        'sub' => '17', 'sub_type' => (new TestUser)->getMorphClass(), 'protocol' => 'yjs', 'state_format' => 'yjs-update-v1', 'iat' => $timestamp, 'exp' => $timestamp + 300, 'jti' => 'middleware-stack',
-    ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
+        'sub' => '17', 'sub_type' => (new TestUser)->getMorphClass(), 'protocol' => 'yjs/2', 'state_format' => 'yjs-update-v1', 'iat' => $timestamp, 'exp' => $timestamp + 300, 'jti' => 'middleware-stack',
+    ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256', 'k1');
 
     signedHubCall($body, $jwt, $timestamp)->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('userId', '17');
 });

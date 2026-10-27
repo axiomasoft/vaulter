@@ -40,13 +40,17 @@ final readonly class CollaborationCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $jwt = $this->config->hubJwtSecret();
+        $keys = $this->config->hubJwtKeys();
+        $violation = $this->config->hubJwtKeysViolation();
+        $issuer = $this->config->hubIssuer();
         $webhook = $this->config->hubWebhookSecret();
         $url = $this->config->hubUrl();
         $store = $this->config->drainCacheStore() ?? $this->string('cache.default');
         $driver = $store === null ? null : $this->string('cache.stores.'.$store.'.driver');
         $evidence = [
-            'jwt_secret_set' => $jwt !== null,
+            'jwt_keys_set' => $keys !== [],
+            'jwt_active_kid_set' => $this->config->hubJwtActiveKid() !== null,
+            'issuer_set' => $issuer !== null,
             'webhook_secret_set' => $webhook !== null,
             'hub_url_set' => $url !== null,
             'drain_cache_store' => $store,
@@ -54,10 +58,18 @@ final readonly class CollaborationCheck implements DoctorCheck
         ];
 
         $problems = [];
-        if ($jwt === null || $webhook === null) {
-            $problems[] = ['collaboration.hub_secrets_missing', 'The JWT secret and the webhook secret must both be set.', 'set VAULTER_COLLAB_SECRET and VAULTER_COLLAB_WEBHOOK_SECRET'];
-        } elseif ($jwt === $webhook) {
-            $problems[] = ['collaboration.hub_secrets_equal', 'The JWT secret and the webhook secret must differ: the hub holds the webhook secret and could sign room tokens with it.', 'use two different values'];
+        if ($keys === [] || $webhook === null) {
+            $problems[] = ['collaboration.hub_secrets_missing', 'The JWT key set and the webhook secret must both be set.', 'set VAULTER_COLLAB_JWT_KEYS, VAULTER_COLLAB_JWT_ACTIVE_KID and VAULTER_COLLAB_WEBHOOK_SECRET'];
+        } elseif ($violation !== null) {
+            $problems[] = ['collaboration.hub_secrets_invalid', sprintf('The JWT key set is unusable: %s. The hub holds the webhook secret and could sign room tokens with an equal key.', $violation), 'use keys of at least 32 bytes, distinct from the webhook secret, and an existing jwt_active_kid'];
+        }
+        if ($issuer === null) {
+            $problems[] = ['collaboration.hub_issuer_missing', 'The room token issuer is not set: no token can be minted or verified.', 'set vaulter-collaboration.hub.issuer or app.url'];
+        }
+        try {
+            $this->config->hubClockSkew();
+        } catch (Throwable) {
+            $problems[] = ['collaboration.hub_clock_skew', 'The room token clock skew must be between 0 and 30 seconds.', 'set vaulter-collaboration.hub.clock_skew to at most 30'];
         }
         if ($url === null) {
             $problems[] = ['collaboration.hub_url_missing', 'The hub URL is not set.', 'set vaulter-collaboration.hub.url'];

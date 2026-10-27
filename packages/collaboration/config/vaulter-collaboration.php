@@ -5,19 +5,25 @@ declare(strict_types=1);
 /**
  * The configuration of the vaulter-collaboration package, published with the vaulter-collaboration-config tag.
  * The module is opt-in: it is active only after `vaulter.modules.collaboration` is set to `true`, and an active
- * module needs the hub URL and both secrets below.
+ * module needs the hub URL, the JWT key set and the webhook secret below.
  */
 return [
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-        // Signs the room tokens (Laravel only); must differ from the webhook secret the hub holds.
-        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        // The room-token keys (Laravel only, never given to the hub): `kid => secret`, HS256, each at least 32 bytes and
+        // different from the webhook secret the hub holds. The environment value is "kid:secret" pairs, comma-separated; a PHP array is accepted too.
+        // Tokens are signed with jwt_active_kid and verified with any key of the set: add the new key, switch the active
+        // kid, remove the old key once its tokens have expired (docs/key-rotation.md).
+        'jwt_keys' => env('VAULTER_COLLAB_JWT_KEYS'),
+        'jwt_active_kid' => env('VAULTER_COLLAB_JWT_ACTIVE_KID'),
+        // The `iss` of a room token, compared as an exact string with the server configuration (null: app.url).
+        'issuer' => env('VAULTER_COLLAB_ISSUER'),
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
         // The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no
         // control message reaches the hub, because a renewal checks the rights again (D26).
         'token_ttl' => 300,
-        // The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds); part of the
-        // exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance).
+        // The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds, 0..30);
+        // part of the exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance).
         'clock_skew' => 30,
         'timestamp_tolerance' => 300,
     ],

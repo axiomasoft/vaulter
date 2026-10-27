@@ -20,7 +20,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * both required:
  *
  *   - the room JWT the client got from collaborationSession() and the hub relays
- *     (HS256, hub.jwt_secret): it names the user, the room and the scope, so the hub can
+ *     (HS256, a key of hub.jwt_keys named by its `kid`): it names the user, the room and the scope, so the hub can
  *     never act for anyone, anywhere or with more rights than the token carries;
  *   - an HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed by hub.webhook_secret,
  *     with a bounded timestamp and a replay cache in the application's Cache store
@@ -147,10 +147,13 @@ final readonly class CollaborationCallResolver
     }
 
     /**
-     * Verify a room JWT on its own (signature and exp, by firebase/php-jwt, with `hub.clock_skew` of leeway) and lift
-     * its claims: what a batch recheck does for each connection the signed body names. The room must parse, and its
-     * drive/document/generation must repeat the token's own claims, so no claim can be read two ways. Null on any
-     * failure.
+     * Verify a room JWT on its own and lift its claims: the one verifier of authenticate, load, append, renew and
+     * recheck (a batch recheck does it for each connection the signed body names). The order is fixed: the header
+     * (HS256 only, a `kid` of the local key map, no remote key reference), then the signature and the time claims
+     * (firebase/php-jwt, `hub.clock_skew` of leeway: expired once now >= exp + skew), and only then the claims — the
+     * issuer, audience, protocol, time order and the identities. The room must parse, and its drive/document/generation
+     * must repeat the token's own claims, so no claim can be read two ways. Null on any failure; neither the token nor
+     * a key is ever logged.
      */
     public function verifyToken(?string $bearerToken): ?CollaborationCall
     {
@@ -158,28 +161,40 @@ final readonly class CollaborationCallResolver
             return null;
         }
 
-        $secret = $this->config->hubJwtSecret();
+        $issuer = $this->config->hubIssuer();
+        $keys = $this->config->hubJwtKeys();
 
-        if ($secret === null) {
+        if ($issuer === null || $keys === [] || $this->config->hubJwtKeysViolation() !== null || !$this->headerIsAllowed($bearerToken, $keys)) {
             return null;
         }
+
+        $map = array_map(static fn (string $secret): Key => new Key($secret, 'HS256'), $keys);
 
         // The application clock, as the tokens are minted by it, and the clock skew both sides tolerate.
         [$leeway, $timestamp] = [JWT::$leeway, JWT::$timestamp];
         try {
             JWT::$leeway = $this->config->hubClockSkew();
             JWT::$timestamp = Carbon::now()->getTimestamp();
-            $claims = (array) JWT::decode($bearerToken, new Key($secret, 'HS256'));
+            $claims = (array) JWT::decode($bearerToken, $map);
         } catch (Throwable) {
             return null;
         } finally {
             [JWT::$leeway, JWT::$timestamp] = [$leeway, $timestamp];
         }
 
+        $iat = $claims['iat'] ?? null;
+        $nbf = $claims['nbf'] ?? null;
+        $expiry = $claims['exp'] ?? null;
+
+        if (($claims['iss'] ?? null) !== $issuer || ($claims['aud'] ?? null) !== CollaborationConfig::JWT_AUDIENCE
+            || ($claims['protocol'] ?? null) !== CollaborationConfig::JWT_PROTOCOL
+            || !is_int($iat) || !is_int($nbf) || !is_int($expiry) || $iat > $nbf || $nbf >= $expiry) {
+            return null;
+        }
+
         $room = $claims['room'] ?? null;
         $subject = $claims['sub'] ?? null;
         $subjectType = $claims['sub_type'] ?? null;
-        $protocol = $claims['protocol'] ?? null;
         $stateFormat = $claims['state_format'] ?? null;
         $scope = $claims['scope'] ?? null;
         $generation = $claims['generation'] ?? null;
@@ -191,7 +206,7 @@ final readonly class CollaborationCallResolver
 
         if (!is_string($room) || !is_string($subject) || $subject === ''
             || !is_string($subjectType) || $subjectType === '' || $subjectType === ActorRef::SYSTEM_TYPE
-            || !is_string($protocol) || $protocol === '' || !is_string($stateFormat) || $stateFormat === ''
+            || !is_string($stateFormat) || $stateFormat === ''
             || !array_key_exists('tenant', $claims)
             || !in_array($scope, [CollaborationCall::SCOPE_READ, CollaborationCall::SCOPE_WRITE], true)
             || !is_int($generation) || $generation < 0 || !is_int($schemaVersion) || $schemaVersion < 1 || ($tenant !== null && !is_string($tenant))
@@ -210,7 +225,7 @@ final readonly class CollaborationCallResolver
             room: $room,
             ref: $ref,
             principal: new ActorRef(type: $subjectType, id: $subject),
-            protocol: $protocol,
+            protocol: 'yjs',
             stateFormat: $stateFormat,
             mode: $scope === CollaborationCall::SCOPE_WRITE ? 'rw' : 'ro',
             schemaVersion: $schemaVersion,
@@ -219,5 +234,38 @@ final readonly class CollaborationCallResolver
             jti: $jti,
             expiresAt: $exp,
         );
+    }
+
+    /**
+     * Whether the unverified header allows a lookup at all: HS256 only, a string `kid` present in the local key map,
+     * and no key reference (jku/x5u/x5c/jwk/crit) that could point outside it. The signature is still checked after.
+     *
+     * @param array<string, string> $keys
+     */
+    private function headerIsAllowed(string $token, array $keys): bool
+    {
+        $segments = explode('.', $token);
+
+        if (count($segments) !== 3) {
+            return false;
+        }
+
+        try {
+            $header = JWT::jsonDecode(JWT::urlsafeB64Decode($segments[0]));
+        } catch (Throwable) {
+            return false;
+        }
+
+        if (!is_object($header) || ($header->alg ?? null) !== 'HS256' || !is_string($header->kid ?? null) || !array_key_exists($header->kid, $keys)) {
+            return false;
+        }
+
+        foreach (['jku', 'x5u', 'x5c', 'jwk', 'crit'] as $reference) {
+            if (property_exists($header, $reference)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

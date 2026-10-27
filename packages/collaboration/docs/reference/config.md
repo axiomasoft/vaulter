@@ -10,8 +10,10 @@ both secrets. Yjs updates are the source of truth; TipTap JSON is the projection
 |---|---|---|---|
 | `vaulter-collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | The transport (`hocuspocus` only) |
 | `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL |
-| `vaulter-collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Room-token signing key, Laravel only |
-| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Shared secret of the HMAC body signature of every hub call; must differ from `jwt_secret` |
+| `vaulter-collaboration.hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | *(unset)* | Room-token keys, `kid:secret` pairs (comma-separated in the environment): HS256, each at least 32 bytes and different from the webhook secret. Tokens are verified with any key of the set and signed with `jwt_active_kid`. Lives only on Laravel, never on the hub — see [key rotation](key-rotation.md). |
+| `vaulter-collaboration.hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | *(unset)* | The kid of the key that signs new and renewed tokens; it must be in `jwt_keys`. |
+| `vaulter-collaboration.hub.issuer` | `VAULTER_COLLAB_ISSUER` | `app.url` | The exact `iss` of a room token, taken from the server configuration (never the request host). |
+| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Shared secret of the HMAC body signature of every hub call; every JWT key must differ |
 | `vaulter-collaboration.hub.token_ttl` | — | `300` | Room-token TTL (seconds, at most 300): the exposure bound of a lost control message |
 | `vaulter-collaboration.hub.clock_skew` | — | `30` | Tolerated clock difference on a token's `exp` (seconds, 0–60) |
 | `vaulter-collaboration.mode` | `VAULTER_COLLAB_MODE` | `buffered` | `buffered` or `durable` |
@@ -28,7 +30,7 @@ generated list below. The room namespace is `vaulter-documents.broadcast.channel
 | `vaulter-collaboration.hub.timestamp_tolerance` | `300` seconds |
 | `vaulter-collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `'hocuspocus'` | — |
 | `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
-| `vaulter-collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Signs the room tokens (Laravel only); must differ from the webhook secret the hub holds. |
+| `vaulter-collaboration.hub.jwt_keys` / `jwt_active_kid` | `VAULTER_COLLAB_JWT_KEYS` / `VAULTER_COLLAB_JWT_ACTIVE_KID` | `[]` / `null` | Sign and verify the room tokens (Laravel only); every key differs from the webhook secret the hub holds. |
 | `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
 | `vaulter-collaboration.hub.token_ttl` | — | `300` | The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no control message reaches the hub, because a renewal checks the rights again (D26). |
 | `vaulter-collaboration.hub.clock_skew` | — | `30` | The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds); part of the exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance). |

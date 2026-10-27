@@ -47,7 +47,8 @@ composer require axioma-studio/vaulter-collaboration
 
 ```dotenv
 VAULTER_COLLAB_URL=wss://collab.example.com
-VAULTER_COLLAB_SECRET=<32+ случайных символа>          # ключ подписи room-токена, только Laravel
+VAULTER_COLLAB_JWT_KEYS=k1:<32+ случайных символа>   # ключи room-токена kid:secret, только Laravel
+VAULTER_COLLAB_JWT_ACTIVE_KID=k1                       # kid ключа подписи
 VAULTER_COLLAB_WEBHOOK_SECRET=<другое случайное>       # общий с хабом, подписывает каждый вызов хаба
 ```
 
@@ -66,7 +67,9 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<другое случайное>       # общи
 return [
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        'jwt_keys' => [/* kid => secret, from VAULTER_COLLAB_JWT_KEYS */],
+        'jwt_active_kid' => env('VAULTER_COLLAB_JWT_ACTIVE_KID'),
+        'issuer' => env('VAULTER_COLLAB_ISSUER'),
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
         'token_ttl' => 300,
         'clock_skew' => 30,
@@ -83,10 +86,12 @@ return [
 | Ключ | Env | По умолчанию | Назначение |
 |---|---|---|---|
 | `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба для клиента (в продакшне `wss://`). |
-| `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(не задан)* | Ключ HS256 для выпуска и проверки room-токена. Только на стороне Laravel. |
-| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Ключ HMAC-подписи тела каждого вызова хаба и канала control. Общий с хабом; должен отличаться от `jwt_secret` — одинаковые значения дают `InvalidConfigurationException` при загрузке (этот секрет есть у хаба, и при совпадении он смог бы подписать room-токен любого пользователя). |
+| `hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | *(не задан)* | Ключи room-токена, пары `kid:secret` (через запятую в окружении): HS256, каждый не короче 32 байт и отличается от webhook-секрета. Токен проверяется любым ключом набора, подписывается ключом `jwt_active_kid`. Только на стороне Laravel, у хаба его нет. |
+| `hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | *(не задан)* | Kid ключа, которым подписываются новые и обновлённые токены; он обязан входить в `jwt_keys`. |
+| `hub.issuer` | `VAULTER_COLLAB_ISSUER` | `app.url` | Точный `iss` room-токена из конфигурации сервера (не из Host запроса). |
+| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Ключ HMAC-подписи тела каждого вызова хаба и канала control. Общий с хабом; каждый ключ JWT обязан отличаться от него — совпадение даёт `InvalidConfigurationException` при загрузке (этот секрет есть у хаба, и при совпадении он смог бы подписать room-токен любого пользователя). |
 | `hub.token_ttl` | — | `300` | Срок жизни room-токена в секундах, от 1 до **300** (иначе `InvalidConfigurationException`). Ограничивает [экспозицию](#ревокация-и-граница-экспозиции) при потере control-сообщения. |
-| `hub.clock_skew` | — | `30` | Допустимый сдвиг часов для `exp` токена, от 0 до 60 секунд — у хаба и у бэкенда. Не допуск подписи запроса. |
+| `hub.clock_skew` | — | `30` | Допустимый сдвиг часов для `exp` токена, от 0 до 30 секунд — у хаба и у бэкенда. Не допуск подписи запроса. |
 | `hub.timestamp_tolerance` | — | `300` | Допустимый сдвиг часов *подписанного вызова хаба* и окно защиты от повтора. |
 | `control.transport` | `VAULTER_COLLAB_CONTROL_TRANSPORT` | `none` | Как смена прав сразу доходит до хабов: `redis`, `http` или `none`. |
 | `control.redis.connection` | `VAULTER_COLLAB_CONTROL_REDIS` | `default` | Redis-соединение, публикующее в `vaulter:collab:control`. |

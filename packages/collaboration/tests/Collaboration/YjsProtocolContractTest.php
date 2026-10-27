@@ -84,7 +84,7 @@ it('makes the reusable kit reject genuinely signed lying tokens', function (stri
                 return $this->last = new CollaborationSession(...array_replace(get_object_vars($session), ['options' => [...$session->options, 'room' => 'wrong-room']]));
             }
             $claims[$this->field] = $this->field === 'exp' && $this->value === 1301 ? $grant->notAfter + 1 : $this->value;
-            $token = JWT::encode($claims, Hub::JWT_SECRET, 'HS256');
+            $token = JWT::encode($claims, Hub::JWT_SECRET, 'HS256', Hub::JWT_KID);
             if ($this->field === 'tampered') {
                 $token .= 'x';
             }

@@ -97,8 +97,8 @@ it('answers 409 when the document moved to another generation', function (): voi
 });
 
 it('accepts a token within the clock skew of its exp and refuses one beyond it', function (): void {
-    revocationRenew($this, Hub::token($this->node, claims: ['exp' => time() - 10]))->assertOk();
-    revocationRenew($this, Hub::token($this->node, claims: ['exp' => time() - 31]))->assertUnauthorized();
+    revocationRenew($this, Hub::token($this->node, claims: ['iat' => time() - 100, 'nbf' => time() - 100, 'exp' => time() - 10]))->assertOk();
+    revocationRenew($this, Hub::token($this->node, claims: ['iat' => time() - 100, 'nbf' => time() - 100, 'exp' => time() - 31]))->assertUnauthorized();
 });
 
 it('refuses a body that names another room than the token', function (): void {
@@ -127,9 +127,9 @@ it('keeps the exact production verifier skew boundary with fixed clocks', functi
         config()->set('vaulter-collaboration.hub.clock_skew', $oldSkew);
         [JWT::$leeway, JWT::$timestamp] = [$leeway, $timestamp];
     }
-})->with([[30, 990, 200], [30, 970, 401], [30, 969, 401], [0, 990, 401], [60, 941, 200], [60, 940, 401], [60, 939, 401]]);
+})->with([[30, 990, 200], [30, 971, 200], [30, 970, 401], [30, 969, 401], [0, 1001, 200], [0, 1000, 401], [0, 999, 401], [0, 990, 401]]);
 
-it('preserves actual skew configuration bounds zero through sixty', function (int $skew, bool $valid): void {
+it('tightens the skew configuration bounds to zero through thirty without clamping', function (int $skew, bool $valid): void {
     expect(app(CollaborationConfig::class)->hubClockSkew())->toBe(30);
     config()->set('vaulter-collaboration.hub.clock_skew', $skew);
     $read = fn () => app(CollaborationConfig::class)->hubClockSkew();
@@ -138,7 +138,7 @@ it('preserves actual skew configuration bounds zero through sixty', function (in
     } else {
         expect($read)->toThrow(InvalidConfigurationException::class);
     }
-})->with([[0, true], [30, true], [60, true], [-1, false], [61, false]]);
+})->with([[0, true], [30, true], [31, false], [60, false], [-1, false], [61, false]]);
 
 it('applies live View and the original Read ceiling even inside expiry skew', function (): void {
     $oldNow = Carbon::getTestNow();

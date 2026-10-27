@@ -58,7 +58,9 @@ it('records vaulter_export_duration_seconds', function (): void {
 });
 
 it('records vaulter_collab_session_issued_total', function (): void {
-    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'shh-secret-at-least-32-bytes-long-for-hs256']);
+    config()->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
+    config()->set('vaulter-collaboration.hub.webhook_secret', 'webhook-secret-at-least-32-bytes-long-fixture');
 
     $node = p83DocumentNode();
     $actor = new TestUser;

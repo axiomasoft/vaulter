@@ -9,8 +9,9 @@
 
 ## missing-collab-secret
 
-Драйверу Hocuspocus нужен `VAULTER_COLLAB_SECRET`. Задайте общий секрет в своём
-окружении.
+Драйверу Hocuspocus нужен рабочий набор ключей room-токена: `VAULTER_COLLAB_JWT_KEYS` (пары `kid:secret`, каждый секрет
+не короче 32 байт и отличается от webhook-секрета) и `VAULTER_COLLAB_JWT_ACTIVE_KID`, а также issuer
+(`VAULTER_COLLAB_ISSUER` или `app.url`).
 
 
 ## collaboration-epoch-mismatch

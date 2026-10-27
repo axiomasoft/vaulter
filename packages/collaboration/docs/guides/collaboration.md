@@ -47,7 +47,8 @@ missing:
 
 ```dotenv
 VAULTER_COLLAB_URL=wss://collab.example.com
-VAULTER_COLLAB_SECRET=<32+ char random>            # room-token signing key, Laravel only
+VAULTER_COLLAB_JWT_KEYS=k1:<32+ char random>           # room-token keys kid:secret, Laravel only
+VAULTER_COLLAB_JWT_ACTIVE_KID=k1                       # the signing kid
 VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub, signs every hub call
 ```
 
@@ -67,7 +68,9 @@ The file is `config/vaulter-collaboration.php` (publish tag `vaulter-collaborati
 return [
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        'jwt_keys' => [/* kid => secret, from VAULTER_COLLAB_JWT_KEYS */],
+        'jwt_active_kid' => env('VAULTER_COLLAB_JWT_ACTIVE_KID'),
+        'issuer' => env('VAULTER_COLLAB_ISSUER'),
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
         'token_ttl' => 300,
         'clock_skew' => 30,
@@ -84,10 +87,12 @@ return [
 | Key | Env | Default | Purpose |
 |---|---|---|---|
 | `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to (`wss://` in production). |
-| `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints and verifies the room token with. Lives only on Laravel. |
-| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call and of the control channel. Shared with the hub; must differ from `jwt_secret` — equal values are an `InvalidConfigurationException` at boot (the hub holds this secret, so with the same value it could sign a room token for any user). |
+| `hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | *(unset)* | Room-token keys, `kid:secret` pairs (comma-separated in the environment): HS256, each at least 32 bytes and different from the webhook secret. Tokens are verified with any key of the set and signed with `jwt_active_kid`. Lives only on Laravel, never on the hub — see [key rotation](key-rotation.md). |
+| `hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | *(unset)* | The kid of the key that signs new and renewed tokens; it must be in `jwt_keys`. |
+| `hub.issuer` | `VAULTER_COLLAB_ISSUER` | `app.url` | The exact `iss` of a room token, taken from the server configuration (never the request host). |
+| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call and of the control channel. Shared with the hub; every key must differ from it — an equal value is an `InvalidConfigurationException` at boot (the hub holds this secret, so with the same value it could sign a room token for any user). |
 | `hub.token_ttl` | — | `300` | Room token lifetime in seconds, 1 to **300** (anything else is an `InvalidConfigurationException`). It bounds the [exposure](#revocation-and-the-exposure-bound) of a lost control message. |
-| `hub.clock_skew` | — | `30` | Tolerated clock difference on a token's `exp`, 0 to 60 seconds, by the hub and the backend. Not the tolerance of a request signature. |
+| `hub.clock_skew` | — | `30` | Tolerated clock difference on a token's `exp`, 0 to **30** seconds, by the hub and the backend. Not the tolerance of a request signature. |
 | `hub.timestamp_tolerance` | — | `300` | Accepted clock skew of a *signed hub call*; also its replay window. |
 | `control.transport` | `VAULTER_COLLAB_CONTROL_TRANSPORT` | `none` | How a change of permissions reaches the hubs at once: `redis`, `http` or `none`. |
 | `control.redis.connection` | `VAULTER_COLLAB_CONTROL_REDIS` | `default` | The Redis connection that publishes on `vaulter:collab:control`. |

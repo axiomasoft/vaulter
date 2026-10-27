@@ -3,7 +3,11 @@
 
 Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final readonly class
   public const array CONTROL_TRANSPORTS = ['redis', 'http', 'none']
+  public const string JWT_AUDIENCE = 'vaulter-collaboration-hub'
+  public const string JWT_PROTOCOL = 'yjs/2'
+  public const int MAX_CLOCK_SKEW = 30
   public const int MAX_TOKEN_TTL = 300
+  public const int MIN_JWT_KEY_BYTES = 32
   public const int RETRY_HORIZON_SECONDS = 10
   public function assertDistinctHubSecrets(): void
   public function channelPrefix(): string
@@ -19,7 +23,11 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
   public function drainCacheStore(): ?string
   public function drainMaxAppendTx(): int
   public function hubClockSkew(): int
-  public function hubJwtSecret(): ?string
+  public function hubIssuer(): ?string
+  public function hubJwtActiveKid(): ?string
+  public function hubJwtKeys(): array
+  public function hubJwtKeysViolation(): ?string
+  public function hubJwtSigningKey(): ?string
   public function hubTimestampTolerance(): int
   public function hubTokenTtl(): int
   public function hubUrl(): ?string

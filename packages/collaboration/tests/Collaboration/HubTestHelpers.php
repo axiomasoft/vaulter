@@ -37,12 +37,18 @@ final class HubTestHelpers
 
     public const string JWT_SECRET = 'jwt-signing-secret-that-is-at-least-32-bytes';
 
+    public const string JWT_KID = 'k1';
+
+    public const string ISSUER = 'https://vaulter.test';
+
     public static function configure(): void
     {
         config()->set('vaulter-drive.access.permission_driver', 'database');
         config()->set('vaulter-collaboration.driver', 'hocuspocus');
         config()->set('vaulter-collaboration.hub.webhook_secret', self::WEBHOOK_SECRET);
-        config()->set('vaulter-collaboration.hub.jwt_secret', self::JWT_SECRET);
+        config()->set('vaulter-collaboration.hub.jwt_keys', [self::JWT_KID => self::JWT_SECRET]);
+        config()->set('vaulter-collaboration.hub.jwt_active_kid', self::JWT_KID);
+        config()->set('vaulter-collaboration.hub.issuer', self::ISSUER);
         config()->set('vaulter-collaboration.hub.timestamp_tolerance', 300);
 
         // The hub calls carry only the token subject; materialise it without a host
@@ -92,9 +98,11 @@ final class HubTestHelpers
 
         return JWT::encode(
             payload: [
+                'iss' => self::ISSUER,
+                'aud' => CollaborationConfig::JWT_AUDIENCE,
                 'sub' => (string) $actorId,
                 'sub_type' => (new TestUser)->getMorphClass(),
-                'protocol' => 'yjs',
+                'protocol' => CollaborationConfig::JWT_PROTOCOL,
                 'state_format' => 'yjs-update-v1',
                 'document_id' => (string) $node->getKey(),
                 'drive_id' => (string) $node->drive_id,
@@ -105,12 +113,14 @@ final class HubTestHelpers
                 'permissions_version' => app(PermissionVersions::class)->current((string) $node->drive_id)->toClaim(),
                 'room' => self::room($node, $epoch),
                 'iat' => now()->getTimestamp(),
+                'nbf' => now()->getTimestamp(),
                 'exp' => now()->getTimestamp() + 300,
                 'jti' => (string) Str::uuid(),
                 ...$claims,
             ],
             key: self::JWT_SECRET,
             alg: 'HS256',
+            keyId: self::JWT_KID,
         );
     }
 
