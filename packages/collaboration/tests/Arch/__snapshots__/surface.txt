@@ -19,7 +19,6 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
   public function controlTransport(): string
   public function drainCacheStore(): ?string
   public function drainMaxAppendTx(): int
-  public function driver(): string
   public function hubClockSkew(): int
   public function hubJwtSecret(): ?string
   public function hubTimestampTolerance(): int
@@ -44,9 +43,6 @@ Vaulter\Collaboration\Data\RoomRef api since 1.0 final readonly class
   public int $epoch
   public string $nodeId
   public function __construct(string $driveId, string $nodeId, int $epoch)
-
-Vaulter\Collaboration\Enums\CollaborationDriverType api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
-  case Hocuspocus = 'hocuspocus'
 
 Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public const string COVERAGE = 'coverage'

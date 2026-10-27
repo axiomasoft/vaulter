@@ -12,6 +12,7 @@ use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Documents\State\PendingStateDrainer;
+use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
 use Vaulter\Documents\Tests\Fixtures\State\FakePendingStateDrainer;
@@ -87,7 +88,7 @@ it('answers 409 without resolving a drainer when none is active', function (): v
     guardMark($this->id, 3);
     $before = ($this->aggregate)();
 
-    expect(app(Kernel::class)->capabilities()->has(PendingStateDrainer::class))->toBeFalse()
+    expect(app(Kernel::class)->extensions()->handlerKeys(PendingStateDrainer::class) !== [])->toBeFalse()
         ->and(fn () => $this->documents->content($this->id))->toThrow(DocumentStatePendingException::class)
         ->and(fn () => $this->documents->export($this->id, 'html'))->toThrow(DocumentStatePendingException::class)
         ->and(fn () => $this->documents->update($this->id, DocumentTestHelpers::content('Mine')->toArray()))->toThrow(DocumentStatePendingException::class)
@@ -244,7 +245,7 @@ it('drains the purge target even behind more trashed pending documents than one 
     foreach (range(1, 101) as $n) {
         $stuck[] = (string) $this->documents->create('Stuck '.$n, content: DocumentTestHelpers::content('Stuck')->toArray())->id;
     }
-    Document::query()->whereIn('node_id', $stuck)->update(['pending_generation' => 0, 'pending_through_seq' => 1]);
+    Document::query()->whereIn('node_id', $stuck)->update(['pending_generation' => 0, 'pending_through_seq' => 1, 'pending_protocol' => 'yjs', 'pending_state_format' => 'yjs-update-v1', 'pending_schema_version' => 1]);
     Node::query()->whereIn('id', $stuck)->update(['trashed_at' => now()]);
     $target = (string) $this->documents->create('Target', content: DocumentTestHelpers::content('Target')->toArray())->id;
     guardMark($target, 3);
@@ -350,4 +351,16 @@ it('answers the REST content, export, replace and restore with the problem docum
         ->assertJsonPath('code', 'document_state_pending');
 
     expect(GrantedDocuments::aggregate($node)->collab_epoch)->toBe(0);
+});
+
+it('routes each mixed pending page by stored protocol and never drops unknown markers', function (): void {
+    guardDrainer(true);
+    $unknown = ($this->aggregate)();
+    $unknown->forceFill(['pending_protocol' => 'acme-ot', 'pending_state_format' => 'acme-json-v1', 'pending_schema_version' => 1,
+        'pending_generation' => 0, 'pending_through_seq' => 1])->save();
+    $known = $this->documents->create('Known', content: DocumentTestHelpers::content('Known')->toArray());
+    guardMark($known->id, 3);
+    app(PendingStateGuard::class)->drainTrashed($this->handle->model()->getKey(), wholeDrive: true);
+    expect($unknown->fresh()->pending_through_seq)->toBe(1)
+        ->and(array_map(static fn ($call) => $call['marker']->nodeId, FakePendingStateDrainer::$calls))->toContain((string) $known->id);
 });

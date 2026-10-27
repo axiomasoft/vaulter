@@ -33,14 +33,14 @@ final readonly class RoomTokens
      *
      * @return array{token: string, room: string, exp: int, jti: string, scope: string, permissions_version: array{drive: int, global: int}}
      */
-    public function mint(string $subject, string $documentId, string $driveId, ?string $tenant, int $generation, int $schemaVersion, bool $writable): array
+    public function mint(string $subject, string $documentId, string $driveId, ?string $tenant, int $generation, int $schemaVersion, bool $writable, ?int $notAfter = null): array
     {
         $secret = $this->config->hubJwtSecret() ?? throw CollaborationConfigException::missingSecret();
         $room = $this->config->room($driveId, $documentId, $generation);
         $scope = $writable ? CollaborationCall::SCOPE_WRITE : CollaborationCall::SCOPE_READ;
         $version = $this->versions->current($driveId)->toClaim();
         $issuedAt = Carbon::now()->getTimestamp();
-        $exp = $issuedAt + $this->config->hubTokenTtl();
+        $exp = min($issuedAt + $this->config->hubTokenTtl(), $notAfter ?? PHP_INT_MAX);
         $jti = (string) Str::uuid();
 
         $token = JWT::encode(

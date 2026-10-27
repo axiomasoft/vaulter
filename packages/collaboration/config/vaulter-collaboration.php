@@ -8,7 +8,6 @@ declare(strict_types=1);
  * module needs the hub URL and both secrets below.
  */
 return [
-    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
         // Signs the room tokens (Laravel only); must differ from the webhook secret the hub holds.

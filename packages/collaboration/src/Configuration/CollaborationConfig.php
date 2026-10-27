@@ -30,23 +30,6 @@ final readonly class CollaborationConfig
     #[Internal]
     public function __construct(private Repository $config, private DocumentsConfig $documents) {}
 
-    /** @throws InvalidConfigurationException for the removed reverb driver */
-    public function driver(): string
-    {
-        $value = $this->config->get(key: 'vaulter-collaboration.driver', default: 'hocuspocus');
-
-        // Reverb could not persist Yjs state server-side, so a room could never be
-        // fenced off after a restore; failing loudly beats silently switching transport.
-        if ($value === 'reverb') {
-            throw new InvalidConfigurationException(
-                '[Vaulter] The reverb collaboration driver was removed; set vaulter-collaboration.driver to hocuspocus. '
-                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guides/collaboration.md',
-            );
-        }
-
-        return is_string($value) ? $value : 'hocuspocus';
-    }
-
     public function channelPrefix(): string
     {
         return $this->documents->channelPrefix();

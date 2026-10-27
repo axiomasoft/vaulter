@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Vaulter\Collaboration\CollaborationDriverManager;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
-use Vaulter\Collaboration\Enums\CollaborationDriverType;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
+use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\VaulterException;
+use Vaulter\Kernel;
+use Vaulter\Modules\MissingExtensionException;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует режим (rw/ro) из
@@ -40,7 +43,6 @@ function documentNode(): Node
 }
 
 it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', function (): void {
-    config()->set('vaulter-collaboration.driver', 'hocuspocus');
     config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
     config()->set('vaulter-collaboration.hub.url', 'ws://hub:1234');
     config()->set('vaulter-collaboration.hub.token_ttl', 240);
@@ -50,11 +52,11 @@ it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', functi
     expect($presentation->capabilities->editable)->toBeTrue()
         ->and($presentation->capabilities->collaborative)->toBeTrue();
     $before = time();
-    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, epoch: 3, schemaVersion: 1, writable: true, actorId: 42);
+    $session = app(HocuspocusCollaborationDriver::class)->issueSession(sessionGrant($node, 3, true, 42));
 
-    expect($session->driver)->toBe(CollaborationDriverType::Hocuspocus->value)
-        ->and($session->url)->toBe('ws://hub:1234')
-        ->and($session->readOnly)->toBeFalse()
+    expect($session->protocol)->toBe('yjs')
+        ->and($session->endpoint)->toBe('ws://hub:1234')
+        ->and($session->mode)->toBe(CollaborationMode::Write)
         ->and($session->token)->toBeString()->not->toBe('');
 
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
@@ -72,11 +74,11 @@ it('encodes the ro mode into the hocuspocus JWT of a read-only session', functio
     config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = documentNode();
-    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, epoch: 0, schemaVersion: 1, writable: false, actorId: 1);
+    $session = app(HocuspocusCollaborationDriver::class)->issueSession(sessionGrant($node, 0, false, 1));
 
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
-    expect($session->readOnly)->toBeTrue()
+    expect($session->mode)->toBe(CollaborationMode::Read)
         ->and($claims->scope)->toBe('read');
 });
 
@@ -86,7 +88,7 @@ it('binds the hocuspocus room JWT to a single node', function (): void {
     $nodeA = documentNode();
     $nodeB = documentNode();
 
-    $sessionA = app(HocuspocusCollaborationDriver::class)->issueSession($nodeA, epoch: 0, schemaVersion: 1, writable: true, actorId: 1);
+    $sessionA = app(HocuspocusCollaborationDriver::class)->issueSession(sessionGrant($nodeA, 0, true, 1));
     $claimsA = JWT::decode($sessionA->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     // The token for node A carries node A's room — never node B's.
@@ -95,18 +97,38 @@ it('binds the hocuspocus room JWT to a single node', function (): void {
 });
 
 it('resolves the node-collaboration driver from config', function (): void {
-    $manager = app(CollaborationDriverManager::class);
-
-    config()->set('vaulter-collaboration.driver', 'hocuspocus');
-    expect($manager->driver())->toBeInstanceOf(HocuspocusCollaborationDriver::class);
+    expect(app(Kernel::class)->extensions()->handler(CollaborationProtocolDriver::class, 'yjs'))->toBeInstanceOf(HocuspocusCollaborationDriver::class);
 });
 
 it('rejects an unknown node-collaboration driver with an operator-facing remedy', function (): void {
-    $manager = app(CollaborationDriverManager::class);
+    expect(fn () => app(Kernel::class)->extensions()->handler(CollaborationProtocolDriver::class, 'unknown'))
+        ->toThrow(MissingExtensionException::class);
+});
 
-    expect(fn () => $manager->driver('unknown'))
-        ->toThrow(
-            VaulterException::class,
-            '[Vaulter] Unknown collaboration driver [unknown]. Fix: set config(vaulter-collaboration.driver) to hocuspocus.',
-        );
+function sessionGrant(Node $node, int $generation, bool $writable, int $actor): CollaborationGrant
+{
+    return new CollaborationGrant(
+        nodeId: (string) $node->getKey(), driveId: (string) $node->drive_id, tenant: null,
+        principal: new ActorRef('user', $actor),
+        mode: $writable ? CollaborationMode::Write : CollaborationMode::Read,
+        generation: $generation, schemaVersion: 1, documentType: 'vaulter/rich-text', protocol: 'yjs', stateFormat: 'yjs-update-v1', notAfter: time() + 300,
+    );
+}
+
+it('bounds real JWT expiry by the grant ceiling and supports only exact Yjs state', function (): void {
+    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    $grant = sessionGrant(documentNode(), 3, true, 42);
+    $grant = new CollaborationGrant(...array_replace(get_object_vars($grant), ['notAfter' => time() + 10]));
+    $driver = app(HocuspocusCollaborationDriver::class);
+    $session = $driver->issueSession($grant);
+    $session->assertGrant($grant, $driver->version());
+    $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
+    expect($claims->exp)->toBe($grant->notAfter)->and($session->expiresAt)->toBe($claims->exp);
+    foreach ([false, true] as $checkpoint) {
+        foreach (CollaborationMode::cases() as $mode) {
+            expect($driver->supportsState('vaulter/rich-text', 'yjs-update-v1', 1, $checkpoint, $mode))->toBeTrue()
+                ->and($driver->supportsState('vaulter/rich-text', 'other', 1, $checkpoint, $mode))->toBeFalse()
+                ->and($driver->supportsState('vaulter/rich-text', 'yjs-update-v1', 2, $checkpoint, $mode))->toBeFalse();
+        }
+    }
 });

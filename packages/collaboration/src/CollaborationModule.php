@@ -20,7 +20,7 @@ use Vaulter\Collaboration\Revocation\PermissionVersionSink;
 use Vaulter\Collaboration\Schema\CollaborationSchema;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Routing\RouteLabelSource;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\State\PendingStateDrainer;
 use Vaulter\Drive\Contracts\DriveExtension;
 use Vaulter\Events\EventSink;
@@ -35,7 +35,7 @@ use Vaulter\Modules\VaulterModule;
 /**
  * The collaboration module (D1, D22): the manifest of the vaulter-collaboration package, offered by its provider.
  * Opt-in, because it opens a network channel and needs secrets; it edits documents, so it requires the documents
- * module. It provides the `CollaborationDriver` and `PendingStateDrainer` capabilities the documents module defines (the
+ * module. It provides the `CollaborationProtocolDriver` and `PendingStateDrainer` capabilities the documents module defines (the
  * realtime transport and the drain of a pending document through the hub), and brings its session and hub routes,
  * problem codes, doctor check, generation closing and prune, the managed drain, the permission versions and control
  * channel of revocations (D26, D46), and `vaulter-collaboration.*` configuration. Its removal is refused while a document carries saved edits not in a checkpoint yet.
@@ -98,8 +98,8 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
             // …and reaches the hubs after its commit, best effort (ephemeral: no retention, no replay).
             ->slot(OutboxConsumer::class, ControlConsumer::class, ControlConsumer::ID)
             // The transport is the capability the documents module defines (OptionalSingle): without this module none is selected.
-            ->provides(CollaborationDriver::class, HocuspocusCollaborationDriver::class)
+            ->slot(CollaborationProtocolDriver::class, HocuspocusCollaborationDriver::class, 'collaboration.protocol.yjs', key: 'yjs')
             // A pending document is drained through the hub's compaction worker before documents reads or replaces it (C8, C9).
-            ->provides(PendingStateDrainer::class, HubDrainer::class);
+            ->slot(PendingStateDrainer::class, HubDrainer::class, 'collaboration.pending.yjs', key: 'yjs');
     }
 }

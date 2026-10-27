@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
@@ -14,13 +16,13 @@ use Vaulter\Documents\Types\DocumentTypeRegistry;
 #[Internal]
 final readonly class YjsStateCompatibility
 {
-    public function __construct(private DocumentTypeRegistry $types) {}
+    public function __construct(private DocumentTypeRegistry $types, private HocuspocusCollaborationDriver $driver) {}
 
     public function assert(string $documentType, ?CollaborationStateBinding $binding): void
     {
         $type = $this->types->find($documentType);
         if (!$type instanceof SupportsCollaboration || $binding === null || $binding->protocol !== 'yjs'
-            || $binding->stateFormat !== 'yjs-update-v1' || $type->collaborationProtocol() !== $binding->protocol
+            || !$this->driver->supportsState($documentType, $binding->stateFormat, $binding->schemaVersion, true, CollaborationMode::Read) || $type->collaborationProtocol() !== $binding->protocol
             || $type->collaborationStateFormat() !== $binding->stateFormat || $type->schemaVersion() !== $binding->schemaVersion) {
             throw new CollaborationUnavailableException('unsupported_binding', $documentType);
         }

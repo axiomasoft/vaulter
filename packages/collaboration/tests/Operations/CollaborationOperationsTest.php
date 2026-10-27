@@ -8,6 +8,7 @@ use Vaulter\Collaboration\Tests\Support\AcmeKanbanV2Type;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Facades\Documents;
@@ -48,7 +49,7 @@ it('needs a user for a collaboration session and maps Edit to read-write', funct
     AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
 
     expect(fn () => sessions($handle)->session($node->id))->toThrow(MissingActorException::class)
-        ->and(sessions($handle->actingAs(AccessTestHelpers::user(5)))->session($node->id)->readOnly)->toBeFalse();
+        ->and(sessions($handle->actingAs(AccessTestHelpers::user(5)))->session($node->id)->mode)->toBe(CollaborationMode::Write);
 });
 
 it('binds a collaboration session to the document generation and schema', function (): void {
@@ -60,13 +61,13 @@ it('binds a collaboration session to the document generation and schema', functi
 
     $session = sessions($acting)->session($node->id);
 
-    expect($session->epoch)->toBe(1)
+    expect($session->generation)->toBe(1)
         ->and($session->schemaVersion)->toBe(1)
-        ->and($session->driver)->toBe('hocuspocus')
+        ->and($session->protocol)->toBe('yjs')
         ->and($session->nodeId)->toBe($node->id)
-        ->and($session->driveId)->toBe($node->driveId)
-        ->and($session->room)->toBe('vaulter.documents.'.$node->driveId.'.'.$node->id.'.1')
-        ->and($session->mode())->toBe('rw');
+        ->and($session->options['drive_id'])->toBe($node->driveId)
+        ->and($session->options['room'])->toBe('vaulter.documents.'.$node->driveId.'.'.$node->id.'.1')
+        ->and($session->mode)->toBe(CollaborationMode::Write);
 });
 
 it('answers collaboration_unavailable when the type cannot collaborate', function (): void {
@@ -81,7 +82,7 @@ it('gives an editor a read-only session when the room could not write', function
     [$node, $clientSchemaVersion] = $arrange();
     $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(5));
 
-    expect(sessions($handle)->session($node->getKey(), $clientSchemaVersion)->readOnly)->toBeTrue();
+    expect(sessions($handle)->session($node->getKey(), $clientSchemaVersion)->mode)->toBe(CollaborationMode::Read);
 })->with([
     'type not installed' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5, content: OpaqueContent::fromArray(['cells' => []]), type: 'acme/gone'), null]],
     'client speaks another schema' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5), 2]],

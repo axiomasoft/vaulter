@@ -640,3 +640,5 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 
 **Write outside an operation** — A write bypassed the Vaulter operations.
 <!-- vaulter:errors:end -->
+
+`collaboration_protocol_contract` (503, retryable: never, receipt: never): the collaboration adapter returned a session outside its authorized grant; correct the adapter.

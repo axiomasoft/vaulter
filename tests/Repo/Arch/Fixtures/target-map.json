@@ -736,20 +736,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/CollaborationDriverManager.php",
-            "fqcn": "Vaulter\\Collaboration\\CollaborationDriverManager",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\CollaborationDriverManager"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/collaboration/src/CollaborationHub.php",
             "fqcn": "Vaulter\\Collaboration\\CollaborationHub",
             "kind": "final-class",
@@ -984,20 +970,6 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Drain\\PendingRemovalGuard"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/collaboration/src/Enums/CollaborationDriverType.php",
-            "fqcn": "Vaulter\\Collaboration\\Enums\\CollaborationDriverType",
-            "kind": "enum",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Collaboration\\Enums\\CollaborationDriverType"
         },
         {
             "action": "keep",
@@ -3032,8 +3004,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/documents/src/Contracts/CollaborationDriver.php",
-            "fqcn": "Vaulter\\Documents\\Contracts\\CollaborationDriver",
+            "file": "packages/documents/src/Contracts/CollaborationProtocolDriver.php",
+            "fqcn": "Vaulter\\Documents\\Contracts\\CollaborationProtocolDriver",
             "kind": "interface",
             "note": null,
             "owner": "documents",
@@ -3041,7 +3013,7 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Contracts\\",
             "surface": "Spi:Implement",
-            "target_fqcn": "Vaulter\\Documents\\Contracts\\CollaborationDriver"
+            "target_fqcn": "Vaulter\\Documents\\Contracts\\CollaborationProtocolDriver"
         },
         {
             "action": "keep",
@@ -3140,6 +3112,34 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Contracts\\",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Documents\\Contracts\\UpgradesSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Data/Collaboration/CollaborationGrant.php",
+            "fqcn": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationGrant",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\Collaboration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationGrant"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Data/Collaboration/CollaborationMode.php",
+            "fqcn": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationMode",
+            "kind": "enum",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\Collaboration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationMode"
         },
         {
             "action": "keep",
@@ -3574,6 +3574,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Events\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\Events\\Revisions\\DocumentRevisionCreated"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Exceptions/CollaborationProtocolContractException.php",
+            "fqcn": "Vaulter\\Documents\\Exceptions\\CollaborationProtocolContractException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Exceptions\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Exceptions\\CollaborationProtocolContractException"
         },
         {
             "action": "keep",
@@ -4750,6 +4764,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Support\\DocumentTypeKey"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Testing/Contracts/CollaborationProtocolContractTests.php",
+            "fqcn": "Vaulter\\Documents\\Testing\\Contracts\\CollaborationProtocolContractTests",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Testing\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Testing\\Contracts\\CollaborationProtocolContractTests"
         },
         {
             "action": "keep",

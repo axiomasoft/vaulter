@@ -40,6 +40,8 @@ final class PendingDrainerModule implements VaulterModule
 
     public function register(ModuleBuilder $module): void
     {
-        $module->providesFromConfig(PendingStateDrainer::class, self::CONFIG_KEY);
+        if (is_string($class = config(self::CONFIG_KEY))) {
+            $module->slot(PendingStateDrainer::class, $class, 'fixture.pending.yjs', key: 'yjs');
+        }
     }
 }

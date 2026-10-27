@@ -3491,6 +3491,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '503':
+          $ref: '#/components/responses/Problem503'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -4763,6 +4765,7 @@ components:
           - collaboration_epoch_mismatch
           - collaboration_protocol_mismatch
           - collaboration_seed_conflict
+          - collaboration_protocol_contract
           - collaboration_unavailable
           - collaboration_update_mismatch
           - collaboration_update_too_large
@@ -4872,6 +4875,7 @@ components:
         collaboration_epoch_mismatch: {status: 409, retryable: after_refetch, receipt: cacheable, module: collaboration}
         collaboration_protocol_mismatch: {status: 409, retryable: never, receipt: never, module: collaboration}
         collaboration_seed_conflict: {status: 409, retryable: after_refetch, receipt: cacheable, module: collaboration}
+        collaboration_protocol_contract: {status: 503, retryable: never, receipt: never, module: documents}
         collaboration_unavailable: {status: 409, retryable: never, receipt: never, module: documents}
         collaboration_update_mismatch: {status: 422, retryable: never, receipt: never, module: collaboration}
         collaboration_update_too_large: {status: 413, retryable: never, receipt: never, module: collaboration}

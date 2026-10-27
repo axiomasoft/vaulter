@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Problems;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
@@ -37,6 +38,7 @@ final class DocumentsProblemCodes implements ProblemCodeSource
     public function codes(): array
     {
         return [
+            'collaboration_protocol_contract' => new ProblemSpec(503, CollaborationProtocolContractException::class),
             'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class),
             'comment_not_found' => new ProblemSpec(404, CommentNotFoundException::class),
             'document_content_degraded' => new ProblemSpec(409, DocumentContentDegradedException::class, receipt: ReceiptPolicy::Cacheable),

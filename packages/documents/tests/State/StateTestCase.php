@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Tests\State;
 
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
+use Vaulter\Documents\Tests\Fixtures\State\FakePendingStateDrainer;
+use Vaulter\Documents\Tests\Fixtures\State\PendingDrainerModule;
 use Vaulter\Documents\Tests\Fixtures\State\PendingDrainerProvider;
 
 /**
@@ -14,6 +16,16 @@ use Vaulter\Documents\Tests\Fixtures\State\PendingDrainerProvider;
  */
 abstract class StateTestCase extends DocumentTestCase
 {
+    /** The handler graph is sealed at boot; absence fixtures must be selected before compilation. */
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+        $name = $this->nameWithDataSet();
+        $absent = str_contains($name, 'without_resolving_a_drainer') || str_contains($name, 'no drainer');
+        $app['config']->set(PendingDrainerModule::CONFIG_KEY,
+            $absent ? null : FakePendingStateDrainer::class);
+    }
+
     #[\Override]
     protected function getPackageProviders($app): array
     {

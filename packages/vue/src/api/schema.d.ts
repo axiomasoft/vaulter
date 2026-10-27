@@ -1267,6 +1267,7 @@ export interface components {
              * @example collaboration_epoch_mismatch
              * @example collaboration_protocol_mismatch
              * @example collaboration_seed_conflict
+             * @example collaboration_protocol_contract
              * @example collaboration_unavailable
              * @example collaboration_update_mismatch
              * @example collaboration_update_too_large
@@ -5259,6 +5260,7 @@ export interface operations {
             409: components["responses"]["Problem409"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
+            503: components["responses"]["Problem503"];
         };
     };
     "comments.index": {

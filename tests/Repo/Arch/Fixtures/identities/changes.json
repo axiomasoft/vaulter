@@ -1122,12 +1122,20 @@
             "reason": "P4.13: the env override is read by the vaulter-webhooks config file of the webhooks package; the name and the default are unchanged"
         },
         {
-            "change": "renamed",
-            "decision": "D1",
+            "change": "removed",
+            "decision": "PLAN4-D5",
             "from": "config:vaulter-documents.collaboration.driver",
             "id": "config:vaulter-collaboration.driver",
             "kind": "config",
-            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+            "reason": "P3.2 removes the formerly renamed selector; exact prior record retained in previous_change",
+            "previous_change": {
+                "change": "renamed",
+                "decision": "D1",
+                "from": "config:vaulter-documents.collaboration.driver",
+                "id": "config:vaulter-collaboration.driver",
+                "kind": "config",
+                "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+            }
         },
         {
             "change": "renamed",
@@ -5852,6 +5860,27 @@
             "id": "format:receipt-document-snapshot",
             "kind": "protocol",
             "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D5",
+            "id": "config:vaulter-collaboration.driver",
+            "kind": "config",
+            "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D5",
+            "id": "env:VAULTER_COLLAB_DRIVER",
+            "kind": "config",
+            "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "problem:collaboration_protocol_contract",
+            "kind": "protocol",
+            "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

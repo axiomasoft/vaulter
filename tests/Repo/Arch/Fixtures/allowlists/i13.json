@@ -718,17 +718,6 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/documents/src/Contracts/CollaborationDriver.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Contracts\\CollaborationDriver::issueSession()",
-            "target": "Vaulter\\Drive\\Models\\Node",
-            "view": "signature"
-        },
-        {
-            "category": "domain-model",
-            "count": 1,
             "file": "packages/documents/src/Contracts/ExportFilenameResolver.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",

@@ -10,7 +10,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\CoreModule;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
@@ -119,7 +119,7 @@ it('provides the filename seam and leaves the optional collaboration transport u
     $capabilities = app(Kernel::class)->capabilities();
 
     expect($capabilities->require(ExportFilenameResolver::class))->toBeInstanceOf(DefaultExportFilenameResolver::class)
-        ->and($capabilities->has(CollaborationDriver::class))->toBeFalse();
+        ->and(app(Kernel::class)->extensions()->handlerKeys(CollaborationProtocolDriver::class) !== [])->toBeFalse();
 });
 
 it('fills the type and exporter registries from the module contributions, once', function (): void {

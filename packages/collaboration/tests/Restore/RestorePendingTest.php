@@ -44,7 +44,7 @@ beforeEach(function (): void {
 });
 
 it('provides the drainer of the documents while the module is active', function (): void {
-    expect(app(Kernel::class)->capabilities()->has(PendingStateDrainer::class))->toBeTrue();
+    expect(app(Kernel::class)->extensions()->handlerKeys(PendingStateDrainer::class) !== [])->toBeTrue();
 });
 
 it('drains the saved edits through the hub, keeps them in a revision and closes the generation on a restore', function (): void {

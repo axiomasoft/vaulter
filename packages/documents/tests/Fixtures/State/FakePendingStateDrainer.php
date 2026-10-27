@@ -15,6 +15,11 @@ use Vaulter\Documents\State\PendingStateDrainer;
  */
 final class FakePendingStateDrainer implements PendingStateDrainer
 {
+    public function protocol(): string
+    {
+        return 'yjs';
+    }
+
     /** @var list<array{marker: PendingMarker, transactionLevel: int}> */
     public static array $calls = [];
 

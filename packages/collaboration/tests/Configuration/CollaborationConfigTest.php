@@ -19,8 +19,7 @@ function config_of(array $values = [], array $documents = []): CollaborationConf
 it('reads the shipped defaults of the vaulter-collaboration root', function (): void {
     $config = config_of(require __DIR__.'/../../config/vaulter-collaboration.php');
 
-    expect($config->driver())->toBe('hocuspocus')
-        ->and($config->hubUrl())->toBe('ws://localhost:1234')
+    expect($config->hubUrl())->toBe('ws://localhost:1234')
         ->and($config->hubTokenTtl())->toBe(300)
         ->and($config->hubClockSkew())->toBe(30)
         ->and($config->controlTransport())->toBe('none')
@@ -67,8 +66,7 @@ it('parses only room names it issues', function (string $room): void {
 it('refuses the removed reverb driver and a token ttl above five minutes', function (): void {
     $ttl = static fn (int $seconds): CollaborationConfig => config_of(['hub' => ['token_ttl' => $seconds]]);
 
-    expect(fn () => config_of(['driver' => 'reverb'])->driver())->toThrow(InvalidConfigurationException::class, 'reverb collaboration driver was removed')
-        ->and(fn () => $ttl(301)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
+    expect(fn () => $ttl(301)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
         ->and(fn () => $ttl(0)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
         ->and($ttl(300)->hubTokenTtl())->toBe(300)
         ->and(config_of()->maxStateBytes())->toBe(16777216)

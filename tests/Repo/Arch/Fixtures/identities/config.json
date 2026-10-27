@@ -997,12 +997,20 @@
             "reason": "P4.13: the env override is read by the vaulter-webhooks config file of the webhooks package; the name and the default are unchanged"
         },
         {
-            "change": "renamed",
-            "decision": "D1",
+            "change": "removed",
+            "decision": "PLAN4-D5",
             "from": "config:vaulter-documents.collaboration.driver",
             "id": "config:vaulter-collaboration.driver",
             "kind": "config",
-            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+            "previous_change": {
+                "change": "renamed",
+                "decision": "D1",
+                "from": "config:vaulter-documents.collaboration.driver",
+                "id": "config:vaulter-collaboration.driver",
+                "kind": "config",
+                "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+            },
+            "reason": "P3.2 removes the formerly renamed selector; exact prior record retained in previous_change"
         },
         {
             "change": "renamed",
@@ -1276,6 +1284,20 @@
             "id": "env:VAULTER_SCRUB_MAX_SECONDS",
             "kind": "config",
             "reason": "P6.9: environment variable of vaulter-media.scrub.max_seconds"
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D5",
+            "id": "config:vaulter-collaboration.driver",
+            "kind": "config",
+            "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D5",
+            "id": "env:VAULTER_COLLAB_DRIVER",
+            "kind": "config",
+            "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
         }
     ],
     "items": [
@@ -1576,21 +1598,6 @@
         {
             "default": 10,
             "id": "config:vaulter-collaboration.drain.restore_deadline",
-            "owner": "collaboration",
-            "registered_defaults": true,
-            "root": "vaulter-collaboration",
-            "source": {
-                "file": "packages/collaboration/config/vaulter-collaboration.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "default": {
-                "default": "hocuspocus",
-                "env": "VAULTER_COLLAB_DRIVER"
-            },
-            "env": "VAULTER_COLLAB_DRIVER",
-            "id": "config:vaulter-collaboration.driver",
             "owner": "collaboration",
             "registered_defaults": true,
             "root": "vaulter-collaboration",
@@ -4117,20 +4124,6 @@
                 ""
             ],
             "id": "env:VAULTER_COLLAB_CONTROL_URLS",
-            "owner": "collaboration",
-            "source": {
-                "file": "packages/collaboration/config/vaulter-collaboration.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_keys": [
-                "vaulter-collaboration.driver"
-            ],
-            "defaults": [
-                "hocuspocus"
-            ],
-            "id": "env:VAULTER_COLLAB_DRIVER",
             "owner": "collaboration",
             "source": {
                 "file": "packages/collaboration/config/vaulter-collaboration.php",

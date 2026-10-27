@@ -640,3 +640,5 @@ outline: deep
 
 **Запись вне операции** — Запись выполнена в обход операций Vaulter.
 <!-- vaulter:errors:end -->
+
+`collaboration_protocol_contract` (503, retryable: never, receipt: never): the collaboration adapter returned a session outside its authorized grant; correct the adapter.

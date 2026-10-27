@@ -14,7 +14,7 @@ use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Schema\CollaborationSchema;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\State\PendingStateDrainer;
 use Vaulter\Events\EventSink;
 use Vaulter\Http\Middleware\EnsureModuleActive;
@@ -22,9 +22,13 @@ use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\GuardsRemoval;
+use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleCompiler;
+use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Modules\SlotContribution;
+use Vaulter\Modules\VaulterModule;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 /**
@@ -59,10 +63,8 @@ it('declares an opt-in manifest that needs the documents module', function (): v
         ->and(CollaborationModule::ownedSchema())->toBe(CollaborationSchema::class)
         ->and(array_map(realpath(...), $builder->schemaPaths()))->toBe([realpath(__DIR__.'/../../database/migrations')])
         ->and(array_map(realpath(...), $builder->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/collaboration.php')])
-        ->and(array_map(static fn ($provider): string => $provider->contract.'=>'.$provider->implementation, $builder->capabilityProviders()))->toBe([
-            CollaborationDriver::class.'=>'.HocuspocusCollaborationDriver::class,
-            PendingStateDrainer::class.'=>'.HubDrainer::class,
-        ])
+        ->and($builder->capabilityProviders())->toBe([])
+        ->and(array_values(array_map(static fn ($c): string => $c->key ?? '', array_filter($builder->contributions(), static fn ($c): bool => in_array($c->slot, [CollaborationProtocolDriver::class, PendingStateDrainer::class], true)))))->toBe(['yjs', 'yjs'])
         ->and($builder->commandClasses())->toBe([PruneGenerationsCommand::class, DrainCommand::class])
         ->and($builder->schedules())->toBe([CollaborationSchedule::class])
         // Read statically by vaulter:module:uninstall, also while the module is off (C10).
@@ -75,13 +77,13 @@ it('drains pending documents through the hub and closes the generations a restor
     $kernel = $app->make(Kernel::class);
     $sinks = array_map(static fn (SlotContribution $contribution): string => $contribution->id, $kernel->extensions()->contributions(EventSink::class));
 
-    expect($kernel->capabilities()->require(PendingStateDrainer::class))->toBeInstanceOf(HubDrainer::class)
+    expect($kernel->extensions()->handler(PendingStateDrainer::class, 'yjs'))->toBeInstanceOf(HubDrainer::class)
         ->and($sinks)->toContain('collaboration.generations')
         ->and($app->make(ConsoleKernel::class)->all())->toHaveKey('vaulter:collaboration:prune')
         ->and($app->make(ConsoleKernel::class)->all())->toHaveKey('vaulter:collaboration:drain')
         ->and(FreshApplication::$queries)->toBe(0);
     $off = FreshApplication::boot();
-    expect($off->make(Kernel::class)->capabilities()->has(PendingStateDrainer::class))->toBeFalse()
+    expect($off->make(Kernel::class)->extensions()->handlerKeys(PendingStateDrainer::class) !== [])->toBeFalse()
         ->and($off->make(ConsoleKernel::class)->all())->not->toHaveKey('vaulter:collaboration:drain');
 });
 
@@ -95,7 +97,7 @@ it('stays off by default: no routes, no driver, no operations, and the host stil
         ->and(collaborationRoutes($app))->toBe([])
         ->and($app['router']->has('vaulter.v1.collaboration.hub.append'))->toBeFalse()
         ->and($app['router']->has('vaulter.v1.documents.collaboration.session'))->toBeFalse()
-        ->and($kernel->capabilities()->has(CollaborationDriver::class))->toBeFalse()
+        ->and($kernel->extensions()->handlerKeys(CollaborationProtocolDriver::class) !== [])->toBeFalse()
         ->and($app->bound(CollaborationOperations::class))->toBeFalse()
         ->and($app['config']->has('vaulter-collaboration'))->toBeFalse()
         ->and(FreshApplication::$queries)->toBe(0);
@@ -118,8 +120,8 @@ it('mounts the session and the hub routes behind the module middleware once it i
             'vaulter.v1.collaboration.hub.renew',
             'vaulter.v1.collaboration.hub.recheck',
         ])
-        ->and($kernel->capabilities()->require(CollaborationDriver::class))->toBeInstanceOf(HocuspocusCollaborationDriver::class)
-        ->and($app['config']->get('vaulter-collaboration.driver'))->toBe('hocuspocus')
+        ->and($kernel->extensions()->handler(CollaborationProtocolDriver::class, 'yjs'))->toBeInstanceOf(HocuspocusCollaborationDriver::class)
+        ->and($app['config']->has('vaulter-collaboration.driver'))->toBeFalse()
         ->and(FreshApplication::$queries)->toBe(0);
 });
 
@@ -137,11 +139,44 @@ it('keeps the problem codes of the collaboration concept out of the catalogue wh
     $off = FreshApplication::boot()->make(ProblemCatalog::class);
     $on = FreshApplication::boot(['vaulter.modules.collaboration' => true])->make(ProblemCatalog::class);
 
-    foreach (['collaboration_epoch_mismatch', 'collaboration_seed_conflict', 'collaboration_unavailable', 'collaboration_checkpoint_conflict', 'collaboration_draining'] as $code) {
+    foreach (['collaboration_epoch_mismatch', 'collaboration_seed_conflict', 'collaboration_checkpoint_conflict', 'collaboration_draining'] as $code) {
         expect($off->has($code))->toBeFalse($code)
             ->and($on->has($code))->toBeTrue($code)
             ->and($on->module($code))->toBe('collaboration')
             ->and($on->title($code, 'en'))->not->toBeNull()
             ->and($on->title($code, 'ru'))->not->toBeNull();
     }
+});
+
+it('rejects duplicate protocol handler keys before resolving transports', function (): void {
+    $modules = array_map(static fn ($state) => new $state->manifest, FreshApplication::boot(['vaulter.modules.collaboration' => true])->make(Kernel::class)->modules());
+    $modules[] = new class implements VaulterModule
+    {
+        public function id(): ModuleId
+        {
+            return new ModuleId('duplicate-yjs');
+        }
+
+        public function version(): string
+        {
+            return '1.0';
+        }
+
+        public function activation(): Activation
+        {
+            return Activation::Auto;
+        }
+
+        public function requires(): array
+        {
+            return ['documents' => '^1.0'];
+        }
+
+        public function register(ModuleBuilder $module): void
+        {
+            $module->slot(CollaborationProtocolDriver::class, HocuspocusCollaborationDriver::class, 'duplicate.protocol.yjs', key: 'yjs');
+        }
+    };
+    $compiled = (new ModuleCompiler)->compile($modules, ['collaboration' => true]);
+    expect($compiled)->toBeInstanceOf(InvalidModuleGraph::class);
 });

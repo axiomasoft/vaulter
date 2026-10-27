@@ -5,50 +5,33 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
+use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
-use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Kernel;
 
-/**
- * Mints a {@see CollaborationSession} for an actor whose access was already decided.
- * It makes no access decision itself: DocumentOperations::collaborationSession()
- * authorizes View through the OperationGuard and decides whether the session may
- * write, so a token never grants more than the guard allowed.
- */
 #[Internal]
 final readonly class CollaborationSessionService
 {
-    public function __construct(
-        private CollaborationDriverManager $drivers,
-        private MetricsRecorder $metrics,
-        private CollaborationConfig $config,
-    ) {}
+    public function __construct(private Kernel $kernel, private MetricsRecorder $metrics) {}
 
-    /** @param Ability $ability the highest ability the actor holds; only labels the metric */
-    public function issue(Node $node, Ability $ability, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): CollaborationSession
+    public function issue(CollaborationGrant $grant, Ability $ability): CollaborationSession
     {
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
+        $extensions = $this->kernel->extensions();
+        if (!in_array($grant->protocol, $extensions->handlerKeys(CollaborationProtocolDriver::class), true)) {
+            throw new CollaborationUnavailableException('protocol_unavailable', $grant->documentType);
         }
-
-        $session = $this->drivers->driver()->issueSession(
-            node: $node,
-            epoch: $epoch,
-            schemaVersion: $schemaVersion,
-            writable: $writable,
-            actorId: $actorId,
-        );
-
-        $this->metrics->counter(
-            name: 'vaulter_collab_session_issued_total',
-            labels: [
-                'driver' => $this->config->driver(),
-                'ability' => $ability->value,
-            ],
-        );
+        $driver = $extensions->handler(CollaborationProtocolDriver::class, $grant->protocol);
+        if ($driver->protocol() !== $grant->protocol) {
+            throw new CollaborationProtocolContractException;
+        }
+        $session = $driver->issueSession($grant);
+        $session->assertGrant($grant, $driver->version());
+        $this->metrics->counter(name: 'vaulter_collab_session_issued_total', labels: ['driver' => $grant->protocol, 'ability' => $ability->value]);
 
         return $session;
     }

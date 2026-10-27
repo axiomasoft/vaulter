@@ -149,7 +149,7 @@
             "match": "exact",
             "value": "problem:blob_unavailable",
             "owner": "media",
-            "why": "D23: a pin refused because the bytes of the blob are gone — the media pin protocol"
+            "why": "D23: a pin refused because the bytes of the blob are gone \u2014 the media pin protocol"
         },
         {
             "match": "prefix",
@@ -306,6 +306,12 @@
             "value": "morph:Vaulter\\ValueObjects\\Access\\Actor::",
             "owner": "core",
             "why": "core keeps Actor (architecture#ownership-map)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:collaboration_protocol_contract",
+            "owner": "documents",
+            "why": "PLAN4-D16 P3.2 documents validates protocol sessions"
         }
     ],
     "formats": [
@@ -465,7 +471,7 @@
                 "file": "packages/core/src/Http/Middleware/ReadIdempotencyKey.php",
                 "symbol": "Vaulter\\Http\\Middleware\\ReadIdempotencyKey::parse"
             },
-            "format": "Idempotency-Key request header: one Structured Field String (\"…\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
+            "format": "Idempotency-Key request header: one Structured Field String (\"\u2026\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
             "owner": "core",
             "why": "D25: the HTTP spelling of the idempotency key on the routes of idempotent operations"
         },

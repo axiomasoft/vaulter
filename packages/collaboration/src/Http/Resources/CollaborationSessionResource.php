@@ -7,6 +7,7 @@ namespace Vaulter\Collaboration\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 
 /**
@@ -31,6 +32,10 @@ final class CollaborationSessionResource extends JsonResource
         /** @var CollaborationSession $session */
         $session = $this->resource;
 
-        return $session->toArray();
+        return ['driver' => $session->protocol === 'yjs' ? 'hocuspocus' : $session->protocol, 'room' => $session->options['room'] ?? null,
+            'node_id' => $session->nodeId, 'drive_id' => $session->options['drive_id'] ?? null,
+            'epoch' => $session->generation, 'schema_version' => $session->schemaVersion,
+            'mode' => $session->mode === CollaborationMode::Read ? 'ro' : 'rw',
+            'token' => $session->token, 'url' => $session->endpoint];
     }
 }

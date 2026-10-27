@@ -127,7 +127,7 @@ it('is switched off and selects no drainer, and brings no drain command', functi
     $kernel = app(Kernel::class);
 
     expect($kernel->isActive('collaboration'))->toBeFalse()
-        ->and($kernel->capabilities()->has(PendingStateDrainer::class))->toBeFalse()
+        ->and($kernel->extensions()->handlerKeys(PendingStateDrainer::class) !== [])->toBeFalse()
         ->and(app(ConsoleKernel::class)->all())->not->toHaveKey('vaulter:collaboration:drain');
 });
 

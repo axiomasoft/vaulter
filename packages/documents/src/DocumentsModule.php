@@ -10,7 +10,7 @@ use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\Console\MakeDocumentTypeCommand;
 use Vaulter\Documents\Console\MakeExporterCommand;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
@@ -116,9 +116,9 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             // collaboration module (a package of its own, D1) provides it, and without it documents are edited one at a time.
             ->defineCapability(ExportFilenameResolver::class, Cardinality::RequiredSingle)
             ->provides(ExportFilenameResolver::class, DefaultExportFilenameResolver::class)
-            ->defineCapability(CollaborationDriver::class, Cardinality::OptionalSingle)
+            ->defineSlot(CollaborationProtocolDriver::class, SlotKind::Handler, Cardinality::Many)
             // Brings a pending document's working state up to the collaboration log (D26): without a provider such a
             // document answers 409 document_state_pending instead of serving or replacing stale content.
-            ->defineCapability(PendingStateDrainer::class, Cardinality::OptionalSingle);
+            ->defineSlot(PendingStateDrainer::class, SlotKind::Handler, Cardinality::Many);
     }
 }

@@ -9,7 +9,7 @@ use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -89,7 +89,7 @@ it('keeps ordinary JSON editing after the adapter is disabled and never drops pe
     $kernel = new Kernel(app());
     $kernel->seal((new ModuleCompiler)->compileOffered(ModuleCatalog::of(app())->offered(), config('vaulter.modules')));
     app()->instance(Kernel::class, $kernel);
-    expect($kernel->isActive('collaboration'))->toBeFalse()->and($kernel->capabilities()->has(CollaborationDriver::class))->toBeFalse();
+    expect($kernel->isActive('collaboration'))->toBeFalse()->and($kernel->extensions()->handlerKeys(CollaborationProtocolDriver::class) !== [])->toBeFalse();
     $drive = Vaulter::drive($settled->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1));
     $documents = Documents::in($drive);
     $before = Hub::aggregate($settled);

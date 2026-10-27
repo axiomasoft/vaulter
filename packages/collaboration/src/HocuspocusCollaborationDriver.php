@@ -6,58 +6,41 @@ namespace Vaulter\Collaboration;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
-use Vaulter\Collaboration\Enums\CollaborationDriverType;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
+use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Support\Identity;
 
-/**
- * The collaboration transport targeting an external Node Hocuspocus hub (see
- * packages/collaboration/hub/). The client connects with a signed room JWT ({@see RoomTokens}: sub, document_id,
- * drive_id, tenant, generation, schema_version, scope, permissions_version, room, iat, exp, jti); the hub forwards it
- * on every call, where the backend re-checks it against the live document and rights, and renews it before it
- * expires. Requires firebase/php-jwt.
- */
 #[Internal]
-final readonly class HocuspocusCollaborationDriver implements CollaborationDriver
+final readonly class HocuspocusCollaborationDriver implements CollaborationProtocolDriver
 {
-    public function __construct(
-        private CollaborationConfig $config,
-        private RoomTokens $tokens,
-    ) {}
+    public function __construct(private CollaborationConfig $config, private RoomTokens $tokens) {}
 
-    public function type(): string
+    public function protocol(): string
     {
-        return CollaborationDriverType::Hocuspocus->value;
+        return 'yjs';
     }
 
-    public function issueSession(Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): CollaborationSession
+    public function version(): string
     {
-        $nodeId = Identity::stringify($node->getRawOriginal($node->getKeyName()));
-        $driveId = Identity::stringify($node->getRawOriginal('drive_id'));
-        $tenant = $node->getRawOriginal('tenant_id');
+        return 'yjs/2';
+    }
 
-        $minted = $this->tokens->mint(
-            subject: Identity::stringify($actorId),
-            documentId: $nodeId,
-            driveId: $driveId,
-            tenant: $tenant === null ? null : Identity::stringify($tenant),
-            generation: $epoch,
-            schemaVersion: $schemaVersion,
-            writable: $writable,
-        );
+    public function supportsState(string $documentType, string $stateFormat, int $schemaVersion, bool $hasCheckpoint, CollaborationMode $mode): bool
+    {
+        return $documentType === 'vaulter/rich-text' && $stateFormat === 'yjs-update-v1' && $schemaVersion === 1;
+    }
 
-        return new CollaborationSession(
-            driver: $this->type(),
-            room: $minted['room'],
-            nodeId: $nodeId,
-            driveId: $driveId,
-            epoch: $epoch,
-            schemaVersion: $schemaVersion,
-            readOnly: !$writable,
-            token: $minted['token'],
-            url: $this->config->hubUrl(),
-        );
+    public function issueSession(CollaborationGrant $grant): CollaborationSession
+    {
+        $minted = $this->tokens->mint(subject: Identity::stringify($grant->principal->id), documentId: $grant->nodeId,
+            driveId: $grant->driveId, tenant: $grant->tenant, generation: $grant->generation,
+            schemaVersion: $grant->schemaVersion, writable: $grant->mode === CollaborationMode::Write, notAfter: $grant->notAfter);
+
+        return new CollaborationSession(protocol: $this->protocol(), version: $this->version(), endpoint: $this->config->hubUrl(),
+            token: $minted['token'], expiresAt: $minted['exp'], mode: $grant->mode, nodeId: $grant->nodeId,
+            generation: $grant->generation, schemaVersion: $grant->schemaVersion,
+            options: ['room' => $minted['room'], 'drive_id' => $grant->driveId]);
     }
 }

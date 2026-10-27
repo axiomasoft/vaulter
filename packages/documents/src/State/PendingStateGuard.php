@@ -7,6 +7,7 @@ namespace Vaulter\Documents\State;
 use Closure;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Kernel;
@@ -62,14 +63,9 @@ final readonly class PendingStateGuard
         if ($this->database->connection()->transactionLevel() > 0) {
             return;
         }
-        $capabilities = $this->kernel->capabilities();
-        if (!$capabilities->has(PendingStateDrainer::class)) {
-            return;
-        }
 
         // Keyset pages over every marked trashed document: each is drained once, so documents a drain cannot settle
         // never starve the ones after them.
-        $drainer = null;
         $after = null;
         do {
             $query = Document::query()
@@ -87,11 +83,24 @@ final readonly class PendingStateGuard
                 $after = $document->getKey();
                 $marker = self::markerOf($document);
                 if ($marker !== null) {
-                    $drainer ??= $capabilities->require(PendingStateDrainer::class);
-                    $drainer->drain($marker);
+                    $this->drain($marker);
                 }
             }
         } while ($documents->count() === self::PURGE_DRAIN_PAGE);
+    }
+
+    private function drain(PendingMarker $marker): void
+    {
+        $extensions = $this->kernel->extensions();
+        $protocol = $marker->binding->protocol;
+        if (!in_array($protocol, $extensions->handlerKeys(PendingStateDrainer::class), true)) {
+            return;
+        }
+        $drainer = $extensions->handler(PendingStateDrainer::class, $protocol);
+        if ($drainer->protocol() !== $protocol) {
+            throw new CollaborationProtocolContractException;
+        }
+        $drainer->drain($marker);
     }
 
     /** @throws DocumentStatePendingException when the row carries a marker */
@@ -120,11 +129,7 @@ final readonly class PendingStateGuard
             if ($this->database->connection()->transactionLevel() > 0) {
                 throw $pending;
             }
-            $capabilities = $this->kernel->capabilities();
-            if (!$capabilities->has(PendingStateDrainer::class)) {
-                throw $pending;
-            }
-            $capabilities->require(PendingStateDrainer::class)->drain($pending->marker);
+            $this->drain($pending->marker);
         }
 
         return $attempt();

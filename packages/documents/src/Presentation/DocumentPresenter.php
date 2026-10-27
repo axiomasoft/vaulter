@@ -7,8 +7,10 @@ namespace Vaulter\Documents\Presentation;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\ContentDecoder;
-use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
+use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -38,18 +40,27 @@ final readonly class DocumentPresenter implements KindPresenter
 
     public function present(Node|NodeSnapshot $node): NodePresentation
     {
-        [$key, $schemaVersion] = $this->head($node);
+        [$key, $schemaVersion, $protocol, $format, $hasCheckpoint] = $this->head($node);
         $type = $this->decoder->type($key);
         $features = $type->features();
         $viewer = $type->viewer();
         $writable = $this->decoder->schemaWritable($type, $schemaVersion);
+        $collaborative = false;
+        if ($writable && $type instanceof SupportsCollaboration && $protocol !== null && $format !== null
+            && $protocol === $type->collaborationProtocol() && $format === $type->collaborationStateFormat()
+            && in_array($protocol, $this->kernel->extensions()->handlerKeys(CollaborationProtocolDriver::class), true)) {
+            $driver = $this->kernel->extensions()->handler(CollaborationProtocolDriver::class, $protocol);
+            if ($driver->protocol() !== $protocol) {
+                throw new CollaborationProtocolContractException;
+            }
+            $collaborative = $driver->supportsState($key, $format, $schemaVersion, $hasCheckpoint, CollaborationMode::Read);
+        }
         $capabilities = new ContentCapabilities(
             editable: $features->editable && $writable,
             previewable: $features->previewable,
             downloadable: $features->downloadable,
             thumbnailable: $features->thumbnailable,
-            collaborative: $writable && $type instanceof SupportsCollaboration
-                && $this->kernel->capabilities()->has(CollaborationDriver::class),
+            collaborative: $collaborative,
         );
 
         return new NodePresentation(
@@ -61,16 +72,12 @@ final readonly class DocumentPresenter implements KindPresenter
         );
     }
 
-    /** @return array{string, int} */
+    /** @return array{string, int, ?string, ?string, bool} */
     private function head(Node|NodeSnapshot $node): array
     {
-        if ($node instanceof NodeSnapshot && $node->document !== null) {
-            return [$node->document->type, $node->document->schemaVersion];
-        }
-
         $id = $node instanceof NodeSnapshot ? $node->id : $node->getKey();
-        $document = Document::query()->where('node_id', $id)->first(['type', 'schema_version']);
+        $document = Document::query()->where('node_id', $id)->first(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'collab_state_size']);
 
-        return $document === null ? ['', 1] : [$document->type, $document->schema_version];
+        return $document === null ? ['', 1, null, null, false] : [$document->type, $document->schema_version, $document->collab_protocol, $document->collab_state_format, $document->collab_state_size !== null];
     }
 }

@@ -27,6 +27,11 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class HubDrainer implements PendingStateDrainer
 {
+    public function protocol(): string
+    {
+        return 'yjs';
+    }
+
     public function __construct(
         private VaulterDatabase $database,
         private CompactionLeases $leases,

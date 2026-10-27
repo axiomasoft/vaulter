@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'collaboration_protocol_contract' => ['title' => 'Collaboration adapter contract violation', 'detail' => 'The adapter returned a session outside the authorized grant.'],
     'collaboration_unavailable' => [
         'title' => 'Collaboration unavailable',
         'detail' => 'The stored collaboration binding, protocol or required converter is unavailable.',

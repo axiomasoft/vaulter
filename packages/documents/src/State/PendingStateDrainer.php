@@ -20,5 +20,7 @@ use Vaulter\Attributes\SpiKind;
 #[Spi(SpiKind::Implement)]
 interface PendingStateDrainer
 {
+    public function protocol(): string;
+
     public function drain(PendingMarker $marker): void;
 }
