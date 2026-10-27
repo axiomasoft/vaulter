@@ -191,10 +191,25 @@ cache (`Cache-Control: no-store`).
 
 ### List links
 
-`GET /v1/nodes/{node}/shares` returns the node's live links as `{ "data": [ … ] }` (a node has
-few links, so the list is not paged). Each carries the role, audience, scope, the password flag,
+`GET /v1/nodes/{node}/shares` returns the node's live links as `{ "data": [ … ], "meta": { "next_cursor": … } }`,
+in pages (default 50, at most 200; the pages show the current state, not a snapshot). Each carries the role, audience, scope, the password flag,
 the token generation and the counters (`use_count`, `max_uses`, `expires_at`) — but **never**
 the `token`, its hash or its prefix.
+
+An empty page may still carry a non-null `next_cursor`, so read until it is `null`.
+`client.shares.list()` does that for you and returns the complete list or rejects (no partial
+list); `client.shares.page()` is the manual loop:
+
+<!-- snippet: host -->
+
+```ts
+let cursor: string | null = null
+do {
+  const page = await client.shares.page(nodeId, { cursor })
+  apply(page.data)
+  cursor = page.meta.next_cursor
+} while (cursor !== null)
+```
 
 ### Change a link
 

@@ -29,6 +29,7 @@ import type {
   FileRevision,
   Grant,
   GrantList,
+  GrantPage,
   IfMatch,
   ListNodesQuery,
   MintedShare,
@@ -168,8 +169,14 @@ export interface VaulterClient {
   }
 
   grants: {
+    /** One page of grants with the access tag: pass `meta.next_cursor` back until it is null (an empty page may still have one). */
+    page(nodeId: NodeId, query?: CursorQuery): Promise<GrantPage>
+    /** Every grant: reads all pages, and rejects rather than return a partial set. */
     list(nodeId: NodeId): Promise<Grant[]>
-    /** The grants with the node's access tag, the `etag` a revoke or an inheritance change sends. */
+    /**
+     * The complete grant set with the node's access tag, the `etag` a revoke or an inheritance change sends. All pages are
+     * read; a tag that changes between pages, an error or a repeated cursor rejects and nothing partial is returned.
+     */
     listTagged(nodeId: NodeId): Promise<GrantList>
     create(nodeId: NodeId, input: CreateGrantInput): Promise<Grant>
     /** Needs the access tag of the node (`grants.listTagged().etag`). */
@@ -183,6 +190,9 @@ export interface VaulterClient {
   }
 
   shares: {
+    /** One page of share links: pass `meta.next_cursor` back until it is null (an empty page may still have one). */
+    page(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<Share>>
+    /** Every share link: reads all pages, and rejects rather than return a partial set. */
     list(nodeId: NodeId): Promise<Share[]>
     /** Mint a share link — the response carries the raw token EXACTLY ONCE. */
     create(nodeId: NodeId, input?: CreateShareInput): Promise<MintedShare>
@@ -245,6 +255,29 @@ function cursorQuery(query?: CursorQuery): Record<string, string | number> {
     params.per_page = query.perPage
   }
   return params
+}
+
+/**
+ * Read every page of a cursor list. Ends only on a null `next_cursor` (an empty page with a cursor continues), rejects a
+ * cursor seen before instead of looping, and lets any error out without a partial result.
+ */
+async function exhaust<P extends { meta: { next_cursor: string | null } }>(fetchPage: (cursor: string | null) => Promise<P>): Promise<P[]> {
+  const pages: P[] = []
+  const seen = new Set<string>()
+  let cursor: string | null = null
+  do {
+    const next: P = await fetchPage(cursor)
+    pages.push(next)
+    cursor = next.meta.next_cursor
+    if (cursor !== null) {
+      if (seen.has(cursor)) {
+        throw new Error('The server repeated a pagination cursor; the list is incomplete.')
+      }
+      seen.add(cursor)
+    }
+  } while (cursor !== null)
+
+  return pages
 }
 
 function shareHeaders(access?: ShareAccess): Record<string, string> {
@@ -331,6 +364,21 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     }
 
     return { start, abort }
+  }
+
+  const grantsPage = (nodeId: NodeId, query?: CursorQuery): Promise<GrantPage> =>
+    transport.json<GrantPage>('GET', `/nodes/${nodeId}/grants`, { query: cursorQuery(query) })
+  const sharesPage = (nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<Share>> =>
+    transport.json<CursorPage<Share>>('GET', `/nodes/${nodeId}/shares`, { query: cursorQuery(query) })
+  async function listGrantsTagged(nodeId: NodeId): Promise<GrantList> {
+    const pages = await exhaust((cursor) => grantsPage(nodeId, { cursor }))
+    const etag = pages[0].etag
+    if (pages.some((read) => read.etag !== etag)) {
+      // The set changed between two pages: the rows and the tag would not belong together.
+      throw new Error(`The grants of node ${nodeId} changed while they were read; reload them.`)
+    }
+
+    return { etag, data: pages.flatMap((read) => read.data) }
   }
 
   return {
@@ -469,8 +517,9 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     },
 
     grants: {
-      list: (nodeId) => data('GET', `/nodes/${nodeId}/grants`),
-      listTagged: (nodeId) => transport.json<GrantList>('GET', `/nodes/${nodeId}/grants`),
+      page: grantsPage,
+      list: async (nodeId) => (await listGrantsTagged(nodeId)).data,
+      listTagged: listGrantsTagged,
       create: (nodeId, input) =>
         data('POST', `/nodes/${nodeId}/grants`, {
           json: {
@@ -490,7 +539,8 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     },
 
     shares: {
-      list: (nodeId) => data('GET', `/nodes/${nodeId}/shares`),
+      page: sharesPage,
+      list: async (nodeId) => (await exhaust((cursor) => sharesPage(nodeId, { cursor }))).flatMap((read) => read.data),
       create: (nodeId, input) =>
         data('POST', `/nodes/${nodeId}/shares`, {
           json: {

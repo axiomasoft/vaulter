@@ -37,7 +37,10 @@ export type DocumentRevisionWithContent = Schemas['DocumentRevisionWithContent']
 export type DocumentBody = Schemas['DocumentBody']
 export type Grant = Schemas['Grant']
 /** The grants of a node with its access tag (`etag`): the If-Match of a revoke or an inheritance change. */
-export type GrantList = Schemas['GrantList']
+export type GrantList = Pick<Schemas['GrantList'], 'etag' | 'data'>
+
+/** One page of a node's grants: the access tag the whole set carries, the rows and the continuation. */
+export type GrantPage = Schemas['GrantList']
 export type Share = Schemas['Share']
 export type MintedShare = Schemas['MintedShare']
 export type Activity = Schemas['Activity']

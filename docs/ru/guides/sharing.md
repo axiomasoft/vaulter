@@ -190,10 +190,25 @@ async function mint() {
 
 ### Список ссылок
 
-`GET /v1/nodes/{node}/shares` возвращает живые ссылки узла как `{ "data": [ … ] }` (у узла мало
-ссылок, поэтому список без страниц). Каждая несёт роль, аудиторию, scope, флаг пароля, поколение
+`GET /v1/nodes/{node}/shares` возвращает живые ссылки узла как `{ "data": [ … ], "meta": { "next_cursor": … } }`
+страницами (по умолчанию 50, не более 200; страницы показывают текущее состояние, не снимок). Каждая несёт роль, аудиторию, scope, флаг пароля, поколение
 токена и счётчики (`use_count`, `max_uses`, `expires_at`) — но **никогда** `token`, его хеш или
 префикс.
+
+Пустая страница может нести непустой `next_cursor`, поэтому читайте до `null`.
+`client.shares.list()` делает это сам и возвращает полный список или отклоняется (без частичного
+списка); `client.shares.page()` — ручной цикл:
+
+<!-- snippet: host -->
+
+```ts
+let cursor: string | null = null
+do {
+  const page = await client.shares.page(nodeId, { cursor })
+  apply(page.data)
+  cursor = page.meta.next_cursor
+} while (cursor !== null)
+```
 
 ### Изменить ссылку
 

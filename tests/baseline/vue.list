@@ -27,6 +27,7 @@ tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > re
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > sends the opaque etag verbatim in If-Match for every node mutation
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > takes the document validator from the ETag response header
 tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > lists the grants with the access tag of the node
+tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > reads every page of the grants and the shares, following an empty page and refusing a repeated cursor
 tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > rejects a stale tag with a 412 stale_write VaulterApiError
 tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > sends the resource tag verbatim in If-Match for every versioned write
 tests/api/client.test.ts > createVaulterClient — requests > builds download URLs without fetching
@@ -76,6 +77,11 @@ tests/composables.test.ts > useComments > lists a node's comments into reactive 
 tests/composables.test.ts > useComments > passes a 412 stale_write through as a VaulterApiError and keeps the thread
 tests/composables.test.ts > useComments > refuses to write a comment it holds no etag for instead of sending it blind
 tests/composables.test.ts > useComments > resolves with the held comment etag and swaps in the raised version
+tests/composables/grants-shares-pagination.test.ts > the page helpers of the client > forwards the cursor and per_page and returns one page with its meta and tag
+tests/composables/grants-shares-pagination.test.ts > useGrants over a paged server > keeps no partial set or tag when a later page fails, the tag drifts or a cursor repeats
+tests/composables/grants-shares-pagination.test.ts > useGrants over a paged server > publishes the whole set and the access tag only after the last page, through an empty page with a cursor
+tests/composables/grants-shares-pagination.test.ts > useShares over a paged server > reads every page, an empty one with a cursor included
+tests/composables/grants-shares-pagination.test.ts > useShares over a paged server > shows no partial list when a page fails or a cursor repeats
 tests/contract/fixtures.test.ts > openapi examples are assignable to the generated client types > Drive, Grant, Share, FileRevision and the change feed keep their enums
 tests/contract/fixtures.test.ts > openapi examples are assignable to the generated client types > Node: enum values and the shape of a presentation-less node
 tests/contract/fixtures.test.ts > the client returns what the server sent > documents.content keeps the body keys and adds only the etag

@@ -1072,6 +1072,7 @@
                         "packages/drive/tests/Http/PublicSharesV1Test.php",
                         "packages/drive/tests/Http/QuarantinedDownloadTest.php",
                         "packages/drive/tests/Http/ReadPaginationSecurityTest.php",
+                        "packages/drive/tests/Http/ReadSecurityMatrixTest.php",
                         "packages/drive/tests/Http/RepresentationTagTest.php",
                         "packages/drive/tests/Http/SecurityMatrixTest.php",
                         "packages/drive/tests/Http/SharesV1Test.php",
@@ -1322,6 +1323,7 @@
                         "packages/webhooks/tests/Console/SchedulingRegistrarTest.php",
                         "packages/webhooks/tests/Feature/PruneWebhooksTest.php",
                         "packages/webhooks/tests/Http/IfMatchRequiredTest.php",
+                        "packages/webhooks/tests/Http/ReadSecurityMatrixTest.php",
                         "packages/webhooks/tests/Http/SecurityMatrixTest.php",
                         "packages/webhooks/tests/Http/WebhookEndpointsV1Test.php",
                         "packages/webhooks/tests/Http/WebhookExceptionStatusTest.php",
@@ -1519,6 +1521,7 @@
                         "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
                         "packages/documents/tests/Http/ExportV1Test.php",
                         "packages/documents/tests/Http/IfMatchRequiredTest.php",
+                        "packages/documents/tests/Http/ReadSecurityMatrixTest.php",
                         "packages/documents/tests/Http/SecurityMatrixTest.php"
                     ]
                 },

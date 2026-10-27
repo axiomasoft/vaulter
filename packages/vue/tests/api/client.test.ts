@@ -284,11 +284,27 @@ describe('createVaulterClient — preconditions on drives, grants, inheritance, 
   })
 
   it('lists the grants with the access tag of the node', async () => {
-    const fetchMock = fetchSequence(() => jsonResponse({ etag: '"node-access.5.3"', data: [{ id: 'g1' }] }))
+    const fetchMock = fetchSequence(() => jsonResponse({ etag: '"node-access.5.3"', data: [{ id: 'g1' }], meta: { next_cursor: null, per_page: 50 } }))
     const client = createVaulterClient({ fetch: fetchMock })
 
     expect(await client.grants.listTagged('5')).toEqual({ etag: '"node-access.5.3"', data: [{ id: 'g1' }] })
     expect(call(fetchMock).headers['If-Match']).toBeUndefined()
+  })
+
+  it('reads every page of the grants and the shares, following an empty page and refusing a repeated cursor', async () => {
+    const meta = (next: string | null) => ({ next_cursor: next, per_page: 1 })
+    const client = createVaulterClient({
+      fetch: fetchSequence(
+        () => jsonResponse({ etag: '"t"', data: [{ id: 'g1' }], meta: meta('c1') }),
+        () => jsonResponse({ etag: '"t"', data: [], meta: meta('c2') }),
+        () => jsonResponse({ etag: '"t"', data: [{ id: 'g2' }], meta: meta(null) }),
+        () => jsonResponse({ data: [{ id: 's1' }], meta: meta('c1') }),
+        () => jsonResponse({ data: [{ id: 's2' }], meta: meta('c1') }),
+      ),
+    })
+
+    expect((await client.grants.list('5')).map((g) => g.id)).toEqual(['g1', 'g2'])
+    await expect(client.shares.list('5')).rejects.toThrow(/repeated/)
   })
 
   it('rejects a stale tag with a 412 stale_write VaulterApiError', async () => {

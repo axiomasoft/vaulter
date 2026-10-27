@@ -645,8 +645,21 @@ node. See [Grants](/guides/grants).
 
 #### `GET v1/nodes/{node}/grants` — `grants.index`
 
-The grants set directly on the node. **Response:** `200 { "data": [Grant, …] }` (the
-grants of one node are few, so this list is not paged).
+The grants set directly on the node, in pages (`cursor`, `per_page` 1–200, default 50).
+**Response:** `200 { "etag": "…", "data": [Grant, …], "meta": { "next_cursor": …, "per_page": … } }`.
+`etag` is the node's access tag, the same on every page of one set; `next_cursor` is `null`
+on the last page. Page one (`next_cursor` set) and page two (`next_cursor: null`):
+
+```json
+{ "etag": "\"node-access.5.3\"", "data": [{ "id": "g1" }], "meta": { "next_cursor": "eyJ2Ijo…", "per_page": 1 } }
+{ "etag": "\"node-access.5.3\"", "data": [], "meta": { "next_cursor": null, "per_page": 1 } }
+```
+
+An **empty page may still carry a cursor** — keep reading until `next_cursor` is `null`,
+never until `data` is empty. The cursor is encrypted and bound to the node, the caller and
+the access version: another node, another caller or a changed grant set answers `422
+validation_failed` (`errors.cursor`), and the caller's `manage` right is checked on every
+page. A set that changes between two pages is not a snapshot — reload from the first page.
 
 #### `POST v1/nodes/{node}/grants` — `grants.store`
 
@@ -705,8 +718,11 @@ Every owner route needs `share` on the node.
 
 #### `GET v1/nodes/{node}/shares` — `shares.index`
 
-The node's live links. **Response:** `200 { "data": [Share, …] }`. A token is never
-listed.
+The node's live links, in pages (`cursor`, `per_page` 1–200, default 50). **Response:**
+`200 { "data": [Share, …], "meta": { "next_cursor": …, "per_page": … } }`. A token is never
+listed. An empty page may carry a non-null `next_cursor`; read until it is `null`. The cursor
+is encrypted, bound to the node and the caller (`422 validation_failed` otherwise), and `share`
+is checked on every page; the pages show the current state, not a snapshot.
 
 #### `POST v1/nodes/{node}/shares` — `shares.store`
 

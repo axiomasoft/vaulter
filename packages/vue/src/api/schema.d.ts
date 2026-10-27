@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * List grants of a node
-         * @description The grants set directly on the node. `etag` is the access tag of the node (in the body only: a list is never stored): its id and access version, which every grant, revoke and inheritance change raises (the node sequence and the node ETag do not move). Send it as If-Match of a revoke or an inheritance change.
+         * @description One page (default 50, max 200) of the grants set directly on the node, newest first. `etag` is the access tag of the node (in the body only: a list is never stored): its id and access version, which every grant, revoke and inheritance change raises (the node sequence and the node ETag do not move). Send it as If-Match of a revoke or an inheritance change.
          */
         get: operations["grants.index"];
         put?: never;
@@ -95,7 +95,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List share links of a node */
+        /**
+         * List share links of a node
+         * @description One page (default 50, max 200) of the share links of the node, newest first. Tokens are never listed.
+         */
         get: operations["shares.index"];
         put?: never;
         /**
@@ -1616,12 +1619,14 @@ export interface components {
             /** @description The access tag of the node, the If-Match of a revoke or an inheritance change. */
             etag: string;
             data: components["schemas"]["Grant"][];
+            meta: components["schemas"]["PageMeta"];
         };
         ShareEnvelope: {
             data: components["schemas"]["Share"];
         };
         ShareList: {
             data: components["schemas"]["Share"][];
+            meta: components["schemas"]["PageMeta"];
         };
         MintedShareEnvelope: {
             data: components["schemas"]["MintedShare"];
@@ -1979,7 +1984,12 @@ export type $defs = Record<string, never>;
 export interface operations {
     "grants.index": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Opaque cursor from meta.next_cursor. */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Page size, 1..200, default 50. */
+                per_page?: components["parameters"]["PerPage"];
+            };
             header?: never;
             path: {
                 /** @description Node id. */
@@ -2004,6 +2014,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
     };
@@ -2184,7 +2195,12 @@ export interface operations {
     };
     "shares.index": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Opaque cursor from meta.next_cursor. */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Page size, 1..200, default 50. */
+                per_page?: components["parameters"]["PerPage"];
+            };
             header?: never;
             path: {
                 /** @description Node id. */
@@ -2209,6 +2225,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
     };

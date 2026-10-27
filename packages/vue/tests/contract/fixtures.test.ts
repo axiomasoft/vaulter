@@ -74,8 +74,8 @@ describe('the client returns what the server sent', () => {
     const client = createVaulterClient({
       fetch: fetchSequence(
         () => jsonResponse(driveExample.body),
-        () => jsonResponse({ data: [grantExample.body.data] }),
-        () => jsonResponse({ data: [shareExample.body.data] }),
+        () => jsonResponse({ etag: '"t"', data: [grantExample.body.data], meta: { next_cursor: null, per_page: 50 } }),
+        () => jsonResponse({ data: [shareExample.body.data], meta: { next_cursor: null, per_page: 50 } }),
       ),
     })
 

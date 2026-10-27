@@ -258,6 +258,24 @@ Event::listen(function (NodeGrantCreated $event): void {
 опираясь на namespace `grants` внедрённого клиента
 (`client.grants.list` / `grant` / `revoke`).
 
+`GET /nodes/{node}/grants` отдаётся страницами (по умолчанию 50, не более 200).
+`client.grants.list()` и `listTagged()` читают **все** страницы и возвращают полный набор —
+`listTagged()` вместе с тегом доступа — или отклоняются: ошибка, отозванное право, повторенный
+сервером курсор или тег доступа, изменившийся между страницами, не оставляют ни частичного
+набора, ни нового тега. Для ручного постраничного чтения есть `client.grants.page()`; пустая
+страница может иметь курсор, поэтому цикл идёт по курсору:
+
+<!-- snippet: host -->
+
+```ts
+let cursor: string | null = null
+do {
+  const page = await client.grants.page(nodeId, { cursor })
+  apply(page.data)
+  cursor = page.meta.next_cursor
+} while (cursor !== null)
+```
+
 <!-- snippet: host -->
 
 ```vue

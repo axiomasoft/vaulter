@@ -260,6 +260,23 @@ Event::listen(function (NodeGrantCreated $event): void {
 backed by the injected client's `grants` namespace
 (`client.grants.list` / `grant` / `revoke`).
 
+`GET /nodes/{node}/grants` is paged (default 50, at most 200). `client.grants.list()` and
+`listTagged()` read **every** page and return the complete set — `listTagged()` with the access
+tag — or reject: an error, a revoked right, a cursor the server repeats or an access tag that
+changed between pages leaves no partial set and no new tag behind. To page by hand use
+`client.grants.page()`; an empty page can still have a cursor, so loop on the cursor:
+
+<!-- snippet: host -->
+
+```ts
+let cursor: string | null = null
+do {
+  const page = await client.grants.page(nodeId, { cursor })
+  apply(page.data)
+  cursor = page.meta.next_cursor
+} while (cursor !== null)
+```
+
 <!-- snippet: host -->
 
 ```vue

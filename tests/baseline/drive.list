@@ -240,6 +240,7 @@ P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Quota_never_use
 P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Repositories_never_uses_the_Testing_namespaces
 P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Rules_never_uses_the_Testing_namespaces
 P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Schema_never_uses_the_Testing_namespaces
+P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Security_never_uses_the_Testing_namespaces
 P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Sharing_never_uses_the_Testing_namespaces
 P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Support_never_uses_the_Testing_namespaces
 P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Tenancy_never_uses_the_Testing_namespaces
@@ -384,8 +385,8 @@ P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_f
 P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.profiles.providers', ['Vaulter\Drive\Testing\Fixture…rofile'])"
 P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.profiles.providers', ['stdClass'])"
 P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.sharing.token_generator', 'stdClass')"
-P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_rejects_the_null_permission_driver_at_production_boot
 P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_reports_a_malformed_drive_configuration_under_the_doctor_check_of_the_kernel
+P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_reports_the_null_permission_driver_as_the_drive_permission_driver_invariant__not_as_a_structural_error
 P\Tests\Configuration\DriveConfigValidatorTest::__pest_evaluable_it_validates_the_shipped_drive_configuration
 P\Tests\Configuration\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core
 P\Tests\Configuration\UploadFileSizePolicyTest::__pest_evaluable_it_accepts_a_nonempty_ordinary_upload_when_the_canonical_byte_limit_is_unlimited
@@ -1058,6 +1059,11 @@ P\Tests\Http\FilesV1Test::__pest_evaluable_it_downloads_the_head_and_one_exact_r
 P\Tests\Http\FilesV1Test::__pest_evaluable_it_lists_revisions_newest_first__adds_one_with_If_Match_and_restores_an_older_one
 P\Tests\Http\FilesV1Test::__pest_evaluable_it_pins_a_revision__refuses_to_delete_the_head_and_deletes_an_old_revision
 P\Tests\Http\FilesV1Test::__pest_evaluable_it_uploads_a_file_in_one_request_and_answers_201_with_the_node_and_its_tag
+P\Tests\Http\GrantsSharesPaginationTest::__pest_evaluable_it_pages_grants_two_pages_then_an_empty_cursor__keeping_the_access_etag_on_every_page
+P\Tests\Http\GrantsSharesPaginationTest::__pest_evaluable_it_pages_shares_and_never_lists_a_token
+P\Tests\Http\GrantsSharesPaginationTest::__pest_evaluable_it_rejects_an_out_of_range_per__page_and_a_malformed__foreign_or_cross_list_grants_shares_cursor
+P\Tests\Http\GrantsSharesPaginationTest::__pest_evaluable_it_seals_the_grants_cursor__encrypted__scope_bound__raw_parameters_only_inside_the_payload
+P\Tests\Http\GrantsSharesPaginationTest::__pest_evaluable_it_seals_the_public_share_children_cursor_with_raw_Laravel_parameters__bound_to_its_own_link
 P\Tests\Http\GrantsV1Test::__pest_evaluable_it_changes_the_access_tag_but_neither_the_sequence_nor_the_ETag_of_the_node
 P\Tests\Http\GrantsV1Test::__pest_evaluable_it_creates__lists_and_revokes_a_grant_with_string_ids_and_no_permission_bits
 P\Tests\Http\GrantsV1Test::__pest_evaluable_it_does_not_revoke_a_grant_through_another_node
@@ -1212,6 +1218,76 @@ P\Tests\Http\QuarantinedDownloadTest::__pest_evaluable_it_answers_423_for_a_head
 P\Tests\Http\QuarantinedDownloadTest::__pest_evaluable_it_answers_423_for_a_head_whose_blob_the_integrity_scrub_marked__in_both_delivery_modes__D49_"('strict')"
 P\Tests\Http\QuarantinedDownloadTest::__pest_evaluable_it_answers_423_for_an_infected_head__in_both_delivery_modes"('direct_signed')"
 P\Tests\Http\QuarantinedDownloadTest::__pest_evaluable_it_answers_423_for_an_infected_head__in_both_delivery_modes"('strict')"
+P\Tests\Http\ReadPaginationSecurityTest::__pest_evaluable_it_keeps_a_long_typed_host_and_filter_scope_out_of_the_cursor__seeks_raw_keys__keeps_empty_scan_progress_and_rejects_a_re_bound_scope
+P\Tests\Http\ReadPaginationSecurityTest::__pest_evaluable_it_keeps_a_node_cursor_encrypted__bounded_at_2048_bytes_and_free_of_the_last_name_for_an_exactly_255_byte_unicode_name
+P\Tests\Http\ReadPaginationSecurityTest::__pest_evaluable_it_rejects_a_legacy_signed_cursor__an_oversized_cursor_and_a_cursor_re_bound_to_another_scope
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_covers_every_GET_HEAD_route_of_the_package__with_a_reason_for_each_row_that_does_not_apply
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.drive R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.drive R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.drive R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.drive R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.node R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.node R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.node R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "activity.node R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "changes.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "changes.index R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "changes.index R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "changes.start R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "changes.start R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "changes.start R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "drives.show R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "drives.show R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "drives.show R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.download R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.download R11""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.download R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.download R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.download R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.download R11""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.download R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.download R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.index R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.index R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "files.revisions.index R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "grants.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "grants.index R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "grants.index R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "grants.index R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.abilities R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.abilities R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.abilities R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.index R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.index R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.index R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.search R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.search R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.search R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.search R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.show R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.show R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.show R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.starred R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.starred R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.starred R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "nodes.starred R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "shared.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "shares.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "shares.index R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "shares.index R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "shares.index R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "trash.index R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "trash.index R10""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "trash.index R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "trash.index R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "uploads.show R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "uploads.show R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "uploads.show R3""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "uploads.tus.head R1""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "uploads.tus.head R2""
+P\Tests\Http\ReadSecurityMatrixTest::__pest_evaluable_it_holds_the_read_security_matrix"dataset "uploads.tus.head R3""
 P\Tests\Http\RepresentationTagTest::__pest_evaluable_it_changes_when_an_embedded_ability_changes_although_the_sequence_does_not
 P\Tests\Http\RepresentationTagTest::__pest_evaluable_it_formats_the_document_content_tag_from_the_content_generation_only
 P\Tests\Http\RepresentationTagTest::__pest_evaluable_it_ignores_key_order_at_every_depth
