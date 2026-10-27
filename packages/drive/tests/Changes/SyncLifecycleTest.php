@@ -31,7 +31,8 @@ const SYNC_T0 = 1_000_000;
 
 function syncAt(int $offset): void
 {
-    Carbon::setTestNow(Carbon::createFromTimestamp(SYNC_T0 + $offset));
+    // In the application timezone, as Carbon::now() is outside a test.
+    Carbon::setTestNow(Carbon::createFromTimestamp(SYNC_T0 + $offset, date_default_timezone_get()));
 }
 
 function syncDeadline(string $cursor): int
@@ -106,6 +107,39 @@ it('expires at a grant deadline without any mutation, before data', function ():
     syncAt(101);
     expect(fn () => $this->reader->changes()->list($c0))->toThrow(CursorExpiredException::class);
 });
+
+it('reads the grant deadline in a non-UTC application timezone at the instant the resolver does', function (string $timezone): void {
+    $originalTimezone = date_default_timezone_get();
+    $originalConfig = config('app.timezone');
+    config()->set('app.timezone', $timezone);
+    date_default_timezone_set($timezone);
+    try {
+        syncAt(0);
+        // Stored as the naive wall clock of the application timezone, as a host writes it.
+        $grant = AccessTestHelpers::grant($this->a, RoleRegistry::READER, expiresAt: Carbon::createFromTimestamp(SYNC_T0 + 100, $timezone));
+        expect(Carbon::now()->getOffset())->not->toBe(0)
+            ->and($grant->refresh()->expires_at?->getTimestamp())->toBe(SYNC_T0 + 100);
+
+        $c0 = $this->reader->changes()->startCursor();
+        expect(syncDeadline($c0))->toBe(SYNC_T0 + 100);
+        $this->drive->folders()->create('doc', $this->a);
+
+        // Valid before the expiry, and the deadline does not grow page to page.
+        syncAt(50);
+        $page = $this->reader->changes()->list($c0);
+        expect($page->changes)->toHaveCount(1)->and(syncDeadline($page->cursor))->toBe(SYNC_T0 + 100);
+        syncAt(100);
+        expect(syncDeadline($this->reader->changes()->list($page->cursor)->cursor))->toBe(SYNC_T0 + 100);
+
+        // No mutation since: the cursor dies at the real expiry instant, before data.
+        syncAt(101);
+        expect(fn () => $this->reader->changes()->list($page->cursor))->toThrow(CursorExpiredException::class)
+            ->and(fn () => $this->reader->changes()->list($c0))->toThrow(CursorExpiredException::class);
+    } finally {
+        date_default_timezone_set($originalTimezone);
+        config()->set('app.timezone', $originalConfig);
+    }
+})->with(['UTC+3' => 'Europe/Moscow', 'UTC-5' => 'America/New_York']);
 
 it('hands out no page when the deadline passes while the page is read and projected', function (): void {
     AccessTestHelpers::grant($this->a, RoleRegistry::READER, expiresAt: Carbon::createFromTimestamp(SYNC_T0 + 100));

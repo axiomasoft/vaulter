@@ -198,7 +198,9 @@ final class GrantReadRepository
             throw new UnexpectedValueException('[Vaulter] The earliest grant expiry is not a timestamp string.');
         }
 
-        return Carbon::parse($earliest, 'UTC')->getTimestamp();
+        // The column is naive: rows hold the wall clock of the application timezone, and
+        // the bound above was formatted in the zone of $now. Read it back in that zone.
+        return Carbon::parse($earliest, $now->getTimezone())->getTimestamp();
     }
 
     /**
