@@ -1,6 +1,8 @@
-Vaulter\Documents\Contracts\CollaborationDriver
-  issueSession(\Vaulter\Drive\Models\Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSession
-  type(): string
+Vaulter\Documents\Contracts\CollaborationProtocolDriver
+  issueSession(\Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant): \Vaulter\Documents\Data\Collaboration\CollaborationSession
+  protocol(): string
+  supportsState(string $documentType, string $stateFormat, int $schemaVersion, bool $hasCheckpoint, \Vaulter\Documents\Data\Collaboration\CollaborationMode $mode): bool
+  version(): string
 
 Vaulter\Documents\Contracts\DocumentCodec
   decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
@@ -299,18 +301,19 @@ Vaulter\Documents\Data\Types\DocumentFeatures
   readonly bool $thumbnailable
 
 Vaulter\Documents\Data\Collaboration\CollaborationSession
-  __construct(string $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
-  mode(): string
+  __construct(string $protocol, string $version, ?string $endpoint, string $token, int $expiresAt, \Vaulter\Documents\Data\Collaboration\CollaborationMode $mode, string $nodeId, int $generation, int $schemaVersion, array $options = [])
+  assertGrant(\Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant, string $version): void
   toArray(): array
-  readonly ?string $url
-  readonly bool $readOnly
-  readonly int $epoch
+  readonly ?string $endpoint
+  readonly \Vaulter\Documents\Data\Collaboration\CollaborationMode $mode
+  readonly array $options
+  readonly int $expiresAt
+  readonly int $generation
   readonly int $schemaVersion
-  readonly string $driveId
-  readonly string $driver
   readonly string $nodeId
-  readonly string $room
+  readonly string $protocol
   readonly string $token
+  readonly string $version
 
 Vaulter\Documents\ValueObjects\DocumentExport
   __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId, bool $lossy = false)
