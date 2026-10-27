@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Psr\Http\Message\StreamInterface;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
@@ -223,4 +224,78 @@ it('rejects registering an endpoint whose host resolves into a private range, F-
         'url' => 'https://internal.test/hook',
         'events' => ['folder.created'],
     ])->assertStatus(422)->assertJsonValidationErrors('url');
+});
+
+// ─────────────── P5.3: embedded IPv4, test ranges, proxy, response budget ───────────────
+
+it('blocks IPv4-embedding IPv6, TEST-NET and benchmark addresses by default', function (string $ip): void {
+    fakeResolver()->set('embedded.test', [$ip]);
+
+    expect(fn () => app(OutboundUrlGuard::class)->pin('https://embedded.test/hook'))
+        ->toThrow(BlockedOutboundUrlException::class);
+})->with([
+    '::ffff:7f00:1', '64:ff9b::7f00:1', '64:ff9b:1::7f00:1', '2002:7f00:1::', '2001:0:7f00:1::1', '::127.0.0.1', '::7f00:1',
+    '192.0.0.8', '192.0.2.1', '198.18.0.1', '198.19.255.255', '198.51.100.7', '203.0.113.9', '2001:db8::1', '100::1',
+]);
+
+it('keeps public IPv4 and IPv6 destinations and mixed-case scheme as positive controls', function (): void {
+    fakeResolver()->set('pub.test', [FakeHostResolver::PUBLIC_IP, '2606:4700:4700::1111']);
+
+    expect(app(OutboundUrlGuard::class)->pin('HtTpS://pub.test./hook')->port)->toBe(443);
+});
+
+it('rejects a mixed public/private A+AAAA answer and treats userinfo and fragments unambiguously', function (): void {
+    fakeResolver()->set('mix.test', [FakeHostResolver::PUBLIC_IP, '64:ff9b::a00:1']);
+    $guard = app(OutboundUrlGuard::class);
+
+    expect(fn () => $guard->pin('https://mix.test/'))->toThrow(BlockedOutboundUrlException::class)
+        ->and(fn () => $guard->pin('http://user:pass@127.0.0.1/'))->toThrow(BlockedOutboundUrlException::class)
+        ->and(fn () => $guard->pin('http://127.0.0.1#@example.com/'))->toThrow(BlockedOutboundUrlException::class)
+        ->and(fn () => $guard->pin('unix:///var/run/docker.sock'))->toThrow(BlockedOutboundUrlException::class)
+        ->and(fn () => $guard->pin('gopher://pub.test/'))->toThrow(BlockedOutboundUrlException::class);
+});
+
+it('keeps an explicit allowed_ip_ranges host override above the new defaults', function (): void {
+    config(['vaulter-webhooks.delivery.allowed_ip_ranges' => ['198.51.100.0/24']]);
+    fakeResolver()->set('lab.test', ['198.51.100.7']);
+
+    expect(app(OutboundUrlGuard::class)->pin('https://lab.test/')->ip)->toBe('198.51.100.7');
+});
+
+it('transport options disable every env proxy, redirects and decoding and keep the pin', function (): void {
+    $names = ['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'];
+    $saved = array_map(fn (string $n) => getenv($n), array_combine($names, $names));
+
+    try {
+        foreach ($names as $n) {
+            putenv($n.'=http://127.0.0.1:3128');
+        }
+
+        fakeResolver()->set('pub.test', [FakeHostResolver::PUBLIC_IP]);
+        $job = new DeliverWebhook(deliveryId: 'x');
+        $config = new ReflectionProperty($job, 'webhooksConfig');
+        $config->setValue($job, app(WebhooksConfig::class));
+        $method = new ReflectionMethod($job, 'transportOptions');
+        $options = $method->invoke($job, app(OutboundUrlGuard::class)->pin('https://pub.test/'));
+    } finally {
+        foreach ($saved as $n => $v) {
+            putenv($v === false ? $n : $n.'='.$v);
+        }
+    }
+
+    expect($options['proxy'])->toBe('')
+        ->and($options['decode_content'])->toBeFalse()
+        ->and($options['curl'][CURLOPT_FOLLOWLOCATION])->toBeFalse()
+        ->and($options['curl'][CURLOPT_RESOLVE][0])->toContain('pub.test:443:'.FakeHostResolver::PUBLIC_IP)
+        ->and($options['sink'])->toBeInstanceOf(StreamInterface::class);
+});
+
+it('re-pins on every attempt after DNS changes', function (): void {
+    fakeResolver()->set('rot.test', [FakeHostResolver::PUBLIC_IP]);
+    $guard = app(OutboundUrlGuard::class);
+    $first = $guard->pin('https://rot.test/');
+    fakeResolver()->set('rot.test', ['10.0.0.5']);
+
+    expect($first->ip)->toBe(FakeHostResolver::PUBLIC_IP)
+        ->and(fn () => $guard->pin('https://rot.test/'))->toThrow(BlockedOutboundUrlException::class);
 });

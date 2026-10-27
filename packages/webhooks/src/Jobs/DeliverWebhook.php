@@ -259,6 +259,12 @@ final class DeliverWebhook implements ShouldQueue
     private function transportOptions(PinnedOutboundEndpoint $pinned): array
     {
         $options = [
+            // '' disables the proxy outright: cURL/Guzzle would otherwise take HTTP(S)_PROXY /
+            // ALL_PROXY (any case) from the worker environment, and a proxy resolves the name
+            // itself, bypassing the CURLOPT_RESOLVE pin. No config key re-enables one.
+            'proxy' => '',
+            // The delivery needs only the status: never inflate, so the byte budget is the wire budget.
+            'decode_content' => false,
             'curl' => [
                 CURLOPT_RESOLVE => [$pinned->curlResolveEntry()],
                 CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
@@ -270,11 +276,7 @@ final class DeliverWebhook implements ShouldQueue
         $maxResponseBytes = $this->webhooksConfig->maxResponseBytes();
 
         if ($maxResponseBytes > 0) {
-            $sink = fopen('php://temp/maxmemory:'.$maxResponseBytes, 'w+b');
-
-            if ($sink !== false) {
-                $options['sink'] = $sink;
-            }
+            $options['sink'] = ResponseSizeLimit::boundedSink($maxResponseBytes);
 
             $options['on_headers'] = static function (ResponseInterface $response) use ($maxResponseBytes): void {
                 $header = $response->getHeaderLine('Content-Length');

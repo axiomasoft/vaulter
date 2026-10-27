@@ -39,6 +39,21 @@ final readonly class WebhooksConfig
         'fc00::/7',
         'fe80::/10',
         'ff00::/8',
+        // Not public destinations: IETF protocol assignments, TEST-NET-1/2/3, benchmarking.
+        '192.0.0.0/24',
+        '192.0.2.0/24',
+        '198.18.0.0/15',
+        '198.51.100.0/24',
+        '203.0.113.0/24',
+        // Forms that embed an IPv4 address and may route to an internal one: IPv4-compatible,
+        // NAT64 (RFC 6052 / 8215), 6to4 and Teredo; plus documentation and discard prefixes.
+        '::/96',
+        '64:ff9b::/96',
+        '64:ff9b:1::/48',
+        '2002::/16',
+        '2001::/32',
+        '2001:db8::/32',
+        '100::/64',
     ];
 
     private const array DEFAULT_RETRY_SCHEDULE = [5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400];

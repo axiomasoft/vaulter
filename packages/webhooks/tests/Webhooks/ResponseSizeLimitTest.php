@@ -32,3 +32,22 @@ it('enforces the smallest positive ceiling, F-P1.7-06', function (): void {
     expect(fn () => ResponseSizeLimit::assertContentLengthWithinLimit('2', 1))
         ->toThrow(WebhookResponseTooLargeException::class);
 });
+
+// P5.3: the cap holds WHILE streaming — absent, false or chunked Content-Length. The sink
+// is a deterministic fixture of the local predicate, not a real cURL/TLS abort (owner P8.2).
+it('aborts a chunked or falsely-declared body mid-stream past the limit', function (): void {
+    $sink = ResponseSizeLimit::boundedSink(10);
+    $sink->write('12345');
+    $sink->write('67890');
+
+    expect(fn () => $sink->write('x'))->toThrow(WebhookResponseTooLargeException::class);
+});
+
+it('accepts a body exactly at the limit and a single oversized chunk is refused unbuffered', function (): void {
+    $sink = ResponseSizeLimit::boundedSink(4);
+    $sink->write('abcd');
+    $sink->rewind();
+
+    expect($sink->getContents())->toBe('abcd')
+        ->and(fn () => ResponseSizeLimit::boundedSink(4)->write('abcde'))->toThrow(WebhookResponseTooLargeException::class);
+});

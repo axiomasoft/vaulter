@@ -25,4 +25,14 @@ final class WebhookResponseTooLargeException extends VaulterException
             .'Docs: '.self::docs('webhook-response-too-large'),
         );
     }
+
+    public static function streamed(int $limit): self
+    {
+        return new self(
+            sprintf('[Vaulter] Webhook response refused: the body streamed past the %d-byte limit and the read was aborted. ', $limit)
+            .'Why: Content-Length may be absent or false, and the delivery needs only the status code. '
+            .'Fix: have the receiver return a small (or empty) body, or raise vaulter-webhooks.delivery.max_response_bytes. '
+            .'Docs: '.self::docs('webhook-response-too-large'),
+        );
+    }
 }

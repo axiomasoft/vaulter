@@ -30,3 +30,13 @@ it('requires the default blocked ranges to stay and allows extending them', func
         ->and((new BlockedRangesInvariant(webhooksDelivery(['blocked_ip_ranges' => [...$default, '203.0.113.0/24']])))->violation())->toBeNull()
         ->and((new BlockedRangesInvariant(webhooksDelivery(['blocked_ip_ranges' => ['203.0.113.0/24']])))->violation())->toContain('10.0.0.0/8');
 });
+
+it('judges blocked ranges by binary coverage and rejects malformed CIDRs', function (): void {
+    $default = WebhooksConfig::DEFAULT_BLOCKED_IP_RANGES;
+    $invariant = fn (array $ranges) => (new BlockedRangesInvariant(webhooksDelivery(['blocked_ip_ranges' => $ranges])))->violation();
+
+    expect($invariant(['0.0.0.0/0', '::/0']))->toBeNull()
+        ->and($invariant(array_diff($default, ['198.18.0.0/15'])))->toContain('198.18.0.0/15')
+        ->and($invariant([...$default, '10.0.0.0/99']))->toContain('malformed')
+        ->and($invariant([...$default, 'nope/8']))->toContain('malformed');
+});
