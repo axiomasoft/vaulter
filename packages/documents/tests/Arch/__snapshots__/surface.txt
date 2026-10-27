@@ -629,11 +629,12 @@ Vaulter\Documents\State\PendingStateDrainer spi:implement since 1.0 interface
   public function drain(Vaulter\Documents\State\PendingMarker $marker): void
   public function protocol(): string
 
-Vaulter\Documents\Testing\Contracts\CollaborationProtocolContractTests api since 1.0 final class
+Vaulter\Documents\Testing\Contracts\CollaborationProtocolContractTests api since 1.0 trait
+  public function assertCollaborationProtocolContract(Vaulter\Documents\Contracts\CollaborationProtocolDriver $driver, Vaulter\Documents\Data\Collaboration\CollaborationGrant $readGrant, Vaulter\Documents\Data\Collaboration\CollaborationGrant $writeGrant, Closure $verify): void
   public function assertCollaborationSessionContract(Vaulter\Documents\Contracts\CollaborationProtocolDriver $driver, Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant, Vaulter\Documents\Data\Collaboration\CollaborationSession $session): void
 
 Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests api since 1.0 trait
-  public function assertDocumentTypeContract(Vaulter\Documents\Contracts\DocumentType $type): void
+  public function assertDocumentTypeContract(Vaulter\Documents\Contracts\DocumentType $type, array $historicalFixtures = []): void
 
 Vaulter\Documents\Testing\Contracts\ExporterContractTests api since 1.0 final class
   public function assertExporterContract(Vaulter\Documents\Contracts\DocumentExporter $exporter): void

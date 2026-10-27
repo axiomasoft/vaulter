@@ -4770,7 +4770,7 @@
             "eloquent": false,
             "file": "packages/documents/src/Testing/Contracts/CollaborationProtocolContractTests.php",
             "fqcn": "Vaulter\\Documents\\Testing\\Contracts\\CollaborationProtocolContractTests",
-            "kind": "final-class",
+            "kind": "trait",
             "note": null,
             "owner": "documents",
             "package": "documents",
@@ -14928,6 +14928,20 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Media\\Testing\\Contracts\\ContentScannerContractTests"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Testing/Contracts/StorageDriverContractTests.php",
+            "fqcn": "Vaulter\\Media\\Testing\\Contracts\\StorageDriverContractTests",
+            "kind": "trait",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Media\\Testing\\Contracts\\StorageDriverContractTests"
         },
         {
             "action": "keep",

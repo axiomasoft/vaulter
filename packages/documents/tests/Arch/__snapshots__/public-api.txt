@@ -425,7 +425,7 @@ Vaulter\Documents\Presentation\DocumentPresenter
   present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|\Vaulter\Drive\Models\Node $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests
-  assertDocumentTypeContract(\Vaulter\Documents\Contracts\DocumentType $type): void
+  assertDocumentTypeContract(\Vaulter\Documents\Contracts\DocumentType $type, array $historicalFixtures = []): void
 
 Vaulter\Documents\Testing\Contracts\ExporterContractTests
   assertExporterContract(\Vaulter\Documents\Contracts\DocumentExporter $exporter): void

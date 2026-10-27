@@ -141,6 +141,9 @@ Vaulter\Media\Testing\Contracts\ContentScannerContractTests api since 1.0 final 
   public function assertContentScannerContract(Vaulter\Media\Contracts\Cas\ContentScanner $scanner, array $samples): void
   public function assertUnreadableBytesAreNeverClean(Vaulter\Media\Contracts\Cas\ContentScanner $scanner): void
 
+Vaulter\Media\Testing\Contracts\StorageDriverContractTests api since 1.0 trait
+  public function assertStorageDriverContract(Vaulter\Media\Contracts\Cas\StorageDriver $driver, ?string $disk = null): void
+
 Vaulter\Media\Testing\FakeContentScanner api since 1.0 final class implements Vaulter\Media\Contracts\Cas\ContentScanner
   public array $scans = []
   public function __construct(string $key = 'fake', string $version = '1')

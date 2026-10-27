@@ -13,5 +13,7 @@ final class AcmeProvider extends ServiceProvider
     {
         ModuleCatalog::of($this->app)->offer(AcmeModule::class);
         $this->app->singleton(AcmeDriver::class);
+        $this->app->singleton(AcmeFixtureLog::class);
+        $this->app->singleton(AcmePendingStateDrainer::class);
     }
 }

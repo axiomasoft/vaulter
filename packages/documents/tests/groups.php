@@ -20,6 +20,7 @@ return [
         'Document/DocumentSchemaWritableTest.php',
         'Document/DocumentCopyLifecycleTest.php',
         // The marker CHECK and the T → N → D locks of the collaborative-state contract (P5.3).
+        'State/CollaborationBindingTransitionTest.php',
         'State/CollaborativeStateTest.php',
         'Types/UnknownDocumentTypeFallbackTest.php',
     ],

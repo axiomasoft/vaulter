@@ -2146,14 +2146,14 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 
 - `repo`: 269 (introduced P1.3)
 - `core`: 60
-- `media`: 142
+- `media`: 148
 - `drive`: 427
-- `documents`: 223
+- `documents`: 244
 - `azgard`: 9
 - `filament`: 27
 - `webhooks`: 148
 - `vue`: 31
-- `collaboration`: 332
+- `collaboration`: 351
 - `hub`: 30
 - `vue-collaboration`: 57
 - `integration`: 0

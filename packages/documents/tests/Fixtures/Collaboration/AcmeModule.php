@@ -6,6 +6,8 @@ namespace Vaulter\Documents\Tests\Fixtures\Collaboration;
 
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\State\PendingStateDrainer;
+use Vaulter\Documents\Tests\Fixtures\State\FakePendingStateDrainer;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
@@ -36,6 +38,8 @@ final class AcmeModule implements VaulterModule
     public function register(ModuleBuilder $module): void
     {
         $module->slot(DocumentType::class, AcmeType::class, 'acme.type', key: 'acme/ot')
-            ->slot(CollaborationProtocolDriver::class, AcmeDriver::class, 'acme.protocol', key: 'acme-ot');
+            ->slot(CollaborationProtocolDriver::class, AcmeDriver::class, 'acme.protocol', key: 'acme-ot')
+            ->slot(PendingStateDrainer::class, AcmePendingStateDrainer::class, 'acme.drainer', key: 'acme-ot')
+            ->slot(PendingStateDrainer::class, FakePendingStateDrainer::class, 'acme.fixture.yjs-drainer', key: 'yjs');
     }
 }

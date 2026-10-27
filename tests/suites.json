@@ -775,6 +775,25 @@
                         "packages/media/tests/Console/SchedulingRegistrarTest.php",
                         "packages/media/tests/Support/UtcDateTimeCastTest.php"
                     ]
+                },
+                {
+                    "key": "RefreshDatabase+StorageDriverContractTests+TestCase",
+                    "fingerprint": "555a082c1a50",
+                    "lifecycle": "refresh",
+                    "database": true,
+                    "engines": [
+                        "sqlite",
+                        "pgsql",
+                        "mysql"
+                    ],
+                    "skeleton_writer": false,
+                    "empty_passes": [
+                        "serial"
+                    ],
+                    "files": [
+                        "packages/media/tests/Cas/FlysystemStorageDriverContractTest.php",
+                        "packages/media/tests/Cas/StorageDriverContractKitTest.php"
+                    ]
                 }
             ]
         },
@@ -1499,7 +1518,7 @@
                     ]
                 },
                 {
-                    "key": "DocumentTypeContractTests+ExportTestCase+RefreshDatabase",
+                    "key": "CollaborationProtocolContractTests+DocumentTypeContractTests+ExportTestCase+RefreshDatabase",
                     "fingerprint": "0d8e29ce33f8",
                     "lifecycle": "refresh",
                     "database": true,
@@ -1733,6 +1752,42 @@
                         "packages/documents/tests/Providers/HttpRegistrarTest.php",
                         "packages/documents/tests/Providers/InvalidDefaultDocumentTypeTest.php"
                     ]
+                },
+                {
+                    "key": "CollaborationProtocolContractTests+OperationsTestCase+RefreshDatabase+WithAcme",
+                    "fingerprint": "f5033cd4a41c",
+                    "lifecycle": "refresh",
+                    "database": true,
+                    "engines": [
+                        "sqlite",
+                        "pgsql",
+                        "mysql"
+                    ],
+                    "skeleton_writer": false,
+                    "empty_passes": [
+                        "serial"
+                    ],
+                    "files": [
+                        "packages/documents/tests/Collaboration/AcmeOtProtocolContractTest.php"
+                    ]
+                },
+                {
+                    "key": "DatabaseMigrations+OperationsTestCase+WithAcme",
+                    "fingerprint": "6a4c8e099d78",
+                    "lifecycle": "migrations",
+                    "database": true,
+                    "engines": [
+                        "sqlite",
+                        "pgsql",
+                        "mysql"
+                    ],
+                    "skeleton_writer": false,
+                    "empty_passes": [
+                        "serial"
+                    ],
+                    "files": [
+                        "packages/documents/tests/Collaboration/SecondProtocolTest.php"
+                    ]
                 }
             ]
         },
@@ -1928,6 +1983,24 @@
                         "packages/collaboration/tests/Configuration/CollaborationConfigTest.php",
                         "packages/collaboration/tests/Configuration/CollaborationSecretsTest.php",
                         "packages/collaboration/tests/Providers/CollaborationRegistrarTest.php"
+                    ]
+                },
+                {
+                    "key": "CollaborationEnabledTestCase+CollaborationProtocolContractTests+RefreshDatabase",
+                    "fingerprint": "498be69c043e",
+                    "lifecycle": "refresh",
+                    "database": true,
+                    "engines": [
+                        "sqlite",
+                        "pgsql",
+                        "mysql"
+                    ],
+                    "skeleton_writer": false,
+                    "empty_passes": [
+                        "serial"
+                    ],
+                    "files": [
+                        "packages/collaboration/tests/Collaboration/YjsProtocolContractTest.php"
                     ]
                 }
             ]

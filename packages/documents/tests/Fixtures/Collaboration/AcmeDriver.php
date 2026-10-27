@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Tests\Fixtures\Collaboration;
 
+use Illuminate\Support\Carbon;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
@@ -49,7 +50,7 @@ final class AcmeDriver implements CollaborationProtocolDriver
     public function verify(string $token): CollaborationGrant
     {
         $grant = $this->credentials[$token] ?? throw new \InvalidArgumentException('Invalid opaque credential.');
-        if ($grant->notAfter <= time()) {
+        if ($grant->notAfter <= Carbon::now()->getTimestamp()) {
             throw new \InvalidArgumentException('Expired opaque credential.');
         }
 
