@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Changes;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 
 /**
  * A page of a drive's change journal. Apply the changes in order (a node may appear
  * more than once: the last one wins), then store $cursor; with $hasMore, ask for the
  * next page at once.
  */
-#[Internal]
+#[Api]
 final readonly class ChangePage
 {
     /** @param list<NodeChange> $changes */

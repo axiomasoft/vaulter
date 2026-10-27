@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Changes;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 
@@ -15,7 +15,7 @@ use Vaulter\Drive\Enums\Changes\ChangeOperation;
  * for this reader (a removed folder takes its whole subtree with it) — no node id, no
  * reason, no snapshot. $syncKey is null only for an anonymous reader's upsert.
  */
-#[Internal]
+#[Api]
 final readonly class NodeChange
 {
     public function __construct(
