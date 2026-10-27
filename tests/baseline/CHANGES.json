@@ -18636,7 +18636,7 @@
       ]
     },
     "core": {
-      "count": 110,
+      "count": 112,
       "names": [
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_has_no_accessor_of_a_module_section__the_drive_reads_its_own_through_DriveConfig",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_keeps_no_drive_and_no_webhooks_section_in_the_kernel_config_root__P4_11__P4_13_",
@@ -18720,6 +18720,7 @@
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names\"('vaulter:relay:other', false)\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names\"('vaulter:relay:replay', true)\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names\"('vaulter:webhooks:redeliver', true)\"",
+        "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names\"('vaulter:webhooks:retry', true)\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_is_satisfied_when_tenancy_is_disabled",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_lets_a_guarded_command_run_for_an_accepted_risk_with_a_reason\"dataset \"accepted risk\"\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_lets_a_non_guarded_or_build_command_run_without_the_production_secrets",
@@ -18741,6 +18742,7 @@
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler\"('vaulter:relay')\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler\"('vaulter:relay:replay')\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler\"('vaulter:webhooks:redeliver')\"",
+        "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler\"('vaulter:webhooks:retry')\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_runs_every_declared_build_or_doctor_exemption_before_its_fake_handler_under_a_violation\"('config:cache')\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_runs_every_declared_build_or_doctor_exemption_before_its_fake_handler_under_a_violation\"('package:discover')\"",
         "P\\Packages\\core\\tests\\Security\\ProductionInvariantsTest::__pest_evaluable_it_runs_every_declared_build_or_doctor_exemption_before_its_fake_handler_under_a_violation\"('vaulter:doctor')\"",
@@ -18904,7 +18906,7 @@
       ]
     },
     "drive": {
-      "count": 503,
+      "count": 504,
       "names": [
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_keeps_the_event_out_of_the_activity_feed_and_away_from_webhooks__with_the_access_policy_as_its_subject",
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_records_a_drive_wide_change_when_the_drive_is_archived__unarchived_and_deleted",
@@ -19101,6 +19103,7 @@
         "P\\Tests\\Http\\ListQueryTest::__pest_evaluable_it_refuses_a_page_size_out_of_range_with_a_422_validation_error\"('many')\"",
         "P\\Tests\\Http\\QuarantinedDownloadTest::__pest_evaluable_it_answers_423_for_a_head_whose_blob_the_integrity_scrub_marked__in_both_delivery_modes__D49_\"('direct_signed')\"",
         "P\\Tests\\Http\\QuarantinedDownloadTest::__pest_evaluable_it_answers_423_for_a_head_whose_blob_the_integrity_scrub_marked__in_both_delivery_modes__D49_\"('strict')\"",
+        "P\\Tests\\Http\\ReadPaginationSecurityTest::__pest_evaluable_it_binds_a_node_cursor_to_the_typed_principal__another_user_and_the_same_id_under_another_morph_type_get_422",
         "P\\Tests\\Http\\ReadPaginationSecurityTest::__pest_evaluable_it_keeps_a_long_typed_host_and_filter_scope_out_of_the_cursor__seeks_raw_keys__keeps_empty_scan_progress_and_rejects_a_re_bound_scope",
         "P\\Tests\\Http\\ReadPaginationSecurityTest::__pest_evaluable_it_keeps_a_node_cursor_encrypted__bounded_at_2048_bytes_and_free_of_the_last_name_for_an_exactly_255_byte_unicode_name",
         "P\\Tests\\Http\\ReadPaginationSecurityTest::__pest_evaluable_it_rejects_a_legacy_signed_cursor__an_oversized_cursor_and_a_cursor_re_bound_to_another_scope",
@@ -19740,7 +19743,7 @@
       ]
     },
     "webhooks": {
-      "count": 187,
+      "count": 207,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_domain_exceptions_of_the_webhooks_package_implement_the_HTTP_problem_contract",
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_it_binds_no_route_model_in_the_package",
@@ -19889,7 +19892,20 @@
         "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_accepts_only_https_as_the_delivery_scheme_in_production\"(['http'], false)\"",
         "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_accepts_only_https_as_the_delivery_scheme_in_production\"(['https'], true)\"",
         "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_judges_blocked_ranges_by_binary_coverage_and_rejects_malformed_CIDRs",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"(' 10.0.0.0/8')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('/8')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('10.0.0.0/')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('10.0.0.0/-1')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('10.0.0.0/33')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('10.0.0.0/8/8')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('10.0.0.0/99')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('10.0.0.0/nope')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('::1/129')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('::1/999')\"",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_rejects_every_malformed_blocked_or_allowed_CIDR_structurally__never_as_an_accepted_risk_and_never_coerced\"('nope/8')\"",
         "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_requires_the_default_blocked_ranges_to_stay_and_allows_extending_them",
+        "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_still_accepts_legitimate_public_IPv4_and_IPv6_allow_and_block_ranges",
         "P\\Tests\\Security\\WebhooksInvariantsTest::__pest_evaluable_it_treats_the_default_scheme_list_as_insecure",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_answers_a_keyed_retry_of_a_redelivery_from_its_receipt_and_sends_nothing__even_once_the_delivery_was_delivered_again",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_answers_a_stale_If_Match_with_412_stale__write_and_changes_nothing__under_a_key_too",
@@ -19923,6 +19939,13 @@
         "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_blocks_IPv4_embedding_IPv6__TEST_NET_and_benchmark_addresses_by_default\"('::ffff:7f00:1')\"",
         "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_keeps_an_explicit_allowed__ip__ranges_host_override_above_the_new_defaults",
         "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_keeps_public_IPv4_and_IPv6_destinations_and_mixed_case_scheme_as_positive_controls",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_keeps_the_guard_on_a_valid_allowed_IPv6_range_and_a_bare_allowed_address_while_the_rest_stays_blocked",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_never_lets_a_malformed_allowed_range_open_loopback_or_link_local__and_a_valid_one_still_rescues_its_own_range_only\"('10.0.0.0/')\"",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_never_lets_a_malformed_allowed_range_open_loopback_or_link_local__and_a_valid_one_still_rescues_its_own_range_only\"('10.0.0.0/-1')\"",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_never_lets_a_malformed_allowed_range_open_loopback_or_link_local__and_a_valid_one_still_rescues_its_own_range_only\"('10.0.0.0/99')\"",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_never_lets_a_malformed_allowed_range_open_loopback_or_link_local__and_a_valid_one_still_rescues_its_own_range_only\"('10.0.0.0/nope')\"",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_never_lets_a_malformed_allowed_range_open_loopback_or_link_local__and_a_valid_one_still_rescues_its_own_range_only\"('::/')\"",
+        "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_never_lets_a_malformed_allowed_range_open_loopback_or_link_local__and_a_valid_one_still_rescues_its_own_range_only\"('::/nope')\"",
         "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_re_pins_on_every_attempt_after_DNS_changes",
         "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_rejects_a_mixed_public_private_A_AAAA_answer_and_treats_userinfo_and_fragments_unambiguously",
         "P\\Tests\\Webhooks\\OutboundUrlGuardTest::__pest_evaluable_it_transport_options_disable_every_env_proxy__redirects_and_decoding_and_keep_the_pin",

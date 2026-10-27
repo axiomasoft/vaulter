@@ -9,6 +9,7 @@ use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Contracts\HostResolver;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
+use Vaulter\Webhooks\Security\CidrRange;
 use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 
 /**
@@ -122,43 +123,15 @@ final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
     }
 
     /**
-     * Binary CIDR containment, family-aware: a bare IP is an exact match, and a
-     * cross-family (IPv4 vs IPv6) comparison is never a match.
+     * Binary CIDR containment, family-aware: a bare IP is an exact match, a
+     * cross-family (IPv4 vs IPv6) comparison and a malformed range are never a match.
      */
     private function inRange(string $ip, string $cidr): bool
     {
-        if (!str_contains($cidr, '/')) {
-            $ipBin = @inet_pton($ip);
-            $cidrBin = @inet_pton($cidr);
-
-            return $ipBin !== false && $cidrBin !== false && $ipBin === $cidrBin;
-        }
-
-        [$subnet, $bitsRaw] = explode('/', $cidr, 2);
-
+        $range = CidrRange::parse($cidr);
         $ipBin = @inet_pton($ip);
-        $subnetBin = @inet_pton($subnet);
 
-        if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
-            return false;
-        }
-
-        $bits = (int) $bitsRaw;
-        $bits = max(0, min($bits, strlen($ipBin) * 8));
-
-        $fullBytes = intdiv($bits, 8);
-        $remainderBits = $bits % 8;
-
-        if ($fullBytes > 0 && strncmp($ipBin, $subnetBin, $fullBytes) !== 0) {
-            return false;
-        }
-
-        if ($remainderBits === 0) {
-            return true;
-        }
-
-        $mask = (0xFF << (8 - $remainderBits)) & 0xFF;
-
-        return (ord($ipBin[$fullBytes]) & $mask) === (ord($subnetBin[$fullBytes]) & $mask);
+        // A malformed range never matches: it is rejected at config validation, never coerced to a prefix.
+        return $range !== null && $ipBin !== false && CidrRange::contains($ipBin, $range[0], $range[1]);
     }
 }

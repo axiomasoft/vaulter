@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Security\BlockedRangesInvariant;
 use Vaulter\Webhooks\Security\SchemesInvariant;
@@ -37,6 +38,23 @@ it('judges blocked ranges by binary coverage and rejects malformed CIDRs', funct
 
     expect($invariant(['0.0.0.0/0', '::/0']))->toBeNull()
         ->and($invariant(array_diff($default, ['198.18.0.0/15'])))->toContain('198.18.0.0/15')
-        ->and($invariant([...$default, '10.0.0.0/99']))->toContain('malformed')
-        ->and($invariant([...$default, 'nope/8']))->toContain('malformed');
+        ->and($invariant([...$default, '203.0.113.0/24', '2001:db8::/32', '8.8.8.8']))->toBeNull();
+});
+
+it('rejects every malformed blocked or allowed CIDR structurally, never as an accepted risk and never coerced', function (string $range): void {
+    foreach (['blocked_ip_ranges', 'allowed_ip_ranges'] as $key) {
+        $ranges = $key === 'blocked_ip_ranges' ? [...WebhooksConfig::DEFAULT_BLOCKED_IP_RANGES, $range] : [$range];
+
+        expect(fn () => webhooksDelivery([$key => $ranges])->validate())->toThrow(InvalidConfigurationException::class, $key);
+    }
+
+    expect(fn () => (new BlockedRangesInvariant(webhooksDelivery(['blocked_ip_ranges' => [...WebhooksConfig::DEFAULT_BLOCKED_IP_RANGES, $range]])))->violation())
+        ->toThrow(InvalidConfigurationException::class, 'valid IP or CIDR');
+})->with(['10.0.0.0/nope', '10.0.0.0/-1', '10.0.0.0/', '/8', '', '10.0.0.0/33', '10.0.0.0/99', '::1/129', '::1/999', 'nope/8', '10.0.0.0/8/8', ' 10.0.0.0/8']);
+
+it('still accepts legitimate public IPv4 and IPv6 allow and block ranges', function (): void {
+    $config = webhooksDelivery(['allowed_ip_ranges' => ['198.51.100.0/24', '2001:db8::/32', '203.0.113.9'], 'blocked_ip_ranges' => ['0.0.0.0/0', '::/0']]);
+    $config->validate();
+
+    expect($config->allowedIpRanges())->toBe(['198.51.100.0/24', '2001:db8::/32', '203.0.113.9']);
 });

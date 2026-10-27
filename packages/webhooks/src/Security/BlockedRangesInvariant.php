@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks\Security;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Security\ProductionInvariant;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 
 /** The blocked ranges may be extended but never narrowed below the built-in private/loopback/link-local defaults. */
@@ -30,10 +31,11 @@ final readonly class BlockedRangesInvariant implements ProductionInvariant
             }
         }
 
-        $malformed = array_values(array_filter($configured, fn (string $range): bool => $this->parse($range) === null));
+        $malformed = array_values(array_filter($configured, fn (string $range): bool => CidrRange::parse($range) === null));
 
         if ($malformed !== []) {
-            return 'vaulter-webhooks.delivery.blocked_ip_ranges contains malformed CIDR entries ('.implode(', ', $malformed).').';
+            // Structural, never an accepted risk: a malformed entry has no defined range.
+            throw new InvalidConfigurationException('[Vaulter] vaulter-webhooks.delivery.blocked_ip_ranges contains malformed CIDR entries ('.implode(', ', $malformed).').');
         }
 
         return $missing === []
@@ -49,60 +51,24 @@ final readonly class BlockedRangesInvariant implements ProductionInvariant
      */
     private function covered(string $default, array $configured): bool
     {
-        $inner = $this->parse($default);
+        $inner = CidrRange::parse($default);
 
         if ($inner === null) {
             return false;
         }
 
         foreach ($configured as $range) {
-            $outer = $this->parse($range);
+            $outer = CidrRange::parse($range);
 
             if ($outer === null || strlen($outer[0]) !== strlen($inner[0]) || $outer[1] > $inner[1]) {
                 continue;
             }
 
-            if ($this->prefixMatches($outer[0], $inner[0], $outer[1])) {
+            if (CidrRange::prefixMatches($outer[0], $inner[0], $outer[1])) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    /** @return array{string, int}|null packed network address and prefix length; null when malformed. */
-    private function parse(string $cidr): ?array
-    {
-        $parts = explode('/', $cidr, 2);
-        $bin = @inet_pton($parts[0]);
-
-        if ($bin === false) {
-            return null;
-        }
-
-        $max = strlen($bin) * 8;
-
-        if (!isset($parts[1])) {
-            return [$bin, $max];
-        }
-
-        if (preg_match('/^\d{1,3}$/', $parts[1]) !== 1 || (int) $parts[1] > $max) {
-            return null;
-        }
-
-        return [$bin, (int) $parts[1]];
-    }
-
-    private function prefixMatches(string $a, string $b, int $bits): bool
-    {
-        $full = intdiv($bits, 8);
-
-        if ($full > 0 && strncmp($a, $b, $full) !== 0) {
-            return false;
-        }
-
-        $rest = $bits % 8;
-
-        return $rest === 0 || ((ord($a[$full]) ^ ord($b[$full])) & ((0xFF << (8 - $rest)) & 0xFF)) === 0;
     }
 }

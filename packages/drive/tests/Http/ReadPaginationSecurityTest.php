@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Crypt;
 use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -94,4 +95,30 @@ it('rejects a legacy signed cursor, an oversized cursor and a cursor re-bound to
     $other = AccessTestHelpers::folder($this->storage, null, 'other');
     AccessTestHelpers::grant($other, RoleRegistry::READER);
     $this->getJson($this->base.'/nodes?parent='.$other->id.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
+});
+
+it('binds a node cursor to the typed principal: another user and the same id under another morph type get 422', function (): void {
+    AccessTestHelpers::folder($this->storage, $this->folder, 'a');
+    AccessTestHelpers::folder($this->storage, $this->folder, 'b');
+    $url = $this->base.'/nodes?parent='.$this->folder->id.'&per_page=1';
+    $cursor = $this->getJson($url)->assertOk()->json('meta.next_cursor');
+    $this->getJson($url.'&cursor='.urlencode($cursor))->assertOk();
+
+    $other = AccessTestHelpers::user(2);
+    AccessTestHelpers::grant($this->folder, RoleRegistry::READER, subjectId: 2);
+    $this->actingAs($other);
+    $this->getJson($url.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
+
+    $morph = new class extends User
+    {
+        public function getMorphClass(): string
+        {
+            return 'other-principal';
+        }
+    };
+    $morph->forceFill(['id' => 1]);
+    $morph->exists = true;
+    AccessTestHelpers::grant($this->folder, RoleRegistry::READER, subjectId: 1, subjectType: 'other-principal');
+    $this->actingAs($morph);
+    $this->getJson($url.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
 });

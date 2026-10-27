@@ -14,6 +14,7 @@ use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
+use Vaulter\Webhooks\Security\CidrRange;
 use Vaulter\Webhooks\WebhooksSchedule;
 
 /**
@@ -121,6 +122,8 @@ final readonly class WebhooksConfig
     {
         $this->assertNoRemovedKeys();
         $this->urlGuard();
+        $this->allowedIpRanges();
+        $this->blockedIpRanges();
         $this->retrySchedule();
         $this->retryJitter();
         $this->relayFanoutChunk();
@@ -329,9 +332,11 @@ final readonly class WebhooksConfig
         $ranges = [];
 
         foreach ($value as $range) {
-            if (is_string($range) && $range !== '') {
-                $ranges[] = $range;
+            if (!is_string($range) || CidrRange::parse($range) === null) {
+                throw new InvalidConfigurationException('[Vaulter] '.$key.' must contain only valid IP or CIDR strings.');
             }
+
+            $ranges[] = $range;
         }
 
         return $ranges;

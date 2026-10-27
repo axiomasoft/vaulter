@@ -171,6 +171,7 @@ P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_gua
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names"('vaulter:relay:other', false)"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names"('vaulter:relay:replay', true)"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names"('vaulter:webhooks:redeliver', true)"
+P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_guards_only_canonical_long_lived_command_names"('vaulter:webhooks:retry', true)"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_is_satisfied_when_tenancy_is_disabled
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_lets_a_guarded_command_run_for_an_accepted_risk_with_a_reason"dataset "accepted risk""
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_lets_a_non_guarded_or_build_command_run_without_the_production_secrets
@@ -192,6 +193,7 @@ P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_ref
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler"('vaulter:relay')"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler"('vaulter:relay:replay')"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler"('vaulter:webhooks:redeliver')"
+P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_refuses_every_declared_guarded_command_name_before_its_fake_handler"('vaulter:webhooks:retry')"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_runs_every_declared_build_or_doctor_exemption_before_its_fake_handler_under_a_violation"('config:cache')"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_runs_every_declared_build_or_doctor_exemption_before_its_fake_handler_under_a_violation"('package:discover')"
 P\Packages\core\tests\Security\ProductionInvariantsTest::__pest_evaluable_it_runs_every_declared_build_or_doctor_exemption_before_its_fake_handler_under_a_violation"('vaulter:doctor')"

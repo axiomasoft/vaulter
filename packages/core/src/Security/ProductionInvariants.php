@@ -22,8 +22,8 @@ final class ProductionInvariants
     /** Canonical Symfony command names that serve traffic or run side effects for a long time. */
     public const array GUARDED_COMMANDS = [
         'queue:work', 'queue:listen', 'horizon', 'octane:start', 'vaulter:relay', 'schedule:work', 'schedule:run',
-        // Registered commands that run outward relay side effects (outbox replay to a consumer, webhook redelivery); no wildcard.
-        'vaulter:relay:replay', 'vaulter:webhooks:redeliver',
+        // Registered commands that run outward relay side effects (outbox replay to a consumer, webhook redelivery and retry); no wildcard.
+        'vaulter:relay:replay', 'vaulter:webhooks:redeliver', 'vaulter:webhooks:retry',
     ];
 
     /** @var array<string, true> accepted ids already logged during this boot */

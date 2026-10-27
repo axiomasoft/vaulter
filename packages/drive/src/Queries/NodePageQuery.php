@@ -51,7 +51,8 @@ final readonly class NodePageQuery
         };
         $direction = $options->descending ? 'desc' : 'asc';
         $order = array_map(static fn (string $column): array => ['column' => $column, 'direction' => $direction], $columns);
-        $identity = json_encode(['drive' => (string) $context->driveId(), 'tenant' => $context->drive->tenant_id, 'kind' => $kind, 'filter' => $filter, 'kinds' => $options->kinds, 'sort' => $options->sort->value, 'direction' => $direction], JSON_THROW_ON_ERROR);
+        $principal = $context->actor->ref();
+        $identity = json_encode(['drive' => (string) $context->driveId(), 'tenant' => $context->drive->tenant_id, 'kind' => $kind, 'actor' => [$principal->type, $principal->id === null ? null : (string) $principal->id, $principal->reason], 'filter' => $filter, 'kinds' => $options->kinds, 'sort' => $options->sort->value, 'direction' => $direction], JSON_THROW_ON_ERROR);
 
         return $this->listing->page(actor: $context, candidates: $query, order: $order, perPage: $options->perPage, cursor: $options->cursor, context: $identity);
     }

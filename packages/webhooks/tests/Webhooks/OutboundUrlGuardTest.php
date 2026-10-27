@@ -6,6 +6,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Contracts\HostResolver;
@@ -260,6 +261,27 @@ it('keeps an explicit allowed_ip_ranges host override above the new defaults', f
     fakeResolver()->set('lab.test', ['198.51.100.7']);
 
     expect(app(OutboundUrlGuard::class)->pin('https://lab.test/')->ip)->toBe('198.51.100.7');
+});
+
+it('never lets a malformed allowed range open loopback or link-local, and a valid one still rescues its own range only', function (string $range): void {
+    config(['vaulter-webhooks.delivery.allowed_ip_ranges' => [$range]]);
+    fakeResolver()->set('meta.test', ['169.254.169.254']);
+    fakeResolver()->set('local.test', ['127.0.0.1']);
+
+    foreach (['meta.test', 'local.test'] as $host) {
+        expect(fn () => app(OutboundUrlGuard::class)->pin('http://'.$host.'/'))->toThrow(InvalidConfigurationException::class);
+    }
+})->with(['10.0.0.0/nope', '10.0.0.0/-1', '10.0.0.0/', '10.0.0.0/99', '::/nope', '::/']);
+
+it('keeps the guard on a valid allowed IPv6 range and a bare allowed address while the rest stays blocked', function (): void {
+    config(['vaulter-webhooks.delivery.allowed_ip_ranges' => ['2001:db8::/32', '198.51.100.7']]);
+    fakeResolver()->set('v6.test', ['2001:db8::5']);
+    fakeResolver()->set('v4.test', ['198.51.100.7']);
+    fakeResolver()->set('lo.test', ['127.0.0.1']);
+
+    expect(app(OutboundUrlGuard::class)->pin('https://v6.test/')->ip)->toBe('2001:db8::5')
+        ->and(app(OutboundUrlGuard::class)->pin('https://v4.test/')->ip)->toBe('198.51.100.7')
+        ->and(fn () => app(OutboundUrlGuard::class)->pin('https://lo.test/'))->toThrow(BlockedOutboundUrlException::class);
 });
 
 it('transport options disable every env proxy, redirects and decoding and keep the pin', function (): void {

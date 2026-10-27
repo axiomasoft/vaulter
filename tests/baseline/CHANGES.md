@@ -2145,13 +2145,13 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 ## Additions (current − original)
 
 - `repo`: 304 (introduced P1.3)
-- `core`: 110
+- `core`: 112
 - `media`: 148
-- `drive`: 503
+- `drive`: 504
 - `documents`: 277
 - `azgard`: 9
 - `filament`: 27
-- `webhooks`: 187
+- `webhooks`: 207
 - `vue`: 37
 - `collaboration`: 461
 - `hub`: 30

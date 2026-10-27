@@ -15,9 +15,10 @@ A module contributes narrow `Vaulter\Contracts\Security\ProductionInvariant` obj
 active modules' invariants in id order through `Vaulter\Security\ProductionInvariants`:
 
 - HTTP: once at application boot; long-lived commands (`queue:work`, `queue:listen`, `horizon`,
-  `octane:start`, `vaulter:relay`, `schedule:work`, `schedule:run`) once on the canonical
+  `octane:start`, `vaulter:relay`, `schedule:work`, `schedule:run`, and the outward side-effect commands
+  `vaulter:relay:replay`, `vaulter:webhooks:redeliver`, `vaulter:webhooks:retry`) once on the canonical
   `CommandStarting` event, before the command handles. Build and doctor commands are exempt.
-- Structural errors (malformed TTL, equal hub secrets, unknown driver) are not invariants: they fail in
+- Structural errors (malformed TTL, equal hub secrets, unknown driver, a malformed webhook allow or block CIDR) are not invariants: they fail in
   every environment before any risk classification, and their coercion and defaults are unchanged.
 - A risk is accepted only with `vaulter.security.accepted_risks[<id>] = '<nonempty reason>'`; the
   doctor reports accepted, unaccepted, exempt and structural states. An empty reason accepts nothing.
@@ -29,5 +30,5 @@ Invariants shipped: `core.tenancy`, `drive.permission-driver`, `collaboration.se
 ## Consequences
 
 The former production throws in `DriveConfigValidator` and `CollaborationConfig::assertSecrets()` are
-removed; the latter's non-production warning is replaced by the doctor report. Key rotation (kid) and new
-webhook ranges are future work.
+removed; the latter's non-production warning is replaced by the doctor report. Hub JWT key rotation (`kid` keyring) and
+the webhook blocked/allowed ranges are implemented; a malformed range is rejected, never coerced.
