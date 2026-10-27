@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Http\Controllers\Collaboration;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -11,7 +14,6 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\CompactionLease;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
-use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 
 /**
  * Protocol 2 compaction lease (C12): the hub's compaction worker asks for up to `max` (1..100) document generations
@@ -75,7 +77,7 @@ final readonly class HubCompactionLeaseController
             'document' => $lease->nodeId,
             'generation' => $log->generation,
             'lease_token' => $lease->token,
-            'lease_expires_at' => SnapshotValue::iso($lease->expiresAt),
+            'lease_expires_at' => self::wire($lease->expiresAt),
             'checkpoint_seq' => $log->checkpointSeq,
             'head_seq' => $log->headSeq,
             'checkpoint_version' => $lease->checkpointVersion,
@@ -89,5 +91,11 @@ final readonly class HubCompactionLeaseController
                 : null,
             'tail' => $log->tail,
         ];
+    }
+
+    /** The lease expiry as it has always been on the wire: UTC with microseconds and a trailing Z. */
+    private static function wire(DateTimeInterface $time): string
+    {
+        return DateTimeImmutable::createFromInterface($time)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
     }
 }

@@ -1983,6 +1983,7 @@
                     "files": [
                         "packages/collaboration/tests/Configuration/CollaborationConfigTest.php",
                         "packages/collaboration/tests/Configuration/CollaborationSecretsTest.php",
+                        "packages/collaboration/tests/Configuration/CollaborationWiringBoundaryTest.php",
                         "packages/collaboration/tests/Providers/CollaborationRegistrarTest.php"
                     ]
                 },

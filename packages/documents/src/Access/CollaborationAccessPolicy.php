@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Access;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
@@ -19,7 +20,9 @@ use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\DriveStatus;
@@ -31,6 +34,7 @@ use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Kernel;
 use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\Actor;
 
 /** Live, profile-aware authority shared by issuance and every user backend call. */
 #[Api]
@@ -45,6 +49,8 @@ final readonly class CollaborationAccessPolicy
         private DocumentQuery $query,
         private Kernel $kernel,
         private DocumentsConfig $config,
+        private DriveConfig $drives,
+        private AccessResolver $resolver,
     ) {}
 
     public function evaluate(DriveContext $context, NodeSnapshot|string|int $document, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): CollaborationAccessDecision
@@ -85,13 +91,14 @@ final readonly class CollaborationAccessPolicy
         // The same rule the hub re-checks on every call: only an editor of content this
         // installation can save back, on an active drive, with a client that speaks the
         // type's schema, gets a room that writes; everyone else watches it.
+        $driveActive = $node->storage()->value('status') === DriveStatus::Active;
         $writable = $ceiling === CollaborationMode::Write
             && $ability === Ability::Edit
             && $binding->schemaVersion === $type->schemaVersion()
             && $driver->supportsState($aggregate->type, $binding->stateFormat, $binding->schemaVersion, $hasCheckpoint, CollaborationMode::Write)
             && $this->decoder->editable($aggregate)
             && ($clientSchemaVersion === null || $clientSchemaVersion === $type->schemaVersion())
-            && $node->storage()->value('status') === DriveStatus::Active;
+            && $driveActive;
 
         return new CollaborationAccessDecision(new CollaborationGrant(
             nodeId: Identity::stringify($node->getKey()), driveId: Identity::stringify($node->drive_id),
@@ -99,7 +106,47 @@ final readonly class CollaborationAccessPolicy
             mode: $writable ? CollaborationMode::Write : CollaborationMode::Read, generation: $binding->generation,
             schemaVersion: $binding->schemaVersion, documentType: $aggregate->type, protocol: $binding->protocol,
             stateFormat: $binding->stateFormat, notAfter: Carbon::now()->getTimestamp() + $this->config->collaborationSessionTtl(),
-        ), $ability);
+        ), $ability, $driveActive);
+    }
+
+    /**
+     * The same decision for a reference a hub carries (drive, node, tenant) instead of a drive handle: the node must
+     * exist, be live, sit in the named drive and belong to the tenant, and so must its drive — otherwise it is the 404
+     * of a missing node. Everything else is {@see self::evaluate()}.
+     *
+     * @throws NodeNotFoundException the reference does not name a live node of that drive and tenant
+     */
+    public function evaluateReference(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): CollaborationAccessDecision
+    {
+        if ($actor->isSystem() || $actor->ref()->id === null) {
+            throw MissingActorException::required();
+        }
+        $model = $this->drives->model('node');
+        $node = $model::query()->find($nodeId);
+        if (!$node instanceof Node
+            || Identity::stringify($node->getRawOriginal('drive_id')) !== $driveId
+            || $node->trashed_at !== null
+            || ($node->getRawOriginal('tenant_id') === null ? null : Identity::stringify($node->getRawOriginal('tenant_id'))) !== $tenant) {
+            throw NodeNotFoundException::forId($nodeId);
+        }
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($nodeId);
+        if (($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $tenant) {
+            throw NodeNotFoundException::forId($nodeId);
+        }
+
+        return $this->evaluate(DriveContext::for($drive, $actor, $correlationId), $nodeId, $ceiling, $clientSchemaVersion);
+    }
+
+    /**
+     * Whether `$user` may at least View the document node `$nodeId`, by the ordinary access resolver: the check of a
+     * realtime room channel. No protocol, write or operation restriction; a missing or non-document node is false.
+     */
+    public function canViewDocumentNode(Authorizable $user, int|string $nodeId): bool
+    {
+        $model = $this->drives->model('node');
+        $node = $model::query()->find($nodeId);
+
+        return $node instanceof Node && $node->kind->isDocument() && $this->resolver->can($user, Ability::View, $node);
     }
 
     private function document(DriveContext $context, NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node

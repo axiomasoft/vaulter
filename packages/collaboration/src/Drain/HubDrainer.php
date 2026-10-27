@@ -8,11 +8,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Documents\State\PendingStateDrainer;
-use Vaulter\Documents\State\PendingStateGuard;
-use Vaulter\Support\Identity;
 
 /**
  * The documents' PendingStateDrainer on the hub (C8, C9): PHP does not merge Yjs, so a drain asks the hub's compaction
@@ -34,6 +32,7 @@ final readonly class HubDrainer implements PendingStateDrainer
 
     public function __construct(
         private VaulterDatabase $database,
+        private CollaborativeState $state,
         private CompactionLeases $leases,
         private DrainWaiter $waiter,
         private CollaborationConfig $config,
@@ -51,8 +50,9 @@ final readonly class HubDrainer implements PendingStateDrainer
     /** Whether the document no longer carries a marker of the drained generation; a plain read between the polls. */
     private function settled(PendingMarker $marker): bool
     {
-        $document = Document::query()->whereKey(Identity::key($marker->documentId))->first();
-        $current = $document instanceof Document ? PendingStateGuard::markerOf($document) : null;
+        // Between the polls no lock is held: each read is a short transaction of its own, and a document that is gone or
+        // addressed by another aggregate settles it.
+        $current = $this->database->transaction(fn (): ?PendingMarker => $this->state->lockByDocumentId($marker->documentId)?->pending);
 
         return $current === null || $current->generation !== $marker->generation;
     }

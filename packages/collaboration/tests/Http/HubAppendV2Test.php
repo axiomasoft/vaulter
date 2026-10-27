@@ -35,7 +35,7 @@ beforeEach(function (): void {
 it('appends an update and answers the committed receipt with the protocol header', function (): void {
     $id = (string) Str::uuid();
 
-    Hub::callV2('append', Hub::appendBody($this->node, "\x00\x01update", $id), $this->token)
+    Hub::callV2('append', Hub::seedBody($this->node, "\x00\x01update", updateId: $id), $this->token)
         ->assertOk()
         ->assertHeader(HubProtocol::HEADER, '2')
         ->assertExactJson(['generation' => 0, 'update_id' => $id, 'seq' => 1, 'sha256' => hash('sha256', "\x00\x01update"), 'persisted' => true, 'permissions_stale' => false]);
@@ -44,7 +44,7 @@ it('appends an update and answers the committed receipt with the protocol header
 });
 
 it('answers a retried append with the same receipt', function (): void {
-    $body = Hub::appendBody($this->node, 'update');
+    $body = Hub::seedBody($this->node, 'update');
 
     $first = Hub::callV2('append', $body, $this->token)->assertOk()->json();
     $retry = Hub::callV2('append', $body, $this->token)->assertOk()->json();
@@ -58,7 +58,7 @@ it('answers a retried append with the same receipt', function (): void {
 
 it('loads the checkpoint and the committed tail under protocol 2', function (): void {
     $ids = [(string) Str::uuid(), (string) Str::uuid()];
-    Hub::callV2('append', Hub::appendBody($this->node, 'first', $ids[0]), $this->token)->assertOk();
+    Hub::callV2('append', Hub::seedBody($this->node, 'first', updateId: $ids[0]), $this->token)->assertOk();
     Hub::callV2('append', Hub::appendBody($this->node, 'second', $ids[1]), $this->token)->assertOk();
 
     Hub::callV2('load', ['room' => Hub::room($this->node)], $this->token)
@@ -108,6 +108,7 @@ it('seeds a load from the content of the locked row, together with its state ver
     $room = $hub->open($call, $call->room);
 
     // A REST PUT commits between open() and the locked read of the log.
+    $opened = Hub::aggregate($this->node)->content;
     $version = Hub::aggregate($this->node)->state_version + 1;
     DB::table(app(DatabaseConfig::class)->table('documents'))
         ->where('node_id', $this->node->getKey())
@@ -115,7 +116,7 @@ it('seeds a load from the content of the locked row, together with its state ver
 
     $loaded = $hub->loadLog($room, $call);
 
-    expect($room->document->content['content'][0]['content'][0]['text'])->toBe('Draft')
+    expect($opened['content'][0]['content'][0]['text'])->toBe('Draft')
         ->and($loaded['state_version'])->toBe($version)
         ->and($loaded['content']['content'][0]['content'][0]['text'])->toBe('Changed');
 });

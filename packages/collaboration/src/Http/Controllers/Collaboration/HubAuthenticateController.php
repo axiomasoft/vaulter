@@ -35,7 +35,7 @@ final readonly class HubAuthenticateController
             'allowed' => true,
             'mode' => $room->mode(),
             'userId' => $room->userId,
-            'epoch' => $room->document->collab_epoch,
+            'epoch' => $room->grant->generation,
         ]));
     }
 }

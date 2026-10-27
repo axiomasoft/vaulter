@@ -139,10 +139,10 @@ it('refuses a seed built before a REST update and loses no text', function (): v
     $loaded = Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))->assertOk();
     $version = $loaded->json('state_version');
 
-    // The document has no Yjs state, so this update does not move the epoch.
+    // A REST replace of a collaborative document without a checkpoint is an explicit reseed: the generation moves once.
     $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1));
     Documents::in($handle)->update($node->id, Hub::tiptap('Written over REST'));
-    expect(Hub::aggregate($node)->collab_epoch)->toBe(0);
+    expect(Hub::aggregate($node)->collab_epoch)->toBe(1);
 
     // The hub still seeds from what it loaded ('Draft'): refused, 'Written over REST' survives.
     Hub::call('append', Hub::seedBody($node, 'stale-seed', stateVersion: $version), Hub::token($node))
@@ -318,6 +318,10 @@ it('refuses a checkpoint state above collaboration.max_state_bytes with 413 and 
         'expected_checkpoint_version' => $lease->checkpointVersion,
         'state' => base64_encode($state),
         'content' => Hub::tiptap('Seed'),
+        'protocol' => $lease->log->binding->protocol,
+        'state_format' => $lease->log->binding->stateFormat,
+        'schema_version' => $lease->log->binding->schemaVersion,
+        'type' => $lease->log->type,
     ];
 
     Hub::callV2('checkpoint', $checkpoint(str_repeat('y', 9)), token: null)

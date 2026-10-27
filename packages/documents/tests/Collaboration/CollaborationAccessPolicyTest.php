@@ -113,6 +113,47 @@ it('narrows mismatching client schemas and archived drives to read', function (?
     expect(app(CollaborationAccessPolicy::class)->evaluate($this->context, $this->node, clientSchemaVersion: $client)->grant->mode)->toBe(CollaborationMode::Read);
 })->with([[0, false], [2, false], [null, true]]);
 
+it('evaluates a hub reference like the handle form and reports the drive as active only while it is', function (bool $archived): void {
+    if ($archived) {
+        $this->drive->archive();
+    }
+    $policy = app(CollaborationAccessPolicy::class);
+
+    $decision = $policy->evaluateReference($this->context->actor, $this->node->driveId, $this->node->id, null, 'ref-1');
+
+    expect($decision->driveActive)->toBe(!$archived)
+        ->and($decision->grant->mode)->toBe($archived ? CollaborationMode::Read : CollaborationMode::Write)
+        ->and($decision->grant->nodeId)->toBe($this->node->id);
+})->with([false, true]);
+
+it('hides a hub reference of another drive, tenant, trashed or unknown node and a system actor', function (string $case): void {
+    $policy = app(CollaborationAccessPolicy::class);
+    $driveId = $this->node->driveId;
+    $nodeId = $this->node->id;
+    $tenant = null;
+    $actor = $this->context->actor;
+    match ($case) {
+        'drive' => $driveId = Docs::drive()->model()->getKey() === $this->drive->model()->getKey() ? '999999' : (string) Docs::drive()->model()->getKey(),
+        'tenant' => $tenant = '0',
+        'trash' => $this->drive->nodes()->trash($this->node->id),
+        'unknown' => $nodeId = '999999',
+        'system' => $actor = Docs::context($this->drive)->actor,
+    };
+
+    expect(fn () => $policy->evaluateReference($actor, $driveId, $nodeId, $tenant, 'ref-2'))
+        ->toThrow($case === 'system' ? MissingActorException::class : NodeNotFoundException::class);
+})->with(['drive', 'tenant', 'trash', 'unknown', 'system']);
+
+it('answers the room channel View check by the ordinary resolver and false for a missing node', function (): void {
+    $policy = app(CollaborationAccessPolicy::class);
+    $viewer = AccessTestHelpers::user(42);
+    $stranger = AccessTestHelpers::user(777);
+
+    expect($policy->canViewDocumentNode($viewer, $this->node->id))->toBeTrue()
+        ->and($policy->canViewDocumentNode($stranger, $this->node->id))->toBeFalse()
+        ->and($policy->canViewDocumentNode($viewer, 999999))->toBeFalse();
+});
+
 it('hides unavailable adapters until View and rejects system principals', function (): void {
     policyDriver(false);
     expect(fn () => app(CollaborationAccessPolicy::class)->evaluate(Docs::context($this->drive, 99), $this->node))->toThrow(NodeNotFoundException::class);

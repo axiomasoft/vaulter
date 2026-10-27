@@ -13,7 +13,6 @@ use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Drain\DrainWaiter;
 use Vaulter\Collaboration\Drain\PendingDocuments;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
-use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\State\PendingMarker;
 
@@ -35,8 +34,6 @@ use Vaulter\Documents\State\PendingMarker;
 #[Internal]
 final class DrainCommand extends Command
 {
-    use OpensWriteScope;
-
     protected $signature = 'vaulter:collaboration:drain
         {--deadline=30 : Seconds to wait for the hub to checkpoint every pending document}
         {--release : Remove the draining flag: appends are accepted again}';

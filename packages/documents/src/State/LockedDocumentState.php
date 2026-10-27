@@ -6,6 +6,7 @@ namespace Vaulter\Documents\State;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\DriveStatus;
 
 /**
  * A document as {@see CollaborativeState::lock()} read it under the tree, node and document locks (T → N → D). It is
@@ -18,7 +19,11 @@ use Vaulter\Attributes\Internal;
 #[Api]
 final readonly class LockedDocumentState
 {
-    /** @param array<string, mixed> $content */
+    /**
+     * @param array<string, mixed> $content
+     * @param DriveStatus|null     $driveStatus     the status of the drive, read under its shared lock; null: not usable
+     * @param int|null             $collabStateSize the binary size of the checkpoint, null: there is none
+     */
     #[Internal]
     public function __construct(
         public string $documentId,
@@ -33,5 +38,7 @@ final readonly class LockedDocumentState
         public ?CollaborationStateBinding $binding,
         public ?string $collabState,
         public array $content,
+        public ?DriveStatus $driveStatus = null,
+        public ?int $collabStateSize = null,
     ) {}
 }

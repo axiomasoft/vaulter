@@ -12,8 +12,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CollaborativeState;
+use Vaulter\Documents\State\LockedDocumentState;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Support\Identity;
@@ -201,19 +201,13 @@ final readonly class CompactionLeases
      */
     private function lease(Head $candidate, string $hubId, ?int $room): CompactionLease|false|null
     {
-        $nodeId = Document::query()->whereKey(Identity::key($candidate->documentId))->value('node_id');
-        if (!is_int($nodeId) && !is_string($nodeId)) {
-            return null;
-        }
-
-        return $this->database->transaction(function () use ($candidate, $nodeId, $hubId, $room): CompactionLease|false|null {
-            try {
-                $locked = $this->state->lock($nodeId);
-            } catch (NodeNotFoundException|NotADocumentException) {
+        return $this->database->transaction(function () use ($candidate, $hubId, $room): CompactionLease|false|null {
+            $locked = $this->state->lockByDocumentId($candidate->documentId);
+            if ($locked === null) {
                 return null;
             }
             // A generation a restore closed while the module was off is never compacted: the prune retires it (C4).
-            if ($locked->binding?->protocol !== 'yjs' || $locked->documentId !== $candidate->documentId || $locked->generation !== $candidate->generation) {
+            if ($locked->binding?->protocol !== 'yjs' || $locked->generation !== $candidate->generation) {
                 return null;
             }
             $now = Carbon::now();
@@ -226,7 +220,7 @@ final readonly class CompactionLeases
                 return null;
             }
             // Measured before the tail is read: a generation over the budget is never loaded into memory here.
-            if ($room !== null && $this->size($locked->documentId, $head) > $room) {
+            if ($room !== null && $this->size($locked, $head) > $room) {
                 return false;
             }
 
@@ -255,9 +249,10 @@ final readonly class CompactionLeases
      * The bytes the entry of `$head` would carry, as CompactionLease::bytes() counts them (the checkpoint's binary size,
      * the tail as stored), read under the document and head locks without loading either.
      */
-    private function size(string $documentId, Head $head): int
+    private function size(LockedDocumentState $locked, Head $head): int
     {
-        $checkpoint = Document::query()->whereKey(Identity::key($documentId))->lockForUpdate()->value('collab_state_size');
+        $documentId = $locked->documentId;
+        $checkpoint = $locked->collabStateSize;
         // Locking reads, row by row: on MySQL a plain read would miss the appends committed since this transaction's
         // first read (UpdateLog::read()), and PostgreSQL locks no rows for an aggregate.
         $stored = $this->log->rows('collaboration_updates', $documentId, $head->generation)

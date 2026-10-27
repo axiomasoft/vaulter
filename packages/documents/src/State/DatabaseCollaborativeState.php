@@ -23,6 +23,7 @@ use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Repositories\NodeReadRepository;
@@ -81,6 +82,9 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         }
         $document = $this->documents->lockForNode($current) ?? throw NotADocumentException::forNode($key);
 
+        // A locking read: on MySQL (REPEATABLE READ) a plain one would answer from the snapshot of the first read.
+        $driveStatus = $current->storage()->sharedLock()->value('status');
+
         $state = new LockedDocumentState(
             documentId: Identity::stringify($document->getKey()),
             nodeId: Identity::stringify($key),
@@ -94,10 +98,30 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             binding: $document->collaborationBinding(),
             collabState: $document->collab_state,
             content: $document->content ?? [],
+            driveStatus: $driveStatus instanceof DriveStatus ? $driveStatus : null,
+            collabStateSize: $document->collab_state_size,
         );
         $this->issued[$state] = [$this->database->connection(), $this->transactionRecord()];
 
         return $state;
+    }
+
+    public function lockByDocumentId(int|string $documentId): ?LockedDocumentState
+    {
+        $this->assertTransaction();
+
+        $nodeId = Document::query()->whereKey(Identity::key($documentId))->value('node_id');
+        if (!is_int($nodeId) && !is_string($nodeId)) {
+            return null;
+        }
+
+        try {
+            $locked = $this->lock($nodeId);
+        } catch (NodeNotFoundException|NotADocumentException) {
+            return null;
+        }
+
+        return $locked->documentId === Identity::stringify($documentId) ? $locked : null;
     }
 
     public function markPending(LockedDocumentState $state, CollaborationStateBinding $binding, int $throughSeq): PendingMarker

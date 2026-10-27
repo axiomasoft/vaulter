@@ -184,7 +184,7 @@ it('never leases a retired generation or one its document left', function (strin
         $heads->update(['retired_at' => now()]);
     } else {
         // The generation moved on while the module was off: the head stayed open.
-        Hub::aggregate($this->node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null])->save();
+        Hub::aggregate($this->node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
     }
     $head = Compaction::head($this->node, 0);
 

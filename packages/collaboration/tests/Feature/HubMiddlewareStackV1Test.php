@@ -16,6 +16,7 @@ use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 class HubMiddlewareStackTestCase extends CollaborationEnabledTestCase
 {
@@ -55,7 +56,7 @@ it('requires Sanctum on the session route and the hub credentials, not Sanctum, 
 
 it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $drive = DocumentTestHelpers::drive();
-    app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver);
+    app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver(userType: (new TestUser)->getMorphClass()));
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: DriveTestHelpers::model($drive->root()),
     ));
@@ -65,7 +66,7 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $jwt = JWT::encode([
         'room' => $room, 'document_id' => (string) $node->getKey(), 'drive_id' => (string) $node->drive_id, 'tenant' => null,
         'generation' => 0, 'schema_version' => 1, 'scope' => 'write', 'permissions_version' => ['drive' => 0, 'global' => 0],
-        'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 300, 'jti' => 'middleware-stack',
+        'sub' => '17', 'sub_type' => (new TestUser)->getMorphClass(), 'protocol' => 'yjs', 'state_format' => 'yjs-update-v1', 'iat' => $timestamp, 'exp' => $timestamp + 300, 'jti' => 'middleware-stack',
     ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
 
     signedHubCall($body, $jwt, $timestamp)->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('userId', '17');

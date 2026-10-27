@@ -7,9 +7,7 @@ namespace Vaulter\Collaboration;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
-use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Drive\Models\Node;
 
 /**
  * A hub call's room as it stands now: the live document behind the token, the
@@ -22,8 +20,6 @@ use Vaulter\Drive\Models\Node;
 final readonly class HubRoom
 {
     public function __construct(
-        public Node $node,
-        public Document $document,
         public ?DocumentType $type,
         public ?Ability $ability,
         public bool $writable,

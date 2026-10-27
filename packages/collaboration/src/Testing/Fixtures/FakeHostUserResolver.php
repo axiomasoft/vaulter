@@ -8,28 +8,29 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Support\Identity;
-use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
-/** TestUser-only typed resolver; unknown IDs fail closed. */
+/** CollaborationTestUser-only typed resolver; unknown IDs fail closed. */
 #[Internal]
 final class FakeHostUserResolver implements HostUserResolver
 {
     /**
      * @param list<int|string> $unknownIds ids that resolve to null
+     * @param string|null      $userType   the principal type the host grants its test users under; default: this fixture's own
      */
     public function __construct(
         private readonly array $unknownIds = [],
+        private readonly ?string $userType = null,
     ) {}
 
     public function find(ActorRef $principal): ?Authorizable
     {
         $id = $principal->id;
-        if ($principal->type !== (new TestUser)->getMorphClass() || $id === null || in_array($id, $this->unknownIds, strict: false)) {
+        if ($principal->type !== ($this->userType ?? (new CollaborationTestUser)->getMorphClass()) || $id === null || in_array($id, $this->unknownIds, strict: false)) {
             return null;
         }
 
-        $user = new TestUser;
+        $user = (new CollaborationTestUser)->morphAs($principal->type);
         $user->forceFill(['id' => Identity::key($id) ?? $id]);
         $user->exists = true;
 

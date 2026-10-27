@@ -9,6 +9,7 @@ use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Drive\Models\Node;
 
@@ -20,11 +21,17 @@ use Vaulter\Drive\Models\Node;
 
 function idemAppend(Node $node, string $payload, string $updateId, ?string $sha256 = null): mixed
 {
+    // The first record of an empty, unseeded generation is its seed (server origin, CAS on the state version).
+    $aggregate = Hub::aggregate($node);
+    $seed = $aggregate->collab_state_size === null && (Compaction::head($node)?->headSeq ?? 0) === 0;
+
     return app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
-        generation: Hub::aggregate($node)->collab_epoch,
+        generation: $aggregate->collab_epoch,
         updateId: $updateId,
         payload: $payload,
         claimedSha256: $sha256 ?? hash('sha256', $payload),
+        origin: $seed ? 'server' : 'client',
+        seedStateVersion: $seed ? $aggregate->state_version : null,
     ));
 }
 

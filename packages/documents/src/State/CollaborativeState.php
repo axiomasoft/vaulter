@@ -35,6 +35,16 @@ interface CollaborativeState
     public function lock(int|string $nodeId): LockedDocumentState;
 
     /**
+     * Service addressing of an aggregate id (a head enumerated by a service): the aggregate-to-node mapping is read
+     * without a row lock, then {@see self::lock()} takes the locks in their normal order and the fresh locked
+     * document id must equal `$documentId`. Null — nothing written — when there is no mapping, the node is gone or
+     * no document any more, or another aggregate answers the node now. Never changes {@see self::lock()}.
+     *
+     * @throws LogicException outside a transaction
+     */
+    public function lockByDocumentId(int|string $documentId): ?LockedDocumentState;
+
+    /**
      * Record that edits of `$generation` through `$throughSeq` are committed but not checkpointed: the marker becomes
      * (generation, max(current, `$throughSeq`)). The generation must be the document's current one — the caller fences
      * it on the locked state first.

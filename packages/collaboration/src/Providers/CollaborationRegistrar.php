@@ -22,12 +22,9 @@ use Vaulter\Collaboration\Revocation\Transports\HttpControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\NoControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\RedisControlTransport;
 use Vaulter\Configuration\ScheduleConfig;
-use Vaulter\Doctor\Checks\ConfigValidCheck;
+use Vaulter\Documents\Access\CollaborationAccessPolicy;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Drive\Access\AccessResolver;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /** The container wiring of the collaboration module ({@see CollaborationModule}): its configuration, the host-user seam and the room channel. */
@@ -44,9 +41,9 @@ final class CollaborationRegistrar implements ModuleBindings
             $config->hubClockSkew();
             $config->controlTransport();
             $config->mode();
-            (new ScheduleConfig($app->make('config')))->frequencies('vaulter-collaboration', CollaborationSchedule::KEYS);
+            $app->make(ScheduleConfig::class)->frequencies('vaulter-collaboration', CollaborationSchedule::KEYS);
         });
-        $app->tag('vaulter.config_validator.collaboration', ConfigValidCheck::TAG);
+        $app->tag('vaulter.config_validator.collaboration', 'vaulter.config_validators');
 
         // The host-user resolver seam: the collaboration webhook resolves the
         // acting user by id through the host's auth user-provider. Bound to the
@@ -92,21 +89,10 @@ final class CollaborationRegistrar implements ModuleBindings
 
     /**
      * Authorize a node room: the id resolves to a kind=document node the actor may at
-     * least View through the AccessResolver.
+     * least View (the access policy of the documents answers with the ordinary access resolver).
      */
     private static function authorizeNodeRoom(Authenticatable $user, int|string $roomId): bool
     {
-        if (!$user instanceof Authorizable) {
-            return false;
-        }
-
-        $model = app(DriveConfig::class)->model('node');
-        $node = $model::query()->find($roomId);
-
-        if (!$node instanceof Node || !$node->kind->isDocument()) {
-            return false;
-        }
-
-        return app(AccessResolver::class)->can($user, Ability::View, $node);
+        return $user instanceof Authorizable && app(CollaborationAccessPolicy::class)->canViewDocumentNode($user, $roomId);
     }
 }

@@ -89,6 +89,34 @@ it('locks the document of a node and reads its state', function (): void {
         ->and($locked->trashed)->toBeFalse();
 });
 
+it('addresses a document by its aggregate id inside a transaction, distinct from the node id', function (): void {
+    $document = GrantedDocuments::aggregate($this->node);
+    $documentId = Identity::stringify($document->getKey());
+
+    $locked = collabStateIn(static fn (CollaborativeState $state): ?LockedDocumentState => $state->lockByDocumentId($document->getKey()));
+
+    expect($locked)->toBeInstanceOf(LockedDocumentState::class)
+        ->and($locked->documentId)->toBe($documentId)
+        ->and($locked->nodeId)->toBe(Identity::stringify($this->node->getKey()))
+        ->and(fn () => app(CollaborativeState::class)->lockByDocumentId($documentId))->toThrow(LogicException::class);
+});
+
+it('returns null without a write for a missing, stale or unmapped aggregate id', function (): void {
+    $document = GrantedDocuments::aggregate($this->node);
+    $version = $document->state_version;
+    $epoch = $document->collab_epoch;
+
+    $missing = collabStateIn(static fn (CollaborativeState $state): ?LockedDocumentState => $state->lockByDocumentId(999_999));
+    Node::query()->whereKey($this->node->getKey())->delete();
+    $gone = collabStateIn(static fn (CollaborativeState $state): ?LockedDocumentState => $state->lockByDocumentId($document->getKey()));
+    $after = Document::query()->whereKey($document->getKey())->first();
+
+    expect($missing)->toBeNull()
+        ->and($gone)->toBeNull()
+        ->and($after?->state_version ?? $version)->toBe($version)
+        ->and($after?->collab_epoch ?? $epoch)->toBe($epoch);
+});
+
 it('refuses a node that does not exist or is not a document', function (): void {
     $root = $this->node->parent_id;
 

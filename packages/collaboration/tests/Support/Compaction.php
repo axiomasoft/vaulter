@@ -30,15 +30,23 @@ final class Compaction
 {
     public const string HUB = 'hub-a';
 
+    /**
+     * The first record of an empty, unseeded generation is its seed (origin server, CAS on the state version the load
+     * returned): the log accepts nothing else there. Every later record is a client update.
+     */
     public static function append(Node $node, string $payload, ?int $generation = null, ?string $updateId = null, bool $seed = false): AppendResult
     {
+        $aggregate = Hub::aggregate($node);
+        $generation ??= $aggregate->collab_epoch;
+        $seed = $seed || ($generation === $aggregate->collab_epoch && $aggregate->collab_state_size === null && (self::head($node, $generation)?->headSeq ?? 0) === 0);
+
         return app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
-            generation: $generation ?? Hub::aggregate($node)->collab_epoch,
+            generation: $generation,
             updateId: $updateId ?? (string) Str::uuid(),
             payload: $payload,
             claimedSha256: hash('sha256', $payload),
             origin: $seed ? 'server' : 'client',
-            seedStateVersion: $seed ? Hub::aggregate($node)->state_version : null,
+            seedStateVersion: $seed ? $aggregate->state_version : null,
         ));
     }
 

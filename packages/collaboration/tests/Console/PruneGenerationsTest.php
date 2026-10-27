@@ -25,7 +25,7 @@ function pruneClosed(Node $node): void
     DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))
         ->where('document_id', Hub::aggregate($node)->getKey())
         ->update(['retired_at' => now()]);
-    Hub::aggregate($node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null])->save();
+    Hub::aggregate($node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
 }
 
 function pruneGrace(): int
@@ -86,7 +86,7 @@ it('counts what it would prune with --dry-run and deletes nothing', function ():
 it('retires the open head of a generation its document left, and prunes it only after the grace from then', function (): void {
     Compaction::append($this->node, 'u1');
     // The generation moved on while the module was off: no sink closed the head.
-    Hub::aggregate($this->node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null])->save();
+    Hub::aggregate($this->node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
     $this->travel(400)->days();
 
     $this->artisan('vaulter:collaboration:prune')->expectsOutputToContain('Retired 1 left generation')->assertExitCode(0);

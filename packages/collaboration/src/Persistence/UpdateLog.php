@@ -16,14 +16,12 @@ use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
 
 /**
@@ -44,7 +42,6 @@ final readonly class UpdateLog
         private DatabaseConfig $tables,
         private CollaborativeState $state,
         private DrainState $draining,
-        private NodeReadRepository $nodes,
         private YjsStateCompatibility $compatibility,
     ) {}
 
@@ -84,7 +81,7 @@ final readonly class UpdateLog
                 return new AppendResult($locked->documentId, $update->generation, $update->updateId, $receipt->seq, $receipt->sha256, duplicate: true);
             }
             $this->assertDriveWritable($locked);
-            $checkpointed = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->value('collab_state_size') !== null;
+            $checkpointed = $locked->collabStateSize !== null;
             if ($head['head_seq'] === 0 && !$checkpointed && $update->seedStateVersion === null) {
                 throw new CollaborationSeedConflictException($locked->nodeId);
             }
@@ -148,13 +145,6 @@ final readonly class UpdateLog
     public function read(LockedDocumentState $locked): LogSnapshot
     {
         $this->compatibility->assert($locked->type, $locked->binding);
-        // The row lock() holds, read again under that lock: a plain read would answer from the transaction's
-        // snapshot on MySQL (see below).
-        $document = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->first();
-        if (!$document instanceof Document) {
-            throw new LogicException('[Vaulter] A locked document has no aggregate row.');
-        }
-
         $head = $this->lockHead($locked, create: false);
         // The transaction began with a plain read (the node, in lock()): on MySQL (REPEATABLE READ) a plain read here
         // would answer from that older snapshot and miss an append committed since, while the head FOR UPDATE sees
@@ -179,11 +169,11 @@ final readonly class UpdateLog
         return new LogSnapshot(
             documentId: $locked->documentId,
             generation: $locked->generation,
-            stateVersion: $document->state_version,
-            type: $document->type,
-            schemaVersion: $document->schema_version,
-            content: $document->content,
-            checkpoint: $document->collab_state,
+            stateVersion: $locked->stateVersion,
+            type: $locked->type,
+            schemaVersion: $locked->schemaVersion,
+            content: $locked->content,
+            checkpoint: $locked->collabState,
             checkpointSeq: $head['checkpoint_seq'],
             headSeq: $head['head_seq'],
             tail: $tail,
@@ -227,8 +217,7 @@ final readonly class UpdateLog
      */
     private function assertDriveWritable(LockedDocumentState $locked): void
     {
-        // A locking read: on MySQL (REPEATABLE READ) a plain one would answer from the snapshot of lock()'s first read.
-        $status = $this->nodes->find($locked->nodeId)?->storage()->sharedLock()->value('status');
+        $status = $locked->driveStatus;
         if ($status === DriveStatus::Archived) {
             throw PermissionDeniedException::forAbility(Ability::Edit->value);
         }
@@ -249,7 +238,7 @@ final readonly class UpdateLog
     private function assertSeedable(LockedDocumentState $locked, array $head, int $expected): void
     {
         // The size column tells whether a checkpoint exists without reading it; a locking read, as in read().
-        $checkpointed = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->value('collab_state_size') !== null;
+        $checkpointed = $locked->collabStateSize !== null;
         if ($head['head_seq'] > 0 || $checkpointed) {
             throw new CollaborationSeedConflictException($locked->nodeId);
         }

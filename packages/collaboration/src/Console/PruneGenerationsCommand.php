@@ -9,7 +9,6 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Persistence\RetiredGenerations;
-use Vaulter\Console\Concerns\OpensWriteScope;
 
 /**
  * Delete the update log, receipts and head of the closed collaboration generations past their grace (C11): retired
@@ -24,8 +23,6 @@ use Vaulter\Console\Concerns\OpensWriteScope;
 #[Internal]
 final class PruneGenerationsCommand extends Command
 {
-    use OpensWriteScope;
-
     protected $signature = 'vaulter:collaboration:prune
         {--dry-run : Report what would be pruned without deleting}';
 

@@ -9,12 +9,8 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
-use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Support\Identity;
 
 /**
  * The end of a closed generation's log (C11). A generation is closed when the document moved past it (a restore or a
@@ -111,19 +107,10 @@ final readonly class RetiredGenerations
      */
     private function locked(Head $head, Closure $change): mixed
     {
-        $nodeId = Document::query()->whereKey(Identity::key($head->documentId))->value('node_id');
-        if (!is_int($nodeId) && !is_string($nodeId)) {
-            return null;
-        }
+        return $this->database->transaction(function () use ($head, $change): mixed {
+            $locked = $this->state->lockByDocumentId($head->documentId);
 
-        return $this->database->transaction(function () use ($nodeId, $head, $change): mixed {
-            try {
-                $locked = $this->state->lock($nodeId);
-            } catch (NodeNotFoundException|NotADocumentException) {
-                return null;
-            }
-
-            return $locked->documentId === $head->documentId ? $change($locked) : null;
+            return $locked !== null ? $change($locked) : null;
         });
     }
 }

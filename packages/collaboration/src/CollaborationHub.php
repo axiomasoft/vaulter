@@ -16,15 +16,10 @@ use Vaulter\Documents\Access\CollaborationAccessPolicy;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Drive\Models\Node;
-use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -41,8 +36,6 @@ use Vaulter\ValueObjects\Access\Actor;
 final readonly class CollaborationHub
 {
     public function __construct(
-        private NodeReadRepository $nodes,
-        private DocumentReadRepository $documents,
         private DocumentTypeRegistry $types,
         private CollaborationAccessPolicy $policy,
         private HostUserResolver $users,
@@ -67,26 +60,17 @@ final readonly class CollaborationHub
         }
 
         $ref = $call->ref;
-        $node = $this->nodes->find($ref->nodeId);
-        if (!$node instanceof Node
-            || Identity::stringify($node->getRawOriginal('drive_id')) !== $ref->driveId
-            || $node->trashed_at !== null
-            || $this->tenant($node) !== $call->tenant) {
-            throw NodeNotFoundException::forId($ref->nodeId);
-        }
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($ref->nodeId);
         $actor = $this->users->find($call->principal);
         if ($actor === null) {
             throw NodeNotFoundException::forId($ref->nodeId);
         }
         $resolved = Actor::user($actor);
         if ($resolved->ref()->type !== $call->principal->type
-            || Identity::stringify($resolved->ref()->id) !== Identity::stringify($call->principal->id)
-            || ($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $call->tenant) {
+            || Identity::stringify($resolved->ref()->id) !== Identity::stringify($call->principal->id)) {
             throw NodeNotFoundException::forId($ref->nodeId);
         }
-        $decision = $this->policy->evaluate(
-            DriveContext::for($drive, $resolved, $call->jti), $ref->nodeId,
+        $decision = $this->policy->evaluateReference(
+            $resolved, $ref->driveId, $ref->nodeId, $call->tenant, $call->jti,
             ceiling: $call->mayStore() ? CollaborationMode::Write : CollaborationMode::Read,
             clientSchemaVersion: $call->schemaVersion,
         );
@@ -97,15 +81,12 @@ final readonly class CollaborationHub
         if ($grant->protocol !== $call->protocol || $grant->stateFormat !== $call->stateFormat || $grant->schemaVersion !== $call->schemaVersion) {
             throw new CollaborationUnavailableException('unsupported_binding', $grant->documentType);
         }
-        $document = $this->documents->forNode($node) ?? throw NotADocumentException::forNode($node->getKey());
 
         return new HubRoom(
-            node: $node,
-            document: $document,
             type: $this->types->find($grant->documentType),
             ability: $decision->ability,
             writable: $grant->mode === CollaborationMode::Write,
-            driveActive: $drive->status === DriveStatus::Active,
+            driveActive: $decision->driveActive,
             userId: Identity::stringify($call->principal->id),
             grant: $grant,
             permissionsStale: $call->permissionsVersion->olderThan($this->versions->current($ref->driveId)),
@@ -129,7 +110,7 @@ final readonly class CollaborationHub
             throw PermissionDeniedException::forAbility(Ability::Edit->value);
         }
         if ($update->generation !== $call->ref->epoch) {
-            throw new CollaborationEpochMismatchException(expected: $update->generation, actual: $room->document->collab_epoch);
+            throw new CollaborationEpochMismatchException(expected: $update->generation, actual: $room->grant->generation);
         }
 
         return $this->log->append($call->ref->nodeId, $update, function () use ($call): void {
@@ -179,12 +160,5 @@ final readonly class CollaborationHub
         if ($room->ability === null) {
             throw NodeNotFoundException::forId($call->ref->nodeId);
         }
-    }
-
-    private function tenant(Node $node): ?string
-    {
-        $tenant = $node->getRawOriginal('tenant_id');
-
-        return $tenant === null ? null : Identity::stringify($tenant);
     }
 }

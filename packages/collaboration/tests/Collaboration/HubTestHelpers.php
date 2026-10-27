@@ -47,7 +47,7 @@ final class HubTestHelpers
 
         // The hub calls carry only the token subject; materialise it without a host
         // user provider.
-        app()->bind(HostUserResolver::class, static fn (): FakeHostUserResolver => new FakeHostUserResolver);
+        app()->bind(HostUserResolver::class, static fn (): FakeHostUserResolver => new FakeHostUserResolver(userType: (new TestUser)->getMorphClass()));
     }
 
     public static function document(

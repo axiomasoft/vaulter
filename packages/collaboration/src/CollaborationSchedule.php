@@ -23,7 +23,7 @@ final class CollaborationSchedule implements ModuleSchedule
 
     public function define(Schedule $schedule, Repository $config): void
     {
-        $frequencies = (new ScheduleConfig($config))->frequencies('vaulter-collaboration', self::KEYS);
+        $frequencies = app(ScheduleConfig::class)->frequencies('vaulter-collaboration', self::KEYS);
         foreach (self::TASKS as $key => [$command, $expiry]) {
             $frequency = $frequencies[$key] ?? null;
             if ($frequency !== null) {

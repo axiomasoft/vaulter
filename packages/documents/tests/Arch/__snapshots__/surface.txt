@@ -2,7 +2,9 @@
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
 Vaulter\Documents\Access\CollaborationAccessPolicy api since 1.0 final readonly class
+  public function canViewDocumentNode(Illuminate\Contracts\Auth\Access\Authorizable $user, int|string $nodeId): bool
   public function evaluate(Vaulter\Drive\Operations\DriveContext $context, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
+  public function evaluateReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
 
 Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly class
   public function channelPrefix(): string
@@ -126,8 +128,9 @@ Vaulter\Documents\Contracts\UpgradesSchema spi:implement since 1.0 interface
 
 Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision api since 1.0 final readonly class
   public Vaulter\Drive\Enums\Access\Ability $ability
+  public bool $driveActive
   public Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant
-  public function __construct(Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant, Vaulter\Drive\Enums\Access\Ability $ability)
+  public function __construct(Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant, Vaulter\Drive\Enums\Access\Ability $ability, bool $driveActive = false)
 
 Vaulter\Documents\Data\Collaboration\CollaborationGrant api since 1.0 final readonly class
   public string $documentType
@@ -584,6 +587,7 @@ Vaulter\Documents\State\CollaborationStateBinding api since 1.0 final readonly c
 
 Vaulter\Documents\State\CollaborativeState api since 1.0 interface
   public function lock(int|string $nodeId): Vaulter\Documents\State\LockedDocumentState
+  public function lockByDocumentId(int|string $documentId): ?Vaulter\Documents\State\LockedDocumentState
   public function markPending(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CollaborationStateBinding $binding, int $throughSeq): Vaulter\Documents\State\PendingMarker
   public function pendingDocuments(int $limit = 100, int|null|string $after = null, ?string $protocol = null): array
   public function publishCheckpoint(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CheckpointPublication $publication): Vaulter\Documents\State\CheckpointOutcome
@@ -605,9 +609,11 @@ Vaulter\Documents\State\CollaborativeStateTransition api since 1.0 final readonl
 Vaulter\Documents\State\LockedDocumentState api since 1.0 final readonly class
   public ?Vaulter\Documents\State\CollaborationStateBinding $binding
   public ?string $collabState
+  public ?int $collabStateSize
   public array $content
   public string $documentId
   public string $driveId
+  public ?Vaulter\Drive\Enums\DriveStatus $driveStatus
   public int $generation
   public string $nodeId
   public ?Vaulter\Documents\State\PendingMarker $pending
