@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\Yaml\Yaml;
@@ -30,7 +30,7 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
  * for a route is `n/a` with its reason and the test that holds the requirement instead; the coverage test holds the
  * route set to `Route::getRoutes()` (GET/HEAD) and to the OpenAPI operations, not to this file's own list.
  */
-uses(RefreshDatabase::class);
+uses(DatabaseMigrations::class);
 
 beforeEach(function (): void {
     Storage::fake('local');

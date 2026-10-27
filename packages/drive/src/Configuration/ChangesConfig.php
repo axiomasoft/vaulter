@@ -20,6 +20,12 @@ final readonly class ChangesConfig
 
     private const int DEFAULT_MAX_PAGE_SIZE = 1000;
 
+    private const int DEFAULT_KEY_GENERATION = 1;
+
+    private const int DEFAULT_CURSOR_MAX_AGE_SECONDS = 86400;
+
+    private const int MAX_CURSOR_MAX_AGE_SECONDS = 2592000;
+
     /** A larger page would hold one request's visibility batch for too long. */
     private const int MAX_PAGE_SIZE = 10000;
 
@@ -29,7 +35,22 @@ final readonly class ChangesConfig
     /** Days an entry stays readable; a cursor older than that expires (410). */
     public function retentionDays(): int
     {
-        return $this->positiveInteger('vaulter-drive.changes.retention_days', self::DEFAULT_RETENTION_DAYS, PHP_INT_MAX);
+        return $this->positiveInteger('vaulter-drive.changes.retention_days', self::DEFAULT_RETENTION_DAYS, intdiv(PHP_INT_MAX, 86400));
+    }
+
+    /**
+     * The sync key generation (PLAN4.D20): raising it on every instance expires every
+     * cursor and changes every sync_key, so clients bootstrap again.
+     */
+    public function keyGeneration(): int
+    {
+        return $this->positiveInteger('vaulter-drive.changes.key_generation', self::DEFAULT_KEY_GENERATION, PHP_INT_MAX);
+    }
+
+    /** Seconds a cursor lives after it was issued; never longer than the retention. */
+    public function cursorMaxAgeSeconds(): int
+    {
+        return $this->positiveInteger('vaulter-drive.changes.cursor_max_age_seconds', self::DEFAULT_CURSOR_MAX_AGE_SECONDS, min(self::MAX_CURSOR_MAX_AGE_SECONDS, $this->retentionDays() * 86400));
     }
 
     /** The largest limit a client may ask one page for. */

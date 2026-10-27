@@ -868,6 +868,7 @@
                         "packages/drive/tests/Changes/ChangeJournalTest.php",
                         "packages/drive/tests/Changes/DriveChangesEndToEndTest.php",
                         "packages/drive/tests/Changes/PruneChangesCommandTest.php",
+                        "packages/drive/tests/Changes/ReaderSyncIdentityTest.php",
                         "packages/drive/tests/Concurrency/ChangeJournalRaceTest.php",
                         "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php",
                         "packages/drive/tests/Concurrency/CompleteUploadRetryTest.php",
@@ -891,6 +892,8 @@
                         "packages/drive/tests/Concurrency/TreeLockRaceTest.php",
                         "packages/drive/tests/Concurrency/TusConcurrentPatchTest.php",
                         "packages/drive/tests/Concurrency/TusPatchVsSweepRaceTest.php",
+                        "packages/drive/tests/Http/ChangesV1Test.php",
+                        "packages/drive/tests/Http/ReadSecurityMatrixTest.php",
                         "packages/drive/tests/Tenancy/TenantProvisioningRaceTest.php"
                     ]
                 },
@@ -1054,7 +1057,6 @@
                         "packages/drive/tests/Http/ActivityV1Test.php",
                         "packages/drive/tests/Http/CacheHeadersDriveV1Test.php",
                         "packages/drive/tests/Http/CacheHeadersV1Test.php",
-                        "packages/drive/tests/Http/ChangesV1Test.php",
                         "packages/drive/tests/Http/ContentResponderTest.php",
                         "packages/drive/tests/Http/DirectSignedDownloadTest.php",
                         "packages/drive/tests/Http/DriveRouteLabelsTest.php",
@@ -1076,7 +1078,6 @@
                         "packages/drive/tests/Http/PublicSharesV1Test.php",
                         "packages/drive/tests/Http/QuarantinedDownloadTest.php",
                         "packages/drive/tests/Http/ReadPaginationSecurityTest.php",
-                        "packages/drive/tests/Http/ReadSecurityMatrixTest.php",
                         "packages/drive/tests/Http/RepresentationTagTest.php",
                         "packages/drive/tests/Http/SecurityMatrixTest.php",
                         "packages/drive/tests/Http/SharesV1Test.php",
@@ -1425,7 +1426,8 @@
                         "serial"
                     ],
                     "files": [
-                        "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php"
+                        "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php",
+                        "packages/documents/tests/Events/DocumentJournalTest.php"
                     ]
                 },
                 {
@@ -1661,7 +1663,6 @@
                         "packages/documents/tests/Events/DocumentEventCatalogConformanceTest.php",
                         "packages/documents/tests/Events/DocumentEventValidatorsTest.php",
                         "packages/documents/tests/Events/DocumentEventsRecordedTest.php",
-                        "packages/documents/tests/Events/DocumentJournalTest.php",
                         "packages/documents/tests/Operations/CollaborationSessionTest.php",
                         "packages/documents/tests/Operations/CommentOperationsTest.php",
                         "packages/documents/tests/Operations/DocumentAbilityMatrixTest.php",

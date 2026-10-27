@@ -13,6 +13,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Changes\ChangeJournal;
+use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Configuration\ChangesConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Changes\ChangePage;
@@ -33,8 +34,9 @@ use Vaulter\Support\Identity;
 
 /**
  * The change journal of a drive as one reader sees it. A syncing
- * client lists the drive, takes startCursor(), and from then on applies list() pages
- * instead of listing again.
+ * client first takes startCursor() (C0), only then lists the drive, and from then on
+ * applies list() pages from C0 instead of listing again (PLAN4.D20): changes made while
+ * it listed are caught up by the feed.
  *
  * Entries are filtered by the reader's current access with the same exact resolver the
  * listing uses: an upsert of a node the reader may see carries its current snapshot; an
@@ -58,13 +60,27 @@ final readonly class ChangeOperations
         private Repository $repository,
     ) {}
 
-    /** A cursor at the end of the journal: list() from it returns what changes next. */
+    /**
+     * A cursor at the end of the journal (C0): list() from it returns what changes next.
+     * The head is created and committed first, then the drive is authorized afresh and
+     * the head read FOR SHARE in a short transaction of its own, so a cursor never points
+     * behind a head that a rollback could still take away.
+     *
+     * @throws LogicException inside an open transaction: its snapshot could be older than the head
+     */
     public function startCursor(): string
     {
+        if ($this->database->connection()->transactionLevel() > 0) {
+            throw new LogicException('[Vaulter] startCursor() cannot run inside an open transaction. '
+                .'Why: the cursor must follow a committed journal head, not an uncommitted one or an older snapshot. '
+                .'Fix: take the start cursor before the transaction begins or after it commits.');
+        }
+        $this->heads->create($this->context->driveId(), self::tenant($this->drive()));
         $drive = $this->drive();
-        $head = $this->heads->find($this->context->driveId()) ?? self::emptyHead();
+        $head = $this->database->transaction(fn (): array => $this->heads->find($this->context->driveId(), 'share') ?? self::emptyHead());
+        $issuedAt = now()->getTimestamp();
 
-        return $this->cursor($drive, epoch: $head['epoch'], after: $head['last_seq']);
+        return $this->cursor($drive, epoch: $head['epoch'], after: $head['last_seq'], issuedAt: $issuedAt, notAfter: $issuedAt + $this->changes->cursorMaxAgeSeconds());
     }
 
     /**
@@ -81,9 +97,20 @@ final readonly class ChangeOperations
             throw new InvalidArgumentException("[Vaulter] The change page limit must be between 1 and {$max}.");
         }
         $drive = $this->drive();
-        $position = ChangeCursor::decode($cursor, $this->appKey());
-        if ($position->driveId !== Identity::stringify($drive->getKey()) || $position->tenantId !== self::tenant($drive)) {
+        $identity = $this->identity();
+        $position = ChangeCursor::decode($cursor, $identity->cursorSubkey());
+        $principal = $this->principal();
+        if ($position->driveId !== Identity::stringify($drive->getKey()) || $position->tenantId !== self::tenant($drive)
+            || $position->actorType !== $principal['type'] || $position->actorId !== $principal['id'] || $position->actorReason !== $principal['reason']) {
             throw InvalidCursorException::otherDrive();
+        }
+        if ($position->keyGeneration !== $identity->keyGeneration) {
+            throw CursorExpiredException::reset();
+        }
+        // The deadline only ever shrinks: the issued clock with the current cap.
+        $notAfter = min($position->notAfter, $position->issuedAt + $this->changes->cursorMaxAgeSeconds());
+        if (now()->getTimestamp() > $notAfter) {
+            throw CursorExpiredException::reset();
         }
 
         // Inside a transaction the head is first read FOR SHARE: a prune waits until this
@@ -112,7 +139,7 @@ final readonly class ChangeOperations
 
         return new ChangePage(
             changes: $this->project($drive, $rows),
-            cursor: $this->cursor($drive, epoch: $position->epoch, after: $after),
+            cursor: $this->cursor($drive, epoch: $position->epoch, after: $after, issuedAt: $position->issuedAt, notAfter: $notAfter),
             hasMore: $hasMore,
         );
     }
@@ -206,9 +233,33 @@ final readonly class ChangeOperations
         return $drive;
     }
 
-    private function cursor(Drive $drive, int $epoch, int $after): string
+    private function cursor(Drive $drive, int $epoch, int $after, int $issuedAt, int $notAfter): string
     {
-        return (new ChangeCursor(tenantId: self::tenant($drive), driveId: Identity::stringify($drive->getKey()), epoch: $epoch, after: $after))->encode($this->appKey());
+        $identity = $this->identity();
+        $principal = $this->principal();
+
+        return (new ChangeCursor(
+            tenantId: self::tenant($drive), driveId: Identity::stringify($drive->getKey()),
+            actorType: $principal['type'], actorId: $principal['id'], actorReason: $principal['reason'],
+            keyGeneration: $identity->keyGeneration, epoch: $epoch, after: $after, issuedAt: $issuedAt, notAfter: $notAfter,
+        ))->encode($identity->cursorSubkey());
+    }
+
+    private function identity(): ReaderSyncIdentity
+    {
+        return new ReaderSyncIdentity($this->appKey(), $this->changes->keyGeneration());
+    }
+
+    /**
+     * The principal the cursor is bound to; an anonymous reader is bound as one.
+     *
+     * @return array{type: ?string, id: string, reason: string}
+     */
+    private function principal(): array
+    {
+        $actor = $this->context->actor->ref();
+
+        return $actor->type === null ? ['type' => null, 'id' => '', 'reason' => ''] : ReaderSyncIdentity::principal($actor);
     }
 
     private function appKey(): string
@@ -223,9 +274,7 @@ final readonly class ChangeOperations
 
     private static function tenant(Drive $drive): ?string
     {
-        $tenant = Identity::stringify($drive->getRawOriginal('tenant_id'));
-
-        return $tenant === '' ? null : $tenant;
+        return ReaderSyncIdentity::tenant($drive->getRawOriginal('tenant_id'));
     }
 
     /** @return array{last_seq: int, pruned_through: int, epoch: int} a drive whose journal has never been written */

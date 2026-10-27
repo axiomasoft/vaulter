@@ -8,6 +8,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Changes\ChangeCursor;
+use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\Changes\NodeChange;
@@ -99,10 +100,12 @@ it('(d) reports a trashed node as remove(deleted)', function (): void {
 });
 
 it('(e) skips a node created where the reader cannot see, while the system actor sees it', function (): void {
+    // A cursor is bound to its principal (PLAN4.D20): the system actor takes its own C0.
+    $systemCursor = $this->drive->changes()->startCursor();
     $secret = $this->drive->folders()->create('secret', $this->hidden);
 
     $page = $this->reader->changes()->list($this->cursor);
-    $system = $this->drive->changes()->list($this->cursor);
+    $system = $this->drive->changes()->list($systemCursor);
 
     expect($page->changes)->toBe([])
         ->and($page->hasMore)->toBeFalse()
@@ -149,7 +152,11 @@ it('(g) rejects a forged cursor and a cursor of another drive (400)', function (
 });
 
 it('(g) rejects a validly signed cursor naming another tenant', function (): void {
-    $forged = (new ChangeCursor(tenantId: 'tenant-b', driveId: (string) $this->drive->model()->getKey(), epoch: 1, after: 0))->encode((string) config('app.key'));
+    $forged = (new ChangeCursor(
+        tenantId: 'tenant-b', driveId: (string) $this->drive->model()->getKey(),
+        actorType: AccessTestHelpers::user(1)->getMorphClass(), actorId: (string) AccessTestHelpers::user(1)->getKey(), actorReason: '',
+        keyGeneration: 1, epoch: 1, after: 0, issuedAt: now()->getTimestamp(), notAfter: now()->getTimestamp() + 60,
+    ))->encode((new ReaderSyncIdentity((string) config('app.key'), 1))->cursorSubkey());
 
     expect(fn () => $this->reader->changes()->list($forged))->toThrow(InvalidCursorException::class, 'another drive');
 });
@@ -225,5 +232,5 @@ it('starts a reader at the end of the journal', function (): void {
     $start = $this->reader->changes()->startCursor();
 
     expect($this->reader->changes()->list($start)->changes)->toBe([])
-        ->and(ChangeCursor::decode($start, (string) config('app.key'))->after)->toBe(3);
+        ->and(ChangeCursor::decode($start, (new ReaderSyncIdentity((string) config('app.key'), 1))->cursorSubkey())->after)->toBe(3);
 });

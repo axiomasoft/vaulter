@@ -817,6 +817,7 @@
         "packages/drive/tests/Changes/ChangeJournalTest.php",
         "packages/drive/tests/Changes/DriveChangesEndToEndTest.php",
         "packages/drive/tests/Changes/PruneChangesCommandTest.php",
+        "packages/drive/tests/Changes/ReaderSyncIdentityTest.php",
         "packages/drive/tests/Concurrency",
         "packages/drive/tests/Content/ScanEvidenceBoundaryTest.php",
         "packages/drive/tests/Drive/DrivePurgeTest.php",

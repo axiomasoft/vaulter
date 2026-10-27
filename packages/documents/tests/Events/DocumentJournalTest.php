@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
@@ -17,7 +17,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
  * an upsert, compacted to one entry per document, whether or not it took a checkpoint;
  * content events carry no node sequence, a restore is the newest state.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class);
+uses(OperationsTestCase::class, DatabaseMigrations::class);
 
 /** @return list<array{seq: int, event_type: string, operation: string, node_sequence: ?int}> */
 function documentJournal(int|string $nodeId): array

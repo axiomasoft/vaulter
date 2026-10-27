@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -12,7 +12,7 @@ use Vaulter\Drive\Testing\Http\V1;
  * The change journal: a start cursor, then pages of changes for the reader with the
  * node as the reader sees it (abilities included) and the cursor to continue from.
  */
-uses(RefreshDatabase::class);
+uses(DatabaseMigrations::class);
 
 beforeEach(function (): void {
     config()->set('vaulter-drive.features.changes', true);

@@ -104,6 +104,11 @@ return [
         'retention_days' => 30,
         // The largest page DriveHandle::changes()->list() returns.
         'max_page_size' => 1000,
+        // Raise on every instance together to expire all cursors and sync keys (after
+        // key rotation or re-enabling the journal); clients bootstrap again.
+        'key_generation' => 1,
+        // Seconds a cursor lives after startCursor(): 1..2592000, at most the retention.
+        'cursor_max_age_seconds' => 86400,
     ],
     'handlers' => [],
     'uploads' => [
