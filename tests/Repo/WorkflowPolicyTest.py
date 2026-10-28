@@ -955,6 +955,39 @@ class PinPolicyTest(unittest.TestCase):
         self.assertEqual([], policy.check_pins('x', self.doc({'run': 'docker run --rm rhysd/actionlint:1.7.7@' + self.digest})))
 
 
+    def test_pin_docker_run_image_argument_short_names_and_options(self):
+        for command in (
+            'docker run --rm node:22-slim node --version',
+            'docker run postgres',
+            'docker run --name pg --network host postgres:16-alpine',
+            'docker run -it -v "$PWD:/repo" -w /repo node:22-slim node --version',
+            'docker run --env IMAGE=example/unrelated:tag --entrypoint /bin/sh node',
+            'docker run --platform=linux/amd64 --name=lint rhysd/actionlint:1.7.7',
+            'docker run -- example/unqualified',
+        ):
+            with self.subTest(command=command):
+                self.assertTrue(policy.check_pins('x', self.doc({'run': command})), command)
+        for prefix in (
+            'docker run --rm ',
+            'docker run --platform linux/amd64 --network=host ',
+            'docker run -itv "$PWD:/repo" -w/repo ',
+            'docker run --env IMAGE=example/unrelated:tag --entrypoint /bin/sh ',
+            'docker run -- ',
+        ):
+            for image in ('node', 'node:22-slim', 'registry.example:5000/team/tool:v1'):
+                command = prefix + image + '@' + self.digest + ' node --version'
+                with self.subTest(command=command):
+                    self.assertEqual([], policy.check_pins('x', self.doc({'run': command})))
+
+    def test_pin_docker_run_checks_each_actual_image_and_not_command_arguments(self):
+        good = 'docker run --rm node@' + self.digest + ' echo rhysd/actionlint:1.7.7'
+        self.assertEqual([], policy.check_pins('x', self.doc({'run': good})))
+        self.assertTrue(policy.check_pins('x', self.doc({'run': good + ' && docker run --rm postgres'})))
+        for command in ('docker run --unknown-option value node@' + self.digest, 'docker run --rm', 'docker run -v'):
+            with self.subTest(command=command):
+                self.assertTrue(policy.check_pins('x', self.doc({'run': command})))
+
+
 class TrustedManifestPinTest(unittest.TestCase):
     """Synthetic TOOL/candidate fixtures prove source selection and failure handling only."""
 

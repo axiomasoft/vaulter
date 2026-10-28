@@ -37,6 +37,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -486,6 +487,53 @@ def pinned_image(ref: object) -> bool:
     return isinstance(ref, str) and re.fullmatch(r'[^\s@]+@sha256:[0-9a-f]{64}', ref) is not None
 
 
+def docker_run_images(command: str) -> list[str]:
+    """Read the image positional argument, never option values or container command arguments."""
+    if not re.search(r'\bdocker\s+run\b', command):
+        return []
+    lexer = shlex.shlex(command.replace('\\\n', ''), posix=True, punctuation_chars=';&|()')
+    lexer.whitespace_split = True
+    tokens = list(lexer)
+    values = set(('add-host annotation attach blkio-weight blkio-weight-device cap-add cap-drop cgroup-parent cgroupns cidfile '
+                  'cpu-count cpu-percent cpu-period cpu-quota cpu-rt-period cpu-rt-runtime cpu-shares cpus cpuset-cpus cpuset-mems '
+                  'device device-cgroup-rule device-read-bps device-read-iops device-write-bps device-write-iops dns dns-option '
+                  'dns-search domainname entrypoint env env-file expose gpus group-add health-cmd health-interval health-retries '
+                  'health-start-interval health-start-period health-timeout hostname init-path io-maxbandwidth io-maxiops ip ip6 '
+                  'ipc isolation label label-file link link-local-ip log-driver log-opt mac-address memory memory-reservation '
+                  'memory-swap memory-swappiness mount name network network-alias oom-score-adj pid pids-limit platform publish '
+                  'pull restart runtime security-opt shm-size stop-signal stop-timeout storage-opt sysctl tmpfs ulimit user userns '
+                  'uts volume volume-driver volumes-from workdir').split())
+    flags = set('detach disable-content-trust help init interactive no-healthcheck oom-kill-disable privileged publish-all read-only rm sig-proxy tty'.split())
+    images = []
+    for i, token in enumerate(tokens[:-1]):
+        if token.rsplit('/', 1)[-1] != 'docker' or tokens[i + 1] != 'run':
+            continue
+        index = i + 2
+        while index < len(tokens) and tokens[index].startswith('-'):
+            option = tokens[index]
+            index += 1
+            if option == '--':
+                break
+            if option.startswith('--'):
+                name, equal, _ = option[2:].partition('=')
+                if name in values:
+                    if not equal: index += 1
+                elif name not in flags:
+                    raise ValueError('unsupported Docker run option')
+            else:
+                # Boolean short flags can cluster (-it); value flags can attach their value (-w/repo).
+                for offset, short in enumerate(option[1:], 1):
+                    if short in 'a c e h l m p u v w'.split():
+                        if offset == len(option) - 1: index += 1
+                        break
+                    if short not in 'ditP':
+                        raise ValueError('unsupported Docker run short option')
+        if index >= len(tokens) or tokens[index] in (';', '&&', '||', '|', '&', '(', ')'):
+            raise ValueError('missing Docker run image argument')
+        images.append(tokens[index])
+    return images
+
+
 def pin_commit(chain: list[dict]) -> str:
     """Validate a resolver's complete annotated-tag chain, ending at a commit."""
     if not chain or len(chain) > 9:
@@ -553,9 +601,12 @@ def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
             if ref.startswith('actions/checkout@') and not pushes_checkout(job) and (step.get('with') or {}).get('persist-credentials') is not False:
                 errors.append(f'{name}:{job_id}: pin checkout persist-credentials must be false')
             command = str(step.get('run', ''))
-            for image in re.findall(r'(?<![\w/])([\w.-]+/[\w./-]+:[\w.-]+(?:@sha256:[\w]+)?)', command):
-                if 'docker run' in command and not pinned_image(image):
-                    errors.append(f'{name}:{job_id}: pin docker run digest required')
+            try:
+                for image in docker_run_images(command):
+                    if not pinned_image(image):
+                        errors.append(f'{name}:{job_id}: pin docker run digest required')
+            except ValueError:
+                errors.append(f'{name}:{job_id}: pin cannot determine Docker run image argument')
             if re.search(r'\bnpm\s+(?:install|i)\b', command):
                 errors.append(f'{name}:{job_id}: pin use npm ci with committed lock')
     return errors
