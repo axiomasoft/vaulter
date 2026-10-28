@@ -9,20 +9,22 @@ declare(strict_types=1);
  */
 
 it('splits the root CHANGELOG.md into each split PHP package before the subtree split, F-P2.1-06', function (): void {
-    $workflow = file_get_contents(dirname(__DIR__, 3).'/.github/workflows/monorepo-split.yml');
+    $root = dirname(__DIR__, 3);
+    $workflow = file_get_contents($root.'/.github/workflows/monorepo-split.yml');
+    $builder = file_get_contents($root.'/scripts/release/build-artifacts.php');
 
+    // The root CHANGELOG.md now ships inside the canonical prepared tree (public channel), so the ZIP and the split commit
+    // carry the same bytes; the publisher only materializes that prepared commit.
     expect($workflow)->not->toBeFalse()
-        ->and($workflow)->toContain('cp CHANGELOG.md packages/${{ matrix.package }}/CHANGELOG.md');
+        ->and($builder)->not->toBeFalse()
+        ->and($builder)->toContain("':CHANGELOG.md'");
 
-    // The copy step must run BEFORE the split action, or the split repo still
-    // never sees the file (subtree split only carries what already exists under
-    // packages/<name> at the time the split action runs).
-    $copyPos = strpos($workflow, 'cp CHANGELOG.md packages/');
-    $splitPos = strpos($workflow, 'monorepo-split-github-action');
+    $preparePos = strpos($workflow, 'build-artifacts.php --version');
+    $materializePos = strpos($workflow, '--materialize-split');
 
-    expect($copyPos)->not->toBeFalse()
-        ->and($splitPos)->not->toBeFalse()
-        ->and($copyPos)->toBeLessThan($splitPos);
+    expect($preparePos)->not->toBeFalse()
+        ->and($materializePos)->not->toBeFalse()
+        ->and($preparePos)->toBeLessThan($materializePos);
 });
 
 it('declares a deprecation policy with a concrete removal horizon in CONTRIBUTING.md, F-P2.1-07', function (): void {

@@ -5,6 +5,7 @@ Requires the locally installed PyYAML and PHP 8.4 (scripts/php84). consumer-smok
 syntax-checked here: it needs Packagist and runs in the phase run.
 """
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -23,10 +24,10 @@ MANIFEST = json.loads((ROOT / "release" / "packages.json").read_text())
 PHP_PACKAGES = [Path(p["path"]).name for p in MANIFEST["php"]]
 
 
-def php(script, *args, cwd=None):
+def php(script, *args, cwd=None, env=None):
     return subprocess.run(
         [str(ROOT / "scripts" / "php84"), str(RELEASE / script), *args],
-        cwd=cwd, text=True, capture_output=True,
+        cwd=cwd, text=True, capture_output=True, env=env,
     )
 
 
@@ -258,6 +259,267 @@ class BuildArtifactsTest(unittest.TestCase):
         self.assertEqual(meta["version"], "0.3.0")
         self.assertEqual(meta["require"]["axioma-studio/vaulter-core"], "0.3.0")
 
+    def drifted_repo(self):
+        """Two commits: the second drops the webhooks manifest entry and rewrites core's composer.json."""
+        directory = tempfile.TemporaryDirectory(prefix="vaulter-prepare-")
+        self.addCleanup(directory.cleanup)
+        tree = Path(directory.name) / "repo"
+        release_tree(tree, full_packages=True)
+        git("init", "-q", "-b", "main", cwd=tree)
+        git("add", "-A", cwd=tree)
+        git("commit", "-q", "-m", "old", cwd=tree)
+        old = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tree, text=True, capture_output=True, check=True).stdout.strip()
+        manifest = json.loads((tree / "release/packages.json").read_text())
+        manifest["php"] = [p for p in manifest["php"] if p["name"] != "axioma-studio/vaulter-webhooks"]
+        (tree / "release/packages.json").write_text(json.dumps(manifest))
+        composer = json.loads((tree / "packages/core/composer.json").read_text())
+        composer["description"] = "drifted after the old ref"
+        (tree / "packages/core/composer.json").write_text(json.dumps(composer))
+        git("add", "-A", cwd=tree)
+        git("commit", "-q", "-m", "new", cwd=tree)
+        return tree, old, Path(directory.name) / "out"
+
+    def test_manifest_comes_from_the_same_ref_as_the_package_bytes(self):
+        tree, old, out = self.drifted_repo()
+        result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={tree}", f"--ref={old}")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((out / "axioma-studio-vaulter-webhooks-0.3.0.zip").exists(), "old-ref manifest must list webhooks")
+
+    def test_mixed_manifest_and_package_source_is_rejected(self):
+        tree, old, out = self.drifted_repo()
+        result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={tree}", f"--ref={old}", "--manifest-ref=HEAD")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("mixed source", result.stderr)
+        self.assertEqual(list(out.glob("*.zip")), [])
+
+    def test_zip_and_prepared_split_tree_share_one_composer_json(self):
+        prepared = self.out / "prepared"
+        for name in ("vaulter-core", "vaulter-documents", "vaulter"):
+            record = json.loads((prepared / f"axioma-studio-{name}.json").read_text())
+            with self.subTest(package=name):
+                self.assertEqual(record["qualification"], "pending")
+                self.assertRegex(record["split_tree"], r"^[0-9a-f]{40}$")
+                self.assertRegex(record["split_commit"], r"^[0-9a-f]{40}$")
+                self.assertRegex(record["source_sha"], r"^[0-9a-f]{40}$")
+                tree_composer = (prepared / f"axioma-studio-{name}" / "tree" / "composer.json").read_bytes()
+                self.assertEqual(self.zip_of(name).read("composer.json"), tree_composer)
+                self.assertEqual(record["files"]["composer.json"]["sha256"], hashlib.sha256(tree_composer).hexdigest())
+                self.assertEqual(record["archive_sha256"], hashlib.sha256((self.out / f"axioma-studio-{name}-0.3.0.zip").read_bytes()).hexdigest())
+        verified = php("build-artifacts.php", f"--verify-prepared={prepared}")
+        self.assertEqual(verified.returncode, 0, verified.stderr)
+
+    def test_consumer_rejects_zip_or_tree_drift_from_the_prepared_record(self):
+        for tamper in ("zip-composer", "tree-readme", "tree-mode"):
+            with self.subTest(tamper=tamper), tempfile.TemporaryDirectory(prefix="vaulter-tamper-") as directory:
+                out = Path(directory) / "out"
+                shutil.copytree(self.out, out)
+                prepared = out / "prepared"
+                base = prepared / "axioma-studio-vaulter-core" / "tree"
+                if tamper == "zip-composer":
+                    path = out / "axioma-studio-vaulter-core-0.3.0.zip"
+                    with zipfile.ZipFile(path) as source:
+                        entries = {n: source.read(n) for n in source.namelist()}
+                    entries["composer.json"] += b" "
+                    with zipfile.ZipFile(path, "w") as target:
+                        for name, data in entries.items():
+                            target.writestr(name, data)
+                elif tamper == "tree-readme":
+                    readme = next(p for p in sorted(base.rglob("*")) if p.is_file() and p.name != "composer.json")
+                    readme.write_bytes(readme.read_bytes() + b"x")
+                else:
+                    (base / "composer.json").chmod(0o755)
+                result = php("build-artifacts.php", f"--verify-prepared={prepared}")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("axioma-studio-vaulter-core", result.stderr)
+
+    def materialize(self, prepared, git_dir, package="axioma-studio/vaulter-core", source=None):
+        record = json.loads((prepared / f"{package.replace('/', '-')}.json").read_text()) if (prepared / f"{package.replace('/', '-')}.json").exists() else {}
+        return php("build-artifacts.php", f"--materialize-split={prepared}", f"--package={package}",
+                   f"--source-sha={source or record.get('source_sha', '0' * 40)}", f"--git-dir={git_dir}")
+
+    def test_split_workflow_consumes_the_prepared_record_without_a_second_build(self):
+        workflow = yaml.safe_load((ROOT / ".github/workflows/monorepo-split.yml").read_text())
+        jobs = workflow["jobs"]
+        text = (ROOT / ".github/workflows/monorepo-split.yml").read_text()
+        self.assertNotIn("monorepo-split-github-action", text)
+        prepare, split = jobs["prepare"], jobs["split"]
+        self.assertIn("route", prepare["needs"] if isinstance(prepare["needs"], list) else [prepare["needs"]])
+        prepare_text = json.dumps(prepare)
+        self.assertIn("build-artifacts.php", prepare_text)
+        self.assertIn("--manifest-ref", prepare_text)
+        self.assertNotIn("GH_ACCESS_TOKEN", prepare_text)
+        self.assertIn("prepare", split["needs"])
+        split_text = json.dumps(split)
+        self.assertIn("--materialize-split", split_text)
+        self.assertIn("download-artifact", split_text)
+        for forbidden in ("--version=", "cp CHANGELOG.md", "composer", "git subtree", "monorepo-split"):
+            self.assertNotIn(forbidden, split_text)
+        # The credential is read only by the step that pushes the exact materialized commit.
+        holders = [s["name"] for s in split["steps"] if "GH_ACCESS_TOKEN" in json.dumps(s)]
+        self.assertTrue(holders)
+        self.assertTrue(all("prepared" in n.lower() for n in holders), holders)
+
+    def test_materialized_split_is_exactly_the_recorded_tree_and_commit(self):
+        prepared = self.out / "prepared"
+        record = json.loads((prepared / "axioma-studio-vaulter-core.json").read_text())
+        with tempfile.TemporaryDirectory(prefix="vaulter-materialize-") as directory:
+            git_dir = Path(directory) / "split.git"
+            result = self.materialize(prepared, git_dir)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), record["split_commit"])
+            tree = subprocess.run(["git", "--git-dir", str(git_dir), "rev-parse", f"{record['split_commit']}^{{tree}}"], text=True, capture_output=True)
+            self.assertEqual(tree.stdout.strip(), record["split_tree"])
+
+    def test_materialize_fails_closed_on_missing_or_different_record_ref_tree_or_bytes(self):
+        for case in ("missing-record", "other-source", "tree-bytes", "tree-oid", "commit-oid", "no-qualification", "archive-drift"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory(prefix="vaulter-materialize-bad-") as directory:
+                out = Path(directory) / "out"
+                shutil.copytree(self.out, out)
+                prepared = out / "prepared"
+                record_path = prepared / "axioma-studio-vaulter-core.json"
+                record = json.loads(record_path.read_text())
+                source = None
+                if case == "missing-record":
+                    record_path.unlink()
+                    source = record["source_sha"]
+                elif case == "other-source":
+                    source = "1" * 40
+                elif case == "tree-bytes":
+                    target = next(p for p in sorted((prepared / "axioma-studio-vaulter-core" / "tree").rglob("*")) if p.is_file() and p.name != "composer.json")
+                    target.write_bytes(target.read_bytes() + b"x")
+                elif case == "no-qualification":
+                    del record["qualification"]
+                    record_path.write_text(json.dumps(record))
+                elif case == "archive-drift":
+                    (out / record["archive"]).write_bytes(b"not the prepared archive")
+                else:
+                    key = "split_tree" if case == "tree-oid" else "split_commit"
+                    record[key] = "2" * 40
+                    record_path.write_text(json.dumps(record))
+                git_dir = Path(directory) / "split.git"
+                result = self.materialize(prepared, git_dir, source=source)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(result.stdout.strip(), "")
+                self.assertTrue(result.stderr.strip())
+
+    def approved_fixture(self, directory, mutate=None, approval_override=None):
+        """A SYNTHETIC approval for tests only: it proves the gate compares identities, it is never real owner evidence."""
+        out = Path(directory) / "out"
+        shutil.copytree(self.out, out)
+        prepared = out / "prepared"
+        record_path = prepared / "axioma-studio-vaulter-core.json"
+        record = json.loads(record_path.read_text())
+        record["sbom_sha256"], record["resolution_sha256"] = "a" * 64, "b" * 64
+        record_path.write_text(json.dumps(record))
+        fields = ("source_sha", "split_commit", "split_tree", "content_manifest_sha256", "archive_sha256", "sbom_sha256", "resolution_sha256", "policy_sha256", "tool_sha256")
+        approval = {"status": "approved", "source_sha": record["source_sha"], "policy_sha256": record["policy_sha256"], "tool_sha256": record["tool_sha256"],
+                    "packages": {"axioma-studio/vaulter-core": {f: record[f] for f in fields}}}
+        if mutate:
+            mutate(approval)
+        path = Path(directory) / "approval.json"
+        if approval_override != "missing":
+            path.write_text(json.dumps(approval))
+        return prepared, path, record
+
+    def require_approved(self, prepared, approval, record, source=None, pinned="auto"):
+        """pinned: "auto" = the sha256 of the approval bytes supplied the way the protected variable would be (a SYNTHETIC
+        externally supplied hash that proves the protocol only), None = variable absent, or an explicit value."""
+        env = {k: v for k, v in os.environ.items() if k != "VAULTER_PREPARED_APPROVAL_SHA256"}
+        if pinned == "auto":
+            pinned = hashlib.sha256(Path(approval).read_bytes()).hexdigest() if Path(approval).exists() else "0" * 64
+        if pinned is not None:
+            env["VAULTER_PREPARED_APPROVAL_SHA256"] = pinned
+        return php("build-artifacts.php", f"--require-approved={prepared}", "--package=axioma-studio/vaulter-core",
+                   f"--source-sha={source or record['source_sha']}", f"--approval={approval}", f"--root={self.repo}", env=env)
+
+    def test_self_asserted_matching_approval_without_the_protected_hash_is_refused(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            self.assertEqual(self.require_approved(prepared, approval, record).returncode, 0)  # protocol positive (synthetic)
+            for label, pinned in (("absent", None), ("malformed", "not-a-hash"), ("uppercase", "A" * 64),
+                                  ("wrong", "1" * 64), ("hash-of-the-record-not-of-A", record["archive_sha256"])):
+                with self.subTest(pinned=label):
+                    result = self.require_approved(prepared, approval, record, pinned=pinned)
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn("publish refused", result.stderr)
+                    self.assertNotIn("approved: axioma", result.stdout)
+
+    def test_a_tampered_or_reused_approval_fails_the_protected_hash_before_it_is_parsed(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            pinned = hashlib.sha256(approval.read_bytes()).hexdigest()
+            approval.write_bytes(approval.read_bytes() + b" ")
+            result = self.require_approved(prepared, approval, record, pinned=pinned)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("protected external hash", result.stderr)
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as first, tempfile.TemporaryDirectory(prefix="vaulter-gate-") as second:
+            _, old_approval, _ = self.approved_fixture(first)
+            prepared, _, record = self.approved_fixture(second, lambda a: a.update(source_sha="3" * 40))
+            result = self.require_approved(prepared, old_approval, record, pinned=hashlib.sha256(old_approval.read_bytes()).hexdigest())
+            self.assertEqual(result.returncode, 0, "same bytes, same record: identical identity is fine")
+            other_source = self.require_approved(prepared, old_approval, record, source="4" * 40, pinned=hashlib.sha256(old_approval.read_bytes()).hexdigest())
+            self.assertEqual(other_source.returncode, 1)
+
+    def test_workflow_never_forces_and_gates_the_credential_on_the_approved_record(self):
+        text = (ROOT / ".github/workflows/monorepo-split.yml").read_text()
+        self.assertNotIn("--force", text)
+        self.assertNotIn("push -f", text)
+        steps = yaml.safe_load(text)["jobs"]["split"]["steps"]
+        names = [s.get("name", "") for s in steps]
+        gate = next(i for i, s in enumerate(steps) if "--require-approved" in s.get("run", ""))
+        push = next(i for i, s in enumerate(steps) if "--materialize-split" in s.get("run", ""))
+        self.assertLess(gate, push, names)
+        self.assertNotIn("GH_ACCESS_TOKEN", json.dumps(steps[gate]))
+        for earlier in steps[:push]:
+            self.assertNotIn("GH_ACCESS_TOKEN", json.dumps(earlier))
+        self.assertIn("--atomic", steps[push]["run"])
+        self.assertIn("refusing to replace", steps[push]["run"])
+        self.assertIn("prepared-approval.json", steps[gate]["run"])
+        self.assertEqual(steps[gate]["env"]["VAULTER_PREPARED_APPROVAL_SHA256"], "${{ vars.VAULTER_PREPARED_APPROVAL_SHA256 }}")
+        self.assertEqual(text.count("VAULTER_PREPARED_APPROVAL_SHA256:"), 1)
+        self.assertNotIn("sha256sum", steps[gate]["run"])
+
+    def test_pending_or_missing_approval_cannot_pass_the_publisher_gate(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            pending = self.require_approved(self.out / "prepared", Path(directory) / "none.json", json.loads((self.out / "prepared/axioma-studio-vaulter-core.json").read_text()))
+            self.assertEqual(pending.returncode, 1)
+            self.assertIn("publish refused", pending.stderr)
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            prepared, approval, record = self.approved_fixture(directory, approval_override="missing")
+            self.assertEqual(self.require_approved(prepared, approval, record).returncode, 1)
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            (prepared / "axioma-studio-vaulter-core.json").write_text(json.dumps({**record, "sbom_sha256": None}))
+            result = self.require_approved(prepared, approval, {**record, "sbom_sha256": None})
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("pending", result.stderr)
+
+    def test_synthetic_approval_of_the_exact_record_passes_and_any_identity_drift_refuses(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            result = self.require_approved(prepared, approval, record)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        cases = {
+            "status": lambda a: a.update(status="pending"),
+            "archive": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(archive_sha256="c" * 64),
+            "split-commit": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(split_commit="d" * 40),
+            "split-tree": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(split_tree="d" * 40),
+            "sbom": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(sbom_sha256="e" * 64),
+            "tool": lambda a: a.update(tool_sha256="f" * 64),
+            "policy": lambda a: a.update(policy_sha256="f" * 64),
+            "source": lambda a: a.update(source_sha="1" * 40),
+            "other-package": lambda a: a.update(packages={"axioma-studio/vaulter-media": a["packages"]["axioma-studio/vaulter-core"]}),
+        }
+        for name, mutate in cases.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+                prepared, approval, record = self.approved_fixture(directory, mutate)
+                result = self.require_approved(prepared, approval, record)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("publish refused", result.stderr)
+        with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            self.assertEqual(self.require_approved(prepared, approval, record, source="2" * 40).returncode, 1)
+
     def test_requires_version_and_output_directory(self):
         self.assertEqual(php("build-artifacts.php", "--version=latest", f"--out={self.out}").returncode, 2)
         self.assertEqual(php("build-artifacts.php", "--version=0.3.0").returncode, 2)
@@ -387,7 +649,8 @@ class WorkflowAndShellTest(unittest.TestCase):
 
     def test_matrix_is_computed_by_the_route_job_from_the_manifest(self):
         self.assertEqual(self.workflow["jobs"]["split"]["strategy"]["matrix"]["package"], "${{ fromJSON(needs.route.outputs.matrix) }}")
-        self.assertEqual(self.workflow["jobs"]["split"]["needs"], "route")
+        self.assertEqual(self.workflow["jobs"]["split"]["needs"], ["route", "prepare"])
+        self.assertEqual(self.workflow["jobs"]["prepare"]["needs"], "route")
         self.assertEqual(self.workflow["jobs"]["route"]["needs"], "verify-release-sha")
 
     def test_verify_tags_runs_after_the_split(self):
@@ -399,11 +662,13 @@ class WorkflowAndShellTest(unittest.TestCase):
 
     def test_no_credential_is_read_before_the_route_job(self):
         text = (ROOT / ".github/workflows/monorepo-split.yml").read_text()
-        route = text[text.index("  route:\n"):text.index("  split:\n")]
+        route = text[text.index("  route:\n"):text.index("  prepare:\n")]
         self.assertNotIn("GH_ACCESS_TOKEN", route)
         self.assertIn("route-release.php", route)
+        prepare = text[text.index("  prepare:\n"):text.index("  split:\n")]
+        self.assertNotIn("GH_ACCESS_TOKEN", prepare)
         for step in self.workflow["jobs"]["split"]["steps"]:
-            if "monorepo-split-github-action" in step.get("uses", ""):
+            if "--materialize-split" in step.get("run", ""):
                 self.assertEqual(step["if"], "steps.plan.outputs.excluded != 'true'")
 
     def test_split_repository_names_come_from_the_manifest(self):
@@ -411,8 +676,8 @@ class WorkflowAndShellTest(unittest.TestCase):
         text = (ROOT / ".github/workflows/monorepo-split.yml").read_text()
         self.assertNotIn("vaulter-${{ matrix.package }}", text)
         split = self.workflow["jobs"]["split"]["steps"]
-        action = next(s for s in split if "monorepo-split-github-action" in s.get("uses", ""))
-        self.assertEqual(action["with"]["repository_name"], "${{ steps.plan.outputs.name }}")
+        push = next(s for s in split if "--materialize-split" in s.get("run", ""))
+        self.assertIn("steps.plan.outputs.split", json.dumps(push))
         plan = next(s for s in split if s.get("id") == "plan")
         self.assertIn("release/packages.json", plan["run"])
 

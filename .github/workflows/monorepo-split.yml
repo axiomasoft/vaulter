@@ -103,6 +103,7 @@ jobs:
     outputs:
       qualified: ${{ steps.route.outputs.qualified }}
       channel: ${{ steps.route.outputs.channel }}
+      version: ${{ steps.route.outputs.version }}
       matrix: ${{ steps.route.outputs.matrix }}
     steps:
       - name: Checkout
@@ -133,9 +134,42 @@ jobs:
           php scripts/release/route-release.php --tag="${GITHUB_REF_NAME}" --sha="${GITHUB_SHA}" \
             --evidence-dir=release-evidence --github-output="${GITHUB_OUTPUT}"
 
+  # ONE canonical prepare of the tagged commit, holding no publisher credential: the manifest and every package byte
+  # come from github.sha (mixed sources are refused), the tree is exported and normalized once, and the ZIP, the split
+  # tree and the split commit all derive from that prepared record. Qualification of the record stays pending (D18);
+  # nothing is pushed here.
+  prepare:
+    name: Prepare the canonical split trees
+    needs: route
+    if: needs.route.outputs.qualified == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Prepare once from the tagged commit
+        env:
+          CHANNEL: ${{ needs.route.outputs.channel }}
+          VERSION: ${{ needs.route.outputs.version }}
+        run: |
+          php scripts/release/build-artifacts.php --version="${VERSION}" --channel="${CHANNEL}" \
+            --ref="${GITHUB_SHA}" --manifest-ref="${GITHUB_SHA}" --out=release-prepared
+          php scripts/release/build-artifacts.php --verify-prepared=release-prepared/prepared
+
+      - name: Upload the prepared record, trees and archives
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-prepared
+          path: release-prepared
+
   split:
     name: Split packages/${{ matrix.package }}
-    needs: route
+    needs: [route, prepare]
     if: needs.route.outputs.qualified == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -157,47 +191,71 @@ jobs:
           split="$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .split' release/packages.json)"
           echo "channel=${{ needs.route.outputs.channel }}" >> "$GITHUB_OUTPUT"
           echo "split=${split}" >> "$GITHUB_OUTPUT"
+          echo "package=$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .name' release/packages.json)" >> "$GITHUB_OUTPUT"
           echo "name=${split#axioma-studio/}" >> "$GITHUB_OUTPUT"
           echo "excluded=false" >> "$GITHUB_OUTPUT"
 
-      # F-P2.1-06 (VLT-REMED P4.7): the subtree split below copies ONLY
-      # packages/<name>, so a split repo (what Packagist is registered against, D15/
-      # ADR-0010) never carried the root CHANGELOG.md — a consumer running
-      # `composer require axioma-studio/vaulter-<name>` got a package with zero
-      # changelog history. Copy the root CHANGELOG.md into the package directory
-      # BEFORE the split step so it becomes part of the split commit/subtree.
-      - name: Copy root CHANGELOG.md into packages/${{ matrix.package }} (F-P2.1-06)
-        if: steps.plan.outputs.excluded != 'true' && steps.plan.outputs.channel == 'public'
-        run: cp CHANGELOG.md packages/${{ matrix.package }}/CHANGELOG.md
-
-      - name: Split packages/${{ matrix.package }} → ${{ steps.plan.outputs.split }}
-        if: steps.plan.outputs.excluded != 'true'
-        # Pinned by commit for supply-chain safety; the trailing comment is the version tag.
-        uses: danharrin/monorepo-split-github-action@14e42e2437f674b8987c1f50ca3689116aea1893 # v2.4.5
+      - name: Download the prepared record
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          package_directory: packages/${{ matrix.package }}
-          repository_organization: axioma-studio
-          repository_name: ${{ steps.plan.outputs.name }}
-          user_name: Axioma Bot
-          user_email: dev@axioma.studio
-          branch: main
-          # Propagate the pushed tag to the split repo (used internally as as_tag).
-          tag: ${{ github.ref_name }}
+          name: release-prepared
+          path: release-prepared
+
+      - name: Download the qualification evidence of this SHA
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-qualification
+          path: release-evidence
+
+      # D18 gate: the EXTERNAL approved qualification must bind this exact prepared record (source, split tree/commit,
+      # content, archive, SBOM, resolution, policy and tool digests). A pending record or a missing approval stops the
+      # job HERE, before any publisher credential is read. Nothing in this repository can create that approval.
+      - name: Require the approved qualification of the prepared record
+        if: steps.plan.outputs.excluded != 'true'
+        env:
+          PACKAGE: ${{ steps.plan.outputs.package }}
+          # Protected external SHA-256 of the exact approval bytes (repository/owner variable). Never derived from the
+          # candidate and never defaulted: unset or wrong => the gate refuses before any publisher secret is read.
+          VAULTER_PREPARED_APPROVAL_SHA256: ${{ vars.VAULTER_PREPARED_APPROVAL_SHA256 }}
+        run: |
+          php scripts/release/build-artifacts.php --require-approved=release-prepared/prepared \
+            --package="${PACKAGE}" --source-sha="${GITHUB_SHA}" --approval=release-evidence/prepared-approval.json
+
+      # The root CHANGELOG.md is already part of the prepared tree (F-P2.1-06). This job never rebuilds, re-splits or
+      # re-normalizes composer.json: --materialize-split rebuilds the commit from the prepared bytes and refuses any
+      # record/ref/tree/byte mismatch. Publication is never destructive: no force, atomic, and an existing branch or tag
+      # that is not already the prepared commit refuses (history-aware parent derivation is not qualified yet).
+      - name: Push the prepared split commit of packages/${{ matrix.package }} → ${{ steps.plan.outputs.split }}
+        if: steps.plan.outputs.excluded != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          SPLIT: ${{ steps.plan.outputs.split }}
+          PACKAGE: ${{ steps.plan.outputs.package }}
+        run: |
+          commit="$(php scripts/release/build-artifacts.php --materialize-split=release-prepared/prepared \
+            --package="${PACKAGE}" --source-sha="${GITHUB_SHA}" --git-dir="${RUNNER_TEMP}/split.git")"
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${SPLIT}.git"
+          for ref in refs/heads/main "refs/tags/${GITHUB_REF_NAME}"; do
+            existing="$(git ls-remote "${remote}" "${ref}" | cut -f1)"
+            if [[ -n "${existing}" && "${existing}" != "${commit}" ]]; then
+              echo "${SPLIT} ${ref} already exists at ${existing}; refusing to replace it with ${commit}" >&2
+              exit 1
+            fi
+          done
+          git --git-dir="${RUNNER_TEMP}/split.git" push --atomic "${remote}" "${commit}:refs/heads/main" "${commit}:refs/tags/${GITHUB_REF_NAME}"
+          mkdir -p expected-splits
+          echo "${commit}" > expected-splits/commit
 
-      # The subtree action does not report the commit it pushed, so read it back from the split
-      # repo; verify-tags compares the tag against it.
-      - name: Record the pushed split commit
+      # Read back what the split repository holds so verify-tags compares against the prepared commit, not a guess.
+      - name: Read back the prepared split commit from the split repository
         if: steps.plan.outputs.excluded != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
           SPLIT: ${{ steps.plan.outputs.split }}
         run: |
-          mkdir -p expected-splits
           sha="$(git ls-remote "https://x-access-token:${GITHUB_TOKEN}@github.com/${SPLIT}.git" refs/heads/main | cut -f1)"
-          if [[ -z "${sha}" ]]; then
-            echo "split repo ${SPLIT} has no main branch" >&2
+          if [[ -z "${sha}" || "${sha}" != "$(cat expected-splits/commit)" ]]; then
+            echo "split repo ${SPLIT} main is ${sha:-missing}, not the prepared commit" >&2
             exit 1
           fi
           jq -n --arg k "${SPLIT}" --arg v "${sha}" '{($k): $v}' \

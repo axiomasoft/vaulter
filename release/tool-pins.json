@@ -50,10 +50,6 @@
       "tag": "v1.9.0",
       "commit": "a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d"
     },
-    "danharrin/monorepo-split-github-action": {
-      "tag": "v2.4.5",
-      "commit": "14e42e2437f674b8987c1f50ca3689116aea1893"
-    },
     "docker/build-push-action": {
       "tag": "v6.19.2",
       "commit": "10e90e3645eae34f1e60eeb005ba3a3d33f178e8"
