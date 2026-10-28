@@ -18193,7 +18193,7 @@
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 345,
+      "count": 350,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__all_four_block__I1_and_I2_since_P4_16__the_collaboration_residual_of_D32_emptied_in_P5_1_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -18451,6 +18451,11 @@
         "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_release_line_base__a_removed_Port__read_between_the_release_base_and_the_candidate_is_a_BREAK_on_its_line__a_corrupt_seed_or_manifest_is_exit_2__cases_9_10_",
         "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_release_line_base__build_metadata_ties__a_deleted_known_tag__a_shallow_clone_and_a_non_commit_candidate_are_exit_2__bc_bases__missing_tag_",
         "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_release_line_base__the_candidate_is_excluded_under_any_tag_alias__prerelease_and_tree_tags_are_no_base__and_SemVer_order_beats_string_order__bc_bases_",
+        "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_review__manifest__a_surface_current_in_the_base_cannot_turn_pending_in_the_candidate_head__so_a_base_BREAK_is_never_hidden__pending_to_current_is_allowed",
+        "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_review__manifest__the_npm_declaration_adapter_is_registered_exactly_as_npm_surface_schema_1__another_spelling_or_version_stays_exit_2",
+        "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_review__release__a_byte_identical_private_collaboration_line_has_zero_ancestor_unresolved_noise_because_the_PHP_graph_spans_every_line__while_a_removed_core_method_is_still_a_BREAK_on_its_own_line",
+        "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_review__release__a_malformed_or_missing_npm_report_or_components_snapshot__an_unknown_npm_shape__a_downgraded_npm_surface_and_a_release_line_missing_from_the_manifest_are_tooling_errors__never_green",
+        "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_review__release__an_npm_export_removed_is_a_BREAK_on_its_own_line__a_prop_turned_required_and_an_event_change_are_REVIEW__and_the_unchanged_private_npm_line_stays_empty_end_to_end",
         "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_schema__JSON_order_is_no_change__a_new_NOT_NULL_column__a_nullable_column_made_NOT_NULL__a_new_default_or_a_dropped_foreign_key_is_REVIEW__a_removed_column_or_table_is_BREAK__a_new_table_is_ADD__case_7_",
         "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_schema__the_schema_identities_compare_columns_by_id__a_removed_column_is_BREAK_and_nullable_to_NOT_NULL_is_REVIEW__snapshots_of_another_preset_or_a_duplicate_column_are_exit_2__case_7_",
         "P\\Tests\\Repo\\Release\\BcCheckTest::__pest_evaluable_it_trust__a_policy_revision_equal_to_the_candidate_and_candidate_edited_exceptions_are_self_authorizing_and_exit_2__a_malformed_policy_is_rejected__D18_",
