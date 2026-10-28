@@ -22,7 +22,7 @@ final class SnapshotManifest
     public const FORMAT = 'vaulter.contract-snapshots';
 
     /** adapter => the schema versions of its inputs it reads */
-    public const ADAPTERS = ['php-surface' => [1], 'identities' => [1], 'schema-ddl' => [1]];
+    public const ADAPTERS = ['php-surface' => [1], 'identities' => [1], 'schema-ddl' => [1], 'npm-surface' => [1]];
 
     private const SURFACE_KEYS = ['id', 'adapter', 'schema_version', 'owner', 'release_line', 'inputs', 'required', 'status', 'coverage'];
 
@@ -99,8 +99,9 @@ final class SnapshotManifest
     }
 
     /**
-     * The surfaces to check: every surface of base and head. A base surface missing from head, or one whose adapter,
-     * owner or release line changed, is an error; the inputs are the union of both sides.
+     * The surfaces to check: every surface of base and head. A base surface missing from head, one whose adapter, owner or
+     * release line changed, or one `current` in the base that head turns `pending` (which would stop comparing it and hide a
+     * base BREAK) is an error; the inputs are the union of both sides.
      *
      * @param  Manifest                    $base
      * @param  Manifest                    $head
@@ -117,6 +118,9 @@ final class SnapshotManifest
                 if ($head['surfaces'][$id][$field] !== $surface[$field]) {
                     throw new ContractError("surface {$id}: {$field} changed between base and head");
                 }
+            }
+            if ($surface['status'] === 'current' && $head['surfaces'][$id]['status'] !== 'current') {
+                throw new ContractError("surface {$id}: status current in the base cannot become {$head['surfaces'][$id]['status']} in the head (no narrowing of the checked scope)");
             }
             $inputs = array_values(array_unique([...$surface['inputs'], ...$head['surfaces'][$id]['inputs']]));
             sort($inputs, SORT_STRING);

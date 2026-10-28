@@ -769,3 +769,41 @@ it('qualification: a signature guard never grants runtime, serial, archive consu
         ->and($report)->not->toHaveKey('actual_runtime_qualification', true)
         ->and(file_get_contents(bc_root().'/scripts/release/Contract/trusted-host.py'))->toContain("'actual_runtime_qualification': False");
 });
+
+// --- review R1 correction (D116): manifest status and adapter kind ---------------------------------------------------------
+
+/** A manifest of one surface with the given status and adapter, on a php and an npm release line. */
+function bc_review_manifest(string $status, string $adapter = 'php-surface', int $version = 1): array
+{
+    return SnapshotManifest::parse(json_encode([
+        'format' => 'vaulter.contract-snapshots',
+        'version' => 1,
+        'release_lines' => ['php-public' => ['owners' => ['core']], 'npm-vue' => ['owners' => ['vue']]],
+        'surfaces' => [[
+            'id' => 'surface:x', 'adapter' => $adapter, 'schema_version' => $version,
+            'owner' => $adapter === 'npm-surface' ? 'vue' : 'core', 'release_line' => $adapter === 'npm-surface' ? 'npm-vue' : 'php-public',
+            'inputs' => ['packages/x/surface.json'], 'required' => true, 'status' => $status,
+        ]],
+    ], JSON_THROW_ON_ERROR));
+}
+
+it('review_manifest: a surface current in the base cannot turn pending in the candidate head, so a base BREAK is never hidden; pending to current is allowed', function (): void {
+    $current = bc_review_manifest('current');
+    $pending = bc_review_manifest('pending');
+
+    expect(bc_exit(static fn (): array => SnapshotManifest::union($current, $pending)))->toBe(2)
+        ->and(fn () => SnapshotManifest::union($current, $pending))->toThrow(ContractError::class, 'surface:x: status current in the base cannot become pending')
+        ->and(SnapshotManifest::union($pending, $current)['surface:x']['status'])->toBe('current')
+        ->and(SnapshotManifest::union($pending, $pending)['surface:x']['status'])->toBe('pending')
+        ->and(SnapshotManifest::union($current, $current)['surface:x']['status'])->toBe('current');
+});
+
+it('review_manifest: the npm declaration adapter is registered exactly as npm-surface schema 1; another spelling or version stays exit 2', function (): void {
+    expect(SnapshotManifest::ADAPTERS)->toHaveKey('npm-surface')
+        ->and(SnapshotManifest::ADAPTERS['npm-surface'])->toBe([1])
+        ->and(bc_review_manifest('current', 'npm-surface')['surfaces']['surface:x']['adapter'])->toBe('npm-surface')
+        ->and(bc_exit(static fn (): array => bc_review_manifest('current', 'npm')))->toBe(2)
+        ->and(bc_exit(static fn (): array => bc_review_manifest('current', 'npm-surfaces')))->toBe(2)
+        ->and(bc_exit(static fn (): array => bc_review_manifest('current', 'npm-surface', 2)))->toBe(2)
+        ->and(bc_exit(static fn (): array => bc_review_manifest('stale')))->toBe(2);
+});
