@@ -409,7 +409,17 @@ class BuildArtifactsTest(unittest.TestCase):
         prepared = out / "prepared"
         record_path = prepared / "axioma-studio-vaulter-core.json"
         record = json.loads(record_path.read_text())
-        record["sbom_sha256"], record["resolution_sha256"] = "a" * 64, "b" * 64
+        composer_path = prepared / "axioma-studio-vaulter-core/tree/composer.json"
+        composer = json.loads(composer_path.read_text())
+        lock_path = out / "synthetic.lock"
+        lock_path.write_text(json.dumps({"packages": [{"name": name, "version": "1.0.0"} for name in set(composer.get("require", {})) | set(composer.get("suggest", {})) if "/" in name]}))
+        resolution = out / "synthetic-resolution.json"
+        resolution.write_text(json.dumps({"source_sha": record["source_sha"], "lock": str(lock_path), "lock_sha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(), "php_version": "8.4-fixture", "composer_version": "2-fixture", "profile": "synthetic-protocol-only"}))
+        result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(composer_path), str(resolution), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "synthetic.cdx.json")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        record.update(json.loads(result.stdout))
+        with (out / "SHA256SUMS").open("a") as sums:
+            sums.write(record["sbom_sha256"] + "  " + record["sbom"] + "\n")
         record_path.write_text(json.dumps(record))
         fields = ("source_sha", "split_commit", "split_tree", "content_manifest_sha256", "archive_sha256", "sbom_sha256", "resolution_sha256", "policy_sha256", "tool_sha256")
         approval = {"status": "approved", "source_sha": record["source_sha"], "policy_sha256": record["policy_sha256"], "tool_sha256": record["tool_sha256"],
@@ -519,6 +529,175 @@ class BuildArtifactsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
             prepared, approval, record = self.approved_fixture(directory)
             self.assertEqual(self.require_approved(prepared, approval, record, source="2" * 40).returncode, 1)
+
+    def test_checksums_cover_exact_zip_bytes_and_refuse_tampering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "out"
+            shutil.copytree(self.out, out)
+            sums = out / "SHA256SUMS"
+            self.assertTrue(sums.is_file(), "prepared artifacts need SHA256SUMS")
+            result = subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=out, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            archive = next(out.glob("*.zip"))
+            archive.write_bytes(archive.read_bytes() + b"tamper")
+            self.assertNotEqual(subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=out, capture_output=True).returncode, 0)
+
+    def sbom_fixture(self, directory, ambiguous=False, missing=False):
+        tree, _, _ = self.drifted_repo()
+        manifest = json.loads((tree / "release/packages.json").read_text())
+        manifest["php"] = [p for p in manifest["php"] if p["name"] == "axioma-studio/vaulter-core"]
+        (tree / "release/packages.json").write_text(json.dumps(manifest))
+        composer = json.loads((tree / "packages/core/composer.json").read_text())
+        composer["require"] = {"php": "^8.4", "fixture/api": "^1", "fixture/replaced": "*"}
+        composer["suggest"] = {"fixture/optional": "optional integration"}
+        (tree / "packages/core/composer.json").write_text(json.dumps(composer))
+        git("add", "-A", cwd=tree)
+        git("commit", "-q", "-m", "runtime fixture", cwd=tree)
+        source = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=tree, text=True).strip()
+        lock = {"packages": [{"name": "fixture/provider", "version": "1.2.0", "provide": {"fixture/api": "1.0"}, "replace": {"fixture/replaced": "*"}, "require": {"fixture/leaf": "^2"}}, {"name": "fixture/leaf", "version": "2.0.0"}],
+                "packages-dev": [{"name": "fixture/optional", "version": "1.0.0"}, {"name": "fixture/dev-only", "version": "9.0.0"}]}
+        if ambiguous:
+            lock["packages"].append({"name": "fixture/other", "version": "1.0.0", "provide": {"fixture/api": "1.0"}})
+        lock_path = Path(directory) / "saved.lock"
+        lock_path.write_text(json.dumps(lock))
+        resolution = {"source_sha": source, "lock": str(lock_path), "lock_sha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(), "php_version": "8.4.0", "composer_version": "2.8.0", "profile": "synthetic-reference-only"}
+        if missing:
+            lock_path.unlink()
+        provenance = Path(directory) / "resolution.json"
+        provenance.write_text(json.dumps(resolution))
+        out = Path(directory) / "sbom-out"
+        result = php("build-artifacts.php", "--version=0.3.0", f"--root={tree}", f"--out={out}", f"--sbom={provenance}")
+        return result, out, resolution
+
+    def test_runtime_reference_schema_closure_and_provenance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result, out, resolution = self.sbom_fixture(directory)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            record = json.loads((out / "prepared/axioma-studio-vaulter-core.json").read_text())
+            bom_path = out / record["sbom"]
+            bom = json.loads(bom_path.read_text())
+            self.assertEqual(bom["metadata"]["component"]["version"], "0.3.0")
+            self.assertEqual(bom["version"], 1)
+            self.assertEqual({c["name"] for c in bom["components"]}, {"fixture/provider", "fixture/leaf", "fixture/optional"})
+            props = {p["name"]: p["value"] for p in bom["metadata"]["properties"]}
+            self.assertEqual(props["vaulter:scope"], "reference-resolution; not installed consumer environment")
+            self.assertEqual(props["vaulter:resolution_sha256"], resolution["lock_sha256"])
+            self.assertEqual(record["sbom_sha256"], hashlib.sha256(bom_path.read_bytes()).hexdigest())
+            self.assertEqual(record["resolution_sha256"], resolution["lock_sha256"])
+            self.assertEqual(subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=out, capture_output=True).returncode, 0)
+            evidence_dir = os.environ.get("VAULTER_RELEASE_FIXTURE_EVIDENCE")
+            if evidence_dir:
+                evidence = Path(evidence_dir) / "reference-resolution"
+                evidence.mkdir(parents=True)
+                for artifact in out.iterdir():
+                    if artifact.is_file():
+                        shutil.copy2(artifact, evidence / artifact.name)
+                shutil.copy2(out / "prepared/axioma-studio-vaulter-core.json", evidence / "prepared-record.json")
+                shutil.copy2(out / "prepared/axioma-studio-vaulter-core/tree/composer.json", evidence / "composer.json")
+            bom["components"][0]["version"] = "tampered"
+            bom_path.write_text(json.dumps(bom))
+            self.assertNotEqual(subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=out, capture_output=True).returncode, 0)
+            self.assertEqual(php("build-artifacts.php", f"--verify-prepared={out / 'prepared'}").returncode, 1)
+
+    def test_runtime_reference_refuses_ambiguity_and_missing_resolution(self):
+        for kwargs in ({"ambiguous": True}, {"missing": True}):
+            with self.subTest(**kwargs), tempfile.TemporaryDirectory() as directory:
+                result, _, _ = self.sbom_fixture(directory, **kwargs)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertRegex(result.stderr, "ambiguous|resolution|lock")
+
+    def test_schema_rejects_invalid_metadata_version_and_pins(self):
+        import runpy
+        helper = runpy.run_path(str(RELEASE / "sbom.py"))
+        validate = helper["schema_check"]
+        bom = {"bomFormat": "CycloneDX", "specVersion": "1.5", "version": 1,
+               "metadata": {"component": {"type": "library", "name": "fixture/package", "version": "0.3.0"}}, "components": []}
+        validate(bom)
+        for change in (lambda b: b.update(version=0), lambda b: b["metadata"]["component"].pop("version"), lambda b: b["metadata"].update(unexpected=True)):
+            broken = json.loads(json.dumps(bom))
+            change(broken)
+            with self.assertRaises(Exception):
+                validate(broken)
+        with tempfile.TemporaryDirectory() as directory:
+            copied = Path(directory) / "tool"
+            shutil.copytree(RELEASE / "schema", copied / "schema")
+            schema = copied / "schema/bom-1.5.schema.json"
+            schema.write_bytes(schema.read_bytes() + b" ")
+            validate.__globals__["HERE"] = copied
+            with self.assertRaisesRegex(ValueError, "pin differs"):
+                validate(bom)
+
+    def test_reference_identity_is_deterministic_and_saved_input_tampering_refuses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result, out, resolution = self.sbom_fixture(directory)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            prepared = out / "prepared"
+            record_path = prepared / "axioma-studio-vaulter-core.json"
+            record = json.loads(record_path.read_text())
+            second = Path(directory) / "second-out"
+            args = [f"--out={second}" if arg.startswith("--out=") else arg for arg in result.args]
+            again = subprocess.run(args, text=True, capture_output=True)
+            self.assertEqual(again.returncode, 0, again.stderr)
+            self.assertEqual((out / record["archive"]).read_bytes(), (second / record["archive"]).read_bytes())
+            self.assertEqual((out / record["sbom"]).read_bytes(), (second / record["sbom"]).read_bytes())
+            self.assertEqual((out / "SHA256SUMS").read_bytes(), (second / "SHA256SUMS").read_bytes())
+            self.assertEqual({line.split("  ", 1)[1] for line in (out / "SHA256SUMS").read_text().splitlines()}, {record["archive"], record["sbom"]})
+            # The exact retained resolution, composer and source reproduce the same SBOM bytes offline.
+            expected = (out / record["sbom"]).read_bytes()
+            result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(prepared / "axioma-studio-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((out / "reproduced.cdx.json").read_bytes(), expected)
+            for field in ("resolution", "resolution_provenance", "source_sha", "policy_sha256", "version"):
+                with self.subTest(field=field), tempfile.TemporaryDirectory() as cloned:
+                    clone = Path(cloned) / "out"
+                    shutil.copytree(out, clone)
+                    saved_path = clone / "prepared/axioma-studio-vaulter-core.json"
+                    saved = json.loads(saved_path.read_text())
+                    if field in ("resolution", "resolution_provenance"):
+                        artifact = clone / saved[field]
+                        body = json.loads(artifact.read_text())
+                        if field == "resolution":
+                            body["packages"][0]["version"] = "9.9.9"
+                        else:
+                            body["profile"] = "tampered"
+                        artifact.write_text(json.dumps(body))
+                        # Even a self-updated record hash cannot make a changed saved resolution match its SBOM.
+                        saved[field + "_sha256"] = hashlib.sha256(artifact.read_bytes()).hexdigest()
+                    else:
+                        saved[field] = "2" * 40 if field == "source_sha" else "2" * 64 if field == "policy_sha256" else "9.9.9"
+                    saved_path.write_text(json.dumps(saved))
+                    refused = php("build-artifacts.php", f"--verify-prepared={clone / 'prepared'}")
+                    self.assertEqual(refused.returncode, 1, refused.stdout)
+
+    def test_tool_helper_cannot_be_hidden_by_a_schema_basename_collision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            env = {**os.environ, "VAULTER_PREPARED_APPROVAL_SHA256": hashlib.sha256(approval.read_bytes()).hexdigest()}
+            for case in ("helper", "collision", "schema", "provenance", "missing-helper", "missing-schema"):
+                with self.subTest(case=case):
+                    tool = Path(directory) / case
+                    shutil.copytree(RELEASE, tool)
+                    original_helper = (tool / "sbom.py").read_bytes()
+                    if case in ("helper", "collision"):
+                        (tool / "sbom.py").write_bytes(original_helper + b"\n# altered producer bytes\n")
+                        if case == "collision":
+                            (tool / "schema/sbom.py").write_bytes(original_helper)
+                    elif case == "schema":
+                        schema = tool / "schema/bom-1.5.schema.json"
+                        schema.write_bytes(schema.read_bytes() + b" ")
+                    elif case == "provenance":
+                        pins = tool / "schema/provenance.json"
+                        body = json.loads(pins.read_text())
+                        body["tag"] = "altered-pin-provenance"
+                        pins.write_text(json.dumps(body))
+                    elif case == "missing-helper":
+                        (tool / "sbom.py").unlink()
+                    else:
+                        (tool / "schema/spdx.schema.json").unlink()
+                    self.assertEqual((tool / "build-artifacts.php").read_bytes(), (RELEASE / "build-artifacts.php").read_bytes())
+                    result = php(str(tool / "build-artifacts.php"), f"--require-approved={prepared}", "--package=axioma-studio/vaulter-core", f"--source-sha={record['source_sha']}", f"--approval={approval}", f"--root={self.repo}", env=env)
+                    self.assertEqual(result.returncode, 1, "old authenticated synthetic A must refuse changed producer: " + result.stdout)
+                    self.assertIn("publish refused", result.stderr)
 
     def test_requires_version_and_output_directory(self):
         self.assertEqual(php("build-artifacts.php", "--version=latest", f"--out={self.out}").returncode, 2)

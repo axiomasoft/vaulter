@@ -26,12 +26,31 @@ require __DIR__.'/manifest-lib.php';
 
 $options = ['root' => dirname(__DIR__, 2), 'ref' => 'HEAD', 'channel' => 'public'];
 foreach (array_slice($argv, 1) as $arg) {
-    if (preg_match('/^--(version|out|root|ref|channel|manifest-ref|verify-prepared|materialize-split|package|source-sha|git-dir|require-approved|approval)=(.+)$/', $arg, $m) === 1) {
+    if (preg_match('/^--(version|out|root|ref|channel|manifest-ref|verify-prepared|materialize-split|package|source-sha|git-dir|require-approved|approval|sbom)=(.+)$/', $arg, $m) === 1) {
         $options[$m[1]] = $m[2];
     } else {
         fwrite(STDERR, "build-artifacts: unknown argument {$arg}\n");
         exit(2);
     }
+}
+
+/** Complete local builder/helper/schema closure; actual trust admission remains external (D18). */
+function artifactToolDigest(): string
+{
+    $required = ['build-artifacts.php', 'manifest-lib.php', 'sbom.py', 'schema/bom-1.5.schema.json', 'schema/spdx.schema.json', 'schema/jsf-0.82.schema.json', 'schema/provenance.json'];
+    $paths = $required;
+    foreach (glob(__DIR__.'/schema/*') ?: [] as $path) {
+        $paths[] = 'schema/'.basename($path);
+    }
+    $paths = array_unique($paths);
+    sort($paths);
+    $map = [];
+    foreach ($paths as $relative) {
+        $path = __DIR__.'/'.$relative;
+        $map[$relative] = is_file($path) && !is_link($path) ? hash_file('sha256', $path) : null;
+    }
+
+    return hash('sha256', json_encode($map, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 }
 
 function contentMap(string $dir): array
@@ -129,6 +148,50 @@ function verifyRecord(string $dir, string $recordPath): array
         $errors[] = "{$label}: archive content differs from the prepared tree";
     }
 
+    if (($record['sbom_sha256'] ?? null) !== null) {
+        foreach (['sbom', 'resolution', 'resolution_provenance'] as $kind) {
+            $file = $record[$kind] ?? '';
+            $path = dirname($dir).'/'.$file;
+            if ($file === '' || basename($file) !== $file || !is_file($path) || hash_file('sha256', $path) !== ($record[$kind.'_sha256'] ?? null)) {
+                $errors[] = "{$label}: {$kind} bytes/hash missing or different";
+            }
+        }
+        if ($errors === []) {
+            $bom = json_decode((string) file_get_contents(dirname($dir).'/'.$record['sbom']), true);
+            $props = [];
+            foreach ($bom['metadata']['properties'] ?? [] as $property) {
+                $props[$property['name']] = $property['value'];
+            }
+            foreach (['source_sha', 'resolution_sha256', 'policy_sha256', 'tool_sha256'] as $field) {
+                if (($props['vaulter:'.$field] ?? null) !== $record[$field]) {
+                    $errors[] = "{$label}: SBOM {$field} differs from record";
+                }
+            }
+            if (($bom['metadata']['component']['name'] ?? null) !== $record['package'] || ($bom['metadata']['component']['version'] ?? null) !== $record['version']) {
+                $errors[] = "{$label}: SBOM package/version differs from record";
+            }
+        }
+    }
+
+    if (($record['sbom_sha256'] ?? null) !== null && $errors === []) {
+        $command = 'python3 -I -B '.escapeshellarg(__DIR__.'/sbom.py').' --verify';
+        foreach ([$tree.'/composer.json', dirname($dir).'/'.$record['resolution_provenance'], $record['source_sha'], $record['version'], $record['tool_sha256'], $record['policy_sha256'], dirname($dir).'/'.$record['sbom']] as $argument) {
+            $command .= ' '.escapeshellarg($argument);
+        }
+        if (run($command, $log) !== 0) {
+            $errors[] = "{$label}: reference resolution/SBOM refused: {$log}";
+        }
+    }
+    $sums = @file_get_contents(dirname($dir).'/SHA256SUMS');
+    foreach (['archive', 'sbom'] as $kind) {
+        if (isset($record[$kind], $record[$kind.'_sha256'])) {
+            $expected = $record[$kind.'_sha256'].'  '.$record[$kind];
+            if ($sums === false || !in_array($expected, explode("\n", $sums), true)) {
+                $errors[] = "{$label}: {$kind} differs from SHA256SUMS";
+            }
+        }
+    }
+
     return $errors;
 }
 
@@ -193,7 +256,7 @@ if (isset($options['require-approved'])) {
     run(sprintf('git -C %s show %s', escapeshellarg($root), escapeshellarg($source.':release/packages.json')), $manifestBytes);
     $actual = [
         'policy_sha256' => hash('sha256', (string) $manifestBytes),
-        'tool_sha256' => hash('sha256', (string) file_get_contents(__FILE__).(string) file_get_contents(__DIR__.'/manifest-lib.php')),
+        'tool_sha256' => artifactToolDigest(),
     ];
     foreach (['source_sha', 'split_commit', 'split_tree', 'content_manifest_sha256', 'archive_sha256', 'sbom_sha256', 'resolution_sha256', 'policy_sha256', 'tool_sha256'] as $field) {
         $value = $record[$field] ?? null;
@@ -317,7 +380,7 @@ if ($code !== 0) {
 }
 $manifest = json_decode($manifestBytes, true, 512, JSON_THROW_ON_ERROR);
 $policySha = hash('sha256', $manifestBytes);
-$toolSha = hash('sha256', (string) file_get_contents(__FILE__).(string) file_get_contents(__DIR__.'/manifest-lib.php'));
+$toolSha = artifactToolDigest();
 $commitDate = '';
 run(sprintf('git -C %s show -s --format=%%cI %s', escapeshellarg($root), escapeshellarg($sourceSha)), $commitDate);
 $commitDate = trim($commitDate);
@@ -411,10 +474,27 @@ foreach ($manifest['php'] as $package) {
     }
     foreach ($files as $local => $meta) {
         $zip->addFile($preparedTree.'/'.$local, $local);
+        $zip->setMtimeName($local, max(315532800, (int) strtotime($commitDate)));
+        $zip->setExternalAttributesName($local, ZipArchive::OPSYS_UNIX, (octdec($meta['mode']) << 16));
     }
     $zip->close();
 
-    file_put_contents($preparedDir.'/'.$label.'.json', json_encode([
+    $sbom = ['sbom_sha256' => null, 'resolution_sha256' => null];
+    if (isset($options['sbom'])) {
+        $sbomPath = $out.'/'.$label.'-'.$version.'.cdx.json';
+        $command = 'python3 -I -B '.escapeshellarg(__DIR__.'/sbom.py');
+        foreach ([$preparedTree.'/composer.json', $options['sbom'], $sourceSha, $version, $toolSha, $policySha, $sbomPath] as $argument) {
+            $command .= ' '.escapeshellarg($argument);
+        }
+        if (run($command, $log) !== 0) {
+            fwrite(STDERR, "build-artifacts: resolution/SBOM incomplete: {$log}\n");
+            exit(1);
+        }
+        $sbom = json_decode(trim($log), true, 512, JSON_THROW_ON_ERROR);
+        $built[] = $sbomPath;
+    }
+
+    file_put_contents($preparedDir.'/'.$label.'.json', json_encode($sbom + [
         'source_sha' => $sourceSha,
         'release_line' => $package['release_line'],
         'channel' => $package['channel'],
@@ -437,5 +517,8 @@ foreach ($manifest['php'] as $package) {
     $built[] = $zipPath;
     echo "built {$zipPath}\n";
 }
+
+sort($built);
+file_put_contents($out.'/SHA256SUMS', implode("\n", array_map(static fn (string $path): string => hash_file('sha256', $path).'  '.basename($path), $built))."\n");
 
 echo count($built)." artifact(s) for {$version}\n";
