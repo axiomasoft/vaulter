@@ -16,25 +16,28 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write       # changesets opens/updates the Version Packages PR + tags
-  pull-requests: write  # ...and the PR itself
+  contents: read
 
 jobs:
   # Versioning only: opens/updates the Version Packages PR. No registry credential is available here.
   version-pr:
+    permissions:
+      contents: write
+      pull-requests: write
     if: github.repository == 'axiomasoft/vaulter'
     name: Version Packages PR
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+          # Changesets pushes version commits/tags using this checkout credential.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
       - run: npm ci
-      - uses: changesets/action@v1
+      - uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           version: npm run version
           commit: 'chore(release): version packages'
@@ -56,9 +59,11 @@ jobs:
     outputs:
       qualified: ${{ steps.route.outputs.qualified }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Download the qualification evidence of this SHA
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-qualification
           path: release-evidence
@@ -73,6 +78,8 @@ jobs:
           echo "qualified=true" >> "${GITHUB_OUTPUT}"
 
   release:
+    permissions:
+      contents: write
     # Publishing belongs to the canonical repository, after routing + qualification.
     # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not publish.
     if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
@@ -83,12 +90,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          # Changesets pushes version commits/tags using this checkout credential.
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
@@ -105,7 +113,7 @@ jobs:
         run: npm test
 
       - name: Publish the qualified packages
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           publish: npm run release
         env:

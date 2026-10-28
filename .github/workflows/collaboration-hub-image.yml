@@ -16,9 +16,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
-  attestations: write
 
 env:
   REGISTRY: ghcr.io
@@ -38,9 +35,11 @@ jobs:
     outputs:
       qualified: ${{ steps.route.outputs.qualified }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Download the qualification evidence of this SHA
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-qualification
           path: release-evidence
@@ -50,16 +49,21 @@ jobs:
             --evidence-dir=release-evidence --github-output="${GITHUB_OUTPUT}"
 
   image:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
     needs: route
     if: always() && (github.event_name == 'workflow_dispatch' || needs.route.outputs.qualified == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-
-      # Supply-chain gate (master plan Addendum A.3 #11): fail the publish if a known
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       # high/critical advisory is present in the runtime dependency tree before we ship.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
@@ -69,12 +73,12 @@ jobs:
           npm ci --no-audit --no-fund
           npm audit --omit=dev --audit-level=high
 
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Log in to GHCR
         if: github.event_name != 'workflow_dispatch'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -85,7 +89,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#collaboration-hub-v}" >> "$GITHUB_OUTPUT"
 
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -94,7 +98,7 @@ jobs:
             type=semver,pattern={{major}},value=${{ steps.ver.outputs.version }}
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ./packages/collaboration/hub
           platforms: linux/amd64,linux/arm64
@@ -108,7 +112,7 @@ jobs:
 
       - name: Attest build provenance
         if: github.event_name != 'workflow_dispatch'
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}

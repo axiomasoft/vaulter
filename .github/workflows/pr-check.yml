@@ -9,16 +9,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   title:
+    permissions:
+      contents: read
+      pull-requests: read
     name: Conventional Commit title
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Validate PR title
-        uses: amannn/action-semantic-pull-request@v6
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -36,13 +44,18 @@ jobs:
           requireScope: false
 
   size:
+    permissions:
+      contents: read
+      pull-requests: write
     name: PR size check
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Check PR size
-        uses: CodelyTV/pr-size-labeler@v1
+        uses: CodelyTV/pr-size-labeler@19c335e7695ba922de938806dd129f0a9b992644 # v1.12.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: 'size/XS'

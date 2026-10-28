@@ -67,12 +67,13 @@ jobs:
       consumer_matrix: ${{ steps.plan.outputs.consumer_matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           coverage: none
@@ -138,9 +139,9 @@ jobs:
       matrix: ${{ fromJSON(needs.changes.outputs.quality_matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      # The Composer path repo expects axiomasoft/azguard (AzGuard v1) at ../azguard/packages/core. AzGuard has
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       # no tagged release: the bridge pins the commit required in packages/azgard/composer.json (dev-main#<sha>).
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
@@ -152,7 +153,7 @@ jobs:
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3
@@ -164,7 +165,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-quality-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
@@ -202,7 +203,9 @@ jobs:
       matrix: ${{ fromJSON(needs.changes.outputs.fast_matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
@@ -214,7 +217,7 @@ jobs:
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -226,7 +229,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ matrix.package }}-laravel${{ matrix.laravel }}-${{ hashFiles('**/composer.json') }}
@@ -305,7 +308,7 @@ jobs:
     # supported by Actions, so server flags such as fsync=off cannot be passed and the image defaults stay).
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
           POSTGRES_USER: vaulter
           POSTGRES_PASSWORD: secret
@@ -319,7 +322,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       mysql:
-        image: mysql:8.4
+        image: mysql:8.4@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7
         env:
           MYSQL_ROOT_PASSWORD: secret
           MYSQL_DATABASE: vaulter_test
@@ -333,7 +336,9 @@ jobs:
           --health-retries 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
@@ -345,7 +350,7 @@ jobs:
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_mysql, pdo_sqlite, sqlite3, pcntl, posix
@@ -357,7 +362,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-db-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
@@ -403,7 +408,7 @@ jobs:
       DB_PASSWORD: secret
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
           POSTGRES_USER: vaulter
           POSTGRES_PASSWORD: secret
@@ -418,10 +423,12 @@ jobs:
           --health-retries 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_sqlite, sqlite3, pcntl, posix
@@ -433,7 +440,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-serial-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
@@ -471,10 +478,12 @@ jobs:
       matrix: ${{ fromJSON(needs.changes.outputs.consumer_matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -486,7 +495,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-consumer-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
@@ -517,17 +526,17 @@ jobs:
         node: ['22']
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # The committed API types must be exactly what openapi/vaulter-v1.yaml generates.
       - name: Generated API types are current
@@ -561,17 +570,17 @@ jobs:
         node: ['22']
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # The package imports the built types of its peer @vaulter/vue (a workspace link to its dist/).
       - name: Build @vaulter/vue (peer)
@@ -599,10 +608,12 @@ jobs:
         node: ['22']
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
 
@@ -629,10 +640,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -640,7 +653,7 @@ jobs:
           tools: composer:v2
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
 
@@ -649,7 +662,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-repo-${{ hashFiles('**/composer.json') }}
@@ -679,7 +692,7 @@ jobs:
           scripts/t sqlite -p repo
 
       - name: actionlint
-        run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7
+        run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
 
   openapi:
     name: OpenAPI spec validation
@@ -689,10 +702,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
 
@@ -765,7 +780,7 @@ jobs:
       BC_REQUIRED_LINES: php-public,php-collaboration,npm-vue,npm-vue-collaboration
       BC_SELECTED_LINES: all
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -787,9 +802,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      # The verdict is scripts/ci/workflow-policy.py gate (unit-tested on fake needs fixtures): a skipped lane is
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       # green only when `changes` says it was not needed, and an empty required matrix is red.
       - name: Verdict
         env:

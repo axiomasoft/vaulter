@@ -881,3 +881,200 @@ class ContractBoundaryTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PinPolicyTest(unittest.TestCase):
+    sha = '1234567890abcdef1234567890abcdef12345678'
+    digest = 'sha256:' + '1a' * 32
+
+    def doc(self, step=None):
+        return {'permissions': {'contents': 'read'}, 'jobs': {'check': {'steps': [step] if step else []}}}
+
+    def test_pin_annotated_chain_ends_in_commit(self):
+        chain = [{'url': 'https://api.github.com/repos/o/r/git/ref/tags/v1', 'object': {'type': 'tag', 'sha': 'a' * 40}},
+                 {'url': 'https://api.github.com/repos/o/r/git/tags/' + 'a' * 40, 'object': {'type': 'tag', 'sha': 'b' * 40}},
+                 {'url': 'https://api.github.com/repos/o/r/git/tags/' + 'b' * 40, 'object': {'type': 'commit', 'sha': self.sha}}]
+        self.assertEqual(self.sha, policy.pin_commit(chain))
+        foreign = copy.deepcopy(chain)
+        foreign[1]['url'] = foreign[1]['url'].replace('/o/r/', '/other/repo/')
+        with self.assertRaises(ValueError): policy.pin_commit(foreign)
+        for broken in (chain[:-1], [], [dict(chain[-1], object={'type': 'tree', 'sha': self.sha})], [chain[0], chain[-1]]):
+            with self.assertRaises(ValueError): policy.pin_commit(broken)
+
+    def test_pin_local_uses_and_remote_reusable(self):
+        for ref in ('./local/action', './.github/workflows/reuse.yml', 'owner/repo/.github/workflows/x.yml@' + self.sha):
+            self.assertEqual([], policy.check_pins('x', self.doc({'uses': ref})))
+        for ref in ('owner/repo@v4', 'owner/repo@' + self.sha[:12], './a/../bad'):
+            self.assertTrue(policy.check_pins('x', self.doc({'uses': ref})))
+
+    def test_pin_docker_action_digest(self):
+        self.assertEqual([], policy.check_pins('x', self.doc({'uses': 'docker://alpine@' + self.digest})))
+        self.assertTrue(policy.check_pins('x', self.doc({'uses': 'docker://alpine:latest'})))
+
+    def test_pin_services_and_job_containers(self):
+        doc = self.doc(); job = doc['jobs']['check']
+        job['services'] = {'db': {'image': 'postgres@' + self.digest}}
+        job['container'] = 'node@' + self.digest
+        self.assertEqual([], policy.check_pins('x', doc))
+        job['services']['db']['image'] = 'postgres:16'
+        self.assertTrue(policy.check_pins('x', doc))
+        job['container'] = {'image': 'node:22'}
+        self.assertEqual(2, len(policy.check_pins('x', doc)))
+
+    def test_pin_multistage_repeated_from_and_malformed_digest(self):
+        good = 'FROM node@' + self.digest + ' AS deps\nFROM node@' + self.digest + ' AS runtime\nFROM deps AS reused\nFROM scratch\n'
+        self.assertEqual([], policy.check_docker_pins(good))
+        self.assertEqual(1, len(policy.check_docker_pins(good.replace('FROM node@' + self.digest + ' AS runtime', 'FROM node:22 AS runtime'))))
+        for suffix in ('abc', 'g' * 64, 'a' * 63, 'a' * 65, '${DIGEST}'):
+            self.assertFalse(policy.pinned_image('node@sha256:' + suffix))
+            self.assertTrue(policy.check_docker_pins('FROM node@sha256:' + suffix))
+
+    def test_pin_checkout_permissions_and_npm_lock_command(self):
+        checkout = {'uses': 'actions/checkout@' + self.sha, 'with': {'persist-credentials': False}}
+        doc = self.doc(checkout)
+        self.assertEqual([], policy.check_pins('x', doc))
+        checkout['with']['persist-credentials'] = True
+        self.assertTrue(policy.check_pins('x', doc))
+        doc['jobs']['check']['steps'].append({'uses': 'changesets/action@' + self.sha})
+        self.assertEqual([], policy.check_pins('x', doc))
+        doc['permissions'] = {'contents': 'write'}
+        self.assertTrue(policy.check_pins('x', doc))
+        doc['permissions'] = {}
+        doc['jobs']['check']['permissions'] = {'id-token': 'write'}
+        self.assertTrue(policy.check_pins('x', doc))
+        self.assertTrue(policy.check_pins('x', self.doc({'run': 'npm install'})))
+        self.assertEqual([], policy.check_pins('x', self.doc({'run': 'npm ci'})))
+
+    def test_pin_version_comment_and_docker_run_shortcuts(self):
+        ref = 'owner/repo@' + self.sha
+        self.assertTrue(policy.check_pins('x', self.doc({'uses': ref}), 'uses: ' + ref))
+        self.assertEqual([], policy.check_pins('x', self.doc({'uses': ref}), 'uses: ' + ref + ' # v1.2.3'))
+        self.assertTrue(policy.check_pins('x', self.doc({'run': 'docker run --rm rhysd/actionlint:1.7.7'})))
+        self.assertEqual([], policy.check_pins('x', self.doc({'run': 'docker run --rm rhysd/actionlint:1.7.7@' + self.digest})))
+
+
+class TrustedManifestPinTest(unittest.TestCase):
+    """Synthetic TOOL/candidate fixtures prove source selection and failure handling only."""
+
+    def wrapper(self):
+        spec = importlib.util.spec_from_file_location('pin_openapi', ROOT / 'scripts/release/Contract/openapi-check.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def manifest(self):
+        return json.loads((ROOT / 'release/tool-pins.json').read_text())
+
+    def put(self, root, content):
+        path = root / 'release/tool-pins.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+        return path
+
+    def test_pin_manifest_approved_tool_source_ignores_candidate_and_environment(self):
+        import os
+        from unittest.mock import patch
+        module = self.wrapper()
+        approved = self.manifest()
+        expected = approved['images']['tufin/oasdiff:v1.33.0']['image']
+        with tempfile.TemporaryDirectory() as tmp:
+            tool, candidate = Path(tmp) / 'T', Path(tmp) / 'S'
+            self.put(tool, json.dumps(approved))
+            bad = copy.deepcopy(approved)
+            bad['images']['tufin/oasdiff:v1.33.0']['image'] = 'attacker/fake:latest'
+            candidate_manifest = self.put(candidate, json.dumps(bad))
+            with patch.object(module, 'TOOL', tool), patch.dict(os.environ, {'BC_TOOL_ROOT': str(candidate), 'BC_SOURCE_ROOT': str(candidate), 'BC_TOOL_PINS': str(candidate_manifest)}):
+                self.assertEqual(expected, module.tool_image())
+                (tool / 'release/tool-pins.json').unlink()
+                with self.assertRaises((ValueError, OSError)): module.tool_image()
+
+    def test_pin_manifest_missing_malformed_and_schema_fail_closed(self):
+        from unittest.mock import patch
+        module = self.wrapper()
+        invalid = ('not json', '[]', 'null', '{}', '{"schema_version": true, "images": {}}',
+                   '{"schema_version": 2, "images": {}}', '{"schema_version": 1, "images": []}')
+        with tempfile.TemporaryDirectory() as tmp, patch.object(module, 'TOOL', Path(tmp)):
+            with self.assertRaises((ValueError, OSError)): module.tool_image()
+            for text in invalid:
+                self.put(Path(tmp), text)
+                with self.assertRaises(ValueError, msg=text): module.tool_image()
+
+    def test_pin_manifest_digest_image_tag_and_missing_entry_negatives(self):
+        from unittest.mock import patch
+        module = self.wrapper()
+        with tempfile.TemporaryDirectory() as tmp, patch.object(module, 'TOOL', Path(tmp)):
+            changes = ({'digest': 'sha256:bad'}, {'digest': 'sha256:' + 'g' * 64},
+                       {'digest': 'sha256:' + 'a' * 64}, {'image': 'tufin/oasdiff:v1.33.0'},
+                       {'image': 'attacker/oasdiff@sha256:' + 'a' * 64}, {'tag': 'tufin/oasdiff:latest'},
+                       {'digest': None}, {'image': None})
+            for change in changes:
+                doc = self.manifest()
+                doc['images']['tufin/oasdiff:v1.33.0'].update(change)
+                self.put(Path(tmp), json.dumps(doc))
+                with self.assertRaises(ValueError, msg=str(change)): module.tool_image()
+            for entry in (None, [], {}, 'floating'):
+                doc = self.manifest()
+                doc['images'] = {} if entry is None else {'tufin/oasdiff:v1.33.0': entry}
+                self.put(Path(tmp), json.dumps(doc))
+                with self.assertRaises(ValueError): module.tool_image()
+            doc = self.manifest()
+            doc['images']['tufin/oasdiff:v1.32.0'] = copy.deepcopy(doc['images']['tufin/oasdiff:v1.33.0'])
+            self.put(Path(tmp), json.dumps(doc))
+            with self.assertRaises(ValueError): module.tool_image()
+
+    def test_pin_manifest_symlink_cannot_redirect_to_candidate(self):
+        from unittest.mock import patch
+        module = self.wrapper()
+        with tempfile.TemporaryDirectory() as tmp:
+            tool, candidate = Path(tmp) / 'T', Path(tmp) / 'S'
+            path = self.put(candidate, json.dumps(self.manifest()))
+            (tool / 'release').mkdir(parents=True)
+            (tool / 'release/tool-pins.json').symlink_to(path)
+            with patch.object(module, 'TOOL', tool):
+                with self.assertRaises(ValueError): module.tool_image()
+
+    def test_pin_manifest_parser_origin_guard_precedes_import_and_manifest(self):
+        import types
+        from unittest.mock import patch
+        module = self.wrapper()
+        with patch.dict('os.environ', {'BC_REQUIRE_TOOL_PARSER': '1'}), \
+             patch('importlib.util.find_spec', return_value=types.SimpleNamespace(origin='/candidate/yaml/__init__.py')), \
+             patch.object(module, 'tool_image') as image, patch.object(module.subprocess, 'run') as process:
+            with self.assertRaisesRegex(ValueError, 'parser is outside approved T'):
+                module.run('/candidate', 'a' * 40, {'exit': 0, 'lines': {}})
+            image.assert_not_called()
+            process.assert_not_called()
+
+    def test_pin_manifest_real_consumer_argv_and_error_exit_without_docker(self):
+        import subprocess
+        import sys
+        from unittest.mock import patch
+        module = self.wrapper()
+        expected = self.manifest()['images']['tufin/oasdiff:v1.33.0']['image']
+        report = {'exit': 0, 'lines': {line: {'admission': 'compared', 'base': 'approved-base'} for line in module.SPECS}}
+        with patch.dict('os.environ', {'BC_REQUIRE_TOOL_PARSER': '0', 'BC_OASDIFF_BIN': ''}), \
+             patch.object(module, 'closure'), patch.object(module.subprocess, 'check_output', return_value='b' * 40), \
+             patch.object(module.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as process:
+            observed = module.run('/candidate', 'a' * 40, report)
+            self.assertEqual(0, observed['exit'])
+            self.assertEqual(2, process.call_count)
+            for call in process.call_args_list:
+                argv = call.args[0]
+                self.assertEqual(['docker', 'run', '--rm'], argv[:3])
+                self.assertEqual(expected, argv[5])
+        # Only run the wrapper's error path; a missing TOOL manifest must prevent any Docker/Git operation.
+        with tempfile.TemporaryDirectory() as tmp:
+            tool = Path(tmp) / 'T'
+            script = tool / 'scripts/release/Contract/openapi-check.py'
+            script.parent.mkdir(parents=True)
+            script.write_bytes((ROOT / 'scripts/release/Contract/openapi-check.py').read_bytes())
+            candidate = Path(tmp) / 'S'
+            self.put(candidate, json.dumps(self.manifest()))
+            report_path = Path(tmp) / 'report.json'
+            report_path.write_text(json.dumps(report))
+            result = subprocess.run([sys.executable, '-I', str(script), str(candidate), 'a' * 40, str(report_path)],
+                                    capture_output=True, text=True, env={'PATH': '/usr/bin:/bin'})
+            self.assertEqual(2, result.returncode)
+            error = json.loads(result.stdout)
+            self.assertEqual('not_checked', error['status'])
+            self.assertFalse(error['actual_runtime_qualification'])

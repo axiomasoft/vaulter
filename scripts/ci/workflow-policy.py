@@ -465,6 +465,97 @@ def check_publisher(name: str, doc: dict) -> list[str]:
     return errors
 
 
+def pinned_image(ref: object) -> bool:
+    return isinstance(ref, str) and re.fullmatch(r'[^\s@]+@sha256:[0-9a-f]{64}', ref) is not None
+
+
+def pin_commit(chain: list[dict]) -> str:
+    """Validate a resolver's complete annotated-tag chain, ending at a commit."""
+    if not chain or len(chain) > 9:
+        raise ValueError('missing/too deep tag chain')
+    origin = re.fullmatch(r'https://api.github.com/repos/([^/]+/[^/]+)/git/ref/tags/[^\s]+', chain[0].get('url', ''))
+    if origin is None:
+        raise ValueError('invalid primary ref URL')
+    prefix = 'https://api.github.com/repos/' + origin[1] + '/git/tags/'
+    for i, row in enumerate(chain):
+        obj = row.get('object', {})
+        if not re.fullmatch(r'[0-9a-f]{40}', str(obj.get('sha', ''))):
+            raise ValueError('invalid object SHA')
+        if obj.get('type') != ('commit' if i == len(chain) - 1 else 'tag'):
+            raise ValueError('tag chain must end at commit')
+        if i and row.get('url') != prefix + chain[i-1]['object']['sha']:
+            raise ValueError('disconnected tag chain')
+    return chain[-1]['object']['sha']
+
+
+def pushes_checkout(job: dict) -> bool:
+    # Only actions that actually commit/push need checkout's saved credential.
+    return any(str(step.get('uses', '')).startswith('changesets/action@')
+               for step in job.get('steps', []))
+
+
+def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
+    errors = []
+    top = doc.get('permissions')
+    if not isinstance(top, dict) or any(v != 'read' for v in top.values()):
+        errors.append(f'{name}: pin permissions must be explicit read/empty at workflow level')
+    def uses(ref):
+        if not isinstance(ref, str):
+            errors.append(f'{name}: pin invalid uses')
+        elif ref.startswith('./'):
+            if '..' in Path(ref).parts or '@' in ref:
+                errors.append(f'{name}: pin unsafe local uses')
+        elif ref.startswith('docker://'):
+            if not pinned_image(ref[9:]): errors.append(f'{name}: pin docker action digest required')
+        elif not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_./-]+)?@[0-9a-f]{40}', ref):
+            errors.append(f'{name}: pin full action commit required: {ref}')
+        elif text and not re.search(re.escape(ref) + r"['\"]?\s+# v[^\s]+", text):
+            errors.append(f'{name}: pin version comment required: {ref}')
+    for job_id, job in (doc.get('jobs') or {}).items():
+        if 'uses' in job: uses(job['uses'])
+        steps = job.get('steps') or []
+        refs = ' '.join(str(step.get('uses', '')) for step in steps)
+        # Narrow capability grants require their actual consuming action.
+        allowed = set()
+        if 'changesets/action@' in refs: allowed |= {'contents', 'pull-requests'}
+        if 'actions/deploy-pages@' in refs: allowed |= {'pages', 'id-token'}
+        if 'docker/build-push-action@' in refs: allowed |= {'packages'}
+        if 'actions/attest-build-provenance@' in refs: allowed |= {'attestations', 'id-token'}
+        if 'CodelyTV/pr-size-labeler@' in refs: allowed |= {'pull-requests'}
+        permissions = job.get('permissions', {})
+        if not isinstance(permissions, dict) or any(v not in ('read', 'none', 'write') or (v == 'write' and k not in allowed) for k,v in permissions.items()):
+            errors.append(f'{name}:{job_id}: pin unjustified write permissions')
+        containers = [job.get('container')] + list((job.get('services') or {}).values())
+        for container in containers:
+            if container is not None:
+                image = container.get('image') if isinstance(container, dict) else container
+                if not pinned_image(image): errors.append(f'{name}:{job_id}: pin container digest required')
+        for step in steps:
+            ref = str(step.get('uses', ''))
+            if ref: uses(ref)
+            if ref.startswith('actions/checkout@') and not pushes_checkout(job) and (step.get('with') or {}).get('persist-credentials') is not False:
+                errors.append(f'{name}:{job_id}: pin checkout persist-credentials must be false')
+            command = str(step.get('run', ''))
+            for image in re.findall(r'(?<![\w/])([\w.-]+/[\w./-]+:[\w.-]+(?:@sha256:[\w]+)?)', command):
+                if 'docker run' in command and not pinned_image(image):
+                    errors.append(f'{name}:{job_id}: pin docker run digest required')
+            if re.search(r'\bnpm\s+(?:install|i)\b', command):
+                errors.append(f'{name}:{job_id}: pin use npm ci with committed lock')
+    return errors
+
+
+def check_docker_pins(text: str) -> list[str]:
+    errors, stages = [], set()
+    for line in text.splitlines():
+        match = re.match(r'\s*FROM\s+(?:--platform=\S+\s+)?(\S+)(?:\s+AS\s+(\S+))?\s*$', line, re.I)
+        if not match: continue
+        ref, alias = match.groups()
+        if ref.lower() not in stages and ref != 'scratch' and not pinned_image(ref):
+            errors.append('Dockerfile: pin external FROM digest required: ' + ref)
+        if alias: stages.add(alias.lower())
+    return errors
+
+
 def check_dir(directory: Path) -> list[str]:
     errors: list[str] = []
     root = directory.resolve().parents[1]
@@ -483,6 +574,7 @@ def check_dir(directory: Path) -> list[str]:
             errors.append(f'{path.name}: unparsable ({exc})')
             continue
         errors += check_workflow(path.name, doc)
+        errors += check_pins(path.name, doc, path.read_text())
         if path.name == 'ci.yml':
             errors += check_ci(doc, root)
         elif path.name == 'weekly-full.yml':
@@ -491,6 +583,8 @@ def check_dir(directory: Path) -> list[str]:
             errors += check_split(doc)
         elif path.name in PUBLISHERS:
             errors += check_publisher(path.name, doc)
+    dockerfile = root / 'packages/collaboration/hub/Dockerfile'
+    if dockerfile.exists(): errors += check_docker_pins(dockerfile.read_text())
     return errors
 
 

@@ -35,7 +35,9 @@ jobs:
       db_matrix: ${{ steps.plan.outputs.db_matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Every lane, every package
         id: plan
@@ -51,7 +53,9 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.fast_matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
@@ -63,7 +67,7 @@ jobs:
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -132,7 +136,7 @@ jobs:
       DB_PASSWORD: secret
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
           POSTGRES_USER: vaulter
           POSTGRES_PASSWORD: secret
@@ -146,7 +150,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       mysql:
-        image: mysql:8.4
+        image: mysql:8.4@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7
         env:
           MYSQL_ROOT_PASSWORD: secret
           MYSQL_DATABASE: vaulter_test
@@ -160,7 +164,9 @@ jobs:
           --health-retries 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
@@ -172,7 +178,7 @@ jobs:
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_mysql, pdo_sqlite, sqlite3, pcntl, posix
@@ -198,10 +204,12 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.4 (pcov)
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -224,10 +232,12 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -235,7 +245,7 @@ jobs:
           tools: composer:v2
 
       - name: Setup Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
@@ -261,15 +271,17 @@ jobs:
         node: ['22', '24']  # the maintained LTS lines; Node 20 is end-of-life (2026-04-30)
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Generated API types are current
         run: npm run api:check --workspace @vaulter/vue
@@ -293,15 +305,17 @@ jobs:
         node: ['22', '24']  # engines.node >=22 (@hocuspocus/provider@4)
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build @vaulter/vue (peer)
         run: npm run build --workspace @vaulter/vue
@@ -321,10 +335,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
@@ -346,10 +362,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
@@ -357,7 +375,7 @@ jobs:
           tools: composer:v2
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
 
@@ -377,7 +395,7 @@ jobs:
           scripts/t sqlite -p repo --full
 
       - name: actionlint
-        run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7
+        run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
 
   full-gate:
     name: Full qualification gate

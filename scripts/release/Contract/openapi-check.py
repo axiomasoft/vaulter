@@ -13,10 +13,36 @@ from pathlib import Path
 TOOL = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(TOOL / 'vendor/python'))
 
-# Transitional pin until P7.1 supplies its manifest. Never read candidate tool configuration.
-IMAGE = 'tufin/oasdiff:v1.33.0'
 SPECS = {'php-public': 'openapi/vaulter-v1.yaml',
          'php-collaboration': 'packages/collaboration/openapi/hub.yaml'}
+
+
+def tool_image():
+    """Only the manifest inside the externally approved complete T inventory has authority."""
+    path = TOOL / 'release/tool-pins.json'
+    # The host already rejects symlinks in T. Keep direct invocations from following a
+    # manifest (or parent directory) redirected outside T, including into candidate S.
+    if path.is_symlink() or not path.resolve(strict=True).is_relative_to(TOOL.resolve()):
+        raise ValueError('tool pin manifest is outside approved T')
+    document = json.loads(path.read_text())
+    if not isinstance(document, dict) or type(document.get('schema_version')) is not int or document['schema_version'] != 1:
+        raise ValueError('invalid tool pin manifest schema')
+    images = document.get('images')
+    if not isinstance(images, dict):
+        raise ValueError('invalid tool pin manifest images')
+    entries = [(tag, entry) for tag, entry in images.items() if tag.startswith('tufin/oasdiff:')]
+    if len(entries) != 1:
+        raise ValueError('tool pin manifest must contain exactly one oasdiff image')
+    tag, entry = entries[0]
+    if not isinstance(entry, dict) or not re.fullmatch(r'tufin/oasdiff:v[0-9]+\.[0-9]+\.[0-9]+', tag) or entry.get('tag') != tag:
+        raise ValueError('invalid oasdiff tag in tool pin manifest')
+    digest = entry.get('digest')
+    if not isinstance(digest, str) or not re.fullmatch(r'sha256:[0-9a-f]{64}', digest):
+        raise ValueError('invalid oasdiff digest in tool pin manifest')
+    image = tag + '@' + digest
+    if entry.get('image') != image:
+        raise ValueError('oasdiff image/digest mismatch in tool pin manifest')
+    return image
 
 
 def blob(root, sha, path):
@@ -73,6 +99,7 @@ def run(root, candidate, report):
         raise ValueError('OpenAPI parser is outside approved T')
     global yaml
     import yaml
+    image = tool_image()
     rows = []
     code = report['exit']
     for line, spec in SPECS.items():
@@ -87,7 +114,7 @@ def run(root, candidate, report):
             closure(root, base, spec, d / 'base')
             closure(root, candidate, spec, d / 'candidate')
             binary = os.environ.get('BC_OASDIFF_BIN')
-            args = ([binary] if binary else ['docker', 'run', '--rm', '-v', tmp + ':/work:ro', IMAGE])
+            args = ([binary] if binary else ['docker', 'run', '--rm', '-v', tmp + ':/work:ro', image])
             prefix = tmp if binary else '/work'
             result = subprocess.run(args + ['breaking', prefix + '/base/' + spec, prefix + '/candidate/' + spec, '--fail-on', 'ERR'], capture_output=True)
             exit_code = result.returncode if result.returncode in (0, 1) else 2

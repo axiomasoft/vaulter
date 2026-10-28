@@ -106,10 +106,12 @@ jobs:
       matrix: ${{ steps.route.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Download the qualification evidence of this SHA
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-qualification
           path: release-evidence
@@ -145,9 +147,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      # The repository name comes from release/packages.json: the metapackage is axioma-studio/vaulter,
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       # not axioma-studio/vaulter-vaulter. A manifest or probe error fails the job instead of shipping.
       - name: Resolve the split repository of packages/${{ matrix.package }}
         id: plan
@@ -203,7 +205,7 @@ jobs:
 
       - name: Upload expected split commit
         if: steps.plan.outputs.excluded != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: expected-split-${{ matrix.package }}
           path: expected-splits/${{ matrix.package }}.json
@@ -217,10 +219,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Download expected split commits
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: expected-split-*
           path: expected-splits

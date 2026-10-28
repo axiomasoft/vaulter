@@ -9,7 +9,7 @@
 ARG NODE_VERSION=22-slim
 
 # ── deps: reproducible production install from the committed lockfile ────────────────
-FROM node:${NODE_VERSION} AS deps
+FROM node:${NODE_VERSION}@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 # --no-audit/--no-fund avoid the post-install network steps that can crash alpine's npm
@@ -17,7 +17,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
 # ── runtime: minimal, non-root ──────────────────────────────────────────────────────
-FROM node:${NODE_VERSION} AS runtime
+FROM node:${NODE_VERSION}@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d AS runtime
 WORKDIR /app
 
 # Secure default: the published image runs as production, so the hub demands an explicit
