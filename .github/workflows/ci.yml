@@ -794,10 +794,61 @@ jobs:
           test "${BC_HOST_PYTHON:0:1}" = /
           exec "$BC_HOST_PYTHON" -I "$BC_HOST_BOOTSTRAP"
 
+  sca:
+    name: Locked dependency advisory gate
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      # Empty [] grants no waivers and requires no approval. Nonempty exceptions require this protected approval digest.
+      AUDIT_SUPPRESSIONS_SHA256: ${{ vars.AUDIT_SUPPRESSIONS_SHA256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Resolve one Composer lock and capture provenance
+        run: |
+          mkdir -p var/plan4/P7.2
+          # Root lock is ignored: resolve once without scripts/plugins or installing archives.
+          composer update --no-install --no-scripts --no-plugins --no-interaction
+          sha256sum composer.lock package-lock.json > var/plan4/P7.2/input-locks.sha256
+          composer --version > var/plan4/P7.2/composer.version
+          npm --version > var/plan4/P7.2/npm.version
+          echo 'Composer locked including dev; npm runtime omit=dev high threshold; optional package matrices and build-dev pending P8.2' > var/plan4/P7.2/profile.txt
+      - name: Capture both raw advisory reports and statuses
+        run: |
+          set +e
+          composer audit --locked --format=json > var/plan4/P7.2/composer.json 2> var/plan4/P7.2/composer.stderr
+          vaulter_composer_exit=$?
+          printf '%s\n' "$vaulter_composer_exit" > var/plan4/P7.2/composer.exit
+          npm audit --omit=dev --audit-level=high --json > var/plan4/P7.2/npm.json 2> var/plan4/P7.2/npm.stderr
+          vaulter_npm_exit=$?
+          printf '%s\n' "$vaulter_npm_exit" > var/plan4/P7.2/npm.exit
+          # Acquisition statuses are data for the blocking gate, not a clean verdict.
+      - name: Reject incomplete reports and unapproved high or critical findings
+        run: |
+          python3 scripts/ci/audit-gate.py --composer-report=var/plan4/P7.2/composer.json --composer-exit="$(cat var/plan4/P7.2/composer.exit)" --npm-report=var/plan4/P7.2/npm.json --npm-exit="$(cat var/plan4/P7.2/npm.exit)" --suppressions=release/audit-suppressions.json --format=json
+      - name: Preserve advisory acquisition bundle
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dependency-advisory-reports
+          path: var/plan4/P7.2
+
   ci-gate:
     name: CI gate
     if: always()
-    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, vue-collaboration, hub, repo, openapi, contract-bc]
+    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, vue-collaboration, hub, repo, openapi, contract-bc, sca]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

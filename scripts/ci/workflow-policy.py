@@ -291,6 +291,7 @@ def check_ci(doc: dict, root: Path) -> list[str]:
         if 'changes' not in ([job['needs']] if isinstance(job.get('needs'), str) else (job.get('needs') or [])):
             errors.append(f'{name}: job {job_id} does not need `changes`')
     errors += check_contract_bc(jobs.get('contract-bc') or {})
+    errors += check_sca(jobs.get('sca') or {})
     for job_id, workspace, lane in (('vue', '@vaulter/vue', 'vue'), ('vue-collaboration', '@vaulter/vue-collaboration', 'vue_collaboration')):
         errors += check_npm_declaration_job(job_id, workspace, lane, jobs.get(job_id) or {})
     for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
@@ -298,6 +299,22 @@ def check_ci(doc: dict, root: Path) -> list[str]:
             errors.append(f'{name}: changes must expose {output} from the actual plan')
     errors += check_bc_release_policy(root)
     errors += check_support(name, doc, root)
+    return errors
+
+
+def check_sca(job: dict) -> list[str]:
+    errors = []
+    if not job or job.get('if') or job.get('continue-on-error') or job.get('permissions') != {'contents': 'read'}:
+        errors.append('ci.yml: sca must be unconditional and blocking with read-only permissions')
+    if (job.get('env') or {}).get('AUDIT_SUPPRESSIONS_SHA256') != '${{ vars.AUDIT_SUPPRESSIONS_SHA256 }}':
+        errors.append('ci.yml: sca suppression approval must come from protected external variable')
+    commands = '\n'.join(str(step.get('run','')) for step in job.get('steps', []))
+    for required in ('composer audit --locked --format=json', 'npm audit --omit=dev --audit-level=high --json', 'input-locks.sha256', 'composer.version', 'npm.version', 'composer.exit', 'npm.exit', 'composer.stderr', 'npm.stderr', 'scripts/ci/audit-gate.py', '--composer-exit=', '--npm-exit=', '--suppressions=release/audit-suppressions.json'):
+        if required not in commands: errors.append('ci.yml: sca missing ' + required)
+    for step in job.get('steps', []):
+        command = str(step.get('run',''))
+        if 'scripts/ci/audit-gate.py' in command and (step.get('if') or step.get('continue-on-error') or '||' in command):
+            errors.append('ci.yml: sca gate may not be bypassed')
     return errors
 
 
@@ -663,6 +680,8 @@ def gate_errors(needs: dict) -> list[str]:
     changes = needs.get('changes') or {}
     if changes.get('result') != 'success':
         return [f'changes: {changes.get("result", "missing")} (nothing can be trusted without it)']
+    if (needs.get('sca') or {}).get('result') != 'success':
+        errors.append('sca: required advisory gate is ' + (needs.get('sca') or {}).get('result', 'missing'))
     outputs = changes.get('outputs') or {}
     skip_reason = outputs.get('skip_reason', '')
     expected = {lane: outputs.get(f'has_{lane}') == 'true' for lane in LANES}

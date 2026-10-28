@@ -124,12 +124,13 @@ def ci_doc():
     jobs = {'changes': {'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}}
     for lane in lanes:
         jobs[lane] = {'needs': 'changes', 'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}
+    jobs['sca'] = copy.deepcopy(policy.load_workflow(ROOT / '.github/workflows/ci.yml')['jobs']['sca'])
     jobs['consumer-isolation'] = consumer_job()
     jobs['contract-bc'] = contract_job()
     jobs['vue'] = npm_job('@vaulter/vue', 'vue')
     jobs['vue-collaboration'] = npm_job('@vaulter/vue-collaboration', 'vue_collaboration')
     jobs['changes']['outputs'] = {output: '${{ steps.plan.outputs.' + output + ' }}' for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines')}
-    jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes,
+    jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes + ['sca'],
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
     return {
         'on': {'push': {'branches': ['main']}, 'pull_request': {'branches': ['main']}, 'workflow_dispatch': {}},
@@ -180,6 +181,7 @@ def needs(results, **outputs):
         base.setdefault(field, json.dumps(list(policy.REQUIRED_BC_LINES)))
     out = {job: {'result': result, 'outputs': {}} for job, result in results.items()}
     out.setdefault('contract-bc', {'result': 'success' if base['has_contract_bc'] == 'true' else 'skipped', 'outputs': {}})
+    out.setdefault('sca', {'result': 'success', 'outputs': {}})
     out['changes'] = {'result': results.get('changes', 'success'), 'outputs': base}
     return out
 
@@ -1078,3 +1080,24 @@ class TrustedManifestPinTest(unittest.TestCase):
             error = json.loads(result.stdout)
             self.assertEqual('not_checked', error['status'])
             self.assertFalse(error['actual_runtime_qualification'])
+
+
+class ScaWorkflowTest(unittest.TestCase):
+    def test_sca_required_even_for_docs_only_and_blocks_all_non_success(self):
+        for status in ('failure', 'cancelled', 'skipped', 'missing'):
+            doc = needs({'sca': status}, skip_reason='docs-only')
+            self.assertTrue(any('sca:' in e for e in policy.gate_errors(doc)))
+        skipped = {policy.lane_job(lane): 'skipped' for lane in policy.LANES}
+        self.assertEqual([], policy.gate_errors(needs(skipped, skip_reason='docs-only')))
+
+    def test_sca_approval_capture_and_gate_cannot_be_removed_or_bypassed(self):
+        actual = policy.load_workflow(ROOT / '.github/workflows/ci.yml')['jobs']['sca']
+        self.assertEqual([], policy.check_sca(actual))
+        for key,value in (('if','false'), ('continue-on-error',True), ('env',{})):
+            broken = copy.deepcopy(actual); broken[key] = value
+            self.assertTrue(policy.check_sca(broken))
+        for bypass in ({'if':'false'}, {'continue-on-error':True}):
+            broken = copy.deepcopy(actual)
+            for step in broken['steps']:
+                if 'scripts/ci/audit-gate.py' in str(step.get('run','')): step.update(bypass)
+            self.assertTrue(policy.check_sca(broken))
