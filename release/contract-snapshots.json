@@ -19,6 +19,16 @@
             "owners": [
                 "collaboration"
             ]
+        },
+        "npm-vue": {
+            "owners": [
+                "vue"
+            ]
+        },
+        "npm-vue-collaboration": {
+            "owners": [
+                "vue-collaboration"
+            ]
         }
     },
     "surfaces": [
@@ -229,6 +239,34 @@
             "required": true,
             "status": "pending",
             "coverage": "DDL by preset+table+column, named index/constraint, foreign key by binding; stale after schema edits until the P8.2 server run regenerates it; never taken for the current schema."
+        },
+        {
+            "id": "npm:vue",
+            "adapter": "npm-surface",
+            "schema_version": 1,
+            "owner": "vue",
+            "release_line": "npm-vue",
+            "inputs": [
+                "packages/vue/etc/index.api.md",
+                "packages/vue/etc/components.surface.txt"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "API Extractor report per exported entrypoint plus the props/emits of exported .vue components (declaration-only); types only, no runtime, ESM/CJS, tgz or Vue behavior (P8.2)."
+        },
+        {
+            "id": "npm:vue-collaboration",
+            "adapter": "npm-surface",
+            "schema_version": 1,
+            "owner": "vue-collaboration",
+            "release_line": "npm-vue-collaboration",
+            "inputs": [
+                "packages/vue-collaboration/etc/index.api.md",
+                "packages/vue-collaboration/etc/components.surface.txt"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "API Extractor report per exported entrypoint plus the props/emits of exported .vue components (declaration-only); types only, no runtime, ESM/CJS, tgz or Vue behavior (P8.2)."
         }
     ]
 }

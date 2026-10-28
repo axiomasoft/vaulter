@@ -42,6 +42,13 @@ final class ReleaseCheck
                 throw new ContractError('the candidate manifest is missing');
             }
             $headManifest = SnapshotManifest::parse($headManifestJson);
+            $manifestLines = array_keys($headManifest['release_lines']);
+            $policyLines = array_keys($policy['lines']);
+            sort($manifestLines, SORT_STRING);
+            sort($policyLines, SORT_STRING);
+            if ($manifestLines !== $policyLines) {
+                throw new ContractError('the release lines of the candidate manifest ('.implode(', ', $manifestLines).') differ from the trusted policy ('.implode(', ', $policyLines).')');
+            }
             $lines = [];
             $changes = [];
             foreach ($policy['lines'] as $line => $def) {
@@ -98,20 +105,37 @@ final class ReleaseCheck
     private static function compare(string $line, array $base, array $head, SourceReader $baseReader, SourceReader $headReader): array
     {
         $changes = [];
-        $sides = ['base' => [$baseReader, []], 'head' => [$headReader, []]];
         $surfaces = SnapshotManifest::union($base, $head);
+        $current = array_filter($surfaces, static fn (array $s): bool => $s['status'] === 'current');
+        // The PHP graph is loaded from EVERY current php-surface of EVERY line before the per-line filter: a root of one line
+        // may extend a class of another (collaboration → core), and an ancestor outside the line is resolved, not unresolved.
         $php = ['base' => [], 'head' => []];
-        $own = array_filter($surfaces, static fn (array $s): bool => ($s['release_line'] === $line || $s['release_line'] === '*') && $s['status'] === 'current');
-        foreach ($own as $id => $surface) {
-            $files = ['base' => SnapshotManifest::collect($surface, $baseReader), 'head' => SnapshotManifest::collect($surface, $headReader)];
+        $declared = [];
+        foreach ($current as $id => $surface) {
             if ($surface['adapter'] === 'php-surface') {
+                $files = ['base' => SnapshotManifest::collect($surface, $baseReader), 'head' => SnapshotManifest::collect($surface, $headReader)];
                 $php['base'] += $files['base'];
                 $php['head'] += $files['head'];
+                $declared[$id] = $files['base'] + $files['head'];
+            }
+        }
+        $before = $php['base'] === [] ? [] : PhpSurface::load($php['base']);
+        $after = $php['head'] === [] ? [] : PhpSurface::load($php['head']);
+        $own = array_filter($current, static fn (array $s): bool => $s['release_line'] === $line || $s['release_line'] === '*');
+        foreach ($own as $id => $surface) {
+            if ($surface['adapter'] === 'php-surface') {
+                $changes = [...$changes, ...PhpSurface::compare($id, $before, $after, PhpSurface::declared($declared[$id]))];
 
                 continue;
             }
+            $files = ['base' => SnapshotManifest::collect($surface, $baseReader), 'head' => SnapshotManifest::collect($surface, $headReader)];
             if (array_keys($files['base']) !== array_keys($files['head'])) {
                 throw new ContractError("surface {$id}: the set of snapshot files changed between base and head");
+            }
+            if ($surface['adapter'] === 'npm-surface') {
+                $changes = [...$changes, ...self::npm($id, $files['base'], $files['head'])];
+
+                continue;
             }
             foreach ($files['head'] as $path => $json) {
                 $changes = [...$changes, ...($surface['adapter'] === 'identities'
@@ -119,18 +143,32 @@ final class ReleaseCheck
                     : SchemaDdl::compare($id, SchemaDdl::load($files['base'][$path], $path), SchemaDdl::load($json, $path)))];
             }
         }
-        unset($sides);
-        if ($php['head'] !== [] || $php['base'] !== []) {
-            $before = PhpSurface::load($php['base']);
-            $after = PhpSurface::load($php['head']);
-            foreach ($own as $id => $surface) {
-                if ($surface['adapter'] === 'php-surface') {
-                    $changes = [...$changes, ...PhpSurface::compare($id, $before, $after, PhpSurface::declared(SnapshotManifest::collect($surface, $baseReader) + SnapshotManifest::collect($surface, $headReader)))];
-                }
-            }
-        }
 
         return Change::sorted($changes);
+    }
+
+    /**
+     * An npm surface: one API Extractor report per exported entrypoint plus exactly one components.surface.txt (the props/emits
+     * of the .vue components, which the reports do not carry). Any other shape is an error, never an empty comparison.
+     *
+     * @param  array<string, string> $base path => bytes
+     * @param  array<string, string> $head path => bytes
+     * @return list<ChangeRow>
+     */
+    private static function npm(string $id, array $base, array $head): array
+    {
+        $reports = array_values(array_filter(array_keys($head), static fn (string $p): bool => str_ends_with($p, '.api.md')));
+        $components = array_values(array_filter(array_keys($head), static fn (string $p): bool => basename($p) === 'components.surface.txt'));
+        if ($reports === [] || count($components) !== 1 || count($reports) + 1 !== count($head)) {
+            throw new ContractError("surface {$id}: an npm surface needs API reports (*.api.md) and exactly one components.surface.txt");
+        }
+        $changes = [];
+        foreach ($reports as $i => $path) {
+            $load = static fn (array $files): array => NpmSurface::load($files[$path], $i === 0 ? $files[$components[0]] : '', $path);
+            $changes = [...$changes, ...NpmSurface::compare($id, $load($base), $load($head))];
+        }
+
+        return $changes;
     }
 
     /** @param array<string, mixed> $manifest */
