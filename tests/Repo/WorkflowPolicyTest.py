@@ -565,8 +565,15 @@ class SingleCiTest(unittest.TestCase):
         doc = policy.load_workflow(workflows / 'collaboration-hub-image.yml')
         self.assertEqual(['collaboration-hub-v*'], doc['on']['push']['tags'])
         self.assertTrue(doc['env']['IMAGE_NAME'].endswith('/vaulter-collaboration-hub'))
+        smoke = doc['jobs']['smoke']
+        self.assertEqual("github.event_name == 'workflow_dispatch'", smoke['if'])
+        build = next(s for s in smoke['steps'] if 'docker/build-push-action@' in s.get('uses', ''))
+        self.assertEqual('./packages/collaboration/hub', build['with']['context'])
+        self.assertIs(False, build['with']['push'])
+        self.assertEqual({'contents': 'read'}, smoke['permissions'])
         steps = doc['jobs']['image']['steps']
-        self.assertIn('./packages/collaboration/hub', [(s.get('with') or {}).get('context') for s in steps])
+        self.assertFalse(any('build-push-action' in s.get('uses', '') for s in steps))
+        self.assertTrue(any('imagetools create' in s.get('run', '') and '@${DIGEST}' in s['run'] for s in steps))
         manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
         self.assertEqual(['ghcr.io/axiomasoft/vaulter-collaboration-hub'], [i['name'] for i in manifest['images']])
         self.assertEqual(('private', 'collaboration-hub-v'), (manifest['images'][0]['channel'], manifest['images'][0]['tag_prefix']))
@@ -1351,3 +1358,53 @@ class ScaWorkflowTest(unittest.TestCase):
             result = self.run_artifact_gate('npm', '--tgz', str(odd), '--approval', str(approval), '--source-sha', self.SOURCE, '--channel', 'private', '--visibility', 'private', '--emit-verified', str(Path(tmp) / 'v2.txt'), pin=pin)
             self.assertEqual(1, result.returncode)
             self.assertIn('control characters', result.stderr)
+
+
+class OciPromotionPermissionTest(unittest.TestCase):
+    def doc(self):
+        return policy.load_workflow(ROOT / '.github/workflows/collaboration-hub-image.yml')
+
+    def permission_errors(self, doc):
+        return [e for e in policy.check_pins('collaboration-hub-image.yml', doc)
+                if 'unjustified write permissions' in e]
+
+    def test_authenticated_same_digest_publisher_has_required_registry_permission(self):
+        doc = self.doc()
+        self.assertEqual('write', doc['jobs']['image']['permissions']['packages'])
+        self.assertTrue(policy.authenticated_oci_promotion('collaboration-hub-image.yml', doc, 'image'))
+        self.assertEqual([], self.permission_errors(doc))
+
+    def test_permission_requires_authentication_order_route_digest_and_no_rebuild(self):
+        def gate(d):
+            return next(s for s in d['jobs']['image']['steps'] if 'artifact-gate.py oci' in s.get('run', ''))
+
+        def promote(d):
+            return next(s for s in d['jobs']['image']['steps'] if 'imagetools create' in s.get('run', ''))
+
+        mutations = {
+            'fork candidate event': lambda d: d['on'].update(pull_request={}),
+            'unqualified publisher': lambda d: d['jobs']['image'].pop('if'),
+            'missing route dependency': lambda d: d['jobs']['image'].pop('needs'),
+            'unprotected approval hash': lambda d: gate(d)['env'].update(VAULTER_ARTIFACT_APPROVAL_SHA256='candidate'),
+            'compare only': lambda d: gate(d).update(run=gate(d)['run'].replace('--approval', '--expect-approval')),
+            'gate may skip': lambda d: gate(d).update({'if': 'false'}),
+            'gate may fail': lambda d: gate(d).update({'continue-on-error': True}),
+            'tag replaces digest': lambda d: promote(d).update(run=promote(d)['run'].replace('@${DIGEST}', ':latest')),
+            'different digest output': lambda d: promote(d)['env'].update(DIGEST='sha256:' + 'a' * 64),
+            'rebuild in publisher': lambda d: d['jobs']['image']['steps'].append({'run': 'docker build .'}),
+            'login precedes approval': lambda d: d['jobs']['image']['steps'].insert(0, {'uses': 'docker/login-action@' + 'a' * 40}),
+            'unconditional attestation': lambda d: [s.pop('if', None) for s in d['jobs']['image']['steps'] if 'attest-build-provenance' in s.get('uses', '')],
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                doc = self.doc()
+                mutate(doc)
+                self.assertTrue(self.permission_errors(doc), label)
+
+    def test_route_smoke_preparer_and_candidate_jobs_cannot_gain_publisher_writes(self):
+        for job in ('route', 'smoke', 'prepare', 'candidate'):
+            for permission in ('packages', 'id-token', 'contents', 'attestations'):
+                with self.subTest(job=job, permission=permission):
+                    doc = self.doc()
+                    doc['jobs'].setdefault(job, {'steps': []}).setdefault('permissions', {})[permission] = 'write'
+                    self.assertTrue(self.permission_errors(doc))

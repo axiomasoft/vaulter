@@ -6,3 +6,8 @@
 /rector.php export-ignore
 /vendor export-ignore
 /.gitattributes export-ignore
+/composer.lock export-ignore
+/node_modules export-ignore
+/.agents export-ignore
+/.env* export-ignore
+*.cache export-ignore

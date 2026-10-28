@@ -1209,5 +1209,44 @@ class VerifySplitTagsV2Test(VerifySplitTagsTest):
 
 
 
+class DockerfileCheckTest(unittest.TestCase):
+    def check(self, text):
+        with tempfile.TemporaryDirectory(prefix="dockerfile-fixture-") as directory:
+            path = Path(directory) / "Dockerfile"
+            path.write_text(text)
+            return subprocess.run(["python3", str(RELEASE / "dockerfile-check.py"), str(path)],
+                                  capture_output=True, text=True)
+
+    def valid(self):
+        return "FROM node@sha256:" + "a" * 64 + " AS deps\nFROM node@sha256:" + "b" * 64 + "\nUSER node\nHEALTHCHECK CMD node probe.js\n"
+
+    def test_pinned_nonroot_runtime_with_healthcheck_passes(self):
+        self.assertEqual(self.check(self.valid()).returncode, 0)
+
+    def test_every_build_stage_must_pin_digest(self):
+        self.assertNotEqual(self.check(self.valid().replace("node@sha256:" + "a" * 64, "node:22")).returncode, 0)
+
+    def test_final_user_must_be_nonroot(self):
+        for user in ("root", "0", "0:1000", "${USER}"):
+            with self.subTest(user=user):
+                self.assertNotEqual(self.check(self.valid().replace("USER node", "USER " + user)).returncode, 0)
+        self.assertNotEqual(self.check(self.valid() + "USER root\n").returncode, 0)
+
+    def test_runtime_healthcheck_cannot_be_missing_disabled_or_only_in_builder(self):
+        for text in (self.valid().replace("HEALTHCHECK CMD node probe.js", ""),
+                     self.valid() + "HEALTHCHECK NONE\n",
+                     self.valid() + "FROM node@sha256:" + "c" * 64 + "\nUSER node\n"):
+            self.assertNotEqual(self.check(text).returncode, 0)
+
+    def test_remote_add_shell_json_flags_and_build_stage_are_rejected(self):
+        for add in ('ADD https://example.test/a /a', 'ADD ["http://example.test/a", "/a"]',
+                    'ADD --checksum=sha256:abc https://example.test/a /a',
+                    'ADD git@github.com:owner/repo.git /src'):
+            self.assertNotEqual(self.check(self.valid() + add + "\n").returncode, 0)
+
+    def test_local_copy_and_add_do_not_trigger_remote_rule(self):
+        self.assertEqual(self.check(self.valid() + "ADD ./asset /app/asset\n").returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

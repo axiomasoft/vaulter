@@ -57,7 +57,8 @@ class ReleaseGateTest(unittest.TestCase):
         self.assertEqual(permissions, {"contents": "read", "checks": "read"})
         # verify-release-sha gates route, route (routing + qualification) gates split
         self.assertEqual(self.release["jobs"]["route"]["needs"], "verify-release-sha")
-        self.assertEqual(self.release["jobs"]["split"]["needs"], "route")
+        self.assertEqual(self.release["jobs"]["prepare"]["needs"], "route")
+        self.assertEqual(self.release["jobs"]["split"]["needs"], ["route", "prepare"])
 
     def test_shell_syntax(self):
         result = subprocess.run(["bash", "-n"], input=self.script, text=True, capture_output=True)
@@ -178,7 +179,8 @@ class RouteGateTest(unittest.TestCase):
 
     def test_route_runs_between_the_same_sha_gate_and_the_split(self):
         self.assertEqual(self.route["needs"], "verify-release-sha")
-        self.assertEqual(self.release["jobs"]["split"]["needs"], "route")
+        self.assertEqual(self.release["jobs"]["prepare"]["needs"], "route")
+        self.assertEqual(self.release["jobs"]["split"]["needs"], ["route", "prepare"])
         self.assertNotIn("GH_ACCESS_TOKEN", yaml.safe_dump(self.route))
 
     def test_qualified_public_tag_outputs_the_dynamic_matrix(self):

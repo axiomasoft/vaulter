@@ -686,6 +686,58 @@ def pushes_checkout(job: dict) -> bool:
                for step in job.get('steps', []))
 
 
+def authenticated_oci_promotion(name: str, doc: dict, job_id: str) -> bool:
+    """A structural permission justification, never proof that owner A or protected variables exist at runtime."""
+    if name != 'collaboration-hub-image.yml' or job_id != 'image':
+        return False
+    events = doc.get('on') or {}
+    if not isinstance(events, dict) or set(events) - {'push', 'workflow_dispatch'}:
+        return False
+    if (events.get('push') or {}).get('tags') != ['collaboration-hub-v*']:
+        return False
+    jobs = doc.get('jobs') or {}
+    route, image = jobs.get('route') or {}, jobs.get(job_id) or {}
+    if _needs(image) != ['route'] or image.get('if') != "needs.route.outputs.qualified == 'true'":
+        return False
+    if route.get('if') != "github.event_name != 'workflow_dispatch'":
+        return False
+    route_permissions = route.get('permissions') or doc.get('permissions') or {}
+    if any(v == 'write' or k == 'id-token' for k, v in route_permissions.items()):
+        return False
+    if 'secrets.' in json.dumps(route) or 'route-release.php' not in _runs(route):
+        return False
+    if check_route_before_credentials(name, doc, 'image', 'route', ('docker/login-action',)) or check_artifacts(name, doc):
+        return False
+    steps = image.get('steps') or []
+    gate = next((i for i, s in enumerate(steps) if 'artifact-gate.py oci' in str(s.get('run', ''))), None)
+    if gate is None:
+        return False
+    verify = steps[gate]
+    if verify.get('if') or verify.get('continue-on-error') or image.get('continue-on-error'):
+        return False
+    run = str(verify.get('run', ''))
+    required = ('--approval', '--source-sha', '--digest', '--platforms', '--sbom-sha256',
+                '--policy-sha256', '--tool-sha256', '--channel', '--visibility')
+    if not verify.get('id') or any(option not in run for option in required):
+        return False
+    if '||' in run or 'continue-on-error' in run or '"${GITHUB_SHA}"' not in run:
+        return False
+    digest_output = '${{ steps.' + verify['id'] + '.outputs.digest }}'
+    promotions = [s for s in steps if 'imagetools create' in str(s.get('run', ''))]
+    if len(promotions) != 1:
+        return False
+    promotion = promotions[0]
+    if steps.index(promotion) <= gate or (promotion.get('env') or {}).get('DIGEST') != digest_output:
+        return False
+    if '"${REGISTRY}/${IMAGE_NAME}@${DIGEST}"' not in str(promotion.get('run', '')):
+        return False
+    for step in steps:
+        if 'attest-build-provenance' in str(step.get('uses', '')):
+            if step.get('if') != "vars.VAULTER_ATTESTATIONS == 'true'" or (step.get('with') or {}).get('subject-digest') != digest_output:
+                return False
+    return True
+
+
 def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
     errors = []
     top = doc.get('permissions')
@@ -714,6 +766,14 @@ def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
         if 'docker/build-push-action@' in refs: allowed |= {'packages'}
         if 'actions/attest-build-provenance@' in refs: allowed |= {'attestations', 'id-token'}
         if 'CodelyTV/pr-size-labeler@' in refs: allowed |= {'pull-requests'}
+        if name == 'collaboration-hub-image.yml':
+            # Build-only smoke, route, prepare and arbitrary jobs acquire no publisher capabilities.
+            # The publisher needs the complete authenticated, non-rebuilding same-digest flow.
+            allowed = set()
+            if authenticated_oci_promotion(name, doc, job_id):
+                allowed.add('packages')
+                if 'actions/attest-build-provenance@' in refs:
+                    allowed |= {'attestations', 'id-token'}
         permissions = job.get('permissions', {})
         if not isinstance(permissions, dict) or any(v not in ('read', 'none', 'write') or (v == 'write' and k not in allowed) for k,v in permissions.items()):
             errors.append(f'{name}:{job_id}: pin unjustified write permissions')
