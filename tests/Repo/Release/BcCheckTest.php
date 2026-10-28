@@ -8,6 +8,9 @@ use Vaulter\Release\Contract\Change;
 use Vaulter\Release\Contract\ContractError;
 use Vaulter\Release\Contract\Identities;
 use Vaulter\Release\Contract\NpmSurface;
+use Vaulter\Release\Contract\ReleaseBases;
+use Vaulter\Release\Contract\ReleaseCheck;
+use Vaulter\Release\Contract\TrustPolicy;
 use Vaulter\Release\Contract\PhpSurface;
 use Vaulter\Release\Contract\SchemaDdl;
 use Vaulter\Release\Contract\SnapshotManifest;
@@ -540,4 +543,178 @@ it('npm: a file that is no API Extractor report, an empty report or an unreadabl
         ->and(bc_exit(static fn (): array => NpmSurface::load("## API Report File for \"x\"\n", $f['components'], 'b')))->toBe(2)
         ->and(bc_exit(static fn (): array => NpmSurface::load($f['report'], "VaulterBreadcrumb garbage\n", 'c')))->toBe(2)
         ->and(Change::exitOf(static fn (): array => NpmSurface::compare('npm:vue', NpmSurface::load($f['report'], "x\n", 'd'), NpmSurface::load($f['report'], $f['components'], 'e'))))->toBe(2);
+});
+
+// --- Release bases, trust and exceptions (D14/D18, PLAN4 P6.2/U3; bc-bases, release-identity; cases 9-10) -----------------------
+// Temporary git repositories only: no network, no fetch, no tag or checkout of the real repository.
+
+function bc_git(string $dir, array $args): string
+{
+    $process = proc_open(['git', '-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', '-c', 'tag.gpgsign=false', '-c', 'init.defaultBranch=main', '-C', $dir, ...$args], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    $out = (string) stream_get_contents($pipes[1]);
+    stream_get_contents($pipes[2]);
+    proc_close($process);
+
+    return trim($out);
+}
+
+/**
+ * main = A → B → C. Public v1.9.0=A, v1.10.0=B, annotated v1.11.0=C, v1.99.0=C, prerelease v1.12.0-rc.1=C; private collaboration-v2.0.0=A.
+ * C removes Port::read, which A and B have.
+ *
+ * @return array{dir: string, A: string, B: string, C: string}
+ */
+function bc_release_repo(bool $removeInC = true): array
+{
+    $dir = bc_scratch([]);
+    bc_git($dir, ['init', '-q']);
+    $commit = static function (string $code) use ($dir): string {
+        $files = ['packages/core/surface.json' => Surface::structures(Surface::fromSources(bc_src($code)))['core'], SnapshotManifest::PATH => bc_manifest(), 'release/bc-exceptions.json' => bc_exceptions_json()];
+        foreach ($files as $path => $bytes) {
+            @mkdir(dirname("{$dir}/{$path}"), 0777, true);
+            file_put_contents("{$dir}/{$path}", $bytes);
+        }
+        bc_git($dir, ['add', '-A']);
+        bc_git($dir, ['commit', '-q', '--allow-empty', '-m', 'c'.bin2hex(random_bytes(3))]);
+
+        return bc_git($dir, ['rev-parse', 'HEAD']);
+    };
+    $with = '#[Api] final class Port { public function read(): void {} }';
+    $a = $commit($with);
+    $b = $commit($with.' ');
+    $c = $commit($removeInC ? '#[Api] final class Port {}' : $with);
+    foreach ([['v1.9.0', $a], ['v1.10.0', $b], ['v1.99.0', $c], ['v1.12.0-rc.1', $c], ['collaboration-v2.0.0', $a]] as [$tag, $sha]) {
+        bc_git($dir, ['tag', $tag, $sha]);
+    }
+    bc_git($dir, ['tag', '-a', 'v1.11.0', '-m', 'release', $c]);
+    bc_git($dir, ['tag', 'v1.0.0-tree', bc_git($dir, ['rev-parse', 'HEAD^{tree}'])]);
+
+    return ['dir' => $dir, 'A' => $a, 'B' => $b, 'C' => $c];
+}
+
+function bc_exceptions_json(array $exceptions = []): string
+{
+    return json_encode(['format' => 'vaulter.bc-exceptions', 'version' => 1, 'exceptions' => $exceptions], JSON_THROW_ON_ERROR);
+}
+
+/** @param list<array<string, mixed>> $known @param list<array<string, mixed>> $approvals */
+function bc_policy(array $known = [], array $approvals = [], array $lines = ['php-public' => ['prefix' => 'v', 'major' => 1]]): array
+{
+    return TrustPolicy::parse(json_encode(['format' => 'vaulter.bc-trust-policy', 'version' => 1, 'lines' => $lines, 'known_releases' => $known, 'decisions' => ['PLAN4-D18'], 'approvals' => $approvals], JSON_THROW_ON_ERROR));
+}
+
+const BC_T = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+
+it('release line base: the candidate is excluded under any tag alias, prerelease and tree tags are no base, and SemVer order beats string order (bc-bases)', function (): void {
+    $r = bc_release_repo();
+    $base = static fn (string $candidate, string $prefix = 'v', int $major = 1, array $known = []): ?string => ReleaseBases::resolve($r['dir'], $candidate, $prefix, $major, $known)['tag'] ?? null;
+
+    expect($base($r['C']))->toBe('v1.10.0')
+        ->and($base($r['B']))->toBe('v1.9.0')
+        ->and($base($r['A']))->toBeNull()
+        ->and($base($r['C'], 'collaboration-v', 2))->toBe('collaboration-v2.0.0')
+        ->and(ReleaseBases::semver('1.2.3-rc.1+b.5'))->toBe(['major' => 1, 'minor' => 2, 'patch' => 3, 'pre' => 'rc.1', 'build' => 'b.5'])
+        ->and(ReleaseBases::semver('1.2'))->toBeNull()
+        ->and(ReleaseBases::semver('01.2.3'))->toBeNull();
+});
+
+it('release line base: build-metadata ties, a deleted known tag, a shallow clone and a non-commit candidate are exit 2 (bc-bases, missing tag)', function (): void {
+    $r = bc_release_repo();
+    $known = [['line' => 'php-public', 'tag' => 'v1.10.0', 'sha' => $r['B']]];
+    $resolve = static fn (string $dir, array $known = []): mixed => ReleaseBases::resolve($dir, $r['C'], 'v', 1, $known);
+    expect($resolve($r['dir'], $known)['tag'])->toBe('v1.10.0');
+
+    bc_git($r['dir'], ['tag', 'v1.10.0+build.2', $r['B']]);
+    expect(bc_exit(static fn (): mixed => $resolve($r['dir'])))->toBe(2);
+    bc_git($r['dir'], ['tag', '-d', 'v1.10.0+build.2']);
+    bc_git($r['dir'], ['tag', '-d', 'v1.10.0']);
+    expect(bc_exit(static fn (): mixed => $resolve($r['dir'])))->toBe(0)
+        ->and(bc_exit(static fn (): mixed => $resolve($r['dir'], $known)))->toBe(2)
+        ->and(bc_exit(static fn (): mixed => ReleaseBases::resolve($r['dir'], bc_git($r['dir'], ['rev-parse', 'HEAD^{tree}']), 'v', 1, [])))->toBe(2);
+
+    $shallow = bc_scratch([]);
+    bc_git($shallow, ['clone', '-q', '--depth=1', 'file://'.$r['dir'], '.']);
+    expect(bc_exit(static fn (): mixed => ReleaseBases::resolve($shallow, bc_git($shallow, ['rev-parse', 'HEAD']), 'v', 1, [])))->toBe(2);
+});
+
+it('release line base: a removed Port::read between the release base and the candidate is a BREAK on its line; a corrupt seed or manifest is exit 2 (cases 9-10)', function (): void {
+    $r = bc_release_repo();
+    $run = static fn (array $policy, ?string $exceptions = null, ?string $candidate = null): array => ReleaseCheck::run($r['dir'], $candidate ?? $r['C'], BC_T, $policy, $exceptions ?? bc_exceptions_json(), 'tool', '2026-10-28');
+
+    $result = $run(bc_policy());
+    expect($result['exit'])->toBe(1)
+        ->and($result['lines']['php-public'])->toBe(['admission' => 'compared', 'base' => 'v1.10.0'])
+        ->and(array_map(static fn (array $c): string => "{$c['classification']} {$c['subject']} {$c['rule']} {$c['release_line']}", $result['changes']))->toBe(['BREAK Vaulter\Port::read() member-removed php-public'])
+        ->and($run(bc_policy(), null, $r['B'])['exit'])->toBe(0)
+        ->and($run(bc_policy(), '{"corrupt'))->toHaveKey('exit', 2)
+        ->and($run(bc_policy())['exit'])->toBe(1);
+
+    $broken = bc_release_repo(false);
+    file_put_contents($broken['dir'].'/release/contract-snapshots.json', '{"corrupt');
+    bc_git($broken['dir'], ['commit', '-qam', 'break manifest']);
+    expect(ReleaseCheck::run($broken['dir'], bc_git($broken['dir'], ['rev-parse', 'HEAD']), BC_T, bc_policy(), bc_exceptions_json(), 'tool', '2026-10-28')['exit'])->toBe(2);
+});
+
+it('trust: no predecessor is initial_bootstrap and never a BC pass, only an external exact approved_initial_release admits it, and a missing known tag is not masked (release-identity)', function (): void {
+    $r = bc_release_repo(false);
+    $run = static fn (array $policy, string $candidate): array => ReleaseCheck::run($r['dir'], $candidate, BC_T, $policy, bc_exceptions_json(), 'tool', '2026-10-28');
+    $approval = static fn (string $sha): array => ['kind' => 'initial_release', 'candidate_sha' => $sha, 'policy_digest' => TrustPolicy::digest(bc_policy()), 'line' => 'php-public'];
+
+    expect($run(bc_policy(), $r['A']))->toMatchArray(['exit' => 1, 'lines' => ['php-public' => ['admission' => 'initial_bootstrap', 'base' => null]]])
+        ->and($run(bc_policy([], [$approval($r['A'])]), $r['A'])['lines']['php-public']['admission'])->toBe('approved_initial_release')
+        ->and($run(bc_policy([], [$approval($r['A'])]), $r['A'])['exit'])->toBe(0)
+        ->and($run(bc_policy([], [$approval($r['B'])]), $r['A'])['exit'])->toBe(1)
+        ->and($run(bc_policy([['line' => 'php-public', 'tag' => 'v0.9.0', 'sha' => $r['A']]], [$approval($r['A'])]), $r['A'])['exit'])->toBe(2);
+});
+
+it('trust: a policy revision equal to the candidate and candidate-edited exceptions are self-authorizing and exit 2; a malformed policy is rejected (D18)', function (): void {
+    $r = bc_release_repo();
+    $exception = ['surface' => 'php:core', 'subject' => 'Vaulter\Port::read()', 'rule' => 'member-removed', 'classification' => 'BREAK', 'release_line' => 'php-public', 'before_hash' => null, 'after_hash' => null, 'decision' => 'PLAN4-D18', 'reason' => 'x', 'expiry' => '2030-01-01'];
+    $self = ReleaseCheck::run($r['dir'], $r['C'], $r['C'], bc_policy(), bc_exceptions_json(), 'tool', '2026-10-28');
+    $edited = ReleaseCheck::run($r['dir'], $r['C'], BC_T, bc_policy(), bc_exceptions_json([$exception]), 'tool', '2026-10-28');
+
+    expect($self['exit'])->toBe(2)
+        ->and($self['changes'][0]['error'])->toContain('self-authorizing')
+        ->and($edited['exit'])->toBe(2)
+        ->and($edited['changes'][0]['error'])->toContain('self-authorizing')
+        ->and(bc_exit(static fn (): array => TrustPolicy::parse('{"format":"x"}')))->toBe(2)
+        ->and(bc_exit(static fn (): array => TrustPolicy::parse('not json')))->toBe(2);
+});
+
+it('exception: only an exact, unexpired exception bound by an external approval to the exact candidate, policy, exceptions and tool digests suppresses a change (release-identity waiver)', function (): void {
+    $change = Change::make('php:core', 'Vaulter\Port::read()', 'member-removed', Change::BREAK, 'b', null, 'x') + ['release_line' => 'php-public'];
+    $exception = ['surface' => 'php:core', 'subject' => 'Vaulter\Port::read()', 'rule' => 'member-removed', 'classification' => 'BREAK', 'release_line' => 'php-public', 'before_hash' => $change['before_hash'], 'after_hash' => null, 'decision' => 'PLAN4-D18', 'reason' => 'approved', 'expiry' => '2026-12-31'];
+    $json = bc_exceptions_json([$exception]);
+    $policy = bc_policy();
+    $digests = ['candidate_sha' => str_repeat('c', 40), 'policy_digest' => TrustPolicy::digest($policy), 'exceptions_digest' => hash('sha256', $json), 'tool_digest' => 'tool'];
+    $withApproval = static fn (array $d): array => bc_policy([], [['kind' => 'exceptions'] + $d]);
+    $apply = static fn (array $e, array $p, array $d, string $today = '2026-10-28', ?array $c = null): int => count(TrustPolicy::apply([$c ?? $change], $e, $p, $d, $today)['remaining']);
+
+    expect($apply([$exception], $withApproval($digests), $digests))->toBe(0)
+        ->and($apply([$exception], $policy, $digests))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), $digests, '2027-01-01'))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), ['candidate_sha' => str_repeat('d', 40)] + $digests))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), ['tool_digest' => 'other'] + $digests))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['subject' => 'Vaulter\Port::write()'] + $change))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['after_hash' => str_repeat('1', 64)] + $change))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['release_line' => 'php-collaboration'] + $change))->toBe(1)
+        ->and(bc_exit(static fn (): array => TrustPolicy::exceptions(bc_exceptions_json([['subject' => 'Vaulter\*'] + $exception]), $policy)))->toBe(2)
+        ->and(bc_exit(static fn (): array => TrustPolicy::exceptions(bc_exceptions_json([['decision' => 'PLAN4-D99'] + $exception]), $policy)))->toBe(2)
+        ->and(count(TrustPolicy::exceptions($json, $policy)))->toBe(1);
+});
+
+it('exception: the CLI runs from the tool checkout, reads the candidate as data and exits 1 on the removed method, 2 without the trusted inputs (cases 9-10)', function (): void {
+    $r = bc_release_repo();
+    $files = bc_scratch(['policy.json' => json_encode(['format' => 'vaulter.bc-trust-policy', 'version' => 1, 'lines' => ['php-public' => ['prefix' => 'v', 'major' => 1]], 'known_releases' => [], 'decisions' => ['PLAN4-D18'], 'approvals' => []]), 'exceptions.json' => bc_exceptions_json()]);
+    $cli = static function (array $args): int {
+        exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(bc_root().'/scripts/release/bc-check.php').' '.implode(' ', array_map('escapeshellarg', $args)).' 2>&1', $output, $exit);
+
+        return $exit;
+    };
+    $args = ["--root={$r['dir']}", "--candidate={$r['C']}", "--policy={$files}/policy.json", '--policy-rev='.BC_T, "--exceptions={$files}/exceptions.json", '--today=2026-10-28'];
+
+    expect($cli($args))->toBe(1)
+        ->and($cli(["--root={$r['dir']}", "--candidate={$r['B']}", ...array_slice($args, 2)]))->toBe(0)
+        ->and($cli(array_slice($args, 0, 3)))->toBe(2)
+        ->and(strlen(ReleaseCheck::toolDigest(bc_root().'/scripts/release')))->toBe(64);
 });
