@@ -1134,3 +1134,220 @@ class ScaWorkflowTest(unittest.TestCase):
             for step in broken['steps']:
                 if 'scripts/ci/audit-gate.py' in str(step.get('run','')): step.update(bypass)
             self.assertTrue(policy.check_sca(broken))
+
+    # --- P7.3/U3: one accepted artifact per release flow (npm tgz, OCI digest, PHP prepared record) -----------------
+    def artifact_doc(self, name):
+        return policy.load_workflow(ROOT / '.github/workflows' / name)
+
+    def artifact_errors(self, name, doc):
+        return policy.check_artifacts(name, doc, json.dumps(doc))
+
+    def test_artifact_repository_publishers_satisfy_the_single_artifact_rules(self):
+        for name in ('monorepo-split.yml', 'release-npm.yml', 'collaboration-hub-image.yml'):
+            with self.subTest(workflow=name):
+                self.assertEqual([], self.artifact_errors(name, self.artifact_doc(name)))
+
+    def test_artifact_npm_is_packed_once_and_the_publisher_consumes_the_same_tgz(self):
+        base = self.artifact_doc('release-npm.yml')
+        self.assertIn('pack', base['jobs'])
+        for label, mutate in {
+            'publisher repacks': lambda d: d['jobs']['release']['steps'].append({'run': 'npm pack --workspace @vaulter/vue'}),
+            'publisher rebuilds': lambda d: d['jobs']['release']['steps'].append({'run': 'npm run build'}),
+            'publisher installs': lambda d: d['jobs']['release']['steps'].append({'run': 'npm ci'}),
+            'publisher publishes without the gate': lambda d: d['jobs']['release']['steps'].__setitem__(slice(None), [s for s in d['jobs']['release']['steps'] if 'artifact-gate.py' not in json.dumps(s)]),
+            'secret before verify': lambda d: d['jobs']['release']['steps'].insert(0, {'run': 'true', 'env': {'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}}),
+            'secret in the verify step': lambda d: d['jobs']['release']['steps'][next(i for i, s in enumerate(d['jobs']['release']['steps']) if 'artifact-gate.py npm' in str(s.get('run', '')))]['env'].update(NODE_AUTH_TOKEN='${{ secrets.NPM_TOKEN }}'),
+            'lifecycle scripts run with the secret': lambda d: [s.update(run=s['run'].replace(' --ignore-scripts', '')) for s in d['jobs']['release']['steps'] if 'npm publish' in str(s.get('run', ''))],
+            'publish step also builds': lambda d: [s.update(run=s['run'] + '\nnpm run build') for s in d['jobs']['release']['steps'] if 'npm publish' in str(s.get('run', ''))],
+            'compare-only gate without the approval': lambda d: [s.update(run=s['run'].replace('--approval release-evidence/artifact-approval.json', '--expect-sha256 abc')) for s in d['jobs']['release']['steps'] if 'artifact-gate.py npm' in str(s.get('run', ''))],
+            'approval hash computed in the job': lambda d: [s['env'].update(VAULTER_ARTIFACT_APPROVAL_SHA256='${{ env.COMPUTED }}') for s in d['jobs']['release']['steps'] if 'artifact-gate.py npm' in str(s.get('run', ''))],
+            'verify step drops channel and visibility': lambda d: [s.update(run=s['run'].replace('--channel', '--nochannel').replace('--visibility', '--novisibility')) for s in d['jobs']['release']['steps'] if 'artifact-gate.py npm' in str(s.get('run', ''))],
+            'publish ignores the verified access': lambda d: [s.update(run=s['run'].replace('--access "${access}"', '--access public')) for s in d['jobs']['release']['steps'] if 'npm publish' in str(s.get('run', ''))],
+            'approval hash missing': lambda d: [s['env'].pop('VAULTER_ARTIFACT_APPROVAL_SHA256') for s in d['jobs']['release']['steps'] if 'artifact-gate.py npm' in str(s.get('run', ''))],
+            'publisher publishes by changesets': lambda d: d['jobs']['release']['steps'].append({'uses': 'changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d', 'with': {'publish': 'npm run release'}}),
+            'pack job holds the registry token': lambda d: d['jobs']['pack'].update(env={'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}),
+            'pack job may mint an OIDC token': lambda d: d['jobs']['pack'].update(permissions={'contents': 'read', 'id-token': 'write'}),
+            'publisher does not need pack': lambda d: d['jobs']['release'].update(needs='route'),
+            'version job holds the registry token': lambda d: d['jobs']['version-pr'].update(env={'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}),
+        }.items():
+            with self.subTest(case=label):
+                doc = copy.deepcopy(base)
+                mutate(doc)
+                self.assertTrue(self.artifact_errors('release-npm.yml', doc), label)
+
+    def test_artifact_oci_promotes_the_exact_tested_digest_without_rebuild_or_tag(self):
+        base = self.artifact_doc('collaboration-hub-image.yml')
+        for label, mutate in {
+            'publisher builds': lambda d: d['jobs']['image']['steps'].append({'uses': 'docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8', 'with': {'push': True}}),
+            'publisher promotes a tag': lambda d: d['jobs']['image']['steps'].append({'run': 'docker buildx imagetools create -t ghcr.io/x/y:1.0.0 ghcr.io/x/y:latest'}),
+            'oci gate is compare-only': lambda d: [s.update(run=s['run'].replace('--approval release-evidence/artifact-approval.json', '--tested-digest sha256:x')) for s in d['jobs']['image']['steps'] if 'artifact-gate.py oci' in str(s.get('run', ''))],
+            'oci approval hash from the candidate': lambda d: [s['env'].update(VAULTER_ARTIFACT_APPROVAL_SHA256='${{ env.COMPUTED }}') for s in d['jobs']['image']['steps'] if 'artifact-gate.py oci' in str(s.get('run', ''))],
+            'secret before the oci gate': lambda d: d['jobs']['image']['steps'].insert(0, {'run': 'true', 'env': {'T': '${{ secrets.GITHUB_TOKEN }}'}}),
+            'publisher skips the digest gate': lambda d: d['jobs']['image']['steps'].__setitem__(slice(None), [s for s in d['jobs']['image']['steps'] if 'artifact-gate.py' not in json.dumps(s)]),
+            'attestation is unconditional': lambda d: [s.pop('if', None) for s in d['jobs']['image']['steps'] if 'attest-build-provenance' in str(s.get('uses', ''))],
+            'attestation flag false is not reported unavailable': lambda d: d['jobs']['image']['steps'].__setitem__(slice(None), [s for s in d['jobs']['image']['steps'] if 'unavailable' not in json.dumps(s)]),
+        }.items():
+            with self.subTest(case=label):
+                doc = copy.deepcopy(base)
+                mutate(doc)
+                self.assertTrue(self.artifact_errors('collaboration-hub-image.yml', doc), label)
+
+    def test_artifact_php_publisher_consumes_the_prepared_record_after_the_external_approval(self):
+        base = self.artifact_doc('monorepo-split.yml')
+        steps = lambda d: d['jobs']['split']['steps']
+        gate = lambda d: next(i for i, s in enumerate(steps(d)) if '--require-approved' in str(s.get('run', '')))
+        for label, mutate in {
+            'second build in the publisher': lambda d: steps(d).append({'run': 'php scripts/release/build-artifacts.php --version=1.0.0 --out=x'}),
+            'force push': lambda d: steps(d).append({'run': 'git push --force origin main'}),
+            'no approval gate': lambda d: steps(d).pop(gate(d)),
+            'credential before the gate': lambda d: steps(d).insert(0, {'run': 'true', 'env': {'T': '${{ secrets.GH_ACCESS_TOKEN }}'}}),
+            'hash derived in the job': lambda d: steps(d)[gate(d)]['env'].update(VAULTER_PREPARED_APPROVAL_SHA256='${{ env.COMPUTED }}'),
+            'prepare job holds the credential': lambda d: d['jobs']['prepare'].update(env={'T': '${{ secrets.GH_ACCESS_TOKEN }}'}),
+            'split does not need prepare': lambda d: d['jobs']['split'].update(needs='route'),
+        }.items():
+            with self.subTest(case=label):
+                doc = copy.deepcopy(base)
+                mutate(doc)
+                self.assertTrue(self.artifact_errors('monorepo-split.yml', doc), label)
+
+    def run_artifact_gate(self, *args, pin=None, extra_env=None):
+        import os, subprocess
+        env = {k: v for k, v in os.environ.items() if k != 'VAULTER_ARTIFACT_APPROVAL_SHA256'}
+        if pin is not None:
+            env['VAULTER_ARTIFACT_APPROVAL_SHA256'] = pin
+        env.update(extra_env or {})
+        if args and args[0] == 'npm' and '--channel' not in args:
+            args = (*args, '--channel', 'public', '--visibility', 'public')
+        return subprocess.run(['python3', '-I', str(ROOT / 'scripts/release/artifact-gate.py'), *args], capture_output=True, text=True, env=env)
+
+    def synthetic_tgz(self, directory, name='@vaulter/vue', version='1.0.0', extra=b''):
+        import hashlib, base64, io, tarfile
+        path = Path(directory) / 'pkg.tgz'
+        with tarfile.open(path, 'w:gz') as tar:
+            body = json.dumps({'name': name, 'version': version}).encode() + extra
+            info = tarfile.TarInfo('package/package.json'); info.size = len(body)
+            tar.addfile(info, io.BytesIO(body))
+        data = path.read_bytes()
+        return path, hashlib.sha256(data).hexdigest(), 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode()
+
+    SOURCE = '5' * 40
+
+    def approval_file(self, directory, artifacts, **top):
+        """SYNTHETIC approval: the positive case proves the protocol only, it is never an owner grant."""
+        import hashlib
+        path = Path(directory) / 'approval.json'
+        path.write_text(json.dumps({'status': 'approved', 'source_sha': self.SOURCE, 'artifacts': artifacts, **top}))
+        return path, hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def npm_entry(self, sha, integrity, version='1.0.0'):
+        return {'kind': 'npm', 'channel': 'public', 'visibility': 'public', 'version': version, 'tgz_sha256': sha, 'integrity': integrity, 'consumer_evidence_sha256': 'c' * 64}
+
+    def test_artifact_gate_npm_publishes_only_the_tgz_the_authenticated_approval_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tgz, sha, integrity = self.synthetic_tgz(tmp)
+            approval, pin = self.approval_file(tmp, {'npm': {'@vaulter/vue': self.npm_entry(sha, integrity)}})
+            args = ('npm', '--tgz', str(tgz), '--approval', str(approval), '--source-sha', self.SOURCE)
+            self.assertEqual(0, self.run_artifact_gate(*args, pin=pin).returncode)  # protocol positive, not an owner grant
+            for label, kwargs in {'no protected hash': {'pin': None}, 'malformed hash': {'pin': 'xyz'}, 'uppercase hash': {'pin': pin.upper()},
+                                  'wrong hash': {'pin': '0' * 64}, 'hash of the tgz instead of A': {'pin': sha}}.items():
+                with self.subTest(case=label):
+                    result = self.run_artifact_gate(*args, **kwargs)
+                    self.assertEqual(1, result.returncode, result.stdout)
+                    self.assertIn('refused', result.stderr)
+            # forged BOTH candidate payload and matching command-line expectations, but no protected A: nothing to authenticate
+            forged = self.run_artifact_gate('npm', '--tgz', str(tgz), '--expect-sha256', sha, '--expect-integrity', integrity)
+            self.assertNotEqual(0, forged.returncode)
+            self.assertNotIn('accepted', forged.stdout)
+            # a self-asserted matching A without the protected hash of THOSE bytes
+            self.assertEqual(1, self.run_artifact_gate(*args, pin=pin[::-1]).returncode)
+            # same source, repacked bytes (a second pack after the approval): the old A cannot be inherited
+            repacked, _, _ = self.synthetic_tgz(tmp, extra=b' ')
+            self.assertEqual(1, self.run_artifact_gate('npm', '--tgz', str(repacked), '--approval', str(approval), '--source-sha', self.SOURCE, pin=pin).returncode)
+            # A tampered after it was pinned
+            approval.write_bytes(approval.read_bytes() + b' ')
+            self.assertEqual(1, self.run_artifact_gate(*args, pin=pin).returncode)
+
+    def test_artifact_gate_npm_refuses_incomplete_or_mismatched_approval_even_when_authenticated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tgz, sha, integrity = self.synthetic_tgz(tmp)
+            good = self.npm_entry(sha, integrity)
+            cases = {
+                'source SHA only (no artifact slots)': ({}, {}),
+                'other package only': ({'npm': {'@vaulter/other': good}}, {}),
+                'missing integrity': ({'npm': {'@vaulter/vue': {k: v for k, v in good.items() if k != 'integrity'}}}, {}),
+                'missing consumer evidence': ({'npm': {'@vaulter/vue': {k: v for k, v in good.items() if k != 'consumer_evidence_sha256'}}}, {}),
+                'other version': ({'npm': {'@vaulter/vue': self.npm_entry(sha, integrity, '1.0.1')}}, {}),
+                'other sha256': ({'npm': {'@vaulter/vue': self.npm_entry('0' * 64, integrity)}}, {}),
+                'other integrity': ({'npm': {'@vaulter/vue': self.npm_entry(sha, 'sha512-AAAA')}}, {}),
+                'other kind': ({'npm': {'@vaulter/vue': {**good, 'kind': 'oci'}}}, {}),
+                'pending status': ({'npm': {'@vaulter/vue': good}}, {'status': 'pending'}),
+                'other source': ({'npm': {'@vaulter/vue': good}}, {'source_sha': '6' * 40}),
+            }
+            for label, (artifacts, top) in cases.items():
+                with self.subTest(case=label):
+                    approval, pin = self.approval_file(tmp, artifacts, **top)
+                    result = self.run_artifact_gate('npm', '--tgz', str(tgz), '--approval', str(approval), '--source-sha', self.SOURCE, pin=pin)
+                    self.assertEqual(1, result.returncode, result.stdout)
+                    self.assertIn('refused', result.stderr)
+
+    def test_artifact_gate_oci_promotes_only_the_digest_the_authenticated_approval_accepted(self):
+        digest = 'sha256:' + 'a' * 64
+        entry = {'kind': 'oci', 'digest': digest, 'platforms': ['linux/amd64', 'linux/arm64'], 'sbom_sha256': 'c' * 64, 'policy_sha256': 'd' * 64, 'tool_sha256': 'e' * 64, 'visibility': 'private'}
+        base = ['oci', '--source-sha', self.SOURCE, '--digest', digest, '--platforms', 'linux/arm64,linux/amd64', '--sbom-sha256', 'c' * 64,
+                '--policy-sha256', 'd' * 64, '--tool-sha256', 'e' * 64, '--channel', 'private', '--visibility', 'private']
+        with tempfile.TemporaryDirectory() as tmp:
+            approval, pin = self.approval_file(tmp, {'oci': entry})
+            args = base + ['--approval', str(approval)]
+            self.assertEqual(0, self.run_artifact_gate(*args, pin=pin).returncode)  # protocol positive, not an owner grant
+            self.assertEqual(1, self.run_artifact_gate(*args).returncode)
+            self.assertEqual(1, self.run_artifact_gate(*args, pin='0' * 64).returncode)
+            mutated = lambda flag, value: [value if i > 0 and args[i - 1] == flag else a for i, a in enumerate(args)]
+            for label, argv in {
+                'tag instead of digest': mutated('--digest', 'ghcr.io/x/y:1.0.0'), 'other digest': mutated('--digest', 'sha256:' + 'b' * 64),
+                'platform set': mutated('--platforms', 'linux/amd64'), 'sbom': mutated('--sbom-sha256', 'f' * 64),
+                'policy': mutated('--policy-sha256', 'f' * 64), 'tool': mutated('--tool-sha256', 'f' * 64),
+                'private to a public destination': mutated('--visibility', 'public'), 'private to an unprobed destination': mutated('--visibility', 'unknown'),
+                'other source': mutated('--source-sha', '6' * 40),
+            }.items():
+                with self.subTest(case=label):
+                    self.assertEqual(1, self.run_artifact_gate(*argv, pin=pin).returncode, label)
+            for label, artifacts in {'source SHA only': {}, 'incomplete entry': {'oci': {k: v for k, v in entry.items() if k != 'sbom_sha256'}},
+                                     'accepted public, run claims private': {'oci': {**entry, 'visibility': 'public'}}}.items():
+                with self.subTest(case=label):
+                    other, other_pin = self.approval_file(tmp, artifacts)
+                    argv = base + ['--approval', str(other)]
+                    self.assertEqual(1, self.run_artifact_gate(*argv, pin=other_pin).returncode, label)
+
+    def test_artifact_gate_npm_private_needs_a_probed_private_destination_even_with_an_authenticated_approval(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tgz, sha, integrity = self.synthetic_tgz(tmp)
+            private = {**self.npm_entry(sha, integrity), 'channel': 'private', 'visibility': 'private'}
+            approval, pin = self.approval_file(tmp, {'npm': {'@vaulter/vue': private}})
+            base = ('npm', '--tgz', str(tgz), '--approval', str(approval), '--source-sha', self.SOURCE)
+            verified = Path(tmp) / 'verified.txt'
+            ok = self.run_artifact_gate(*base, '--channel', 'private', '--visibility', 'private', '--emit-verified', str(verified), pin=pin)
+            self.assertEqual(0, ok.returncode, ok.stderr)  # probed-private positive control (synthetic protocol only)
+            self.assertEqual(f'{tgz}\trestricted\n', verified.read_text())
+            for label, flags in {'public destination': ('--channel', 'private', '--visibility', 'public'),
+                                 'unprobed destination': ('--channel', 'private', '--visibility', 'unknown'),
+                                 'empty visibility': ('--channel', 'private', '--visibility', ''),
+                                 'public channel claimed for a private approval': ('--channel', 'public', '--visibility', 'private')}.items():
+                with self.subTest(case=label):
+                    result = self.run_artifact_gate(*base, *flags, pin=pin)
+                    self.assertEqual(1, result.returncode, result.stdout)
+                    self.assertRegex(result.stderr, 'channel|private|visibility')
+            for label, entry in {'approval accepted a public destination for a private channel': {**private, 'visibility': 'public'},
+                                 'approval without channel': {k: v for k, v in private.items() if k != 'channel'},
+                                 'approval without visibility': {k: v for k, v in private.items() if k != 'visibility'}}.items():
+                with self.subTest(case=label):
+                    other, other_pin = self.approval_file(tmp, {'npm': {'@vaulter/vue': entry}})
+                    argv = ('npm', '--tgz', str(tgz), '--approval', str(other), '--source-sha', self.SOURCE, '--channel', 'private', '--visibility', 'private')
+                    self.assertEqual(1, self.run_artifact_gate(*argv, pin=other_pin).returncode, label)
+            # no channel/visibility at all is not a valid invocation, and a control character cannot reach the verified record
+            self.assertNotEqual(0, __import__('subprocess').run(['python3', '-I', str(ROOT / 'scripts/release/artifact-gate.py'), *base], capture_output=True, env={**__import__('os').environ, 'VAULTER_ARTIFACT_APPROVAL_SHA256': pin}).returncode)
+            approval, pin = self.approval_file(tmp, {'npm': {'@vaulter/vue': private}})
+            odd = Path(tmp) / 'odd\nname.tgz'
+            odd.write_bytes(tgz.read_bytes())
+            result = self.run_artifact_gate('npm', '--tgz', str(odd), '--approval', str(approval), '--source-sha', self.SOURCE, '--channel', 'private', '--visibility', 'private', '--emit-verified', str(Path(tmp) / 'v2.txt'), pin=pin)
+            self.assertEqual(1, result.returncode)
+            self.assertIn('control characters', result.stderr)

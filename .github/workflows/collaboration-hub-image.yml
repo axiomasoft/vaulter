@@ -48,6 +48,27 @@ jobs:
           php scripts/release/route-release.php --tag="${GITHUB_REF_NAME}" --sha="${GITHUB_SHA}" \
             --evidence-dir=release-evidence --github-output="${GITHUB_OUTPUT}"
 
+  # workflow_dispatch smoke only: builds without pushing and holds no registry credential.
+  smoke:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ./packages/collaboration/hub
+          push: false
+
+  # Promotion, never a build: the image was built and TESTED before qualification and is identified by its manifest
+  # digest. The qualified evidence names that digest, the platform set and the SBOM; this job re-tags exactly that digest
+  # (no tag is an identity, nothing is rebuilt) and only after artifact-gate.py accepts the pair. A private channel
+  # requires a destination probed private.
   image:
     permissions:
       contents: read
@@ -55,65 +76,63 @@ jobs:
       id-token: write
       attestations: write
     needs: route
-    if: always() && (github.event_name == 'workflow_dispatch' || needs.route.outputs.qualified == 'true')
+    if: needs.route.outputs.qualified == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      # high/critical advisory is present in the runtime dependency tree before we ship.
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          node-version: '22'
-
-      - name: Audit dependencies
-        working-directory: ./packages/collaboration/hub
-        run: |
-          npm ci --no-audit --no-fund
-          npm audit --omit=dev --audit-level=high
-
-      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+          name: release-qualification
+          path: release-evidence
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
+      # Authentication first, no registry credential: the exact bytes of the external approval A must hash to the protected
+      # variable before A is parsed, then the digest, platform set, SBOM, policy, tool and visibility reported for this run
+      # must be exactly what A accepted. The candidate's own evidence file is only the thing being compared, never the authority.
+      - name: Require the authenticated approval of the tested digest before any registry credential
+        id: tested
+        env:
+          VAULTER_ARTIFACT_APPROVAL_SHA256: ${{ vars.VAULTER_ARTIFACT_APPROVAL_SHA256 }}
+        run: |
+          evidence=release-evidence/oci-tested.json
+          digest="$(jq -er .digest "${evidence}")"
+          python3 -I scripts/release/artifact-gate.py oci --approval release-evidence/artifact-approval.json --source-sha "${GITHUB_SHA}" \
+            --digest "${digest}" --platforms "$(jq -er '.platforms | join(",")' "${evidence}")" \
+            --sbom-sha256 "$(jq -er .sbom_sha256 "${evidence}")" --policy-sha256 "$(jq -er .policy_sha256 "${evidence}")" \
+            --tool-sha256 "$(jq -er .tool_sha256 "${evidence}")" --channel "$(jq -er .channel "${evidence}")" \
+            --visibility "$(jq -er .visibility "${evidence}")"
+          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
+
       - name: Log in to GHCR
-        if: github.event_name != 'workflow_dispatch'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Strip the `collaboration-hub-v` tag prefix → bare semver for the image tags.
       - id: ver
         run: echo "version=${GITHUB_REF_NAME#collaboration-hub-v}" >> "$GITHUB_OUTPUT"
 
-      - id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}},value=${{ steps.ver.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.ver.outputs.version }}
-            type=semver,pattern={{major}},value=${{ steps.ver.outputs.version }}
+      - name: Promote the tested digest to the release tag
+        env:
+          DIGEST: ${{ steps.tested.outputs.digest }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          docker buildx imagetools create --tag "${REGISTRY}/${IMAGE_NAME}:${VERSION}" "${REGISTRY}/${IMAGE_NAME}@${DIGEST}"
 
-      - id: build
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: ./packages/collaboration/hub
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'workflow_dispatch' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # Provenance is attested by the dedicated step below (avoid duplicate
-          # provenance attestations for the same digest); keep the SBOM here.
-          provenance: false
-          sbom: true
-
+      # Attestations need Enterprise Cloud on a private repo (D11): off by default. A false flag means the provenance is
+      # UNAVAILABLE, not that the image was signed.
       - name: Attest build provenance
-        if: github.event_name != 'workflow_dispatch'
+        if: vars.VAULTER_ATTESTATIONS == 'true'
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.build.outputs.digest }}
+          subject-digest: ${{ steps.tested.outputs.digest }}
           push-to-registry: true
+
+      - name: Record that attestation is unavailable
+        if: vars.VAULTER_ATTESTATIONS != 'true'
+        run: echo "build provenance attestation unavailable (vars.VAULTER_ATTESTATIONS is not true); the digest is not signed" >> "${GITHUB_STEP_SUMMARY}"

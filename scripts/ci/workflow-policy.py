@@ -436,7 +436,8 @@ def check_split(doc: dict) -> list[str]:
     if route_needs != 'verify-release-sha' and route_needs != ['verify-release-sha']:
         errors.append(f'{name}: route must need verify-release-sha')
     split_needs = (jobs.get('split') or {}).get('needs')
-    if split_needs != 'route' and split_needs != ['route']:
+    split_needs = [split_needs] if isinstance(split_needs, str) else list(split_needs or [])
+    if 'route' not in split_needs:
         errors.append(f'{name}: split must need route (routing + qualification before the split credential)')
     errors += check_route_before_credentials(name, doc, 'split', 'route', ('GH_ACCESS_TOKEN',))
     return errors
@@ -472,6 +473,132 @@ def check_route_before_credentials(name: str, doc: dict, publisher: str, route: 
         errors.append(f'{name}: {publisher} must need {route} (no credential before routing + qualification)')
     if not any(credential in json.dumps(publish_job) for credential in credentials):
         errors.append(f'{name}: {publisher} no longer shows the credential this policy guards {credentials}')
+    return errors
+
+
+# --- P7.3/U3: ONE accepted artifact per release flow ---------------------------------------------------------------
+NPM_CREDENTIALS = ('NPM_TOKEN', 'NODE_AUTH_TOKEN')
+
+
+def _needs(job: dict) -> list[str]:
+    needs = job.get('needs') or []
+    return [needs] if isinstance(needs, str) else list(needs)
+
+
+def _runs(job: dict) -> str:
+    return '\n'.join(str(step.get('run', '')) for step in job.get('steps') or [])
+
+
+def _uses(job: dict) -> str:
+    return ' '.join(str(step.get('uses', '')) for step in job.get('steps') or [])
+
+
+def _check_approval_gate(name: str, step: dict, variable: str, credentials: tuple[str, ...]) -> list[str]:
+    """The gate authenticates the external approval bytes (protected variable only); compare-only is not an approval gate."""
+    errors: list[str] = []
+    if (step.get('env') or {}).get(variable) != '${{ vars.' + variable + ' }}':
+        errors.append(f'{name}: the approval hash comes only from vars.{variable}')
+    run = str(step.get('run', ''))
+    if 'artifact-gate.py' in run and ('--approval' not in run or '--source-sha' not in run):
+        errors.append(f'{name}: artifact-gate.py without --approval/--source-sha is a compare-only check, not an approval gate')
+    if re.search(r'--expect-|--tested-|--bind', run):
+        errors.append(f'{name}: expected values supplied on the command line are not authority')
+    if any(credential in json.dumps(step) for credential in credentials):
+        errors.append(f'{name}: the verify step holds a publisher credential')
+    return errors
+
+
+def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
+    """npm: pack once without a credential, publish that tgz. OCI: promote the tested digest. PHP: consume the prepared record."""
+    errors: list[str] = []
+    jobs = doc.get('jobs') or {}
+    if name == 'release-npm.yml':
+        pack, release, version = jobs.get('pack'), jobs.get('release'), jobs.get('version-pr')
+        if not isinstance(pack, dict) or not isinstance(release, dict):
+            return [f'{name}: needs a credential-free pack job and a release job that publishes the accepted tgz']
+        dumped = json.dumps(pack)
+        if any(token in dumped for token in NPM_CREDENTIALS) or 'id-token' in dumped:
+            errors.append(f'{name}: pack must hold no registry credential and mint no OIDC token')
+        if 'npm pack' not in _runs(pack):
+            errors.append(f'{name}: pack must run npm pack once')
+        if (pack.get('permissions') or {}).get('contents') == 'write':
+            errors.append(f'{name}: pack must not write repository contents')
+        if 'pack' not in _needs(release):
+            errors.append(f'{name}: release must need pack (it publishes the accepted tgz)')
+        runs = _runs(release)
+        if re.search(r'\bnpm\s+(pack|ci|install|i|run\s+(build|release|version))\b|changeset\s+publish', runs) or 'changesets/action' in _uses(release):
+            errors.append(f'{name}: release must not pack, install, build or let Changesets publish; it publishes the accepted tgz only')
+        if 'download-artifact' not in _uses(release):
+            errors.append(f'{name}: release must download the accepted tgz artifact')
+        steps = release.get('steps') or []
+        gate = next((i for i, step in enumerate(steps) if 'artifact-gate.py npm' in str(step.get('run', ''))), None)
+        publish = next((i for i, step in enumerate(steps) if 'npm publish' in str(step.get('run', ''))), None)
+        if gate is None or publish is None or gate > publish:
+            errors.append(f'{name}: release must verify the tgz with artifact-gate.py npm before npm publish')
+        else:
+            errors += _check_approval_gate(name, steps[gate], 'VAULTER_ARTIFACT_APPROVAL_SHA256', NPM_CREDENTIALS)
+            if any(token in json.dumps(step) for step in steps[:gate + 1] for token in NPM_CREDENTIALS):
+                errors.append(f'{name}: no npm credential may appear before or in the verify step')
+            verify_run = str(steps[gate].get('run', ''))
+            if '--channel' not in verify_run or '--visibility' not in verify_run:
+                errors.append(f'{name}: the verify step must pass --channel and --visibility (private needs a probed private destination)')
+            publish_run = str(steps[publish].get('run', ''))
+            if '--access "${access}"' not in publish_run or 'public|restricted' not in publish_run:
+                errors.append(f'{name}: npm access is derived from the verified record only (public|restricted)')
+            if '--ignore-scripts' not in publish_run or re.search(r'artifact-gate|python|\bnpm\s+(pack|ci|install|run)\b|\bnode\b|\bbash\b\s+\S+\.sh', publish_run):
+                errors.append(f'{name}: the secret step only runs npm publish --ignore-scripts of the verified tgz')
+            if len(steps) > publish + 1 and any(token in json.dumps(step) for step in steps[publish + 1:] for token in NPM_CREDENTIALS):
+                errors.append(f'{name}: the npm credential belongs to the publish step only')
+        if isinstance(version, dict) and any(token in json.dumps(version) for token in NPM_CREDENTIALS):
+            errors.append(f'{name}: version-pr must not hold the registry token')
+    elif name == 'collaboration-hub-image.yml':
+        image = jobs.get('image')
+        if not isinstance(image, dict):
+            return [f'{name}: needs an image promotion job']
+        runs, uses = _runs(image), _uses(image)
+        if 'build-push-action' in uses or re.search(r'docker\s+(buildx\s+)?build\b', runs):
+            errors.append(f'{name}: image promotes the tested digest and must not build')
+        for command in re.findall(r'imagetools create[^\n]*', runs):
+            if not re.search(r'@(\$\{|sha256:)', command):
+                errors.append(f'{name}: imagetools create must promote an exact @digest, not a tag')
+        steps = image.get('steps') or []
+        gate = next((i for i, step in enumerate(steps) if 'artifact-gate.py oci' in str(step.get('run', ''))), None)
+        login = next((i for i, step in enumerate(steps) if 'docker/login-action' in str(step.get('uses', ''))), None)
+        if gate is None or login is None or gate > login:
+            errors.append(f'{name}: artifact-gate.py oci must accept the tested digest before the registry login')
+        else:
+            errors += _check_approval_gate(name, steps[gate], 'VAULTER_ARTIFACT_APPROVAL_SHA256', ('secrets.',))
+            if any('secrets.' in json.dumps(step) for step in steps[:gate]):
+                errors.append(f'{name}: no secret may be read before the approval gate')
+        attest = [step for step in steps if 'attest-build-provenance' in str(step.get('uses', ''))]
+        if any('VAULTER_ATTESTATIONS' not in str(step.get('if', '')) for step in attest):
+            errors.append(f'{name}: attestation must run only under vars.VAULTER_ATTESTATIONS')
+        if not any('unavailable' in json.dumps(step) and 'VAULTER_ATTESTATIONS' in str(step.get('if', '')) for step in steps):
+            errors.append(f'{name}: a false vars.VAULTER_ATTESTATIONS must be recorded as attestation unavailable')
+    elif name == 'monorepo-split.yml':
+        prepare, split = jobs.get('prepare'), jobs.get('split')
+        if not isinstance(prepare, dict) or not isinstance(split, dict):
+            return [f'{name}: needs a prepare job and a split job that consumes its record']
+        if 'GH_ACCESS_TOKEN' in json.dumps(prepare):
+            errors.append(f'{name}: prepare must hold no publisher credential')
+        if 'prepare' not in _needs(split):
+            errors.append(f'{name}: split must need prepare (one prepared artifact, no second build)')
+        if re.search(r'--force|push\s+-f\b|\+refs/', text or json.dumps(doc)):
+            errors.append(f'{name}: publication is never forced')
+        if re.search(r'build-artifacts\.php\s+--version', _runs(split)):
+            errors.append(f'{name}: split must not build again; it consumes the prepared record')
+        steps = split.get('steps') or []
+        gate = next((i for i, step in enumerate(steps) if '--require-approved' in str(step.get('run', ''))), None)
+        push = next((i for i, step in enumerate(steps) if '--materialize-split' in str(step.get('run', ''))), None)
+        if gate is None or push is None or gate > push:
+            errors.append(f'{name}: --require-approved must run before the push of the prepared commit')
+        else:
+            if (steps[gate].get('env') or {}).get('VAULTER_PREPARED_APPROVAL_SHA256') != '${{ vars.VAULTER_PREPARED_APPROVAL_SHA256 }}':
+                errors.append(f'{name}: the approval hash comes only from vars.VAULTER_PREPARED_APPROVAL_SHA256')
+            if any('GH_ACCESS_TOKEN' in json.dumps(step) for step in steps[:gate + 1]):
+                errors.append(f'{name}: no publisher credential may be read before the approval gate')
+            if '--atomic' not in str(steps[push].get('run', '')):
+                errors.append(f'{name}: the prepared commit is pushed atomically')
     return errors
 
 
@@ -651,6 +778,8 @@ def check_dir(directory: Path) -> list[str]:
             errors += check_split(doc)
         elif path.name in PUBLISHERS:
             errors += check_publisher(path.name, doc)
+        if path.name in ('monorepo-split.yml', 'release-npm.yml', 'collaboration-hub-image.yml'):
+            errors += check_artifacts(path.name, doc, path.read_text())
     dockerfile = root / 'packages/collaboration/hub/Dockerfile'
     if dockerfile.exists(): errors += check_docker_pins(dockerfile.read_text())
     return errors

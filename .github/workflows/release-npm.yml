@@ -77,45 +77,101 @@ jobs:
           done < <(jq -r '.npm[] | [.tag_prefix, .path] | @tsv' release/packages.json)
           echo "qualified=true" >> "${GITHUB_OUTPUT}"
 
-  release:
-    permissions:
-      contents: write
-    # Publishing belongs to the canonical repository, after routing + qualification.
-    # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not publish.
+  # ONE pack, no credential: the accepted tgz of each npm line is packed here once (npm pack never runs a publisher
+  # credential and never runs in the publishing job). Its sha256/integrity are recorded next to it; the publisher below
+  # consumes exactly these bytes. Nothing from this job's output is executed or extracted by the publisher.
+  pack:
     if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
     needs: route
-    name: Changesets publish
+    name: Pack the accepted tgz once
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - name: Pack every npm line once and record sha256 + integrity
+        run: |
+          mkdir -p npm-pack
+          while IFS= read -r path; do
+            name="$(jq -er .name "${path}/package.json")"
+            version="$(jq -er .version "${path}/package.json")"
+            npm pack --workspace "${name}" --pack-destination npm-pack >/dev/null
+            tgz="npm-pack/$(echo "${name#@}" | tr '/' '-')-${version}.tgz"
+            jq -n --arg name "${name}" --arg version "${version}" --arg file "$(basename "${tgz}")" \
+              --arg sha256 "$(sha256sum "${tgz}" | cut -d' ' -f1)" \
+              --arg integrity "sha512-$(openssl dgst -sha512 -binary "${tgz}" | base64 -w0)" \
+              '{name: $name, version: $version, file: $file, sha256: $sha256, integrity: $integrity}' > "${tgz}.json"
+          done < <(jq -r '.npm[].path' release/packages.json)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: npm-pack
+          path: npm-pack
+
+  release:
+    permissions:
+      contents: read
+    # Publishing belongs to the canonical repository, after routing + qualification and after the accepted pack.
+    # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not publish.
+    if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
+    needs: [route, pack]
+    name: Publish the accepted tgz
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          fetch-depth: 0
-          # Changesets pushes version commits/tags using this checkout credential.
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+          name: npm-pack
+          path: npm-pack
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
-        run: npm ci
-
-      # Build the publishable workspaces BEFORE publish - dist/ is gitignored and
-      # each package ships "files": ["dist"], so an unbuilt dist would publish empty.
-      - name: Build npm workspaces
-        run: npm run build
-
-      - name: Test npm workspaces
-        run: npm test
-
-      - name: Publish the qualified packages
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          publish: npm run release
+          name: release-qualification
+          path: release-evidence
+
+      # Credential-free verify FIRST. The exact bytes of the external approval A must hash to the protected variable
+      # (never computed from the candidate, no default) before A is parsed; each candidate tgz must then be exactly the
+      # tgz A accepted for that package/version/source (sha256, integrity, consumer evidence). Only verified files are
+      # listed for publishing. No npm token is present in this step. Registry dist.integrity is compared after the
+      # authorized publish; before it the identity is pending (P8.2).
+      - name: Verify the candidate tgz against the authenticated approval
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAULTER_ARTIFACT_APPROVAL_SHA256: ${{ vars.VAULTER_ARTIFACT_APPROVAL_SHA256 }}
+        run: |
+          : > verified.txt
+          for tgz in npm-pack/*.tgz; do
+            name="$(tar -xOzf "${tgz}" package/package.json | jq -er .name)"
+            python3 -I scripts/release/artifact-gate.py npm --tgz "${tgz}" \
+              --approval release-evidence/artifact-approval.json --source-sha "${GITHUB_SHA}" \
+              --channel "$(jq -er --arg n "${name}" '.npm[] | select(.name == $n) | .channel' release/packages.json)" \
+              --visibility "$(jq -r --arg n "${name}" '.[$n] // "unknown"' release-evidence/npm-visibility.json)" \
+              --emit-verified verified.txt
+          done
+          test "$(wc -l < verified.txt)" = "$(jq '.npm | length' release/packages.json)"
+
+      # The secret appears only here, and only `npm publish` of the verified file runs with it: no script, build, pack
+      # or install (--ignore-scripts, no lifecycle execution with the token).
+      - name: Publish the verified tgz
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          while IFS=$'\t' read -r tgz access; do
+            case "${access}" in public|restricted) ;; *) echo "unexpected access ${access}" >&2; exit 1 ;; esac
+            npm publish "${tgz}" --ignore-scripts --access "${access}" --provenance=false
+          done < verified.txt
