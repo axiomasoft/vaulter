@@ -16,7 +16,9 @@ use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\DoctorCommand;
 use Vaulter\Console\ModulesCommand;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Http\Controllers\ModuleGraphInvalidController;
+use Vaulter\Jobs\FrameworkJobPublisher;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
@@ -43,6 +45,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        $this->app->singletonIf(JobPublisher::class, FrameworkJobPublisher::class);
         $this->offerModule(CoreModule::class);
         $this->registerModuleKernel();
     }

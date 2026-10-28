@@ -7,6 +7,8 @@ namespace Vaulter\Drive;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Attributes\Api;
+use Vaulter\Drive\Jobs\DriveJobTasks;
+use Vaulter\Jobs\JobRegistry;
 use Vaulter\Modules\OffersModules;
 
 /**
@@ -25,6 +27,7 @@ final class VaulterDriveServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        $this->app->singletonIf(JobRegistry::class, static fn () => DriveJobTasks::registry());
         $this->offerModule(DriveModule::class);
     }
 }

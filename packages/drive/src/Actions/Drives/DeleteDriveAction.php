@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Drives;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
-use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\DriveStoreRepository;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Jobs\JobRequest;
 
 /**
  * active|archived → deleting, then an asynchronous, idempotent purge of the whole
@@ -40,8 +41,9 @@ final readonly class DeleteDriveAction
                 // Nothing of the drive is reachable from now on; its row and the drive.deleted event go with the purge.
                 $this->recorder->record(EffectivePermissionsChanged::forDrive(drive: $drive, reason: DriveEventType::DriveDeleted->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
-            $driveId = $drive->id;
-            $this->database->afterCommit(static fn () => PurgeDriveJob::dispatch($driveId));
+            $publisher = app(JobPublisher::class);
+            $prepared = $publisher->prepare(new JobRequest('vaulter.drive:purge', ['driveId' => (string) $drive->id]));
+            $this->database->afterCommit(static fn () => $publisher->publish($prepared));
 
             return $drive;
         });

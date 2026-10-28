@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
@@ -26,6 +27,7 @@ use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
+use Vaulter\Testing\Jobs\FixtureJobPublisher;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -33,6 +35,7 @@ beforeEach(fn () => DriveTestHelpers::insideOperation());
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
+    app()->instance(JobPublisher::class, new FixtureJobPublisher);
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter.tenancy.enabled', true);

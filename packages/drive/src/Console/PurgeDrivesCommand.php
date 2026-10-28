@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\DriveStatus;
-use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Jobs\JobRequest;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\Tenancy;
 
@@ -59,7 +60,8 @@ final class PurgeDrivesCommand extends Command
                         // One batch per turn; the purge converges.
                     }
                 } else {
-                    PurgeDriveJob::dispatch($key);
+                    $publisher = app(JobPublisher::class);
+                    $publisher->publish($publisher->prepare(new JobRequest('vaulter.drive:purge', ['driveId' => (string) $key])));
                 }
                 $done++;
             } catch (Throwable $exception) {

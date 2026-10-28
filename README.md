@@ -39,6 +39,7 @@ $file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), 
 | Package | Purpose |
 | --- | --- |
 | `axioma-studio/vaulter-core` | the kernel: modules, operations, events and outbox, idempotency, errors |
+| `axioma-studio/vaulter-tenant` | optional binding to an existing Tenant runtime; [host composition](packages/tenant/README.md) |
 | `axioma-studio/vaulter-media` | content-addressed storage and the blob pins |
 | `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3), access, sharing, activity; the `Vaulter` entry point |
 | `axioma-studio/vaulter-documents` | editor, versions, comments, export |

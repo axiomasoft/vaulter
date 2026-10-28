@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
@@ -27,6 +27,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Jobs\PreparedJob;
 use Vaulter\Media\Content\ScanInput;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
@@ -309,9 +310,10 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
             ->and($work->refresh()->state)->toBe('retry_wait')->and($work->lease_token)->toBeNull();
         app(VaulterDatabase::class)->write(fn () => $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save());
-        $bus = Mockery::mock(Dispatcher::class);
-        $bus->shouldReceive('dispatch')->andThrow(new RuntimeException('broker unavailable'));
-        $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(DriveConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), recover: app(RecoverScanWorkAction::class), supersede: app(SupersedeScanWorkAction::class), policies: app(ScanPolicyResolver::class), bus: $bus);
+        $publisher = Mockery::mock(JobPublisher::class);
+        $publisher->shouldReceive('prepare')->andReturnUsing(fn ($request, $origin = null) => new PreparedJob($request, $origin));
+        $publisher->shouldReceive('publish')->andThrow(new RuntimeException('broker unavailable'));
+        $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(DriveConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), recover: app(RecoverScanWorkAction::class), supersede: app(SupersedeScanWorkAction::class), policies: app(ScanPolicyResolver::class), publisher: $publisher);
         $before = now('UTC')->getTimestamp();
         $publisher->reconcile();
         $available = $work->refresh()->available_at->getTimestamp();

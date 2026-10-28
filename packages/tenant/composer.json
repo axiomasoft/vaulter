@@ -1,0 +1,26 @@
+{
+    "name": "axioma-studio/vaulter-tenant",
+    "description": "Optional neutral Vaulter binding to the public Tenant runtime and frozen publication boundary.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axioma-studio/vaulter-core": "self.version",
+        "axiomasoft/tenant": "^1.0",
+        "axiomasoft/tenant-laravel": "^1.0",
+        "illuminate/bus": "^12.0|^13.0",
+        "illuminate/pipeline": "^12.0|^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vaulter\\Tenant\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vaulter\\Tenant\\TenantServiceProvider"
+            ]
+        }
+    }
+}

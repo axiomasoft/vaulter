@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Drive\Actions\Content\SupersedeScanWorkAction;
 use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Jobs\JobRequest;
+use Vaulter\Jobs\PreparedJob;
 
 #[Internal]
 final readonly class ScanWorkReconciler
@@ -25,23 +26,42 @@ final readonly class ScanWorkReconciler
     public function __construct(private VaulterDatabase $database, private DriveConfig $config,
         private DriveConfig $driveConfig, private ScanObligationRepository $work,
         private RecoverScanWorkAction $recover, private SupersedeScanWorkAction $supersede,
-        private ScanPolicyResolver $policies, private Dispatcher $bus) {}
+        private ScanPolicyResolver $policies, private JobPublisher $publisher) {}
 
     public function afterCommit(ScanObligation $work): void
     {
-        $this->database->afterCommit(fn () => $this->publish($work));
+        $prepared = $this->prepare($work);
+        $this->database->afterCommit(fn () => $this->publishPrepared($prepared));
     }
 
     public function publish(ScanObligation $work): bool
     {
         try {
-            $job = new ScanFileRevision($work->id, $work->generation, $work->drive_id, $work->tenant_id);
-            $job->onQueue($this->driveConfig->scanQueue());
-            $this->bus->dispatch($job);
+            return $this->publishPrepared($this->prepare($work));
+        } catch (\Throwable $error) {
+            Log::warning('Vaulter scanner capture failed; durable work remains due.');
+
+            return false;
+        }
+    }
+
+    private function prepare(ScanObligation $work): PreparedJob
+    {
+        return $this->publisher->prepare(new JobRequest('vaulter.drive:scan', [
+            'obligationId' => (string) $work->id, 'generation' => (string) $work->generation,
+            'driveId' => (string) $work->drive_id,
+            ...($work->tenant_id === null ? [] : ['tenantId' => (string) $work->tenant_id]),
+        ], $this->driveConfig->scanQueue()));
+    }
+
+    private function publishPrepared(PreparedJob $prepared): bool
+    {
+        try {
+            $this->publisher->publish($prepared);
 
             return true;
-        } catch (\Throwable) {
-            Log::warning('Vaulter scanner publication failed; durable work remains due.');
+        } catch (\Throwable $error) {
+            Log::warning('Vaulter scanner publication failed; durable work remains due.', ['exception' => $error::class, 'reason' => $error->getCode()]);
 
             return false;
         }

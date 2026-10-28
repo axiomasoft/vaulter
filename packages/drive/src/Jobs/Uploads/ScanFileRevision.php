@@ -21,6 +21,7 @@ use Vaulter\Drive\Jobs\Middleware\RestoreTenantContext;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Jobs\PublicationContext;
 use Vaulter\Media\Content\ScanInput;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
@@ -38,7 +39,7 @@ final class ScanFileRevision implements ShouldQueue
     public int $timeout = 90;
 
     public function __construct(public int|string $obligationId, public int $generation,
-        public int|string $driveId, public int|string|null $tenantId) {}
+        public int|string $driveId, public int|string|null $tenantId, public ?PublicationContext $publicationContext = null) {}
 
     /** @return list<RestoreTenantContext> */
     public function middleware(): array

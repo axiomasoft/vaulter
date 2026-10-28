@@ -1,6 +1,6 @@
 {
     "name": "axioma-studio/vaulter-monorepo",
-    "description": "Vaulter — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
+    "description": "Vaulter \u2014 embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
     "type": "project",
     "license": "MIT",
     "homepage": "https://github.com/axiomasoft/vaulter",
@@ -15,7 +15,8 @@
         "axioma-studio/vaulter-core": "@dev",
         "axioma-studio/vaulter-media": "@dev",
         "axioma-studio/vaulter-drive": "@dev",
-        "axioma-studio/vaulter-documents": "@dev"
+        "axioma-studio/vaulter-documents": "@dev",
+        "axioma-studio/vaulter-tenant": "@dev"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
@@ -53,6 +54,17 @@
             "url": "packages/*",
             "options": {
                 "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../tenant/packages/*",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/tenant": "1.0.0",
+                    "axiomasoft/tenant-laravel": "1.0.0"
+                }
             }
         }
     ],

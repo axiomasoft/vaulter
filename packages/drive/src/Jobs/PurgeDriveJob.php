@@ -10,8 +10,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Jobs\JobPublisher;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Jobs\JobRequest;
+use Vaulter\Jobs\PublicationContext;
 use Vaulter\Support\Identity;
 
 /**
@@ -33,7 +36,7 @@ final class PurgeDriveJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
     /** @var list<int> */
     public array $backoff = [30, 120, 600];
 
-    public function __construct(public int|string $driveId) {}
+    public function __construct(public int|string $driveId, public ?PublicationContext $publicationContext = null) {}
 
     public function uniqueId(): string
     {
@@ -43,7 +46,9 @@ final class PurgeDriveJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
     public function handle(PurgeDriveStepAction $step, VaulterDatabase $database): void
     {
         if (!$database->write(fn (): bool => $step->execute($this->driveId))) {
-            self::dispatch($this->driveId);
+            $publisher = app(JobPublisher::class);
+            $prepared = $publisher->prepare(new JobRequest('vaulter.drive:purge', ['driveId' => (string) $this->driveId]), $this->publicationContext);
+            $publisher->publish($prepared);
         }
     }
 }
