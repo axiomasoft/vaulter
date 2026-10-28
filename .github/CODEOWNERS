@@ -1,0 +1,20 @@
+# Confirmed repository collaborator: academici (GitHub repository API, admin/maintain/push).
+# Last matching pattern wins; each critical rule deliberately retains the same maintainer.
+# Routing only: required code-owner reviews and protection are owner P8.2 prerequisites.
+* @academici
+/packages/core/ @academici
+/packages/*/database/ @academici
+/packages/*/src/Schema/ @academici
+/packages/drive/src/**/Access/ @academici
+/packages/drive/src/**/Uploads/ @academici
+/packages/drive/src/Jobs/Uploads/ScanFileRevision.php @academici
+/packages/*/src/Tenancy/ @academici
+/packages/webhooks/src/*UrlGuard* @academici
+/.github/ @academici
+/release/ @academici
+/scripts/release/ @academici
+/scripts/test-release-tools.py @academici
+/openapi/ @academici
+/packages/collaboration/ @academici
+/packages/vue-collaboration/ @academici
+/SECURITY.md @academici

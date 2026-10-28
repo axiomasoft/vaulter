@@ -221,7 +221,7 @@ jobs:
           php scripts/release/build-artifacts.php --require-approved=release-prepared/prepared \
             --package="${PACKAGE}" --source-sha="${GITHUB_SHA}" --approval=release-evidence/prepared-approval.json
 
-      # The root CHANGELOG.md is already part of the prepared tree (F-P2.1-06). This job never rebuilds, re-splits or
+      # Root SECURITY.md (from the same immutable source, before hashes) and CHANGELOG.md are already part of the prepared tree (F-P2.1-06). This job never rebuilds, re-splits or
       # re-normalizes composer.json: --materialize-split rebuilds the commit from the prepared bytes and refuses any
       # record/ref/tree/byte mismatch. Publication is never destructive: no force, atomic, and an existing branch or tag
       # that is not already the prepared commit refuses (history-aware parent derivation is not qualified yet).

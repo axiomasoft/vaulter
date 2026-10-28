@@ -472,6 +472,19 @@ foreach ($manifest['php'] as $package) {
         file_put_contents($dir.'/CHANGELOG.md', $changelog);
     }
 
+    // Root governance bytes come from immutable S, before ANY tree/content/ZIP identity.
+    // Never consult the checkout or copy SECURITY after qualification. Require a regular blob.
+    if ($channel === 'public') {
+        $securityRef = $sourceSha.':SECURITY.md';
+        $code = run(sprintf('git -C %s ls-tree %s -- SECURITY.md', escapeshellarg($root), escapeshellarg($sourceSha)), $securityEntry);
+        if ($code !== 0 || preg_match('/^100(?:644|755) blob [0-9a-f]{40}\tSECURITY\.md\n?$/D', $securityEntry) !== 1
+            || run(sprintf('git -C %s show %s', escapeshellarg($root), escapeshellarg($securityRef)), $securityBytes) !== 0) {
+            fwrite(STDERR, "build-artifacts: SECURITY.md must be a regular blob at {$sourceSha}\n");
+            exit(1);
+        }
+        file_put_contents($dir.'/SECURITY.md', $securityBytes);
+    }
+
     $composer['version'] = $version;
     // Path repositories point at sibling checkouts and mean nothing inside a dist archive.
     unset($composer['repositories']);

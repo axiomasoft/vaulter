@@ -50,7 +50,7 @@ def copy_files(files, target):
 def release_tree(target, full_packages=False):
     """A copy of the release inputs: manifest, workflow, composer.json files and the npm client manifest."""
     files = [
-        "release/packages.json", ".github/workflows/monorepo-split.yml", ".changeset/config.json",
+        "release/packages.json", ".github/workflows/monorepo-split.yml", ".changeset/config.json", "SECURITY.md",
         "packages/vue/package.json", "packages/vue-collaboration/package.json",
         "packages/collaboration/src/HocuspocusCollaborationDriver.php",
         "packages/documents/src/Types/RichTextDocumentType.php", "packages/documents/src/Types/MarkdownDocumentType.php",
@@ -204,6 +204,43 @@ class BuildArtifactsTest(unittest.TestCase):
 
     def zip_of(self, name):
         return zipfile.ZipFile(self.out / f"axioma-studio-{name}-0.3.0.zip")
+
+    def test_security_from_immutable_source_is_in_every_public_record_and_split(self):
+        self.assertEqual(self.result.returncode, 0, self.result.stderr)
+        source = (self.repo / "SECURITY.md").read_bytes()
+        # Dirty checkout bytes must not replace immutable source S.
+        (self.repo / "SECURITY.md").write_text("unqualified checkout policy")
+        self.addCleanup((self.repo / "SECURITY.md").write_bytes, source)
+        with tempfile.TemporaryDirectory(prefix="vaulter-security-source-") as directory:
+            out = Path(directory) / "out"
+            result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={self.repo}")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            records = list((out / "prepared").glob("*.json"))
+            self.assertEqual(len(records), 7)
+            for path in records:
+                record = json.loads(path.read_text())
+                tree = out / "prepared" / path.stem / "tree"
+                self.assertEqual((tree / "SECURITY.md").read_bytes(), source)
+                self.assertEqual(record["files"]["SECURITY.md"]["sha256"], hashlib.sha256(source).hexdigest())
+                with zipfile.ZipFile(out / record["archive"]) as archive:
+                    self.assertEqual(archive.read("SECURITY.md"), source)
+                git_dir = Path(directory) / (path.stem + ".git")
+                exported = php("build-artifacts.php", f"--materialize-split={out / 'prepared'}",
+                               f"--package={record['package']}", f"--source-sha={record['source_sha']}", f"--git-dir={git_dir}")
+                self.assertEqual(exported.returncode, 0, exported.stderr)
+                blob = subprocess.run(["git", "--git-dir", str(git_dir), "show", f"{record['split_commit']}:SECURITY.md"], capture_output=True, check=True)
+                self.assertEqual(blob.stdout, source)
+
+    def test_security_tampering_after_synthetic_qualification_refuses_identity(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-security-tamper-") as directory:
+            prepared, approval, record = self.approved_fixture(directory)
+            self.assertEqual(self.require_approved(prepared, approval, record).returncode, 0)
+            policy = prepared / "axioma-studio-vaulter-core/tree/SECURITY.md"
+            policy.write_bytes(policy.read_bytes() + b"unqualified policy change\n")
+            result = self.require_approved(prepared, approval, record)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("publish refused", result.stderr)
+            self.assertIn("prepared tree differs", result.stderr)
 
     def test_builds_every_releasable_package(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
