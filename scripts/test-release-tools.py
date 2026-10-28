@@ -712,9 +712,21 @@ class BuildArtifactsTest(unittest.TestCase):
             git("commit", "-q", "-m", "dangling changelog link", cwd=tree)
             self.assertFalse(target.exists())
             out = Path(directory) / "out"
-            result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={tree}")
+            # Own fake tar/git on PATH: they only record that they were invoked, then run the real tool.
+            bin_dir, marker, git_log = Path(directory) / "bin", Path(directory) / "tar-invoked", Path(directory) / "git-log"
+            bin_dir.mkdir()
+            for tool, record in (("tar", f'echo tar >> "{marker}"'), ("git", f'echo "$@" >> "{git_log}"')):
+                real = shutil.which(tool)
+                (bin_dir / tool).write_text(f'#!/bin/sh\n{record}\nexec "{real}" "$@"\n')
+                (bin_dir / tool).chmod(0o755)
+            env = {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+            result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={tree}", env=env)
             self.assertEqual(result.returncode, 1, result.stdout)
             self.assertIn("symlink", result.stderr)
+            self.assertFalse(marker.exists(), "the extractor ran although the exported tree holds a symlink (refusal must precede extraction)")
+            logged = git_log.read_text() if git_log.exists() else ""
+            self.assertNotIn("archive", logged, "git archive ran before the symlink preflight")
+            self.assertNotIn(":CHANGELOG.md", logged, "package metadata/CHANGELOG was read before the refusal")
             self.assertFalse(target.exists(), "the builder wrote through a package symlink before refusing")
             self.assertFalse(target.parent.joinpath("TARGET").is_symlink())
             self.assertEqual(list(out.glob("*.zip")) if out.exists() else [], [])

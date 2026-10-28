@@ -432,6 +432,24 @@ foreach ($manifest['php'] as $package) {
 
     $dir = $staging.'/'.basename($package['path']);
     mkdir($dir, 0775, true);
+    // Preflight BEFORE any extraction: the exported tree's mode-120000 entries (symlinks, dangling included) are read from the
+    // git tree object itself, so no extractor, no metadata read and no write runs for a tree that carries one.
+    $code = run(sprintf('git -C %s ls-tree -r -z %s', escapeshellarg($root), escapeshellarg($sourceSha.':'.$package['path'])), $listing);
+    if ($code !== 0) {
+        fwrite(STDERR, "build-artifacts: cannot list the exported tree of {$name}: {$listing}\n");
+        exit(1);
+    }
+    $linked = [];
+    foreach (explode("\0", $listing) as $entry) {
+        if ($entry !== '' && str_starts_with($entry, '120000 ')) {
+            $linked[] = substr($entry, (int) strpos($entry, "\t") + 1);
+        }
+    }
+    if ($linked !== []) {
+        fwrite(STDERR, "build-artifacts: refused: {$name} exports symlink(s) ".implode(', ', $linked)."; nothing was extracted\n");
+        exit(1);
+    }
+
     $pipeline = sprintf('git -C %s archive --format=tar %s | tar -x -C %s', escapeshellarg($root), escapeshellarg($sourceSha.':'.$package['path']), escapeshellarg($dir));
     $code = run('bash -o pipefail -c '.escapeshellarg($pipeline), $log);
     if ($code !== 0) {
