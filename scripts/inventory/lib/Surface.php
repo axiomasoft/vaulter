@@ -27,11 +27,21 @@ use Throwable;
  *
  * @phpstan-type Member array{group: int, name: string, line: string, types: list<string>, kind: string}
  * @phpstan-type Generic array{member: string, kind: string, target: string}
- * @phpstan-type SurfaceType array{fqcn: string, file: string, package: string, surface: string, since: string, header: string, doc: list<string>, members: list<Member>, facade?: array<string, list<string>>, generics?: list<Generic>, ancestors?: list<string>}
+ * @phpstan-type SurfaceType array{fqcn: string, file: string, package: string, surface: string, since: string, header: string, doc: list<string>, members: list<Member>, facade?: array<string, list<string>>, generics?: list<Generic>, ancestors?: list<string>, structure?: array<string, mixed>}
  */
 final class Surface
 {
     public const SNAPSHOT = 'packages/%s/tests/Arch/__snapshots__/surface.txt';
+
+    /** The machine view of the same reading (P6.2): versioned, keyed by FQCN and member key, read by the BC check. */
+    public const STRUCTURE = 'packages/%s/tests/Arch/__snapshots__/surface.json';
+
+    public const FORMAT = 'vaulter.surface';
+
+    public const FORMAT_VERSION = 1;
+
+    /** The docblock tags that state a contract (types, generics, throws); prose tags (@see, @link, @since…) are not read. */
+    private const CONTRACT_TAGS = '/^@(?:phpstan-|psalm-)?(?:param|return|var|template[\w-]*|extends|implements|use|mixin|method|property[\w-]*|throws|readonly|immutable|pure|sealed|require-extends|require-implements|assert[\w-]*|param-out|self-out|this-out)\b/';
 
     public const INVARIANT = 'I13';
 
@@ -52,6 +62,68 @@ final class Surface
     public static function snapshotPath(string $package): string
     {
         return sprintf(self::SNAPSHOT, $package);
+    }
+
+    public static function structurePath(string $package): string
+    {
+        return sprintf(self::STRUCTURE, $package);
+    }
+
+    /**
+     * One structural JSON per package: its Api and Spi roots and every type of the package that is an ancestor (parent,
+     * interface, trait) of a root anywhere — an Internal ancestor is no contract root but stays in the graph, because the
+     * members a root inherits from it are part of the root's surface. A name outside the sources stays a bare name.
+     *
+     * @param  list<SurfaceType>     $types
+     * @param  list<string>|null     $packages
+     * @return array<string, string>
+     */
+    public static function structures(array $types, ?array $packages = null): array
+    {
+        $packages ??= array_values(array_unique(array_filter(array_column($types, 'package'))));
+        sort($packages, SORT_STRING);
+        $by = [];
+        $folded = [];
+        foreach ($types as $type) {
+            $lower = strtolower($type['fqcn']);
+            if (isset($folded[$lower])) {
+                throw new InventoryError("duplicate type {$type['fqcn']} ({$folded[$lower]}, {$type['file']})");
+            }
+            $folded[$lower] = $type['file'];
+            $by[$type['fqcn']] = $type;
+        }
+
+        $graph = [];
+        $queue = [];
+        foreach ($types as $type) {
+            if (in_array($type['surface'], ['Api', 'Spi:Implement', 'Spi:Call'], true)) {
+                $queue[] = $type['fqcn'];
+            }
+        }
+        while ($queue !== []) {
+            $current = array_shift($queue);
+            if (isset($graph[$current]) || !isset($by[$current])) {
+                continue;
+            }
+            $graph[$current] = true;
+            $structure = $by[$current]['structure'] ?? throw new InventoryError("{$current}: no structure read");
+            array_push($queue, ...$structure['extends'], ...$structure['implements'], ...$structure['traits']);
+        }
+
+        $documents = [];
+        foreach ($packages as $package) {
+            $entries = [];
+            foreach ($types as $type) {
+                if ($type['package'] === $package && isset($graph[$type['fqcn']])) {
+                    $entries[$type['fqcn']] = $type['structure'];
+                }
+            }
+            ksort($entries, SORT_STRING);
+            $document = ['format' => self::FORMAT, 'version' => self::FORMAT_VERSION, 'package' => $package, 'types' => (object) $entries];
+            $documents[$package] = json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR)."\n";
+        }
+
+        return $documents;
     }
 
     /**
@@ -412,8 +484,428 @@ final class Surface
             }
         }
         $type['ancestors'] = $ancestors;
+        $type['structure'] = self::structure($node, $type['fqcn'], $type['surface'], $type['since']);
 
         return $type;
+    }
+
+    /**
+     * The structural view of a type for the BC check: modifiers, ancestors with trait adaptations, attributes, the contract
+     * docblock tags, and every public or protected member by key — methods case-insensitively (`method:<lower>`), properties,
+     * constants and cases by their exact name. An Internal member keeps only its key, visibility and the flag, so a public
+     * member turned Internal is visible; private members are no surface. A syntax the reader does not know is an error.
+     *
+     * @return array<string, mixed>
+     */
+    private static function structure(Stmt\ClassLike $node, string $fqcn, string $surface, string $since): array
+    {
+        $printer = new Standard;
+        $parent = $node instanceof Stmt\Class_ ? $node->extends?->toString() : null;
+        $context = ['self' => $fqcn, 'parent' => $parent];
+        $kind = match (true) {
+            $node instanceof Stmt\Interface_ => 'interface',
+            $node instanceof Stmt\Trait_ => 'trait',
+            $node instanceof Stmt\Enum_ => 'enum',
+            $node instanceof Stmt\Class_ => 'class',
+            default => throw new InventoryError("{$fqcn}: unknown class-like ".$node::class),
+        };
+        $names = static fn (array $list): array => self::sorted(array_map(static fn (Name $n): string => $n->toString(), $list));
+
+        $traits = [];
+        $adaptations = [];
+        $members = [];
+        foreach ($node->stmts as $stmt) {
+            if ($stmt instanceof Stmt\TraitUse) {
+                array_push($traits, ...array_map(static fn (Name $n): string => $n->toString(), $stmt->traits));
+                foreach ($stmt->adaptations as $adaptation) {
+                    $adaptations[] = match (true) {
+                        $adaptation instanceof Stmt\TraitUseAdaptation\Alias => ['trait' => $adaptation->trait?->toString(), 'method' => $adaptation->method->toLowerString(), 'alias' => $adaptation->newName?->toString(), 'visibility' => $adaptation->newModifier === null ? null : self::visibilityOf($adaptation->newModifier), 'insteadof' => []],
+                        $adaptation instanceof Stmt\TraitUseAdaptation\Precedence => ['trait' => $adaptation->trait?->toString(), 'method' => $adaptation->method->toLowerString(), 'alias' => null, 'visibility' => null, 'insteadof' => $names($adaptation->insteadof)],
+                        default => throw new InventoryError("{$fqcn}: unknown trait adaptation ".$adaptation::class),
+                    };
+                }
+            } elseif ($stmt instanceof Stmt\ClassMethod) {
+                $key = 'method:'.$stmt->name->toLowerString();
+                if (!$stmt->isPrivate()) {
+                    self::put($members, $key, self::method($stmt, $printer, $context), $fqcn);
+                }
+                if ($stmt->name->toLowerString() === '__construct') {
+                    foreach ($stmt->params as $param) {
+                        if ($param->flags !== 0 && ($param->flags & Modifiers::PRIVATE) === 0) {
+                            self::put($members, 'property:'.self::paramName($param), self::promoted($param, $printer, $context), $fqcn);
+                        }
+                    }
+                }
+            } elseif ($stmt instanceof Stmt\Property) {
+                foreach ($stmt->props as $property) {
+                    if (!$stmt->isPrivate()) {
+                        self::put($members, 'property:'.$property->name->toString(), self::property($stmt, $property, $printer, $context), $fqcn);
+                    }
+                }
+            } elseif ($stmt instanceof Stmt\ClassConst) {
+                foreach ($stmt->consts as $const) {
+                    if (!$stmt->isPrivate()) {
+                        self::put($members, 'constant:'.$const->name->toString(), self::constant($stmt, $const, $printer, $context), $fqcn);
+                    }
+                }
+            } elseif ($stmt instanceof Stmt\EnumCase) {
+                self::put($members, 'case:'.$stmt->name->toString(), [
+                    'kind' => 'case',
+                    'name' => $stmt->name->toString(),
+                    'value' => $stmt->expr === null ? null : self::expr($printer, $stmt->expr),
+                    'attributes' => self::attributes($stmt->attrGroups, $printer),
+                    'deprecated' => self::deprecated($stmt->attrGroups, $stmt->getDocComment()?->getText() ?? ''),
+                    'doc' => self::contractDoc($stmt->getDocComment()?->getText() ?? ''),
+                ], $fqcn);
+            } elseif (!$stmt instanceof Stmt\Nop) {
+                throw new InventoryError("{$fqcn}: unknown class statement ".$stmt::class);
+            }
+        }
+        ksort($members, SORT_STRING);
+        $doc = $node->getDocComment()?->getText() ?? '';
+
+        return [
+            'kind' => $kind,
+            'surface' => $surface,
+            'since' => $since,
+            'modifiers' => [
+                'abstract' => $node instanceof Stmt\Class_ && $node->isAbstract(),
+                'final' => $node instanceof Stmt\Class_ && $node->isFinal(),
+                'readonly' => $node instanceof Stmt\Class_ && $node->isReadonly(),
+            ],
+            'backing' => $node instanceof Stmt\Enum_ ? $node->scalarType?->toLowerString() : null,
+            'extends' => match (true) {
+                $node instanceof Stmt\Class_ => $parent === null ? [] : [$parent],
+                $node instanceof Stmt\Interface_ => $names($node->extends),
+                default => [],
+            },
+            'implements' => $node instanceof Stmt\Class_ || $node instanceof Stmt\Enum_ ? $names($node->implements) : [],
+            'traits' => self::sorted($traits),
+            'adaptations' => $adaptations,
+            'attributes' => self::attributes($node->attrGroups, $printer),
+            'deprecated' => self::deprecated($node->attrGroups, $doc),
+            'doc_internal' => preg_match('/@internal\b/', $doc) === 1,
+            'doc' => self::contractDoc($doc),
+            'members' => (object) $members,
+        ];
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $members
+     * @param array<string, mixed>                $member
+     */
+    private static function put(array &$members, string $key, array $member, string $fqcn): void
+    {
+        if (isset($members[$key])) {
+            throw new InventoryError("{$fqcn}: duplicate member key {$key}");
+        }
+        $members[$key] = $member;
+    }
+
+    /**
+     * @param  array{self: string, parent: string|null} $context
+     * @return array<string, mixed>
+     */
+    private static function method(Stmt\ClassMethod $stmt, Standard $printer, array $context): array
+    {
+        if (self::internal($stmt->attrGroups)) {
+            return ['kind' => 'method', 'name' => $stmt->name->toString(), 'visibility' => self::visibilityOf($stmt->flags), 'internal' => true];
+        }
+        $doc = $stmt->getDocComment()?->getText() ?? '';
+        $params = [];
+        foreach ($stmt->params as $param) {
+            $params[] = [
+                'name' => self::paramName($param),
+                'type' => self::nativeType($param->type, $context),
+                'default' => $param->default === null ? null : self::expr($printer, $param->default),
+                'variadic' => $param->variadic,
+                'by_ref' => $param->byRef,
+                'promoted' => $param->flags !== 0,
+                'attributes' => self::attributes($param->attrGroups, $printer),
+            ];
+        }
+
+        return [
+            'kind' => 'method',
+            'name' => $stmt->name->toString(),
+            'visibility' => self::visibilityOf($stmt->flags),
+            'internal' => false,
+            'static' => $stmt->isStatic(),
+            'abstract' => $stmt->isAbstract() || $stmt->stmts === null,
+            'final' => $stmt->isFinal(),
+            'by_ref' => $stmt->byRef,
+            'params' => $params,
+            'return' => self::nativeType($stmt->returnType, $context),
+            'attributes' => self::attributes($stmt->attrGroups, $printer),
+            'deprecated' => self::deprecated($stmt->attrGroups, $doc),
+            'doc_internal' => preg_match('/@internal\b/', $doc) === 1,
+            'doc' => self::contractDoc($doc),
+        ];
+    }
+
+    /**
+     * @param  array{self: string, parent: string|null} $context
+     * @return array<string, mixed>
+     */
+    private static function promoted(Node\Param $param, Standard $printer, array $context): array
+    {
+        if (self::internal($param->attrGroups)) {
+            return ['kind' => 'property', 'name' => self::paramName($param), 'visibility' => self::visibilityOf($param->flags), 'internal' => true];
+        }
+
+        return [
+            'kind' => 'property',
+            'name' => self::paramName($param),
+            'visibility' => self::visibilityOf($param->flags),
+            'set_visibility' => self::setVisibility($param->flags),
+            'internal' => false,
+            'promoted' => true,
+            'static' => false,
+            'readonly' => ($param->flags & Modifiers::READONLY) !== 0,
+            'abstract' => false,
+            'final' => ($param->flags & Modifiers::FINAL) !== 0,
+            'type' => self::nativeType($param->type, $context),
+            'default' => null,
+            'hooks' => self::hooks($param->hooks, $printer, $context),
+            'attributes' => self::attributes($param->attrGroups, $printer),
+            'deprecated' => self::deprecated($param->attrGroups, ''),
+            'doc_internal' => false,
+            'doc' => [],
+        ];
+    }
+
+    /**
+     * @param  array{self: string, parent: string|null} $context
+     * @return array<string, mixed>
+     */
+    private static function property(Stmt\Property $stmt, Node\PropertyItem $property, Standard $printer, array $context): array
+    {
+        if (self::internal($stmt->attrGroups)) {
+            return ['kind' => 'property', 'name' => $property->name->toString(), 'visibility' => self::visibilityOf($stmt->flags), 'internal' => true];
+        }
+        $doc = $stmt->getDocComment()?->getText() ?? '';
+
+        return [
+            'kind' => 'property',
+            'name' => $property->name->toString(),
+            'visibility' => self::visibilityOf($stmt->flags),
+            'set_visibility' => self::setVisibility($stmt->flags),
+            'internal' => false,
+            'promoted' => false,
+            'static' => $stmt->isStatic(),
+            'readonly' => $stmt->isReadonly(),
+            'abstract' => $stmt->isAbstract(),
+            'final' => $stmt->isFinal(),
+            'type' => self::nativeType($stmt->type, $context),
+            'default' => $property->default === null ? null : self::expr($printer, $property->default),
+            'hooks' => self::hooks($stmt->hooks, $printer, $context),
+            'attributes' => self::attributes($stmt->attrGroups, $printer),
+            'deprecated' => self::deprecated($stmt->attrGroups, $doc),
+            'doc_internal' => preg_match('/@internal\b/', $doc) === 1,
+            'doc' => self::contractDoc($doc),
+        ];
+    }
+
+    /**
+     * @param  array{self: string, parent: string|null} $context
+     * @return array<string, mixed>
+     */
+    private static function constant(Stmt\ClassConst $stmt, Node\Const_ $const, Standard $printer, array $context): array
+    {
+        if (self::internal($stmt->attrGroups)) {
+            return ['kind' => 'constant', 'name' => $const->name->toString(), 'visibility' => self::visibilityOf($stmt->flags), 'internal' => true];
+        }
+        $doc = $stmt->getDocComment()?->getText() ?? '';
+
+        return [
+            'kind' => 'constant',
+            'name' => $const->name->toString(),
+            'visibility' => self::visibilityOf($stmt->flags),
+            'internal' => false,
+            'final' => $stmt->isFinal(),
+            'type' => self::nativeType($stmt->type, $context),
+            'value' => self::expr($printer, $const->value),
+            'attributes' => self::attributes($stmt->attrGroups, $printer),
+            'deprecated' => self::deprecated($stmt->attrGroups, $doc),
+            'doc_internal' => preg_match('/@internal\b/', $doc) === 1,
+            'doc' => self::contractDoc($doc),
+        ];
+    }
+
+    /**
+     * @param  list<Node\PropertyHook>                  $hooks
+     * @param  array{self: string, parent: string|null} $context
+     * @return list<array<string, mixed>>
+     */
+    private static function hooks(array $hooks, Standard $printer, array $context): array
+    {
+        $found = [];
+        foreach ($hooks as $hook) {
+            $found[] = [
+                'name' => $hook->name->toLowerString(),
+                'final' => $hook->isFinal(),
+                'abstract' => $hook->body === null,
+                'by_ref' => $hook->byRef,
+                'params' => array_map(static fn (Node\Param $p): array => ['name' => self::paramName($p), 'type' => self::nativeType($p->type, $context)], $hook->params),
+                'attributes' => self::attributes($hook->attrGroups, $printer),
+            ];
+        }
+        usort($found, static fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
+
+        return $found;
+    }
+
+    /**
+     * A native type in a normal form: `?T` is `T|null`, union members sorted, an intersection inside a union in parentheses,
+     * `self`/`parent` resolved in the declaring type, builtin names lower-case. An unknown type node is an error.
+     *
+     * @param array{self: string, parent: string|null} $context
+     */
+    private static function nativeType(?Node $type, array $context, bool $nested = false): ?string
+    {
+        if ($type === null) {
+            return null;
+        }
+        if ($type instanceof Node\Identifier) {
+            return $type->toLowerString();
+        }
+        if ($type instanceof Name) {
+            return match (strtolower($type->toString())) {
+                'self' => $context['self'],
+                'parent' => $context['parent'] ?? throw new InventoryError("{$context['self']}: `parent` in a type without a parent"),
+                'static' => 'static',
+                default => $type->toString(),
+            };
+        }
+        if ($type instanceof Node\NullableType) {
+            return self::union([self::nativeType($type->type, $context, true), 'null']);
+        }
+        if ($type instanceof Node\UnionType) {
+            return self::union(array_map(static fn (Node $t): ?string => self::nativeType($t, $context, true), $type->types));
+        }
+        if ($type instanceof Node\IntersectionType) {
+            $parts = self::sorted(array_map(static fn (Node $t): string => (string) self::nativeType($t, $context, true), $type->types));
+
+            return $nested ? '('.implode('&', $parts).')' : implode('&', $parts);
+        }
+
+        throw new InventoryError("{$context['self']}: unknown type node ".$type::class);
+    }
+
+    /** @param list<string|null> $parts */
+    private static function union(array $parts): string
+    {
+        $flat = [];
+        foreach ($parts as $part) {
+            // A nested `?T` inside a union cannot be written, but a normal form must not depend on that.
+            array_push($flat, ...(str_starts_with((string) $part, '(') ? [(string) $part] : explode('|', (string) $part)));
+        }
+
+        return implode('|', self::sorted(array_values(array_unique($flat))));
+    }
+
+    /**
+     * @param  list<string> $values
+     * @return list<string>
+     */
+    private static function sorted(array $values): array
+    {
+        sort($values, SORT_STRING);
+
+        return array_values($values);
+    }
+
+    /**
+     * Every attribute with its arguments, printed with resolved names and sorted: the order of attributes is no contract.
+     *
+     * @param  list<Node\AttributeGroup> $groups
+     * @return list<string>
+     */
+    private static function attributes(array $groups, Standard $printer): array
+    {
+        $found = [];
+        foreach ($groups as $group) {
+            foreach ($group->attrs as $attribute) {
+                $arguments = array_map(static fn (Node\Arg $a): string => ($a->name === null ? '' : $a->name->toString().': ').self::expr($printer, $a->value), $attribute->args);
+                $found[] = $attribute->name->toString().($arguments === [] ? '' : '('.implode(', ', $arguments).')');
+            }
+        }
+
+        return self::sorted($found);
+    }
+
+    /** @param list<Node\AttributeGroup> $groups */
+    private static function deprecated(array $groups, string $doc): bool
+    {
+        foreach ($groups as $group) {
+            foreach ($group->attrs as $attribute) {
+                if (strtolower($attribute->name->toString()) === 'deprecated') {
+                    return true;
+                }
+            }
+        }
+
+        return preg_match('/@deprecated\b/', $doc) === 1;
+    }
+
+    /**
+     * The contract tags of a docblock, one normalised line each (continuation lines joined), sorted.
+     *
+     * @return list<string>
+     */
+    private static function contractDoc(string $doc): array
+    {
+        if ($doc === '') {
+            return [];
+        }
+        $text = (string) preg_replace(['#^\s*/\*\*#', '#\*/\s*$#', '#^\s*\*[ \t]?#m'], '', $doc);
+        $tags = [];
+        $current = null;
+        foreach (preg_split('/\R/', $text) ?: [] as $line) {
+            $line = trim($line);
+            if (str_starts_with($line, '@')) {
+                $current !== null && $tags[] = $current;
+                $current = $line;
+            } elseif ($current !== null && $line !== '') {
+                $current .= ' '.$line;
+            } else {
+                $current !== null && $tags[] = $current;
+                $current = null;
+            }
+        }
+        $current !== null && $tags[] = $current;
+        // A typed tag keeps its type and variable, not its prose; the other contract tags keep their whole line.
+        $typed = ['param', 'param-out', 'var', 'return', 'throws', 'property', 'property-read', 'property-write'];
+        $kept = [];
+        foreach (self::docTags($doc, $typed, true) as [$tag, $type, $variable]) {
+            $kept[] = trim((string) preg_replace('/\s+/', ' ', "@{$tag} {$type}".($variable === '' ? '' : " \${$variable}")));
+        }
+        foreach ($tags as $tag) {
+            if (preg_match(self::CONTRACT_TAGS, $tag) === 1 && preg_match('/^@(?:phpstan-|psalm-)?(?:'.implode('|', $typed).')(?![\w-])/', $tag) !== 1) {
+                $kept[] = trim((string) preg_replace('/\s+/', ' ', $tag));
+            }
+        }
+
+        return self::sorted($kept);
+    }
+
+    private static function visibilityOf(int $flags): string
+    {
+        return match (true) {
+            ($flags & Modifiers::PRIVATE) !== 0 => 'private',
+            ($flags & Modifiers::PROTECTED) !== 0 => 'protected',
+            default => 'public',
+        };
+    }
+
+    private static function setVisibility(int $flags): ?string
+    {
+        return match (true) {
+            ($flags & Modifiers::PRIVATE_SET) !== 0 => 'private',
+            ($flags & Modifiers::PROTECTED_SET) !== 0 => 'protected',
+            ($flags & Modifiers::PUBLIC_SET) !== 0 => 'public',
+            default => null,
+        };
     }
 
     /** @return list<string> the template names a docblock declares */

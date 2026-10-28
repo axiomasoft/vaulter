@@ -11,8 +11,9 @@ require_once dirname(__DIR__).'/lib/Surface.php';
 
 /**
  * packages/<p>/tests/Arch/__snapshots__/surface.txt: the supported surface of each package (D27), read from the
- * #[Api], #[Spi] and #[Internal] attributes of packages/<p>/src. `--check` is red on any difference, so a change of the
- * surface is a visible change of a committed file.
+ * #[Api], #[Spi] and #[Internal] attributes of packages/<p>/src, and beside it surface.json, the versioned structural view
+ * of the same reading for the BC check (P6.2). `--check` is red on any difference of either, so a change of the surface is
+ * a visible change of a committed file.
  */
 return new class implements Generator
 {
@@ -24,9 +25,9 @@ return new class implements Generator
     public function write(Repo $repo, array $options = []): array
     {
         $written = [];
-        foreach (Surface::manifests(Surface::read($repo), $repo->sourcePackages()) as $package => $contents) {
-            $repo->write(Surface::snapshotPath($package), $contents);
-            $written[] = Surface::snapshotPath($package);
+        foreach ($this->outputs($repo) as $path => $contents) {
+            $repo->write($path, $contents);
+            $written[] = $path;
         }
 
         return $written;
@@ -47,11 +48,10 @@ return new class implements Generator
     {
         $lines = [];
         $code = 0;
-        foreach (Surface::manifests(Surface::read($repo), $repo->sourcePackages()) as $package => $contents) {
-            $path = Surface::snapshotPath($package);
+        foreach ($this->outputs($repo) as $path => $contents) {
             $diff = Diff::unified($repo->exists($path) ? $repo->read($path) : '', $contents, $path);
-            if ($report) {
-                $lines[] = sprintf('%s: %d surface lines', $package, substr_count($contents, "\n") - 2);
+            if ($report && str_ends_with($path, '.txt')) {
+                $lines[] = sprintf('%s: %d surface lines', basename(dirname($path, 4)), substr_count($contents, "\n") - 2);
             }
             if ($diff !== []) {
                 $code = 1;
@@ -63,5 +63,20 @@ return new class implements Generator
         }
 
         return ['code' => $code, 'lines' => $lines];
+    }
+
+    /** @return array<string, string> path => contents: the txt and the structural json of every package, from one reading */
+    private function outputs(Repo $repo): array
+    {
+        $types = Surface::read($repo);
+        $outputs = [];
+        foreach (Surface::manifests($types, $repo->sourcePackages()) as $package => $contents) {
+            $outputs[Surface::snapshotPath($package)] = $contents;
+        }
+        foreach (Surface::structures($types, $repo->sourcePackages()) as $package => $contents) {
+            $outputs[Surface::structurePath($package)] = $contents;
+        }
+
+        return $outputs;
     }
 };

@@ -160,6 +160,25 @@ it('manifest: the classifier facts of a type (facade @method, docblock generics,
         ->and(Surface::manifests($types, ['core'])['core'])->toContain("  @method static Money zero()\n")->not->toContain('facade');
 });
 
+it('manifest: the structural surface.json is versioned, keyed by FQCN and member key, and keeps an Internal ancestor of a root while dropping an unrelated Internal type', function (): void {
+    $sources = sm_sources() + ['packages/core/src/Base.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Internal] abstract class Base { public function read(string $key): string { return $key; } } #[Api] final class Child extends Base {}'];
+    $types = Surface::fromSources($sources);
+    $json = json_decode(Surface::structures($types, ['core'])['core'], true, 512, JSON_THROW_ON_ERROR);
+    $money = $json['types']['Vaulter\\Money'];
+
+    expect([$json['format'], $json['version'], $json['package']])->toBe([Surface::FORMAT, Surface::FORMAT_VERSION, 'core'])
+        ->and(array_keys($json['types']))->toBe(['Vaulter\\Base', 'Vaulter\\Child', 'Vaulter\\Handler', 'Vaulter\\Kind', 'Vaulter\\Money'])
+        ->and($json['types']['Vaulter\\Base']['surface'])->toBe('Internal')
+        ->and($json['types']['Vaulter\\Child']['extends'])->toBe(['Vaulter\\Base'])
+        ->and(array_keys($money['members']))->toBe(['constant:CURRENCY', 'constant:DEBUG', 'constant:STEP', 'method:__construct', 'method:add', 'method:count', 'method:hook', 'method:parse', 'property:cents', 'property:label', 'property:trace'])
+        ->and($money['members']['method:hook'])->toBe(['kind' => 'method', 'name' => 'hook', 'visibility' => 'public', 'internal' => true])
+        ->and($money['members']['method:add']['params'][0]['type'])->toBe('Vaulter\\Money|int')
+        ->and($money['members']['method:parse']['params'][0]['by_ref'])->toBeTrue()
+        ->and($money['members']['property:cents']['promoted'])->toBeTrue()
+        ->and($json['types']['Vaulter\\Kind']['backing'])->toBe('string')
+        ->and(Surface::manifests($types, ['core'])['core'])->not->toContain('Vaulter\\Base ');
+});
+
 it('matches the committed manifest of every package to the code, exactly', function (): void {
     $generator = require dirname(__DIR__, 3).'/scripts/inventory/generators/surface.php';
     $outcome = $generator->check(Repo::discover());

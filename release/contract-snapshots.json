@@ -1,0 +1,234 @@
+{
+    "format": "vaulter.contract-snapshots",
+    "version": 1,
+    "note": "The contract surfaces of the BC check (D14, PLAN4 P6.2). Checked surfaces are the union of base and head; a surface cannot be dropped or narrowed to nothing. owner/release_line `*` = each item carries its owner (identities, schema). Refresh the inputs with their generators; this file is edited by hand and reviewed.",
+    "release_lines": {
+        "php-public": {
+            "owners": [
+                "core",
+                "media",
+                "drive",
+                "documents",
+                "webhooks",
+                "filament",
+                "azgard",
+                "vaulter"
+            ]
+        },
+        "php-collaboration": {
+            "owners": [
+                "collaboration"
+            ]
+        }
+    },
+    "surfaces": [
+        {
+            "id": "php:azgard",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "azgard",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/azgard/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:collaboration",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "collaboration",
+            "release_line": "php-collaboration",
+            "inputs": [
+                "packages/collaboration/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:core",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "core",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/core/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:documents",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "documents",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/documents/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:drive",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "drive",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/drive/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:filament",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "filament",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/filament/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:media",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "media",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/media/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "php:webhooks",
+            "adapter": "php-surface",
+            "schema_version": 1,
+            "owner": "webhooks",
+            "release_line": "php-public",
+            "inputs": [
+                "packages/webhooks/tests/Arch/__snapshots__/surface.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
+        },
+        {
+            "id": "identities:cli",
+            "adapter": "identities",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "tests/Repo/Arch/Fixtures/identities/cli.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "items by id+owner; exit_codes are symbolic, not an exhaustive code-path proof (manual check)."
+        },
+        {
+            "id": "identities:config",
+            "adapter": "identities",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "tests/Repo/Arch/Fixtures/identities/config.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "items by id+owner; default/env compared as structure."
+        },
+        {
+            "id": "identities:http",
+            "adapter": "identities",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "tests/Repo/Arch/Fixtures/identities/http.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "items by id+owner: uri, methods, name, middleware (security removal BREAK); OpenAPI is the separate oasdiff check."
+        },
+        {
+            "id": "identities:protocol",
+            "adapter": "identities",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "tests/Repo/Arch/Fixtures/identities/protocol.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "items by id+owner; no optional marker in data, a new key is REVIEW."
+        },
+        {
+            "id": "identities:schema",
+            "adapter": "identities",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "tests/Repo/Arch/Fixtures/identities/schema.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "items by id+owner over preset axes; server engines are qualified in P8.2."
+        },
+        {
+            "id": "schema:sqlite",
+            "adapter": "schema-ddl",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "packages/core/tests/Fixtures/Schema/expected/sqlite/*.json"
+            ],
+            "required": true,
+            "status": "current",
+            "coverage": "DDL by preset+table+column, named index/constraint, foreign key by binding; static SQLite comparison, does not qualify pgsql/mysql."
+        },
+        {
+            "id": "schema:pgsql",
+            "adapter": "schema-ddl",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "packages/core/tests/Fixtures/Schema/expected/pgsql/*.json"
+            ],
+            "required": true,
+            "status": "pending",
+            "coverage": "DDL by preset+table+column, named index/constraint, foreign key by binding; stale after schema edits until the P8.2 server run regenerates it; never taken for the current schema."
+        },
+        {
+            "id": "schema:mysql",
+            "adapter": "schema-ddl",
+            "schema_version": 1,
+            "owner": "*",
+            "release_line": "*",
+            "inputs": [
+                "packages/core/tests/Fixtures/Schema/expected/mysql/*.json"
+            ],
+            "required": true,
+            "status": "pending",
+            "coverage": "DDL by preset+table+column, named index/constraint, foreign key by binding; stale after schema edits until the P8.2 server run regenerates it; never taken for the current schema."
+        }
+    ]
+}

@@ -297,7 +297,8 @@
             "suite": "repo",
             "src": [
                 "scripts",
-                "Makefile"
+                "Makefile",
+                "release/contract-snapshots.json"
             ],
             "tests": [
                 "tests/Repo"
