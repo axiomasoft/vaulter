@@ -104,9 +104,19 @@ def consumer_job():
 
 def contract_job():
     return {'needs': 'changes', 'if': "needs.changes.outputs.has_contract_bc == 'true'", 'timeout-minutes': 15,
-            'env': {key: '${{ vars.' + key + ' }}' for key in ('BC_HOST_BOOTSTRAP', 'BC_TOOL_ROOT', 'BC_TOOL_REV', 'BC_RUNTIME_APPROVAL', 'BC_SHA256SUMS')},
+            'env': {**{key: '${{ vars.' + key + ' }}' for key in ('BC_HOST_BOOTSTRAP', 'BC_TOOL_ROOT', 'BC_TOOL_REV', 'BC_RUNTIME_APPROVAL', 'BC_SHA256SUMS')},
+                    'BC_REQUIRED_LINES': ','.join(policy.REQUIRED_BC_LINES), 'BC_SELECTED_LINES': 'all'},
             'steps': [{'uses': 'actions/checkout@v4', 'with': {'fetch-depth': 0, 'fetch-tags': True, 'persist-credentials': False}},
                       {'run': '"$BC_HOST_PYTHON" -I "$BC_HOST_BOOTSTRAP"'}]}
+
+
+def npm_job(workspace, lane):
+    steps = [{'uses': 'actions/checkout@v4', 'with': {'persist-credentials': False}},
+             {'run': f'npm run api:surface:check --workspace {workspace}'}]
+    if workspace == '@vaulter/vue':
+        steps.append({'run': 'npm run api:check --workspace @vaulter/vue'})
+    return {'needs': 'changes', 'if': f"needs.changes.outputs.has_{lane} == 'true'", 'timeout-minutes': 30,
+            'permissions': {'contents': 'read'}, 'steps': steps}
 
 
 def ci_doc():
@@ -116,6 +126,9 @@ def ci_doc():
         jobs[lane] = {'needs': 'changes', 'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}
     jobs['consumer-isolation'] = consumer_job()
     jobs['contract-bc'] = contract_job()
+    jobs['vue'] = npm_job('@vaulter/vue', 'vue')
+    jobs['vue-collaboration'] = npm_job('@vaulter/vue-collaboration', 'vue_collaboration')
+    jobs['changes']['outputs'] = {output: '${{ steps.plan.outputs.' + output + ' }}' for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines')}
     jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes,
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
     return {
@@ -159,10 +172,14 @@ def selector(status='ok', exit_code=0, suites=(), errors=()):
 def needs(results, **outputs):
     """toJSON(needs) of ci-gate: `results` maps job to result, `outputs` are the outputs of `changes`."""
     base = {'skip_reason': '', 'has_quality': 'false', 'has_fast': 'false', 'has_db': 'false', 'has_serial': 'false',
-            'has_consumer': 'false', 'has_vue': 'false', 'has_vue_collaboration': 'false', 'has_hub': 'false', 'has_repo': 'false', 'has_openapi': 'false'}
+            'has_consumer': 'false', 'has_vue': 'false', 'has_vue_collaboration': 'false', 'has_hub': 'false', 'has_repo': 'false', 'has_openapi': 'false', 'has_contract_bc': 'false'}
     base.update({k: v for k, v in outputs.items()})
+    if not base['skip_reason'] and any(base.get('has_' + lane) == 'true' for lane in policy.LANES):
+        base['has_contract_bc'] = outputs.get('has_contract_bc', 'true')
+    for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
+        base.setdefault(field, json.dumps(list(policy.REQUIRED_BC_LINES)))
     out = {job: {'result': result, 'outputs': {}} for job, result in results.items()}
-    out.setdefault('contract-bc', {'result': 'skipped', 'outputs': {}})
+    out.setdefault('contract-bc', {'result': 'success' if base['has_contract_bc'] == 'true' else 'skipped', 'outputs': {}})
     out['changes'] = {'result': results.get('changes', 'success'), 'outputs': base}
     return out
 
@@ -642,6 +659,123 @@ class SingleCiTest(unittest.TestCase):
 
 
 class ContractBoundaryTest(unittest.TestCase):
+    def test_review_npm_both_ci_jobs_require_a_blocking_declaration_guard(self):
+        actual = policy.load_workflow(ROOT / '.github/workflows/ci.yml')
+        for job_id, workspace in (('vue', '@vaulter/vue'), ('vue-collaboration', '@vaulter/vue-collaboration')):
+            command = f'npm run api:surface:check --workspace {workspace}'
+            configured = copy.deepcopy(actual)
+            configured['jobs'][job_id]['steps'].append({'run': command})
+            for broken_step in (None, {'run': command, 'if': 'false'}, {'run': command, 'continue-on-error': True},
+                                {'run': command + ' --if-present'}, {'run': command + ' || true'}):
+                broken = copy.deepcopy(configured)
+                broken['jobs'][job_id]['steps'] = [step for step in broken['jobs'][job_id]['steps'] if step.get('run') != command]
+                if broken_step is not None:
+                    broken['jobs'][job_id]['steps'].append(broken_step)
+                errors = policy.check_ci(broken, ROOT)
+                self.assertTrue(any(job_id + ': declaration guard' in e for e in errors), (job_id, broken_step, errors))
+
+    def test_review_npm_php_only_line_selection_cannot_succeed_at_the_real_gate(self):
+        planned = policy.plan_outputs(policy.derive_support(ROOT), 'all')
+        green_jobs = {policy.lane_job(lane): 'success' for lane in policy.LANES}
+        for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
+            outputs = copy.deepcopy(planned)
+            outputs[field] = json.dumps(['php-public', 'php-collaboration'])
+            errors = policy.gate_errors(needs(green_jobs, **outputs))
+            self.assertTrue(any(field in e for e in errors), (field, errors))
+
+        for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
+            for missing in (None, 'not-json', '[]', json.dumps(['php-public'] * 4), '[{}, {}, {}, {}]'):
+                outputs = dict(planned, **{field: missing})
+                self.assertTrue(any(field in e for e in policy.gate_errors(needs(green_jobs, **outputs))))
+        bypass = dict(planned, has_contract_bc='false')
+        self.assertTrue(any('four-line contract gate' in e for e in policy.gate_errors(needs(green_jobs, **bypass))))
+        self.assertEqual([], policy.gate_errors(needs(green_jobs, **planned)))
+
+    def test_review_npm_trusted_policy_has_four_independent_release_lines(self):
+        policy_doc = json.loads((ROOT / 'scripts/release/Contract/bc-trust-policy.json').read_text())
+        self.assertEqual({'php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration'}, set(policy_doc['lines']))
+        manifest = json.loads((ROOT / 'release/packages.json').read_text())
+        for entry in manifest['npm']:
+            version = json.loads((ROOT / entry['path'] / 'package.json').read_text())['version']
+            self.assertEqual({'prefix': entry['tag_prefix'], 'major': int(version.split('.')[0])}, policy_doc['lines'][entry['release_line']])
+
+    def test_review_npm_real_workflow_preserves_guards_conditions_and_gate_dependencies(self):
+        actual = policy.load_workflow(ROOT / '.github/workflows/ci.yml')
+        self.assertEqual([], policy.check_ci(actual, ROOT))
+        for job_id in ('vue', 'vue-collaboration', 'contract-bc'):
+            broken = copy.deepcopy(actual)
+            broken['jobs']['ci-gate']['needs'].remove(job_id)
+            self.assertTrue(any('does not need' in e for e in policy.check_ci(broken, ROOT)))
+            broken = copy.deepcopy(actual)
+            broken['jobs'][job_id]['if'] = 'false'
+            self.assertTrue(policy.check_ci(broken, ROOT))
+            broken = copy.deepcopy(actual)
+            broken['jobs'][job_id]['continue-on-error'] = True
+            self.assertTrue(policy.check_ci(broken, ROOT))
+        for field in ('BC_REQUIRED_LINES', 'BC_SELECTED_LINES'):
+            broken = copy.deepcopy(actual)
+            broken['jobs']['contract-bc']['env'][field] = 'php-public,php-collaboration'
+            self.assertTrue(any(field in e for e in policy.check_ci(broken, ROOT)))
+        for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
+            broken = copy.deepcopy(actual)
+            del broken['jobs']['changes']['outputs'][output]
+            self.assertTrue(any(output in e for e in policy.check_ci(broken, ROOT)))
+        for job_id in ('vue', 'vue-collaboration'):
+            for mutate in (lambda j: j.update(permissions={'contents': 'write'}),
+                           lambda j: j.update(env={'TOKEN': '${{ secrets.NPM_TOKEN }}'}),
+                           lambda j: j['steps'][0]['with'].update({'persist-credentials': True})):
+                broken = copy.deepcopy(actual)
+                mutate(broken['jobs'][job_id])
+                self.assertTrue(policy.check_ci(broken, ROOT))
+
+    def test_review_npm_trusted_host_requires_selected_lines_and_preserves_aggregate_failure(self):
+        import contextlib
+        import io
+        import os
+        import subprocess
+        from unittest.mock import patch
+        spec = importlib.util.spec_from_file_location('trusted_host_lines', ROOT / 'scripts/release/Contract/trusted-host.py')
+        host = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(host)
+        policy_doc = json.loads((ROOT / 'scripts/release/Contract/bc-trust-policy.json').read_text())
+        self.assertEqual(tuple(policy.REQUIRED_BC_LINES), host.selected_lines(policy_doc))
+        for field in ('required', 'selected'):
+            for value in ('php-public,php-collaboration', '', 'php-public,php-public,php-public,php-public'):
+                with self.assertRaises(ValueError):
+                    host.selected_lines(policy_doc, **{field: value})
+        for line in ('npm-vue', 'npm-vue-collaboration'):
+            broken = copy.deepcopy(policy_doc)
+            del broken['lines'][line]
+            with self.assertRaises(ValueError): host.selected_lines(broken)
+        report = {'exit': 0, 'lines': {line: {'admission': 'compared', 'base': 'release-base'} for line in policy.REQUIRED_BC_LINES}, 'changes': []}
+        host.validate_line_report(report, policy.REQUIRED_BC_LINES, 0)
+        for name in policy.REQUIRED_BC_LINES:
+            broken = copy.deepcopy(report)
+            del broken['lines'][name]
+            with self.assertRaises(ValueError): host.validate_line_report(broken, policy.REQUIRED_BC_LINES, 0)
+            for edit in ({'admission': 'not_checked'}, {'admission': 'initial_bootstrap'}, {'selected': False}, {'required': False}, {'status': 'pending'}):
+                broken = copy.deepcopy(report)
+                broken['lines'][name].update(edit)
+                with self.assertRaises(ValueError): host.validate_line_report(broken, policy.REQUIRED_BC_LINES, 0)
+        with self.assertRaises(ValueError): host.validate_line_report(report, policy.REQUIRED_BC_LINES, 1)
+        # Stubbed coordinator/OpenAPI processes prove line/exit plumbing only; no runtime or compatibility pass.
+        with tempfile.TemporaryDirectory() as tmp:
+            tool = Path(tmp) / 'T'
+            (tool / 'scripts/release/Contract').mkdir(parents=True)
+            (tool / 'scripts/release/Contract/bc-trust-policy.json').write_text(json.dumps(policy_doc))
+            env = {'BC_TOOL_ROOT': str(tool), 'BC_TOOL_REV': 'a' * 40, 'BC_SHA256SUMS': 'external', 'BC_RUNTIME_APPROVAL': 'external', 'BC_RUNTIME_APPROVAL_SHA256': 'external', 'BC_SOURCE_ROOT': '/candidate-data-only', 'BC_SOURCE_SHA': 'c' * 40}
+            for coordinator_exit, openapi_exit, expected in ((0, 0, 0), (1, 0, 1), (0, 1, 1), (1, 2, 2), (0, 125, 2)):
+                stub_report = dict(report, exit=coordinator_exit)
+                processes = [subprocess.CompletedProcess([], coordinator_exit, json.dumps(stub_report).encode()), subprocess.CompletedProcess([], openapi_exit)]
+                output = io.StringIO()
+                with patch.dict(os.environ, env, clear=True), patch.object(host, 'verify', return_value=('/approved/php8.4', {'PATH': '/usr/bin:/bin'})), patch.object(host.subprocess, 'check_output', return_value='b' * 40), patch.object(host.subprocess, 'run', side_effect=processes) as run, contextlib.redirect_stdout(output):
+                    self.assertEqual(expected, host.main())
+                    self.assertEqual('/approved/php8.4', run.call_args_list[0].args[0][0])
+                    self.assertEqual(str(tool) + '/scripts/release/bc-check.php', run.call_args_list[0].args[0][1])
+                observed = json.loads(output.getvalue())
+                self.assertEqual(list(policy.REQUIRED_BC_LINES), observed['required_release_lines'])
+                self.assertEqual(list(policy.REQUIRED_BC_LINES), observed['selected_release_lines'])
+
     def test_contract_lane_is_selected_and_blocks_every_non_success(self):
         support = policy.derive_support(ROOT)
         out = policy.plan_outputs(support, 'all')

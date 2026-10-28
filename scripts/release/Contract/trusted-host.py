@@ -11,6 +11,41 @@ import subprocess
 import sys
 import tempfile
 
+REQUIRED_BC_LINES = ('php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration')
+
+
+def selected_lines(policy, selected='all', required=None):
+    """Host-owned mandatory coverage; neither candidate selectors nor an old PHP-only policy can narrow it."""
+    expected = set(REQUIRED_BC_LINES)
+    if not isinstance(policy.get('lines'), dict) or set(policy['lines']) != expected:
+        raise ValueError('trusted policy must require all four PHP/npm release lines')
+    for value in (required, selected if selected != 'all' else None):
+        if value is not None:
+            lines = value.split(',')
+            if len(lines) != len(expected) or set(lines) != expected:
+                raise ValueError('required/selected BC lines must include all four PHP/npm release lines')
+    return REQUIRED_BC_LINES
+
+
+def validate_line_report(report, required, returncode):
+    """A successful subprocess with missing, skipped or deferred npm coverage is still a tool error."""
+    if type(report.get('exit')) is not int or report['exit'] not in (0, 1, 2) or report['exit'] != returncode:
+        raise ValueError('incoherent contract checker exit status')
+    if report['exit'] == 2:
+        return
+    lines = report.get('lines')
+    if not isinstance(lines, dict) or set(lines) != set(required):
+        raise ValueError('contract checker omitted required PHP/npm release lines')
+    for name, line in lines.items():
+        if not isinstance(line, dict) or line.get('admission') not in ('compared', 'initial_bootstrap', 'approved_initial_release'):
+            raise ValueError('required line was not checked: ' + name)
+        if line.get('selected', True) is not True or line.get('required', True) is not True or line.get('status', 'current') != 'current':
+            raise ValueError('required line cannot be omitted/deferred: ' + name)
+        if report['exit'] == 0 and line['admission'] == 'initial_bootstrap':
+            raise ValueError('initial bootstrap is not a compatibility pass: ' + name)
+        if line['admission'] == 'compared' and not isinstance(line.get('base'), str):
+            raise ValueError('compared line has no release base: ' + name)
+
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -86,12 +121,17 @@ def main():
     e = os.environ
     tool = e['BC_TOOL_ROOT']
     php, env = verify(tool, e['BC_TOOL_REV'], e['BC_SHA256SUMS'], e['BC_RUNTIME_APPROVAL'], e['BC_RUNTIME_APPROVAL_SHA256'])
+    policy_path = tool + '/scripts/release/Contract/bc-trust-policy.json'
+    required = selected_lines(json.loads(Path(policy_path).read_text()), e.get('BC_SELECTED_LINES', 'all'), e.get('BC_REQUIRED_LINES'))
     # Protected mount and Git metadata integrity are external prerequisites; never claimed by a candidate fixture.
     with tempfile.TemporaryDirectory(prefix='vaulter-bc-host-') as tmp:
-        args = [php, tool + '/scripts/release/bc-check.php', '--root=' + e['BC_SOURCE_ROOT'], '--candidate=' + e['BC_SOURCE_SHA'], '--policy=' + tool + '/scripts/release/Contract/bc-trust-policy.json', '--policy-rev=' + e['BC_TOOL_REV'], '--exceptions=' + tool + '/release/bc-exceptions.json']
+        args = [php, tool + '/scripts/release/bc-check.php', '--root=' + e['BC_SOURCE_ROOT'], '--candidate=' + e['BC_SOURCE_SHA'], '--policy=' + policy_path, '--policy-rev=' + e['BC_TOOL_REV'], '--exceptions=' + tool + '/release/bc-exceptions.json']
         result = subprocess.run(args, env=env, cwd=tmp, capture_output=True)
         report = json.loads(result.stdout)
+        validate_line_report(report, required, result.returncode)
         report.update({'source_sha': e['BC_SOURCE_SHA'], 'policy_sha': e['BC_TOOL_REV'], 'signature_guard_only': True, 'actual_runtime_qualification': False})
+        report['required_release_lines'] = list(required)
+        report['selected_release_lines'] = list(required)
         for line in report['lines'].values():
             line['policy_sha'] = e['BC_TOOL_REV']
             line['source_sha'] = e['BC_SOURCE_SHA']
@@ -101,7 +141,8 @@ def main():
         print(json.dumps(report), flush=True)
         if result.returncode == 2:
             return 2
-        return subprocess.run(['/bin/bash', tool + '/scripts/release/oasdiff-check.sh', e['BC_SOURCE_ROOT'], e['BC_SOURCE_SHA'], str(path)], env=env, cwd=tmp).returncode
+        openapi_exit = subprocess.run(['/bin/bash', tool + '/scripts/release/oasdiff-check.sh', e['BC_SOURCE_ROOT'], e['BC_SOURCE_SHA'], str(path)], env=env, cwd=tmp).returncode
+        return max(report['exit'], openapi_exit if openapi_exit in (0, 1, 2) else 2)
 
 
 if __name__ == '__main__':

@@ -58,6 +58,8 @@ jobs:
       has_repo: ${{ steps.plan.outputs.has_repo }}
       has_openapi: ${{ steps.plan.outputs.has_openapi }}
       has_contract_bc: ${{ steps.plan.outputs.has_contract_bc }}
+      contract_bc_required_lines: ${{ steps.plan.outputs.contract_bc_required_lines }}
+      contract_bc_selected_lines: ${{ steps.plan.outputs.contract_bc_selected_lines }}
       quality_matrix: ${{ steps.plan.outputs.quality_matrix }}
       fast_matrix: ${{ steps.plan.outputs.fast_matrix }}
       db_matrix: ${{ steps.plan.outputs.db_matrix }}
@@ -506,6 +508,8 @@ jobs:
     if: needs.changes.outputs.has_vue == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -514,6 +518,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
@@ -526,6 +532,10 @@ jobs:
       # The committed API types must be exactly what openapi/vaulter-v1.yaml generates.
       - name: Generated API types are current
         run: npm run api:check --workspace @vaulter/vue
+
+      # Declaration freshness is separate from the trusted predecessor comparison and OpenAPI types.
+      - name: Public declaration surface is current
+        run: npm run api:surface:check --workspace @vaulter/vue
 
       - name: Type-check
         run: npm run typecheck --workspace @vaulter/vue
@@ -542,6 +552,8 @@ jobs:
     if: needs.changes.outputs.has_vue_collaboration == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -550,6 +562,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
@@ -562,6 +576,9 @@ jobs:
       # The package imports the built types of its peer @vaulter/vue (a workspace link to its dist/).
       - name: Build @vaulter/vue (peer)
         run: npm run build --workspace @vaulter/vue
+
+      - name: Private declaration surface is current
+        run: npm run api:surface:check --workspace @vaulter/vue-collaboration
 
       - name: Type-check
         run: npm run typecheck --workspace @vaulter/vue-collaboration
@@ -745,6 +762,8 @@ jobs:
       BC_RUNTIME_APPROVAL_SHA256: ${{ vars.BC_RUNTIME_APPROVAL_SHA256 }}
       BC_SOURCE_ROOT: ${{ github.workspace }}
       BC_SOURCE_SHA: ${{ github.sha }}
+      BC_REQUIRED_LINES: php-public,php-collaboration,npm-vue,npm-vue-collaboration
+      BC_SELECTED_LINES: all
     steps:
       - uses: actions/checkout@v4
         with:

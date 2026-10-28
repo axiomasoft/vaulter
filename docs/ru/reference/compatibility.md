@@ -245,7 +245,7 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 | Сериализованные задачи/receipt, retry/drain | вручную / not_checked | задачи и receipt из 1.x читаются последующими 1.x; семантика retry/drain неизменна. Прохождение проверки сигнатур не квалифицирует rolling workers: смешанные версии требуют политики drain старых workers или owner tuple-теста | not_checked | владелец: `packages/drive`/`core`, линия 1.x; BC-pass не заявляется |
 | Схема сохранённых документов, wire-версии протокола | вручную / not_checked | версии растут только совместимо | not_checked | владелец: `packages/documents`/`collaboration`, линия 1.x |
 | Env хаба/образа | исходники/конфиг `packages/collaboration/hub` и приватные docs; вручную / not_checked, Docker runtime отложен в P8.2 | имена не удаляются без alias | not_checked | владелец: `packages/collaboration`, линия 1.x |
-| npm `@vaulter/vue` | `etc/*.api.{md,json}`, entrypoints, consumer type fixtures | экспорты, типы, props, events; runtime-поведение машинно не защищено | машинный дрейф типов | consumer-runtime |
+| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | `etc/index.api.md`, `etc/components.surface.txt` каждого пакета, публичные entrypoints и consumer type fixtures | удаление экспорта — BREAK; изменение деклараций, обязательных props или emits — REVIEW | `api:surface:check` сверяет декларации с кодом в обоих Vue jobs; trusted-координатор `npm-surface` сравнивает их с предшественником независимой release-line | только декларации; packed/runtime-квалификация — P8.2 |
 | Root-only ключи `composer.json` (D8) | корневой `composer.json` | split-пакеты не наследуют root-only ключи; не обещание пакета | not_checked | вручную |
 
 Именованные аргументы — часть API для типов `#[Api]`; нестабильные конструкторы — `#[Internal]` (D27, `tests/Repo/Arch/SurfaceRulesTest.php`). Атрибуты не гарантируют поведение.
@@ -296,13 +296,41 @@ extensions, environment and bytes are required. PHP children use that approved b
 shim inside its checkout. Scratch files live outside T. Git metadata integrity, protected
 mounts, the external bootstrap and runtime approval remain owner prerequisites.
 
-The trusted default policy `Contract/bc-trust-policy.json` contains both release lines
-and no approvals. A known missing release is a tooling error. No predecessor is
-`initial_bootstrap`, never a self-baseline BC pass; only external exact D18 approval
-can admit an initial release. Reports distinguish changes, errors, selected bases,
-policy/source SHAs, `not_checked`, and pending qualification. Structural signatures,
-identity/schema and npm declaration guards do not qualify runtime semantics, serial
-workers, actual tgz/ZIP consumers, Docker, installs or upgrades. Those remain pending
-owner P8.2 runs; actual runtime qualification is false in synthetic reports.
+Trusted policy `Contract/bc-trust-policy.json` требует четыре независимые release-line
+и не содержит approvals:
+
+| Обязательная линия | Семейство тегов | Зафиксированный major |
+|:--|:--|:--|
+| `php-public` | `v<version>` | 1 |
+| `php-collaboration` | `collaboration-v<version>` | 1 |
+| `npm-vue` | `@vaulter/vue@<version>` | 1 |
+| `npm-vue-collaboration` | `@vaulter/vue-collaboration@<version>` | 0 |
+
+Major npm берётся из независимой версии соответствующего пакета: сейчас 1.0.0 и 0.0.0.
+Поле `api: 1` release manifest не означает версию 1.x приватного пакета. Новый major
+требует явного изменения trusted policy. Семейства тегов и каналы заданы в
+`release/packages.json`; npm-тег не выбирает PHP-базу или базу соседнего npm-пакета.
+Host требует все четыре линии в policy и отчёте. `BC_SELECTED_LINES=all` выбирает
+полный trusted-набор; урезанный `BC_REQUIRED_LINES` или selection, отсутствие линии,
+skipped/deferred-покрытие и несогласованный process status блокируют результат.
+Успешный OpenAPI не маскирует BREAK/REVIEW или tool error координатора. Плановые
+required/selected outputs и реальные зависимости jobs входят в итоговый CI gate;
+даже Vue-only изменение требует координатор всех четырёх линий.
+
+Оба Vue jobs выполняют блокирующий `api:surface:check` без secrets и сохранённых
+checkout credentials, с правами только contents:read. Эта проверка регенерирует
+декларации и сверяет committed reports с исходниками; она не одобряет изменение отчёта.
+Trusted-координатор отдельно сравнивает base/candidate reports адаптером `npm-surface`
+и применяет точные разрешения. Публичный `api:check` по-прежнему проверяет generated
+OpenAPI types и не заменяет ни одну из проверок деклараций.
+
+Отсутствующий известный release — tooling error. При отсутствии предшественника
+статус `initial_bootstrap` не является BC pass относительно самого себя; первый выпуск
+может допустить только внешнее точное D18 approval. Отчёт разделяет изменения,
+ошибки, выбранные базы, SHA policy/source, `not_checked` и pending qualification.
+Структурные сигнатуры, identities/schema и npm declaration guards не квалифицируют
+runtime-семантику, serial workers, реальные tgz/ZIP consumers, Docker, установку и
+upgrade. Эти проверки остаются за владельцем в P8.2; в синтетических отчётах
+actual runtime qualification всегда false.
 
 Синтетические проверки подтверждают оркестрацию и границу доверия. Реальная квалификация REST, Docker, архивов, runtime и upgrade отложена на P8.2; внешняя настройка владельца не считается выполненной.

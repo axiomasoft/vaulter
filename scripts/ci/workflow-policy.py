@@ -57,6 +57,12 @@ LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboratio
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
 CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
 LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration', 'contract_bc': 'contract-bc'}
+REQUIRED_BC_LINES = ('php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration')
+
+
+def complete_bc_lines(value: object) -> bool:
+    """An exact set, including both npm lines; a duplicated line cannot stand in for a missing one."""
+    return isinstance(value, list) and len(value) == len(REQUIRED_BC_LINES) and all(isinstance(line, str) for line in value) and set(value) == set(REQUIRED_BC_LINES)
 
 
 def lane_job(lane: str) -> str:
@@ -285,6 +291,12 @@ def check_ci(doc: dict, root: Path) -> list[str]:
         if 'changes' not in ([job['needs']] if isinstance(job.get('needs'), str) else (job.get('needs') or [])):
             errors.append(f'{name}: job {job_id} does not need `changes`')
     errors += check_contract_bc(jobs.get('contract-bc') or {})
+    for job_id, workspace, lane in (('vue', '@vaulter/vue', 'vue'), ('vue-collaboration', '@vaulter/vue-collaboration', 'vue_collaboration')):
+        errors += check_npm_declaration_job(job_id, workspace, lane, jobs.get(job_id) or {})
+    for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
+        if (jobs.get('changes', {}).get('outputs') or {}).get(output) != '${{ steps.plan.outputs.' + output + ' }}':
+            errors.append(f'{name}: changes must expose {output} from the actual plan')
+    errors += check_bc_release_policy(root)
     errors += check_support(name, doc, root)
     return errors
 
@@ -304,7 +316,56 @@ def check_contract_bc(job: dict) -> list[str]:
             config = step.get('with', {})
             if config.get('fetch-depth') != 0 or config.get('fetch-tags') is not True or config.get('persist-credentials') is not False:
                 errors.append('ci.yml: contract-bc needs full tags/history without persisted credentials')
+    env = job.get('env') or {}
+    required = str(env.get('BC_REQUIRED_LINES', '')).split(',')
+    selected = env.get('BC_SELECTED_LINES')
+    if not complete_bc_lines(required):
+        errors.append('ci.yml: contract-bc BC_REQUIRED_LINES must include all four PHP/npm lines')
+    if selected != 'all' and not complete_bc_lines(str(selected).split(',')):
+        errors.append('ci.yml: contract-bc BC_SELECTED_LINES must select all four PHP/npm lines')
+    if job.get('if') != "needs.changes.outputs.has_contract_bc == 'true'":
+        errors.append('ci.yml: contract-bc must follow the actual planned condition')
     return errors
+
+
+def check_npm_declaration_job(job_id: str, workspace: str, lane: str, job: dict) -> list[str]:
+    errors = []
+    command = f'npm run api:surface:check --workspace {workspace}'
+    steps = [step for step in job.get('steps', []) if str(step.get('run', '')).strip() == command]
+    if len(steps) != 1 or any('if' in step or str(step.get('continue-on-error', False)).lower() != 'false' for step in steps):
+        errors.append(f'{job_id}: declaration guard must run the exact api:surface:check command unconditionally and block errors')
+    if job.get('if') != f"needs.changes.outputs.has_{lane} == 'true'" or str(job.get('continue-on-error', False)).lower() != 'false':
+        errors.append(f'{job_id}: declaration guard must follow the actual lane condition and block errors')
+    if job.get('permissions') != {'contents': 'read'} or 'secrets.' in json.dumps(job):
+        errors.append(f'{job_id}: declaration guard runs candidate code only in an unprivileged job without secrets')
+    checkouts = [step for step in job.get('steps', []) if 'actions/checkout@' in step.get('uses', '')]
+    if not checkouts or any((step.get('with') or {}).get('persist-credentials') is not False for step in checkouts):
+        errors.append(f'{job_id}: declaration guard must not retain checkout credentials')
+    if job_id == 'vue' and not any(step.get('run') == 'npm run api:check --workspace @vaulter/vue' for step in job.get('steps', [])):
+        errors.append('vue: OpenAPI api:check must remain distinct from the declaration guard')
+    return errors
+
+
+def check_bc_release_policy(root: Path) -> list[str]:
+    """Compare trusted policy pins with the actual independent package lines, never with candidate approvals."""
+    try:
+        policy = json.loads((root / 'scripts/release/Contract/bc-trust-policy.json').read_text())
+        manifest = json.loads((root / 'release/packages.json').read_text())
+        lines = policy['lines']
+        if set(lines) != set(REQUIRED_BC_LINES):
+            return ['ci.yml: trusted BC policy must require all four PHP/npm release lines']
+        errors = []
+        for entry in manifest['php'] + manifest['npm']:
+            definition = lines.get(entry['release_line'], {})
+            if definition.get('prefix') != entry['tag_prefix'] or type(definition.get('major')) is not int or definition['major'] < 0:
+                errors.append(f"ci.yml: trusted BC policy differs from release/packages.json for {entry['release_line']}")
+        for entry in manifest['npm']:
+            version = json.loads((root / entry['path'] / 'package.json').read_text())['version']
+            if lines[entry['release_line']]['major'] != int(version.split('.')[0]):
+                errors.append(f"ci.yml: trusted BC policy must pin the independent npm major for {entry['release_line']}")
+        return errors
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        return [f'ci.yml: unreadable trusted BC release-line policy: {error}']
 
 
 def check_weekly(doc: dict, root: Path) -> list[str]:
@@ -491,6 +552,8 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
         'openapi': skip_reason == '', 'contract_bc': skip_reason == '',
     }
     out = {'skip_reason': skip_reason, 'mode': mode}
+    out['contract_bc_required_lines'] = json.dumps(list(REQUIRED_BC_LINES), separators=(',', ':'))
+    out['contract_bc_selected_lines'] = json.dumps(list(REQUIRED_BC_LINES) if skip_reason == '' else [], separators=(',', ':'))
     for lane, value in flags.items():
         out[f'has_{lane}'] = _bool(value and skip_reason == '')
     for lane, rows in (('quality', quality_matrix), ('fast', fast), ('db', db_matrix), ('serial', serial), ('consumer', consumer)):
@@ -509,6 +572,16 @@ def gate_errors(needs: dict) -> list[str]:
     outputs = changes.get('outputs') or {}
     skip_reason = outputs.get('skip_reason', '')
     expected = {lane: outputs.get(f'has_{lane}') == 'true' for lane in LANES}
+    if not skip_reason and any(expected.values()) and not expected['contract_bc']:
+        errors.append('contract_bc: every active CI plan requires the four-line contract gate')
+    if expected['contract_bc']:
+        for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
+            try:
+                value = json.loads(outputs.get(field, 'null'))
+            except (TypeError, ValueError):
+                value = None
+            if not complete_bc_lines(value):
+                errors.append(f'contract_bc: {field} must include all four PHP/npm release lines')
     if skip_reason and any(expected.values()):
         errors.append(f'changes: skip_reason {skip_reason!r} yet lanes are expected: {[lane for lane, on in expected.items() if on]}')
     if not skip_reason and not any(expected.values()):

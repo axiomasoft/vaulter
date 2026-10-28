@@ -318,7 +318,7 @@ Each `TestCase` migrates its own schema on start, so run one schema group per in
 | Queued job / receipt serialization, retry/drain | manual / not_checked | serialized jobs and receipts from 1.x readable by later 1.x; retry/drain semantics unchanged. A passing signature check does not qualify rolling workers: mixed versions need a drain-old-workers policy or an owner tuple test | not_checked | owner: `packages/drive`/`core`, line 1.x; no BC pass claimed |
 | Persisted document schema, protocol wire versions | manual / not_checked | versions only grow compatibly | not_checked | owner: `packages/documents`/`collaboration`, line 1.x |
 | Hub/image environment variables | `packages/collaboration/hub` source/config and private docs; manual / not_checked, Docker runtime deferred to P8.2 | names not removed without alias | not_checked | owner: `packages/collaboration`, line 1.x |
-| npm `@vaulter/vue` | `etc/*.api.{md,json}`, entrypoints, consumer type fixtures | exports, types, props, events; runtime behavior not machine-protected | machine drift for types | consumer-runtime |
+| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | each package’s `etc/index.api.md`, `etc/components.surface.txt`, public entrypoints and consumer type fixtures | removed exports are BREAK; changed declarations, required props or emits are REVIEW | `api:surface:check` checks declaration freshness in each Vue CI job; the trusted `npm-surface` coordinator compares with the independent release-line predecessor | declaration guard only; packed/runtime qualification is P8.2 |
 | Root-only `composer.json` keys (D8) | root `composer.json` | split packages do not inherit root-only keys; not a package promise | not_checked | manual |
 
 Named arguments are part of the API for `#[Api]` types; unstable constructors are `#[Internal]` (D27, `tests/Repo/Arch/SurfaceRulesTest.php`). Attributes do not guarantee behavior.
@@ -369,8 +369,35 @@ extensions, environment and bytes are required. PHP children use that approved b
 shim inside its checkout. Scratch files live outside T. Git metadata integrity, protected
 mounts, the external bootstrap and runtime approval remain owner prerequisites.
 
-The trusted default policy `Contract/bc-trust-policy.json` contains both release lines
-and no approvals. A known missing release is a tooling error. No predecessor is
+The trusted default policy `Contract/bc-trust-policy.json` requires four independent
+release lines and contains no approvals:
+
+| Required line | Tag family | Pinned major |
+|:--|:--|:--|
+| `php-public` | `v<version>` | 1 |
+| `php-collaboration` | `collaboration-v<version>` | 1 |
+| `npm-vue` | `@vaulter/vue@<version>` | 1 |
+| `npm-vue-collaboration` | `@vaulter/vue-collaboration@<version>` | 0 |
+
+The npm majors follow the actual independent package versions (currently 1.0.0 and
+0.0.0); the release manifest’s `api: 1` does not make the private package version 1.x.
+Advancing a major requires an explicit trusted policy update. Tag prefixes and channels
+come from `release/packages.json`; an npm tag never selects a PHP or neighboring npm base.
+The host requires all four policy and report lines, even when a selector requests only PHP.
+`BC_SELECTED_LINES=all` selects the complete trusted set; a reduced `BC_REQUIRED_LINES`
+or selection, missing line, skipped/deferred line, or incoherent process status blocks.
+The aggregate preserves any coordinator BREAK/REVIEW or tooling error even if OpenAPI
+returns success. CI’s planned required/selected line outputs and actual job dependencies
+participate in the final gate; a Vue-only change still requires this four-line coordinator.
+
+Both Vue jobs execute `api:surface:check` as a blocking step in an unprivileged job,
+without secrets or persisted checkout credentials. This regenerates and checks the
+committed declaration reports against source; it does not approve a report change.
+The trusted coordinator separately compares the base/candidate reports with `npm-surface`
+and applies the exact exception policy. The public `api:check` continues to check generated
+OpenAPI types and is not a replacement for either declaration check.
+
+A known missing release is a tooling error. No predecessor is
 `initial_bootstrap`, never a self-baseline BC pass; only external exact D18 approval
 can admit an initial release. Reports distinguish changes, errors, selected bases,
 policy/source SHAs, `not_checked`, and pending qualification. Structural signatures,
