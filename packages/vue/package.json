@@ -51,7 +51,9 @@
     "typecheck": "vue-tsc --noEmit",
     "api:generate": "openapi-typescript ../../openapi/vaulter-v1.yaml -o src/api/schema.d.ts",
     "api:check": "node scripts/api-check.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "api:surface:check": "node ../../scripts/release/npm-surface.mjs vue",
+    "api:surface:update": "node ../../scripts/release/npm-surface.mjs vue --update"
   },
   "peerDependencies": {
     "vue": "^3.4",

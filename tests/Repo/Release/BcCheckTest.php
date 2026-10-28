@@ -7,6 +7,7 @@ use Vaulter\Inventory\Surface;
 use Vaulter\Release\Contract\Change;
 use Vaulter\Release\Contract\ContractError;
 use Vaulter\Release\Contract\Identities;
+use Vaulter\Release\Contract\NpmSurface;
 use Vaulter\Release\Contract\PhpSurface;
 use Vaulter\Release\Contract\SchemaDdl;
 use Vaulter\Release\Contract\SnapshotManifest;
@@ -485,4 +486,58 @@ it('schema: the schema identities compare columns by id, a removed column is BRE
         ->and(bc_identity_rows('schema', $before, $removed))->toBe(['BREAK column:v_activity.actor_id identity-removed'])
         ->and(Change::exitOf(static fn (): array => SchemaDdl::compare('schema:sqlite', SchemaDdl::load(json_encode($ddl), 'a'), SchemaDdl::load(json_encode($other), 'b'))))->toBe(2)
         ->and(bc_exit(static fn (): array => SchemaDdl::load(json_encode($duplicate), 'dup')))->toBe(2);
+});
+
+/** @return array{report: string, components: string} the committed declaration reports of an npm package */
+function bc_npm_files(string $package = 'vue'): array
+{
+    $dir = bc_root()."/packages/{$package}/etc";
+
+    return ['report' => (string) file_get_contents("{$dir}/index.api.md"), 'components' => (string) file_get_contents("{$dir}/components.surface.txt")];
+}
+
+/** @return list<string> "CLASSIFICATION subject rule" of the changes from the committed reports to an edit of them */
+function bc_npm_rows(callable $edit, string $package = 'vue'): array
+{
+    $before = bc_npm_files($package);
+    $after = $edit($before);
+    expect($after)->not->toBe($before);
+
+    return bc_rows(NpmSurface::compare("npm:{$package}", NpmSurface::load($before['report'], $before['components'], 'before'), NpmSurface::load($after['report'], $after['components'], 'after')));
+}
+
+it('npm: the committed declaration reports are no change against themselves, and a removed export is a BREAK (bc-npm, scenario 8)', function (): void {
+    foreach (['vue', 'vue-collaboration'] as $package) {
+        $f = bc_npm_files($package);
+        $surface = NpmSurface::load($f['report'], $f['components'], $package);
+        expect(NpmSurface::compare("npm:{$package}", $surface, $surface))->toBe([]);
+    }
+    expect(bc_npm_rows(static fn (array $f): array => ['report' => str_replace("export function createVaulterClient(options?: VaulterClientOptions): VaulterClient;\n", '', $f['report']), 'components' => $f['components']]))
+        ->toBe(['BREAK export:function:createVaulterClient export-removed'])
+        ->and(bc_npm_rows(static fn (array $f): array => ['report' => str_replace('export function createVaulterClient(', 'export function createVaulterClient2(', $f['report']), 'components' => $f['components']]))
+        ->toContain('BREAK export:function:createVaulterClient export-removed')
+        ->toContain('ADD export:function:createVaulterClient2 export-added');
+});
+
+it('npm: a component prop turned required, a changed prop type or event payload are REVIEW, a removed prop or event is BREAK, a new optional prop is ADD (bc-npm props/emits)', function (): void {
+    $edit = static fn (string $from, string $to): callable => static fn (array $f): array => ['report' => $f['report'], 'components' => str_replace($from, $to, $f['components'])];
+    $path = 'VaulterBreadcrumb prop path?: { id: string; name: string; }[] | undefined';
+
+    expect(bc_npm_rows($edit($path, 'VaulterBreadcrumb prop path: { id: string; name: string; }[]')))->toBe(['REVIEW prop:VaulterBreadcrumb.path prop-required'])
+        ->and(bc_npm_rows($edit('VaulterBreadcrumb prop rootLabel?: string | undefined', 'VaulterBreadcrumb prop rootLabel?: number | undefined')))->toBe(['REVIEW prop:VaulterBreadcrumb.rootLabel prop-changed'])
+        ->and(bc_npm_rows($edit('emit (event: "navigate", nodeId: string | null): void', 'emit (event: "navigate", nodeId: string): void')))->toBe(['REVIEW emit:VaulterBreadcrumb@navigate event-changed'])
+        ->and(bc_npm_rows($edit("{$path}\n", '')))->toBe(['BREAK prop:VaulterBreadcrumb.path prop-removed'])
+        ->and(bc_npm_rows($edit('VaulterBreadcrumb emit (event: "navigate", nodeId: string | null): void', 'VaulterBreadcrumb emit (event: "navigated", nodeId: string | null): void')))
+        ->toBe(['BREAK emit:VaulterBreadcrumb@navigate event-removed', 'ADD emit:VaulterBreadcrumb@navigated event-added'])
+        ->and(bc_npm_rows($edit("{$path}\n", "{$path}\nVaulterBreadcrumb prop tone?: string | undefined\n")))->toBe(['ADD prop:VaulterBreadcrumb.tone prop-added'])
+        ->and(bc_npm_rows($edit("{$path}\n", "{$path}\nVaulterBreadcrumb prop tone: string\n")))->toBe(['REVIEW prop:VaulterBreadcrumb.tone prop-added-required']);
+});
+
+it('npm: a file that is no API Extractor report, an empty report or an unreadable component row is exit 2, never green (bc-npm inputs)', function (): void {
+    $f = bc_npm_files();
+
+    expect(bc_exit(static fn (): array => NpmSurface::load('not a report', $f['components'], 'a')))->toBe(2)
+        ->and(bc_exit(static fn (): array => NpmSurface::load("## API Report File for \"x\"\n", $f['components'], 'b')))->toBe(2)
+        ->and(bc_exit(static fn (): array => NpmSurface::load($f['report'], "VaulterBreadcrumb garbage\n", 'c')))->toBe(2)
+        ->and(Change::exitOf(static fn (): array => NpmSurface::compare('npm:vue', NpmSurface::load($f['report'], "x\n", 'd'), NpmSurface::load($f['report'], $f['components'], 'e'))))->toBe(2);
 });

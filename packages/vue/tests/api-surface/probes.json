@@ -1,0 +1,25 @@
+{
+  "mutations": [
+    {
+      "id": "removed-composable-export",
+      "report": "api",
+      "file": "index.d.ts",
+      "from": "createVaulterClient, ",
+      "to": ""
+    },
+    {
+      "id": "prop-optional-to-required",
+      "report": "surface",
+      "file": "components/VaulterBreadcrumb.vue.d.ts",
+      "from": "path?:",
+      "to": "path:"
+    },
+    {
+      "id": "event-payload-narrowed",
+      "report": "surface",
+      "file": "components/VaulterBreadcrumb.vue.d.ts",
+      "from": "nodeId: string | null",
+      "to": "nodeId: string"
+    }
+  ]
+}
