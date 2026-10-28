@@ -20,7 +20,7 @@
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0",
+    "@changesets/cli": "^3.0.3",
     "@microsoft/api-extractor": "7.58.9",
     "typescript": "5.9.3",
     "vitepress": "^1.6.3",
