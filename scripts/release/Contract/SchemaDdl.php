@@ -15,6 +15,7 @@ namespace Vaulter\Release\Contract;
  * upgrade evidence. A static comparison of one engine does not qualify another: pgsql/mysql stay `pending` in the manifest.
  *
  * @phpstan-import-type ChangeRow from Change
+ *
  * @phpstan-type Table array{columns: array<string, array<string, mixed>>, indexes: array<string, mixed>, constraints: array<string, mixed>, foreign_keys: array<string, mixed>}
  * @phpstan-type Snapshot array{preset: string, driver: string, tables: array<string, Table>}
  */

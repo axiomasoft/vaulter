@@ -34,7 +34,7 @@ final class Identities
     private const SECURITY_MIDDLEWARE = '/^(?:auth\b|auth:|can:|ability:|abilities:|signed|verified|password\.confirm|throttle|vaulter\.module|.*\\\\(?:Authenticate|Authorize|EnsureEmailIsVerified|ValidateSignature)\w*$)/i';
 
     /**
-     * @param  list<string>                                                                $owners the packages of the inventory
+     * @param  list<string>                                                                                $owners the packages of the inventory
      * @return array{kind: string, root: array<string, mixed>, items: array<string, array<string, mixed>>}
      */
     public static function load(string $json, string $kind, array $owners, string $where): array
@@ -281,7 +281,7 @@ final class Identities
     /**
      * A new schema item belongs to a new table when its table has no identity before and one after.
      *
-     * @param array<string, mixed>                                                                $item
+     * @param array<string, mixed>                                                                        $item
      * @param array{kind: string, root: array<string, mixed>, items: array<string, array<string, mixed>>} $before
      * @param array{kind: string, root: array<string, mixed>, items: array<string, array<string, mixed>>} $after
      */

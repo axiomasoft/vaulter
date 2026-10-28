@@ -1,80 +1,31 @@
 name: OpenAPI
-
 on:
-  push:
-    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
-    paths: ['openapi/**', 'packages/collaboration/openapi/**', '.github/workflows/openapi.yml']
-  pull_request:
-    branches: [main]
-    paths: ['openapi/**', 'packages/collaboration/openapi/**', '.github/workflows/openapi.yml']
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
-env:
-  # Pinned: a floating tag would let a new oasdiff rule fail an unrelated PR.
-  # Bump deliberately, together with plans/.../artifacts/P6.3/tool-pins.md.
-  OASDIFF_IMAGE: tufin/oasdiff:v1.33.0
-
+permissions:
+  contents: read
 jobs:
   breaking:
-    name: Breaking changes (oasdiff)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - contract: openapi/vaulter-v1.yaml
-            tags: v*
-            channel: public
-          - contract: packages/collaboration/openapi/hub.yaml
-            tags: collaboration-v*
-            channel: private
-
+    env:
+      BC_HOST_BOOTSTRAP: ${{ vars.BC_HOST_BOOTSTRAP }}
+      BC_HOST_PYTHON: ${{ vars.BC_HOST_PYTHON }}
+      BC_TOOL_ROOT: ${{ vars.BC_TOOL_ROOT }}
+      BC_TOOL_REV: ${{ vars.BC_TOOL_REV }}
+      BC_SHA256SUMS: ${{ vars.BC_SHA256SUMS }}
+      BC_RUNTIME_APPROVAL: ${{ vars.BC_RUNTIME_APPROVAL }}
+      BC_RUNTIME_APPROVAL_SHA256: ${{ vars.BC_RUNTIME_APPROVAL_SHA256 }}
+      BC_SOURCE_ROOT: ${{ github.workspace }}
+      BC_SOURCE_SHA: ${{ github.sha }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # The base is the contract of the last released tag; before the first release that carries
-      # the file, it is the contract on the base branch of the pull request.
-      - name: Select the base contract
-        id: base
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BASE_REF: ${{ github.base_ref }}
-          CONTRACT: ${{ matrix.contract }}
-          RELEASE_TAGS: ${{ matrix.tags }}
+          fetch-tags: true
+          persist-credentials: false
+      - name: Shared trusted checker and pinned oasdiff wrapper
+        working-directory: /tmp
         run: |
-          mkdir -p "$RUNNER_TEMP/base"
-          tag="$(git tag --list "$RELEASE_TAGS" --sort=-v:refname | head -n 1)"
-          source=""
-          if [ -n "$tag" ] && git cat-file -e "$tag:$CONTRACT" 2>/dev/null; then
-            source="$tag"
-          elif [ "$EVENT_NAME" = "pull_request" ] && git cat-file -e "origin/$BASE_REF:$CONTRACT" 2>/dev/null; then
-            source="origin/$BASE_REF"
-          fi
-
-          if [ -z "$source" ]; then
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No released or base-branch contract yet; nothing to compare."
-            exit 0
-          fi
-
-          git show "$source:$CONTRACT" > "$RUNNER_TEMP/base/contract.yaml"
-          echo "found=true" >> "$GITHUB_OUTPUT"
-          echo "Comparing against $source"
-
-      - name: oasdiff breaking
-        if: steps.base.outputs.found == 'true'
-        env:
-          CONTRACT: ${{ matrix.contract }}
-        run: |
-          docker run --rm \
-            -v "$RUNNER_TEMP/base:/base:ro" \
-            -v "$PWD:/candidate:ro" \
-            "$OASDIFF_IMAGE" breaking /base/contract.yaml "/candidate/$CONTRACT" --fail-on ERR
+          test "${BC_HOST_BOOTSTRAP:0:1}" = /
+          test "${BC_HOST_PYTHON:0:1}" = /
+          exec "$BC_HOST_PYTHON" -I "$BC_HOST_BOOTSTRAP"

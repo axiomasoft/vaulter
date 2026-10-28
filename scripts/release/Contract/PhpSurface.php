@@ -140,7 +140,7 @@ final class PhpSurface
      * The members a type exposes through its graph, each with the type that declares it (`from`), and the names of its
      * ancestors: resolved in the graph, or unresolved (outside the sources).
      *
-     * @param  array<string, array<string, mixed>>                                                                 $types
+     * @param  array<string, array<string, mixed>>                                                                    $types
      * @return array{members: array<string, array<string, mixed>>, ancestors: list<string>, unresolved: list<string>}
      */
     public static function resolve(array $types, string $fqcn): array
@@ -356,7 +356,7 @@ final class PhpSurface
         }
         foreach (['static' => Change::BREAK, 'by_ref' => Change::BREAK] as $flag => $classification) {
             if (array_key_exists($flag, $b) && $b[$flag] !== $a[$flag]) {
-                $add($subject, $flag === 'by_ref' ? 'return-by-ref' : 'static', $classification, $b[$flag], $a[$flag], "{$subject}: the ".($flag === 'by_ref' ? 'returns-by-reference' : 'static')." mode changed.");
+                $add($subject, $flag === 'by_ref' ? 'return-by-ref' : 'static', $classification, $b[$flag], $a[$flag], "{$subject}: the ".($flag === 'by_ref' ? 'returns-by-reference' : 'static').' mode changed.');
             }
         }
         foreach (['final', 'abstract', 'readonly'] as $flag) {
@@ -444,9 +444,9 @@ final class PhpSurface
     /**
      * Attributes, deprecation, `@internal` and the contract PHPDoc of a type or member.
      *
-     * @param array<string, mixed>                                            $b
-     * @param array<string, mixed>                                            $a
-     * @param callable(string, string, string, mixed, mixed, string): void    $add
+     * @param array<string, mixed>                                         $b
+     * @param array<string, mixed>                                         $a
+     * @param callable(string, string, string, mixed, mixed, string): void $add
      */
     private static function common(string $subject, array $b, array $a, callable $add, bool $type): void
     {

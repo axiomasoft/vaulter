@@ -52,11 +52,11 @@ REMOVED_WORKFLOWS = [
 ]
 GATE_JOB = 'ci-gate'
 GATE_CHECK_NAME = 'CI gate'
-LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboration', 'hub', 'repo', 'openapi']
+LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboration', 'hub', 'repo', 'openapi', 'contract_bc']
 # PLAN3 P4.19 (I14): packages whose split archive must stand alone. azgard is the external gate (D20), filament has its
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
 CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
-LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration'}
+LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration', 'contract_bc': 'contract-bc'}
 
 
 def lane_job(lane: str) -> str:
@@ -284,7 +284,26 @@ def check_ci(doc: dict, root: Path) -> list[str]:
             continue
         if 'changes' not in ([job['needs']] if isinstance(job.get('needs'), str) else (job.get('needs') or [])):
             errors.append(f'{name}: job {job_id} does not need `changes`')
+    errors += check_contract_bc(jobs.get('contract-bc') or {})
     errors += check_support(name, doc, root)
+    return errors
+
+
+def check_contract_bc(job: dict) -> list[str]:
+    errors = []
+    blob = json.dumps(job)
+    for token in ('has_contract_bc', 'BC_HOST_BOOTSTRAP', 'BC_TOOL_ROOT', 'BC_TOOL_REV', 'BC_RUNTIME_APPROVAL', 'BC_SHA256SUMS', 'fetch-depth', 'fetch-tags', '-I'):
+        if token not in blob:
+            errors.append('ci.yml: contract-bc missing trusted boundary ' + token)
+    if 'secrets.' in blob or 'scripts/php84' in blob or str(job.get('continue-on-error', False)).lower() != 'false':
+        errors.append('ci.yml: contract-bc must be blocking, without candidate runtime or secrets')
+    for step in job.get('steps', []):
+        if str(step.get('continue-on-error', False)).lower() != 'false':
+            errors.append('ci.yml: contract-bc step may not hide tool errors')
+        if 'actions/checkout@' in step.get('uses', ''):
+            config = step.get('with', {})
+            if config.get('fetch-depth') != 0 or config.get('fetch-tags') is not True or config.get('persist-credentials') is not False:
+                errors.append('ci.yml: contract-bc needs full tags/history without persisted credentials')
     return errors
 
 
@@ -469,7 +488,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
         'quality': bool(quality_matrix), 'fast': bool(fast), 'db': bool(db_matrix), 'serial': bool(serial),
         'consumer': bool(consumer),
         'vue': 'vue' in suites, 'vue_collaboration': 'vue-collaboration' in suites, 'hub': 'hub' in suites, 'repo': 'repo' in suites,
-        'openapi': skip_reason == '',
+        'openapi': skip_reason == '', 'contract_bc': skip_reason == '',
     }
     out = {'skip_reason': skip_reason, 'mode': mode}
     for lane, value in flags.items():

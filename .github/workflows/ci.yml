@@ -17,7 +17,7 @@ name: CI
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
 #   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub (+ vue-collaboration, P5.14)
-#   openapi.yml oasdiff breaking ........................... openapi.yml (unchanged, informative, D21)
+#   openapi.yml oasdiff breaking ........................... contract-bc (blocking, D14/D18)
 #   new: mysql 8.4 lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation, I14)
 on:
@@ -57,6 +57,7 @@ jobs:
       has_hub: ${{ steps.plan.outputs.has_hub }}
       has_repo: ${{ steps.plan.outputs.has_repo }}
       has_openapi: ${{ steps.plan.outputs.has_openapi }}
+      has_contract_bc: ${{ steps.plan.outputs.has_contract_bc }}
       quality_matrix: ${{ steps.plan.outputs.quality_matrix }}
       fast_matrix: ${{ steps.plan.outputs.fast_matrix }}
       db_matrix: ${{ steps.plan.outputs.db_matrix }}
@@ -679,7 +680,7 @@ jobs:
           python-version: '3.12'
 
       # Blocking validation: the document parses, is OpenAPI 3, every local $ref resolves and operationIds are
-      # unique. The breaking-change comparison against the last stable tag stays informative in openapi.yml (D21).
+      # unique. The trusted contract-bc lane compares both specifications against their release-line bases.
       - name: Validate openapi/vaulter-v1.yaml
         run: |
           python3 -m pip install 'pyyaml==6.0.2'
@@ -726,10 +727,43 @@ jobs:
           sys.exit(1 if errors else 0)
           PY
 
+  contract-bc:
+    name: Contract BC (trusted policy)
+    needs: changes
+    if: needs.changes.outputs.has_contract_bc == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      BC_HOST_BOOTSTRAP: ${{ vars.BC_HOST_BOOTSTRAP }}
+      BC_HOST_PYTHON: ${{ vars.BC_HOST_PYTHON }}
+      BC_TOOL_ROOT: ${{ vars.BC_TOOL_ROOT }}
+      BC_TOOL_REV: ${{ vars.BC_TOOL_REV }}
+      BC_SHA256SUMS: ${{ vars.BC_SHA256SUMS }}
+      BC_RUNTIME_APPROVAL: ${{ vars.BC_RUNTIME_APPROVAL }}
+      BC_RUNTIME_APPROVAL_SHA256: ${{ vars.BC_RUNTIME_APPROVAL_SHA256 }}
+      BC_SOURCE_ROOT: ${{ github.workspace }}
+      BC_SOURCE_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      # Bootstrap/Python and protected read-only T are provisioned outside candidate authority.
+      # Missing owner configuration blocks; this job never installs or runs candidate tools.
+      - name: Exact trusted closure and contract check
+        working-directory: /tmp
+        run: |
+          test "${BC_HOST_BOOTSTRAP:0:1}" = /
+          test "${BC_HOST_PYTHON:0:1}" = /
+          exec "$BC_HOST_PYTHON" -I "$BC_HOST_BOOTSTRAP"
+
   ci-gate:
     name: CI gate
     if: always()
-    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, vue-collaboration, hub, repo, openapi]
+    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, vue-collaboration, hub, repo, openapi, contract-bc]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

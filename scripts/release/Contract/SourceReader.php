@@ -136,7 +136,7 @@ final class SourceReader
     }
 
     /**
-     * @param  list<string>           $arguments
+     * @param  list<string>             $arguments
      * @return array{0: int, 1: string}
      */
     private function git(array $arguments): array

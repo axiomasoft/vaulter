@@ -102,12 +102,20 @@ def consumer_job():
             'steps': [{'run': 'scripts/release/consumer-check.sh "$PACKAGE"'}]}
 
 
+def contract_job():
+    return {'needs': 'changes', 'if': "needs.changes.outputs.has_contract_bc == 'true'", 'timeout-minutes': 15,
+            'env': {key: '${{ vars.' + key + ' }}' for key in ('BC_HOST_BOOTSTRAP', 'BC_TOOL_ROOT', 'BC_TOOL_REV', 'BC_RUNTIME_APPROVAL', 'BC_SHA256SUMS')},
+            'steps': [{'uses': 'actions/checkout@v4', 'with': {'fetch-depth': 0, 'fetch-tags': True, 'persist-credentials': False}},
+                      {'run': '"$BC_HOST_PYTHON" -I "$BC_HOST_BOOTSTRAP"'}]}
+
+
 def ci_doc():
     lanes = [policy.lane_job(lane) for lane in policy.LANES]
     jobs = {'changes': {'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}}
     for lane in lanes:
         jobs[lane] = {'needs': 'changes', 'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}
     jobs['consumer-isolation'] = consumer_job()
+    jobs['contract-bc'] = contract_job()
     jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes,
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
     return {
@@ -154,6 +162,7 @@ def needs(results, **outputs):
             'has_consumer': 'false', 'has_vue': 'false', 'has_vue_collaboration': 'false', 'has_hub': 'false', 'has_repo': 'false', 'has_openapi': 'false'}
     base.update({k: v for k, v in outputs.items()})
     out = {job: {'result': result, 'outputs': {}} for job, result in results.items()}
+    out.setdefault('contract-bc', {'result': 'skipped', 'outputs': {}})
     out['changes'] = {'result': results.get('changes', 'success'), 'outputs': base}
     return out
 
@@ -630,6 +639,110 @@ class SingleCiTest(unittest.TestCase):
         out = self.plan(selector('docs_only', 0))
         skipped = {policy.lane_job(lane): 'skipped' for lane in policy.LANES}
         self.assertEqual([], policy.gate_errors(needs(skipped, **out)))
+
+
+class ContractBoundaryTest(unittest.TestCase):
+    def test_contract_lane_is_selected_and_blocks_every_non_success(self):
+        support = policy.derive_support(ROOT)
+        out = policy.plan_outputs(support, 'all')
+        self.assertEqual('true', out['has_contract_bc'])
+        for result in ('failure', 'cancelled', 'skipped', 'missing'):
+            errors = policy.gate_errors(needs({'contract-bc': result}, has_contract_bc='true'))
+            self.assertTrue(any('contract_bc: required lane' in e for e in errors))
+        for key in ('fetch-depth', 'fetch-tags', 'persist-credentials'):
+            job = contract_job()
+            del job['steps'][0]['with'][key]
+            self.assertTrue(policy.check_contract_bc(job))
+        job = contract_job()
+        job['steps'][-1]['continue-on-error'] = True
+        self.assertTrue(policy.check_contract_bc(job))
+        self.assertEqual([], policy.check_contract_bc(contract_job()))
+
+    def test_host_exact_inventory_runtime_and_readonly_tool(self):
+        import hashlib
+        import os
+        import subprocess
+        import sys
+        spec = importlib.util.spec_from_file_location('trusted_host', ROOT / 'scripts/release/Contract/trusted-host.py')
+        host = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(host)
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            tool = d / 'tool'
+            tool.mkdir()
+            subprocess.run(['git', 'init', '-q', str(tool)], check=True)
+            (tool / 'helper').write_text('approved')
+            (tool / 'composer.lock').write_text('lock')
+            (tool / 'vendor').mkdir()
+            (tool / 'vendor/autoload.php').write_text('<?php')
+            import shutil
+            release = tool / 'scripts/release'
+            (release / 'Contract').mkdir(parents=True)
+            shutil.copy(ROOT / 'scripts/release/bc-check.php', release / 'bc-check.php')
+            for file in (ROOT / 'scripts/release/Contract').glob('*.php'):
+                shutil.copy(file, release / 'Contract' / file.name)
+            for args in (['add', '.'], ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'fixture']):
+                subprocess.run(['git', '-C', str(tool)] + args, check=True)
+            rev = subprocess.check_output(['git', '-C', str(tool), 'rev-parse', 'HEAD'], text=True).strip()
+            # Fixture setup uses source php84; bootstrap itself receives a separately approved absolute binary.
+            php = subprocess.check_output([str(ROOT / 'scripts/php84'), 'php', '-r', 'echo PHP_BINARY;'], text=True)
+            php = str(Path(php).resolve())
+            env = {'PATH': '/usr/bin:/bin', 'BC_PYTHON': sys.executable}
+            probe = 'echo json_encode(["version"=>PHP_VERSION,"ini"=>php_ini_loaded_file(),"scanned"=>php_ini_scanned_files(),"extensions"=>get_loaded_extensions()]);'
+            config = json.loads(subprocess.check_output([php, '-r', probe], env=env))
+            names = [config['ini']] if config['ini'] else []
+            names += [n.strip() for n in (config['scanned'] or '').split(',') if n.strip()]
+            approval = d / 'runtime.json'
+            approval.write_text(json.dumps({'php': php, 'sha256': host.digest(Path(php)), 'configuration': config, 'config_files': {n: host.digest(Path(n)) for n in names}, 'environment': env}))
+            sums = d / 'SHA256SUMS'
+            names = sorted(p.relative_to(tool).as_posix() for p in tool.rglob('*') if p.is_file() and '.git' not in p.parts)
+            sums.write_text(''.join(host.digest(tool / n) + '  ' + n + '\n' for n in names))
+            approved_runtime = host.digest(approval)
+            verify = lambda: host.verify(str(tool), rev, str(sums), str(approval), approved_runtime)
+            for path in (tool / 'helper', tool / 'composer.lock', tool / 'vendor/autoload.php'):
+                original = path.read_bytes()
+                path.write_bytes(b'tampered')
+                with self.assertRaises(ValueError): verify()
+                path.write_bytes(original)
+            extra = tool / 'untracked'
+            extra.write_text('not listed')
+            with self.assertRaises(ValueError): verify()
+            extra.unlink()
+            extra.symlink_to(tool / 'helper')
+            with self.assertRaises(ValueError): verify()
+            extra.unlink()
+            helper = tool / 'helper'
+            helper.unlink()
+            with self.assertRaises(ValueError): verify()
+            helper.write_text('approved')
+            original = approval.read_bytes()
+            approval.write_bytes(original + b' ')
+            with self.assertRaises(ValueError): verify()
+            approval.unlink()
+            with self.assertRaises(FileNotFoundError): verify()
+            approval.write_bytes(original)
+            # Read-only tool files/directories: verification and direct PHP execution need no shim writes.
+            for path in tool.rglob('*'):
+                if '.git' not in path.parts: path.chmod(0o555 if path.is_dir() else 0o444)
+            tool.chmod(0o555)
+            binary, approved_env = verify()
+            self.assertEqual('8.4', subprocess.check_output([binary, '-r', 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'], env=approved_env, cwd=tmp, text=True))
+            checked = subprocess.run([binary, str(release / 'bc-check.php')], env=approved_env, cwd=tmp, capture_output=True, text=True)
+            self.assertEqual(2, checked.returncode)
+            self.assertIn('missing --root', checked.stdout)
+            self.assertFalse((tool / 'build').exists())
+            tool.chmod(0o755)
+            for path in tool.rglob('*'):
+                if path.is_dir() and '.git' not in path.parts: path.chmod(0o755)
+            candidate = d / 'candidate'
+            candidate.mkdir()
+            marker = d / 'executed'
+            (candidate / 'hashlib.py').write_text('raise RuntimeError("candidate module executed")')
+            attack_env = dict(os.environ, PYTHONPATH=str(candidate), BC_TOOL_ROOT=str(tool), BC_TOOL_REV=rev, BC_SHA256SUMS=str(d / 'missing'), BC_RUNTIME_APPROVAL=str(approval), BC_RUNTIME_APPROVAL_SHA256=approved_runtime)
+            isolated = subprocess.run([sys.executable, '-I', str(ROOT / 'scripts/release/Contract/trusted-host.py')], cwd=candidate, env=attack_env, capture_output=True, text=True)
+            self.assertEqual(2, isolated.returncode)
+            self.assertIn('untrusted_checker', isolated.stdout)
+            self.assertNotIn('candidate module executed', isolated.stderr)
 
 
 if __name__ == '__main__':

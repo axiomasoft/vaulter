@@ -718,3 +718,54 @@ it('exception: the CLI runs from the tool checkout, reads the candidate as data 
         ->and($cli(array_slice($args, 0, 3)))->toBe(2)
         ->and(strlen(ReleaseCheck::toolDigest(bc_root().'/scripts/release')))->toBe(64);
 });
+
+it('OpenAPI: both owners and shared ref closure use the resolved line bases, missing refs and unavailable tools fail closed (case 11)', function (): void {
+    $r = bc_release_repo(false);
+    $spec = "openapi: 3.0.3\npaths: {}\ncomponents:\n  schemas:\n    Shared:\n      \$ref: '../../shared.yaml#/Value'\n";
+    foreach (['openapi/vaulter-v1.yaml', 'packages/collaboration/openapi/hub.yaml'] as $path) {
+        @mkdir(dirname($r['dir'].'/'.$path), 0777, true);
+        $ref = $path === 'openapi/vaulter-v1.yaml' ? '../shared.yaml' : '../../../shared.yaml';
+        file_put_contents($r['dir'].'/'.$path, str_replace('../../shared.yaml', $ref, $spec));
+    }
+    file_put_contents($r['dir'].'/shared.yaml', "Value:\n  type: string\n");
+    bc_git($r['dir'], ['add', '.']);
+    bc_git($r['dir'], ['commit', '-qm', 'specs']);
+    $base = bc_git($r['dir'], ['rev-parse', 'HEAD']);
+    bc_git($r['dir'], ['tag', 'spec-base', $base]);
+    file_put_contents($r['dir'].'/shared.yaml', "Value:\n  type: integer\n");
+    bc_git($r['dir'], ['commit', '-qam', 'shared edit']);
+    $candidate = bc_git($r['dir'], ['rev-parse', 'HEAD']);
+    $scratch = bc_scratch(['fake' => "#!/bin/sh\nprintf '%s\\n' \"\$@\" >> \"\$BC_ARGV\"\nexit \"\${BC_FAKE_EXIT:-0}\"\n", 'report.json' => json_encode(['exit' => 0, 'lines' => ['php-public' => ['admission' => 'compared', 'base' => 'spec-base'], 'php-collaboration' => ['admission' => 'compared', 'base' => 'spec-base']]])]);
+    chmod($scratch.'/fake', 0755);
+    $run = static function (string $binary, string $exit = '0', bool $trustedParser = false) use ($r, $candidate, $scratch): array {
+        $env = ['PATH' => '/usr/bin:/bin', 'BC_PYTHON' => '/usr/bin/python3', 'BC_OASDIFF_BIN' => $binary, 'BC_ARGV' => $scratch.'/argv', 'BC_FAKE_EXIT' => $exit];
+        $env['BC_REQUIRE_TOOL_PARSER'] = $trustedParser ? '1' : '0';
+        $p = proc_open(['/bin/bash', bc_root().'/scripts/release/oasdiff-check.sh', $r['dir'], $candidate, $scratch.'/report.json'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $scratch, $env);
+        $report = json_decode(stream_get_contents($pipes[1]), true);
+        stream_get_contents($pipes[2]);
+
+        return [proc_close($p), $report];
+    };
+    [$exit, $report] = $run($scratch.'/fake');
+    expect($exit)->toBe(0)
+        ->and(array_column($report['openapi'], 'owner'))->toBe(['core', 'collaboration'])
+        ->and(array_column($report['openapi'], 'base_sha'))->toBe([$base, $base])
+        ->and($report['actual_runtime_qualification'])->toBeFalse()
+        ->and(substr_count(file_get_contents($scratch.'/argv'), '--fail-on'))->toBe(2)
+        ->and($run($scratch.'/fake', '1')[0])->toBe(1)
+        ->and($run($scratch.'/fake', '0', true)[0])->toBe(2)
+        ->and($run($scratch.'/missing')[0])->toBe(2);
+    file_put_contents($r['dir'].'/shared.yaml', "Other: {}\n");
+    bc_git($r['dir'], ['commit', '-qam', 'broken ref']);
+    $broken = bc_git($r['dir'], ['rev-parse', 'HEAD']);
+    exec('BC_PYTHON=/usr/bin/python3 BC_OASDIFF_BIN='.escapeshellarg($scratch.'/fake').' /bin/bash '.escapeshellarg(bc_root().'/scripts/release/oasdiff-check.sh').' '.escapeshellarg($r['dir']).' '.escapeshellarg($broken).' '.escapeshellarg($scratch.'/report.json').' 2>&1', $output, $code);
+    expect($code)->toBe(2);
+});
+
+it('qualification: a signature guard never grants runtime, serial, archive consumer or upgrade qualification (case 12)', function (): void {
+    $r = bc_release_repo(false);
+    $report = ReleaseCheck::run($r['dir'], $r['B'], BC_T, bc_policy(), bc_exceptions_json(), 'tool', '2026-10-28');
+    expect($report['exit'])->toBe(0)
+        ->and($report)->not->toHaveKey('actual_runtime_qualification', true)
+        ->and(file_get_contents(bc_root().'/scripts/release/Contract/trusted-host.py'))->toContain("'actual_runtime_qualification': False");
+});

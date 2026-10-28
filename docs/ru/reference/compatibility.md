@@ -253,3 +253,56 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 ### Политика deprecation (1.x)
 
 Устаревшее живёт минимум один минорный цикл, предупреждает один раз за процесс (`E_USER_DEPRECATED` или лог, не в hot path), называет замену и версию удаления; конфиг-alias читает старое значение, doctor сообщает миграцию. Удаление — только в 2.0, кроме security-исключений с advisory. См. ADR-0037.
+
+
+### BC gate: source, freeze and trusted tool identities (D18)
+
+| Identity | Authority and purpose | Boundary |
+|:--|:--|:--|
+| S | Committed candidate source SHA; `--root` supplies bytes and static snapshots only | Candidate autoload, PHP, hooks, plugins and tests supply no approval authority |
+| F | Freeze metadata commit, sole parent S; only the release manifest differs | F is not a replacement release source or a rebuild |
+| T | Externally approved policy and complete tool revision, read-only after provisioning | Parser, checker, helpers, locks and ignored vendor/autoload inputs belong to T |
+| A | Protected external exact approval bundle for S, policy, exceptions and tool closure | Identical surface hashes do not transfer approval to another S |
+
+`contract-bc` participates in CI lane selection, `needs` and the final `CI gate` verdict.
+A required failed, cancelled, missing or skipped job blocks the gate. The standalone
+OpenAPI workflow calls the same externally provisioned host bootstrap. Both public
+`openapi/vaulter-v1.yaml` (core / php-public) and private hub spec (collaboration /
+php-collaboration) use their resolved release-line bases. Local referenced files and
+JSON-pointer fragments must resolve on both sides, including shared schemas. Remote
+refs, missing inputs and an unavailable oasdiff are `not_checked` / exit 2 in CI.
+The transitional tested pin is `tufin/oasdiff:v1.33.0`, in the trusted wrapper's
+`Contract/openapi-check.py`; P7.1 has not yet supplied a pins manifest.
+Synthetic oasdiff records argv and exit propagation only; it proves no REST compatibility.
+
+Owner host provisioning is required before this lane can pass: provision an externally
+managed absolute Python and approved external copy of `Contract/trusted-host.py`, then
+supply `BC_HOST_PYTHON`, `BC_HOST_BOOTSTRAP`, `BC_TOOL_ROOT`, `BC_TOOL_REV`,
+`BC_SHA256SUMS`, `BC_RUNTIME_APPROVAL`, and `BC_RUNTIME_APPROVAL_SHA256` through the
+protected control plane. Never obtain approval from candidate files. No such external
+provisioning or branch-protection enforcement is claimed by these repository fixtures.
+Missing provisioning blocks, rather than qualifying a release.
+
+The bootstrap is invoked with isolated Python (`-I`) outside the candidate cwd. Its
+external SHA256SUMS must enumerate exactly every regular file in T, including ignored
+dependencies/autoload; only root `.git` metadata is excluded. Normalized relative paths,
+unique entries, no symlinks, no missing/extra/changed files, and HEAD=T are mandatory.
+The checksum inventory and runtime approval live outside T. The runtime JSON contains
+`php` (absolute binary), `sha256`, exact `configuration` (`version`, `ini`, `scanned`,
+`extensions`), `config_files` (absolute config paths and hashes), and exact `environment`
+(including absolute `BC_PYTHON` for the wrapper). PHP 8.4 and matching configuration,
+extensions, environment and bytes are required. PHP children use that approved binary
+(`PHP_BINARY` in PHP fixtures); the host never invokes `scripts/php84`, which writes a
+shim inside its checkout. Scratch files live outside T. Git metadata integrity, protected
+mounts, the external bootstrap and runtime approval remain owner prerequisites.
+
+The trusted default policy `Contract/bc-trust-policy.json` contains both release lines
+and no approvals. A known missing release is a tooling error. No predecessor is
+`initial_bootstrap`, never a self-baseline BC pass; only external exact D18 approval
+can admit an initial release. Reports distinguish changes, errors, selected bases,
+policy/source SHAs, `not_checked`, and pending qualification. Structural signatures,
+identity/schema and npm declaration guards do not qualify runtime semantics, serial
+workers, actual tgz/ZIP consumers, Docker, installs or upgrades. Those remain pending
+owner P8.2 runs; actual runtime qualification is false in synthetic reports.
+
+Синтетические проверки подтверждают оркестрацию и границу доверия. Реальная квалификация REST, Docker, архивов, runtime и upgrade отложена на P8.2; внешняя настройка владельца не считается выполненной.

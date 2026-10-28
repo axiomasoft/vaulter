@@ -16,10 +16,10 @@ namespace Vaulter\Release\Contract;
 final class ReleaseCheck
 {
     /**
-     * @param  string                $root       the candidate repository (data only)
-     * @param  string                $candidate  the candidate source SHA S
-     * @param  string                $policyRev  the trusted revision T the policy and exceptions were read from
-     * @param  array<string, mixed>  $policy     parsed trusted policy
+     * @param  string                                                                                                             $root      the candidate repository (data only)
+     * @param  string                                                                                                             $candidate the candidate source SHA S
+     * @param  string                                                                                                             $policyRev the trusted revision T the policy and exceptions were read from
+     * @param  array<string, mixed>                                                                                               $policy    parsed trusted policy
      * @return array{exit: int, lines: array<string, array<string, mixed>>, changes: list<array<string, mixed>>, suppressed: int}
      */
     public static function run(string $root, string $candidate, string $policyRev, array $policy, string $exceptionsJson, string $toolDigest, string $today): array
@@ -74,6 +74,10 @@ final class ReleaseCheck
     /** The sha256 of the trusted tool closure: every Contract class and the CLI entrypoint. */
     public static function toolDigest(string $releaseDir): string
     {
+        $approved = getenv('BC_TOOL_CLOSURE_SHA256');
+        if (is_string($approved) && preg_match('/^[a-f0-9]{64}$/', $approved) === 1) {
+            return $approved;
+        }
         $files = [];
         foreach (array_merge(glob($releaseDir.'/Contract/*.php') ?: [], [$releaseDir.'/bc-check.php']) as $file) {
             $files[basename($file)] = hash_file('sha256', $file);

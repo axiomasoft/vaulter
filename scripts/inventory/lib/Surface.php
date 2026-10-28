@@ -284,7 +284,7 @@ final class Surface
      * cannot resolve (a Vaulter type it does not know, an ancestor outside the sources) is `review`, never a pass. No category
      * is exempted: an Eloquent model is a finding wherever it appears, and `host-input` is only ever granted by an allowlist.
      *
-     * @param  list<SurfaceType>                                                                                                     $types
+     * @param  list<SurfaceType>                                                                                                                                                                                                    $types
      * @return array{signature: list<array<string, mixed>>, extended: list<array{invariant: string, view: string, file: string, symbol: string, kind: string, target: string, target_owner: string, count: int, category: string}>}
      */
     public static function classify(array $types, SourceIndex $index): array
@@ -385,8 +385,8 @@ final class Surface
     }
 
     /**
-     * @param  array<Node>                                                                             $nodes
-     * @param  array<string, string>                                                                   $uses
+     * @param  array<Node>                                                                       $nodes
+     * @param  array<string, string>                                                             $uses
      * @return list<array{node: Stmt\ClassLike, namespace: string, uses: array<string, string>}>
      */
     private static function classLikes(array $nodes, string $namespace = '', array $uses = []): array
@@ -919,7 +919,7 @@ final class Surface
     /**
      * The tags of a docblock with their type: `@return Collection<int, Node>` => ['return', 'Collection<int, Node>'].
      *
-     * @param  list<string>                      $tags
+     * @param  list<string>                                 $tags
      * @return list<array{0: string, 1: string, 2: string}> tag, type, variable name (of a `@param`)
      */
     private static function docTags(string $doc, array $tags, bool $withVariable = false): array

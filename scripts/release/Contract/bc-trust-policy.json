@@ -1,0 +1,19 @@
+{
+  "format": "vaulter.bc-trust-policy",
+  "version": 1,
+  "lines": {
+    "php-public": {
+      "prefix": "v",
+      "major": 1
+    },
+    "php-collaboration": {
+      "prefix": "collaboration-v",
+      "major": 1
+    }
+  },
+  "known_releases": [],
+  "decisions": [
+    "PLAN4-D18"
+  ],
+  "approvals": []
+}

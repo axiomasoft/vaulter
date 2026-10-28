@@ -69,7 +69,7 @@ final class TrustPolicy
     }
 
     /**
-     * @param  array<string, mixed>       $policy
+     * @param  array<string, mixed>        $policy
      * @return list<array<string, string>> exact exceptions
      */
     public static function exceptions(string $json, array $policy, string $where = 'exceptions'): array
@@ -97,10 +97,10 @@ final class TrustPolicy
     /**
      * Drops the changes covered by an exact, unexpired exception that an external approval binds to this candidate.
      *
-     * @param  list<ChangeRow>                   $changes with `release_line`
-     * @param  list<array<string, string>>       $exceptions
-     * @param  array<string, string>             $digests candidate_sha, policy_digest, exceptions_digest, tool_digest
-     * @param  array<string, mixed>              $policy
+     * @param  list<ChangeRow>                                               $changes    with `release_line`
+     * @param  list<array<string, string>>                                   $exceptions
+     * @param  array<string, string>                                         $digests    candidate_sha, policy_digest, exceptions_digest, tool_digest
+     * @param  array<string, mixed>                                          $policy
      * @return array{remaining: list<array<string, mixed>>, suppressed: int}
      */
     public static function apply(array $changes, array $exceptions, array $policy, array $digests, string $today): array

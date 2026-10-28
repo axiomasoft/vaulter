@@ -47,7 +47,7 @@ final class ReleaseBases
     }
 
     /**
-     * @param  list<array{line?: string, tag: string, sha: string}>                                                               $known the trusted ledger of this line
+     * @param  list<array{line?: string, tag: string, sha: string}>                                                                   $known the trusted ledger of this line
      * @return array{tag: string, sha: string, version: array{major: int, minor: int, patch: int, pre: ?string, build: ?string}}|null
      */
     public static function resolve(string $root, string $candidate, string $prefix, int $major, array $known): ?array
