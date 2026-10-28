@@ -699,6 +699,26 @@ class BuildArtifactsTest(unittest.TestCase):
                     self.assertEqual(result.returncode, 1, "old authenticated synthetic A must refuse changed producer: " + result.stdout)
                     self.assertIn("publish refused", result.stderr)
 
+    def test_direct_builder_refuses_dangling_changelog_before_writes(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-dangling-") as directory:
+            tree = Path(directory) / "repo"
+            release_tree(tree, full_packages=True)
+            target = Path(directory) / "outside" / "TARGET"  # own temp, outside the tree and the output; initially absent
+            target.parent.mkdir()
+            (tree / "CHANGELOG.md").write_text("# Changelog\n")
+            (tree / "packages/core/CHANGELOG.md").symlink_to(target)
+            git("init", "-q", "-b", "main", cwd=tree)
+            git("add", "-A", cwd=tree)
+            git("commit", "-q", "-m", "dangling changelog link", cwd=tree)
+            self.assertFalse(target.exists())
+            out = Path(directory) / "out"
+            result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={tree}")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("symlink", result.stderr)
+            self.assertFalse(target.exists(), "the builder wrote through a package symlink before refusing")
+            self.assertFalse(target.parent.joinpath("TARGET").is_symlink())
+            self.assertEqual(list(out.glob("*.zip")) if out.exists() else [], [])
+
     def test_requires_version_and_output_directory(self):
         self.assertEqual(php("build-artifacts.php", "--version=latest", f"--out={self.out}").returncode, 2)
         self.assertEqual(php("build-artifacts.php", "--version=0.3.0").returncode, 2)

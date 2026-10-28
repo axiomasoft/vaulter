@@ -72,6 +72,24 @@ function contentMap(string $dir): array
     return $map;
 }
 
+/**
+ * Refuses every symlink (dangling ones included) in an exported tree. It runs right after extraction and BEFORE anything is
+ * read from or written into the tree (composer.json, CHANGELOG copy, normalization), so no write can follow a link out of staging.
+ */
+function refuseSymlinks(string $dir, string $name): void
+{
+    $links = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
+        if ($file->isLink()) {
+            $links[] = substr($file->getPathname(), strlen($dir) + 1);
+        }
+    }
+    if ($links !== []) {
+        fwrite(STDERR, "build-artifacts: refused: {$name} exports symlink(s) ".implode(', ', $links)."; a prepared tree has none\n");
+        exit(1);
+    }
+}
+
 function manifestDigest(array $map): string
 {
     return hash('sha256', json_encode($map, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
@@ -420,6 +438,7 @@ foreach ($manifest['php'] as $package) {
         fwrite(STDERR, "build-artifacts: git archive failed for {$name}: {$log}\n");
         exit(1);
     }
+    refuseSymlinks($dir, $name);
 
     $composer = json_decode((string) file_get_contents($dir.'/composer.json'), true, 512, JSON_THROW_ON_ERROR);
 
