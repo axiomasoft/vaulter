@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Configuration\StringList;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -124,13 +125,13 @@ final readonly class DocumentsConfig
     /** @return list<string> */
     public function tiptapExtraNodes(): array
     {
-        return $this->stringList($this->config->get(key: 'vaulter-documents.tiptap.extra_nodes', default: []), []);
+        return StringList::from($this->config->get(key: 'vaulter-documents.tiptap.extra_nodes', default: []), []);
     }
 
     /** @return list<string> */
     public function tiptapExtraMarks(): array
     {
-        return $this->stringList($this->config->get(key: 'vaulter-documents.tiptap.extra_marks', default: []), []);
+        return StringList::from($this->config->get(key: 'vaulter-documents.tiptap.extra_marks', default: []), []);
     }
 
     /** @return array<string, list<string>> */
@@ -167,27 +168,6 @@ final readonly class DocumentsConfig
         }
 
         return $attributes;
-    }
-
-    /**
-     * @param  list<string> $default
-     * @return list<string>
-     */
-    private function stringList(mixed $value, array $default): array
-    {
-        if (!is_array($value)) {
-            return $default;
-        }
-
-        $strings = [];
-
-        foreach ($value as $item) {
-            if (is_string($item)) {
-                $strings[] = $item;
-            }
-        }
-
-        return $strings;
     }
 
     public function commentsEnabled(): bool

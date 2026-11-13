@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Configuration\StringList;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Contracts\Handlers\FileHandler;
 use Vaulter\Drive\Models\Access\NodeGrant;
@@ -287,7 +288,7 @@ final readonly class DriveConfig implements ScanWorkSettings
     /** @return list<string> */
     public function blockedExtensions(): array
     {
-        return $this->stringList($this->config->get('vaulter-drive.uploads.blocked_extensions', []), []);
+        return StringList::from($this->config->get('vaulter-drive.uploads.blocked_extensions', []), []);
     }
 
     public function maxFileSize(): int
@@ -382,28 +383,7 @@ final readonly class DriveConfig implements ScanWorkSettings
     /** @return list<string> */
     public function allowedMimeTypes(): array
     {
-        return $this->stringList($this->config->get(key: 'vaulter-drive.uploads.allowed_mime_types', default: []), []);
-    }
-
-    /**
-     * @param  list<string> $default
-     * @return list<string>
-     */
-    private function stringList(mixed $value, array $default): array
-    {
-        if (!is_array($value)) {
-            return $default;
-        }
-
-        $strings = [];
-
-        foreach ($value as $item) {
-            if (is_string($item)) {
-                $strings[] = $item;
-            }
-        }
-
-        return $strings;
+        return StringList::from($this->config->get(key: 'vaulter-drive.uploads.allowed_mime_types', default: []), []);
     }
 
     public function resumableEnabled(): bool
