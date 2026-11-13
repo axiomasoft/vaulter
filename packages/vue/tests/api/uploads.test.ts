@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createVaulterClient } from '../../src/api/client'
-import { call, emptyResponse, fetchSequence, jsonResponse } from '../support/http'
+import { API_VERSION, call, emptyResponse, fetchSequence, jsonResponse } from '../support/http'
 
 const session = (overrides: Record<string, unknown> = {}) => ({
   data: {
@@ -26,7 +26,7 @@ describe('resumable uploads — tus', () => {
   it('creates the session, resumes from the server offset and PATCHes until the node is created', async () => {
     const fetchMock = fetchSequence(
       () => jsonResponse(session(), 201),
-      () => jsonResponse(session({ received_bytes: 4, status: 'uploading' })),
+      () => emptyResponse(200, { 'Upload-Offset': '4' }),
       () => emptyResponse(204, { 'Upload-Offset': '8' }),
       () => jsonResponse(createdNode, 201, { 'Upload-Offset': '10' }),
     )
@@ -44,6 +44,7 @@ describe('resumable uploads — tus', () => {
       protocol: 'tus', parent_id: '20', name: 'big.bin', total_size_bytes: 10,
     })
 
+    expect(call(fetchMock, 1).method).toBe('HEAD')
     expect(call(fetchMock, 1).url).toBe('/api/vaulter/v1/uploads/u1')
     const first = call(fetchMock, 2)
     expect(first.method).toBe('PATCH')
@@ -54,10 +55,29 @@ describe('resumable uploads — tus', () => {
     expect(progress).toHaveBeenLastCalledWith(10, 10)
   })
 
+  it('resumes a 409 from the Upload-Offset header instead of failing the upload', async () => {
+    const fetchMock = fetchSequence(
+      () => jsonResponse(session(), 201),
+      () => emptyResponse(200, { 'Upload-Offset': '0' }),
+      () => new Response(JSON.stringify({ code: 'upload_offset_mismatch', title: 'Conflict' }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/problem+json', ...API_VERSION, 'Upload-Offset': '4' },
+      }),
+      () => emptyResponse(204, { 'Upload-Offset': '8' }),
+      () => jsonResponse(createdNode, 201, { 'Upload-Offset': '10' }),
+    )
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    const node = await client.uploads.start('7', new Blob(['0123456789'])).start()
+
+    expect(node.id).toBe('99')
+    expect(call(fetchMock, 3).headers['Upload-Offset']).toBe('4')
+  })
+
   it('sends If-Match when replacing the content of an existing file', async () => {
     const fetchMock = fetchSequence(
       () => jsonResponse(session({ total_size_bytes: 0, node_id: '5' }), 201),
-      () => jsonResponse(session({ total_size_bytes: 0 })),
+      () => emptyResponse(200, { 'Upload-Offset': '0' }),
       () => jsonResponse(createdNode, 201, { 'Upload-Offset': '0' }),
     )
     const client = createVaulterClient({ fetch: fetchMock })
@@ -74,7 +94,7 @@ describe('resumable uploads — tus', () => {
     const gate = new Promise<void>((resolve) => { release = resolve })
     const fetchMock = vi.fn<typeof fetch>()
       .mockImplementationOnce(() => Promise.resolve(jsonResponse(session(), 201)))
-      .mockImplementationOnce(() => Promise.resolve(jsonResponse(session())))
+      .mockImplementationOnce(() => Promise.resolve(emptyResponse(200, { 'Upload-Offset': '0' })))
       .mockImplementationOnce(async () => {
         await gate
         return emptyResponse(204, { 'Upload-Offset': '4' })

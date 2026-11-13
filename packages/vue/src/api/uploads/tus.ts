@@ -1,14 +1,22 @@
+import { VaulterApiError } from '../errors'
 import type { Transport } from '../transport'
-import type { Node, UploadSession } from '../types'
+import type { Node } from '../types'
 import { abortedError, type UploadRun } from './shared'
 
 const TUS_VERSION = '1.0.0'
 
-/** The authoritative server-side offset to resume from. */
+/** The authoritative server-side offset: HEAD reports min(on-disk, received_bytes). */
 export async function tusOffset(transport: Transport, uploadId: string): Promise<number> {
-  const { data } = await transport.json<{ data: UploadSession }>('GET', `/uploads/${uploadId}`)
+  const response = await transport.raw('HEAD', `/uploads/${uploadId}`, {
+    headers: { 'Tus-Resumable': TUS_VERSION, Accept: '*/*' },
+  })
+  const header = response.headers.get('Upload-Offset')
+  const offset = header === null ? Number.NaN : Number(header)
+  if (!Number.isFinite(offset)) {
+    throw new Error('[Vaulter] Resumable upload did not report an offset.')
+  }
 
-  return data.received_bytes
+  return offset
 }
 
 /**
@@ -26,14 +34,27 @@ export async function runTus(transport: Transport, uploadId: string, file: Blob,
     }
 
     const slice = file.slice(offset, Math.min(offset + run.chunkSize, run.total))
-    const response = await transport.raw('PATCH', `/uploads/${uploadId}`, {
-      headers: {
-        'Tus-Resumable': TUS_VERSION,
-        'Content-Type': 'application/offset+octet-stream',
-        'Upload-Offset': String(offset),
-      },
-      body: slice,
-    })
+    let response: Response
+    try {
+      response = await transport.raw('PATCH', `/uploads/${uploadId}`, {
+        headers: {
+          'Tus-Resumable': TUS_VERSION,
+          'Content-Type': 'application/offset+octet-stream',
+          'Upload-Offset': String(offset),
+        },
+        body: slice,
+      })
+    } catch (error) {
+      const resumed = error instanceof VaulterApiError && error.status === 409
+        ? Number(error.response?.headers.get('Upload-Offset'))
+        : Number.NaN
+      if (!Number.isFinite(resumed) || resumed === offset) {
+        throw error
+      }
+      offset = resumed
+      run.onProgress?.(Math.min(offset, run.total), run.total)
+      continue
+    }
 
     offset = Number(response.headers.get('Upload-Offset') ?? offset + slice.size)
     run.onProgress?.(Math.min(offset, run.total), run.total)
