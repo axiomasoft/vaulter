@@ -16,7 +16,7 @@ use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Operations\DriveContext;
 
 /**
@@ -36,6 +36,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         private DocumentStoreRepository $documents,
         private DocumentStateWriter $writer,
         private DocumentsConfig $documentsConfig,
+        private DriveConfig $drives,
         private PendingStateGuard $pending,
     ) {}
 
@@ -66,7 +67,8 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
             'updated_by' => $actorId,
         ]);
         // The copy's node row was written by the drive in this transaction; the document keeps it for its events.
-        $document->setRelation('node', Node::query()->whereKey($copy->id)->firstOrFail());
+        $nodeModel = $this->drives->model('node');
+        $document->setRelation('node', $nodeModel::query()->whereKey($copy->id)->firstOrFail());
 
         // The payload is carried verbatim as opaque JSON: the copy must keep content of a
         // type that is not registered (any more) instead of failing or decaying it.

@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Queries;
 
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
+use Vaulter\Support\Identity;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
@@ -45,7 +42,7 @@ final readonly class DocumentQuery
     {
         $key = $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision;
         $model = $this->config->model('document_revision');
-        $found = $key === '' || !self::fitsKey(new $model, $key) ? null : $model::query()->where('document_id', $document->getKey())->whereKey($key)->first();
+        $found = $key === '' || !Identity::fitsKey(new $model, $key) ? null : $model::query()->where('document_id', $document->getKey())->whereKey($key)->first();
 
         return $found ?? throw DocumentRevisionNotFoundException::forNode($node->getKey(), $key);
     }
@@ -89,27 +86,9 @@ final readonly class DocumentQuery
         $key = $comment instanceof CommentSnapshot ? $comment->id : $comment;
         $model = $this->config->model('node_comment');
         // an id the key column cannot hold names no row; asking PostgreSQL for it throws instead (bigint vs 'missing')
-        $found = $key === '' || !self::fitsKey(new $model, $key) ? null : $model::query()->where('node_id', $node->getKey())->whereKey($key)->first();
+        $found = $key === '' || !Identity::fitsKey(new $model, $key) ? null : $model::query()->where('node_id', $node->getKey())->whereKey($key)->first();
 
         return $found ?? throw CommentNotFoundException::forNode($node->getKey(), $key);
-    }
-
-    /**
-     * Whether an untrusted key can name a row of the model: a key its column cannot hold is "not found" and must not reach
-     * the query, where PostgreSQL fails the cast (bigint, uuid) and the request ends in a 500. Mirrors core's Identity::fitsKey,
-     * which is not part of the public surface documents may import.
-     */
-    private static function fitsKey(Model $model, int|string $key): bool
-    {
-        $traits = class_uses_recursive($model);
-        if (in_array(HasUuids::class, $traits, true)) {
-            return Str::isUuid((string) $key);
-        }
-        if (in_array(HasUlids::class, $traits, true)) {
-            return Str::isUlid((string) $key);
-        }
-
-        return $model->getKeyType() !== 'int' || preg_match('/^[0-9]{1,19}$/', (string) $key) === 1;
     }
 
     private function assertPlainPaging(ListOptions $options): void
