@@ -11,6 +11,7 @@ use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
@@ -49,6 +50,26 @@ it('S3 complete при сумме частей меньше total_size_bytes →
 
     // The truncated object was never assembled/committed.
     expect(Blob::query()->count())->toBe(0);
+});
+
+it('отказывает часть S3 больше объявленного размера и потолка файла до записи части', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 3);
+    $handler = app(S3MultipartHandler::class);
+    $parts = app(UploadPartStoreRepository::class);
+
+    expect(fn () => $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('abcd')))
+        ->toThrow(ValidationException::class);
+    expect($parts->sizeOf($session->refresh(), 1))->toBe(0);
+
+    config()->set('vaulter-drive.uploads.max_file_size', 4);
+    $capped = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 100);
+    $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('ab'));
+    $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('xy'));
+
+    expect(fn () => $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('12345')))
+        ->toThrow(ValidationException::class);
+    expect($parts->sizeOf($capped->refresh(), 1))->toBe(2);
 });
 
 it('чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-байт, F-P1.4-04', function (): void {

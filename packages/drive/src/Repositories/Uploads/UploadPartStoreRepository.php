@@ -89,6 +89,18 @@ final class UploadPartStoreRepository
      *
      * @return Collection<int, UploadPart>
      */
+    /** Bytes already recorded for this part number, or 0 when the part is new. */
+    public function sizeOf(UploadSession $session, int $partNo): int
+    {
+        $model = $this->driveConfig->model('upload_part');
+        $size = $model::query()
+            ->where('upload_session_id', $session->getKey())
+            ->where('part_no', $partNo)
+            ->value('size_bytes');
+
+        return is_numeric($size) ? (int) $size : 0;
+    }
+
     public function forSession(UploadSession $session): Collection
     {
         $model = $this->driveConfig->model('upload_part');
