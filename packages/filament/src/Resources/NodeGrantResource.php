@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\Access\AccessOperations;
@@ -31,6 +32,7 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
 use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelGrants;
@@ -53,6 +55,8 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class NodeGrantResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'node grant';
@@ -311,9 +315,12 @@ final class NodeGrantResource extends Resource
             return $value; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
-        $string = (string) $value;
+        $string = is_scalar($value) ? (string) $value : '';
+        if ($string !== '' && ctype_digit($string) && app(IdsConfig::class)->hostKeys() === 'bigint') {
+            return (int) $string;
+        }
 
-        return ctype_digit($string) ? (int) $string : $string;
+        return $string;
     }
 
     private static function notifyDenied(string $body): void

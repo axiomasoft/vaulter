@@ -77,7 +77,7 @@ it('preserves the validated grant form contract at the core Action boundary', fu
         ->first(fn (NodeGrant $candidate): bool => $candidate->subject_type === 'user');
 
     expect($grant)->toBeInstanceOf(NodeGrant::class)
-        ->and((string) $grant->subject_id)->toBe('2')
+        ->and((string) $grant->subject_id)->toBe('002')
         ->and($grant->role_key)->toBe(RoleRegistry::WRITER)
         ->and($grant->role_version)->toBe(1)
         ->and($grant->scope)->toBe(GrantScope::Item)

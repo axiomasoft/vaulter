@@ -35,6 +35,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
 use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelNodes;
@@ -60,6 +61,8 @@ use Vaulter\Filament\Support\PanelShares;
 #[Internal]
 final class NodeShareResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'node share';

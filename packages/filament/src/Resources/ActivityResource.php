@@ -20,6 +20,7 @@ use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventCatalog;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Support\PanelActivity;
 use Vaulter\Filament\Support\PanelRecord;
@@ -36,6 +37,8 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class ActivityResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'activity';
