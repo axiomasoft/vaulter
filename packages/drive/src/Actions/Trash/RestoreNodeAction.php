@@ -86,7 +86,7 @@ final readonly class RestoreNodeAction
             $this->database->lockAggregate('drives', $context->driveId());
             $this->lifecycle->assertWritable($context);
             $fresh = $this->locator->find(context: $context, key: $node, includeTrashed: true);
-            $ids = $this->nodes->subtree($fresh)->modelKeys();
+            $ids = array_map(Identity::stringify(...), $this->nodes->subtree($fresh)->modelKeys());
             $locked = $this->tree->lock([...$ids, $data->destination->id]);
             $current = $this->tree->locked($locked, $node->id);
             // On the locked row and before anything moves, so a stale caller changes nothing.
@@ -107,12 +107,12 @@ final readonly class RestoreNodeAction
                 throw new RestoreDestinationChangedException;
             }
             // A destination inside the subtree being restored would detach it.
-            if (in_array($destination->id, $ids, true)) {
+            if (in_array(Identity::stringify($destination->id), $ids, true)) {
                 throw InvalidDestinationException::trashed($destination);
             }
             // Only the members trashed together with this root come back; descendants
             // trashed earlier on their own stay in the trash under their own roots.
-            $changed = $locked->filter(fn (Node $member): bool => in_array($member->id, $ids, true)
+            $changed = $locked->filter(fn (Node $member): bool => in_array(Identity::stringify($member->id), $ids, true)
                 && $member->trashed_at !== null
                 && $member->trash_root_id !== null
                 && Identity::stringify($member->trash_root_id) === Identity::stringify($current->id));
