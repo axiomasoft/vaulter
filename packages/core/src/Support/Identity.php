@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Vaulter\Attributes\Api;
+use Vaulter\Models\Concerns\HasVaulterKeys;
 
 /**
  * Safely stringifies model keys / auth identifiers (which Eloquent types as mixed).
@@ -47,7 +48,22 @@ final class Identity
         if (in_array(HasUlids::class, $traits, true)) {
             return Str::isUlid((string) $key);
         }
+        if (in_array(HasVaulterKeys::class, $traits, true)) {
+            return match (self::vaulterStrategy($model)) {
+                'uuid7' => Str::isUuid((string) $key),
+                'ulid' => Str::isUlid((string) $key),
+                default => $model->getKeyType() !== 'int' || preg_match('/^[0-9]{1,19}$/', (string) $key) === 1,
+            };
+        }
 
         return $model->getKeyType() !== 'int' || preg_match('/^[0-9]{1,19}$/', (string) $key) === 1;
+    }
+
+    /** The model's own id strategy, including a panel override of the global one. */
+    private static function vaulterStrategy(Model $model): string
+    {
+        $read = \Closure::bind(fn (): string => $this->vaulterIdStrategyKey(), $model, $model);
+
+        return $read();
     }
 }
