@@ -67,12 +67,12 @@ final readonly class ExportDocumentAction
                 if ($data->revision === null) {
                     $this->pending->assertSettled($document);
                 }
-                $type = $this->decoder->writable($document->type);
-                $exporter = $this->exporters->for($type->key(), $data->format);
-
                 $revision = $data->revision;
                 $source = $revision ?? $document;
-                $read = $this->decoder->read($document->type, $source->content, $source->schema_version);
+                $typeKey = $revision === null ? $document->type : $revision->type;
+                $type = $this->decoder->writable($typeKey);
+                $exporter = $this->exporters->for($type->key(), $data->format);
+                $read = $this->decoder->read($typeKey, $source->content, $source->schema_version);
 
                 return new DocumentExport(
                     bytes: $exporter->export($read->content, $type),
