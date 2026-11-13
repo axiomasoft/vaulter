@@ -11,6 +11,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Data\Comments\ResolveCommentInput;
+use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Events\Comments\CommentResolved;
@@ -66,6 +67,18 @@ it('threads a reply under its parent', function (): void {
 
     expect($reply->parent_id)->toBe($root->getKey())
         ->and($root->replies()->count())->toBe(1);
+});
+
+it('refuses a reply whose parent comment belongs to another node', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $here = AccessTestHelpers::folder($storage, null, 'here');
+    $there = AccessTestHelpers::folder($storage, null, 'there');
+    $action = app(AddCommentAction::class);
+    $foreign = $action->execute(DocumentTestHelpers::context($there, 1), $there, nodeCommentData());
+
+    expect(fn () => $action->execute(DocumentTestHelpers::context($here, 1), $here, nodeCommentData(parentId: (int) $foreign->getKey())))
+        ->toThrow(CommentNotFoundException::class);
+    expect(NodeComment::query()->where('node_id', $here->getKey())->count())->toBe(0);
 });
 
 it('resolves a comment, stamping resolved_at + resolved_by and dispatching the event', function (): void {

@@ -8,8 +8,11 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
+use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Repositories\Comments\NodeCommentReadRepository;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Support\Identity;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -36,6 +39,7 @@ final readonly class AddCommentAction
 {
     public function __construct(
         private NodeCommentStoreRepository $comments,
+        private NodeCommentReadRepository $commentReads,
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
@@ -58,6 +62,7 @@ final readonly class AddCommentAction
                 throw NodeNotFoundException::forId($node->id);
             }
             $this->tree->assertLive($current);
+            $this->assertParentOnNode($current, $data->parentId);
 
             $comment = $this->comments->create([
                 'node_id' => $current->getKey(),
@@ -73,5 +78,24 @@ final readonly class AddCommentAction
 
             return $comment;
         });
+    }
+
+    /**
+     * A reply must name a comment of this node. Another node's comment and a key the
+     * column cannot hold answer as not found, the same way the public operation does.
+     */
+    private function assertParentOnNode(Node $node, int|string|null $parentId): void
+    {
+        if ($parentId === null) {
+            return;
+        }
+
+        $model = $this->commentReads->forNode($node)->getModel();
+        $parent = Identity::fitsKey($model, $parentId)
+            ? $this->commentReads->forNode($node)->whereKey($parentId)->first()
+            : null;
+        if (!$parent instanceof NodeComment) {
+            throw CommentNotFoundException::forNode($node->getKey(), $parentId);
+        }
     }
 }
