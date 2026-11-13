@@ -16,6 +16,32 @@ use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
+final class FailingContentStream
+{
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    public function stream_read(int $count): false
+    {
+        return false;
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
+    }
+
+    /** @return array<void> */
+    public function stream_stat(): array
+    {
+        return [];
+    }
+}
+
 beforeEach(function (): void {
     Storage::fake('local');
     config()->set('vaulter-media.disk', 'local');
@@ -44,6 +70,25 @@ it('stages the complete seekable stream and exposes its exact digest and size', 
     expect($path)->not->toBeFile()
         ->and(fn () => $staged->readStream())
         ->toThrow(RuntimeException::class, 'Cannot read a discarded staged object.');
+});
+
+it('refuses a stream that stops making progress and leaves no staged file', function (): void {
+    if (in_array('vaulterfail', stream_get_wrappers(), true)) {
+        stream_wrapper_unregister('vaulterfail');
+    }
+    stream_wrapper_register('vaulterfail', FailingContentStream::class);
+    $stream = fopen('vaulterfail://stopped', 'rb');
+    $store = new Sha256ContentStore(Mockery::mock(StorageDriver::class));
+
+    try {
+        expect(fn () => $store->stage($stream))->toThrow(RuntimeException::class, 'Content stream made no progress.');
+        expect(glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [])->toBe([]);
+    } finally {
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
+        stream_wrapper_unregister('vaulterfail');
+    }
 });
 
 it('builds the canonical key and promotes the exact checksum and bytes', function (): void {
