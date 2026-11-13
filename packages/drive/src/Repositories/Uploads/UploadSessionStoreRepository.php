@@ -175,19 +175,29 @@ final class UploadSessionStoreRepository
      * state (Expired by the sweeper, Aborted by the client) — the row went back to
      * Uploading with a received_bytes that no longer described any real file. Zero rows
      * affected means someone else won the race → a conflict, not a silent overwrite.
+     *
+     * $totalSizeBytes, when not null, records a length on the same write (the staged
+     * size a zero-length PATCH just finished). Null does not touch total_size_bytes,
+     * so a length the client already declared is never replaced.
      */
-    public function advanceReceived(UploadSession $session, int $receivedBytes): UploadSession
+    public function advanceReceived(UploadSession $session, int $receivedBytes, ?int $totalSizeBytes = null): UploadSession
     {
         $model = $this->driveConfig->model('upload_session');
+
+        $attributes = [
+            'received_bytes' => $receivedBytes,
+            'status' => UploadStatus::Uploading->value,
+            'updated_at' => now(),
+        ];
+
+        if ($totalSizeBytes !== null) {
+            $attributes['total_size_bytes'] = $totalSizeBytes;
+        }
 
         $affected = $model::query()
             ->whereKey($session->getKey())
             ->whereIn('status', [UploadStatus::Initiated->value, UploadStatus::Uploading->value])
-            ->update([
-                'received_bytes' => $receivedBytes,
-                'status' => UploadStatus::Uploading->value,
-                'updated_at' => now(),
-            ]);
+            ->update($attributes);
 
         // MySQL reports CHANGED rows, not matched ones: a re-sent identical chunk within the same second rewrites the very
         // same values and affects 0 rows although the session is open. Only a session that is no longer open is a conflict.

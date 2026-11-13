@@ -183,7 +183,18 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
 
             $this->assertWithinMaxBytes(session: $locked, size: $newSize);
 
-            $this->sessions->advanceReceived(session: $locked, receivedBytes: $newSize);
+            // No declared length can ever satisfy received >= total. A zero-length
+            // PATCH at this offset is the client's finish signal: record the bytes
+            // already staged so completion re-reads a total and can commit. A
+            // declared total is left untouched — an over-long PATCH was already
+            // refused in append(), before writeStream().
+            $finishesUnknownLength = $locked->total_size_bytes === null && $acceptedBytes === 0;
+
+            $this->sessions->advanceReceived(
+                session: $locked,
+                receivedBytes: $newSize,
+                totalSizeBytes: $finishesUnknownLength ? $newSize : null,
+            );
 
             return [
                 'offset' => $newSize,
@@ -194,10 +205,9 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
 
     /**
      * Whether every declared byte has been received. With a known total the
-     * gate is received_bytes == total; with an unknown total the client signals
-     * completion explicitly (a zero-length terminating PATCH), so a session whose
-     * total is null is complete once it has received at least one byte and the client
-     * marks it done — surfaced here as "received == total" only when total is set.
+     * gate is received_bytes >= total. With an unknown total a zero-length PATCH
+     * at the current offset records the staged length; until that write the
+     * total stays null and the upload stays incomplete.
      */
     public function isComplete(UploadSessionSnapshot $session): bool
     {
@@ -221,11 +231,19 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
         return $this->reads->find($session->id) ?? throw NodeNotFoundException::forId('upload');
     }
 
+    /**
+     * Known length: staged bytes cover total_size_bytes. Unknown length is
+     * incomplete until a zero-length PATCH records that total.
+     */
     private function reachedTotal(UploadSession $session, int $received): bool
     {
         $total = $session->total_size_bytes;
 
-        return $total !== null && $received >= $total;
+        if ($total === null) {
+            return false;
+        }
+
+        return $received >= $total;
     }
 
     private function assertWithinMaxBytes(UploadSession $session, int $size): void
