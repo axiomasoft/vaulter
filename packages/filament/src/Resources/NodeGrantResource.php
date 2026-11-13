@@ -19,7 +19,6 @@ use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Carbon;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
@@ -35,6 +34,7 @@ use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
 use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelExpiry;
 use Vaulter\Filament\Support\PanelGrants;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
@@ -176,7 +176,8 @@ final class NodeGrantResource extends Resource
 
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
-                ->placeholder('Never'),
+                ->placeholder('Never')
+                ->rules(PanelExpiry::grantRules()),
         ];
     }
 
@@ -207,9 +208,6 @@ final class NodeGrantResource extends Resource
             return;
         }
 
-        /** @var string $expiresAt */
-        $expiresAt = $data['expires_at'] ?? '';
-
         $handle->access()->grant(
             node: $node->id,
             grant: new GrantInput(
@@ -220,7 +218,7 @@ final class NodeGrantResource extends Resource
                 ),
                 role: (string) $data['role'], // @pest-mutate-ignore: RemoveStringCast
                 scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
-                expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
+                expiresAt: PanelExpiry::forGrant($data['expires_at'] ?? null),
             ),
         );
 

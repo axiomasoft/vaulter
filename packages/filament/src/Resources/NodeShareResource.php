@@ -19,7 +19,6 @@ use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use Override;
 use UnitEnum;
@@ -38,6 +37,7 @@ use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
 use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelExpiry;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Support\PanelRecords;
@@ -212,7 +212,8 @@ final class NodeShareResource extends Resource
 
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
-                ->placeholder('Never'),
+                ->placeholder('Never')
+                ->rules(PanelExpiry::shareRules()),
         ];
     }
 
@@ -245,9 +246,8 @@ final class NodeShareResource extends Resource
 
         /** @var string $password */
         $password = $data['password'] ?? '';
-        /** @var string $expiresAt */
-        $expiresAt = $data['expires_at'] ?? '';
         $maxUses = $data['max_uses'] ?? null;
+        $expiresAt = PanelExpiry::forShare($data['expires_at'] ?? null);
 
         try {
             $minted = $handle->shares()->create(
@@ -257,7 +257,7 @@ final class NodeShareResource extends Resource
                     role: (string) ($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
                     audience: ShareAudience::from((string) ($data['audience'] ?? ShareAudience::Anyone->value)), // @pest-mutate-ignore: RemoveStringCast
                     scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
-                    expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
+                    expiresAt: $expiresAt,
                     password: $password === '' ? null : $password,
                     maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
                 ),
