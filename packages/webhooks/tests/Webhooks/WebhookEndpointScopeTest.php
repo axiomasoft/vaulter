@@ -10,6 +10,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Webhooks\Actions\RegisterWebhookEndpointAction;
+use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
 use Vaulter\Webhooks\Actions\UpdateWebhookEndpointAction;
 use Vaulter\Webhooks\Data\RegisterWebhookEndpointInput;
 use Vaulter\Webhooks\Data\UpdateWebhookEndpointInput;
@@ -72,6 +73,31 @@ it('delivers a tenant event only to that tenant\'s endpoints under strict tenanc
         ->and(scopedRecipients($eventA))->toBe([(string) $endpointA->getKey()])
         ->and(scopedRecipients($eventB))->toBe([(string) $endpointB->getKey()])
         ->and(WebhookDelivery::query()->where('endpoint_id', $legacy->getKey())->exists())->toBeFalse();
+});
+
+it('does not list another tenant whose id differs only by case', function (): void {
+    strictTenancy('A');
+    $mine = registerEndpoint();
+    $other = WebhookTestHelpers::endpoint(['tenant_id' => 'a', 'url' => 'https://other-case.test/hook']);
+
+    $ids = app(WebhookEndpointReadRepository::class)->listing()->pluck('id')
+        ->map(static fn (mixed $id): string => (string) $id)->all();
+
+    expect($ids)->toContain((string) $mine->getKey())
+        ->and($ids)->not->toContain((string) $other->getKey());
+});
+
+it('does not deliver a tenant event to an endpoint whose tenant id differs only by case', function (): void {
+    strictTenancy('A');
+    $lower = registerEndpoint(url: 'https://lower.test/hook');
+    $upper = WebhookTestHelpers::endpoint(['tenant_id' => 'a', 'url' => 'https://upper.test/hook']);
+
+    $event = WebhookTestHelpers::outbox(['tenant_id' => 'A']);
+    WebhookTestHelpers::relay();
+
+    expect($lower->tenant_id)->toBe('A')
+        ->and(scopedRecipients($event))->toBe([(string) $lower->getKey()])
+        ->and(WebhookDelivery::query()->where('endpoint_id', $upper->getKey())->exists())->toBeFalse();
 });
 
 it('matches a missing tenant only with a missing tenant', function (): void {

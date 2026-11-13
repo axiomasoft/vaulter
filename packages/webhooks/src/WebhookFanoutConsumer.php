@@ -20,6 +20,7 @@ use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Identity;
+use Vaulter\Tenancy\TenantIdentityPredicate;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -148,7 +149,9 @@ final readonly class WebhookFanoutConsumer implements OutboxConsumer
         if ($envelope->tenantId === null) {
             $query->whereNull('tenant_id');
         } else {
-            $query->where('tenant_id', $envelope->tenantId);
+            $column = $model->qualifyColumn('tenant_id');
+            $query->where($column, $envelope->tenantId)
+                ->whereRaw(new TenantIdentityPredicate($column, $model->getConnection()->getDriverName()), [$envelope->tenantId]);
         }
 
         $driveId = $envelope->scopeKind === OutboxEnvelope::SCOPE_DRIVE ? $envelope->scopeId : null;
