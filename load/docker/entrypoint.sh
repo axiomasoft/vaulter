@@ -11,6 +11,18 @@ envsubst '${PM_MAX_CHILDREN}' \
     < /usr/local/etc/php-fpm.d/www.conf.template \
     > /usr/local/etc/php-fpm.d/www.conf
 
+# The memory lane replaces pool [www]. The image still ships docker.conf / zz-docker.conf,
+# which declare [www] with no process manager, so FPM exits before the healthcheck can pass.
+# The ordinary load template keeps [www], and those fragments stay.
+if ! grep -q '^\[www\]' /usr/local/etc/php-fpm.d/www.conf; then
+    for extra in /usr/local/etc/php-fpm.d/*.conf; do
+        case "$extra" in
+            */www.conf) ;;
+            *) rm -f "$extra" ;;
+        esac
+    done
+fi
+
 cd /app
 
 if [ "${LOAD_SKIP_MIGRATIONS:-1}" != "1" ]; then
