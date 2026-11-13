@@ -15,14 +15,17 @@
 # starting with `-` go to Pest, the others are paths.
 #
 # What runs (tests/suites.json = the machine inventory of suites and schema partitions):
-#   * every partition (one TestCase schema) is its own Pest process, serially; -j N ParaTest workers run INSIDE a
-#     partition (default: half the CPUs, at most 8). A partition's files are handed to Pest through a generated
+#   * every partition (one TestCase schema) is its own Pest process. Server engines, and SQLite when a suite has
+#     more than one partition, run up to T_PARTITION_JOBS of them at once (default 4); each gets its own skeleton
+#     and, on a server, its own databases. -j N ParaTest workers run INSIDE a partition (default: half the CPUs,
+#     at most 8). A partition's files are handed to Pest through a generated
 #     phpunit configuration, so a path list never turns into one pass per path.
 #   * fast (default): `--exclude-group=nofast` (+ yours). --full: parallel pass without `nofull,serial`,
 #     then one pass `--group=serial` (-j1 runs everything but `nofull` in one process). --group=serial: that pass only.
 #   * server engines (pgsql, mysql) are provisioned once through scripts/test-db.sh (DB_EXTERNAL=1 = a ready CI
 #     service; the database must end in _test); they need paths, --group or --full — there is no default server sweep.
-#   * partitions that write into the Testbench skeleton run -j1 with a TESTBENCH_APP_BASE_PATH of their own.
+#   * partitions that write into the Testbench skeleton run -j1. A concurrent partition also gets a
+#     TESTBENCH_APP_BASE_PATH of its own, so it does not publish config into a neighbour's tree.
 #   * hub/vue run `npm test` through their manifests (engines do not apply); `load` is explicit only.
 #   * groups: `database` (+ `database:<zone>`) = the result depends on the engine (selecting it narrows every partition to
 #     the files classified `database` in tests/zones.json; a group selection without -p leaves the Node suites out); `serial` = no parallel workers; `extended` =
@@ -598,8 +601,20 @@ record() { # label code logfile allow_empty seconds
 }
 
 run_pest_steps() { # plan-file engine
-    local plan="$1" engine="$2" step
-    if [[ "$engine" != sqlite && "${T_PARTITION_JOBS:-$(default_partition_jobs)}" -gt 1 ]]; then
+    local plan="$1" engine="$2" step jobs="${T_PARTITION_JOBS:-$(default_partition_jobs)}"
+    # SQLite has no shared server, so a single partition keeps the shared skeleton. Two or more would migrate
+    # and write caches into that one tree at the same time, so they take the same isolated slots as a server engine.
+    local concurrent=0
+    if (( jobs > 1 )); then
+        if [[ "$engine" != sqlite ]]; then
+            concurrent=1
+        else
+            local n
+            n="$(jq -r --arg e "$engine" '[.steps[] | select(.kind == "pest" and .engine == $e and .pass != "serial")] | length' "$plan")"
+            (( n > 1 )) && concurrent=1
+        fi
+    fi
+    if (( concurrent )); then
         run_pest_steps_concurrently "$plan" "$engine"
         return
     fi
@@ -610,9 +625,10 @@ run_pest_steps() { # plan-file engine
 
 default_partition_jobs() { echo 4; }
 
-# Server engines: partitions that may share a machine run at once, every one on databases of its own
-# (<base>_p<N>_test and its workers), so they cannot migrate over each other. `serial` passes (races, committed
-# transactions, shared /tmp) never overlap with anything: they run alone, one by one, after the others.
+# Partitions that may share a machine run at once. A server engine gives every one databases of its own
+# (<base>_p<N>_test and its workers), so they cannot migrate over each other. SQLite is :memory: per process
+# and only needs a private skeleton and TMPDIR. `serial` passes (races, committed transactions, shared /tmp)
+# never overlap with anything: they run alone, one by one, after the others.
 run_pest_steps_concurrently() { # plan-file engine
     local plan="$1" engine="$2" step k=0 jobs="${T_PARTITION_JOBS:-$(default_partition_jobs)}"
     local -a concurrent=() alone=()
@@ -645,8 +661,13 @@ run_pest_steps_concurrently() { # plan-file engine
         while (( ${#running[@]} >= jobs )); do reap_partition; done
         idx=$((idx + 1))
         (
-            export DB_DATABASE="${DB_DATABASE%_test}_p${idx}_test" T_STEP_IDX="p$idx" T_RESULT_FILE="$run_tmp/res-p$idx"
-            db_ensure "$DB_DATABASE" && db_use_external "$engine" "$(jq -r .processes <<<"$step")" && exec_step "$step"
+            export T_STEP_IDX="p$idx" T_RESULT_FILE="$run_tmp/res-p$idx"
+            if [[ "$engine" == sqlite ]]; then
+                exec_step "$step"
+            else
+                export DB_DATABASE="${DB_DATABASE%_test}_p${idx}_test"
+                db_ensure "$DB_DATABASE" && db_use_external "$engine" "$(jq -r .processes <<<"$step")" && exec_step "$step"
+            fi
         ) >"$run_tmp/err-p$idx" 2>&1 &
         running[$!]="p$idx"
     done

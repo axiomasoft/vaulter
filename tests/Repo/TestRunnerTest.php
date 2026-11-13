@@ -111,7 +111,7 @@ function t_fake_pest(): string
                 'FULL_SEEDS' => getenv('VAULTER_FULL_SEEDS'),
                 'SEED_SUBSET' => getenv('VAULTER_SEED_SUBSET'),
             ],
-        ])."\n", FILE_APPEND);
+        ])."\n", FILE_APPEND | LOCK_EX);
         $serial = in_array('--group=serial', $args, true);
         if ($serial && getenv('T_FAKE_NOTESTS_SERIAL')) {
             echo "\n  INFO  No tests found.\n";
@@ -262,18 +262,24 @@ it('refuses an unknown path together with a known one and runs nothing', functio
     expect($code)->toBe(2)->and($err)->toContain('GhostTest.php')->and(t_calls($fx['log']))->toBe([]);
 });
 
-it('runs one pass per partition, serially by schema, and the skeleton writer alone with a private skeleton', function (): void {
+it('runs sqlite partitions together and gives every one a private skeleton', function (): void {
     $fx = t_fixture();
     [$code] = t_run(['sqlite', '-p', 'alpha', '-j4'], t_env($fx), $fx['root']);
     $calls = t_calls($fx['log']);
 
     expect($code)->toBe(0)->and($calls)->toHaveCount(3);
-    expect(array_map(static fn (array $c): array => array_map(static fn (string $f): string => basename($f), $c['files']), $calls))->toBe([
-        ['A1Test.php', 'A2Test.php', 'A3Test.php'], ['MakeXTest.php'], ['ArchTest.php'],
+    $groups = array_map(static fn (array $c): array => array_map(static fn (string $f): string => basename($f), $c['files']), $calls);
+    usort($groups, static fn (array $a, array $b): int => ($a[0] ?? '') <=> ($b[0] ?? ''));
+    expect($groups)->toBe([
+        ['A1Test.php', 'A2Test.php', 'A3Test.php'], ['ArchTest.php'], ['MakeXTest.php'],
     ]);
-    expect($calls[0]['args'])->toContain('--parallel', '--processes=3')->and($calls[1]['args'])->not->toContain('--parallel');
-    expect($calls[1]['env']['SKELETON'])->not->toBe('')->and($calls[1]['env']['SKELETON'])->not->toBe(false)
-        ->and($calls[0]['env']['SKELETON'])->toBeFalse();
+    $skeletons = array_column(array_column($calls, 'env'), 'SKELETON');
+    expect(array_values(array_unique($skeletons)))->toHaveCount(3);
+    foreach ($skeletons as $skeleton) {
+        expect($skeleton)->not->toBeFalse()->and($skeleton)->not->toBe('');
+    }
+    $parallel = array_values(array_filter($calls, static fn (array $c): bool => in_array('--parallel', $c['args'], true)));
+    expect($parallel)->toHaveCount(1)->and($parallel[0]['args'])->toContain('--processes=3');
 });
 
 it('gives every skeleton-writing step a skeleton path of its own', function (): void {
