@@ -18,11 +18,11 @@ final readonly class YjsStateCompatibility
 {
     public function __construct(private DocumentTypeRegistry $types, private HocuspocusCollaborationDriver $driver) {}
 
-    public function assert(string $documentType, ?CollaborationStateBinding $binding): void
+    public function assert(string $documentType, ?CollaborationStateBinding $binding, bool $hasCheckpoint): void
     {
         $type = $this->types->find($documentType);
         if (!$type instanceof SupportsCollaboration || $binding === null || $binding->protocol !== 'yjs'
-            || !$this->driver->supportsState($documentType, $binding->stateFormat, $binding->schemaVersion, true, CollaborationMode::Read) || $type->collaborationProtocol() !== $binding->protocol
+            || !$this->driver->supportsState($documentType, $binding->stateFormat, $binding->schemaVersion, $hasCheckpoint, CollaborationMode::Read) || $type->collaborationProtocol() !== $binding->protocol
             || $type->collaborationStateFormat() !== $binding->stateFormat) {
             throw new CollaborationUnavailableException('unsupported_binding', $documentType);
         }
