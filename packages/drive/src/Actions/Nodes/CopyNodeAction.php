@@ -26,6 +26,7 @@ use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
+use Vaulter\Support\Identity;
 use Vaulter\Events\EventRecorder;
 
 #[Internal]
@@ -54,9 +55,12 @@ final readonly class CopyNodeAction
 
         try {
             return $this->database->transaction(function () use ($source, $parentId, $name, $data, $context): Node {
-                $this->database->lockAggregateShared('drives', $context->driveId());
+                // Exclusive, like move and trash. A shared lock on PostgreSQL lets a create
+                // commit a child under the source after this subtree is read and before
+                // the row locks, and the copy then omits that child.
+                $this->database->lockAggregate('drives', $context->driveId());
                 $this->lifecycle->assertWritable($context);
-                $sourceIds = array_values($this->nodes->subtree($source)->modelKeys());
+                $sourceIds = array_map(Identity::stringify(...), $this->nodes->subtree($source)->modelKeys());
                 $locked = $this->tree->lock([...$sourceIds, $parentId]);
                 $current = $this->tree->locked($locked, $source->id);
                 $destination = $this->tree->locked($locked, $parentId);
@@ -65,7 +69,7 @@ final readonly class CopyNodeAction
                     throw CrossDriveOperationException::between(fromStorageId: $context->driveId(), toStorageId: $destination->drive_id);
                 }
                 $this->tree->assertActiveFolder($destination);
-                $sources = $locked->filter(fn (Node $node): bool => in_array($node->id, $sourceIds, true));
+                $sources = $locked->filter(fn (Node $node): bool => in_array(Identity::stringify($node->id), $sourceIds, true));
                 // Freeze supported membership before creating even the destination root.
                 foreach ($sources as $member) {
                     if (!$this->tree->sameStorage($member, $context->driveId())) {
