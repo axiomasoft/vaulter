@@ -22,7 +22,7 @@
 - `load/` не менялся.
 
 Не подтверждено этим коммитом: зелёный Pest на новых образах. Смотри `Analysis/metrics.md`.
-Отложенное — `Analysis/proposals.md`.
+Отложенное — `Analysis/proposals.md`. Туда же дописан проход documents, collaboration и webhooks: три находки, без правки кода.
 
 ## Проверки, которые уже сняты
 
