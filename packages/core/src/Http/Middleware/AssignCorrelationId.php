@@ -26,13 +26,32 @@ final class AssignCorrelationId
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
-        $id = self::accepted($request->headers->get(self::HEADER)) ?? (string) Str::ulid();
-        $request->attributes->set(self::ATTRIBUTE, $id);
-
+        $id = self::resolve($request);
         $response = $next($request);
         $response->headers->set(self::HEADER, $id);
 
         return $response;
+    }
+
+    /**
+     * The one correlation token for this request: the id already assigned, otherwise an
+     * accepted X-Request-Id or X-Correlation-Id, otherwise one fresh ULID. Activity and
+     * problem responses must call this rather than the raw header. The token is at most
+     * 64 characters of `[A-Za-z0-9._:-]`; anything else is not a trace id.
+     */
+    public static function resolve(Request $request): string
+    {
+        $existing = self::of($request);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $id = self::accepted($request->headers->get(self::HEADER))
+            ?? self::accepted($request->headers->get('X-Correlation-Id'))
+            ?? (string) Str::ulid();
+        $request->attributes->set(self::ATTRIBUTE, $id);
+
+        return $id;
     }
 
     /** The id the request already carries, once assigned. */

@@ -226,7 +226,14 @@ final readonly class WebhooksConfig
     {
         $value = $this->config->get('vaulter-webhooks.manage_ability');
 
-        return is_string($value) && $value !== '' ? $value : null;
+        // Explicit null is the allow-all switch. A blank string is what env() returns
+        // when VAULTER_WEBHOOKS_MANAGE_ABILITY is set but empty, and that must not
+        // bypass the ability the config file names as its default.
+        if ($value === null) {
+            return null;
+        }
+
+        return is_string($value) && $value !== '' ? $value : 'vaulter.webhooks.manage';
     }
 
     /** @return class-string<OutboundUrlGuard> */

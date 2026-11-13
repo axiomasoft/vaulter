@@ -96,6 +96,16 @@ it('resolves the model keys from vaulter-webhooks.models and refuses a class tha
     expect($config->model('webhook_endpoint'))->toBe(WebhookEndpoint::class);
 });
 
+it('treats a blank manage ability as the shipped ability and null as allow-all', function (): void {
+    $blank = new WebhooksConfig(new Repository(['vaulter-webhooks' => ['manage_ability' => '']]));
+    $open = new WebhooksConfig(new Repository(['vaulter-webhooks' => ['manage_ability' => null]]));
+    $named = new WebhooksConfig(new Repository(['vaulter-webhooks' => ['manage_ability' => 'app.hooks']]));
+
+    expect($blank->manageAbility())->toBe('vaulter.webhooks.manage')
+        ->and($open->manageAbility())->toBeNull()
+        ->and($named->manageAbility())->toBe('app.hooks');
+});
+
 it('keeps no webhook key under the kernel root: vaulter.webhooks is not read', function (): void {
     $repository = new Repository([
         'vaulter' => ['webhooks' => ['timeout' => 99, 'retry_jitter' => 0.4]],

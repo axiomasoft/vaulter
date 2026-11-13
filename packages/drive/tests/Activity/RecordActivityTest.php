@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
@@ -277,6 +279,36 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     expect($row->ip)->toBeNull()
         ->and($row->user_agent)->toBeNull()
         ->and($row->request_id)->toBeNull();
+});
+
+it('stores the correlation token the response echoes, including one that is not a uuid', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'traced-node');
+    $request = Request::create('/v1/nodes', 'POST');
+    $request->headers->set('X-Request-Id', 'cached-1');
+    app()->instance('request', $request);
+
+    Activity::query()->delete();
+    recordActivityEvent(new FolderCreated(node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+
+    expect(Activity::query()->firstOrFail()->request_id)->toBe('cached-1')
+        ->and(AssignCorrelationId::of($request))->toBe('cached-1');
+});
+
+it('does not copy a rejected correlation header into the activity row', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'rejected-trace');
+    $request = Request::create('/v1/nodes', 'POST');
+    $request->headers->set('X-Request-Id', "cached-1\nbad");
+    app()->instance('request', $request);
+
+    Activity::query()->delete();
+    recordActivityEvent(new FolderCreated(node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+
+    $stored = Activity::query()->firstOrFail()->request_id;
+
+    expect($stored)->not->toBe("cached-1\nbad")
+        ->and($stored)->toMatch('/^[0-9A-HJKMNP-TV-Z]{26}$/');
 });
 
 // ─────────────────────── an event of the kernel that is no DriveEvent ───────────────────────

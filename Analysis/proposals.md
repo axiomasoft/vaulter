@@ -41,11 +41,11 @@ Testbench. Теперь при двух и более партициях SQLite 
    а затем применяется целиком: `documents.comment` даёт роль commenter, у которой есть
    и Download. Починка меняет опубликованную карту проб (`documents.update` больше не
    означает writer). Тесты драйвера ждут текущее складывание.
-3. `packages/core/src/Support/RequestContext.php`, `requestIdOf` около строки 79.
-   В активность пишется сырой `X-Request-Id`, не очищенный идентификатор.
-   На PostgreSQL не-UUID роняет вставку и откатывает операцию. На MySQL короткая строка
-   остаётся в аудите. Починка — писать только UUID. Это не ломает маршрут, но меняет
-   то, что лежит в `v_activity.request_id`.
+3. Сделано. `RequestContext` брал сырой заголовок и другой ключ атрибута, чем
+   `AssignCorrelationId`. Ответ уже отдавал принятый токен (`cached-1`, ULID), а
+   `v_activity.request_id` был колонкой `uuid`, поэтому PostgreSQL откатывал операцию.
+   Теперь активность и problem-ответ берут `AssignCorrelationId::resolve`, колонка —
+   `string(64)`. Явный контракт заголовка не сужен.
 4. `packages/drive/src/Uploads/S3MultipartHandler.php`, `putPartChunk`.
    Часть ограничена `max_chunk_bytes`, сумма частей — нет: ни `max_file_size`, ни
    объявленный total не проверяются до `StorageDriver::put()`. `complete()` сверяет
@@ -70,14 +70,9 @@ SSRF, JWT, сырой SQL и десериализация в этом объём
    `tenant_id IS NULL` строкой текущего арендатора. Для остальных арендаторов эти id
    станут 404. Это смена видимости, которую код сейчас даёт намеренно запросом, отдельного
    комментария «так и задумано» у метода нет.
-6. `packages/webhooks/config/vaulter-webhooks.php` строка 27 и
-   `WebhooksConfig::manageAbility` строка 229. Пустой `VAULTER_WEBHOOKS_MANAGE_ABILITY`
-   не берёт запасное `vaulter.webhooks.manage`: Laravel `env()` на пустой переменной
-   возвращает `''`, а `manageAbility()` превращает пустую строку в `null`.
-   `WebhookEndpointPolicy` при `null` пускает любого вошедшего пользователя.
-   Явный `null` в PHP-конфиге по-прежнему может означать «без ability». Пустая
-   переменная окружения так делать не должна. Хост, который уже полагается на пустую
-   переменную как на полный доступ, это сломает.
+6. Сделано. Пустой `VAULTER_WEBHOOKS_MANAGE_ABILITY` больше не открывает управление
+   всем вошедшим: `manageAbility()` подставляет `vaulter.webhooks.manage`. Явный PHP
+   `null` по-прежнему означает проверку без ability.
 7. `packages/documents/src/Http/Requests/AddCommentRequest.php` строка 27.
    `body` ограничен 5000 символами, `anchor` — массив без глубины и размера и уходит
    в `jsonb` и в ленту комментария. Крупный anchor скачивает каждый, кто читает узел.

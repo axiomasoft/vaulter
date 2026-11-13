@@ -13,7 +13,6 @@ use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +23,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 
@@ -279,16 +279,6 @@ final readonly class ProblemRenderer
 
     private function requestId(Request $request): string
     {
-        $assigned = $request->attributes->get('vaulter.request_id');
-        if (is_string($assigned) && $assigned !== '') {
-            return $assigned;
-        }
-
-        $incoming = $request->headers->get('X-Request-Id');
-        if (is_string($incoming) && preg_match('/^[A-Za-z0-9._:-]{1,128}$/', $incoming) === 1) {
-            return $incoming;
-        }
-
-        return (string) Str::ulid();
+        return AssignCorrelationId::resolve($request);
     }
 }
