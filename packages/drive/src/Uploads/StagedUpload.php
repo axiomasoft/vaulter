@@ -180,7 +180,7 @@ final readonly class StagedUpload
      *
      * @param resource $chunk
      */
-    public function append(UploadSession $session, mixed $chunk, int $offset): int
+    public function append(UploadSession $session, mixed $chunk, int $offset, ?int $declaredTotal = null, ?int $maxBytes = null): int
     {
         $this->assertChunkWithinLimit($chunk);
 
@@ -220,6 +220,16 @@ final readonly class StagedUpload
             $this->copyChunkWithinLimit($chunk, $buffer);
 
             $size = ftell($buffer);
+            if ($declaredTotal !== null && is_int($size) && $size > $declaredTotal) {
+                throw ValidationException::withMessages([
+                    'received_bytes' => "Upload session {$session->upload_id} would exceed its declared {$declaredTotal} bytes.",
+                ]);
+            }
+            if ($maxBytes !== null && $maxBytes > 0 && is_int($size) && $size > $maxBytes) {
+                throw ValidationException::withMessages([
+                    'received_bytes' => "The upload exceeded the maximum allowed {$maxBytes} bytes.",
+                ]);
+            }
             rewind($buffer);
             $disk->writeStream($key, $buffer);
         } finally {

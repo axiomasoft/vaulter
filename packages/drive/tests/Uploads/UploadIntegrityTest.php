@@ -72,6 +72,16 @@ it('отказывает часть S3 больше объявленного р�
     expect($parts->sizeOf($capped->refresh(), 1))->toBe(2);
 });
 
+it('tus PATCH больше объявленной длины не пишет байты', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: 3);
+    $handler = app(TusUploadHandler::class);
+
+    expect(fn () => $handler->patch($session->refresh(), UploadTestHelpers::streamFor('abcd'), 0))
+        ->toThrow(ValidationException::class);
+    expect(app(StagedUpload::class)->size($session->refresh()))->toBe(0);
+});
+
 it('чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-байт, F-P1.4-04', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8); // 8-byte per-chunk hard ceiling
 

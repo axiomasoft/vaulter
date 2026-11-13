@@ -164,7 +164,13 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
                 throw new OffsetMismatchException($serverOffset);
             }
 
-            $newSize = $this->staged->append(session: $locked, chunk: $chunk, offset: $offset);
+            $newSize = $this->staged->append(
+                session: $locked,
+                chunk: $chunk,
+                offset: $offset,
+                declaredTotal: $locked->total_size_bytes,
+                maxBytes: $this->driveConfig->maxFileSize(),
+            );
             $acceptedBytes = $newSize - $serverOffset;
 
             if ($acceptedBytes > 0) {
