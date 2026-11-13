@@ -15,15 +15,13 @@ use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
-use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Actions\DocumentWriteLock;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Support\DriveLifecycle;
-use Vaulter\Drive\Support\TreeGuard;
+
 use Vaulter\Events\EventRecorder;
 
 /**
@@ -42,14 +40,12 @@ use Vaulter\Events\EventRecorder;
 final readonly class RestoreDocumentRevisionAction
 {
     public function __construct(
-        private DocumentReadRepository $documents,
         private DocumentRevisionReadRepository $revisions,
         private DocumentStateWriter $writer,
         private VaulterDatabase $database,
-        private TreeGuard $tree,
-        private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private PendingStateGuard $pending,
+        private DocumentWriteLock $writeLock,
     ) {}
 
     public function execute(DriveContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
@@ -65,20 +61,7 @@ final readonly class RestoreDocumentRevisionAction
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '' || $driveId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
-            $this->database->lockAggregateShared('drives', $driveId);
-            $this->lifecycle->assertWritable($context);
-            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
-            if (!$this->tree->sameStorage($current, $driveId)) {
-                throw NodeNotFoundException::forId($nodeId);
-            }
-            // A trash that committed before this lock leaves nothing to write to.
-            $this->tree->assertLive($current);
-            if (!$current->kind->isDocument()) {
-                throw NotADocumentException::forNode($nodeId);
-            }
-            $node = $this->tree->sync($node, $current);
-            $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
-            $document->setRelation('node', $node);
+            [$node, $document] = $this->writeLock->acquire($context, $node, $nodeId);
             // Closing the generation over saved edits not in the working state would lose them (C8): G stays.
             $this->pending->assertSettled($document);
             $source = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->revisions->forNode($node, $versionId) : null;
