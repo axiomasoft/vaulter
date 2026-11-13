@@ -11,12 +11,14 @@ use function Orchestra\Testbench\load_migration_paths;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
+use Vaulter\Testing\Concerns\UsesSuiteDatabase;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
     use RefreshesDatabaseForSchemaVariant;
+    use UsesSuiteDatabase;
 
     /**
      * @param  Application              $app
@@ -37,10 +39,7 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function defineEnvironment($app): void
     {
-        $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
-        $app['config']->set('database.default', 'testing');
-        $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());
-        SuiteDatabaseConnection::isolateStorage($app);
+        $this->pinSuiteConnection($app);
 
         // The CAS slice is ACL-agnostic: run OPEN under the env-gated null driver so
         // the tests exercise pure blob mechanics without an access-control lane.
@@ -62,17 +61,4 @@ abstract class TestCase extends OrchestraTestCase
         $this->loadMigrationsFrom($paths);
     }
 
-    /**
-     * The connection the whole suite runs on. Default: in-memory SQLite. Opt INTO
-     * Postgres by exporting DB_CONNECTION=pgsql (plus the DB_* coordinates): the
-     * dedicated pgsql CI lane exercises the real advisory-xact-lock / FOR UPDATE /
-     * SERIALIZABLE critical sections that SQLite cannot model — every such test
-     * SKIPS unless the live driver is pgsql (master plan P4 #11).
-     *
-     * @return array<string, string|bool|null>
-     */
-    protected function suiteDatabaseConnection(): array
-    {
-        return SuiteDatabaseConnection::resolve();
-    }
 }
