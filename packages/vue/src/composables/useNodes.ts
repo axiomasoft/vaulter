@@ -8,8 +8,8 @@ import {
   type ShallowRef,
 } from 'vue'
 import { useVaulterClient } from './useVaulterClient'
+import { VaulterApiError } from '../api/errors'
 import { isStaleError } from './conflict'
-import type { VaulterApiError } from '../api/errors'
 import type { DriveId, Node, NodeId, PageMeta } from '../api/types'
 
 /** A mutation lost the race for a node: it was re-read and now shows its current state. */
@@ -146,6 +146,11 @@ export function useNodes(
       nodes.value = [...nodes.value, ...reconcile(page.data, startedAt, false).filter((row) => !shown.has(row.id))]
       cursor.value = page.meta
       return nodes.value
+    } catch (caught) {
+      if (seq === listSeq) {
+        error.value = caught
+      }
+      throw caught
     } finally {
       moreInFlight = false
     }
@@ -180,9 +185,14 @@ export function useNodes(
       if (isStaleError(caught)) {
         try {
           replace(await client.nodes.get(node.id))
-        } catch {
-          // The node is gone or no longer visible: the list cannot show it any more.
-          drop(node.id)
+        } catch (readError) {
+          // Only a missing or forbidden node leaves the list. A 503 or a network
+          // error on the re-read must not pretend the file was deleted.
+          if (readError instanceof VaulterApiError && (readError.status === 404 || readError.status === 403)) {
+            drop(node.id)
+          } else {
+            error.value = readError
+          }
         }
         conflict.value = { nodeId: node.id, error: caught }
       }

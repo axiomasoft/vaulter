@@ -64,6 +64,11 @@ export function useRevisions(nodeId: NodeId): UseRevisionsReturn {
         cursor.value = page.meta
       }
       return revisions.value
+    } catch (caught) {
+      if (guard.isCurrent(token)) {
+        error.value = caught
+      }
+      throw caught
     } finally {
       guard.endMore()
     }

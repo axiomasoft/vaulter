@@ -44,8 +44,8 @@ const emit = defineEmits<{
 const client = useVaulterClient()
 
 const {
-  nodes, parentId, loading, error, conflict,
-  refresh: refreshNodes, navigate, createFolder,
+  nodes, parentId, cursor, loading, error, conflict,
+  refresh: refreshNodes, loadMore, navigate, createFolder,
   rename, move, trash, restore, purge,
 } = useNodes(props.driveId, () => props.initialParentId ?? null)
 
@@ -279,10 +279,23 @@ async function runSearch(): Promise<void> {
     searchResults.value = null
     return
   }
-  const page = await client.nodes.search(props.driveId, term)
-  // Ignore a stale response if a newer search has started.
-  if (seq === searchSeq) {
-    searchResults.value = page.data
+  const hits: Node[] = []
+  let next: string | null | undefined
+  try {
+    do {
+      const page = await client.nodes.search(props.driveId, term, next ? { cursor: next } : undefined)
+      if (seq !== searchSeq) {
+        return
+      }
+      hits.push(...page.data)
+      next = page.meta.next_cursor
+    } while (next)
+    searchResults.value = hits
+    error.value = null
+  } catch (caught) {
+    if (seq === searchSeq) {
+      error.value = caught
+    }
   }
 }
 
@@ -384,6 +397,15 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
         </slot>
       </template>
     </VaulterNodeList>
+
+    <button
+      v-if="searchResults === null && cursor?.next_cursor"
+      type="button"
+      class="vaulter-drive__more"
+      @click="loadMore"
+    >
+      Load more
+    </button>
 
     <VaulterFolderPicker
       v-if="moveTarget"

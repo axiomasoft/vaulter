@@ -67,6 +67,11 @@ export function useActivity(scope: { driveId: DriveId } | { nodeId: NodeId }): U
         cursor.value = page.meta
       }
       return activity.value
+    } catch (caught) {
+      if (guard.isCurrent(token)) {
+        error.value = caught
+      }
+      throw caught
     } finally {
       guard.endMore()
     }

@@ -67,6 +67,11 @@ export function useComments(nodeId: NodeId): UseCommentsReturn {
         cursor.value = page.meta
       }
       return comments.value
+    } catch (caught) {
+      if (guard.isCurrent(token)) {
+        error.value = caught
+      }
+      throw caught
     } finally {
       guard.endMore()
     }
