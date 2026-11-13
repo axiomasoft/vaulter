@@ -186,11 +186,11 @@ What a machine needs, and why:
 
 | Where | What to install / set | Why |
 |---|---|---|
-| Any machine | `postgresql` 16 and/or `mysql-server` 8.x binaries on `PATH` (`mysqld`, `mysql`, `mysqladmin`; `initdb`, `pg_ctl`, `psql`) | the private servers are started from them; no root, no Docker |
+| Any machine | PostgreSQL 18 and/or MySQL 9.7 binaries on `PATH` (`mysqld`, `mysql`, `mysqladmin`; `initdb`, `pg_ctl`, `psql`) | the private servers are started from them; no root, no Docker |
 | MySQL, strongly recommended | `eatmydata` (`apt install eatmydata`) | the server is throw-away, so `fsync` is pointless; the script puts `libeatmydata` in front of `mysqld` when it is installed. DDL-heavy partitions (`migrate:fresh` per test) ran 6x faster: 547 s -> 86 s. `DB_FAST=0` turns it and the other speed settings off |
 | MySQL on Ubuntu/Debian | nothing, but know the limit: AppArmor lets `mysqld` use `/tmp` only, not `/dev/shm` or `/run/user`, so the data directory cannot be tmpfs. Set `VAULTER_DB_ROOT` to another disk path only if the profile allows it | the speed gap to Docker-on-tmpfs is what `eatmydata` closes |
-| A machine with Docker | `make db-up` / `make db-up-mysql` start `pgsql` / `mysql:8.4` with the data on tmpfs (`scripts/pg-local.sh`, `scripts/mysql-local.sh`); `scripts/t` reuses them (fastest MySQL, one run at a time) | CI uses the same images |
-| CI | service containers `postgres:16` / `mysql:8.4` with `DB_EXTERNAL=1` and the `DB_*` variables; start them with `--innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0 --skip-log-bin --log-bin-trust-function-creators=1` and the data directory on tmpfs | same speed settings as the private server; see the `ci.yml` / `weekly-full.yml` service definitions |
+| A machine with Docker | `make db-up` / `make db-up-mysql` start `pgsql` / `mysql:9.7` with the data on tmpfs (`scripts/pg-local.sh`, `scripts/mysql-local.sh`); `scripts/t` reuses them (fastest MySQL, one run at a time) | CI uses the same major lines |
+| CI | service containers `postgres:18` / `mysql:9.7` with `DB_EXTERNAL=1` and the `DB_*` variables; a cell starts only its own engine. MySQL flags: `--innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0 --skip-log-bin --log-bin-trust-function-creators=1`. Postgres 18 keeps its data under `/var/lib/postgresql` | same speed settings as the private server; see the `ci.yml` / `weekly-full.yml` service definitions |
 | Several runs at once | `VAULTER_DB_PRIVATE=1` (set by `scripts/t-matrix`) | ignores the shared local Docker servers, which would make the runs wait for each other |
 
 The package suites that need a sibling checkout pin it in `composer.json` (azgard: `axiomasoft/azguard` at a commit): a local

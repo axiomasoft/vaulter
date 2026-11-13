@@ -15,7 +15,7 @@ PLAN3 P1.6 adds the single-CI contract:
 * ci.yml is the one PR workflow (push/pull_request/workflow_dispatch, no path filter) and its `ci-gate` job needs every
   other job; the per-package test workflows no longer exist;
 * ci.yml and weekly-full.yml carry the actual PHP support matrix in `env.PHP_SUPPORT`, which must equal what the
-  composer.json files of the packages declare (Laravel 12 / Testbench 10, Laravel 13 / Testbench 11);
+  composer.json files of the packages declare (Laravel 13 / Testbench 11);
 * weekly-full.yml runs on schedule `0 4 * * 1`, by hand and as a reusable workflow; monorepo-split.yml qualifies the
   exact tagged SHA through it and through `CI gate` before anything is published, and never polls for a green run.
 
@@ -611,7 +611,27 @@ def check_publisher(name: str, doc: dict) -> list[str]:
 
 
 def pinned_image(ref: object) -> bool:
-    return isinstance(ref, str) and re.fullmatch(r'[^\s@]+@sha256:[0-9a-f]{64}', ref) is not None
+    """A digest pin, or a GitHub expression whose every image reference is digest-pinned.
+
+    A database cell selects one engine. The workflow writes both images in one expression
+    (`matrix.engine == 'pgsql' && 'postgres…@sha256:…' || 'mysql…@sha256:…'`) so the pin stays
+    in the file a reviewer reads, and the job starts only the engine that cell tests.
+    """
+    if not isinstance(ref, str):
+        return False
+    if re.fullmatch(r'[^\s@]+@sha256:[0-9a-f]{64}', ref) is not None:
+        return True
+    text = ref.strip()
+    if not (text.startswith('${{') and text.endswith('}}')):
+        return False
+    pins = re.findall(r'[A-Za-z0-9_./-]+:[A-Za-z0-9_.-]+@sha256:[0-9a-f]{64}', text)
+    if not pins:
+        return False
+    remainder = text
+    for pin in pins:
+        remainder = remainder.replace(pin, '')
+    bare = re.search(r'(?:^|[^A-Za-z0-9_./-])(?:[A-Za-z0-9_.-]+/)?[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+', remainder)
+    return bare is None
 
 
 def docker_run_images(command: str) -> list[str]:

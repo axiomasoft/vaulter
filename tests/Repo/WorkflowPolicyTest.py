@@ -230,9 +230,9 @@ class SingleCiTest(unittest.TestCase):
 
     def test_support_matrix_follows_composer(self):
         support = self.support
-        self.assertEqual(['12', '13'], support['core']['lines'])
+        self.assertEqual(['13'], support['core']['lines'])
         self.assertEqual(['13'], support['filament']['lines'], 'filament requires Testbench ^11 only')
-        self.assertEqual(['12', '13'], support['azgard']['lines'])
+        self.assertEqual(['13'], support['azgard']['lines'])
         self.assertTrue(support['azgard']['azguard'])
         self.assertFalse(support['azgard']['serial'])
         self.assertTrue(support['drive']['serial'])
@@ -355,12 +355,11 @@ class SingleCiTest(unittest.TestCase):
     def test_stand_only_is_an_explicit_skip(self):
         self.assertEqual('stand-only', self.plan(selector('ok', 0, ['load']))['skip_reason'])
 
-    def test_changed_drive_plans_both_laravel_lines_and_serial(self):
+    def test_changed_drive_plans_the_laravel_13_line_and_serial(self):
         out = self.plan(selector('ok', 0, ['drive', 'documents', 'filament']),
                         pgsql=selector('ok', 0, ['drive']), mysql=selector('ok', 0, ['drive']))
         fast = json.loads(out['fast_matrix'])['include']
-        self.assertEqual({('drive', '12.*', '^10.0'), ('drive', '13.*', '^11.0'), ('documents', '12.*', '^10.0'),
-                          ('documents', '13.*', '^11.0'), ('filament', '13.*', '^11.0')},
+        self.assertEqual({('drive', '13.*', '^11.0'), ('documents', '13.*', '^11.0'), ('filament', '13.*', '^11.0')},
                          {(r['package'], r['laravel'], r['testbench']) for r in fast})
         self.assertEqual([('drive', 'pgsql', '5432', 'vaulter'), ('drive', 'mysql', '3306', 'root')],
                          [(r['package'], r['engine'], r['port'], r['username']) for r in json.loads(out['db_matrix'])['include']])
@@ -379,7 +378,7 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('true', out['has_vue_collaboration'])
         self.assertEqual('true', out['has_hub'])
         self.assertEqual('true', out['has_repo'])
-        self.assertEqual(17, len(json.loads(out['fast_matrix'])['include']))  # 7 packages x 2 lines + filament x 1
+        self.assertEqual(9, len(json.loads(out['fast_matrix'])['include']))  # one Laravel 13 line for each package
         self.assertEqual(9, len(json.loads(out['quality_matrix'])['include']))
         self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration'],
                          [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
@@ -413,10 +412,10 @@ class SingleCiTest(unittest.TestCase):
     def test_integration_is_a_root_suite_of_every_test_lane(self):
         support = policy.derive_support(ROOT)
         self.assertEqual('.', support['integration']['dir'])
-        self.assertEqual(['12', '13'], support['integration']['lines'])
+        self.assertEqual(['13'], support['integration']['lines'])
         self.assertTrue(support['integration']['serial'])
         out = self.plan(selector('ok', 0, ['integration']), pgsql=selector('ok', 0, ['integration']), mysql=selector('ok', 0, ['integration']))
-        self.assertEqual({('integration', '12.*'), ('integration', '13.*')},
+        self.assertEqual({('integration', '13.*')},
                          {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
         self.assertEqual(['integration'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
         self.assertEqual([('integration', 'pgsql'), ('integration', 'mysql')],
@@ -434,12 +433,12 @@ class SingleCiTest(unittest.TestCase):
     def test_webhooks_is_a_php_package_of_every_lane(self):
         support = self.support
         self.assertIn('webhooks', policy.PHP_PACKAGES)
-        self.assertEqual(['12', '13'], support['webhooks']['lines'])
+        self.assertEqual(['13'], support['webhooks']['lines'])
         self.assertTrue(support['webhooks']['serial'], 'its groups.php declares serial cases (forked races)')
         self.assertFalse(support['webhooks']['azguard'])
 
         out = self.plan(selector('ok', 0, ['webhooks']), pgsql=selector('ok', 0, ['webhooks']), mysql=selector('ok', 0, ['webhooks']))
-        self.assertEqual({('webhooks', '12.*'), ('webhooks', '13.*')},
+        self.assertEqual({('webhooks', '13.*')},
                          {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
         self.assertEqual(['webhooks'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
         self.assertEqual([('webhooks', 'pgsql'), ('webhooks', 'mysql')],
@@ -527,13 +526,13 @@ class SingleCiTest(unittest.TestCase):
 
     def test_collaboration_is_a_php_package_of_every_lane(self):
         support = self.support
-        self.assertEqual(['12', '13'], support['collaboration']['lines'])
+        self.assertEqual(['13'], support['collaboration']['lines'])
         self.assertTrue(support['collaboration']['serial'], 'its groups.php declares serial cases (pgsql races)')
         self.assertTrue(support['collaboration']['types'])
         self.assertFalse(support['collaboration']['azguard'])
 
         out = self.plan(selector('ok', 0, ['collaboration']), pgsql=selector('ok', 0, ['collaboration']), mysql=selector('ok', 0, ['collaboration']))
-        self.assertEqual({('collaboration', '12.*'), ('collaboration', '13.*')},
+        self.assertEqual({('collaboration', '13.*')},
                          {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
         self.assertEqual(['collaboration'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
         self.assertEqual(['collaboration'], [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
@@ -926,6 +925,12 @@ class PinPolicyTest(unittest.TestCase):
         job['container'] = 'node@' + self.digest
         self.assertEqual([], policy.check_pins('x', doc))
         job['services']['db']['image'] = 'postgres:16'
+        self.assertTrue(policy.check_pins('x', doc))
+        pinned = 'postgres:18-alpine@sha256:' + 'ab' * 32
+        other = 'mysql:9.7@sha256:' + 'cd' * 32
+        job['services']['db']['image'] = "${{ matrix.engine == 'pgsql' && '%s' || '%s' }}" % (pinned, other)
+        self.assertEqual([], policy.check_pins('x', doc))
+        job['services']['db']['image'] = "${{ matrix.engine == 'pgsql' && 'postgres:16' || '%s' }}" % other
         self.assertTrue(policy.check_pins('x', doc))
         job['container'] = {'image': 'node:22'}
         self.assertEqual(2, len(policy.check_pins('x', doc)))

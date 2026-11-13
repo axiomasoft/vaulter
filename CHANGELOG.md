@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Changed: the qualified platform is PHP 8.4 and Laravel 13, with CI on PostgreSQL 18 and MySQL 9.7 LTS. Laravel 12 and Testbench 10 are no longer a supported line. A database job starts only the engine that cell tests. 1.0 has no installations to migrate.
+
 - Removed mutation testing workflows, Composer/Make commands and the media score-union tool until the kernel is stable. Existing regression tests remain in place.
 
 ### Collaboration package and the durability model (PLAN3.P5, ADR-0031)

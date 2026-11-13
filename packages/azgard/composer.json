@@ -20,14 +20,14 @@
         "axioma-studio/vaulter-core": "self.version",
         "axioma-studio/vaulter-drive": "self.version",
         "axiomasoft/azguard": "dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba",
-        "illuminate/contracts": "^12.0|^13.0",
-        "illuminate/support": "^12.0|^13.0"
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0"
     },
     "require-dev": {
         "axioma-studio/vaulter-media": "self.version",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
-        "orchestra/testbench": "^10.0|^11.0",
+        "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
