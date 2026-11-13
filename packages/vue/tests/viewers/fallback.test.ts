@@ -205,4 +205,84 @@ describe('built-in preview viewers', () => {
     expect(wrapper.find('iframe').exists()).toBe(false)
     expect(wrapper.find('[role="alert"]').text()).toBe('The preview could not be loaded.')
   })
+
+  it('image preview shows a failure instead of a broken image when the bytes are unavailable', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:unavailable')
+    const respond = () => new Response(JSON.stringify({
+      code: 'content_unavailable',
+      status: 423,
+      title: 'Content unavailable',
+      request_id: 'req-1',
+    }), {
+      status: 423,
+      headers: { 'Content-Type': 'application/problem+json', 'X-Vaulter-Api-Version': '1' },
+    })
+    const node = makeFile({ id: '8', presentation: makePresentation({ key: VIEWER_KEYS.imagePreview }) })
+
+    const { wrapper } = mountViewer(node, { respond })
+    await settle()
+
+    expect(wrapper.find('img').exists()).toBe(false)
+    expect(wrapper.find('a').exists()).toBe(false)
+    expect(wrapper.find('[role="alert"]').text()).toBe('The preview could not be loaded.')
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('pdf preview shows a failure instead of a frame when the bytes are unavailable', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:unavailable-pdf')
+    const respond = () => new Response(JSON.stringify({
+      code: 'content_unavailable',
+      status: 423,
+      title: 'Content unavailable',
+      request_id: 'req-1',
+    }), {
+      status: 423,
+      headers: { 'Content-Type': 'application/problem+json', 'X-Vaulter-Api-Version': '1' },
+    })
+    const node = makeFile({ presentation: makePresentation({ key: VIEWER_KEYS.pdfPreview }) })
+
+    const { wrapper } = mountViewer(node, { respond })
+    await settle()
+
+    expect(wrapper.find('iframe').exists()).toBe(false)
+    expect(wrapper.find('a').exists()).toBe(false)
+    expect(wrapper.find('[role="alert"]').text()).toBe('The preview could not be loaded.')
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('image preview links the download URL when direct_signed redirects', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:redirected')
+    const respond = () => new Response(null, {
+      status: 302,
+      headers: { Location: 'https://signed.example/cat.png', 'X-Vaulter-Api-Version': '1' },
+    })
+    const node = makeFile({ id: '8', presentation: makePresentation({ key: VIEWER_KEYS.imagePreview }) })
+
+    const { wrapper, calls } = mountViewer(node, { respond })
+    await settle()
+
+    expect(wrapper.find('img').exists()).toBe(false)
+    expect(wrapper.find('a').attributes('href')).toBe('/api/vaulter/v1/files/8/download')
+    expect(wrapper.find('a').text()).toBe('Download')
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toBe('/files/8/download')
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('pdf preview links the download URL when direct_signed redirects', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:redirected-pdf')
+    const respond = () => new Response(null, {
+      status: 302,
+      headers: { Location: 'https://signed.example/doc.pdf', 'X-Vaulter-Api-Version': '1' },
+    })
+    const node = makeFile({ id: '11', presentation: makePresentation({ key: VIEWER_KEYS.pdfPreview }) })
+
+    const { wrapper, calls } = mountViewer(node, { respond })
+    await settle()
+
+    expect(wrapper.find('iframe').exists()).toBe(false)
+    expect(wrapper.find('a').attributes('href')).toBe('/api/vaulter/v1/files/11/download')
+    expect(calls).toHaveLength(1)
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
+  })
 })

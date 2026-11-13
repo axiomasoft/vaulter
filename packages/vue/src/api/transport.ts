@@ -21,6 +21,11 @@ export interface RequestInitLike {
   /** The opaque ETag of the representation being changed; sent as `If-Match`. */
   etag?: string
   accept?: string
+  /**
+   * `manual` leaves a 3xx (or the browser's opaque redirect) for the caller.
+   * File downloads use it so a `direct_signed` 302 is not followed into a cross-origin URL.
+   */
+  redirect?: RequestRedirect
 }
 
 /** The one place that talks to `fetch`: headers, version guard, problem+json parsing. */
@@ -34,6 +39,11 @@ export interface Transport {
 }
 
 const SUPPORTED_MAJOR = 1
+
+/** A redirect the caller asked not to follow: a real 3xx, or the browser's filtered `opaqueredirect` (status 0). */
+function isUntakenRedirect(response: Response): boolean {
+  return response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)
+}
 
 export function toQueryString(query?: object): string {
   if (!query) {
@@ -106,9 +116,15 @@ export function createTransport(options: VaulterClientOptions = {}): Transport {
         ...init.headers,
       },
       body: hasJson ? JSON.stringify(init.json) : init.body ?? undefined,
+      ...(init.redirect !== undefined ? { redirect: init.redirect } : {}),
     })
 
     checkVersion(response)
+
+    // The caller asked to see the redirect. Following it here would hide a direct_signed 302.
+    if (init.redirect === 'manual' && isUntakenRedirect(response)) {
+      return response
+    }
 
     if (!response.ok) {
       throw await VaulterApiError.fromResponse(response)

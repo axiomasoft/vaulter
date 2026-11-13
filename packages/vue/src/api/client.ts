@@ -1,3 +1,4 @@
+import { VaulterApiError } from './errors'
 import { createTransport, type Transport, type VaulterClientOptions } from './transport'
 import {
   abortedError,
@@ -137,6 +138,10 @@ export interface VaulterClient {
     upload(driveId: DriveId, file: Blob, options?: { parentId?: NodeId | null, name?: string }): Promise<Node>
     /** The base-prefixed URL the browser hits to stream the current head. */
     downloadUrl(nodeId: NodeId): string
+    /**
+     * Bytes of the current head. A `direct_signed` 302 is not followed (fetch would fail CORS
+     * on the signed URL); that rejects with a 3xx `VaulterApiError` so the caller can open `downloadUrl`.
+     */
     download(nodeId: NodeId): Promise<Blob>
     revisions(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<FileRevision>>
     addRevision(nodeId: NodeId, file: Blob, options: IfMatch): Promise<FileRevision>
@@ -203,8 +208,11 @@ export interface VaulterClient {
   }
 
   publicShares: {
+    /** The shared node. `session` is set when the response sends `X-Share-Session`. */
     get(token: string, access?: ShareAccess): Promise<PublicNode>
+    /** One page of a shared folder. `session` is set when the response sends `X-Share-Session`. */
     nodes(token: string, query?: CursorQuery, access?: ShareAccess): Promise<CursorPage<PublicNode>>
+    /** URL only: an anchor can send neither the share session nor the password. */
     downloadUrl(token: string, nodeId?: NodeId): string
   }
 
@@ -287,6 +295,16 @@ function shareHeaders(access?: ShareAccess): Record<string, string> {
   }
 }
 
+/** Copy `X-Share-Session` onto the same JSON object when the response sent one. */
+function attachShareSession<T extends { session?: string }>(body: T, response: Response): T {
+  const session = response.headers.get('X-Share-Session')
+  if (session !== null && session !== '') {
+    body.session = session
+  }
+
+  return body
+}
+
 export function createVaulterClient(options: VaulterClientOptions = {}): VaulterClient {
   const transport = createTransport(options)
 
@@ -294,7 +312,23 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     (await transport.json<Envelope<T>>(method, path, init)).data
   const page = <T>(path: string, query?: object): Promise<CursorPage<T>> =>
     transport.json<CursorPage<T>>('GET', path, { query })
-  const blob = async (path: string): Promise<Blob> => (await transport.raw('GET', path, { accept: '*/*' })).blob()
+  // `redirect: 'manual'` so a direct_signed 302 is not followed into a cross-origin URL (CORS).
+  // The bytes are not available that way; callers open `downloadUrl` instead.
+  const blob = async (path: string): Promise<Blob> => {
+    const response = await transport.raw('GET', path, { accept: '*/*', redirect: 'manual' })
+    if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+      const status = response.status >= 300 && response.status < 400 ? response.status : 302
+      throw new VaulterApiError({
+        status,
+        code: `http_${status}`,
+        title: 'Download redirected',
+        detail: 'Open the download URL instead of fetching a signed redirect.',
+        response,
+      })
+    }
+
+    return response.blob()
+  }
   const send = async (method: string, path: string, init?: Parameters<Transport['json']>[2]): Promise<void> => {
     await transport.json<void>(method, path, init)
   }
@@ -568,12 +602,21 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     },
 
     publicShares: {
-      get: (token, access) => data('GET', `/shares/${token}`, { headers: shareHeaders(access) }),
-      nodes: (token, query, access) =>
-        transport.json<CursorPage<PublicNode>>('GET', `/shares/${token}/nodes`, {
+      get: async (token, access) => {
+        const response = await transport.raw('GET', `/shares/${token}`, { headers: shareHeaders(access) })
+        const body = (await response.json()) as Envelope<PublicNode>
+
+        return attachShareSession(body.data, response)
+      },
+      nodes: async (token, query, access) => {
+        const response = await transport.raw('GET', `/shares/${token}/nodes`, {
           query: cursorQuery(query),
           headers: shareHeaders(access),
-        }),
+        })
+        const listing = (await response.json()) as CursorPage<PublicNode>
+
+        return attachShareSession(listing, response)
+      },
       downloadUrl: (token, nodeId) =>
         transport.url(`/shares/${token}/download${nodeId !== undefined ? `?node=${encodeURIComponent(nodeId)}` : ''}`),
     },

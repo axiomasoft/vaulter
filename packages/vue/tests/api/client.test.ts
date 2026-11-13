@@ -98,6 +98,40 @@ describe('createVaulterClient — requests', () => {
     expect(sent.headers['X-Share-Password']).toBe('pw')
   })
 
+  it('keeps X-Share-Session on the share node and the page for the next call', async () => {
+    const fetchMock = fetchSequence(
+      () => jsonResponse({ data: { id: '1', name: 'Shared' } }, 200, { 'X-Share-Session': 'sess' }),
+      () => jsonResponse({ data: [{ id: '2' }], meta: { next_cursor: null, per_page: 50 } }, 200, { 'X-Share-Session': 'sess-2' }),
+    )
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    const node = await client.publicShares.get('tok', { password: 'pw' })
+    const listing = await client.publicShares.nodes('tok', { cursor: 'c' }, { session: node.session, password: 'pw' })
+
+    expect(node).toEqual({ id: '1', name: 'Shared', session: 'sess' })
+    expect(listing).toEqual({ data: [{ id: '2' }], meta: { next_cursor: null, per_page: 50 }, session: 'sess-2' })
+    const sent = call(fetchMock, 1)
+    expect(sent.url).toBe('/api/vaulter/v1/shares/tok/nodes?cursor=c')
+    expect(sent.headers['X-Share-Session']).toBe('sess')
+    expect(sent.headers['X-Share-Password']).toBe('pw')
+  })
+
+  it('does not invent a share session when the response has no X-Share-Session', async () => {
+    const fetchMock = fetchSequence(
+      () => jsonResponse({ data: { id: '1' } }),
+      () => jsonResponse(page([{ id: '2' }])),
+    )
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    const node = await client.publicShares.get('tok')
+    const listing = await client.publicShares.nodes('tok')
+
+    expect(node).toEqual({ id: '1' })
+    expect(node).not.toHaveProperty('session')
+    expect(listing).toEqual(page([{ id: '2' }]))
+    expect(listing).not.toHaveProperty('session')
+  })
+
   it('creates a grant with the subject object and a share with snake_case fields', async () => {
     const fetchMock = fetchSequence(
       () => jsonResponse({ data: { id: 'g1' } }, 201),
@@ -124,6 +158,45 @@ describe('createVaulterClient — requests', () => {
     expect(client.files.revisionDownloadUrl('5', 'r2')).toBe('/api/vaulter/v1/files/5/revisions/r2/download')
     expect(client.publicShares.downloadUrl('tok', '9')).toBe('/api/vaulter/v1/shares/tok/download?node=9')
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('returns file bytes on 200 and does not follow a direct_signed redirect', async () => {
+    const fetchMock = fetchSequence(
+      () => new Response('png-bytes', { status: 200, headers: { 'Content-Type': 'image/png', 'X-Vaulter-Api-Version': '1' } }),
+      () => new Response(null, { status: 302, headers: { Location: 'https://signed.example/object', 'X-Vaulter-Api-Version': '1' } }),
+      () => new Response(null, { status: 302, headers: { Location: 'https://signed.example/rev', 'X-Vaulter-Api-Version': '1' } }),
+    )
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    await expect((await client.files.download('5')).text()).resolves.toBe('png-bytes')
+    const redirected = await client.files.download('5').catch((error: unknown) => error)
+    const revision = await client.files.downloadRevision('5', 'r2').catch((error: unknown) => error)
+
+    expect(redirected).toBeInstanceOf(VaulterApiError)
+    expect(revision).toBeInstanceOf(VaulterApiError)
+    expect(redirected).toMatchObject({ status: 302, code: 'http_302' })
+    expect(revision).toMatchObject({ status: 302 })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock.mock.calls.map((entry) => (entry[1] as RequestInit).redirect)).toEqual(['manual', 'manual', 'manual'])
+    expect(fetchMock.mock.calls.map((entry) => entry[0])).toEqual([
+      '/api/vaulter/v1/files/5/download',
+      '/api/vaulter/v1/files/5/download',
+      '/api/vaulter/v1/files/5/revisions/r2/download',
+    ])
+  })
+
+  it('rejects a quarantined download as 423 content_unavailable before any byte', async () => {
+    const fetchMock = fetchSequence(() => problemResponse({
+      code: 'content_unavailable',
+      status: 423,
+      title: 'Content unavailable',
+    }, 423))
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    const error = await client.files.download('5').catch((caught: unknown) => caught)
+
+    expect(error).toBeInstanceOf(VaulterApiError)
+    expect(error).toMatchObject({ status: 423, code: 'content_unavailable' })
   })
 
   it('exports a document with the filename the server sent', async () => {

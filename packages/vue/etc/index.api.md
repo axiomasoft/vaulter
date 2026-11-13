@@ -825,6 +825,7 @@ export interface CursorPage<T> {
     data: T[];
     // (undocumented)
     meta: PageMeta;
+    session?: string;
 }
 
 // @public
@@ -4948,7 +4949,9 @@ export function provideVaulterClient(app: App, client: VaulterClient): void;
 export function provideViewerRegistry(app: App, registry: ViewerRegistry): void;
 
 // @public (undocumented)
-export type PublicNode = Schemas['PublicNode'];
+export type PublicNode = Schemas['PublicNode'] & {
+    session?: string;
+};
 
 // @public (undocumented)
 export interface RestrictInheritanceOptions extends IfMatch {
@@ -5499,7 +5502,7 @@ export const VaulterDocumentNode: __VLS_WithSlots_3<typeof __VLS_component_3, __
 export const VaulterDrive: __VLS_WithSlots_4<typeof __VLS_component_4, __VLS_Slots_4>;
 
 // @public
-export type VaulterErrorCode = 'api_version_mismatch' | 'node_sequence_mismatch' | 'document_state_mismatch' | 'precondition_required' | 'validation_failed' | 'invalid_node_name' | 'permission_denied' | 'node_not_found' | 'idempotency_key_reused' | 'operation_in_progress' | 'stale_write' | (string & {});
+export type VaulterErrorCode = 'api_version_mismatch' | 'node_sequence_mismatch' | 'document_state_mismatch' | 'precondition_required' | 'validation_failed' | 'invalid_node_name' | 'permission_denied' | 'node_not_found' | 'idempotency_key_reused' | 'operation_in_progress' | 'stale_write' | 'content_unavailable' | (string & {});
 
 // Warning: (ae-forgotten-export) The symbol "__VLS_WithSlots_5" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "__VLS_component_5" needs to be exported by the entry point index.d.ts

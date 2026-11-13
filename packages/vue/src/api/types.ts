@@ -29,7 +29,10 @@ export type NodeFile = Schemas['NodeFile']
 export type NodeDocument = Schemas['NodeDocument']
 export type NodeWithIncludes = Schemas['NodeWithIncludes']
 export type ScanStatus = Schemas['ScanStatus']
-export type PublicNode = Schemas['PublicNode']
+export type PublicNode = Schemas['PublicNode'] & {
+  /** Set from `X-Share-Session` when that response header is present. Send it back on the next call. */
+  session?: string
+}
 export type Drive = Schemas['Drive']
 export type FileRevision = Schemas['FileRevision']
 export type DocumentRevision = Schemas['DocumentRevision']
@@ -64,6 +67,8 @@ export type DriveId = string
 export interface CursorPage<T> {
   data: T[]
   meta: PageMeta
+  /** Set from `X-Share-Session` on a public share listing; absent on every other list. */
+  session?: string
 }
 
 /** The change feed page: its cursor is always present, `has_more` tells whether to continue. */
