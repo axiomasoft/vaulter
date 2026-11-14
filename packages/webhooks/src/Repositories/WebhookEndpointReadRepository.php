@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks\Repositories;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenantIdentityPredicate;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -45,7 +46,9 @@ final readonly class WebhookEndpointReadRepository
      */
     public function find(int|string $id): ?WebhookEndpoint
     {
-        return $this->query()->whereKey($id)->first();
+        $query = $this->query();
+
+        return Identity::fitsKey($query->getModel(), $id) ? $query->whereKey($id)->first() : null;
     }
 
     /**
