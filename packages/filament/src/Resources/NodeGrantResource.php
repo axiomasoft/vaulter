@@ -23,7 +23,6 @@ use InvalidArgumentException;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\IdsConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\Access\AccessOperations;
@@ -328,12 +327,7 @@ final class NodeGrantResource extends Resource
             return $value; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
-        $string = is_scalar($value) ? (string) $value : '';
-        if ($string !== '' && ctype_digit($string) && app(IdsConfig::class)->hostKeys() === 'bigint') {
-            return (int) $string;
-        }
-
-        return $string;
+        return is_scalar($value) ? (string) $value : '';
     }
 
     private static function notifyDenied(string $body): void

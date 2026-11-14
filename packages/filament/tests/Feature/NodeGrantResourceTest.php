@@ -118,6 +118,34 @@ it('applies grant defaults when optional form values are omitted', function (): 
         ->and($grant->expires_at)->toBeNull();
 });
 
+it('does not saturate a bigint subject id into another subjects grant', function (): void {
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Bigint identity');
+    DriveBuilder::grant($folder, $owner);
+    $other = DriveBuilder::grant($folder, DriveBuilder::user(PHP_INT_MAX), RoleRegistry::READER);
+
+    // Keep the fixture's string columns to observe the panel's input unchanged by SQL casts.
+    // A MySQL unsigned bigint host id can exceed PHP_INT_MAX and must stay a string in PHP.
+    config()->set('vaulter.ids.host_keys', 'bigint');
+    $subjectId = '9223372036854775808';
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => $owner->getMorphClass(),
+        'subject_id' => $subjectId,
+        'role' => RoleRegistry::WRITER,
+        'scope' => GrantScope::Subtree->value,
+    ]);
+
+    $grants = app(GrantReadRepository::class)->forNode($folder)->get();
+
+    expect($other->fresh()->role_key)->toBe(RoleRegistry::READER)
+        ->and($grants->first(fn (NodeGrant $grant): bool => (string) $grant->subject_id === $subjectId)?->role_key)->toBe(RoleRegistry::WRITER);
+});
+
 it('rejects a missing grant node with the declared warning', function (): void {
     pullSentNotifications();
 
