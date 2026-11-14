@@ -31,6 +31,7 @@ final readonly class FolderCreated extends DriveEvent
 
     #[Internal]
     public function __construct(
+        NodeSnapshotMapper $nodeSnapshots,
         Node $node,
         ActorRef $actor,
         string $correlationId,
@@ -39,7 +40,7 @@ final readonly class FolderCreated extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->nodeRow = $node;
-        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->node = $nodeSnapshots->facts($node);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

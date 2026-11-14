@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\EventRecorder;
@@ -115,7 +116,7 @@ it('sends the same occurrence id on the original delivery and a retry', function
     WebhookTestHelpers::endpoint();
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'Retry');
-    $event = new FolderCreated(node: $node, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
+    $event = new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($event));
     $this->travel(1)->seconds();
 

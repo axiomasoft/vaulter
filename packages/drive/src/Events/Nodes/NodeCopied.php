@@ -37,6 +37,7 @@ final readonly class NodeCopied extends DriveEvent
 
     #[Internal]
     public function __construct(
+        NodeSnapshotMapper $nodeSnapshots,
         Node $source,
         Node $copy,
         ActorRef $actor,
@@ -46,9 +47,9 @@ final readonly class NodeCopied extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->sourceRow = $source;
-        $this->source = app(NodeSnapshotMapper::class)->facts($source);
+        $this->source = $nodeSnapshots->facts($source);
         $this->copyRow = $copy;
-        $this->copy = app(NodeSnapshotMapper::class)->facts($copy);
+        $this->copy = $nodeSnapshots->facts($copy);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

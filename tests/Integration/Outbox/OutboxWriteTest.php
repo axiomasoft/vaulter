@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\EventRecorder;
@@ -27,7 +28,7 @@ function outboxWriteFolder(): FolderCreated
 {
     $node = AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'Written');
 
-    return new FolderCreated(node: $node, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
+    return new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
 }
 
 function outboxWriteRecord(object $event): void
@@ -79,7 +80,7 @@ it('leaves neither the event nor its delivery rows when the operation rolls back
 it('writes nothing for a replayed occurrence', function (): void {
     $event = outboxWriteFolder();
     outboxWriteRecord($event);
-    $replay = new FolderCreated(node: AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'Other'), actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid(), eventId: $event->eventId);
+    $replay = new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'Other'), actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid(), eventId: $event->eventId);
     outboxWriteRecord($replay);
 
     expect(OutboxEvent::query()->where('event_id', $event->eventId)->count())->toBe(1)

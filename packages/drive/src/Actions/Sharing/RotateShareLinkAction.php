@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
 use Vaulter\Drive\Data\Sharing\RotateShareLinkInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Sharing\NodeShareRotated;
@@ -38,6 +39,7 @@ final readonly class RotateShareLinkAction
         private NodeLocator $locator,
         private EventRecorder $recorder,
         private AggregateVersion $versions,
+        private AccessSnapshotMapper $accessSnapshots,
     ) {}
 
     public function execute(DriveContext $context, RotateShareLinkInput $input): MintedShareLink
@@ -53,7 +55,7 @@ final readonly class RotateShareLinkAction
 
             [$rotated, $token] = $this->minter->mint(fn (string $tokenHash, string $tokenPrefix): NodeShare => $this->shares->rotate($share, $tokenHash, $tokenPrefix));
             $this->versions->bump($rotated, 'version', AggregateVersion::SHARE);
-            $this->recorder->record(new NodeShareRotated(share: $rotated, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeShareRotated(accessSnapshots: $this->accessSnapshots, share: $rotated, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareRotated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return new MintedShareLink(share: $rotated, token: $token);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Activity\Activity;
@@ -66,7 +67,7 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
 it('stages one row when the same event occurrence is recorded twice', function (): void {
     $node = DriveTestHelpers::model(DriveTestHelpers::drive()->folders()->create('A'));
     $eventId = (string) Str::ulid();
-    $make = static fn (): NodeRenamed => new NodeRenamed(node: $node, fromName: 'A', toName: 'B', actor: Actor::system('replay')->ref(), correlationId: 'c', eventId: $eventId);
+    $make = static fn (): NodeRenamed => new NodeRenamed(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, fromName: 'A', toName: 'B', actor: Actor::system('replay')->ref(), correlationId: 'c', eventId: $eventId);
 
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));

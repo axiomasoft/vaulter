@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Nodes;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
@@ -42,6 +43,7 @@ final readonly class CreateFolderAction
         private NameConflictResolver $names,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     public function execute(DriveContext $context, CreateFolderInput $data): Node
@@ -73,7 +75,7 @@ final readonly class CreateFolderAction
                 'created_by' => $context->actor->ref()->id,
             ]);
 
-            $this->recorder->record(new FolderCreated(node: $node, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new FolderCreated(nodeSnapshots: $this->nodeSnapshots, node: $node, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $node;
         });

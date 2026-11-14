@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Trash;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -44,6 +45,7 @@ final readonly class RestoreNodeAction
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     /**
@@ -138,7 +140,7 @@ final readonly class RestoreNodeAction
                 $this->sequence->bump($member);
             }
             $fresh = $current->refresh();
-            $this->recorder->record(new NodeRestored(node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeRestored(nodeSnapshots: $this->nodeSnapshots, node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $fresh, reason: DriveEventType::NodeRestored->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $fresh;

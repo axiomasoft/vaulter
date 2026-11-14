@@ -117,7 +117,7 @@ final readonly class CopyNodeAction
                 if ($copiedBytes !== $addedBytes) {
                     throw new \LogicException('Copy lifecycle byte accounting is inconsistent.');
                 }
-                $this->recorder->record(new NodeCopied(source: $current, copy: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(new NodeCopied(nodeSnapshots: $this->snapshots, source: $current, copy: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
                 return $copy;
             }, 3);

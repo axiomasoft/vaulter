@@ -32,6 +32,7 @@ final readonly class NodeShareCreated extends DriveEvent
 
     #[Internal]
     public function __construct(
+        AccessSnapshotMapper $accessSnapshots,
         NodeShare $share,
         ActorRef $actor,
         string $correlationId,
@@ -40,7 +41,7 @@ final readonly class NodeShareCreated extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->shareRow = $share;
-        $this->share = app(AccessSnapshotMapper::class)->share($share);
+        $this->share = $accessSnapshots->share($share);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

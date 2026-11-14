@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Access;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Access\RevokeGrantInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
@@ -25,7 +26,7 @@ use Vaulter\Events\EventRecorder;
 #[Internal]
 final readonly class RevokeNodeAccessAction
 {
-    public function __construct(private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder, private NodeStoreRepository $nodes, private AggregateVersion $versions) {}
+    public function __construct(private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder, private NodeStoreRepository $nodes, private AggregateVersion $versions, private NodeSnapshotMapper $nodeSnapshots) {}
 
     public function execute(DriveContext $context, RevokeGrantInput $input): int
     {
@@ -40,7 +41,7 @@ final readonly class RevokeNodeAccessAction
             $subject = $grant->subject();
             $grant->delete();
             $this->versions->bump($locked, 'access_version', AggregateVersion::NODE_ACCESS);
-            $this->recorder->record(new NodeGrantRevoked(node: $locked, subject: $subject, revoked: 1, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeGrantRevoked(nodeSnapshots: $this->nodeSnapshots, node: $locked, subject: $subject, revoked: 1, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $locked, reason: DriveEventType::GrantRevoked->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return 1;

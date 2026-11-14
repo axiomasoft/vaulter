@@ -34,6 +34,7 @@ final readonly class NodeGrantRevoked extends DriveEvent
 
     #[Internal]
     public function __construct(
+        NodeSnapshotMapper $nodeSnapshots,
         Node $node,
         public Subject $subject,
         public int $revoked,
@@ -44,7 +45,7 @@ final readonly class NodeGrantRevoked extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->nodeRow = $node;
-        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->node = $nodeSnapshots->facts($node);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

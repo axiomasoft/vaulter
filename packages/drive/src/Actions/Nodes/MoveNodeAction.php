@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Nodes\NodeMoved;
@@ -58,6 +59,7 @@ final readonly class MoveNodeAction
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private NodeSequence $sequence,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     public function execute(DriveContext $context, MoveNodeInput $data): Node
@@ -110,7 +112,7 @@ final readonly class MoveNodeAction
 
             $this->sequence->bump($moved);
 
-            $this->recorder->record(new NodeMoved(
+            $this->recorder->record(new NodeMoved(nodeSnapshots: $this->nodeSnapshots,
                 node: $moved,
                 fromParentId: $fromParentId,
                 toParentId: $toParentId,

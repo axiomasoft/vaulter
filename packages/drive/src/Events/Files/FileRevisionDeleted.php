@@ -38,6 +38,7 @@ final readonly class FileRevisionDeleted extends DriveEvent
 
     #[Internal]
     public function __construct(
+        NodeSnapshotMapper $nodeSnapshots,
         Node $node,
         File $file,
         public int|string $revisionId,
@@ -50,7 +51,7 @@ final readonly class FileRevisionDeleted extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->nodeRow = $node;
-        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->node = $nodeSnapshots->facts($node);
         $head = $this->node->file;
         $this->file = $head !== null && $head->fileId === SnapshotValue::id($file->getKey())
             ? $head

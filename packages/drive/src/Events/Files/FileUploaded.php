@@ -46,6 +46,8 @@ final readonly class FileUploaded extends DriveEvent
 
     #[Internal]
     public function __construct(
+        NodeSnapshotMapper $nodeSnapshots,
+        FileRevisionSnapshotMapper $revisionSnapshots,
         Node $node,
         File $file,
         FileRevision $version,
@@ -56,13 +58,13 @@ final readonly class FileUploaded extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->nodeRow = $node;
-        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->node = $nodeSnapshots->facts($node);
         $head = $this->node->file;
         $this->file = $head !== null && $head->fileId === SnapshotValue::id($file->getKey())
             ? $head
             : throw new LogicException('[Vaulter] A file event names a node whose file head is not the file of the event.');
         $this->versionRow = $version;
-        $this->version = app(FileRevisionSnapshotMapper::class)->map($version, $file);
+        $this->version = $revisionSnapshots->map($version, $file);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

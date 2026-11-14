@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
@@ -13,6 +12,8 @@ use Vaulter\Drive\Changes\ChangeJournalSink;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Activity\RecordActivityCommand;
 use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -34,6 +35,7 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -186,7 +188,7 @@ it('writes one grant.created row from the grant event', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'shared');
     $grant = AccessTestHelpers::grant($node, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
-    recordActivityEvent(new NodeGrantCreated(grant: $grant, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new NodeGrantCreated(accessSnapshots: app(AccessSnapshotMapper::class), grant: $grant, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $row = ActivityTestHelpers::only(DriveEventType::GrantCreated->value);
 
@@ -201,7 +203,7 @@ it('writes one grant.revoked row from the revoke event', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'locked');
     $subject = new Subject(type: (new TestUser)->getMorphClass(), id: 42);
 
-    recordActivityEvent(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 3, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new NodeGrantRevoked(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, subject: $subject, revoked: 3, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $row = ActivityTestHelpers::only(DriveEventType::GrantRevoked->value);
 
@@ -215,8 +217,8 @@ it('writes one share.created and one share.revoked row from the share events', f
     $node = AccessTestHelpers::folder($storage, null, 'public');
     $share = ShareTestHelpers::share($node, token: 'tok-activity');
 
-    recordActivityEvent(new NodeShareCreated(share: $share, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
-    recordActivityEvent(new NodeShareRevoked(share: $share, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new NodeShareCreated(accessSnapshots: app(AccessSnapshotMapper::class), share: $share, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new NodeShareRevoked(accessSnapshots: app(AccessSnapshotMapper::class), share: $share, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     expect(ActivityTestHelpers::only(DriveEventType::ShareCreated->value)->target_id)->toEqual($node->id)
         ->and(ActivityTestHelpers::only(DriveEventType::ShareRevoked->value)->context['token_prefix'])
@@ -272,7 +274,7 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     app()->offsetUnset('request');
 
     Activity::query()->delete();
-    recordActivityEvent(new FolderCreated(node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $row = Activity::query()->firstOrFail();
 
@@ -289,7 +291,7 @@ it('stores the correlation token the response echoes, including one that is not 
     app()->instance('request', $request);
 
     Activity::query()->delete();
-    recordActivityEvent(new FolderCreated(node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     expect(Activity::query()->firstOrFail()->request_id)->toBe('cached-1')
         ->and(AssignCorrelationId::of($request))->toBe('cached-1');
@@ -341,7 +343,7 @@ it('does not copy a rejected correlation header into the activity row', function
     app()->instance('request', $request);
 
     Activity::query()->delete();
-    recordActivityEvent(new FolderCreated(node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $stored = Activity::query()->firstOrFail()->request_id;
 

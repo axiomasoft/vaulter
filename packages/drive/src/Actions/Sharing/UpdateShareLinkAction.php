@@ -12,6 +12,7 @@ use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Data\Sharing\UpdateShareLinkInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
@@ -46,6 +47,7 @@ final readonly class UpdateShareLinkAction
         private TenancyConfig $tenancy,
         private EventRecorder $recorder,
         private AggregateVersion $versions,
+        private AccessSnapshotMapper $accessSnapshots,
     ) {}
 
     public function execute(DriveContext $context, UpdateShareLinkInput $input): NodeShare
@@ -107,7 +109,7 @@ final readonly class UpdateShareLinkAction
                 $this->versions->bump($updated, 'version', AggregateVersion::SHARE);
                 // Field names only: the new password must never leave the row.
                 $changed = array_map(static fn (string $column): string => $column === 'password_hash' ? 'password' : $column, array_keys($attributes));
-                $this->recorder->record(new NodeShareUpdated(share: $updated, changed: $changed, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(new NodeShareUpdated(accessSnapshots: $this->accessSnapshots, share: $updated, changed: $changed, actor: $context->actor->ref(), correlationId: $context->correlationId));
                 $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareUpdated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
 

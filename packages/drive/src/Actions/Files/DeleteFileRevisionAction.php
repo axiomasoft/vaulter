@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Files;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\RevisionBlobLinks;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
 use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -48,6 +49,7 @@ final readonly class DeleteFileRevisionAction
         private RevisionBlobLinks $links,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     public function execute(DriveContext $context, Node $node, FileRevision|int|string $revision): void
@@ -88,7 +90,7 @@ final readonly class DeleteFileRevisionAction
 
             $this->revisions->delete($locked);
 
-            $this->recorder->record(new FileRevisionDeleted(
+            $this->recorder->record(new FileRevisionDeleted(nodeSnapshots: $this->nodeSnapshots,
                 node: $node,
                 file: $file,
                 revisionId: $locked->id,

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use DateTimeImmutable;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
@@ -370,7 +369,7 @@ it('fails with extension_failed when the middleware of the module breaks the nex
 function acmeRecord(Kernel $kernel, Node $folder): void
 {
     $recorder = new EventRecorder(app(VaulterDatabase::class), app(), app(MetricsRecorder::class), $kernel);
-    $event = new NodeRenamed(
+    $event = new NodeRenamed(nodeSnapshots: app(NodeSnapshotMapper::class),
         node: $folder,
         fromName: 'alpha',
         toName: 'renamed',
