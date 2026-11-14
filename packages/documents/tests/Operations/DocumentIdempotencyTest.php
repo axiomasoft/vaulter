@@ -142,6 +142,34 @@ it('replays a content update, a checkpoint and a restore without a second write'
         ->and(Document::query()->where('node_id', $node->id)->firstOrFail()->state_version)->toBe($restored->stateVersion);
 });
 
+it('does not return a purged document from an old receipt through permissions on the root', function (string $operation, bool $keepEdit): void {
+    [$system] = idempotentDocuments();
+    $root = Node::query()->findOrFail($system->root()->id);
+    AccessTestHelpers::grant($root, RoleRegistry::OWNER, subjectId: 1);
+    $actor = $system->actingAs(AccessTestHelpers::user(1));
+    $node = Documents::in($system)->create('Private', content: DocumentTestHelpers::content('private content')->toArray());
+    $revision = Documents::in($system)->snapshot($node->id, 'before');
+    $state = Documents::in($actor)->content($node->id)->stateVersion;
+    $keyed = Documents::in($actor->withIdempotencyKey('gone-'.$operation));
+    $retry = match ($operation) {
+        'update' => fn () => $keyed->update($node->id, DocumentTestHelpers::content('changed')->toArray(), $state),
+        'snapshot' => fn () => $keyed->snapshot($node->id, 'saved'),
+        'restore' => fn () => $keyed->restore($node->id, $revision->id, $state),
+    };
+    $retry();
+    $receiptCount = DB::table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count();
+    $system->nodes()->trash($node->id);
+    $system->trash()->purge($node->id);
+    if (!$keepEdit) {
+        app(VaulterDatabase::class)->write(static fn () => NodeGrant::query()->where('subject_id', 1)->delete());
+        AccessTestHelpers::grant($root, RoleRegistry::PREVIEWER, subjectId: 1);
+    }
+
+    expect($retry)->toThrow(NodeNotFoundException::class)
+        ->and(DB::table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count())->toBe($receiptCount)
+        ->and(Document::query()->where('node_id', $node->id)->exists())->toBeFalse();
+})->with(['update', 'snapshot', 'restore'])->with([true, false]);
+
 it('stores the stale state of a keyed update as a refusal and answers a retry the same way', function (): void {
     [$system] = idempotentDocuments();
     $node = Documents::in($system)->create('Spec', content: DocumentTestHelpers::content('first')->toArray());
