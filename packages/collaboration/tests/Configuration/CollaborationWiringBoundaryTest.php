@@ -34,7 +34,7 @@ it('defines the prune task from a ScheduleConfig the container resolves, with ov
     $this->app->instance(ScheduleConfig::class, new ScheduleConfig($config));
 
     $schedule = new Schedule;
-    (new CollaborationSchedule)->define($schedule, $config);
+    $this->app->make(CollaborationSchedule::class)->define($schedule, $config);
 
     $events = $schedule->events();
 
