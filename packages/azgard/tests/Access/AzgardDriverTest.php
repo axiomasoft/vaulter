@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Foundation\Auth\User;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\AzgardPermissionMap;
@@ -200,14 +201,14 @@ it('uses the actor itself as the guard when the actor implements the AzgardGuard
 
         protected $guarded = [];
 
-        public function hasScopedPermission(string $permission, object $entity): bool
+        public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
         {
             return false;
         }
 
-        public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+        public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
         {
-            return $permission === 'documents.create';
+            return $actor === $this && $permission === 'documents.create';
         }
     };
     $actor->forceFill(['id' => 7]);

@@ -100,7 +100,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         // Node-blind: AccessScope carries the workspace, not a Node, so the role lane is
         // the WORKSPACE-scoped permission check (composite order step 2). A null
         // workspace means there is nothing for AzGuard to scope against.
-        return Decision::union($this->rolesGranted($guard, $scope->driveOwner->type, $scope->driveOwner->id));
+        return Decision::union($this->rolesGranted($guard, $actor, $scope->driveOwner->type, $scope->driveOwner->id));
     }
 
     /**
@@ -149,6 +149,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         }
 
         return $guard->hasPermissionIn(
+            actor: $actor,
             contextType: $scope->driveOwner->type,
             contextId: $scope->driveOwner->id,
             permission: $this->permissions->createPermission(),
@@ -161,12 +162,12 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
      *
      * @return list<Role>
      */
-    private function rolesGranted(AzgardGuard $guard, string $workspaceType, int|string $workspaceId): array
+    private function rolesGranted(AzgardGuard $guard, Authorizable $actor, string $workspaceType, int|string $workspaceId): array
     {
         $granted = [];
         foreach ($this->roleProbes() as $role => $ability) {
             $permission = $this->permissions->permissionFor($ability);
-            if ($permission !== null && $guard->hasPermissionIn(contextType: $workspaceType, contextId: $workspaceId, permission: $permission)) {
+            if ($permission !== null && $guard->hasPermissionIn(actor: $actor, contextType: $workspaceType, contextId: $workspaceId, permission: $permission)) {
                 $granted[] = $this->roles->latest($role);
             }
         }
@@ -209,7 +210,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         }
 
         if ($actor instanceof AzgardBackedUser) {
-            return new AzgardGuardAdapter(user: $actor, panelId: $this->config->panelId());
+            return new AzgardGuardAdapter(panelId: $this->config->panelId());
         }
 
         return null;

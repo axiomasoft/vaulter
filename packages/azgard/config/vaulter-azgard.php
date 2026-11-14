@@ -29,8 +29,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | A class implementing `Vaulter\Azgard\Contracts\AzgardGuard` that answers
-    | for EVERY actor (it is asked about the actor of each decision, not about
-    | the request user). null (the default) uses the actor itself when it is a
+    | for the required `$actor` argument of each check. It must not substitute
+    | the request user or switch authentication state. null (the default) uses the actor itself when it is a
     | guard, else an adapter over the actor when it is AzGuard-backed, else the
     | lane passes through and grants nothing.
     |

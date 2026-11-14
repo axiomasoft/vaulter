@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Testing;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Api;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 
@@ -36,7 +37,7 @@ final class FakeAzgardGuard implements AzgardGuard
         private readonly array $workspaceGrants = [],
     ) {}
 
-    public function hasScopedPermission(string $permission, object $entity): bool
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
     {
         if ($this->superAdmin) {
             return true;
@@ -53,7 +54,7 @@ final class FakeAzgardGuard implements AzgardGuard
         return false;
     }
 
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
     {
         if ($this->superAdmin) {
             return true;

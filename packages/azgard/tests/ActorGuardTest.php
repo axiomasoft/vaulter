@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
+use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
@@ -84,4 +85,23 @@ it('keeps honouring the guard the host configured, for any actor', function (): 
     $anyone = SpyAzgardUser::make(6);
 
     expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($anyone), $anyone, actorScope())?->role->key)->toBe(RoleRegistry::WRITER);
+});
+
+it('keeps two target actors separate through the same explicit guard regardless of the request user', function (): void {
+    $requestUser = SpyAzgardUser::make(1)->makeSuperAdmin();
+    $this->actingAs($requestUser);
+    HostGuard::bind(new AzgardGuardAdapter);
+    $allowed = SpyAzgardUser::make(7)->makeSuperAdmin();
+    $denied = SpyAzgardUser::make(8);
+    $driver = app(AzgardPermissionDriver::class);
+
+    expect($driver->resolve(Subject::ofModel($denied), $denied, actorScope()))->toBeNull()
+        ->and($driver->canCreateIn($denied, actorScope()))->toBeFalse()
+        ->and($driver->resolve(Subject::ofModel($allowed), $allowed, actorScope())?->role->key)->toBe(RoleRegistry::OWNER)
+        ->and($driver->canCreateIn($allowed, actorScope()))->toBeTrue()
+        ->and($driver->resolve(Subject::ofModel($denied), $denied, actorScope()))->toBeNull();
+
+    auth()->forgetGuards();
+    expect($driver->resolve(Subject::ofModel($allowed), $allowed, actorScope())?->role->key)->toBe(RoleRegistry::OWNER)
+        ->and($driver->resolve(Subject::ofModel($denied), $denied, actorScope()))->toBeNull();
 });
