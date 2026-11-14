@@ -45,10 +45,11 @@ export async function runTus(transport: Transport, uploadId: string, file: Blob,
         body: slice,
       })
     } catch (error) {
-      const resumed = error instanceof VaulterApiError && error.status === 409
-        ? Number(error.response?.headers.get('Upload-Offset'))
-        : Number.NaN
-      if (!Number.isFinite(resumed) || resumed === offset) {
+      const header = error instanceof VaulterApiError && error.status === 409
+        ? error.response?.headers.get('Upload-Offset')
+        : null
+      const resumed = header != null && /^\d+$/.test(header) ? Number(header) : Number.NaN
+      if (!Number.isSafeInteger(resumed) || resumed === offset) {
         throw error
       }
       offset = resumed
