@@ -16,6 +16,7 @@ use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Testing\FakeHostResolver;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
+use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
@@ -46,13 +47,29 @@ it('refuses to POST to the cloud-metadata address on the delivery path, F-P1.7-0
 
     $endpoint = WebhookTestHelpers::endpoint(['url' => 'http://169.254.169.254/latest/meta-data']);
     $delivery = WebhookTestHelpers::delivery($endpoint);
+    $realGuard = app(OutboundUrlGuard::class);
+    $blocked = null;
+    $guard = Mockery::mock(OutboundUrlGuard::class);
+    $guard->shouldReceive('pin')->once()->with($endpoint->url)
+        ->andReturnUsing(function (string $url) use ($realGuard, &$blocked): PinnedOutboundEndpoint {
+            try {
+                return $realGuard->pin($url);
+            } catch (BlockedOutboundUrlException $exception) {
+                $blocked = $exception;
+                throw $exception;
+            }
+        });
+    app()->instance(OutboundUrlGuard::class, $guard);
 
     deliverGuarded($delivery);
 
     Http::assertNothingSent();
 
     expect($delivery->refresh()->status)->toBe('failed')
-        ->and($delivery->last_error)->toContain('blocked');
+        ->and($blocked)->toBeInstanceOf(BlockedOutboundUrlException::class)
+        ->and($blocked?->getMessage())->toContain('blocked address')
+        ->and($delivery->last_error)->toBe('transport_error')
+        ->and($delivery->last_error)->not->toContain('169.254.169.254');
 });
 
 it('refuses a host that resolves to loopback, F-P1.7-01', function (): void {
