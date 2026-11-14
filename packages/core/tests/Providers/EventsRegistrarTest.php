@@ -283,7 +283,8 @@ it('rejects a tenant id the host key column cannot store before the insert', fun
     'varchar(64) and 65 multibyte characters' => ['string', str_repeat('я', 65)],
     'uuid column and a ulid' => ['uuid', (string) Str::ulid()],
     'bigint column and a ulid' => ['bigint', (string) Str::ulid()],
-    'bigint column past the signed maximum' => ['bigint', '9223372036854775808'],
+    'bigint column past the actual column maximum' => ['bigint', fn (): string => in_array(app(VaulterDatabase::class)->connection()->getDriverName(), ['mysql', 'mariadb'], true)
+        ? '18446744073709551616' : '9223372036854775808'],
     'char(26) and a uuid' => ['ulid', (string) Str::uuid()],
     'char(26) and 27 multibyte characters' => ['ulid', str_repeat('я', 27)],
 ]);
@@ -297,7 +298,7 @@ it('stores a tenant id the host key column can hold, including null', function (
         $result = app(VaulterDatabase::class)->transaction(
             fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter(app(VaulterDatabase::class))),
         );
-        $stored = OutboxEvent::query()->where('event_id', $event->eventId)->sole()->tenant_id;
+        $stored = OutboxEvent::query()->where('event_id', $event->eventId)->sole()->getRawOriginal('tenant_id');
 
         expect($result)->toBe(SinkResult::Stored)
             ->and($stored === null ? null : (string) $stored)->toBe($tenant);
@@ -313,7 +314,8 @@ it('stores a tenant id the host key column can hold, including null', function (
     'short token in char(26)' => ['ulid', 'tenant-1'],
     '26 multibyte characters in char(26)' => ['ulid', str_repeat('я', 26)],
     'bigint' => ['bigint', '42'],
-    'signed bigint maximum' => ['bigint', '9223372036854775807'],
+    'actual bigint column maximum' => ['bigint', fn (): string => in_array(app(VaulterDatabase::class)->connection()->getDriverName(), ['mysql', 'mariadb'], true)
+        ? '18446744073709551615' : '9223372036854775807'],
 ]);
 
 it('does not acknowledge a replay gap while a leased delivery remains', function (): void {
