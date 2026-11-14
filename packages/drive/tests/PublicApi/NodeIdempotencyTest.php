@@ -200,6 +200,21 @@ it('denies the replay of a purge to an actor who may not delete there any more',
     expect(nodeReplayDenied(fn () => ($this->keyed)('purge-2')->trash()->purge($folder->id, $trashed->sequence)))->toBeTrue();
 });
 
+it('does not treat a deleted node grant as current Delete on its surviving parent', function (): void {
+    $parent = V1::folder($this->system, 'Parent');
+    $child = V1::folder($this->system, 'Child', $parent->id);
+    $subject = Subject::ofModel(V1::user(2));
+    $this->system->access()->grant($this->system->root()->id, new GrantInput(subject: $subject, role: RoleRegistry::PREVIEWER));
+    $this->system->access()->grant($child->id, new GrantInput(subject: $subject, role: RoleRegistry::OWNER));
+    $actor = $this->system->actingAs(V1::user(2))->withIdempotencyKey('purge-child-only');
+    $trashed = $this->system->nodes()->trash($child->id);
+
+    $actor->trash()->purge($child->id, $trashed->sequence);
+    expect(Node::query()->whereKey($child->id)->exists())->toBeFalse();
+    expect(fn () => $actor->trash()->purge($child->id, $trashed->sequence))->toThrow(PermissionDeniedException::class)
+        ->and(nodeEvents(DriveEventType::NodePurged))->toBe(1);
+});
+
 it('replays an emptied trash with its count and does not empty a later one', function (): void {
     foreach (['a', 'b'] as $name) {
         $this->actor->nodes()->trash(V1::folder($this->system, $name)->id);

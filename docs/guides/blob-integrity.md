@@ -78,6 +78,10 @@ To recover, restore the object from a backup or re-upload the same bytes: an ing
 same scope rewrites the object and clears the mark under the blob lock, the same way a re-commit heals a
 tombstone. Without that, the mark stays and the doctor keeps warning.
 
+Healing verifies the restored bytes against the same size and sha256 before clearing the
+mark. A compatible, versioned clean scan proof for those exact bytes remains applicable.
+The legacy `scan_status` field alone is never a substitute for such a proof.
+
 ## See also
 
 - [Operation catalogue](/reference/operations) · [Commands](/reference/commands)

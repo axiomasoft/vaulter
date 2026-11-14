@@ -66,8 +66,13 @@ A replay is answered only after the owner checks the actor's current right, as i
 
 The stored receipt is not changed by a denial.
 
+Document update, snapshot and restore receipts additionally require the document node to
+remain available. A missing or trashed document answers `404 node_not_found` in PHP too;
+Edit on the root does not disclose its historical content or checkpoint from a receipt.
+
 Over HTTP the route names only the node, so a retry of a request on a node that was **purged** since cannot find its
-drive and answers `404`; a node in the trash still replays.
+drive and answers `404`. Other node receipts can still replay after a trash, under their current scope check;
+the document content operations above require the original available node.
 
 ## Which refusals are stored
 
@@ -101,6 +106,10 @@ excludes the drive's owner answers its own refusal), an actor who cannot see the
 neither gets the old count. This is stricter than a new empty, which skips each trashed node the actor may not
 delete and can answer `0`: an actor with Delete only in a subtree empties their part fresh, but a keyed retry of
 it is refused rather than given the stored count.
+
+A grant only on the purged node is deleted with that node. It does not grant Delete on its
+surviving parent: the first purge can succeed while a later retry is refused by the current
+scope check. The receipt remains unchanged and the purge is never performed a second time.
 
 ## Operations that return a secret
 

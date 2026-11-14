@@ -94,6 +94,11 @@ of it. Register and update endpoints in the tenant they belong to: under strict 
 the endpoint takes the current tenant, and `drive_id` must name a drive of that tenant
 (any other id answers 404).
 
+Management uses that same exact tenant boundary. A manager of tenant A cannot list, read,
+update, delete or rotate the secret of an endpoint whose `tenant_id` is null. Updating an
+endpoint preserves its tenant; it cannot adopt a legacy endpoint. Assign legacy endpoints
+through an explicit administrative data migration before tenant-scoped management.
+
 ## The envelope
 
 The outbox payload is the webhook body. It is built once per occurrence and copied

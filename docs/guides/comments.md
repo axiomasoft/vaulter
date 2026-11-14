@@ -26,6 +26,11 @@ A comment carries an `author` (the authenticated user, polymorphic), a `body`, a
 `anchor` (JSON describing the text range it pins to), a `parent_id` for threads, and a
 `resolved_at` timestamp.
 
+An anchor is limited to **16384 encoded JSON bytes and 16 nesting levels**, using PHP's
+default JSON escaping when counting bytes. HTTP rejects a larger or deeper anchor with
+`422 validation_failed` on `anchor`; the PHP `AddCommentInput` rejects it with
+`InvalidArgumentException` before it can be written or included in a receipt fingerprint.
+
 ## Front-end
 
 <!-- snippet: host -->

@@ -30,6 +30,10 @@ that subscribes to the type. A rolled-back operation leaves neither; a replayed
 occurrence (the same `event_id`) writes nothing. Without consumers only the event is
 written, and retention removes it.
 
+`created_at` retains the occurrence time used by envelopes, subscription eligibility and retention.
+After allocating `outbox_seq`, the writer records microsecond-precision UTC `staged_at` in the same
+transaction. A failure to record it rolls the event back too; a committed production event is staged.
+
 ## The relay
 
 `vaulter:relay` runs every minute (`vaulter.schedule.outbox_relay`), without overlapping.
@@ -41,10 +45,11 @@ One pass:
    paused.
 2. **Reconcile.** A process that ran with an older module graph wrote events without a
    row for a consumer it did not know. Under the consumer lease, the relay inserts the
-   missing rows for the events up to S, the highest seq written more than
+   missing rows for the events up to S, the highest seq whose `staged_at` is more than
    `outbox.settle_window_seconds` ago, and moves `reconciled_through_seq` to S. It never
    moves further: a long transaction can still commit a smaller seq inside the window.
-   Keep the window above the longest Vaulter transaction; `vaulter:doctor`
+   Keep writer and relay clocks synchronized and the window above the longest Vaulter transaction;
+   `vaulter:doctor`
    (`core.outbox.settle_window`) compares it with the database's transaction limits.
 3. **Deliver.** Due rows are leased (`FOR UPDATE SKIP LOCKED` on PostgreSQL and MySQL),
    the consumer runs outside any transaction, and its result is written only under the

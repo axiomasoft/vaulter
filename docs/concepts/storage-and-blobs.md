@@ -85,6 +85,10 @@ The bytes themselves never appear in any column. The model timestamps are disabl
 
 ### The storage key is scope-qualified
 
+`scope_key` and `storage_key` compare exactly, including case, accents and trailing spaces.
+The schema uses `utf8mb4_0900_bin` on MySQL, `C` on PostgreSQL and `BINARY` on SQLite;
+the existing character limits remain 191 and 255 respectively.
+
 `ContentStore::keyFor(BlobScope $scope, string $sha256)` uses the first two digest
 characters as one shard: `{scope-segment}/{sha[0:2]}/{sha}`. Historical scopes keep
 `{legacy-segment}/{sha[0:2]}/{sha[2:4]}/{sha}`. Migration preserves their stored paths;
@@ -503,6 +507,9 @@ before its row commits, and a fresh object must never be mistaken for an orphan.
 :::
 
 ## Flysystem disks: `local`, S3, and per-storage
+
+The S3 adapter supplies the atomic PUT path. Local disks, including those serving signed
+temporary URLs, use staging and promotion; temporary-URL support does not establish atomic writes.
 
 Blobs live on a standard Laravel Flysystem disk. The disk for a given blob is
 resolved per call by `FlysystemStorageDriver::disk()`: a blob's own `disk` column
