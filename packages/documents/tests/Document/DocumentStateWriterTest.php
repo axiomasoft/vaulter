@@ -53,6 +53,28 @@ function writeState(Node $node, DocumentStateChange $change): DocumentStateResul
     });
 }
 
+it('reads streamed collaboration state repeatedly without consuming its stored bytes', function (): void {
+    $bytes = "room\0state\xff";
+    foreach ([new Document, new DocumentRevision] as $model) {
+        $stream = fopen('php://memory', 'r+');
+        expect($stream)->toBeResource();
+        try {
+            fwrite($stream, base64_encode($bytes));
+            rewind($stream);
+            $model->setRawAttributes(['collab_state' => $stream], sync: true);
+
+            expect($model->collab_state)->toBe($bytes)
+                ->and($model->collab_state)->toBe($bytes)
+                ->and(ftell($stream))->toBe(0);
+            fseek($stream, 4);
+            expect($model->collab_state)->toBe($bytes)
+                ->and(ftell($stream))->toBe(4);
+        } finally {
+            fclose($stream);
+        }
+    }
+});
+
 it('captures the working state verbatim into a checkpoint', function (): void {
     $node = writerDocument();
 
