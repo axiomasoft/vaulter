@@ -22,6 +22,7 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Snapshots\ViewerStateSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\ScanStatus;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\NodeUserState;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
@@ -138,7 +139,7 @@ final readonly class NodeSnapshotMapper
 
     /**
      * The reader-scoped sync key of each node (the U1 primitive, the one the change feed names
-     * a remove by); none for a viewer without a sync identity. One query for the drives' tenants.
+     * a remove by); none for a viewer without a sync identity. At most one query for missing drive scopes.
      *
      * @param  list<Node>            $nodes
      * @return array<string, string> node id => key
@@ -149,8 +150,28 @@ final readonly class NodeSnapshotMapper
         if ($identity === null || $viewer === null || $viewer->type === null) {
             return [];
         }
-        $drives = array_values(array_unique(array_map(static fn (Node $node): string => SnapshotValue::id($node->drive_id), $nodes)));
-        $tenants = $this->tenants($drives);
+        $drives = [];
+        $tenants = [];
+        foreach ($nodes as $node) {
+            $driveId = SnapshotValue::id($node->drive_id);
+            $drives[$driveId] = $driveId;
+            $drive = $node->relationLoaded('storage') ? $node->getRelation('storage') : null;
+            // Exact listings already fetched the drive for their access check.
+            // Reuse that persisted scope only when both identities agree; a
+            // missing, partial or changed relation still takes the lookup below.
+            if ($drive instanceof Drive && SnapshotValue::id($drive->getKey()) === $driveId
+                && array_key_exists('tenant_id', $drive->getAttributes())
+                && array_key_exists('tenant_id', $node->getAttributes())
+                && !$drive->isDirty(['tenant_id', $drive->getKeyName()])
+                && !$node->isDirty(['tenant_id', 'drive_id'])
+                && ReaderSyncIdentity::tenant($node->getRawOriginal('tenant_id')) === ReaderSyncIdentity::tenant($drive->getRawOriginal('tenant_id'))) {
+                $tenants[$driveId] = ReaderSyncIdentity::tenant($drive->getRawOriginal('tenant_id'));
+            }
+        }
+        $missing = array_diff_key($drives, $tenants);
+        if ($missing !== []) {
+            $tenants += $this->tenants(array_values($missing));
+        }
         $keys = [];
         foreach ($nodes as $node) {
             $driveId = SnapshotValue::id($node->drive_id);

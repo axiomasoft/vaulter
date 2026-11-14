@@ -13,6 +13,7 @@ use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
@@ -116,6 +117,25 @@ it('uses at most five Vaulter queries for 50 visible nodes and gives each one it
     expect($resources)->toHaveCount(50);
     foreach ($resources as $resource) {
         expect($resource->resolve($request)['abilities']['view'])->toBeTrue();
+    }
+});
+
+it('keeps reader keys on the persisted drive scope when a loaded relation is missing or unusable', function (): void {
+    $stale = $this->storage->fresh();
+    $this->storage->forceFill(['tenant_id' => 17])->save();
+    $this->folder->forceFill(['tenant_id' => 17])->save();
+    $mapper = app(NodeSnapshotMapper::class);
+    $viewer = Actor::user($this->actor)->ref();
+    $expected = $mapper->map($this->folder->fresh(), $viewer)->syncKey;
+    expect($expected)->toHaveLength(43);
+    $foreign = AccessTestHelpers::storage();
+    $foreign->forceFill(['tenant_id' => 77])->save();
+    $partial = Drive::query()->select('id')->findOrFail($this->storage->id);
+    $dirty = $this->storage->fresh()->forceFill(['tenant_id' => 77]);
+
+    foreach ([$this->storage->fresh(), null, $foreign, $partial, $dirty, $stale] as $drive) {
+        $node = $this->folder->fresh()->setRelation('storage', $drive);
+        expect($mapper->map($node, $viewer)->syncKey)->toBe($expected);
     }
 });
 
