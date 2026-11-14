@@ -3,7 +3,12 @@
 declare(strict_types=1);
 
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Collaboration\HocuspocusCollaborationDriver;
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
+use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
+use Vaulter\Documents\VaulterDocumentsServiceProvider;
+use Vaulter\Kernel;
+use Vaulter\Testing\Concerns\FreshApplication;
 
 /*
  * VLT-REMED P3.1 (W3/B11) — doc/ADR-alignment guard tests (D19: green
@@ -13,15 +18,21 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
  */
 
 it('the collaboration configuration accessor falls back to hocuspocus when the config key is entirely absent, F-P3.6-01', function (): void {
-    config()->offsetUnset('vaulter-collaboration.driver');
+    // P3.3 replaced the transport selector with the documents-owned protocol slot.
+    $app = FreshApplication::boot(['vaulter.modules.collaboration' => true], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
+    $app['config']->offsetUnset('vaulter-collaboration.driver');
+    $extensions = $app->make(Kernel::class)->extensions();
 
-    expect((new CollaborationConfig(app('config'), app(DocumentsConfig::class)))->driver())->toBe('hocuspocus');
+    expect($extensions->handlerKeys(CollaborationProtocolDriver::class))->toBe(['yjs'])
+        ->and($extensions->handler(CollaborationProtocolDriver::class, 'yjs'))->toBeInstanceOf(HocuspocusCollaborationDriver::class);
 });
 
 it('the vaulter-collaboration config default transport is hocuspocus (unchanged by P3.1 — the ADR/docs were the drift), F-P3.6-01', function (): void {
     $defaults = require __DIR__.'/../../../packages/collaboration/config/vaulter-collaboration.php';
 
-    expect($defaults['driver'])->toBe('hocuspocus');
+    expect($defaults)->not->toHaveKey('driver')
+        ->and($defaults)->toHaveKeys(['hub', 'mode', 'limits'])
+        ->and(method_exists(CollaborationConfig::class, 'driver'))->toBeFalse();
 });
 
 it('README describes canonical feature ownership (P2.5)', function (): void {

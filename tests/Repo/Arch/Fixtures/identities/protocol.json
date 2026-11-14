@@ -2906,7 +2906,7 @@
         {
             "exception": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
             "id": "problem:collaboration_unavailable",
-            "owner": "collaboration",
+            "owner": "documents",
             "receipt": "never",
             "retryable": "never",
             "source": {
