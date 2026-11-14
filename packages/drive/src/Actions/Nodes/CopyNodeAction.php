@@ -26,8 +26,8 @@ use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
-use Vaulter\Support\Identity;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Support\Identity;
 
 #[Internal]
 final readonly class CopyNodeAction
@@ -189,6 +189,9 @@ final readonly class CopyNodeAction
         if ($source->kind !== NodeKind::Folder) {
             // Both rows are held in this lock transaction; the lifecycle reads their facts, its own aggregates by id.
             $addedBytes += $this->lifecycles->forKind($source->kind)->copy(context: $context, source: $this->snapshots->facts($source), copy: $this->snapshots->facts($copy))->addedBytes;
+            // Capturing the new row's facts cached a missing payload before the
+            // lifecycle created it. The returned snapshot must load that payload.
+            $copy->unsetRelation('file');
         } else {
             foreach ($sources as $child) {
                 if ((string) $child->parent_id === (string) $source->id && $child->trashed_at === null) {

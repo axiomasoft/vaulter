@@ -30,6 +30,9 @@ it('копия файла переиспользует ОДИН блоб чер�
     expect($copy->kind)->toBe(NodeKind::File)
         ->and($copy->name)->toBe('a-copy.txt')
         ->and($copy->id)->not->toEqual($original->id)
+        ->and($copy->file)->not->toBeNull()
+        ->and($copy->file->sizeBytes)->toBe(strlen('shared content'))
+        ->and($copy->file->sha256)->toBe(hash('sha256', 'shared content'))
         // One physical blob, two File handles, two versions referencing it.
         ->and(Blob::query()->count())->toBe(1)
         ->and(File::query()->count())->toBe(2);
