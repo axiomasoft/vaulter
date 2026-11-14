@@ -53,19 +53,19 @@ final class SpyDriveHandle implements DriveHandle
         return $this->inner->quota();
     }
 
-    public function archive(): DriveSnapshot
+    public function archive(?int $expectedVersion = null): DriveSnapshot
     {
-        return $this->inner->archive();
+        return $this->inner->archive($expectedVersion);
     }
 
-    public function unarchive(): DriveSnapshot
+    public function unarchive(?int $expectedVersion = null): DriveSnapshot
     {
-        return $this->inner->unarchive();
+        return $this->inner->unarchive($expectedVersion);
     }
 
-    public function delete(): DriveSnapshot
+    public function delete(?int $expectedVersion = null): DriveSnapshot
     {
-        return $this->inner->delete();
+        return $this->inner->delete($expectedVersion);
     }
 
     public function profile(): Profile

@@ -11,6 +11,7 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
@@ -49,10 +50,10 @@ it('rejects a forged move into a folder without Create and notifies the actor', 
         isImportant: true,
     );
     expect($this->moveSource->fresh()->parent_id)->toBe($parent);
-    Notification::assertNotified(Notification::make()->title('Move not allowed')->danger());
+    Notification::assertNotified(Notification::make()->title('Move not allowed')->body(PermissionDeniedException::forAbility('create')->getMessage())->danger());
     Livewire::test(ListNodes::class)->callTableAction('move', (string) $this->moveSource->getKey(), ['parent_id' => null]);
     expect($this->moveSource->fresh()->parent_id)->toBe($parent);
-    Notification::assertNotified(Notification::make()->title('Move not allowed')->danger());
+    Notification::assertNotified(Notification::make()->title('Move not allowed')->body(PermissionDeniedException::forAbility('create')->getMessage())->danger());
 });
 
 it('moves into a destination when the actor has Create there', function (): void {
