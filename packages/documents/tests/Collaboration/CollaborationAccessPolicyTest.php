@@ -125,6 +125,8 @@ it('evaluates a hub reference like the handle form and reports the drive as acti
     expect($decision->driveActive)->toBe(!$archived)
         ->and($decision->grant->mode)->toBe($archived ? CollaborationMode::Read : CollaborationMode::Write)
         ->and($decision->grant->nodeId)->toBe($this->node->id);
+    expect($policy->evaluateAuthenticationReference($this->context->actor, $this->node->driveId, $this->node->id, null, 'ref-auth'))
+        ->toEqual($policy->evaluateReference($this->context->actor, $this->node->driveId, $this->node->id, null, 'ref-auth'));
 })->with([false, true]);
 
 it('hides a hub reference of another drive, tenant, trashed or unknown node and a system actor', function (string $case): void {
@@ -143,7 +145,22 @@ it('hides a hub reference of another drive, tenant, trashed or unknown node and 
 
     expect(fn () => $policy->evaluateReference($actor, $driveId, $nodeId, $tenant, 'ref-2'))
         ->toThrow($case === 'system' ? MissingActorException::class : NodeNotFoundException::class);
+    expect(fn () => $policy->evaluateAuthenticationReference($actor, $driveId, $nodeId, $tenant, 'ref-auth'))
+        ->toThrow($case === 'system' ? MissingActorException::class : NodeNotFoundException::class);
 })->with(['drive', 'tenant', 'trash', 'unknown', 'system']);
+
+it('returns no authentication grant for denied View while strict reference access stays hidden', function (): void {
+    $policy = app(CollaborationAccessPolicy::class);
+    $actor = Docs::context($this->drive, 99)->actor;
+
+    expect($policy->evaluateAuthenticationReference($actor, $this->node->driveId, $this->node->id, null, 'denied-auth'))->toBeNull();
+    expect(fn () => $policy->evaluateReference($actor, $this->node->driveId, $this->node->id, null, 'denied-load'))
+        ->toThrow(NodeNotFoundException::class);
+
+    $this->drive->model()->forceFill(['status' => 'deleting'])->save();
+    expect(fn () => $policy->evaluateAuthenticationReference($actor, $this->node->driveId, $this->node->id, null, 'deleting-auth'))
+        ->toThrow(NodeNotFoundException::class);
+});
 
 it('answers the room channel View check by the ordinary resolver and false for a missing node', function (): void {
     $policy = app(CollaborationAccessPolicy::class);

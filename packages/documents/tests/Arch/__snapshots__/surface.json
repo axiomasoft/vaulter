@@ -118,6 +118,12 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:evaluateauthenticationreference": {
+                    "kind": "method",
+                    "name": "evaluateAuthenticationReference",
+                    "visibility": "public",
+                    "internal": true
+                },
                 "method:evaluatereference": {
                     "kind": "method",
                     "name": "evaluateReference",

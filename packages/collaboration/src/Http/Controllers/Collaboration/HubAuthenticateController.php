@@ -25,9 +25,9 @@ final readonly class HubAuthenticateController
     public function __invoke(Request $request): JsonResponse
     {
         HubProtocol::require($request);
-        $room = $this->hub->open(ResolveCollaborationCall::call($request), $request->input('room'));
+        $room = $this->hub->authenticate(ResolveCollaborationCall::call($request), $request->input('room'));
 
-        if ($room->ability === null) {
+        if ($room === null) {
             return HubProtocol::mark(new JsonResponse(['allowed' => false, 'mode' => 'ro', 'userId' => null]));
         }
 

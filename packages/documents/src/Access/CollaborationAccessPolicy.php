@@ -118,6 +118,31 @@ final readonly class CollaborationAccessPolicy
      */
     public function evaluateReference(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): CollaborationAccessDecision
     {
+        $context = $this->referenceContext($actor, $driveId, $nodeId, $tenant, $correlationId);
+
+        return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
+    }
+
+    /**
+     * @internal Authentication alone distinguishes a denied View from an invalid reference.
+     * No grant is issued for a denied actor; other callers retain evaluateReference's strict 404.
+     */
+    #[Internal]
+    public function evaluateAuthenticationReference(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): ?CollaborationAccessDecision
+    {
+        $context = $this->referenceContext($actor, $driveId, $nodeId, $tenant, $correlationId);
+        $node = $this->scopedNode($context, $nodeId);
+        $user = $actor->authorizable() ?? throw MissingActorException::required();
+        if ($node->kind->isDocument() && !$this->resolver->can($user, Ability::View, $node)) {
+            return null;
+        }
+
+        return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
+    }
+
+    /** The live node, drive and tenant checks shared by strict reads and authentication. */
+    private function referenceContext(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId): DriveContext
+    {
         if ($actor->isSystem() || $actor->ref()->id === null) {
             throw MissingActorException::required();
         }
@@ -129,11 +154,12 @@ final readonly class CollaborationAccessPolicy
             throw NodeNotFoundException::forId($nodeId);
         }
         $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($nodeId);
-        if (($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $tenant) {
+        if (($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $tenant
+            || $drive->status === DriveStatus::Deleting) {
             throw NodeNotFoundException::forId($nodeId);
         }
 
-        return $this->evaluate(DriveContext::for($drive, $actor, $correlationId), $nodeId, $ceiling, $clientSchemaVersion);
+        return DriveContext::for($drive, $actor, $correlationId);
     }
 
     /**
@@ -162,16 +188,24 @@ final readonly class CollaborationAccessPolicy
 
     private function document(DriveContext $context, NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node
     {
-        $node = $this->locator->find($context, $key);
-        $tenant = $node->tenant_id === null ? null : Identity::stringify($node->tenant_id);
-        if ($tenant !== $context->operation->tenant->id) {
-            throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
-        }
+        $node = $this->scopedNode($context, $key);
         // Authorize before the kind check, so a node the actor cannot see stays
         // indistinguishable from a missing one.
         $this->guard->authorize($context, $ability, $node, $operation);
         if (!$node->kind->isDocument()) {
             throw NotADocumentException::forNode($node->getKey());
+        }
+
+        return $node;
+    }
+
+    /** Apply the same current tenant check to the located node before any ACL decision. */
+    private function scopedNode(DriveContext $context, NodeSnapshot|string|int $key): Node
+    {
+        $node = $this->locator->find($context, $key);
+        $tenant = $node->tenant_id === null ? null : Identity::stringify($node->tenant_id);
+        if ($tenant !== $context->operation->tenant->id) {
+            throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
         }
 
         return $node;
