@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Models\Casts\IntegerKey;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
@@ -42,7 +43,7 @@ it('emits a bigIncrements primary key, integer cast, no concern, no generated id
         ->and($reference->get('nullable'))->toBeTrue()
         ->and($actor->get('type'))->toBe('bigInteger')
         ->and($actor->get('unsigned'))->toBeTrue()
-        ->and($strategy->cast())->toBe('integer')
+        ->and($strategy->cast())->toBe(IntegerKey::class)
         ->and($strategy->modelConcern())->toBeNull()
         ->and($strategy->newId())->toBeNull();
 });

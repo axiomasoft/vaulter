@@ -986,6 +986,14 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Models\\Casts\\IntegerKey",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel: lossless bigint model identity shared by every module, paired with HasVaulterKeys and the built-in id strategy"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Models\\Concerns\\ResolvesVaulterConnection",
             "owner": "core",
             "action": "keep",

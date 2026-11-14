@@ -9345,6 +9345,12 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:getcasts": {
+                    "kind": "method",
+                    "name": "getCasts",
+                    "visibility": "public",
+                    "internal": true
+                },
                 "method:initializehasvaulterkeys": {
                     "kind": "method",
                     "name": "initializeHasVaulterKeys",
@@ -9360,6 +9366,12 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
+                },
+                "method:insertandsetid": {
+                    "kind": "method",
+                    "name": "insertAndSetId",
+                    "visibility": "protected",
+                    "internal": true
                 },
                 "method:vaulteridstrategykey": {
                     "kind": "method",

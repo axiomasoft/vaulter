@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Vaulter\Attributes\Api;
+use Vaulter\Models\Casts\IntegerKey;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 
 /**
@@ -50,11 +51,13 @@ final class Identity
         }
         if (in_array(HasVaulterKeys::class, $traits, true)) {
             $strategy = self::vaulterStrategy($model);
+            $bigint = ($model->getCasts()[$model->getKeyName()] ?? null) === IntegerKey::class;
 
             return match ($strategy) {
                 'uuid7' => Str::isUuid((string) $key),
                 'ulid' => Str::isUlid((string) $key),
-                default => $model->getKeyType() !== 'int' || self::numericFitsKey($model, $key, $strategy === 'bigint'),
+                default => $bigint ? self::numericFitsKey($model, $key, true)
+                    : ($model->getKeyType() !== 'int' || self::numericFitsKey($model, $key)),
             };
         }
 

@@ -7,6 +7,7 @@ namespace Vaulter\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
+use Vaulter\Models\Casts\IntegerKey;
 
 /**
  * Classic auto-incrementing bigint keys (legacy id_type=id). References and
@@ -33,7 +34,7 @@ final class AutoIncrementIds implements IdStrategy
 
     public function cast(): string
     {
-        return 'integer';
+        return IntegerKey::class;
     }
 
     public function modelConcern(): ?string
