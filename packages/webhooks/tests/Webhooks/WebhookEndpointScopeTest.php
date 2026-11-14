@@ -5,12 +5,16 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
+use Vaulter\Webhooks\Actions\DeactivateWebhookEndpointAction;
+use Vaulter\Webhooks\Actions\DeleteWebhookEndpointAction;
 use Vaulter\Webhooks\Actions\RegisterWebhookEndpointAction;
+use Vaulter\Webhooks\Actions\RotateWebhookSecretAction;
 use Vaulter\Webhooks\Actions\UpdateWebhookEndpointAction;
 use Vaulter\Webhooks\Data\RegisterWebhookEndpointInput;
 use Vaulter\Webhooks\Data\UpdateWebhookEndpointInput;
@@ -136,6 +140,35 @@ it('does not adopt a supplied untenanted or foreign endpoint during an update', 
         ->toThrow(WebhookEndpointNotFoundException::class)
         ->and($endpoint->fresh()->getRawOriginal())->toBe($before);
 })->with(['untenanted' => [null], 'another tenant' => ['B']]);
+
+it('refuses a management write when endpoint ownership changed after its scoped pre-read', function (string $operation, ?string $newTenant): void {
+    strictTenancy('A');
+    $endpoint = registerEndpoint();
+    $id = $endpoint->getKey();
+    $stale = app(WebhookEndpointReadRepository::class)->find($id);
+    expect($stale)->not->toBeNull()->and($stale->tenant_id)->toBe('A');
+    $staleBefore = $stale->getAttributes();
+    $staleOriginal = $stale->getRawOriginal();
+    $version = $stale->version;
+    $delivery = WebhookTestHelpers::delivery($endpoint, ['status' => 'pending']);
+    $db = app(VaulterDatabase::class)->connection();
+    // An administrative ownership transfer can land after the management lookup, before the Action takes its lock.
+    $db->table($endpoint->getTable())->where('id', $id)->update(['tenant_id' => $newTenant]);
+    $before = (array) $db->table($endpoint->getTable())->where('id', $id)->sole();
+    $deliveryBefore = $delivery->fresh()->getRawOriginal();
+
+    expect(fn () => match ($operation) {
+        'update' => app(UpdateWebhookEndpointAction::class)->execute($stale, new UpdateWebhookEndpointInput(url: 'https://changed.test/hook'), $version),
+        'rotate' => app(RotateWebhookSecretAction::class)->execute($stale, 600, $version),
+        'deactivate' => app(DeactivateWebhookEndpointAction::class)->execute($stale, $version),
+        'delete' => app(DeleteWebhookEndpointAction::class)->execute($stale, $version),
+    })->toThrow(WebhookEndpointNotFoundException::class);
+
+    expect($stale->getAttributes())->toBe($staleBefore)->and($stale->getRawOriginal())->toBe($staleOriginal)
+        ->and((array) $db->table($endpoint->getTable())->where('id', $id)->first())->toBe($before)
+        ->and($delivery->fresh()->getRawOriginal())->toBe($deliveryBefore);
+    Queue::assertNothingPushed();
+})->with(['update', 'rotate', 'deactivate', 'delete'])->with(['another tenant' => ['B'], 'untenanted' => [null]]);
 
 it('preserves endpoint ownership when it is managed outside strict tenancy', function (?string $tenant): void {
     config()->set('vaulter.tenancy.enabled', false);

@@ -49,13 +49,14 @@ final readonly class UpdateWebhookEndpointAction
         return $this->database->transaction(function () use ($endpoint, $data, $expectedVersion): WebhookEndpoint {
             // Decide from the row as it is now, not from the copy the caller loaded earlier: a
             // stale "inactive" copy would skip killing the deliveries created since.
-            $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
-            $tenant = TenancyBoundary::normalize($endpoint->tenant_id);
+            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail();
+            $tenant = TenancyBoundary::normalize($current->tenant_id);
             if ($this->tenancy->enforced() && $tenant !== $this->tenancy->current()) {
-                throw WebhookEndpointNotFoundException::forId(Identity::stringify($endpoint->getKey()));
+                throw WebhookEndpointNotFoundException::forId(Identity::stringify($current->getKey()));
             }
             // CC1: the version the caller read is compared on the locked row.
-            $this->versions->assertExpected($endpoint, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
+            $this->versions->assertExpected($current, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
+            $endpoint->setRawAttributes($current->getAttributes(), sync: true);
             $wasActive = $endpoint->is_active;
 
             $this->endpoints->update(

@@ -7,7 +7,9 @@ namespace Vaulter\Webhooks\Actions;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Operations\AggregateVersion;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
+use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookDeliveryStoreRepository;
 use Vaulter\Webhooks\Repositories\WebhookEndpointStoreRepository;
@@ -29,15 +31,20 @@ final readonly class DeactivateWebhookEndpointAction
         private WebhookDeliveryStoreRepository $deliveries,
         private VaulterDatabase $database,
         private AggregateVersion $versions,
+        private TenancyBoundary $tenancy,
     ) {}
 
     public function execute(WebhookEndpoint $endpoint, ?int $expectedVersion = null): WebhookEndpoint
     {
         return $this->database->transaction(function () use ($endpoint, $expectedVersion): WebhookEndpoint {
             // Same lock order as a delivery settlement and a redelivery: endpoint first.
-            $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
+            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail();
+            if ($this->tenancy->enforced() && TenancyBoundary::normalize($current->tenant_id) !== $this->tenancy->current()) {
+                throw WebhookEndpointNotFoundException::forId(Identity::stringify($current->getKey()));
+            }
             // CC1: the version the caller read is compared on the locked row.
-            $this->versions->assertExpected($endpoint, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
+            $this->versions->assertExpected($current, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
+            $endpoint->setRawAttributes($current->getAttributes(), sync: true);
             $this->endpoints->deactivate($endpoint);
             $this->deliveries->killOpenForEndpoint(endpointId: Identity::stringify($endpoint->getKey()), reason: 'endpoint_disabled');
             $this->versions->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
