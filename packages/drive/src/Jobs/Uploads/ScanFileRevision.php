@@ -17,6 +17,7 @@ use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\PrivateScanReader;
 use Vaulter\Drive\Content\ScanSnapshot;
+use Vaulter\Drive\Content\VerifiedScanStream;
 use Vaulter\Drive\Jobs\Middleware\RestoreTenantContext;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -114,12 +115,24 @@ final class ScanFileRevision implements ShouldQueue
                 if ($scanner->key() !== $attempt->spec->scannerKey || $scanner->version() !== $attempt->spec->scannerVersion) {
                     throw new InvalidConfigurationException('Scanner identity changed before byte IO.');
                 }
-                $result = $scanner->scan(new ScanInput($stream, $attempt->revisionId, $attempt->blobId,
-                    $attempt->driveId, $attempt->tenantId, $identity->scopeKey, $identity->sha256,
-                    $identity->size, $revision->mime_type, $attempt->spec->scannerVersion,
-                    $attempt->spec->policyVersion, $attempt->deadline));
-                if ($work->now() >= $attempt->deadline) {
-                    $result = new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true);
+                // The row hash is only a claim. The verdict has to follow the bytes just read.
+                $verified = VerifiedScanStream::copy($stream);
+                fclose($stream);
+                $stream = $verified?->stream;
+                if (!$verified instanceof VerifiedScanStream) {
+                    $result = new ScanResult(ScanVerdict::Failed, 'transient_io', true);
+                } elseif (!hash_equals($identity->sha256, $verified->sha256) || $verified->size !== $identity->size) {
+                    $fail->execute($attempt, 'content_identity_mismatch');
+
+                    return;
+                } else {
+                    $result = $scanner->scan(new ScanInput($stream, $attempt->revisionId, $attempt->blobId,
+                        $attempt->driveId, $attempt->tenantId, $identity->scopeKey, $verified->sha256,
+                        $verified->size, $revision->mime_type, $attempt->spec->scannerVersion,
+                        $attempt->spec->policyVersion, $attempt->deadline));
+                    if ($work->now() >= $attempt->deadline) {
+                        $result = new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true);
+                    }
                 }
             }
         } catch (InvalidConfigurationException $exception) {

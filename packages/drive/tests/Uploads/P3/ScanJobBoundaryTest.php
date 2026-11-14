@@ -6,8 +6,10 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
+use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
@@ -109,4 +111,54 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
     expect($scanner->reads)->toBe(0)->and($row->refresh()->attempt)->toBe(1)
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
+});
+
+it('SEC-R12 does not record the row hash when the streamed bytes differ', function (): void {
+    Storage::fake('local');
+    Bus::fake();
+    $scanner = new class implements ContentScanner
+    {
+        public int $reads = 0;
+
+        public function key(): string
+        {
+            return 'fixture';
+        }
+
+        public function version(): string
+        {
+            return '1';
+        }
+
+        public function scan(ScanInput $input): ScanResult
+        {
+            $this->reads++;
+
+            return new ScanResult(ScanVerdict::Clean);
+        }
+    };
+    UploadTestHelpers::scanner($scanner);
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
+    $drive = UploadTestHelpers::storage();
+    $context = DriveContext::system($drive, 'fixture');
+    app(ScanPolicyResolver::class)->initialize($drive, $context);
+    $stream = UploadTestHelpers::streamFor('scan bytes');
+    $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
+    fclose($stream);
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $blob = $revision->blob()->firstOrFail();
+    Storage::disk($blob->disk)->put($blob->storage_key, 'replaced bytes');
+    $row = $revision->scanObligations()->firstOrFail();
+    app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
+    expect($scanner->reads)->toBe(0)
+        ->and($row->refresh()->state)->toBe('settled')
+        ->and($row->outcome)->toBe('failed')
+        ->and($row->reason)->toBe('content_identity_mismatch')
+        ->and($row->retryable)->toBeFalse()
+        ->and($revision->scanEvidence()->where('outcome', 'clean')->count())->toBe(0)
+        ->and($revision->refresh()->scan_status)->not->toBe('clean');
+    expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision->fresh()))
+        ->toThrow(ContentUnavailableException::class);
 });
