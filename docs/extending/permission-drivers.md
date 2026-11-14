@@ -279,17 +279,20 @@ owns the **workspace-scoped role** lane:
   turns it into an absolute Vaulter allow: an AzGuard super-admin reaches the **owner** role
   through the same workspace decisions below, which keep AzGuard's scope policy,
   restrictions, policies and tenant rules.
-- **`resolve`** maps each role's defining ability to an AzGuard permission and
-  asks `hasPermissionIn($workspaceType, $workspaceId, $permission)`; the union of the
-  allowed roles becomes the `Decision`. (`AccessScope` is node-blind, so this is the
-  workspace-scoped check.)
+- **`resolve`** checks every ability of each role through its mapped AzGuard permission,
+  passing the decision's actor to `hasPermissionIn($actor, $workspaceType, $workspaceId, $permission)`.
+  A role is granted only when all of those checks pass; an absent mapping denies the role.
+  The union of fully allowed roles becomes the `Decision`. (`AccessScope` is node-blind,
+  so this is the workspace-scoped check.)
 - **`subjectsFor`** = `[Subject(actor)]` only — AzGuard *answers* checks rather than
   enumerating role-subjects. A host that addresses grant rows to AzGuard roles should
   subclass and append those Subjects.
-- **`canCreateIn`** asks `hasPermissionIn($type, $id, $createPermission)`.
+- **`canCreateIn`** asks `hasPermissionIn($actor, $type, $id, $createPermission)`.
 
-The role → defining-ability probes are: `Previewer → View`, `Reader → Download`,
-`Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
+A single permission does not imply the other abilities of a role. For example,
+View and Comment without Download grant at most Previewer: both Comment and Download
+remain denied because Commenter includes Download. Give the actor every mapped permission
+of a role to grant that complete bundle.
 
 ### The AzGuard panel (host)
 
@@ -385,13 +388,13 @@ API:
 <!-- snippet: signature Vaulter\Azgard\Contracts\AzgardGuard -->
 
 ```php
+use Illuminate\Contracts\Auth\Access\Authorizable;
+
 interface AzgardGuard
 {
-    // Per-resource permission (the per-node lane).
-    public function hasScopedPermission(string $permission, object $entity): bool;
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool;
 
-    // Workspace-scoped permission (the lane resolve()/create actually drive).
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool;
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool;
 }
 ```
 
@@ -400,7 +403,7 @@ The driver always answers for the decision's **actor**, never for whoever the re
 1. If the actor itself implements `AzgardGuard`, the driver uses it directly.
 2. Otherwise, the guard class the **host** named in `vaulter-azgard.guard` is used (see the override below).
 3. Otherwise, for an actor implementing `Vaulter\Azgard\Contracts\AzgardBackedUser`, the
-   driver builds an `AzgardGuardAdapter` over that actor, in the `vaulter-azgard.panel_id` panel.
+   driver uses a stateless `AzgardGuardAdapter` in the `vaulter-azgard.panel_id` panel and passes that actor to each check.
 4. Any other actor gets no AzGuard lane (nothing is raised, `canCreateIn` is `false`).
 
 The bridge binds no guard of its own: no guard is ever built from the **request** user for a
@@ -410,37 +413,31 @@ itself — is decided by the actor's own AzGuard rights.
 
 ::: details Optionally naming one guard for every actor
 Set `vaulter-azgard.guard` to a class implementing `AzgardGuard` (validated at boot; `null` by
-default). The driver then uses that guard for every actor, so it must answer for the actor it is
-asked about, not for the request user (the example below closes over the request user, which is
-correct only when the decision is about that user). The supplied `AzgardGuardAdapter` is a thin
-pass-through onto AzGuard v1:
+default). The driver passes the actor explicitly to every guard call. A shared guard must use
+that argument; it must not resolve or capture the request user. The supplied
+`AzgardGuardAdapter` is stateless and delegates to AzGuard v1 on the supplied actor:
 
 <!-- snippet: host -->
 
 ```php
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
 // config/vaulter-azgard.php: 'guard' => \App\Support\HostAzgardGuard::class,
 final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
 {
-    public function __construct(private \Illuminate\Contracts\Auth\Factory $auth) {}
-
-    public function hasScopedPermission(string $permission, object $entity): bool
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
     {
-        return $entity instanceof Model && $this->actor()?->hasPermission($permission, on: $entity) === true;
+        return $actor instanceof AzgardBackedUser && $entity instanceof Model
+            && $actor->hasPermission($permission, on: $entity);
     }
 
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
     {
-        return $this->actor()?->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId)) === true;
-    }
-
-    private function actor(): ?\Vaulter\Azgard\Contracts\AzgardBackedUser
-    {
-        $user = $this->auth->guard()->user(); // implements AzgardBackedUser
-
-        return $user instanceof \Vaulter\Azgard\Contracts\AzgardBackedUser ? $user : null;
+        return $actor instanceof AzgardBackedUser
+            && $actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
     }
 }
 ```

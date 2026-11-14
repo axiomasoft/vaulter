@@ -529,7 +529,7 @@ authorship or `edit`, delete the comment's author or `manage`. See [Comments](/g
 |---|---|
 | `body` | required, string, max 5000 |
 | `parent_id` | optional, the id of a comment of the same node (a reply) |
-| `anchor` | optional, object |
+| `anchor` | optional, object; at most 16384 JSON bytes with PHP's default escaping and 16 nesting levels |
 
 **Response:** `201` Comment.
 

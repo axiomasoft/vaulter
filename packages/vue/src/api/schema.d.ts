@@ -5089,6 +5089,7 @@ export interface operations {
                 "application/json": {
                     body: string;
                     parent_id?: string | null;
+                    /** @description Optional anchor metadata, limited to 16384 encoded JSON bytes with PHP's default escaping and 16 nesting levels. */
                     anchor?: Record<string, never> | null;
                 };
             };

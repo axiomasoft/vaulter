@@ -374,6 +374,8 @@ function insertOutboxRow(array $event, array $delivery = []): void
     static $next = 0;
     $next++;
     $row = ['event_id' => 'doctor-event-'.$next, 'scope_kind' => 'tenant', 'type' => 'file.uploaded', 'external' => true, 'payload' => '{}', 'created_at' => now(), ...$event];
+    // This fixture is committed after staging: age both instants unless their distinct times are supplied.
+    $row += ['staged_at' => $row['created_at']];
     DB::table(coreTable('outbox'))->insert($row);
     DB::table(coreTable('outbox_deliveries'))->insert([
         'event_id' => $row['event_id'], 'consumer_id' => 'webhooks.fanout', 'outbox_seq' => DB::table(coreTable('outbox'))->where('event_id', $row['event_id'])->value('outbox_seq'),

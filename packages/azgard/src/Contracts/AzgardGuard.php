@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Contracts;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 
@@ -19,13 +20,15 @@ use Vaulter\Attributes\SpiKind;
  * `isSuperAdmin()` is not a decision, and a super-admin is allowed every grant-based
  * permission by the decisions themselves.
  *
- * The host binds a real adapter (the shipped {@see AzgardGuardAdapter} over AzGuard v1's
- * `AzGuardSubject`) for the resolved actor; tests bind {@see FakeAzgardGuard}.
- * Either way the driver only ever sees this interface, never AzGuard's classes.
+ * Every check receives the decision's actor explicitly. A configured guard may be shared,
+ * but must answer for this actor, including a call with no authenticated request user.
+ * It must never substitute Auth::user() or mutate the request's authentication state.
+ * The shipped adapter translates that actor's AzGuard v1 `AzGuardSubject` decisions;
+ * the driver only sees this interface, never AzGuard's classes.
  *
  * Method shapes map onto AzGuard v1 so a host adapter is a thin pass-through:
- *   - hasScopedPermission($perm, $entity) ≙ AzGuardSubject::hasPermission($perm, on: $entity)
- *   - hasPermissionIn($type, $id, $perm)  ≙ AzGuardSubject::hasPermission($perm, on: AssignmentScopeRef::of($type, $id))
+ *   - hasScopedPermission($actor, $perm, $entity) ≙ $actor->hasPermission($perm, on: $entity)
+ *   - hasPermissionIn($actor, $type, $id, $perm) ≙ $actor->hasPermission($perm, on: AssignmentScopeRef::of($type, $id))
  *
  * Morph-alias note (host responsibility): the $contextType is an AzGuard type alias
  * (`[a-z0-9][a-z0-9_.-]*`) — the morph alias of the workspace model, declared as an
@@ -41,7 +44,7 @@ interface AzgardGuard
      * places that exact entity in. $entity is the host's morph-aligned model (e.g. the
      * Node or its owning host record).
      */
-    public function hasScopedPermission(string $permission, object $entity): bool;
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool;
 
     /**
      * Does the actor hold $permission within the host workspace identified by its
@@ -49,5 +52,5 @@ interface AzgardGuard
      * scope — the workspace-scoped-role lane and the create gate both route through
      * here (there is no Node to resolve against for create).
      */
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool;
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool;
 }

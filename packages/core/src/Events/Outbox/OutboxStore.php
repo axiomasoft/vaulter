@@ -45,10 +45,10 @@ final readonly class OutboxStore
         return self::int($this->events()->max('outbox_seq'));
     }
 
-    /** The highest seq of an event older than `$before`: no smaller seq can still commit (the settle window). */
+    /** The highest seq staged after sequence allocation and before the settle-window cutoff. */
     public function settledSeq(CarbonImmutable $before): int
     {
-        return self::int($this->events()->where('created_at', '<', $before)->max('outbox_seq'));
+        return self::int($this->events()->where('staged_at', '<', $before->utc()->format('Y-m-d H:i:s.u'))->max('outbox_seq'));
     }
 
     /**

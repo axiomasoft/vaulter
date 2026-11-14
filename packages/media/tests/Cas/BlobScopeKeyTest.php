@@ -9,9 +9,28 @@ use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Schema\IdStrategyResolver;
+
+it('keeps full UTF-8 character widths and exact unique keys in a fresh media schema', function (): void {
+    $scope = str_repeat('é', 190);
+    $storage = str_repeat('📦', 254);
+    $rows = [];
+    foreach (['A', 'a'] as $suffix) {
+        $blob = (new Blob)->forceFill(['scope_key' => $scope.$suffix, 'storage_key' => $storage.$suffix,
+            'sha256' => hash('sha256', 'utf8 schema fixture'), 'size_bytes' => 0, 'disk' => 'local', 'status' => 'committed']);
+        $blob->save();
+        $rows[] = $blob->fresh();
+    }
+
+    expect($rows[0]->id)->not->toBe($rows[1]->id)
+        ->and($rows[0]->scope_key)->toBe($scope.'A')->and($rows[1]->scope_key)->toBe($scope.'a')
+        ->and($rows[0]->storage_key)->toBe($storage.'A')->and($rows[1]->storage_key)->toBe($storage.'a')
+        ->and(Blob::query()->where('scope_key', $scope.'A')->firstOrFail()->id)->toBe($rows[0]->id)
+        ->and(Blob::query()->where('storage_key', $storage.'a')->firstOrFail()->id)->toBe($rows[1]->id);
+});
 
 it('isolates real identifier strategies across dedup scopes and GC', function (string $strategy, string $dedup): void {
     config()->set('vaulter.ids.strategy', $strategy);

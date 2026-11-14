@@ -25,9 +25,9 @@ function realUser(int $id = 1): AzgardUser
     return AzgardUser::query()->create(['id' => $id, 'name' => 'Ada']);
 }
 
-function bindRealAdapter(AzgardUser $user): void
+function bindRealAdapter(): void
 {
-    HostGuard::bind(new AzgardGuardAdapter($user));
+    HostGuard::bind(new AzgardGuardAdapter);
 }
 
 function driver(): AzgardPermissionDriver
@@ -43,7 +43,7 @@ function projectScope(int $id): AccessScope
 it('resolves a real AzGuard super-admin to the owner role through AzGuard decisions, never an override', function (): void {
     $user = realUser();
     $this->actingAsSuperAdmin($user);
-    bindRealAdapter($user);
+    bindRealAdapter();
 
     // Real chain: driver probes → adapter.hasPermission in project:7 → AzGuard decides
     // every permission for the super-admin role (inherit panel).
@@ -56,8 +56,8 @@ it('folds a real assignment-scope permission into the matching Vaulter role, onl
     // A grant stored in the project:1 assignment scope; the adapter asks hasPermission
     // on that scope, which the Vaulter driver maps to the writer role.
     $user = realUser();
-    $this->actingAsWithPermissions($user, ['documents.update'], on: AssignmentScopeRef::of('project', 1));
-    bindRealAdapter($user);
+    $this->actingAsWithPermissions($user, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete'], on: AssignmentScopeRef::of('project', 1));
+    bindRealAdapter();
 
     $decision = driver()->resolve(Subject::ofModel($user), $user, projectScope(1));
 
@@ -70,7 +70,7 @@ it('folds a real assignment-scope permission into the matching Vaulter role, onl
 it('lets a tenant-wide grant hold in every inheriting workspace', function (): void {
     $user = realUser();
     $this->actingAsWithPermissions($user, ['documents.view']);
-    bindRealAdapter($user);
+    bindRealAdapter();
 
     $decision = driver()->resolve(Subject::ofModel($user), $user, projectScope(3));
 
@@ -80,7 +80,7 @@ it('lets a tenant-wide grant hold in every inheriting workspace', function (): v
 it('gates real workspace creation through the create permission', function (): void {
     $user = realUser();
     $this->actingAsWithPermissions($user, ['documents.create'], on: AssignmentScopeRef::of('project', 5));
-    bindRealAdapter($user);
+    bindRealAdapter();
 
     expect(driver()->canCreateIn($user, projectScope(5)))->toBeTrue()
         ->and(driver()->canCreateIn($user, projectScope(6)))->toBeFalse();
@@ -90,12 +90,12 @@ it('denies a workspace whose type is not an assignment scope type of the panel (
     $user = realUser();
     $this->actingAsWithPermissions($user, ['documents.update']);
 
-    expect((new AzgardGuardAdapter($user))->hasPermissionIn('team', 1, 'documents.update'))->toBeFalse();
+    expect((new AzgardGuardAdapter)->hasPermissionIn($user, 'team', 1, 'documents.update'))->toBeFalse();
 });
 
 it('yields no decision when the real user holds nothing in the workspace', function (): void {
     $user = realUser();
-    bindRealAdapter($user);
+    bindRealAdapter();
 
     expect(driver()->resolve(Subject::ofModel($user), $user, projectScope(1)))->toBeNull()
         ->and(driver()->canCreateIn($user, projectScope(1)))->toBeFalse();
@@ -109,10 +109,10 @@ it('resolves a real entity check through the adapter (entity lane)', function ()
     $other = WorkspaceModel::query()->create(['id' => 2, 'name' => 'Beta']);
     $this->actingAsWithPermissions($user, ['documents.view'], on: $workspace);
 
-    $adapter = new AzgardGuardAdapter($user);
+    $adapter = new AzgardGuardAdapter;
 
-    expect($adapter->hasScopedPermission('documents.view', $workspace))->toBeTrue()
+    expect($adapter->hasScopedPermission($user, 'documents.view', $workspace))->toBeTrue()
         // A permission not granted, and the same grant on a different entity.
-        ->and($adapter->hasScopedPermission('documents.update', $workspace))->toBeFalse()
-        ->and($adapter->hasScopedPermission('documents.view', $other))->toBeFalse();
+        ->and($adapter->hasScopedPermission($user, 'documents.update', $workspace))->toBeFalse()
+        ->and($adapter->hasScopedPermission($user, 'documents.view', $other))->toBeFalse();
 });

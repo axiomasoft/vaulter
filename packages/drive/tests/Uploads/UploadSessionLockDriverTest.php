@@ -24,15 +24,16 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
  */
 it('acquireForPatch на MySQL берёт НЕблокирующий лок — FOR UPDATE NOWAIT, R-02', function (string $driver): void {
     $default = (string) config('database.default');
+    $pdo = DB::connection($default)->getPdo();
 
     config()->set("database.connections.{$driver}", [
         'driver' => $driver,
-        'host' => '127.0.0.1',
-        'database' => 'vaulter',
-        'username' => 'vaulter',
-        'password' => '',
+        'database' => 'vaulter_upload_lock_grammar_test',
         'prefix' => '',
     ]);
+    // pretend() still quotes string bindings for its log. Use only the isolated test PDO for that escaping;
+    // the connection keeps its MySQL/MariaDB grammar and executes no query.
+    $connection = DB::connection($driver)->setPdo($pdo)->setReadPdo($pdo);
     // Репозиторий ветвится по драйверу ДЕФОЛТНОГО соединения — переключаем на время замера.
     config()->set('database.default', $driver);
 
@@ -41,7 +42,7 @@ it('acquireForPatch на MySQL берёт НЕблокирующий лок — 
     $session->forceFill(['id' => 1, 'upload_id' => 'upload-1']);
 
     try {
-        $queries = DB::connection($driver)->pretend(function () use ($session): void {
+        $queries = $connection->pretend(function () use ($session): void {
             try {
                 app(UploadSessionStoreRepository::class)->acquireForPatch($session);
             } catch (ModelNotFoundException) {

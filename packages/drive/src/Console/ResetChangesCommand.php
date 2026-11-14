@@ -30,13 +30,12 @@ final class ResetChangesCommand extends Command
 
     public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, DriveConfig $config): int
     {
-        $argument = $this->argument('drive');
-        $label = is_scalar($argument) ? (string) $argument : '';
+        $label = $this->argument('drive');
         $model = $config->model('drive');
-        // A server engine rejects a non-numeric id for an integer key (SQLSTATE 22P02) instead of finding nothing.
-        $wellFormed = (new $model)->getKeyType() !== 'int' || ctype_digit($label);
+        // Reject an invalid or overflowing key before a server engine attempts its column cast.
+        $wellFormed = Identity::fitsKey(new $model, $label);
         $drive = $wellFormed
-            ? Tenancy::without(static fn () => $model::query()->whereKey($argument)->first())
+            ? Tenancy::without(static fn () => $model::query()->whereKey($label)->first())
             : null;
         $driveId = Identity::key($drive?->getKey());
         if ($drive === null || $driveId === null) {

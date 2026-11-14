@@ -72,6 +72,12 @@ final readonly class OutboxWriter
                     return SinkResult::Replayed;
                 }
 
+                // A smaller sequence can still commit for one transaction window after it was allocated.
+                // Stamp only after this INSERT returned: payload preparation and the INSERT itself may have waited.
+                // Both writes share the operation's transaction, so no committed row is left unstaged.
+                $writer->connection()->table($outbox->getTable())->where('event_id', $event->eventId)
+                    ->update(['staged_at' => now('UTC')->format('Y-m-d H:i:s.u')]);
+
                 $consumers = $this->subscribed($event);
                 if ($consumers === []) {
                     return SinkResult::Stored;

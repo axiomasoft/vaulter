@@ -33,8 +33,8 @@ use Vaulter\Kernel;
  * THE COMPOSITE RESOLUTION ORDER (node-ACL → workspace-scoped role
  * → global), and which lane this driver owns:
  *   1. node-ACL (v_node_grants) — owned by the Vaulter AccessResolver, NOT here;
- *   2. workspace-scoped role — THIS driver's lane: resolve() maps the requested
- *      ability → an AzGuard permission and asks hasPermissionIn(workspaceType,
+ *   2. workspace-scoped role — THIS driver's lane: resolve() maps each registered role's
+ *      abilities → AzGuard permissions and asks hasPermissionIn(actor, workspaceType,
  *      workspaceId, permission). AccessScope is node-blind (it carries no Node), so the
  *      role lane is the WORKSPACE-scoped check; AzGuard's own per-resource
  *      hasScopedPermission lane is reachable through the same seam for a host adapter
@@ -43,7 +43,7 @@ use Vaulter\Kernel;
  *   3. global — folded inside AzGuard: a tenant-wide grant satisfies hasPermissionIn in an
  *      inheriting scope, and AzGuard's super-admin is not a separate lane — AzGuard's own
  *      decision allows a super-admin every grant-based permission in the workspace (under
- *      its scope policy, restrictions and tenant rules), so the probes below yield the
+ *      its scope policy, restrictions and tenant rules), so the complete checks yield the
  *      owner role.
  * The driver only ever RAISES access (a role or null); its roles are unioned with the
  * node grants by the AccessResolver.
@@ -51,21 +51,21 @@ use Vaulter\Kernel;
  *   - override(actor, scope) = null: AzGuard answers only decisions (its `isSuperAdmin()`
  *     is not one), so the bridge never turns AzGuard state into an absolute Vaulter
  *     override that would bypass AzGuard's restrictions, policies or scope isolation;
- *   - resolve(subject, actor, scope) = per role, the role's defining Ability is mapped
- *     to a permission and checked via hasPermissionIn against the workspace; the
- *     roles that pass are unioned into the Decision;
+ *   - resolve(subject, actor, scope) = every ability of a role must have a mapping and be
+ *     allowed in the workspace. Only complete roles are unioned into the Decision. An
+ *     incomplete bundle grants its narrower complete roles, never unconfirmed abilities;
  *   - subjectsFor(actor) = [Subject(actor)] only — AzGuard's per-resource model ANSWERS
  *     checks, it does not enumerate the role-subjects a v_node_grants row could be
  *     addressed to, so the driver contributes just the actor (documented limitation:
  *     a host that grants v_node_grants rows to AzGuard roles should additionally model
  *     those as Subjects, e.g. via a subclass; the guard answers the scoped checks);
- *   - canCreateIn = hasPermissionIn(type, id, the create permission).
+ *   - canCreateIn = hasPermissionIn(actor, type, id, the create permission).
  *
  * The guard is ALWAYS about the decision's `$actor`, never about whoever the request
  * happens to be: the actor itself when it implements the seam; else the guard the HOST
  * configured in `vaulter-azgard.guard` (an explicit choice — the host owns it and must
- * answer for the actor it is asked about); else an {@see AzgardGuardAdapter} built over the
- * actor when it is an {@see AzgardBackedUser} (with the configured panel). No guard is ever
+ * answer for the explicit actor argument); else an {@see AzgardGuardAdapter} for an
+ * {@see AzgardBackedUser} (with the configured panel). No guard is ever
  * built from the REQUEST's user: an actor differing from the request user (an
  * acting-as/preview check, or the collaboration hub's call that has no request user at all)
  * must neither borrow the request user's rights nor be denied for the lack of them. When none applies the lane is a safe
@@ -100,7 +100,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         // Node-blind: AccessScope carries the workspace, not a Node, so the role lane is
         // the WORKSPACE-scoped permission check (composite order step 2). A null
         // workspace means there is nothing for AzGuard to scope against.
-        return Decision::union($this->rolesGranted($guard, $scope->driveOwner->type, $scope->driveOwner->id));
+        return Decision::union($this->rolesGranted($guard, $actor, $scope->driveOwner->type, $scope->driveOwner->id));
     }
 
     /**
@@ -149,48 +149,34 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         }
 
         return $guard->hasPermissionIn(
+            actor: $actor,
             contextType: $scope->driveOwner->type,
             contextId: $scope->driveOwner->id,
             permission: $this->permissions->createPermission(),
         );
     }
 
-    /**
-     * The roles the workspace-scoped guard grants: each role is probed by the mapped
-     * permission of the ability that defines it.
-     *
-     * @return list<Role>
-     */
-    private function rolesGranted(AzgardGuard $guard, string $workspaceType, int|string $workspaceId): array
+    /** @return list<Role> Only complete registered roles whose every mapped ability the actor holds. */
+    private function rolesGranted(AzgardGuard $guard, Authorizable $actor, string $workspaceType, int|string $workspaceId): array
     {
         $granted = [];
-        foreach ($this->roleProbes() as $role => $ability) {
-            $permission = $this->permissions->permissionFor($ability);
-            if ($permission !== null && $guard->hasPermissionIn(contextType: $workspaceType, contextId: $workspaceId, permission: $permission)) {
-                $granted[] = $this->roles->latest($role);
+        $map = $this->permissions->permissionMap();
+        $allowed = [];
+        foreach ($this->roles->all() as $role) {
+            foreach ($role->abilities as $ability) {
+                $permission = $map[$ability->value] ?? null;
+                if ($permission === null) {
+                    continue 2;
+                }
+                $allowed[$permission] ??= $guard->hasPermissionIn(actor: $actor, contextType: $workspaceType, contextId: $workspaceId, permission: $permission);
+                if (!$allowed[$permission]) {
+                    continue 2;
+                }
             }
+            $granted[] = $role;
         }
 
         return $granted;
-    }
-
-    /**
-     * The role → defining-ability probe map: the ability each role adds over the
-     * narrower one. previewer by View, reader by Download, commenter by Comment,
-     * writer by Edit, organizer by Share, owner by Manage.
-     *
-     * @return array<string, Ability>
-     */
-    private function roleProbes(): array
-    {
-        return [
-            RoleRegistry::PREVIEWER => Ability::View,
-            RoleRegistry::READER => Ability::Download,
-            RoleRegistry::COMMENTER => Ability::Comment,
-            RoleRegistry::WRITER => Ability::Edit,
-            RoleRegistry::ORGANIZER => Ability::Share,
-            RoleRegistry::OWNER => Ability::Manage,
-        ];
     }
 
     /**
@@ -209,7 +195,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         }
 
         if ($actor instanceof AzgardBackedUser) {
-            return new AzgardGuardAdapter(user: $actor, panelId: $this->config->panelId());
+            return new AzgardGuardAdapter(panelId: $this->config->panelId());
         }
 
         return null;

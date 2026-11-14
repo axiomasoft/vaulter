@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -468,8 +469,7 @@ it('does not ask an adapter for a URL when temporary URLs are unsupported', func
 });
 
 it('returns the exact result of an atomic object-store write', function (bool $written): void {
-    $filesystem = Mockery::mock(FilesystemAdapter::class);
-    $filesystem->shouldReceive('providesTemporaryUrls')->once()->andReturn(true);
+    $filesystem = Mockery::mock(AwsS3V3Adapter::class);
     $filesystem->shouldReceive('writeStream')->once()->andReturn($written);
     $filesystem->shouldNotReceive('move', 'delete');
     Storage::set('object-store', $filesystem);

@@ -112,12 +112,12 @@
                 },
                 {
                     "name": "request_id",
-                    "type": "uuid",
+                    "type": "character varying(64)",
                     "not_null": false,
                     "default": null,
                     "identity": "",
                     "generated": "",
-                    "collation": null
+                    "collation": "default"
                 },
                 {
                     "name": "created_at",
@@ -151,9 +151,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_activity_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_activity_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_activity_verb_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL verb",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -222,6 +236,34 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_blob_references_blob_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL blob_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blob_references_created_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL created_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blob_references_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blob_references_owner_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL owner_type",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_blob_references_pin_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (blob_id, owner_type, reference_key)",
@@ -232,6 +274,13 @@
                 "custom_blob_references_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blob_references_reference_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL reference_key",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -310,7 +359,7 @@
                     "default": null,
                     "identity": "",
                     "generated": "",
-                    "collation": "default"
+                    "collation": "C"
                 },
                 {
                     "name": "status",
@@ -454,7 +503,7 @@
                     "default": null,
                     "identity": "",
                     "generated": "",
-                    "collation": "default"
+                    "collation": "C"
                 }
             ],
             "indexes": {
@@ -469,6 +518,48 @@
                 "custom_blobs_tenant_id_index": "CREATE INDEX custom_blobs_tenant_id_index ON public.custom_blobs USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_blobs_chunked_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL chunked",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_dedup_scope_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL dedup_scope",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_disk_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL disk",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_first_seen_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL first_seen_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_hash_algo_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL hash_algo",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_blobs_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
@@ -476,9 +567,51 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_blobs_ref_count_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL ref_count",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_scope_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_blobs_scope_sha_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (scope_key, sha256)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_sha256_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sha256",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_storage_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL storage_key",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -615,9 +748,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_collaboration_heads_checkpoint_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL checkpoint_seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_collaboration_heads_checkpoint_version_check": {
                     "type": "c",
                     "definition": "CHECK ((checkpoint_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_checkpoint_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL checkpoint_version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -629,6 +776,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_collaboration_heads_document_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL document_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_collaboration_heads_generation_check": {
                     "type": "c",
                     "definition": "CHECK ((generation >= 0))",
@@ -636,9 +790,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_collaboration_heads_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_collaboration_heads_head_seq_check": {
                     "type": "c",
                     "definition": "CHECK ((head_seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_head_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL head_seq",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -693,9 +861,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_collaboration_permission_versions_scope_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_collaboration_permission_versions_version_check": {
                     "type": "c",
                     "definition": "CHECK ((version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_permission_versions_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -771,9 +953,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_collaboration_receipts_document_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL document_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_collaboration_receipts_generation_check": {
                     "type": "c",
                     "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL generation",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -788,6 +984,27 @@
                 "custom_collaboration_receipts_seq_check": {
                     "type": "c",
                     "definition": "CHECK ((seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_sha256_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sha256",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_update_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL update_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -873,9 +1090,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_collaboration_updates_document_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL document_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_collaboration_updates_generation_check": {
                     "type": "c",
                     "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL generation",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -890,6 +1121,27 @@
                 "custom_collaboration_updates_seq_check": {
                     "type": "c",
                     "definition": "CHECK ((seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_sha256_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sha256",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_update_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL update_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -942,6 +1194,24 @@
                     "collation": null
                 },
                 {
+                    "name": "type",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_epoch",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "schema_version",
                     "type": "integer",
                     "not_null": true,
@@ -949,6 +1219,24 @@
                     "identity": "",
                     "generated": "",
                     "collation": null
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
                 },
                 {
                     "name": "content",
@@ -978,7 +1266,7 @@
                     "collation": null
                 },
                 {
-                    "name": "yjs_state",
+                    "name": "collab_state",
                     "type": "bytea",
                     "not_null": false,
                     "default": null,
@@ -987,7 +1275,7 @@
                     "collation": null
                 },
                 {
-                    "name": "yjs_state_size",
+                    "name": "collab_state_size",
                     "type": "integer",
                     "not_null": false,
                     "default": null,
@@ -1079,9 +1367,37 @@
                 "custom_document_revisions_tenant_id_index": "CREATE INDEX custom_document_revisions_tenant_id_index ON public.custom_document_revisions USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_document_revisions_check": {
+                    "type": "c",
+                    "definition": "CHECK (((schema_version >= 1) AND (((collab_protocol IS NULL) AND (collab_state_format IS NULL) AND (collab_state IS NULL)) OR ((collab_protocol IS NOT NULL) AND (collab_state_format IS NOT NULL) AND (length(btrim((collab_protocol)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (length(btrim((collab_state_format)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0)))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_collab_epoch_check": {
+                    "type": "c",
+                    "definition": "CHECK ((collab_epoch >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_collab_epoch_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL collab_epoch",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_document_revisions_document_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (document_id) REFERENCES custom_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_document_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL document_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1093,9 +1409,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_document_revisions_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_is_autosave_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL is_autosave",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_keep_forever_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL keep_forever",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_document_revisions_no_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (document_id, number)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_number_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL number",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1114,9 +1458,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_document_revisions_schema_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL schema_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_document_revisions_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((state_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_state_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL state_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL type",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1171,6 +1543,24 @@
                     "collation": null
                 },
                 {
+                    "name": "collab_protocol",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
                     "name": "current_revision_id",
                     "type": "bigint",
                     "not_null": false,
@@ -1211,6 +1601,33 @@
                     "type": "bigint",
                     "not_null": true,
                     "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pending_protocol",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "pending_state_format",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "pending_schema_version",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
                     "identity": "",
                     "generated": "",
                     "collation": null
@@ -1261,7 +1678,7 @@
                     "collation": null
                 },
                 {
-                    "name": "yjs_state",
+                    "name": "collab_state",
                     "type": "bytea",
                     "not_null": false,
                     "default": null,
@@ -1270,7 +1687,7 @@
                     "collation": null
                 },
                 {
-                    "name": "yjs_state_size",
+                    "name": "collab_state_size",
                     "type": "integer",
                     "not_null": false,
                     "default": null,
@@ -1336,7 +1753,14 @@
             "constraints": {
                 "custom_documents_check": {
                     "type": "c",
-                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL))))",
+                    "definition": "CHECK (((schema_version >= 1) AND (((collab_protocol IS NULL) AND (collab_state_format IS NULL) AND (collab_state IS NULL)) OR ((collab_protocol IS NOT NULL) AND (collab_state_format IS NOT NULL) AND (length(btrim((collab_protocol)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (length(btrim((collab_state_format)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0)))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_check1": {
+                    "type": "c",
+                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL) AND (pending_protocol IS NULL) AND (pending_state_format IS NULL) AND (pending_schema_version IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL) AND (pending_protocol IS NOT NULL) AND (length(btrim((pending_protocol)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (pending_state_format IS NOT NULL) AND (length(btrim((pending_state_format)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (pending_schema_version IS NOT NULL) AND (pending_schema_version >= 1))))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1348,9 +1772,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_documents_checkpoint_state_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL checkpoint_state_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_documents_collab_epoch_check": {
                     "type": "c",
                     "definition": "CHECK ((collab_epoch >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_collab_epoch_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL collab_epoch",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1362,9 +1800,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_documents_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_documents_node_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1397,9 +1849,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_documents_revision_count_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL revision_count",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_schema_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL schema_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_documents_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((state_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_state_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL state_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL type",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1476,9 +1956,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_drive_change_heads_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_change_heads_epoch_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL epoch",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_change_heads_last_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL last_seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_drive_change_heads_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (drive_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_change_heads_pruned_through_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL pruned_through",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1597,6 +2105,13 @@
                 "custom_drive_changes_tenant_id_index": "CREATE INDEX custom_drive_changes_tenant_id_index ON public.custom_drive_changes USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_drive_changes_change_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL change_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_drive_changes_change_id_unique": {
                     "type": "u",
                     "definition": "UNIQUE (change_id)",
@@ -1611,9 +2126,58 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_drive_changes_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_event_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL event_type",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_occurred_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL occurred_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_operation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL operation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_drive_changes_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (drive_id, seq)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_subtree_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL subtree",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1779,9 +2343,44 @@
                 "custom_drives_tenant_id_index": "CREATE INDEX custom_drives_tenant_id_index ON public.custom_drives USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_drives_disk_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL disk",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_name_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL name",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_owner_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL owner_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_drives_owner_profile_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (owner_type, owner_id, profile)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_owner_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL owner_type",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1793,6 +2392,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_drives_profile_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL profile",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_drives_scan_admission_sequence_check": {
                     "type": "c",
                     "definition": "CHECK (((scan_admission_sequence IS NULL) OR (scan_admission_sequence >= 0)))",
@@ -1800,9 +2406,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_drives_scan_admission_sequence_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scan_admission_sequence",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_used_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL used_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_drives_version_check": {
                     "type": "c",
                     "definition": "CHECK ((version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1879,6 +2513,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_file_revision_blobs_blob_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL blob_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_file_revision_blobs_file_revision_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (file_revision_id) REFERENCES custom_file_revisions(id) ON DELETE CASCADE",
@@ -1886,9 +2527,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_file_revision_blobs_file_revision_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL file_revision_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revision_blobs_ordinal_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL ordinal",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_file_revision_blobs_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (file_revision_id, blob_id, role, ordinal)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revision_blobs_role_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL role",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2117,6 +2779,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_file_revisions_file_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL file_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_file_revisions_id_file_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (id, file_id)",
@@ -2124,9 +2793,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_file_revisions_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_keep_forever_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL keep_forever",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_file_revisions_no_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (file_id, number)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_number_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL number",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_original_name_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL original_name",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2148,6 +2845,41 @@
                 "custom_file_revisions_scan_admission_sequence_check": {
                     "type": "c",
                     "definition": "CHECK (((scan_admission_sequence IS NULL) OR (scan_admission_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_scan_admission_sequence_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scan_admission_sequence",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_scan_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scan_status",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_sha256_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sha256",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2262,9 +2994,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_files_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_files_node_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_files_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2279,6 +3025,20 @@
                 "custom_files_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_files_revision_count_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL revision_count",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_files_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2510,6 +3270,48 @@
                 "custom_idempotency_keys_scope_unique": "CREATE UNIQUE INDEX custom_idempotency_keys_scope_unique ON public.custom_idempotency_keys USING btree (scope_digest)"
             },
             "constraints": {
+                "custom_idempotency_keys_actor_kind_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL actor_kind",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_created_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL created_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_expires_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL expires_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_idempotency_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL idempotency_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_operation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL operation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_idempotency_keys_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
@@ -2517,9 +3319,51 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_idempotency_keys_request_hash_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL request_hash",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_scope_digest_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_digest",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_scope_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_scope_kind_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_kind",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_idempotency_keys_scope_unique": {
                     "type": "u",
                     "definition": "UNIQUE (scope_digest)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_tenant_kind_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL tenant_kind",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2656,9 +3500,44 @@
                 "custom_node_comments_tenant_id_index": "CREATE INDEX custom_node_comments_tenant_id_index ON public.custom_node_comments USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_node_comments_author_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL author_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_author_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL author_type",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_body_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL body",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_comments_node_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2680,6 +3559,13 @@
                 "custom_node_comments_version_check": {
                     "type": "c",
                     "definition": "CHECK ((version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2814,6 +3700,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_node_grants_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_grants_node_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
@@ -2821,9 +3714,51 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_node_grants_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_grants_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_role_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL role_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_role_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL role_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_scope_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_subject_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL subject_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_subject_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL subject_type",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3015,9 +3950,30 @@
                 "custom_node_shares_token_prefix_index": "CREATE INDEX custom_node_shares_token_prefix_index ON public.custom_node_shares USING btree (token_prefix)"
             },
             "constraints": {
+                "custom_node_shares_audience_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL audience",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_shares_node_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3029,6 +3985,41 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_node_shares_role_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL role_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_role_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL role_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_scope_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_token_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL token_generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_token_hash_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL token_hash",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_shares_token_hash_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (token_hash)",
@@ -3036,9 +4027,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_node_shares_token_prefix_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL token_prefix",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_use_count_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL use_count",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_shares_version_check": {
                     "type": "c",
                     "definition": "CHECK ((version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3128,6 +4140,20 @@
                 "custom_node_user_states_tenant_id_index": "CREATE INDEX custom_node_user_states_tenant_id_index ON public.custom_node_user_states USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_node_user_states_actor_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL actor_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_user_states_actor_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL actor_type",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_user_states_actor_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (node_id, actor_type, actor_id)",
@@ -3135,9 +4161,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_node_user_states_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_node_user_states_node_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_user_states_node_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL node_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3414,9 +4454,58 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_nodes_access_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL access_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_nodes_drive_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_inherit_grants_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL inherit_grants",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_kind_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL kind",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_name_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL name_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_name_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL name",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3435,9 +4524,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_nodes_profile_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL profile",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_nodes_sequence_nonnegative": {
                     "type": "c",
                     "definition": "CHECK ((sequence >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_sequence_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sequence",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3553,15 +4663,39 @@
                     "identity": "",
                     "generated": "",
                     "collation": null
+                },
+                {
+                    "name": "staged_at",
+                    "type": "timestamp(6) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
                 }
             ],
             "indexes": {
                 "custom_outbox_created_idx": "CREATE INDEX custom_outbox_created_idx ON public.custom_outbox USING btree (created_at)",
                 "custom_outbox_event_id_unique": "CREATE UNIQUE INDEX custom_outbox_event_id_unique ON public.custom_outbox USING btree (event_id)",
                 "custom_outbox_pkey": "CREATE UNIQUE INDEX custom_outbox_pkey ON public.custom_outbox USING btree (outbox_seq)",
+                "custom_outbox_staged_idx": "CREATE INDEX custom_outbox_staged_idx ON public.custom_outbox USING btree (staged_at)",
                 "custom_outbox_tenant_id_index": "CREATE INDEX custom_outbox_tenant_id_index ON public.custom_outbox USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_outbox_created_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL created_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_event_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL event_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_outbox_event_id_unique": {
                     "type": "u",
                     "definition": "UNIQUE (event_id)",
@@ -3569,9 +4703,44 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_outbox_external_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL external",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_outbox_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL outbox_seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_payload_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL payload",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_outbox_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (outbox_seq)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_scope_kind_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_kind",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_type_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL type",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3693,9 +4862,58 @@
                 "custom_outbox_consumers_pkey": "CREATE UNIQUE INDEX custom_outbox_consumers_pkey ON public.custom_outbox_consumers USING btree (consumer_id)"
             },
             "constraints": {
+                "custom_outbox_consumers_activation_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL activation_seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_consumers_consumer_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL consumer_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_consumers_delivery_class_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL delivery_class",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_consumers_gaps_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL gaps",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_consumers_lease_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL lease_generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_outbox_consumers_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (consumer_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_consumers_reconciled_through_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL reconciled_through_seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_consumers_state_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL state",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3838,9 +5056,58 @@
                 "custom_outbox_deliveries_seq_idx": "CREATE INDEX custom_outbox_deliveries_seq_idx ON public.custom_outbox_deliveries USING btree (outbox_seq)"
             },
             "constraints": {
+                "custom_outbox_deliveries_attempts_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL attempts",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_deliveries_consumer_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL consumer_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_deliveries_event_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL event_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_deliveries_lease_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL lease_generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_deliveries_next_attempt_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL next_attempt_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_deliveries_outbox_seq_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL outbox_seq",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_outbox_deliveries_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (event_id, consumer_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_deliveries_state_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL state",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3965,9 +5232,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_backfill_runs_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_backfill_runs_drive_id_spec_key_unique": {
                     "type": "u",
                     "definition": "UNIQUE (drive_id, spec_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3979,9 +5260,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_backfill_runs_last_admission_sequence_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL last_admission_sequence",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_backfill_runs_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_request_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL request_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_spec_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL spec_key",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3993,9 +5295,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_backfill_runs_state_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL state",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_backfill_runs_target_sequence_check": {
                     "type": "c",
                     "definition": "CHECK (((target_sequence IS NULL) OR (target_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_target_sequence_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL target_sequence",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4242,6 +5558,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_evidence_attempt_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL attempt",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_evidence_blob_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
@@ -4256,9 +5579,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_evidence_content_identity_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL content_identity",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_evidence_drive_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4270,9 +5607,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_evidence_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_evidence_obligation_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (obligation_id) REFERENCES custom_scan_obligations(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_obligation_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL obligation_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_observed_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL observed_at",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4284,9 +5649,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_evidence_outcome_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL outcome",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_evidence_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_policy_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL policy_version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4305,9 +5684,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_evidence_request_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL request_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_evidence_retryable_check": {
                     "type": "c",
                     "definition": "CHECK ((retryable = ANY (ARRAY[false, true])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_retryable_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL retryable",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4326,9 +5719,58 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_evidence_revision_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL revision_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_scanner_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scanner_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_scanner_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scanner_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_scope_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_sha256_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sha256",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_evidence_size_bytes_check": {
                     "type": "c",
                     "definition": "CHECK (((size_bytes IS NULL) OR (size_bytes >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_spec_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL spec_key",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4591,6 +6033,20 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_obligations_attempt_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL attempt",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_available_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL available_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_obligations_blob_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
@@ -4619,6 +6075,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_obligations_content_identity_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL content_identity",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_obligations_drive_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
@@ -4626,9 +6089,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_obligations_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_obligations_generation_check": {
                     "type": "c",
                     "definition": "CHECK (((generation IS NULL) OR (generation >= 1)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4647,9 +6131,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_obligations_policy_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL policy_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_request_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL request_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_obligations_retryable_check": {
                     "type": "c",
                     "definition": "CHECK ((retryable = ANY (ARRAY[false, true])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_retryable_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL retryable",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4661,9 +6166,44 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_obligations_revision_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL revision_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_obligations_revision_id_spec_key_unique": {
                     "type": "u",
                     "definition": "UNIQUE (revision_id, spec_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_scanner_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scanner_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_scanner_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scanner_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_scope_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scope_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_sha256_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL sha256",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4675,9 +6215,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_obligations_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_spec_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL spec_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_obligations_state_check": {
                     "type": "c",
                     "definition": "CHECK (((state)::text = ANY ((ARRAY['pending'::character varying, 'leased'::character varying, 'retry_wait'::character varying, 'settled'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_state_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL state",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4820,9 +6381,23 @@
                 "custom_scan_policy_states_tenant_id_index": "CREATE INDEX custom_scan_policy_states_tenant_id_index ON public.custom_scan_policy_states USING btree (tenant_id)"
             },
             "constraints": {
+                "custom_scan_policy_states_activated_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL activated_at",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_policy_states_boundary_sequence_check": {
                     "type": "c",
                     "definition": "CHECK (((boundary_sequence IS NULL) OR (boundary_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_config_fingerprint_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL config_fingerprint",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4834,9 +6409,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_policy_states_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_policy_states_drive_id_predicate_key_unique": {
                     "type": "u",
                     "definition": "UNIQUE (drive_id, predicate_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4848,9 +6437,58 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_policy_states_mode_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL mode",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_policy_states_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_policy_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL policy_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_predicate_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL predicate_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_scanner_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scanner_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_scanner_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL scanner_version",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_spec_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL spec_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_updated_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL updated_at",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4930,9 +6568,30 @@
                 "custom_scan_requests_pkey": "CREATE UNIQUE INDEX custom_scan_requests_pkey ON public.custom_scan_requests USING btree (id)"
             },
             "constraints": {
+                "custom_scan_requests_correlation_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL correlation_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_requests_generation_check": {
                     "type": "c",
                     "definition": "CHECK (((generation IS NULL) OR (generation >= 1)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_generation_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL generation",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -4951,6 +6610,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_scan_requests_obligation_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL obligation_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_scan_requests_obligation_id_request_key_unique": {
                     "type": "u",
                     "definition": "UNIQUE (obligation_id, request_key)",
@@ -4961,6 +6627,27 @@
                 "custom_scan_requests_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_reason_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL reason",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_request_key_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL request_key",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_requested_at_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL requested_at",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -5048,6 +6735,20 @@
                 "custom_upload_parts_upload_session_id_index": "CREATE INDEX custom_upload_parts_upload_session_id_index ON public.custom_upload_parts USING btree (upload_session_id)"
             },
             "constraints": {
+                "custom_upload_parts_byte_offset_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL byte_offset",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_parts_part_no_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL part_no",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_upload_parts_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (upload_session_id, part_no)",
@@ -5055,9 +6756,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_upload_parts_size_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL size_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_upload_parts_upload_session_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (upload_session_id) REFERENCES custom_upload_sessions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_parts_upload_session_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL upload_session_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -5351,9 +7066,23 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_upload_sessions_cleanup_attempts_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL cleanup_attempts",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_upload_sessions_cleanup_pending_check": {
                     "type": "c",
                     "definition": "CHECK ((cleanup_pending = ANY (ARRAY[false, true])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_cleanup_pending_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL cleanup_pending",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -5365,6 +7094,20 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_upload_sessions_drive_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL drive_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_upload_sessions_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
@@ -5372,9 +7115,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_upload_sessions_protocol_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL protocol",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_received_bytes_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL received_bytes",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_upload_sessions_result_blob_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (result_blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_upload_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL upload_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -5516,9 +7287,23 @@
                 "custom_webhook_deliveries_retry_idx": "CREATE INDEX custom_webhook_deliveries_retry_idx ON public.custom_webhook_deliveries USING btree (status, next_retry_at)"
             },
             "constraints": {
+                "custom_webhook_deliveries_attempts_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL attempts",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_webhook_deliveries_endpoint_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (endpoint_id) REFERENCES custom_webhook_endpoints(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_deliveries_endpoint_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL endpoint_id",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -5530,9 +7315,37 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_webhook_deliveries_event_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL event",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_deliveries_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_deliveries_payload_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL payload",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_webhook_deliveries_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_deliveries_status_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL status",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -5710,6 +7523,34 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_webhook_endpoints_events_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL events",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_failure_count_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL failure_count",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_is_active_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL is_active",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_webhook_endpoints_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
@@ -5717,9 +7558,30 @@
                     "deferred": false,
                     "validated": true
                 },
+                "custom_webhook_endpoints_signing_secret_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL signing_secret",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_url_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL url",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_webhook_endpoints_version_check": {
                     "type": "c",
                     "definition": "CHECK ((version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_version_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL version",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

@@ -77,8 +77,10 @@ it('читает строки блобов (берёт lock) раньше, че�
     // sqlite takes no row lock, so the order of the two reads is what is checked here: the
     // locking read of the batch comes first, the pin count after it (as in the collector's mark).
     $connection = app(VaulterDatabase::class)->connection();
-    $blobs = app(DatabaseConfig::class)->table('blobs');
-    $pins = app(DatabaseConfig::class)->table('blob_references');
+    $grammar = $connection->getQueryGrammar();
+    $blobs = $grammar->wrapTable(app(DatabaseConfig::class)->table('blobs'));
+    $pins = $grammar->wrapTable(app(DatabaseConfig::class)->table('blob_references'));
+    $blobKey = $grammar->wrap($blob->getQualifiedKeyName());
     $connection->enableQueryLog();
     $connection->flushQueryLog();
 
@@ -86,8 +88,8 @@ it('читает строки блобов (берёт lock) раньше, че�
 
     $queries = array_column($connection->getQueryLog(), 'query');
     $connection->disableQueryLog();
-    $rowsAt = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, '"'.$blobs.'"') && str_starts_with($sql, 'select *') && str_contains($sql, '" in ('));
-    $countAt = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'count(*)') && str_contains($sql, '"'.$pins.'"'));
+    $rowsAt = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, $blobs) && str_starts_with($sql, 'select *') && str_contains($sql, $blobKey.' in ('));
+    $countAt = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'count(*)') && str_contains($sql, $pins));
 
     expect($rowsAt)->not->toBeNull()
         ->and($countAt)->not->toBeNull()

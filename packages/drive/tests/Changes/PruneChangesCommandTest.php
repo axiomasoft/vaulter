@@ -108,3 +108,9 @@ it('starts a new epoch on reset and refuses an unknown drive', function (): void
 
     expect((int) pruneHead($drive)->epoch)->toBe(2);
 });
+
+it('refuses a reset key the drive column cannot store', function (string $key): void {
+    $this->artisan('vaulter:changes:reset', ['drive' => $key])
+        ->expectsOutputToContain('not found')
+        ->assertFailed();
+})->with(['9999999999999999999', '18446744073709551616']);

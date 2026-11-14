@@ -19,9 +19,9 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  * restriction, the Vaulter driver grants exactly what AzGuard allows in the workspace —
  * no tenant-wide super-admin leaking into a project, no restriction bypass.
  */
-function isolatedDriverFor(AzgardUser $user): AzgardPermissionDriver
+function isolatedDriver(): AzgardPermissionDriver
 {
-    HostGuard::bind(new AzgardGuardAdapter($user));
+    HostGuard::bind(new AzgardGuardAdapter);
 
     return app(AzgardPermissionDriver::class);
 }
@@ -42,7 +42,7 @@ function isolatedProject(int $id): AccessScope
 it('keeps a tenant-wide super-admin out of an isolated workspace', function (): void {
     $user = AzgardUser::query()->create(['id' => 1, 'name' => 'Ada']);
     $this->actingAsSuperAdmin($user);
-    $driver = isolatedDriverFor($user);
+    $driver = isolatedDriver();
 
     // AzGuard: a super-admin tenant-wide, not inside project 7.
     expect($user->isSuperAdmin())->toBeTrue()
@@ -55,7 +55,7 @@ it('keeps a tenant-wide super-admin out of an isolated workspace', function (): 
 it('grants the owner role to a super-admin of that workspace only', function (): void {
     $user = AzgardUser::query()->create(['id' => 1, 'name' => 'Ada']);
     grantSuperAdminIn($user, 7);
-    $driver = isolatedDriverFor($user);
+    $driver = isolatedDriver();
 
     expect($driver->resolve(Subject::ofModel($user), $user, isolatedProject(7))?->role->key)->toBe(RoleRegistry::OWNER)
         ->and($driver->resolve(Subject::ofModel($user), $user, isolatedProject(8)))->toBeNull();
@@ -65,7 +65,7 @@ it('honours an AzGuard restriction that binds super-admins', function (): void {
     $user = AzgardUser::query()->create(['id' => 1, 'name' => 'Ada']);
     grantSuperAdminIn($user, 7);
     $user->forceFill(['locked_at' => now()])->save();
-    $driver = isolatedDriverFor($user);
+    $driver = isolatedDriver();
 
     expect($driver->resolve(Subject::ofModel($user), $user, isolatedProject(7)))->toBeNull()
         ->and($driver->canCreateIn($user, isolatedProject(7)))->toBeFalse();

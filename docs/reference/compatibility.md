@@ -100,13 +100,10 @@ each engine gives you and the handful of Postgres specifics the schema depends o
 
 ### Canonical schema and upgrade
 
-Fresh migrations create `v_drives`, `v_file_revisions`, `v_file_revision_blobs`
-and every other core table regardless of enabled modules/features. The global
-prefix is supported; per-table overrides are historical upgrade inputs only.
-PostgreSQL 0.2 bigint and ULID dumps upgrade to the same schema as a fresh install,
-including index names, partial predicates and foreign keys. Preflight refuses
-unsafe soft-deleted rows, missing document revisions and own-tables deployments.
-Back up and stop writes before changing code/schema. See
+Install 1.0 on an empty database. Each offered module installs its tables even when
+disabled at runtime: one create migration per table, with a rollback that drops it.
+`vaulter.database.table_prefix` applies to every table; per-table overrides are unsupported.
+There is no migration bridge from 0.x, preflight or data backfill. See
 [the upgrade guide](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
 
 ### Aggregate head integrity
@@ -158,7 +155,9 @@ they are exercised on Postgres in CI so they cannot regress:
 None of this needs configuration — point Vaulter at Postgres and it applies automatically.
 
 
-Stored and pending collaboration bindings are whole, nonblank groups with positive integer schema versions. Null checkpoints retain their binding. SQLite CHECK/rollback is covered locally; PostgreSQL/MySQL migration/backfill enforcement and races remain pending owner P8.2 qualification.
+The fresh schema uses CHECK constraints to keep stored and pending collaboration bindings
+complete and nonblank, with positive integer schema versions. A bound document may have
+a null checkpoint.
 
 ### Id strategy × engine
 
@@ -170,6 +169,10 @@ The primary-key strategy is configurable (see
 | `ulid` (default) | `char(26)` | Lexicographically sortable; lines up with the Corex/Azgard morph keys. |
 | `bigint` | `bigserial` / auto-increment | Classic integer keys. |
 | `uuid7` | native `uuid` on Postgres | Time-ordered UUIDs; uses Postgres' native `uuid` type. |
+
+With `bigint`, built-in Vaulter model primary keys are PHP integers when they fit PHP's integer range.
+MySQL unsigned values above `PHP_INT_MAX` remain exact decimal strings. Snapshot and REST
+resource identifiers are strings, preserving values above JavaScript's safe integer range.
 
 The recursive folder tree (`v_nodes.parent_id → v_nodes.id`) is a self-referencing foreign
 key and migrates under all three strategies. PostgreSQL and SQLite use partial unique
@@ -198,26 +201,19 @@ independently of Vaulter's `ulid`, `uuid7` or `bigint` entity IDs. The default `
 is `varchar(64)` and preserves mixed UUID, ULID and integer host keys as strings.
 For narrower types and engine mappings, see [host-key configuration](/guides/configuration#host-keys-ids-host-keys).
 
-The upgrade migration changes all 27 host-key columns through the configured Vaulter
-connection and legacy table-name map. PostgreSQL uses `ALTER COLUMN ... TYPE ... USING`;
-MySQL/MariaDB uses `MODIFY` and keeps each column's nullability and indexes.
-Fresh schemas already have the target type; repeated upgrades do no work. SQLite's
-upgrade is a no-op because its columns are dynamically typed. Incompatible values cause
-a driver error rather than being discarded. Rollback restores the configured Vaulter
-ID strategy and can also fail when newly stored host keys no longer fit it.
+Fresh migrations create host-key columns with the configured type. Set `ids.host_keys`
+before installing; changing the configuration does not rewrite existing columns.
 
-Vaulter also ships an internal read-only `KeyColumnInspector`. It checks all 27 host-key
-columns plus the REF and fixed-length string columns introduced or renamed by the 0.3
-schema against `ids.host_keys` and `ids.strategy`. It reports missing columns and type or
-length mismatches without changing the database; the doctor command uses this inventory
-to diagnose drift.
+The internal read-only `KeyColumnInspector` checks the host-key, REF and fixed-length
+string columns declared by the offered modules against `ids.host_keys` and `ids.strategy`.
+It reports missing columns and type or length mismatches without changing the database;
+the doctor command uses this inventory to diagnose drift.
 
 If you use the optional [`spatie` permission driver](/extending/permission-drivers): a node grant
-addressed to a spatie **role** stores that role's **primary key** in `v_node_grants.subject_id`
-— the same typed handle every subject uses (a user's key, a team's key). So role grants fit the
-typed `subject_id` column and work on **every database and every id strategy**, exactly like
-user and permission grants. Address a role grant by the role's key (`$role->getKey()`), not its
-name.
+addressed to a Spatie **role** stores that role's **primary key** in `v_node_grants.subject_id`.
+Its storage type follows `ids.host_keys`, independently of `ids.strategy`, just like user
+and team subjects. Choose a host-key type that holds the role's key, and address the grant
+by `$role->getKey()`.
 
 ### Dedicated database connection
 

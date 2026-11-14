@@ -27,6 +27,242 @@ it('binds one event recorder for the application', function (): void {
     expect($this->app->make(EventRecorder::class))->toBe($this->app->make(EventRecorder::class));
 });
 
+it('dates reconciliation after payload preparation and the insert wait within the transaction window', function (): void {
+    $started = CarbonImmutable::parse('2026-11-14T12:00:00Z');
+    $this->travelTo($started);
+    $database = app(VaulterDatabase::class);
+    $connection = $database->connection();
+    $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+    $wrappedTable = $connection->getQueryGrammar()->wrapTable($table);
+    $active = true;
+    $insertWaits = 0;
+    $bodyCalls = 0;
+    $connection->beforeExecuting(function (string $sql) use (&$active, &$insertWaits, $wrappedTable): void {
+        if ($active && str_starts_with(strtolower(ltrim($sql)), 'insert') && str_contains($sql, $wrappedTable)) {
+            $active = false;
+            $insertWaits++;
+            $this->travel(2)->seconds();
+        }
+    });
+
+    try {
+        $before = app(OutboxStore::class)->settledSeq($started->addSecond());
+        $event = new OutboxTimestampProbeEvent(function () use (&$bodyCalls): void {
+            $bodyCalls++;
+            $this->travel(2)->seconds();
+        });
+        $result = $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+        $row = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+
+        // Four seconds elapsed in a transaction bounded by a five-second settle window.
+        expect($result)->toBe(SinkResult::Stored)
+            ->and(CarbonImmutable::now()->diffInSeconds($started, absolute: true))->toBeLessThan(5)
+            ->and($bodyCalls)->toBe(1)
+            ->and($insertWaits)->toBe(1)
+            ->and($row->created_at->toIso8601String())->toBe($started->toIso8601String())
+            ->and($row->staged_at?->toIso8601String())->toBe($started->addSeconds(4)->toIso8601String())
+            ->and($row->payload['time'])->toBe($started->format('Y-m-d\TH:i:s.v\Z'))
+            ->and($row->payload)->not->toHaveKey('staged_at')
+            ->and(app(OutboxStore::class)->settledSeq($started->addSecond()))->toBe($before)
+            ->and(OutboxEvent::query()->where('event_id', $event->eventId)->count())->toBe(1);
+    } finally {
+        $active = false;
+        $this->travelBack();
+    }
+});
+
+it('rolls the inserted event back if its reconciliation timestamp cannot be stored', function (): void {
+    $database = app(VaulterDatabase::class);
+    $connection = $database->connection();
+    $wrappedTable = $connection->getQueryGrammar()->wrapTable(app(DatabaseConfig::class)->table(OutboxStore::EVENTS));
+    $active = true;
+    $connection->beforeExecuting(static function (string $sql) use (&$active, $wrappedTable): void {
+        if ($active && str_starts_with(strtolower(ltrim($sql)), 'update') && str_contains($sql, $wrappedTable)) {
+            throw new RuntimeException('reconciliation timestamp failed');
+        }
+    });
+    $event = new OutboxTimestampProbeEvent;
+
+    try {
+        expect(fn () => $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database))))
+            ->toThrow(RuntimeException::class, 'reconciliation timestamp failed');
+        expect(OutboxEvent::query()->where('event_id', $event->eventId)->exists())->toBeFalse();
+    } finally {
+        $active = false;
+    }
+});
+
+it('never treats an unstaged event as settled because its creation time is old', function (): void {
+    $event = eventsRegistrarOutboxRow();
+    $database = app(VaulterDatabase::class);
+    $database->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::EVENTS))
+        ->where('event_id', $event['event_id'])
+        ->update(['created_at' => now()->subDay(), 'staged_at' => null]);
+
+    expect(app(OutboxStore::class)->settledSeq(CarbonImmutable::now()))->toBe(0)
+        ->and(OutboxEvent::query()->where('event_id', $event['event_id'])->sole()->staged_at)->toBeNull();
+});
+
+it('preserves fractional staging time when deciding the settle cutoff', function (): void {
+    $staged = CarbonImmutable::parse('2026-11-14T12:00:04.900000Z');
+    $this->travelTo($staged);
+    $database = app(VaulterDatabase::class);
+    $event = new OutboxTimestampProbeEvent;
+
+    try {
+        $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+        $row = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+
+        expect($row->staged_at?->format('Y-m-d H:i:s.u'))->toBe('2026-11-14 12:00:04.900000')
+            ->and(app(OutboxStore::class)->settledSeq(CarbonImmutable::parse('2026-11-14T12:00:04.500000Z')))->toBe(0)
+            ->and(app(OutboxStore::class)->settledSeq(CarbonImmutable::parse('2026-11-14T12:00:04.000000Z')))->toBe(0)
+            ->and($database->connection()->table($row->getTable())->where('staged_at', '<', '2026-11-14 12:00:04.500000')->count())->toBe(0)
+            ->and(app(OutboxStore::class)->settledSeq(CarbonImmutable::parse('2026-11-14T12:00:05Z')))->toBe($row->outbox_seq);
+    } finally {
+        $this->travelBack();
+    }
+});
+
+it('stores and reads staging as UTC across a repeated local DST hour without changing the occurrence time', function (string $instant): void {
+    $local = CarbonImmutable::parse($instant)->setTimezone('America/New_York');
+    eventsRegistrarInTimezone('America/New_York', function () use ($local): void {
+        $this->travelTo($local);
+        $database = app(VaulterDatabase::class);
+        $event = new OutboxTimestampProbeEvent(occurredAt: $local);
+
+        try {
+            $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+            $row = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+
+            expect($row->getRawOriginal('created_at'))->toBe($local->format('Y-m-d H:i:s'))
+                ->and($row->getRawOriginal('staged_at'))->toBe($local->utc()->format('Y-m-d H:i:s.u'))
+                ->and($row->staged_at?->getTimestamp())->toBe($local->getTimestamp())
+                ->and($row->staged_at?->format('u'))->toBe('900123')
+                ->and($row->staged_at?->timezoneName)->toBe('UTC')
+                ->and($row->payload['time'])->toBe($local->utc()->format('Y-m-d\TH:i:s.v\Z'));
+        } finally {
+            $this->travelBack();
+        }
+    });
+})->with(['before the fall-back' => ['2026-11-01T05:59:59.900123Z'], 'after the fall-back' => ['2026-11-01T06:00:01.900123Z']]);
+
+it('keeps UTC staging unchanged between MySQL writer and reader session timezones', function (): void {
+    $database = app(VaulterDatabase::class);
+    $connection = $database->connection();
+    if ($connection->getDriverName() !== 'mysql') {
+        $this->markTestSkipped('MySQL converts TIMESTAMP values through the session timezone.');
+    }
+    $previousTimezone = $connection->scalar('SELECT @@SESSION.time_zone');
+    $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z');
+    $this->travelTo($staged);
+    $event = new OutboxTimestampProbeEvent(occurredAt: $staged);
+
+    try {
+        $connection->statement('SET SESSION time_zone = ?', ['+02:00']);
+        $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+        $written = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+        $connection->statement('SET SESSION time_zone = ?', ['+00:00']);
+        $read = $written->fresh();
+
+        expect(app(OutboxStore::class)->settledSeq($staged->addSecond()->subMinutes(5)))->toBe(0)
+            ->and($written->getRawOriginal('staged_at'))->toBe('2026-11-01 06:00:01.900123')
+            ->and($read->getRawOriginal('staged_at'))->toBe('2026-11-01 06:00:01.900123')
+            ->and($read->staged_at?->format('Y-m-d H:i:s.uP'))->toBe('2026-11-01 06:00:01.900123+00:00')
+            ->and(app(OutboxStore::class)->settledSeq($staged->addMicrosecond()))->toBe($read->outbox_seq)
+            ->and($read->payload)->toBe($written->payload)
+            ->and($read->payload['time'])->toBe($staged->format('Y-m-d\TH:i:s.v\Z'));
+    } finally {
+        $connection->statement('SET SESSION time_zone = ?', [$previousTimezone]);
+        $this->travelBack();
+    }
+});
+
+it('compares UTC staging against absolute cutoffs with all microseconds through a DST fall-back', function (): void {
+    eventsRegistrarInTimezone('America/New_York', function (): void {
+        $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z');
+        $this->travelTo($staged->setTimezone('America/New_York'));
+        $database = app(VaulterDatabase::class);
+
+        try {
+            $event = eventsRegistrarOutboxRow();
+            $database->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::EVENTS))
+                ->where('event_id', $event['event_id'])
+                ->update(['staged_at' => $staged->format('Y-m-d H:i:s.u')]);
+
+            foreach ([
+                'fresh after the repeated hour' => ['2026-11-01T05:55:02.900123Z', false],
+                'one microsecond before staging' => ['2026-11-01T06:00:01.900122Z', false],
+                'equal to staging' => ['2026-11-01T06:00:01.900123Z', false],
+                'one microsecond after staging' => ['2026-11-01T06:00:01.900124Z', true],
+                'settled after the window' => ['2026-11-01T06:05:02.900123Z', true],
+            ] as $label => [$instant, $settled]) {
+                $cutoff = CarbonImmutable::parse($instant)->setTimezone('America/New_York');
+                expect(app(OutboxStore::class)->settledSeq($cutoff))->toBe($settled ? $event['outbox_seq'] : 0, $label)
+                    ->and($cutoff->timezoneName)->toBe('America/New_York');
+            }
+        } finally {
+            $this->travelBack();
+        }
+    });
+});
+
+it('keeps a UTC staging model write within the same second precise without changing created_at', function (): void {
+    $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z')->setTimezone('America/New_York');
+    eventsRegistrarInTimezone('America/New_York', function () use ($staged): void {
+        $this->travelTo($staged);
+        $database = app(VaulterDatabase::class);
+        $event = new OutboxTimestampProbeEvent(occurredAt: $staged);
+
+        try {
+            $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+            $row = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+            $createdAt = $row->getRawOriginal('created_at');
+            $payload = $row->payload;
+            $database->write(static fn (): bool => $row->forceFill(['staged_at' => $staged->addMicrosecond()])->save());
+            $fresh = $row->fresh();
+
+            expect($fresh->getRawOriginal('staged_at'))->toBe('2026-11-01 06:00:01.900124')
+                ->and($fresh->staged_at?->format('Y-m-d H:i:s.uP'))->toBe('2026-11-01 06:00:01.900124+00:00')
+                ->and($fresh->getRawOriginal('created_at'))->toBe($createdAt)
+                ->and($fresh->payload)->toBe($payload);
+        } finally {
+            $this->travelBack();
+        }
+    });
+});
+
+it('does not refresh a stored occurrence or its timestamp on replay', function (): void {
+    $started = CarbonImmutable::parse('2026-11-14T12:00:00Z');
+    $this->travelTo($started);
+    $database = app(VaulterDatabase::class);
+    $event = new OutboxTimestampProbeEvent;
+    $active = false;
+    $updates = 0;
+    $connection = $database->connection();
+    $wrappedTable = $connection->getQueryGrammar()->wrapTable(app(DatabaseConfig::class)->table(OutboxStore::EVENTS));
+    $connection->beforeExecuting(static function (string $sql) use (&$active, &$updates, $wrappedTable): void {
+        if ($active && str_starts_with(strtolower(ltrim($sql)), 'update') && str_contains($sql, $wrappedTable)) {
+            $updates++;
+        }
+    });
+
+    try {
+        $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+        $before = OutboxEvent::query()->where('event_id', $event->eventId)->sole()->getRawOriginal();
+        $this->travel(10)->seconds();
+        $active = true;
+        $replay = $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+
+        expect($replay)->toBe(SinkResult::Replayed)
+            ->and($updates)->toBe(0)
+            ->and(OutboxEvent::query()->where('event_id', $event->eventId)->sole()->getRawOriginal())->toBe($before)
+            ->and(OutboxEvent::query()->where('event_id', $event->eventId)->count())->toBe(1);
+    } finally {
+        $active = false;
+        $this->travelBack();
+    }
+});
+
 it('rejects a tenant id the host key column cannot store before the insert', function (string $hostKeys, string $tenant): void {
     $previous = config('vaulter.ids.host_keys');
     config()->set('vaulter.ids.host_keys', $hostKeys);
@@ -47,7 +283,8 @@ it('rejects a tenant id the host key column cannot store before the insert', fun
     'varchar(64) and 65 multibyte characters' => ['string', str_repeat('я', 65)],
     'uuid column and a ulid' => ['uuid', (string) Str::ulid()],
     'bigint column and a ulid' => ['bigint', (string) Str::ulid()],
-    'bigint column past the signed maximum' => ['bigint', '9223372036854775808'],
+    'bigint column past the actual column maximum' => ['bigint', fn (): string => in_array(app(VaulterDatabase::class)->connection()->getDriverName(), ['mysql', 'mariadb'], true)
+        ? '18446744073709551616' : '9223372036854775808'],
     'char(26) and a uuid' => ['ulid', (string) Str::uuid()],
     'char(26) and 27 multibyte characters' => ['ulid', str_repeat('я', 27)],
 ]);
@@ -61,7 +298,7 @@ it('stores a tenant id the host key column can hold, including null', function (
         $result = app(VaulterDatabase::class)->transaction(
             fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter(app(VaulterDatabase::class))),
         );
-        $stored = OutboxEvent::query()->where('event_id', $event->eventId)->sole()->tenant_id;
+        $stored = OutboxEvent::query()->where('event_id', $event->eventId)->sole()->getRawOriginal('tenant_id');
 
         expect($result)->toBe(SinkResult::Stored)
             ->and($stored === null ? null : (string) $stored)->toBe($tenant);
@@ -77,7 +314,8 @@ it('stores a tenant id the host key column can hold, including null', function (
     'short token in char(26)' => ['ulid', 'tenant-1'],
     '26 multibyte characters in char(26)' => ['ulid', str_repeat('я', 26)],
     'bigint' => ['bigint', '42'],
-    'signed bigint maximum' => ['bigint', '9223372036854775807'],
+    'actual bigint column maximum' => ['bigint', fn (): string => in_array(app(VaulterDatabase::class)->connection()->getDriverName(), ['mysql', 'mariadb'], true)
+        ? '18446744073709551615' : '9223372036854775807'],
 ]);
 
 it('does not acknowledge a replay gap while a leased delivery remains', function (): void {
@@ -114,6 +352,20 @@ it('acknowledges a replay gap once no delivery in the range is leased', function
         ->and(app(OutboxStore::class)->consumer('events.registrar.probe')['gaps'][0]['acknowledged_at'] ?? null)->not->toBeNull();
 });
 
+function eventsRegistrarInTimezone(string $timezone, Closure $check): void
+{
+    $previous = date_default_timezone_get();
+    $configured = config('app.timezone');
+    try {
+        config()->set('app.timezone', $timezone);
+        date_default_timezone_set($timezone);
+        $check();
+    } finally {
+        date_default_timezone_set($previous);
+        config()->set('app.timezone', $configured);
+    }
+}
+
 /** @return array{event_id: string, outbox_seq: int} */
 function eventsRegistrarOutboxRow(): array
 {
@@ -131,6 +383,7 @@ function eventsRegistrarOutboxRow(): array
         'external' => false,
         'payload' => '{}',
         'created_at' => now(),
+        'staged_at' => now(),
     ]);
     $seq = app(VaulterDatabase::class)->connection()->table($table)->where('event_id', $eventId)->value('outbox_seq');
 
@@ -223,6 +476,38 @@ final readonly class HostKeyColumnProbeEvent extends DomainEvent
 
     public function data(): array
     {
+        return [];
+    }
+}
+
+final readonly class OutboxTimestampProbeEvent extends DomainEvent
+{
+    public function __construct(private ?Closure $duringBody = null, ?CarbonImmutable $occurredAt = null)
+    {
+        parent::__construct(actor: new ActorRef(type: 'user', id: '1'), correlationId: 'corr-outbox-timestamp', occurredAt: $occurredAt);
+    }
+
+    public function type(): HostKeyColumnProbeType
+    {
+        return HostKeyColumnProbeType::Probe;
+    }
+
+    public function scope(): EventScope
+    {
+        return new EventScope(tenantId: null, driveId: null, profile: 'default');
+    }
+
+    public function subject(): EventSubject
+    {
+        return new EventSubject(type: 'node', id: '1');
+    }
+
+    public function data(): array
+    {
+        if ($this->duringBody !== null) {
+            ($this->duringBody)();
+        }
+
         return [];
     }
 }

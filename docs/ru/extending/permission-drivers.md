@@ -281,17 +281,19 @@ composer require axioma-studio/vaulter-azgard
   превращает его в абсолютный allow Vaulter: super-admin AzGuard получает роль **owner** через
   те же решения в workspace (ниже), которые сохраняют политику scope, ограничения, политики и
   правила тенантов AzGuard.
-- **`resolve`** сопоставляет определяющее право (ability) каждой роли с
-  разрешением AzGuard и спрашивает `hasPermissionIn($workspaceType, $workspaceId, $permission)`;
-  объединение разрешённых ролей становится `Decision`. (`AccessScope` не видит узла, поэтому это
-  проверка в области workspace.)
+- **`resolve`** проверяет каждое право каждой роли через сопоставленное разрешение AzGuard,
+  передавая актора решения в `hasPermissionIn($actor, $workspaceType, $workspaceId, $permission)`.
+  Роль выдаётся только после всех успешных проверок; отсутствие сопоставления запрещает роль.
+  Объединение полностью разрешённых ролей становится `Decision`. (`AccessScope` не видит узла,
+  поэтому это проверка в области workspace.)
 - **`subjectsFor`** = только `[Subject(actor)]` — AzGuard *отвечает* на проверки, а не перечисляет
   субъектов-роли. Хост, адресующий строки грантов на роли AzGuard, должен унаследоваться и
   дописать эти субъекты.
-- **`canCreateIn`** спрашивает `hasPermissionIn($type, $id, $createPermission)`.
+- **`canCreateIn`** спрашивает `hasPermissionIn($actor, $type, $id, $createPermission)`.
 
-Пробы «роль → определяющее право» таковы: `Previewer → View`, `Reader → Download`,
-`Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
+Одно разрешение не даёт остальные права роли. Например, View и Comment без Download
+дают максимум Previewer: Comment и Download остаются запрещены, поскольку Commenter включает
+Download. Для выдачи полного набора актор должен иметь все сопоставленные разрешения роли.
 
 ### Панель AzGuard (хост)
 
@@ -386,13 +388,13 @@ return [
 <!-- snippet: signature Vaulter\Azgard\Contracts\AzgardGuard -->
 
 ```php
+use Illuminate\Contracts\Auth\Access\Authorizable;
+
 interface AzgardGuard
 {
-    // Per-resource permission (the per-node lane).
-    public function hasScopedPermission(string $permission, object $entity): bool;
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool;
 
-    // Workspace-scoped permission (the lane resolve()/create actually drive).
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool;
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool;
 }
 ```
 
@@ -401,7 +403,7 @@ interface AzgardGuard
 1. Если актор сам реализует `AzgardGuard`, драйвер использует его напрямую.
 2. Иначе используется класс guard, который **хост** назвал в `vaulter-azgard.guard` (см. переопределение ниже).
 3. Иначе для актора, реализующего `Vaulter\Azgard\Contracts\AzgardBackedUser`, драйвер строит
-   `AzgardGuardAdapter` над этим актором в панели `vaulter-azgard.panel_id`.
+   stateless `AzgardGuardAdapter` в панели `vaulter-azgard.panel_id`, передавая актора каждой проверке.
 4. Любой другой актор не получает полосу AzGuard (ничего не повышается, `canCreateIn` — `false`).
 
 Мост не привязывает собственный guard: guard никогда не строится из пользователя **запроса** для
@@ -411,37 +413,31 @@ interface AzgardGuard
 
 ::: details Необязательное назначение одного guard для всех акторов
 Задайте в `vaulter-azgard.guard` класс, реализующий `AzgardGuard` (проверяется на boot; по умолчанию
-`null`). Тогда драйвер использует этот guard для любого актора, поэтому он обязан отвечать за того
-актора, о котором его спрашивают, а не за пользователя запроса (пример ниже замыкается на
-пользователя запроса, что верно, только когда решение касается именно его). Поставляемый
-`AzgardGuardAdapter` — тонкий сквозной проход на AzGuard v1:
+`null`). Драйвер явно передаёт актора каждому вызову guard. Общий guard должен использовать
+этот аргумент, а не получать или сохранять пользователя текущего запроса. Поставляемый
+`AzgardGuardAdapter` не хранит пользователя и вызывает AzGuard v1 для переданного актора:
 
 <!-- snippet: host -->
 
 ```php
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
 // config/vaulter-azgard.php: 'guard' => \App\Support\HostAzgardGuard::class,
 final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
 {
-    public function __construct(private \Illuminate\Contracts\Auth\Factory $auth) {}
-
-    public function hasScopedPermission(string $permission, object $entity): bool
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
     {
-        return $entity instanceof Model && $this->actor()?->hasPermission($permission, on: $entity) === true;
+        return $actor instanceof AzgardBackedUser && $entity instanceof Model
+            && $actor->hasPermission($permission, on: $entity);
     }
 
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
     {
-        return $this->actor()?->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId)) === true;
-    }
-
-    private function actor(): ?\Vaulter\Azgard\Contracts\AzgardBackedUser
-    {
-        $user = $this->auth->guard()->user(); // implements AzgardBackedUser
-
-        return $user instanceof \Vaulter\Azgard\Contracts\AzgardBackedUser ? $user : null;
+        return $actor instanceof AzgardBackedUser
+            && $actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
     }
 }
 ```

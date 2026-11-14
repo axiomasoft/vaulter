@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
+use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
@@ -48,7 +49,7 @@ it('does not lend the request user\'s rights to an actor that is not AzGuard-bac
 });
 
 it('decides for the actor when there is no request user at all (the collaboration hub)', function (): void {
-    $carol = SpyAzgardUser::make(4)->grantInWorkspace('project', 9, ['documents.update', 'documents.create']);
+    $carol = SpyAzgardUser::make(4)->grantInWorkspace('project', 9, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete']);
     $driver = app(AzgardPermissionDriver::class);
 
     expect($driver->resolve(Subject::ofModel($carol), $carol, actorScope())?->role->key)->toBe(RoleRegistry::WRITER)
@@ -57,7 +58,7 @@ it('decides for the actor when there is no request user at all (the collaboratio
 
 it('decides for the actor even when a different user is the request user', function (): void {
     $this->actingAs(SpyAzgardUser::make(1));
-    $carol = SpyAzgardUser::make(4)->grantInWorkspace('project', 9, ['documents.update']);
+    $carol = SpyAzgardUser::make(4)->grantInWorkspace('project', 9, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete']);
     $driver = app(AzgardPermissionDriver::class);
 
     expect($driver->resolve(Subject::ofModel($carol), $carol, actorScope())?->role->key)->toBe(RoleRegistry::WRITER);
@@ -65,7 +66,7 @@ it('decides for the actor even when a different user is the request user', funct
 
 it('asks AzGuard in the configured panel', function (): void {
     config()->set('vaulter-azgard.panel_id', 'documents-panel');
-    $carol = SpyAzgardUser::make(4)->grantInWorkspace('project', 9, ['documents.update']);
+    $carol = SpyAzgardUser::make(4)->grantInWorkspace('project', 9, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete']);
 
     app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($carol), $carol, actorScope());
 
@@ -73,15 +74,34 @@ it('asks AzGuard in the configured panel', function (): void {
 });
 
 it('answers the request user through an adapter over that very actor', function (): void {
-    $me = SpyAzgardUser::make(5)->grantInWorkspace('project', 9, ['documents.update']);
+    $me = SpyAzgardUser::make(5)->grantInWorkspace('project', 9, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete']);
     $this->actingAs($me);
 
     expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($me), $me, actorScope())?->role->key)->toBe(RoleRegistry::WRITER);
 });
 
 it('keeps honouring the guard the host configured, for any actor', function (): void {
-    HostGuard::bind(FakeAzgardGuard::grantingWorkspace('project', 9, 'documents.update'));
+    HostGuard::bind(new FakeAzgardGuard(workspaceGrants: array_map(static fn (string $permission): array => ['project', 9, $permission], ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete'])));
     $anyone = SpyAzgardUser::make(6);
 
     expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($anyone), $anyone, actorScope())?->role->key)->toBe(RoleRegistry::WRITER);
+});
+
+it('keeps two target actors separate through the same explicit guard regardless of the request user', function (): void {
+    $requestUser = SpyAzgardUser::make(1)->makeSuperAdmin();
+    $this->actingAs($requestUser);
+    HostGuard::bind(new AzgardGuardAdapter);
+    $allowed = SpyAzgardUser::make(7)->makeSuperAdmin();
+    $denied = SpyAzgardUser::make(8);
+    $driver = app(AzgardPermissionDriver::class);
+
+    expect($driver->resolve(Subject::ofModel($denied), $denied, actorScope()))->toBeNull()
+        ->and($driver->canCreateIn($denied, actorScope()))->toBeFalse()
+        ->and($driver->resolve(Subject::ofModel($allowed), $allowed, actorScope())?->role->key)->toBe(RoleRegistry::OWNER)
+        ->and($driver->canCreateIn($allowed, actorScope()))->toBeTrue()
+        ->and($driver->resolve(Subject::ofModel($denied), $denied, actorScope()))->toBeNull();
+
+    auth()->forgetGuards();
+    expect($driver->resolve(Subject::ofModel($allowed), $allowed, actorScope())?->role->key)->toBe(RoleRegistry::OWNER)
+        ->and($driver->resolve(Subject::ofModel($denied), $denied, actorScope()))->toBeNull();
 });

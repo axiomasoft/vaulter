@@ -3,9 +3,87 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
+
+it('never exposes partial canonical bytes on a signed local disk', function (): void {
+    $fake = Storage::fake('signed-local');
+    $filesystem = Storage::build(['driver' => 'local', 'root' => $fake->path(''), 'serve' => true, 'throw' => true]);
+    Storage::set('signed-local', $filesystem);
+    expect($filesystem->providesTemporaryUrls())->toBeTrue();
+    $key = 'tenant/ab/cd/canonical';
+    $driver = app(FlysystemStorageDriver::class);
+    stream_wrapper_register('interrupted-cas-promotion', InterruptedCasPromotionStream::class);
+    $stream = fopen('interrupted-cas-promotion://input', 'rb');
+
+    try {
+        expect(fn () => $driver->put($key, $stream, 'signed-local', true))
+            ->toThrow(RuntimeException::class, 'interrupted CAS input');
+    } finally {
+        fclose($stream);
+        stream_wrapper_unregister('interrupted-cas-promotion');
+    }
+
+    expect($filesystem->exists($key))->toBeFalse()->and($filesystem->allFiles())->toBe([]);
+
+    $complete = fopen('php://temp', 'w+b');
+    fwrite($complete, 'complete bytes');
+    rewind($complete);
+    try {
+        expect($driver->put($key, $complete, 'signed-local', true))->toBeTrue();
+    } finally {
+        fclose($complete);
+    }
+    expect($filesystem->get($key))->toBe('complete bytes')->and($filesystem->allFiles())->toBe([$key]);
+});
+
+final class InterruptedCasPromotionStream
+{
+    public mixed $context;
+
+    private bool $read = false;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        if ($this->read) {
+            throw new RuntimeException('interrupted CAS input');
+        }
+        $this->read = true;
+
+        return 'partial bytes';
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [];
+    }
+
+    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
+    {
+        if ($offset !== 0 || $whence !== SEEK_SET) {
+            return false;
+        }
+        $this->read = false;
+
+        return true;
+    }
+
+    public function stream_tell(): int
+    {
+        return $this->read ? strlen('partial bytes') : 0;
+    }
+}
 
 /**
  * Atomic CAS promotion (H.3 / F-P1.5-01): the driver must stage bytes under a
@@ -130,17 +208,14 @@ it('promote: move вернул false → put возвращает false и temp 
  * there (review def.2): a canonical S3 PUT was already atomic, and staging would only
  * double the transfer and — past the S3 5 GiB single-request CopyObject limit — make
  * the move FAIL (outside the try/catch, leaking the temp) where a direct PUT succeeds.
- * The pre-fix code staged + moved on EVERY disk with no driver-type guard. Object-store
- * detection reuses the signed-URL signal the driver already trusts: providesTemporaryUrls().
+ * The adapter type identifies S3; signed-URL support also exists on local disks.
  */
 it('object store (атомарная запись) → put пишет прямо в финальный ключ, без temp и без move, review def.2', function (): void {
     $writes = [];
     $moved = false;
 
-    $spy = Mockery::mock(FilesystemAdapter::class);
+    $spy = Mockery::mock(AwsS3V3Adapter::class);
 
-    // The object-store signal: a disk that mints signed URLs is treated as atomic.
-    $spy->shouldReceive('providesTemporaryUrls')->andReturn(true);
     $spy->shouldReceive('exists')->andReturn(false);
 
     $spy->shouldReceive('writeStream')->andReturnUsing(function (string $key) use (&$writes): bool {

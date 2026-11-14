@@ -5772,18 +5772,18 @@
             "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
         },
         {
-            "change": "redefined",
+            "change": "removed",
             "decision": "PLAN4-D16",
             "id": "column:v_document_revisions.yjs_state",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "P3.6 protocol-neutral collab_state naming replaces this identity; every current engine DDL mirror now records the neutral columns."
         },
         {
-            "change": "redefined",
+            "change": "removed",
             "decision": "PLAN4-D16",
             "id": "column:v_document_revisions.yjs_state_size",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "P3.6 protocol-neutral collab_state naming replaces this identity; every current engine DDL mirror now records the neutral columns."
         },
         {
             "change": "added",
@@ -5835,18 +5835,18 @@
             "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
         },
         {
-            "change": "redefined",
+            "change": "removed",
             "decision": "PLAN4-D16",
             "id": "column:v_documents.yjs_state",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "P3.6 protocol-neutral collab_state naming replaces this identity; every current engine DDL mirror now records the neutral columns."
         },
         {
-            "change": "redefined",
+            "change": "removed",
             "decision": "PLAN4-D16",
             "id": "column:v_documents.yjs_state_size",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "P3.6 protocol-neutral collab_state naming replaces this identity; every current engine DDL mirror now records the neutral columns."
         },
         {
             "change": "redefined",
@@ -6106,6 +6106,34 @@
             "change": "added",
             "decision": "PLAN4-D20",
             "reason": "P5.9 U2: minimal keyed remove versus current node upsert; exact operation/sync_key remove union synchronized with OpenAPI/generated TypeScript and PHP NodeChange."
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.staged_at",
+            "kind": "schema",
+            "reason": "Durable reconciliation starts its UTC microsecond settle timestamp after sequence allocation in the same transaction; event occurrence timestamps and fanout eligibility stay unchanged."
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_staged_idx",
+            "kind": "schema",
+            "reason": "Index the post-allocation staging timestamp used by durable outbox reconciliation."
+        },
+        {
+            "change": "redefined",
+            "decision": "D49",
+            "id": "column:v_blobs.scope_key",
+            "kind": "schema",
+            "reason": "Opaque tenant and drive scopes compare exactly, including case and trailing spaces, while retaining their UTF-8 character capacity."
+        },
+        {
+            "change": "redefined",
+            "decision": "D49",
+            "id": "column:v_blobs.storage_key",
+            "kind": "schema",
+            "reason": "The unique physical key uses the same exact comparison as its dedup scope, so one tenant cannot collide with another through SQL collation."
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

@@ -102,8 +102,8 @@ final readonly class TrashOperations implements Contract
     public function purge(NodeSnapshot|string|int $node, ?int $expectedSequence = null): void
     {
         $nodeId = self::idOf($node);
-        // Idempotent by key (D25): the receipt keeps the id and the scope the right to purge was proven in (ID2); a
-        // replay checks Delete in that scope, since the node itself is gone.
+        // Idempotent by key (D25): the receipt keeps the id and its parent as the surviving replay scope (ID2).
+        // A replay needs current Delete there; a grant only on the purged node disappeared with that node.
         $idempotency = new IdempotentWrite(
             codec: new PurgeReceiptCodec,
             authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Delete, $nodeId, OperationKind::Purge, includeTrashed: true),

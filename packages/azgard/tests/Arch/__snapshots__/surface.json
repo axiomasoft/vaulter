@@ -330,6 +330,15 @@
                     "by_ref": false,
                     "params": [
                         {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
                             "name": "contextType",
                             "type": "string",
                             "default": null,
@@ -373,6 +382,15 @@
                     "final": false,
                     "by_ref": false,
                     "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
                         {
                             "name": "permission",
                             "type": "string",
@@ -526,6 +544,15 @@
                     "by_ref": false,
                     "params": [
                         {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
                             "name": "contextType",
                             "type": "string",
                             "default": null,
@@ -569,6 +596,15 @@
                     "final": false,
                     "by_ref": false,
                     "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
                         {
                             "name": "permission",
                             "type": "string",

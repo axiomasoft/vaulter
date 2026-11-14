@@ -17,9 +17,9 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  * a super-admin through the same decisions, the create gate) is exercised end-to-end. Only the
  * leaf user is a controllable double; the adapter and the resolver are production code.
  */
-function bindAdapterFor(SpyAzgardUser $user): void
+function bindStatelessAdapter(): void
 {
-    HostGuard::bind(new AzgardGuardAdapter($user));
+    HostGuard::bind(new AzgardGuardAdapter);
 }
 
 function azgardDriver(): AzgardPermissionDriver
@@ -29,7 +29,7 @@ function azgardDriver(): AzgardPermissionDriver
 
 it('folds an AzGuard super-admin into the owner role through the workspace decisions, never an override', function (): void {
     $user = SpyAzgardUser::make()->makeSuperAdmin();
-    bindAdapterFor($user);
+    bindStatelessAdapter();
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
@@ -39,7 +39,7 @@ it('folds an AzGuard super-admin into the owner role through the workspace decis
 
 it('never overrides for a non super-admin', function (): void {
     $user = SpyAzgardUser::make()->grantOnEntities(['documents.view']);
-    bindAdapterFor($user);
+    bindStatelessAdapter();
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
@@ -47,9 +47,9 @@ it('never overrides for a non super-admin', function (): void {
 });
 
 it('folds a workspace-scoped permission into the matching role', function (): void {
-    // documents.update is the Writer probe (Edit → documents.update) in the ability map.
-    $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.update']);
-    bindAdapterFor($user);
+    // A writer requires the permissions of its whole registered ability set.
+    $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete']);
+    bindStatelessAdapter();
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
     $decision = azgardDriver()->resolve(Subject::ofModel($user), $user, $scope);
@@ -60,7 +60,7 @@ it('folds a workspace-scoped permission into the matching role', function (): vo
 
 it('yields no decision when the workspace grants nothing', function (): void {
     $user = SpyAzgardUser::make();
-    bindAdapterFor($user);
+    bindStatelessAdapter();
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
 
@@ -69,7 +69,7 @@ it('yields no decision when the workspace grants nothing', function (): void {
 
 it('gates workspace creation through the create permission', function (): void {
     $user = SpyAzgardUser::make()->grantInWorkspace('project', 5, ['documents.create']);
-    bindAdapterFor($user);
+    bindStatelessAdapter();
 
     expect(azgardDriver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 5), driveId: 1)))->toBeTrue()
         ->and(azgardDriver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 6), driveId: 1)))->toBeFalse();
@@ -77,7 +77,7 @@ it('gates workspace creation through the create permission', function (): void {
 
 it('exposes only the actor in its subject-set', function (): void {
     $user = SpyAzgardUser::make(3);
-    bindAdapterFor($user);
+    bindStatelessAdapter();
 
     $subjects = azgardDriver()->subjectsFor($user);
 

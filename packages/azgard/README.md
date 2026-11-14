@@ -22,22 +22,22 @@ Drive AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
                                     host User (AzGuard v1 HasAzGuard)
 ```
 
-- **`AzgardGuardAdapter`** implements the Vaulter seam and delegates to the host's
+- **`AzgardGuardAdapter`** implements the Vaulter seam and delegates to each check's explicit
+  actor. It stores only the panel selector, so one configured adapter can serve several actors. It delegates to the host's
   AzGuard v1 subject, translating the two checks into AzGuard decisions:
   `hasScopedPermission` → `hasPermission(on: $entity)` (narrowing the entity to an
   Eloquent model) and `hasPermissionIn` → `hasPermission(on: AssignmentScopeRef::of($type, $id))`
   (the workspace lane).
 - **`AzgardPermissionMap`** maps abilities to permission keys through the live
   `Configuration\AzgardConfig` repository.
-- **`VaulterAzgardServiceProvider`** registers the `azgard` driver key while preserving
-  host overrides and binds the seam from the current request's user (for code that asks
-  `AzgardGuard` about the request user). A request with no AzGuard-backed user gets the
-  deny-all `NullAzgardGuard` — a safe pass-through, never a fatal.
+- **`VaulterAzgardServiceProvider`** offers the `azgard` driver while preserving host
+  overrides. It creates no request-bound guard. The optional configured guard is a capability;
+  without it the driver adapts an AzGuard-backed actor and grants nothing for other actors.
 - **`AzgardPermissionDriver` answers for the decision's actor, not for the request.** It uses
   the actor itself when it implements `AzgardGuard`; else a guard the **host** bound in the
-  container (the host's override must answer for the actor it is asked about); else an
-  `AzgardGuardAdapter` it builds over the actor when the actor is an `AzgardBackedUser`
-  (with `panel_id`). The request-bound default binding is never lent to another actor: an
+  container (the host's override receives the actor as a required argument); else an
+  `AzgardGuardAdapter` when the actor is an `AzgardBackedUser`
+  (with `panel_id`). Every check passes that actor explicitly: an
   acting-as/preview check cannot inherit the request user's rights, and a call with no request
   user (the collaboration hub resolves the token subject itself) is decided by the actor's own
   AzGuard rights.
@@ -94,6 +94,7 @@ bridge pins one commit: `dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`.
 | Key | Default | Meaning |
 |---|---|---|
 | `panel_id` | `null` | AzGuard `guard:` of every check; `null` lets AzGuard select the panel (full name or prefix in the permission, else the request panel, else the user model's panel). |
+| `guard` | `null` | Optional class implementing the actor-aware `AzgardGuard`; every check must use its explicit actor. |
 | `permissions` | `documents.*` ability map | Ability value → permission key, read live by `AzgardPermissionMap`. |
 | `create_permission` | `documents.create` | Workspace creation permission; override through `VAULTER_AZGARD_CREATE_PERMISSION`. |
 
@@ -101,6 +102,29 @@ There is no super-admin override: AzGuard's `isSuperAdmin()` is not a decision. 
 super-admin gets the **owner** role through the same workspace decisions, so AzGuard's scope
 policy (`isolated` keeps a tenant-wide super-admin out of a workspace), restrictions,
 policies and tenant rules all hold.
+
+A Vaulter role is granted only if the actor holds **every mapped ability** of that role's
+registered version. A missing mapping refuses that role. For example, `documents.view`
+and `documents.comment` without `documents.download` yield only `previewer`: neither
+Download nor Comment is added. Comment alone grants no role. This conservative bridge
+returns complete Vaulter roles; it does not represent arbitrary partial ability sets.
+Node grants remain independent and are still unioned by the drive's resolver.
+
+Previously one defining permission expanded to a whole role. Hosts relying on that
+expansion must grant the complete role bundle or deliberately map its abilities to the
+host permission that represents that bundle. Review those mappings before upgrading.
+
+Custom implementations of **Vaulter's** `AzgardGuard` must add the required actor argument:
+
+```php
+public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool;
+public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool;
+```
+
+Resolve permissions for that actor, including when the request has no authenticated user.
+Do not read `Auth::user()` or change global authentication to perform these checks.
+The standard `AzgardBackedUser` / `HasAzGuard` integration needs no method changes;
+the upstream AzGuard package and its interfaces are unchanged.
 
 Misconfiguration fails loud rather than deny: a drive-owner type that is not an AzGuard
 alias throws `InvalidAssignmentScopeException`, and an unselectable panel throws AzGuard's
@@ -120,7 +144,7 @@ Three tiers:
   a real panel (stored grants, `project` assignment scopes, the super-admin role) granted
   through AzGuard's `InteractsWithAzGuard` helpers, and the real adapter → real Vaulter
   resolver. Proves the adapter's calls actually resolve through AzGuard's own engine
-  (super-admin → owner, assignment-scope permission → Writer, tenant-wide inheritance,
+  (super-admin → owner, complete assignment-scope bundle → Writer, tenant-wide inheritance,
   create gate, scope-precise entity check, undeclared scope type denied).
 - **`tests/RealAzgardIsolated/`** — the same engine on an `isolated` panel with a lock
   restriction: a tenant-wide super-admin gets nothing inside a workspace, a workspace

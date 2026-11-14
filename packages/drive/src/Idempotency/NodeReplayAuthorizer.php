@@ -22,6 +22,7 @@ use Vaulter\Idempotency\ResourceRef;
  * guard as the write itself: the receipt's node where it is now (after a move, in its new place), else the
  * recorded scope — the parent it was written under — else, when that is gone too, the drive's root. A node the
  * actor cannot see any more, a revoked grant or a gone drive answers like a new request would.
+ * Content-bearing document receipts can require the original node to remain available instead of falling back.
  *
  * Create (`folders.create`) needs Create in the folder that holds the node now; any other write needs `$ability`
  * on the node itself, or on the scope when the node is gone. The emptied trash (`trash.empty`) is about the whole
@@ -39,6 +40,7 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         private OperationKind $kind = OperationKind::Mutation,
         private bool $includeTrashed = false,
         private bool $alsoCreate = false,
+        private bool $requireExistingNode = false,
     ) {}
 
     /** A replay of folders.create: Create in the folder that holds the created node now (`$parent` for a refusal). */
@@ -50,13 +52,14 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
     /**
      * A replay of a write on `$node` that needs `$ability` on it (rename: Edit).
      *
-     * @param OperationKind $kind           the kind the write itself authorizes as (a purge is not gated like a content mutation)
-     * @param bool          $includeTrashed the node may be in the trash by now (a trashed node, a restore)
-     * @param bool          $alsoCreate     the node must also be creatable where it is now (a move: Move on it and Create in its new folder)
+     * @param OperationKind $kind                the kind the write itself authorizes as (a purge is not gated like a content mutation)
+     * @param bool          $includeTrashed      the node may be in the trash by now (a trashed node, a restore)
+     * @param bool          $alsoCreate          the node must also be creatable where it is now (a move: Move on it and Create in its new folder)
+     * @param bool          $requireExistingNode a content-bearing receipt must not be disclosed through an ancestor after its node is gone
      */
-    public static function forNode(DriveContext $context, NodeLocator $locator, OperationGuard $guard, Ability $ability, string $node, OperationKind $kind = OperationKind::Mutation, bool $includeTrashed = false, bool $alsoCreate = false): self
+    public static function forNode(DriveContext $context, NodeLocator $locator, OperationGuard $guard, Ability $ability, string $node, OperationKind $kind = OperationKind::Mutation, bool $includeTrashed = false, bool $alsoCreate = false, bool $requireExistingNode = false): self
     {
-        return new self($context, $locator, $guard, $ability, $node, $kind, $includeTrashed, $alsoCreate);
+        return new self($context, $locator, $guard, $ability, $node, $kind, $includeTrashed, $alsoCreate, $requireExistingNode);
     }
 
     /**
@@ -87,7 +90,8 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
 
     public function authorize(?ResourceRef $resource, ?ResourceRef $scope): void
     {
-        $node = $resource?->kind === 'node' ? $this->find($resource->id) : null;
+        $nodeId = $resource?->kind === 'node' ? $resource->id : ($this->requireExistingNode ? $this->requestScope : null);
+        $node = $nodeId === null ? null : $this->find($nodeId);
         if ($node !== null) {
             if ($this->ability === null) {
                 $parent = $node->parent_id === null ? $node : $this->locator->find($this->context, $node->parent_id);
@@ -101,6 +105,10 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
             }
 
             return;
+        }
+
+        if ($this->requireExistingNode) {
+            throw NodeNotFoundException::forId($nodeId ?? $this->requestScope ?? 'missing');
         }
 
         $container = ($scope?->kind === 'node' ? $this->find($scope->id) : null) ?? $this->root();

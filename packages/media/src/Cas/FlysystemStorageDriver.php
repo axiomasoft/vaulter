@@ -6,6 +6,7 @@ namespace Vaulter\Media\Cas;
 
 use DateTimeInterface;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\UnableToRetrieveMetadata;
@@ -140,12 +141,12 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
      * store commits a PUT server-side — a failed upload never appears under the key —
      * so it needs no temp-then-move staging. A local/ftp disk, and any disk we cannot
      * positively identify as an object store, is treated as non-atomic so the
-     * truncated-object guard still applies. We reuse the same object-store signal this
-     * driver already trusts for signed URLs (temporaryUrl()): providesTemporaryUrls().
+     * truncated-object guard still applies. Signed URLs are also available on local
+     * disks and do not establish atomic writes; only the S3 adapter guarantees a PUT.
      */
     private function writesAtomically(Filesystem $filesystem): bool
     {
-        return $filesystem instanceof FilesystemAdapter && $filesystem->providesTemporaryUrls();
+        return $filesystem instanceof AwsS3V3Adapter;
     }
 
     /**

@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks\Actions;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Operations\AggregateVersion;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -27,6 +28,7 @@ final readonly class DeleteWebhookEndpointAction
         private WebhookEndpointStoreRepository $endpoints,
         private VaulterDatabase $database,
         private AggregateVersion $versions,
+        private TenancyBoundary $tenancy,
     ) {}
 
     public function execute(WebhookEndpoint $endpoint, ?int $expectedVersion = null): void
@@ -35,6 +37,9 @@ final readonly class DeleteWebhookEndpointAction
             // The stored row under its lock: a rotation or an update that landed in between is a 412, a deletion a 404.
             $row = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first()
                 ?? throw WebhookEndpointNotFoundException::forId(Identity::stringify($endpoint->getKey()));
+            if ($this->tenancy->enforced() && TenancyBoundary::normalize($row->tenant_id) !== $this->tenancy->current()) {
+                throw WebhookEndpointNotFoundException::forId(Identity::stringify($row->getKey()));
+            }
             $this->versions->assertExpected($row, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
             $this->endpoints->delete($row);
         });

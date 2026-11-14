@@ -24,6 +24,8 @@ return [
     'relay' => [
         'fanout_chunk' => 100,
     ],
+    // This ability authorizes management; strict tenancy still limits it to the current tenant's endpoints.
+    // Endpoints without a tenant need an explicit administrative migration before a tenant can manage them.
     'manage_ability' => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
     'delivery' => [
         'url_guard' => DefaultOutboundUrlGuard::class,

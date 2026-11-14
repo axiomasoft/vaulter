@@ -218,7 +218,7 @@ final readonly class DocumentOperations implements DriveExtension
         $nodeId = self::idOf($document);
         $idempotency = new IdempotentWrite(
             codec: new DocumentSnapshotCodec($this->decoder),
-            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId, requireExistingNode: true),
             fingerprint: ['node' => $nodeId, 'content' => $content, 'expected_state_version' => $expectedStateVersion],
         );
 
@@ -259,7 +259,7 @@ final readonly class DocumentOperations implements DriveExtension
         $nodeId = self::idOf($document);
         $idempotency = new IdempotentWrite(
             codec: new DocumentRevisionSnapshotCodec,
-            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId, requireExistingNode: true),
             fingerprint: ['node' => $nodeId, 'label' => $label, 'keep_forever' => $keepForever],
         );
 
@@ -316,7 +316,7 @@ final readonly class DocumentOperations implements DriveExtension
         $nodeId = self::idOf($document);
         $idempotency = new IdempotentWrite(
             codec: new DocumentSnapshotCodec($this->decoder),
-            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId, requireExistingNode: true),
             fingerprint: ['node' => $nodeId, 'revision' => $revision instanceof DocumentRevisionSnapshot ? $revision->id : (string) $revision, 'expected_state_version' => $expectedStateVersion],
         );
 

@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks\Repositories;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenantIdentityPredicate;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -16,8 +17,8 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
  * admin listing + single lookup for the management surface. Authorization is the
  * controller's job (a global manage ability); this repository only shapes queries.
  *
- * Under strict tenancy a caller sees the endpoints of the current tenant and those registered before tenancy (no
- * tenant); an endpoint of another tenant is as unknown as a missing one (R2, P6.11).
+ * Under strict tenancy a caller sees only the endpoints of the current tenant. An endpoint without a tenant,
+ * or of another tenant, is as unknown as a missing one.
  */
 #[Internal]
 final readonly class WebhookEndpointReadRepository
@@ -45,7 +46,9 @@ final readonly class WebhookEndpointReadRepository
      */
     public function find(int|string $id): ?WebhookEndpoint
     {
-        return $this->query()->whereKey($id)->first();
+        $query = $this->query();
+
+        return Identity::fitsKey($query->getModel(), $id) ? $query->whereKey($id)->first() : null;
     }
 
     /**
@@ -63,11 +66,7 @@ final readonly class WebhookEndpointReadRepository
         $column = $query->getModel()->qualifyColumn('tenant_id');
         $driver = $query->getModel()->getConnection()->getDriverName();
 
-        return $query->where(static function (Builder $visible) use ($tenant, $column, $driver): void {
-            $visible->where(static function (Builder $same) use ($tenant, $column, $driver): void {
-                $same->where($column, $tenant)
-                    ->whereRaw(new TenantIdentityPredicate($column, $driver), [$tenant]);
-            })->orWhereNull($column);
-        });
+        return $query->where($column, $tenant)
+            ->whereRaw(new TenantIdentityPredicate($column, $driver), [$tenant]);
     }
 }

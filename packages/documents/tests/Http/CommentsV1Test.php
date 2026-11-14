@@ -48,6 +48,32 @@ it('validates the body and keeps ids as strings', function (): void {
     expect($this->postJson($this->url, ['body' => 'ok'])->json('data.id'))->toBeString();
 });
 
+it('bounds the encoded anchor to 16384 bytes without changing an accepted anchor', function (): void {
+    $anchor = ['value' => str_repeat('a', 16372)];
+    $this->postJson($this->url, ['body' => 'boundary', 'anchor' => $anchor])
+        ->assertCreated()->assertJsonPath('data.anchor', $anchor);
+
+    $this->postJson($this->url, ['body' => 'too large', 'anchor' => ['value' => str_repeat('a', 16373)]])
+        ->assertUnprocessable()->assertJsonValidationErrors('anchor');
+    $this->postJson($this->url, ['body' => 'encoded bytes', 'anchor' => ['value' => str_repeat('я', 2731)]])
+        ->assertUnprocessable()->assertJsonValidationErrors('anchor');
+
+    expect(NodeComment::query()->count())->toBe(1);
+});
+
+it('bounds an anchor to sixteen JSON levels and accepts the boundary', function (): void {
+    $anchor = ['offset' => 1];
+    for ($level = 1; $level < 16; $level++) {
+        $anchor = ['range' => $anchor];
+    }
+    $this->postJson($this->url, ['body' => 'boundary', 'anchor' => $anchor])
+        ->assertCreated()->assertJsonPath('data.anchor', $anchor);
+    $this->postJson($this->url, ['body' => 'too deep', 'anchor' => ['range' => $anchor]])
+        ->assertUnprocessable()->assertJsonValidationErrors('anchor');
+
+    expect(NodeComment::query()->count())->toBe(1);
+});
+
 it('lets a reader list the thread but not write in it', function (): void {
     $reader = Granted::document(level: RoleRegistry::READER, actorId: 1);
     $url = Docs::url('nodes/'.$reader->getKey().'/comments');

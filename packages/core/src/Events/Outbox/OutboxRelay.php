@@ -27,7 +27,7 @@ use Vaulter\Modules\SlotContribution;
  *  1. Register — every consumer of the sealed registry gets its row (a new one starts at the current seq, a paused
  *     one resumes, a detached one starts over); rows of consumers the registry does not hold are paused.
  *  2. Reconcile — under the consumer lease, the rows a process with an older module graph missed are materialized
- *     for events up to S = the highest seq written before now − settle_window, and reconciled_through_seq moves to
+ *     for events up to S = the highest seq staged after allocation before now − settle_window, and reconciled_through_seq moves to
  *     S. It never advances past S: a long transaction may still commit a smaller seq inside the window.
  *  3. Deliver — due rows are leased (SKIP LOCKED where the database has it), the consumer runs outside any
  *     transaction, and each result is written fenced by the lease generation: a worker whose lease was taken over

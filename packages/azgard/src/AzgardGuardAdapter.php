@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Azgard;
 
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
@@ -12,8 +13,9 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
  * The REAL {@see AzgardGuard} adapter (docs/adr/0007-pluggable-authorization.md): it
- * satisfies Vaulter's narrow permission seam by delegating to an AzGuard v1 subject
- * ({@see AzgardBackedUser}). This is the production counterpart to
+ * satisfies Vaulter's narrow permission seam by delegating to the actor supplied to each check
+ * when it is an AzGuard v1 subject ({@see AzgardBackedUser}). It captures no user, so the same
+ * configured adapter safely serves different actors. This is the production counterpart to
  * {@see Testing\FakeAzgardGuard} — the {@see AzgardPermissionDriver} only ever sees the
  * Vaulter seam, so core stays free of any AzGuard dependency; this package carries the
  * concrete bridge.
@@ -41,19 +43,18 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 final readonly class AzgardGuardAdapter implements AzgardGuard
 {
     public function __construct(
-        private AzgardBackedUser $user,
         private ?string $panelId = null,
     ) {}
 
-    public function hasScopedPermission(string $permission, object $entity): bool
+    public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
     {
-        return $entity instanceof Model
-            && $this->user->hasPermission($permission, on: $entity, guard: $this->panelId);
+        return $actor instanceof AzgardBackedUser && $entity instanceof Model
+            && $actor->hasPermission($permission, on: $entity, guard: $this->panelId);
     }
 
-    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+    public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
     {
-        return $this->user->hasPermission(
+        return $actor instanceof AzgardBackedUser && $actor->hasPermission(
             $permission,
             on: AssignmentScopeRef::of($contextType, $contextId),
             guard: $this->panelId,

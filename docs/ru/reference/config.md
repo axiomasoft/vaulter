@@ -429,7 +429,8 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | Key | Env | Default | Description |
 |---|---|---|---|
 | `vaulter-azgard.panel_id` | `VAULTER_AZGARD_PANEL` | `null` | AzGuard panel The AzGuard v1 panel the adapter passes as `guard:` to every check. null (the default) lets AzGuard select the panel — by a full name (`app:documents.view`) or a panel prefix in the permission, else the panel of the request, else the panel of the user model. The default map below names local keys (`documents.view`) of that panel, so the panel's resource prefix must not be `documents` (AzGuard refuses such a panel with PrefixConflictException): give the panel another resourcePrefix() or map the abilities below to other permissions. Set an explicit panel id when the user model belongs to several panels or the checks must not depend on the request panel; AzGuard throws when no panel can be selected. |
-| `vaulter-azgard.guard` | — | `null` | Explicit guard A class implementing `Vaulter\Azgard\Contracts\AzgardGuard` that answers for EVERY actor (it is asked about the actor of each decision, not about the request user). null (the default) uses the actor itself when it is a guard, else an adapter over the actor when it is AzGuard-backed, else the lane passes through and grants nothing. |
+| `vaulter-azgard.guard` | — | `null` | Explicit guard A class implementing `Vaulter\Azgard\Contracts\AzgardGuard` that answers for the required `$actor` argument of each check. It must not substitute the request user or switch authentication state. null (the default) uses the actor itself when it is a guard, else an adapter over the actor when it is AzGuard-backed, else the lane passes through and grants nothing. |
+| `vaulter-azgard.permissions` | — | — | A role is granted only when every ability of its registered version has a mapping and the actor holds every mapped permission. Missing mappings never imply permission. |
 | `vaulter-azgard.permissions.view` | — | `'documents.view'` | — |
 | `vaulter-azgard.permissions.download` | — | `'documents.download'` | — |
 | `vaulter-azgard.permissions.comment` | — | `'documents.comment'` | — |
@@ -697,7 +698,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter-webhooks.retry_claim_seconds` | — | `60` | — |
 | `vaulter-webhooks.relay` | — | — | The webhooks.fanout outbox consumer materializes deliveries fanout_chunk endpoints at a time (1..1000), each chunk in its own transaction under the outbox delivery lease. |
 | `vaulter-webhooks.relay.fanout_chunk` | — | `100` | — |
-| `vaulter-webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | — |
+| `vaulter-webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | This ability authorizes management; strict tenancy still limits it to the current tenant's endpoints. Endpoints without a tenant need an explicit administrative migration before a tenant can manage them. |
 | `vaulter-webhooks.delivery.url_guard` | — | `DefaultOutboundUrlGuard::class` | — |
 | `vaulter-webhooks.delivery.allowed_schemes` | — | `['http', 'https']` | — |
 | `vaulter-webhooks.delivery.blocked_ip_ranges` | — | `null` | — |

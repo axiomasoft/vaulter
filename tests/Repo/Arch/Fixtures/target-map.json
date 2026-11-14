@@ -4656,6 +4656,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Rules/CommentAnchorBounds.php",
+            "fqcn": "Vaulter\\Documents\\Rules\\CommentAnchorBounds",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Rules\\CommentAnchorBounds"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Schema/DocumentsSchema.php",
             "fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchema",
             "kind": "final-class",
@@ -15264,6 +15278,20 @@
             "rule": "other-packages:fqcn:Vaulter\\Media\\VaulterMediaServiceProvider",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Media\\VaulterMediaServiceProvider"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Models/Casts/IntegerKey.php",
+            "fqcn": "Vaulter\\Models\\Casts\\IntegerKey",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Models\\Casts\\IntegerKey",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Models\\Casts\\IntegerKey"
         },
         {
             "action": "keep",

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Foundation\Auth\User;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\AzgardPermissionMap;
@@ -92,9 +93,8 @@ it('lets a super-admin see every node through the AccessResolver', function (): 
 });
 
 it('maps a workspace-scoped AzGuard permission to a role', function (): void {
-    // The host grants documents.update in this workspace → the actor gets a Writer
-    // decision (Writer is gated by the Edit ability → documents.update).
-    bindAzgardGuard(FakeAzgardGuard::grantingWorkspace('project', 1, 'documents.update'));
+    // The host grants every mapped Writer ability in this workspace.
+    bindAzgardGuard(new FakeAzgardGuard(workspaceGrants: array_map(static fn (string $permission): array => ['project', 1, $permission], ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete'])));
 
     $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
@@ -105,6 +105,49 @@ it('maps a workspace-scoped AzGuard permission to a role', function (): void {
     expect($decision)->not->toBeNull()
         ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
 });
+
+it('does not turn View and Comment without Download into a commenter grant', function (bool $view): void {
+    $storage = AccessTestHelpers::storage();
+    $folder = AccessTestHelpers::folder($storage, null, 'comment without download');
+    $grants = [
+        [$storage->owner_type, $storage->owner_id, 'documents.comment'],
+    ];
+    if ($view) {
+        $grants[] = [$storage->owner_type, $storage->owner_id, 'documents.view'];
+    }
+    bindAzgardGuard(new FakeAzgardGuard(workspaceGrants: $grants));
+    $actor = AccessTestHelpers::user();
+    $resolver = app(AccessResolver::class);
+
+    expect($resolver->can($actor, Ability::View, $folder))->toBe($view)
+        ->and($resolver->can($actor, Ability::Comment, $folder))->toBeFalse()
+        ->and($resolver->can($actor, Ability::Download, $folder))->toBeFalse()
+        ->and($resolver->can($actor, Ability::Edit, $folder))->toBeFalse();
+})->with([false, true]);
+
+it('grants no role when a required ability has no permission mapping', function (): void {
+    config()->set('vaulter-azgard.permissions', ['edit' => 'host.docs.write']);
+    bindAzgardGuard(FakeAzgardGuard::superAdmin());
+    $actor = AccessTestHelpers::user();
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
+
+    expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull();
+});
+
+it('grants the complete registered role when every mapped ability is allowed', function (string $role): void {
+    $map = [];
+    foreach (Ability::cases() as $ability) {
+        $map[$ability->value] = 'host.'.$ability->value;
+    }
+    config()->set('vaulter-azgard.permissions', $map);
+    $expected = (new RoleRegistry)->latest($role);
+    $grants = array_map(static fn (Ability $ability): array => ['project', 1, 'host.'.$ability->value], $expected->abilities);
+    bindAzgardGuard(new FakeAzgardGuard(workspaceGrants: $grants));
+    $actor = AccessTestHelpers::user();
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
+
+    expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($actor), $actor, $scope)?->role)->toBe($expected);
+})->with((new RoleRegistry)->keys());
 
 it('composite order: a workspace role grant raises access when NO node-ACL row exists', function (): void {
     // documents.view granted in the workspace; there is no v_node_grants row, so the
@@ -200,14 +243,14 @@ it('uses the actor itself as the guard when the actor implements the AzgardGuard
 
         protected $guarded = [];
 
-        public function hasScopedPermission(string $permission, object $entity): bool
+        public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
         {
             return false;
         }
 
-        public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+        public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
         {
-            return $permission === 'documents.create';
+            return $actor === $this && $permission === 'documents.create';
         }
     };
     $actor->forceFill(['id' => 7]);
