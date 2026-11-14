@@ -259,8 +259,11 @@ it('scopes a system actor and a drive without tenant by tagged values, not nulls
     $system = Vaulter::drive($drive)->asSystem('import')->withIdempotencyKey('sys-1');
 
     $first = $system->folders()->create('Imported');
-    // Another reason is the same system actor: a replay.
-    expect(Vaulter::drive($drive)->asSystem('repair')->withIdempotencyKey('sys-1')->folders()->create('Imported'))->toEqual($first);
+    // Another reason shares the receipt scope, but gets its own reader synchronization key (PLAN4.D20).
+    $replay = Vaulter::drive($drive)->asSystem('repair')->withIdempotencyKey('sys-1')->folders()->create('Imported');
+    expect($replay->withSyncKey(null))->toEqual($first->withSyncKey(null))
+        ->and($first->syncKey)->toHaveLength(43)
+        ->and($replay->syncKey)->toHaveLength(43)->not->toBe($first->syncKey);
     // A user with the same key is another scope: the operation runs.
     expect(fn () => idemHandle($drive, 'sys-1')->folders()->create('Imported'))->toThrow(NodeNameConflictException::class);
 
@@ -417,8 +420,12 @@ it('decodes the snapshot it encoded', function (): void {
     [$drive] = idemDrive();
     $snapshot = Vaulter::drive($drive)->actingAs(AccessTestHelpers::user())->folders()->create('Codec');
     $codec = new NodeSnapshotCodec;
+    $encoded = $codec->encode($snapshot);
+    $decoded = $codec->decode($encoded, 1);
 
-    expect($codec->decode($codec->encode($snapshot), 1))->toEqual($snapshot)
+    expect($encoded)->not->toHaveKey('syncKey')->not->toHaveKey('sync_key')
+        ->and($decoded)->toEqual($snapshot->withSyncKey(null))
+        ->and($decoded->syncKey)->toBeNull()
         ->and($codec->resource($snapshot)->id)->toBe($snapshot->id)
         ->and(fn () => $codec->encode('not a snapshot'))->toThrow(InvalidArgumentException::class);
 });

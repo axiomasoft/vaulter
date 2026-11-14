@@ -56,9 +56,8 @@ it('moves yjs and @tiptap/pm to peerDependencies in @vaulter/vue package.json, F
     // vue was already a peer; it must stay one.
     expect($json['peerDependencies'])->toHaveKey('vue');
 
-    // version:0.0.0 is a documented, deliberate pre-release state (F-P2.5-07
-    // rationale) — not something this fix silently mutates into a made-up number.
-    expect($json['version'])->toBe('0.0.0');
+    // PLAN4.P4.1 adopted the versioned release channels and the vue source manifest at 1.0.0.
+    expect($json['version'])->toBe('1.0.0');
 });
 
 it('formulates README\'s vaulter:install line as "asks to run", not "runs them", F-P2.5-04', function (): void {

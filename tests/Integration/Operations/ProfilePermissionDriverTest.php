@@ -11,8 +11,6 @@ use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Drive\Configuration\AccessConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\DriveConfigValidator;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -29,8 +27,9 @@ use Vaulter\Drive\Testing\Fixtures\Access\ProfileAllowDriver;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileRoleSubjectsDriver;
 use Vaulter\Drive\Testing\NullPermissionDriver;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Exceptions\Configuration\InsecureProductionConfiguration;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Security\ProductionInvariants;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -152,8 +151,10 @@ it('rejects non-production drivers selected by a profile at boot and resolution'
     $manager = new PermissionDriverManager(app(AccessConfig::class), app(), true);
     expect(fn () => $manager->forProfile('positive'))->toThrow(MissingPermissionDriverException::class);
     app()->detectEnvironment(static fn (): string => 'production');
-    expect(fn () => (new DriveConfigValidator(app('config')))->validate(app(DriveConfig::class), app()))
-        ->toThrow(InvalidConfigurationException::class);
+    // PLAN4.P5.1 evaluates production invariants before serving traffic; structural validation is separate.
+    expect(app(ProductionInvariants::class)->evaluate()['violations'])->toHaveKey('drive.permission-driver')
+        ->and(fn () => app(ProductionInvariants::class)->assertSecure())
+        ->toThrow(InsecureProductionConfiguration::class, 'drive.permission-driver');
 });
 
 it('resolves a grant by its stored role and version without rewriting it', function (): void {

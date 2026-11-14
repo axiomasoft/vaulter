@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
@@ -20,6 +21,7 @@ use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Integration\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -102,7 +104,8 @@ it('uses the grants feature independently of disabled bearer links', function ()
 
 it('records explicit system actor and correlation without ambient auth attribution', function (): void {
     $this->actingAs(AccessTestHelpers::user(99));
-    app('request')->headers->set('X-Request-Id', '9e85b5d9-7519-41f1-82cc-7aafac3e8396');
+    $request = Request::create('/api/vaulter/v1/shares', 'POST', server: ['HTTP_X_REQUEST_ID' => '9e85b5d9-7519-41f1-82cc-7aafac3e8396']);
+    app()->instance('request', $request);
     $system = DriveContext::for($this->drive, Actor::system('import fixture'), 'system-correlation');
     $operations = app()->makeWith(ShareOperations::class, ['context' => $system]);
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
@@ -145,8 +148,12 @@ it('applies the same guard on HTTP grants and conceals hidden nodes', function (
     $this->deleteJson($url.'/'.$created->json('data.id'), [], ['If-Match' => $access])->assertNotFound();
 });
 
-it('preserves request UUID and ULID correlation for every grant and share mutation', function (): void {
-    app('request')->headers->set('X-Request-Id', '9e85b5d9-7519-41f1-82cc-7aafac3e8396');
+it('preserves request UUID and ULID correlation for every grant and share mutation', function (string $requestId): void {
+    $request = Request::create('/api/vaulter/v1/grants', 'POST', server: ['HTTP_X_REQUEST_ID' => $requestId]);
+    app()->instance('request', $request);
+    expect(AssignCorrelationId::resolve($request))->toBe($requestId);
+    // A later header change cannot replace the token assigned to this request.
+    $request->headers->set('X-Request-Id', 'changed-after-assignment');
     $context = DriveContext::system($this->drive, 'audit fixture');
     $access = app()->makeWith(AccessOperations::class, ['context' => $context]);
     $shares = app()->makeWith(ShareOperations::class, ['context' => $context]);
@@ -158,10 +165,13 @@ it('preserves request UUID and ULID correlation for every grant and share mutati
     $events = Activity::query()->get();
     expect($events)->toHaveCount(4);
     foreach ($events as $event) {
-        expect($event->request_id)->toBe('9e85b5d9-7519-41f1-82cc-7aafac3e8396')
+        expect($event->request_id)->toBe($requestId)
             ->and($event->context['correlation_id'])->toBe($context->correlationId)
             ->and($event->actor_type)->toBe(ActorRef::SYSTEM_TYPE)
             ->and($event->context['system_reason'])->toBe('audit fixture')
             ->and(json_encode($event->getAttributes()))->not->toContain($minted->token);
     }
-});
+})->with([
+    'UUID' => ['9e85b5d9-7519-41f1-82cc-7aafac3e8396'],
+    'ULID' => ['01ARZ3NDEKTSV4RRFFQ69G5FAV'],
+]);
