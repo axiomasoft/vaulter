@@ -124,7 +124,7 @@
                 },
                 {
                     "name": "request_id",
-                    "type": "char(36)",
+                    "type": "varchar(64)",
                     "nullable": "YES",
                     "default": null,
                     "charset": "utf8mb4",
@@ -325,7 +325,7 @@
                 }
             },
             "constraints": [],
-            "create_sql": "CREATE TABLE `v_activity` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `actor_id` bigint unsigned DEFAULT NULL,\n  `actor_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `verb` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `event_id` varchar(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `target_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `target_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `context` json DEFAULT NULL,\n  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `user_agent` text COLLATE utf8mb4_unicode_ci,\n  `request_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_activity_event_id_unique` (`event_id`),\n  KEY `v_activity_actor_idx` (`actor_type`,`actor_id`,`created_at`),\n  KEY `v_activity_target_idx` (`target_type`,`target_id`,`created_at`),\n  KEY `v_activity_verb_idx` (`verb`,`created_at`),\n  KEY `v_activity_drive_idx` (`drive_id`,`created_at`),\n  KEY `v_activity_tenant_id_index` (`tenant_id`),\n  KEY `v_activity_drive_id_index` (`drive_id`),\n  KEY `v_activity_verb_index` (`verb`),\n  KEY `v_activity_target_id_index` (`target_id`),\n  KEY `v_activity_created_idx` (`created_at`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_activity` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `actor_id` bigint unsigned DEFAULT NULL,\n  `actor_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `verb` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `event_id` varchar(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `target_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `target_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `context` json DEFAULT NULL,\n  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `user_agent` text COLLATE utf8mb4_unicode_ci,\n  `request_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_activity_event_id_unique` (`event_id`),\n  KEY `v_activity_actor_idx` (`actor_type`,`actor_id`,`created_at`),\n  KEY `v_activity_target_idx` (`target_type`,`target_id`,`created_at`),\n  KEY `v_activity_verb_idx` (`verb`,`created_at`),\n  KEY `v_activity_drive_idx` (`drive_id`,`created_at`),\n  KEY `v_activity_tenant_id_index` (`tenant_id`),\n  KEY `v_activity_drive_id_index` (`drive_id`),\n  KEY `v_activity_verb_index` (`verb`),\n  KEY `v_activity_target_id_index` (`target_id`),\n  KEY `v_activity_created_idx` (`created_at`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_blob_references": {
             "columns": [
@@ -546,7 +546,7 @@
                     "nullable": "NO",
                     "default": null,
                     "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
+                    "collation": "utf8mb4_0900_bin",
                     "extra": "",
                     "generation": ""
                 },
@@ -706,7 +706,7 @@
                     "nullable": "NO",
                     "default": null,
                     "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
+                    "collation": "utf8mb4_0900_bin",
                     "extra": "",
                     "generation": ""
                 }
@@ -849,7 +849,7 @@
                 }
             },
             "constraints": [],
-            "create_sql": "CREATE TABLE `v_blobs` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `storage_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `hash_algo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'sha256',\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `size_bytes` bigint NOT NULL,\n  `disk` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `storage_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `ref_count` bigint NOT NULL DEFAULT '0',\n  `dedup_scope` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'tenant',\n  `quarantined_at` timestamp NULL DEFAULT NULL,\n  `integrity_checked_at` timestamp NULL DEFAULT NULL,\n  `integrity_failed_at` timestamp NULL DEFAULT NULL,\n  `storage_version` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `etag` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `md5` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `crc32c` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `chunked` tinyint(1) NOT NULL DEFAULT '0',\n  `encryption_key_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `first_seen_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `committed_at` timestamp NULL DEFAULT NULL,\n  `delete_after_at` timestamp NULL DEFAULT NULL,\n  `scope_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_blobs_scope_sha_uniq` (`scope_key`,`sha256`),\n  UNIQUE KEY `v_blobs_storage_key_uniq` (`storage_key`),\n  KEY `v_blobs_gc_idx` (`status`,`ref_count`,`delete_after_at`),\n  KEY `v_blobs_integrity_idx` (`integrity_checked_at`),\n  KEY `v_blobs_tenant_id_index` (`tenant_id`),\n  KEY `v_blobs_storage_id_index` (`storage_id`),\n  KEY `v_blobs_size_bytes_index` (`size_bytes`),\n  KEY `v_blobs_encryption_key_id_index` (`encryption_key_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_blobs` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `storage_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `hash_algo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'sha256',\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `size_bytes` bigint NOT NULL,\n  `disk` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `storage_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin NOT NULL,\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `ref_count` bigint NOT NULL DEFAULT '0',\n  `dedup_scope` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'tenant',\n  `quarantined_at` timestamp NULL DEFAULT NULL,\n  `integrity_checked_at` timestamp NULL DEFAULT NULL,\n  `integrity_failed_at` timestamp NULL DEFAULT NULL,\n  `storage_version` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `etag` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `md5` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `crc32c` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `chunked` tinyint(1) NOT NULL DEFAULT '0',\n  `encryption_key_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `first_seen_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `committed_at` timestamp NULL DEFAULT NULL,\n  `delete_after_at` timestamp NULL DEFAULT NULL,\n  `scope_key` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_blobs_scope_sha_uniq` (`scope_key`,`sha256`),\n  UNIQUE KEY `v_blobs_storage_key_uniq` (`storage_key`),\n  KEY `v_blobs_gc_idx` (`status`,`ref_count`,`delete_after_at`),\n  KEY `v_blobs_integrity_idx` (`integrity_checked_at`),\n  KEY `v_blobs_tenant_id_index` (`tenant_id`),\n  KEY `v_blobs_storage_id_index` (`storage_id`),\n  KEY `v_blobs_size_bytes_index` (`size_bytes`),\n  KEY `v_blobs_encryption_key_id_index` (`encryption_key_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_collaboration_heads": {
             "columns": [
@@ -1437,12 +1437,52 @@
                     "generation": ""
                 },
                 {
+                    "name": "type",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_epoch",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "schema_version",
                     "type": "int",
                     "nullable": "NO",
                     "default": null,
                     "charset": null,
                     "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
                     "extra": "",
                     "generation": ""
                 },
@@ -1477,7 +1517,7 @@
                     "generation": ""
                 },
                 {
-                    "name": "yjs_state",
+                    "name": "collab_state",
                     "type": "longblob",
                     "nullable": "YES",
                     "default": null,
@@ -1487,7 +1527,7 @@
                     "generation": ""
                 },
                 {
-                    "name": "yjs_state_size",
+                    "name": "collab_state_size",
                     "type": "int",
                     "nullable": "YES",
                     "default": null,
@@ -1721,11 +1761,21 @@
                 },
                 "v_document_revisions_chk_1": {
                     "type": "check",
+                    "clause": "(`collab_epoch` >= 0)",
+                    "enforced": "YES"
+                },
+                "v_document_revisions_chk_2": {
+                    "type": "check",
                     "clause": "(`state_version` >= 0)",
+                    "enforced": "YES"
+                },
+                "v_document_revisions_stored_binding_check": {
+                    "type": "check",
+                    "clause": "((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4\\'[^[:space:]]\\') and regexp_like(`collab_state_format`,_utf8mb4\\'[^[:space:]]\\'))))",
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `v_document_revisions` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `document_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `number` int NOT NULL,\n  `schema_version` int NOT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `yjs_state` longblob,\n  `yjs_state_size` int DEFAULT NULL,\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `label` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `is_autosave` tinyint(1) NOT NULL DEFAULT '0',\n  `keep_forever` tinyint(1) NOT NULL DEFAULT '0',\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'committed',\n  `restored_from_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` bigint unsigned DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_document_revisions_no_uniq` (`document_id`,`number`),\n  UNIQUE KEY `v_document_revisions_id_doc_uniq` (`id`,`document_id`),\n  KEY `v_document_revisions_history_idx` (`document_id`,`is_autosave`,`created_at`),\n  KEY `v_document_revisions_tenant_id_index` (`tenant_id`),\n  KEY `v_document_revisions_document_id_index` (`document_id`),\n  KEY `v_document_revisions_restored_from_revision_id_index` (`restored_from_revision_id`),\n  CONSTRAINT `v_document_revisions_document_id_foreign` FOREIGN KEY (`document_id`) REFERENCES `v_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_document_revisions_restored_fk` FOREIGN KEY (`restored_from_revision_id`) REFERENCES `v_document_revisions` (`id`) ON DELETE SET NULL,\n  CONSTRAINT `v_document_revisions_chk_1` CHECK ((`state_version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_document_revisions` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `document_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `number` int NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `schema_version` int NOT NULL,\n  `collab_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `collab_state` longblob,\n  `collab_state_size` int DEFAULT NULL,\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `label` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `is_autosave` tinyint(1) NOT NULL DEFAULT '0',\n  `keep_forever` tinyint(1) NOT NULL DEFAULT '0',\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'committed',\n  `restored_from_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` bigint unsigned DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_document_revisions_no_uniq` (`document_id`,`number`),\n  UNIQUE KEY `v_document_revisions_id_doc_uniq` (`id`,`document_id`),\n  KEY `v_document_revisions_history_idx` (`document_id`,`is_autosave`,`created_at`),\n  KEY `v_document_revisions_tenant_id_index` (`tenant_id`),\n  KEY `v_document_revisions_document_id_index` (`document_id`),\n  KEY `v_document_revisions_restored_from_revision_id_index` (`restored_from_revision_id`),\n  CONSTRAINT `v_document_revisions_document_id_foreign` FOREIGN KEY (`document_id`) REFERENCES `v_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_document_revisions_restored_fk` FOREIGN KEY (`restored_from_revision_id`) REFERENCES `v_document_revisions` (`id`) ON DELETE SET NULL,\n  CONSTRAINT `v_document_revisions_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `v_document_revisions_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `v_document_revisions_stored_binding_check` CHECK (((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4'[^[:space:]]') and regexp_like(`collab_state_format`,_utf8mb4'[^[:space:]]')))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_documents": {
             "columns": [
@@ -1780,6 +1830,26 @@
                     "generation": ""
                 },
                 {
+                    "name": "collab_protocol",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "current_revision_id",
                     "type": "char(36)",
                     "nullable": "YES",
@@ -1824,6 +1894,36 @@
                     "type": "bigint",
                     "nullable": "NO",
                     "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "pending_protocol",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "pending_state_format",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "pending_schema_version",
+                    "type": "int",
+                    "nullable": "YES",
+                    "default": null,
                     "charset": null,
                     "collation": null,
                     "extra": "",
@@ -1880,7 +1980,7 @@
                     "generation": ""
                 },
                 {
-                    "name": "yjs_state",
+                    "name": "collab_state",
                     "type": "longblob",
                     "nullable": "YES",
                     "default": null,
@@ -1890,7 +1990,7 @@
                     "generation": ""
                 },
                 {
-                    "name": "yjs_state_size",
+                    "name": "collab_state_size",
                     "type": "int",
                     "nullable": "YES",
                     "default": null,
@@ -2118,11 +2218,16 @@
                 },
                 "v_documents_pending_marker_check": {
                     "type": "check",
-                    "clause": "(((`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null)))",
+                    "clause": "(((`pending_generation` is null) and (`pending_through_seq` is null) and (`pending_protocol` is null) and (`pending_state_format` is null) and (`pending_schema_version` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null) and (`pending_protocol` is not null) and regexp_like(`pending_protocol`,_utf8mb4\\'[^[:space:]]\\') and (`pending_state_format` is not null) and regexp_like(`pending_state_format`,_utf8mb4\\'[^[:space:]]\\') and (`pending_schema_version` is not null) and (`pending_schema_version` >= 1)))",
+                    "enforced": "YES"
+                },
+                "v_documents_stored_binding_check": {
+                    "type": "check",
+                    "clause": "((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4\\'[^[:space:]]\\') and regexp_like(`collab_state_format`,_utf8mb4\\'[^[:space:]]\\'))))",
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `v_documents` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `node_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `schema_version` int NOT NULL,\n  `current_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `revision_count` int NOT NULL DEFAULT '0',\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `checkpoint_state_version` bigint NOT NULL DEFAULT '0',\n  `pending_generation` bigint DEFAULT NULL,\n  `pending_through_seq` bigint DEFAULT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `yjs_state` longblob,\n  `yjs_state_size` int DEFAULT NULL,\n  `last_checkpoint_at` timestamp NULL DEFAULT NULL,\n  `created_by` bigint unsigned DEFAULT NULL,\n  `updated_by` bigint unsigned DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_documents_node_uniq` (`node_id`),\n  KEY `v_documents_type_idx` (`type`),\n  KEY `v_documents_pending_idx` (`pending_generation`),\n  KEY `v_documents_tenant_id_index` (`tenant_id`),\n  KEY `v_documents_node_id_index` (`node_id`),\n  KEY `v_documents_current_revision_id_index` (`current_revision_id`),\n  KEY `v_documents_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `v_documents_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `v_document_revisions` (`id`, `document_id`) ON DELETE RESTRICT,\n  CONSTRAINT `v_documents_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_documents_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `v_documents_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_3` CHECK ((`checkpoint_state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_4` CHECK (((`pending_generation` is null) or (`pending_generation` >= 0))),\n  CONSTRAINT `v_documents_chk_5` CHECK (((`pending_through_seq` is null) or (`pending_through_seq` >= 1))),\n  CONSTRAINT `v_documents_pending_marker_check` CHECK ((((`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_documents` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `node_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `schema_version` int NOT NULL,\n  `collab_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `current_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `revision_count` int NOT NULL DEFAULT '0',\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `checkpoint_state_version` bigint NOT NULL DEFAULT '0',\n  `pending_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `pending_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `pending_schema_version` int DEFAULT NULL,\n  `pending_generation` bigint DEFAULT NULL,\n  `pending_through_seq` bigint DEFAULT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `collab_state` longblob,\n  `collab_state_size` int DEFAULT NULL,\n  `last_checkpoint_at` timestamp NULL DEFAULT NULL,\n  `created_by` bigint unsigned DEFAULT NULL,\n  `updated_by` bigint unsigned DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_documents_node_uniq` (`node_id`),\n  KEY `v_documents_type_idx` (`type`),\n  KEY `v_documents_pending_idx` (`pending_generation`),\n  KEY `v_documents_tenant_id_index` (`tenant_id`),\n  KEY `v_documents_node_id_index` (`node_id`),\n  KEY `v_documents_current_revision_id_index` (`current_revision_id`),\n  KEY `v_documents_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `v_documents_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `v_document_revisions` (`id`, `document_id`) ON DELETE RESTRICT,\n  CONSTRAINT `v_documents_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_documents_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `v_documents_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_3` CHECK ((`checkpoint_state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_4` CHECK (((`pending_generation` is null) or (`pending_generation` >= 0))),\n  CONSTRAINT `v_documents_chk_5` CHECK (((`pending_through_seq` is null) or (`pending_through_seq` >= 1))),\n  CONSTRAINT `v_documents_pending_marker_check` CHECK ((((`pending_generation` is null) and (`pending_through_seq` is null) and (`pending_protocol` is null) and (`pending_state_format` is null) and (`pending_schema_version` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null) and (`pending_protocol` is not null) and regexp_like(`pending_protocol`,_utf8mb4'[^[:space:]]') and (`pending_state_format` is not null) and regexp_like(`pending_state_format`,_utf8mb4'[^[:space:]]') and (`pending_schema_version` is not null) and (`pending_schema_version` >= 1)))),\n  CONSTRAINT `v_documents_stored_binding_check` CHECK (((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4'[^[:space:]]') and regexp_like(`collab_state_format`,_utf8mb4'[^[:space:]]')))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_drive_change_heads": {
             "columns": [
@@ -4114,11 +4219,6 @@
                 }
             },
             "constraints": {
-                "v_node_comments_chk_1": {
-                    "type": "check",
-                    "clause": "(`version` >= 0)",
-                    "enforced": "YES"
-                },
                 "v_node_comments_node_id_foreign": {
                     "type": "foreign key",
                     "ref_table": "v_nodes",
@@ -4142,6 +4242,11 @@
                             "id"
                         ]
                     ]
+                },
+                "v_node_comments_chk_1": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
                 }
             },
             "create_sql": "CREATE TABLE `v_node_comments` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `node_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `author_id` bigint unsigned NOT NULL,\n  `author_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `anchor` json DEFAULT NULL,\n  `resolved_at` timestamp NULL DEFAULT NULL,\n  `resolved_by` bigint unsigned DEFAULT NULL,\n  `version` bigint NOT NULL DEFAULT '0',\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `v_node_comments_node_created_idx` (`node_id`,`created_at`),\n  KEY `v_node_comments_parent_idx` (`parent_id`),\n  KEY `v_node_comments_tenant_id_index` (`tenant_id`),\n  KEY `v_node_comments_node_id_index` (`node_id`),\n  KEY `v_node_comments_parent_id_index` (`parent_id`),\n  KEY `v_node_comments_author_id_index` (`author_id`),\n  CONSTRAINT `v_node_comments_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_node_comments_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `v_node_comments` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_node_comments_chk_1` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
@@ -5596,6 +5701,16 @@
                     "collation": null,
                     "extra": "",
                     "generation": ""
+                },
+                {
+                    "name": "staged_at",
+                    "type": "datetime(6)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
                 }
             ],
             "indexes": {
@@ -5638,6 +5753,19 @@
                         }
                     ]
                 },
+                "v_outbox_staged_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "staged_at",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
                 "v_outbox_tenant_id_index": {
                     "unique": false,
                     "type": "BTREE",
@@ -5653,7 +5781,7 @@
                 }
             },
             "constraints": [],
-            "create_sql": "CREATE TABLE `v_outbox` (\n  `outbox_seq` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `event_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `scope_kind` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `scope_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_type` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `sequence` bigint DEFAULT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `external` tinyint(1) NOT NULL,\n  `payload` json NOT NULL,\n  `created_at` timestamp NOT NULL,\n  PRIMARY KEY (`outbox_seq`),\n  UNIQUE KEY `v_outbox_event_id_unique` (`event_id`),\n  KEY `v_outbox_created_idx` (`created_at`),\n  KEY `v_outbox_tenant_id_index` (`tenant_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_outbox` (\n  `outbox_seq` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `event_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `scope_kind` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `scope_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_type` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `sequence` bigint DEFAULT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `external` tinyint(1) NOT NULL,\n  `payload` json NOT NULL,\n  `created_at` timestamp NOT NULL,\n  `staged_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`outbox_seq`),\n  UNIQUE KEY `v_outbox_event_id_unique` (`event_id`),\n  KEY `v_outbox_created_idx` (`created_at`),\n  KEY `v_outbox_staged_idx` (`staged_at`),\n  KEY `v_outbox_tenant_id_index` (`tenant_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_outbox_consumers": {
             "columns": [
@@ -8819,11 +8947,6 @@
                 }
             },
             "constraints": {
-                "v_webhook_endpoints_chk_1": {
-                    "type": "check",
-                    "clause": "(`version` >= 0)",
-                    "enforced": "YES"
-                },
                 "v_webhook_endpoints_drive_id_foreign": {
                     "type": "foreign key",
                     "ref_table": "v_drives",
@@ -8835,6 +8958,11 @@
                             "id"
                         ]
                     ]
+                },
+                "v_webhook_endpoints_chk_1": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
                 }
             },
             "create_sql": "CREATE TABLE `v_webhook_endpoints` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `events` json NOT NULL,\n  `signing_secret` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `previous_signing_secret` text COLLATE utf8mb4_unicode_ci,\n  `previous_secret_expires_at` timestamp NULL DEFAULT NULL,\n  `is_active` tinyint(1) NOT NULL DEFAULT '1',\n  `last_triggered_at` timestamp NULL DEFAULT NULL,\n  `failure_count` int unsigned NOT NULL DEFAULT '0',\n  `failing_since` timestamp NULL DEFAULT NULL,\n  `disabled_at` timestamp NULL DEFAULT NULL,\n  `disabled_reason` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `version` bigint NOT NULL DEFAULT '0',\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `v_webhook_endpoints_active_tenant_idx` (`is_active`,`tenant_id`),\n  KEY `v_webhook_endpoints_is_active_index` (`is_active`),\n  KEY `v_webhook_endpoints_tenant_id_index` (`tenant_id`),\n  KEY `v_webhook_endpoints_drive_id_index` (`drive_id`),\n  CONSTRAINT `v_webhook_endpoints_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `v_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_webhook_endpoints_chk_1` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"

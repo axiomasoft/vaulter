@@ -16,14 +16,14 @@ Vaulter\Azgard\Configuration\AzgardConfig api since 1.0 final readonly class
 Vaulter\Azgard\Contracts\AzgardBackedUser spi:implement since 1.0 interface extends AzGuard\Contracts\AzGuardSubject
 
 Vaulter\Azgard\Contracts\AzgardGuard spi:implement since 1.0 interface
-  public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
-  public function hasScopedPermission(string $permission, object $entity): bool
+  public function hasPermissionIn(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
+  public function hasScopedPermission(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
 
 Vaulter\Azgard\Testing\FakeAzgardGuard api since 1.0 final class implements Vaulter\Azgard\Contracts\AzgardGuard
   public function __construct(bool $superAdmin = false, array $scopedGrants = [], array $workspaceGrants = [])
   public static function grantingWorkspace(string $contextType, int|string $contextId, string $permission): self
-  public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
-  public function hasScopedPermission(string $permission, object $entity): bool
+  public function hasPermissionIn(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
+  public function hasScopedPermission(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
   public static function superAdmin(): self
 
 Vaulter\Azgard\VaulterAzgardServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Vaulter\Modules\OffersModules

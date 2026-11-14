@@ -4656,6 +4656,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Rules/CommentAnchorBounds.php",
+            "fqcn": "Vaulter\\Documents\\Rules\\CommentAnchorBounds",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Rules\\CommentAnchorBounds"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Schema/DocumentsSchema.php",
             "fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchema",
             "kind": "final-class",
