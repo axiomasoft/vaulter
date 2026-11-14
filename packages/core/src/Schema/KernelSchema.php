@@ -78,7 +78,7 @@ final class KernelSchema implements ModuleSchema
         $table->boolean('external');
         $table->json('payload');
         $table->timestamp('created_at');
-        $table->timestamp('staged_at', precision: 6)->nullable();
+        $table->dateTime('staged_at', precision: 6)->nullable();
 
         $table->index('created_at', $table->getTable().'_created_idx');
         $table->index('staged_at', $table->getTable().'_staged_idx');

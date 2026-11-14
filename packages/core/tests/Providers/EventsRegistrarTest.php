@@ -146,6 +146,37 @@ it('stores and reads staging as UTC across a repeated local DST hour without cha
     });
 })->with(['before the fall-back' => ['2026-11-01T05:59:59.900123Z'], 'after the fall-back' => ['2026-11-01T06:00:01.900123Z']]);
 
+it('keeps UTC staging unchanged between MySQL writer and reader session timezones', function (): void {
+    $database = app(VaulterDatabase::class);
+    $connection = $database->connection();
+    if ($connection->getDriverName() !== 'mysql') {
+        $this->markTestSkipped('MySQL converts TIMESTAMP values through the session timezone.');
+    }
+    $previousTimezone = $connection->scalar('SELECT @@SESSION.time_zone');
+    $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z');
+    $this->travelTo($staged);
+    $event = new OutboxTimestampProbeEvent(occurredAt: $staged);
+
+    try {
+        $connection->statement('SET SESSION time_zone = ?', ['+02:00']);
+        $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+        $written = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+        $connection->statement('SET SESSION time_zone = ?', ['+00:00']);
+        $read = $written->fresh();
+
+        expect(app(OutboxStore::class)->settledSeq($staged->addSecond()->subMinutes(5)))->toBe(0)
+            ->and($written->getRawOriginal('staged_at'))->toBe('2026-11-01 06:00:01.900123')
+            ->and($read->getRawOriginal('staged_at'))->toBe('2026-11-01 06:00:01.900123')
+            ->and($read->staged_at?->format('Y-m-d H:i:s.uP'))->toBe('2026-11-01 06:00:01.900123+00:00')
+            ->and(app(OutboxStore::class)->settledSeq($staged->addMicrosecond()))->toBe($read->outbox_seq)
+            ->and($read->payload)->toBe($written->payload)
+            ->and($read->payload['time'])->toBe($staged->format('Y-m-d\TH:i:s.v\Z'));
+    } finally {
+        $connection->statement('SET SESSION time_zone = ?', [$previousTimezone]);
+        $this->travelBack();
+    }
+});
+
 it('compares UTC staging against absolute cutoffs with all microseconds through a DST fall-back', function (): void {
     eventsRegistrarInTimezone('America/New_York', function (): void {
         $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z');
