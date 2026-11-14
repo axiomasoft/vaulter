@@ -70,13 +70,16 @@ final class WebhookTestHelpers
     {
         // forceFill: OutboxEvent is fully guarded — this trusted fixture builder bypasses it like OutboxWriter does.
         $outbox = new OutboxEvent;
+        // A committed fixture has completed staging; age that instant with the occurrence unless explicitly supplied.
+        $createdAt = $attributes['created_at'] ?? now();
         $outbox->forceFill(array_merge([
             'event_id' => 'evt-'.Str::uuid7()->toString(),
             'scope_kind' => 'tenant',
             'type' => 'folder.created',
             'external' => true,
             'payload' => ['node_id' => 'node-1', 'event_id' => 'evt-1'],
-            'created_at' => now(),
+            'created_at' => $createdAt,
+            'staged_at' => $createdAt,
         ], $attributes));
         $outbox->save();
         $outbox->refresh();

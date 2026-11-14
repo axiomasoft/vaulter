@@ -61,7 +61,8 @@ final class KernelSchema implements ModuleSchema
      * monotonic order every consumer reconciles by — a bigIncrements independent of the panel id strategy, like
      * event_id. scope_kind/scope_id name what the event is about (a drive, or the tenant) without a drive column;
      * payload is the envelope a consumer receives. The kernel keeps no delivery state here: that lives in
-     * v_outbox_deliveries, one row per consumer. The (created_at) index serves reconciliation and retention.
+     * v_outbox_deliveries, one row per consumer. created_at serves retention and subscription eligibility;
+     * staged_at is stamped after sequence allocation in the same transaction and serves reconciliation.
      */
     private function defineOutbox(Blueprint $table): void
     {
@@ -77,8 +78,10 @@ final class KernelSchema implements ModuleSchema
         $table->boolean('external');
         $table->json('payload');
         $table->timestamp('created_at');
+        $table->timestamp('staged_at', precision: 6)->nullable();
 
         $table->index('created_at', $table->getTable().'_created_idx');
+        $table->index('staged_at', $table->getTable().'_staged_idx');
     }
 
     /**

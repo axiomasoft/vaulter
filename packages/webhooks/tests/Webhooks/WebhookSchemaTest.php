@@ -20,7 +20,7 @@ it('creates the neutral v_outbox without delivery state', function (): void {
 
     expect(Schema::getColumnListing($table))->toEqualCanonicalizing([
         'outbox_seq', 'event_id', 'tenant_id', 'scope_kind', 'scope_id', 'aggregate_type', 'aggregate_id',
-        'sequence', 'type', 'external', 'payload', 'created_at',
+        'sequence', 'type', 'external', 'payload', 'created_at', 'staged_at',
     ]);
 });
 
@@ -84,6 +84,7 @@ it('casts the outbox json + datetime columns', function (): void {
 
     expect($fresh->payload)->toBe(['a' => 1, 'event_id' => 'x'])
         ->and($fresh->created_at)->toBeInstanceOf(Carbon::class)
+        ->and($fresh->staged_at)->toBeInstanceOf(Carbon::class)
         ->and($fresh->external)->toBeTrue()
         ->and($fresh->outbox_seq)->toBeInt();
 });

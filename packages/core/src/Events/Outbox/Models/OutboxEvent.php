@@ -33,6 +33,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property bool                 $external
  * @property array<string, mixed> $payload
  * @property Carbon               $created_at
+ * @property Carbon|null          $staged_at      set after sequence allocation, before the operation commits
  *
  * @method static Builder<static> query()
  */
@@ -72,6 +73,7 @@ class OutboxEvent extends Model
             'external' => 'boolean',
             'payload' => 'array',
             'created_at' => 'datetime',
+            'staged_at' => 'datetime',
         ];
     }
 }
