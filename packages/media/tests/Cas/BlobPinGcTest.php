@@ -138,7 +138,7 @@ it('refuses a pin to the tombstone a rolled-back sweep left without bytes, and t
         ->and(CasTestHelpers::pins($blob))->toBe(0);
 
     app(VaulterDatabase::class)->transaction(function (): void {
-        app(BlobPins::class)->pin(pinGcBlob('rolled back sweep'), CasTestHelpers::OWNER, 'owner');
+        app(BlobPins::class)->pin(pinGcBlob('rolled back sweep')->getKey(), CasTestHelpers::OWNER, 'owner');
     });
 
     expect($blob->fresh()->status)->toBe(BlobStatus::Committed)
