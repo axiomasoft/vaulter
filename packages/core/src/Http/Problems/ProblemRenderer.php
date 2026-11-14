@@ -13,7 +13,6 @@ use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +25,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Http\Middleware\AssignCorrelationId;
+use Vaulter\Modules\ModuleGraphException;
 
 /**
  * Answers every failure of a versioned route as RFC 9457 `application/problem+json`.
@@ -82,7 +83,12 @@ final readonly class ProblemRenderer
     public function render(Throwable $e, Request $request): ?Response
     {
         // A prepared response (redirect, abort(response())) is the caller's own answer.
-        if (!$this->handles($request) || $e instanceof HttpResponseException) {
+        // The invalid-graph catch-all is a package route on the prefix, not only under /v1.
+        // Leaving ModuleGraphException to the framework turns that 503 into a 500.
+        if ($e instanceof HttpResponseException) {
+            return null;
+        }
+        if (!$this->handles($request) && !$this->invalidGraphOnPackagePrefix($e, $request)) {
             return null;
         }
 
@@ -279,16 +285,22 @@ final readonly class ProblemRenderer
 
     private function requestId(Request $request): string
     {
-        $assigned = $request->attributes->get('vaulter.request_id');
-        if (is_string($assigned) && $assigned !== '') {
-            return $assigned;
+        return AssignCorrelationId::resolve($request);
+    }
+
+    /**
+     * The catch-all mounted while the module graph is invalid lives on the package prefix
+     * (`api/vaulter`, `api/vaulter/not-v1`), which is not the versioned surface. It still
+     * answers 503 `module_graph_invalid`.
+     */
+    private function invalidGraphOnPackagePrefix(Throwable $e, Request $request): bool
+    {
+        if (!$e instanceof ModuleGraphException) {
+            return false;
         }
 
-        $incoming = $request->headers->get('X-Request-Id');
-        if (is_string($incoming) && preg_match('/^[A-Za-z0-9._:-]{1,128}$/', $incoming) === 1) {
-            return $incoming;
-        }
+        $prefix = trim($this->routes->prefix(), '/');
 
-        return (string) Str::ulid();
+        return $prefix !== '' && $request->is($prefix, $prefix.'/*');
     }
 }

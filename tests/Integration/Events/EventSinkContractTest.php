@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -64,7 +65,7 @@ function sinkContractRecorder(array $sinks): EventRecorder
 
 function sinkContractEvent(Node $folder, ?string $eventId = null): NodeRenamed
 {
-    return new NodeRenamed(
+    return new NodeRenamed(nodeSnapshots: app(NodeSnapshotMapper::class),
         node: $folder,
         fromName: 'alpha',
         toName: 'alpha',

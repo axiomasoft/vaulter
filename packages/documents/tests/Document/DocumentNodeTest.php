@@ -91,7 +91,11 @@ it('writes autosaves to the working state and leaves stored checkpoints alone in
 
     expect($result->changed)->toBeTrue()
         ->and($result->checkpoint)->toBeNull()
-        ->and(DocumentTestHelpers::revisions($node))->toHaveCount(1)
+        // The second collaborative JSON reseed captures the generation it closes.
+        ->and(DocumentTestHelpers::revisions($node))->toHaveCount(2)
+        ->and(DocumentTestHelpers::revisions($node)->last()?->content)->toBe(DocumentTestHelpers::content('edit one')->toArray())
+        ->and(DocumentTestHelpers::revisions($node)->last()?->state_version)->toBe(2)
+        ->and(DocumentTestHelpers::revisions($node)->last()?->is_autosave)->toBeTrue()
         ->and($first->refresh()->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('seed')->toArray())
         ->and($result->document->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('edit two')->toArray())
         ->and($result->document->state_version)->toBe(3)

@@ -39,12 +39,13 @@ final readonly class CommentDeleted extends DriveEvent implements ShouldBroadcas
         NodeComment $comment,
         ActorRef $actor,
         string $correlationId,
+        DocumentSnapshotMapper $documents,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->commentRow = $comment;
-        $this->comment = app(DocumentSnapshotMapper::class)->comment($comment);
+        $this->comment = $documents->comment($comment);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

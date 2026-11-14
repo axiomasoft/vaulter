@@ -227,7 +227,7 @@ final class DeliverWebhook implements ShouldQueue
             ->connectTimeout($this->webhooksConfig->connectTimeout())
             // Unconditional — see the docblock: a redirect hop escapes the pin.
             ->withoutRedirecting()
-            ->withOptions($this->transportOptions(pinned: $pinned))
+            ->withOptions($this->requestOptions(pinned: $pinned))
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 'User-Agent' => 'Vaulter-Webhooks/1',
@@ -246,13 +246,39 @@ final class DeliverWebhook implements ShouldQueue
     }
 
     /**
+     * Options handed to Guzzle. {@see transportOptions()} still names the cURL
+     * locks; current Guzzle rejects CURLOPT_FOLLOWLOCATION, CURLOPT_PROTOCOLS
+     * and CURLOPT_REDIR_PROTOCOLS in the curl array (they collide with
+     * allow_redirects and protocols) and throws before the signed headers are
+     * written. withoutRedirecting() and the protocols option are the same locks.
+     *
+     * @return array<string, mixed>
+     */
+    private function requestOptions(PinnedOutboundEndpoint $pinned): array
+    {
+        $options = $this->transportOptions(pinned: $pinned);
+        $curl = $options['curl'] ?? [];
+        if (is_array($curl)) {
+            unset(
+                $curl[CURLOPT_FOLLOWLOCATION],
+                $curl[CURLOPT_PROTOCOLS],
+                $curl[CURLOPT_REDIR_PROTOCOLS],
+            );
+            $options['curl'] = $curl;
+        }
+        $options['protocols'] = ['http', 'https'];
+
+        return $options;
+    }
+
+    /**
      * The Guzzle transport options that harden a delivery (N2): pin the vetted
      * IP onto the connection, lock the protocol to HTTP(S), forbid the transport itself
      * from following a redirect (the second barrier under `withoutRedirecting()`:
      * a cURL handle that never follows Location cannot leave the pinned host even if the
      * HTTP layer is reconfigured), and bound the response body — an oversized declared
-     * Content-Length is refused from the on_headers hook, and the buffering sink spills to
-     * a temp file so an UNDECLARED oversize body never lands whole in RAM.
+     * Content-Length is refused from the on_headers hook, and the bounded sink aborts
+     * an undeclared oversize body before those bytes are kept.
      *
      * @return array<string, mixed>
      */

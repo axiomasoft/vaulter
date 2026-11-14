@@ -60,8 +60,7 @@ final readonly class RegisterWebhookEndpointAction
 
     private function visibleDrive(string $driveId): int|string
     {
-        $intKeys = (new Drive)->getKeyType() === 'int';
-        $drive = $intKeys && !ctype_digit($driveId) ? null : $this->drives->find($intKeys ? (int) $driveId : $driveId);
+        $drive = $this->drives->find($driveId);
         if (!$drive instanceof Drive) {
             throw NodeNotFoundException::forId('drive');
         }

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('maps a framework exception to its problem status and code', function (Throwable $exception, int $status, string $code): void {
@@ -49,3 +52,17 @@ it('keeps Retry-After of a service-unavailable answer', function (): void {
 
     $this->getJson(ProblemProbeRoutes::path('case'))->assertHeader('Retry-After', '30');
 });
+
+it('answers the invalid-graph catch-all outside v1 with 503 module_graph_invalid, not 500', function (string $uri): void {
+    $app = FreshApplication::boot(['vaulter.modules' => ['nope' => true]]);
+    $response = $app->make(HttpKernel::class)->handle(Request::create($uri, 'GET', server: ['HTTP_ACCEPT' => 'application/json']));
+    $body = json_decode((string) $response->getContent(), true);
+
+    expect($response->getStatusCode())->toBe(503)
+        ->and($response->headers->get('Content-Type'))->toContain('application/problem+json')
+        ->and($body)->toMatchArray(['code' => 'module_graph_invalid', 'status' => 503])
+        ->and($response->getContent())->not->toContain('vaulter.modules.nope')->not->toContain('[Vaulter]');
+})->with([
+    'the package prefix' => ['/api/vaulter'],
+    'a path under the prefix that is not v1' => ['/api/vaulter/not-v1'],
+]);

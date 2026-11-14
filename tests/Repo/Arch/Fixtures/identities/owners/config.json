@@ -204,6 +204,12 @@
             "value": "env:VAULTER_TEST_DB_PER_PROCESS",
             "owner": "core",
             "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:VAULTER_TEST_WRITE_GUARD",
+            "owner": "core",
+            "why": "The core UsesSuiteDatabase testing concern pins the database write guard for every package suite; this is a test-only environment input."
         }
     ]
 }

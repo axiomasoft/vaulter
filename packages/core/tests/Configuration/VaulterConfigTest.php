@@ -40,7 +40,7 @@ it('keeps no drive and no webhooks section in the kernel config root (P4.11, P4.
     /** @var array<string, mixed> $config */
     $config = require __DIR__.'/../../config/vaulter.php';
 
-    expect(array_keys($config))->toBe(['database', 'ids', 'tenancy', 'modules', 'routes', 'outbox', 'idempotency', 'schedule', 'observability', 'models'])
+    expect(array_keys($config))->toBe(['database', 'ids', 'tenancy', 'security', 'modules', 'routes', 'outbox', 'idempotency', 'schedule', 'observability', 'models'])
         ->and(array_keys($config['models']))->toBe(['outbox'])
         ->and($config['schedule'])->not->toHaveKey('changes_prune')
         ->and(array_keys($config['schedule']))->toBe(['enabled', 'outbox_relay', 'outbox_prune', 'idempotency_prune']);

@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Artisan;
+use Vaulter\Doctor\Checks\QueueCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRegistry;
@@ -125,6 +127,42 @@ it('trims evidence to 20 short entries', function (): void {
     expect($trimmed)->toHaveCount(20)
         ->and(mb_strlen($trimmed['k0']))->toBe(200)
         ->and($trimmed['k1'])->toBe('array');
+});
+
+it('does not pass the queue check when the default connection is missing', function (): void {
+    $missing = new QueueCheck(new Repository([
+        'queue' => [
+            'default' => 'redis',
+            'connections' => ['sync' => ['driver' => 'sync']],
+        ],
+    ]));
+    $blankDriver = new QueueCheck(new Repository([
+        'queue' => [
+            'default' => 'redis',
+            'connections' => ['redis' => ['connection' => 'default']],
+        ],
+    ]));
+    $configured = new QueueCheck(new Repository([
+        'queue' => [
+            'default' => 'redis',
+            'connections' => ['redis' => ['driver' => 'redis', 'connection' => 'default']],
+        ],
+    ]));
+
+    $missingReport = (new DoctorRunner(doctorRegistry([$missing])))->run(doctorContext());
+    $blankReport = (new DoctorRunner(doctorRegistry([$blankDriver])))->run(doctorContext());
+    $configuredReport = (new DoctorRunner(doctorRegistry([$configured])))->run(doctorContext());
+
+    expect($missingReport->checks[0]->findings[0]->code)->toBe('core.queue.missing')
+        ->and($missingReport->checks[0]->findings[0]->severity)->toBe(DoctorSeverity::Error)
+        ->and($missingReport->checks[0]->findings[0]->evidence)->toBe(['connection' => 'redis'])
+        ->and($missingReport->summary())->toBe(['ok' => 0, 'warning' => 0, 'error' => 1])
+        ->and($missingReport->exitCode())->toBe(1)
+        ->and(json_encode($missingReport->toArray()))->toContain('core.queue.missing')
+        ->and($blankReport->checks[0]->findings[0]->code)->toBe('core.queue.missing')
+        ->and($blankReport->exitCode())->toBe(1)
+        ->and($configuredReport->checks[0]->findings[0]->code)->toBe('core.queue.asynchronous')
+        ->and($configuredReport->exitCode())->toBe(0);
 });
 
 it('counts findings and fails only on an error', function (): void {

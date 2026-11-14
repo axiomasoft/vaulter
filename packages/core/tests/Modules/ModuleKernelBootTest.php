@@ -2,14 +2,24 @@
 
 declare(strict_types=1);
 
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Kernel;
+use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\InvalidModuleGraph;
+use Vaulter\Modules\ModuleApplier;
+use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleGraphException;
+use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Tests\Modules\Fixtures\FixtureModule;
 use Vaulter\Tests\Modules\Fixtures\FixtureModulesProvider;
 use Vaulter\Tests\Modules\Fixtures\Greeter;
 use Vaulter\Tests\Modules\Fixtures\PlainGreeter;
@@ -33,6 +43,25 @@ final class ModulesBootOrderProvider extends ServiceProvider
     public function boot(): void
     {
         ModulesBootProbe::$sealedWhenBooting[] = $this->app->make(Kernel::class)->isSealed() ? 'sealed' : 'open';
+    }
+}
+
+final class ModulesInjectedSchedule implements ModuleSchedule
+{
+    public function __construct(private readonly Repository $config) {}
+
+    public function define(Schedule $schedule, Repository $config): void
+    {
+        $schedule->call(static fn (): bool => true)->name('module-injected')
+            ->cron($this->config->get('module_schedule_probe.cron'));
+    }
+}
+
+final class ModulesZeroArgumentSchedule implements ModuleSchedule
+{
+    public function define(Schedule $schedule, Repository $config): void
+    {
+        $schedule->call(static fn (): bool => true)->name('module-zero-argument')->hourlyAt(7);
     }
 }
 
@@ -114,4 +143,59 @@ it('boots with an invalid graph, activates nothing and reports why', function (a
 it('refuses a module offered after the application booted', function (): void {
     expect(fn () => $this->app->register(FixtureModulesProvider::class, force: true))
         ->toThrow(RegistryFrozenException::class);
+});
+
+it('resolves declared schedules with constructor dependencies and preserves zero-argument schedules', function (bool $alreadyResolved): void {
+    $compiled = (new ModuleCompiler)->compile([
+        new FixtureModule('schedule-probe', declare: static function (ModuleBuilder $module): void {
+            $module->schedule(ModulesInjectedSchedule::class)->schedule(ModulesZeroArgumentSchedule::class);
+        }),
+    ], []);
+    expect($compiled)->toBeInstanceOf(CompiledModules::class);
+
+    $config = $this->app->make(Repository::class);
+    $config->set('vaulter.schedule.enabled', true);
+    $config->set('module_schedule_probe.cron', '17 4 * * *');
+    $this->app->forgetInstance(Schedule::class);
+    $this->app->singleton(Schedule::class, static fn (): Schedule => new Schedule);
+    if ($alreadyResolved) {
+        $this->app->make(Schedule::class);
+    }
+
+    (new ModuleApplier($this->app))->register($compiled);
+
+    $events = [];
+    foreach ($this->app->make(Schedule::class)->events() as $event) {
+        if (in_array($event->description, ['module-injected', 'module-zero-argument'], true)) {
+            $events[$event->description] = $event->expression;
+        }
+    }
+    expect($events)->toBe(['module-injected' => '17 4 * * *', 'module-zero-argument' => '7 * * * *']);
+})->with(['scheduler resolved later' => [false], 'scheduler already resolved' => [true]]);
+
+it('refuses a declared schedule that does not implement ModuleSchedule before applying anything', function (): void {
+    $compiled = (new ModuleCompiler)->compile([
+        new FixtureModule('invalid-schedule', declare: static function (ModuleBuilder $module): void {
+            $module->schedule(stdClass::class);
+        }),
+    ], []);
+
+    expect($compiled)->toBeInstanceOf(InvalidModuleGraph::class)
+        ->and($compiled->reasons)->toContain('module "invalid-schedule" declares the schedule stdClass, which does not implement '.ModuleSchedule::class);
+});
+
+it('refuses a container binding that does not resolve to a module schedule', function (): void {
+    $compiled = (new ModuleCompiler)->compile([
+        new FixtureModule('schedule-probe', declare: static function (ModuleBuilder $module): void {
+            $module->schedule(ModulesInjectedSchedule::class);
+        }),
+    ], []);
+    expect($compiled)->toBeInstanceOf(CompiledModules::class);
+
+    $this->app->make(Repository::class)->set('vaulter.schedule.enabled', true);
+    $this->app->instance(Schedule::class, new Schedule);
+    $this->app->instance(ModulesInjectedSchedule::class, new stdClass);
+
+    expect(fn () => (new ModuleApplier($this->app))->register($compiled))
+        ->toThrow(InvalidConfigurationException::class, 'must resolve to '.ModuleSchedule::class);
 });

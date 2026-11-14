@@ -47,8 +47,8 @@ it('gives a hidden source the same 404 through PHP HTTP and a forged panel callb
     expect(fn () => $handle->nodes()->rename($this->paritySource->getKey(), 'Forbidden'))
         ->toThrow(NodeNotFoundException::class);
     $this->patchJson('api/vaulter/v1/nodes/'.$this->paritySource->id, ['name' => 'Forbidden'], parityEtag($this, (string) $this->paritySource->id))->assertNotFound();
-    expect(fn () => ($action->getActionFunction())(DriveBuilder::row($this->paritySource), ['name' => 'Forbidden']))
-        ->toThrow(NodeNotFoundException::class);
+    ($action->getActionFunction())(DriveBuilder::row($this->paritySource), ['name' => 'Forbidden']);
+    Notification::assertNotified(Notification::make()->title('Rename failed')->body(NodeNotFoundException::forId($this->paritySource->id)->getMessage())->danger());
     expect($this->paritySource->refresh()->name)->toBe('Source')
         ->and($this->paritySource->sequence)->toBe(0);
 });
@@ -61,8 +61,8 @@ it('gives a visible source without Edit the same 403 through all three boundarie
     expect(fn () => $handle->nodes()->rename($this->paritySource->getKey(), 'Forbidden'))
         ->toThrow(PermissionDeniedException::class);
     $this->patchJson('api/vaulter/v1/nodes/'.$this->paritySource->id, ['name' => 'Forbidden'], parityEtag($this, (string) $this->paritySource->id))->assertForbidden();
-    expect(fn () => ($action->getActionFunction())(DriveBuilder::row($this->paritySource), ['name' => 'Forbidden']))
-        ->toThrow(PermissionDeniedException::class);
+    ($action->getActionFunction())(DriveBuilder::row($this->paritySource), ['name' => 'Forbidden']);
+    Notification::assertNotified(Notification::make()->title('Rename failed')->body(PermissionDeniedException::forAbility('edit')->getMessage())->danger());
     expect($this->paritySource->refresh()->name)->toBe('Source')
         ->and($this->paritySource->sequence)->toBe(0);
 });
@@ -90,7 +90,8 @@ it('hides a move destination without View consistently without changing the sour
     $this->postJson('api/vaulter/v1/nodes/'.$this->paritySource->id.'/move', ['destination_id' => (string) $this->parityTarget->id], parityEtag($this, (string) $this->paritySource->id))
         ->assertNotFound();
     expect(fn () => ($action->getActionFunction())(DriveBuilder::row($this->paritySource), ['parent_id' => $this->parityTarget->id], $action))
-        ->toThrow(NodeNotFoundException::class);
+        ->toThrow(Halt::class);
+    Notification::assertNotified(Notification::make()->title('Move not allowed')->body(NodeNotFoundException::forId($this->parityTarget->id)->getMessage())->danger());
     expect($this->paritySource->refresh()->parent_id)->toBe($parent)
         ->and($this->paritySource->sequence)->toBe(0);
 });
@@ -108,7 +109,7 @@ it('rejects a visible destination without Create and retains the panel denial no
         ->assertForbidden();
     expect(fn () => ($action->getActionFunction())(DriveBuilder::row($this->paritySource), ['parent_id' => $this->parityTarget->id], $action))
         ->toThrow(Halt::class);
-    Notification::assertNotified(Notification::make()->title('Move not allowed')->danger());
+    Notification::assertNotified(Notification::make()->title('Move not allowed')->body(PermissionDeniedException::forAbility('create')->getMessage())->danger());
     expect($this->paritySource->refresh()->parent_id)->toBe($parent)
         ->and($this->paritySource->sequence)->toBe(0);
 });

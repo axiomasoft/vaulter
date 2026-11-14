@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Nodes\NodeMoved;
@@ -33,7 +34,8 @@ use Vaulter\Support\Identity;
  *   1. the root never moves;
  *   2. the destination is a live folder of the same storage (no destination = root);
  *   3. cycle — the destination must not be the node itself or one of its own
- *      descendants (checked via the bounded subtree, NOT whereHas('descendants'));
+ *      descendants (bounded subtree, then parent pointers — the subtree CTE drops
+ *      a descendant whose id is a suffix of an ancestor id in the path);
  *   4. the drive policy's children and depth limits at the destination;
  *   5. sibling-name conflict at the destination.
  *
@@ -57,6 +59,7 @@ final readonly class MoveNodeAction
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private NodeSequence $sequence,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     public function execute(DriveContext $context, MoveNodeInput $data): Node
@@ -109,7 +112,7 @@ final readonly class MoveNodeAction
 
             $this->sequence->bump($moved);
 
-            $this->recorder->record(new NodeMoved(
+            $this->recorder->record(new NodeMoved(nodeSnapshots: $this->nodeSnapshots,
                 node: $moved,
                 fromParentId: $fromParentId,
                 toParentId: $toParentId,
@@ -143,8 +146,44 @@ final readonly class MoveNodeAction
             labels: ['operation' => 'subtree_mutate'],
         );
 
-        if (in_array(Identity::stringify($into->id), $descendantIds, strict: true)) {
+        if (in_array(Identity::stringify($into->id), $descendantIds, strict: true)
+            || $this->destinationIsUnder(node: $node, into: $into)) {
             throw NodeCycleException::forMove(nodeId: $node->id, intoId: $into->id);
         }
+    }
+
+    /**
+     * Walk parent_id up to the root. The adjacency CTE's path cycle guard is a
+     * substring test, so an id such as 100 is "already visited" inside 2100 and
+     * never appears in the subtree. Membership in that set alone would let the
+     * move close a cycle. A repeated ancestor that is not this node is an
+     * existing loop; stop there instead of spinning. Past the tree bound the
+     * destination is treated as outside, matching a subtree that stayed complete.
+     */
+    private function destinationIsUnder(Node $node, Node $into): bool
+    {
+        $nodeId = Identity::stringify($node->id);
+        $driveId = Identity::stringify($node->drive_id);
+        $seen = [];
+        $cursor = $into;
+        $bound = $this->nodes->treeBound();
+
+        for ($step = 0; $step <= $bound; $step++) {
+            $cursorId = Identity::stringify($cursor->id);
+            if ($cursorId === $nodeId) {
+                return true;
+            }
+            if (isset($seen[$cursorId]) || $cursor->parent_id === null) {
+                return false;
+            }
+            $seen[$cursorId] = true;
+            $parent = $this->nodes->find($cursor->parent_id);
+            if (!$parent instanceof Node || Identity::stringify($parent->drive_id) !== $driveId) {
+                return false;
+            }
+            $cursor = $parent;
+        }
+
+        return false;
     }
 }

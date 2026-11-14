@@ -30,9 +30,7 @@ final class ListNodeShares extends ListPanelRecords
                 ->label('Create share link')
                 ->icon('heroicon-o-plus')
                 ->schema(NodeShareResource::shareFormComponents())
-                ->action(function (array $data): void {
-                    NodeShareResource::createFromData($data);
-                }),
+                ->action(NodeShareResource::createFromData(...)),
         ];
     }
 }

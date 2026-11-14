@@ -65,7 +65,7 @@ final readonly class UpdateLog
         return $this->database->transaction(function () use ($nodeId, $update, $sha256, $authorize): AppendResult {
             $locked = $this->state->lock($nodeId);
             $authorize?->__invoke();
-            $this->compatibility->assert($locked->type, $locked->binding);
+            $this->compatibility->assert($locked->type, $locked->binding, $locked->collabState !== null);
             if ($locked->trashed) {
                 throw NodeNotFoundException::forId($nodeId);
             }
@@ -144,7 +144,7 @@ final readonly class UpdateLog
      */
     public function read(LockedDocumentState $locked): LogSnapshot
     {
-        $this->compatibility->assert($locked->type, $locked->binding);
+        $this->compatibility->assert($locked->type, $locked->binding, $locked->collabState !== null);
         $head = $this->lockHead($locked, create: false);
         // The transaction began with a plain read (the node, in lock()): on MySQL (REPEATABLE READ) a plain read here
         // would answer from that older snapshot and miss an append committed since, while the head FOR UPDATE sees

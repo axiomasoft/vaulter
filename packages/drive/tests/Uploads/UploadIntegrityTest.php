@@ -6,11 +6,14 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
@@ -49,6 +52,87 @@ it('S3 complete при сумме частей меньше total_size_bytes →
 
     // The truncated object was never assembled/committed.
     expect(Blob::query()->count())->toBe(0);
+});
+
+it('отказывает часть S3 больше объявленного размера и потолка файла до записи части', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 3);
+    $handler = app(S3MultipartHandler::class);
+    $parts = app(UploadPartStoreRepository::class);
+
+    expect(fn () => $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('abcd')))
+        ->toThrow(ValidationException::class);
+    expect($parts->sizeOf($session->refresh(), 1))->toBe(0);
+
+    config()->set('vaulter-drive.uploads.max_file_size', 4);
+    $capped = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 100);
+    $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('ab'));
+    $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('xy'));
+
+    expect(fn () => $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('12345')))
+        ->toThrow(ValidationException::class);
+    expect($parts->sizeOf($capped->refresh(), 1))->toBe(2);
+});
+
+it('tus PATCH больше объявленной длины не пишет байты', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: 3);
+    $handler = app(TusUploadHandler::class);
+
+    expect(fn () => $handler->patch($session->refresh(), UploadTestHelpers::streamFor('abcd'), 0))
+        ->toThrow(ValidationException::class);
+    expect(app(StagedUpload::class)->size($session->refresh()))->toBe(0);
+});
+
+it('пустой PATCH при неизвестной длине завершает tus и позволяет commit', function (): void {
+    $bytes = 'deferred upload';
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: null, targetName: 'deferred.bin');
+    $handler = app(TusUploadHandler::class);
+    $staged = app(StagedUpload::class);
+
+    $partial = $handler->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
+
+    expect($partial)->toBe(['offset' => strlen($bytes), 'complete' => false])
+        ->and($handler->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeFalse()
+        ->and($session->refresh()->total_size_bytes)->toBeNull()
+        ->and($staged->size($session->refresh()))->toBe(strlen($bytes));
+
+    $again = $handler->patch($session->refresh(), UploadTestHelpers::streamFor('more'), strlen($bytes));
+
+    expect($again)->toBe(['offset' => strlen($bytes) + 4, 'complete' => false])
+        ->and($handler->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeFalse();
+
+    $replay = $handler->patch($session->refresh(), UploadTestHelpers::streamFor(''), 0);
+
+    expect($replay)->toBe(['offset' => strlen($bytes) + 4, 'complete' => false]);
+
+    $done = $handler->patch($session->refresh(), UploadTestHelpers::streamFor(''), strlen($bytes) + 4);
+
+    expect($done)->toBe(['offset' => strlen($bytes) + 4, 'complete' => true])
+        ->and($handler->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeTrue()
+        ->and($staged->size($session->refresh()))->toBe(strlen($bytes) + 4)
+        ->and($session->refresh()->total_size_bytes)->toBe(strlen($bytes) + 4);
+
+    app(UploadSessionManager::class)->markAssembled($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
+
+    expect($node->name)->toBe('deferred.bin')
+        ->and($node->size_bytes)->toBe(strlen($bytes) + 4)
+        ->and(Blob::query()->count())->toBe(1)
+        ->and($session->refresh()->status)->toBe(UploadStatus::Committed);
+});
+
+it('пустой PATCH не закрывает tus, пока заявленная длина не набрана', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: 4);
+    $handler = app(TusUploadHandler::class);
+
+    $result = $handler->patch($session->refresh(), UploadTestHelpers::streamFor(''), 0);
+
+    expect($result)->toBe(['offset' => 0, 'complete' => false])
+        ->and($handler->isComplete(UploadSessionSnapshot::fromModel($session->refresh())))->toBeFalse()
+        ->and($session->refresh()->total_size_bytes)->toBe(4);
 });
 
 it('чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-байт, F-P1.4-04', function (): void {

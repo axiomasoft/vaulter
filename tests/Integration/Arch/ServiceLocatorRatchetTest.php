@@ -13,6 +13,9 @@ use Symfony\Component\Finder\Finder;
  * `app(...)` calls hide dependencies and doubled during P3. The baseline pins today's count per file:
  * a file may never grow (and a new file starts at zero), and every conversion must lower the
  * baseline, so the number only goes down. Providers and facades are exempt by nature.
+ * Filament's static Resource::getNavigationGroup() has no argument or constructor injection hook:
+ * ConfiguresNavigationGroup has a reviewed budget of one config lookup, pinned in the baseline.
+ * It reads live configuration instead of retaining another application's config in static state.
  *
  * Lower the baseline after converting calls with:
  *   UPDATE_SNAPSHOT=1 scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch/ServiceLocatorRatchetTest.php

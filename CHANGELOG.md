@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added: `CollaborationAccessPolicy::evaluateAuthenticationReference()` returns no grant when View was revoked on a valid document reference. The hub uses this explicit documents API for its documented `200 allowed=false` response; content access keeps the strict reference check.
+
+- Changed: the qualified platform is PHP 8.4 and Laravel 13, with CI on PostgreSQL 18 and MySQL 9.7 LTS. Laravel 12 and Testbench 10 are no longer a supported line. A database job starts only the engine that cell tests. 1.0 has no installations to migrate.
+- Fixed: a tus retransmit (`Upload-Offset` behind the server) is read only up to `uploads.max_chunk_bytes`, the same ceiling as an append. A larger body is refused before the staged bytes are compared.
+- Fixed: activity stores the same correlation token the response echoes. A raw `X-Request-Id` is no longer written into `v_activity.request_id`, and that column is a 64-character string so an accepted non-UUID token does not abort the operation on PostgreSQL.
+- Fixed: a blank `VAULTER_WEBHOOKS_MANAGE_ABILITY` uses `vaulter.webhooks.manage` instead of opening webhook management to every authenticated user. An explicit PHP `null` still means no ability check.
+
 - Removed mutation testing workflows, Composer/Make commands and the media score-union tool until the kernel is stable. Existing regression tests remain in place.
 
 ### Collaboration package and the durability model (PLAN3.P5, ADR-0031)

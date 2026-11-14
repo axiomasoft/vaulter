@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\RevokeShareInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Sharing\NodeShareRevoked;
@@ -25,7 +26,7 @@ use Vaulter\Events\EventRecorder;
 #[Internal]
 final readonly class RevokeShareLinkAction
 {
-    public function __construct(private NodeShareStoreRepository $shares, private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder, private AggregateVersion $versions) {}
+    public function __construct(private NodeShareStoreRepository $shares, private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder, private AggregateVersion $versions, private AccessSnapshotMapper $accessSnapshots) {}
 
     public function execute(DriveContext $context, RevokeShareInput $input): bool
     {
@@ -39,7 +40,7 @@ final readonly class RevokeShareLinkAction
             $revoked = $this->shares->revoke(share: $share, now: Carbon::now());
             if ($revoked) {
                 $this->versions->bump($share, 'version', AggregateVersion::SHARE);
-                $this->recorder->record(new NodeShareRevoked(share: $share, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(new NodeShareRevoked(accessSnapshots: $this->accessSnapshots, share: $share, actor: $context->actor->ref(), correlationId: $context->correlationId));
                 $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareRevoked->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
 

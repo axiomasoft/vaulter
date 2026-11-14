@@ -8,6 +8,7 @@ use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\AcmeKanbanV2Type;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
+use Vaulter\Collaboration\Tests\Support\Revocation;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
@@ -149,7 +150,7 @@ it('rejects a signature whose timestamp is outside the ±300s window', function 
 
 it('rejects a replayed signature (same nonce twice)', function (): void {
     $node = Hub::document();
-    $body = Hub::appendBody($node, 'replay-bytes');
+    $body = Hub::seedBody($node, 'replay-bytes');
     $headers = Hub::headers($body, Hub::token($node));
 
     webhookAppend($body, $headers)->assertOk();
@@ -158,7 +159,7 @@ it('rejects a replayed signature (same nonce twice)', function (): void {
 
 it('keeps the nonce until the signature itself expires, not just tolerance seconds from receipt', function (): void {
     $node = Hub::document();
-    $body = Hub::appendBody($node, 'late-replay-bytes');
+    $body = Hub::seedBody($node, 'late-replay-bytes');
     // Future-dated within tolerance: the signature stays valid for ~550s from now.
     $headers = Hub::headers($body, Hub::token($node), timestamp: time() + 250);
 
@@ -171,7 +172,7 @@ it('keeps the nonce until the signature itself expires, not just tolerance secon
 
 it('rejects a body other than the signed one, without burning the nonce of the genuine delivery', function (): void {
     $node = Hub::document();
-    $signed = Hub::appendBody($node, 'original-bytes');
+    $signed = Hub::seedBody($node, 'original-bytes');
     $headers = Hub::headers($signed, Hub::token($node));
     $tampered = [...$signed, 'payload' => base64_encode('swapped-bytes'), 'sha256' => hash('sha256', 'swapped-bytes')];
 
@@ -206,6 +207,20 @@ it('answers allowed=false when the user has no access to the node', function ():
         ->assertJsonPath('allowed', false);
 });
 
+it('denies authentication with the published body after View is revoked while load remains hidden', function (): void {
+    ['drive' => $drive, 'folder' => $folder, 'grant' => $grant, 'node' => $node] = Revocation::inheritedDocument();
+    $token = Hub::token($node);
+    $room = Hub::room($node);
+    Hub::call('authenticate', ['room' => $room], $token)->assertOk()->assertJsonPath('allowed', true);
+
+    $drive->access()->revoke($folder->id, $grant);
+
+    Hub::call('authenticate', ['room' => $room], $token)->assertOk()
+        ->assertExactJson(['allowed' => false, 'mode' => 'ro', 'userId' => null]);
+    Hub::call('load', ['room' => $room], $token)->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    expect(Compaction::head($node))->toBeNull();
+});
+
 // ── content this installation cannot save back ──────────────────────────────────────
 //
 // Both hooks answer from the same rule as DocumentOperations::update(): a type that is
@@ -232,28 +247,39 @@ function degradedWebhookNode(): Node
 }
 
 dataset('unwritable collaboration documents', [
-    'degraded read' => [fn (): Node => degradedWebhookNode(), 'document_content_degraded'],
-    'newer schema' => [fn (): Node => Hub::document(schemaVersion: 2), 'document_content_degraded'],
-    'type not installed' => [fn (): Node => Hub::document(content: OpaqueContent::fromArray(['cells' => []]), type: 'acme/gone'), 'document_type_unavailable'],
+    'degraded read' => [fn (): Node => degradedWebhookNode(), null],
+    'newer schema' => [fn (): Node => Hub::document(schemaVersion: 2), 'unsupported_binding'],
+    'type not installed' => [fn (): Node => Hub::documentOfRemovedType(), 'unsupported_binding'],
 ]);
 
-it('authenticates an editor read-only on content that cannot be saved back', function (Closure $node): void {
+it('authenticates an editor read-only on content that cannot be saved back', function (Closure $node, ?string $unavailable): void {
     $node = $node();
 
-    Hub::call('authenticate', ['room' => Hub::room($node)], Hub::token($node))
+    $response = Hub::call('authenticate', ['room' => Hub::room($node)], Hub::token($node));
+    if ($unavailable !== null) {
+        // Unsupported stored bindings cannot be opened even in read mode (P3.3).
+        $response->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable')
+            ->assertJsonPath('meta.context.reason', $unavailable);
+
+        return;
+    }
+    $response
         ->assertOk()
         ->assertJsonPath('allowed', true)
         ->assertJsonPath('mode', 'ro');
 })->with('unwritable collaboration documents');
 
-it('refuses an append over content that cannot be saved back', function (Closure $node): void {
+it('refuses an append over content that cannot be saved back', function (Closure $node, ?string $unavailable): void {
     $node = $node();
     $before = Hub::aggregate($node);
 
     // The room is read-only (authenticate above): nothing of it is appended, so no checkpoint can overwrite the content.
-    Hub::call('append', Hub::seedBody($node, 'room-without-widget'), Hub::token($node))
-        ->assertForbidden()
-        ->assertJsonPath('code', 'permission_denied');
+    $response = Hub::call('append', Hub::seedBody($node, 'room-without-widget'), Hub::token($node));
+    $response->assertStatus($unavailable === null ? 403 : 409)
+        ->assertJsonPath('code', $unavailable === null ? 'permission_denied' : 'collaboration_unavailable');
+    if ($unavailable !== null) {
+        $response->assertJsonPath('meta.context.reason', $unavailable);
+    }
 
     $after = Hub::aggregate($node);
     expect($after->content)->toBe($before->content)

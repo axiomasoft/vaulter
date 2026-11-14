@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Vaulter\Attributes\Internal;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 
 /**
  * The request-scoped audit context the ActivityRecorder stamps onto an activity row
@@ -15,9 +15,9 @@ use Vaulter\Attributes\Internal;
  * the request lifecycle (console commands, queue workers) — recording an event from
  * a job must never blow up for lack of a request.
  *
- * The correlation id prefers an inbound X-Request-Id / X-Correlation-Id header (so a
- * gateway-assigned trace id survives) and otherwise mints a uuid, but only when a
- * request actually exists; off-request it stays null.
+ * The correlation id is the token {@see AssignCorrelationId} already assigned (an
+ * accepted X-Request-Id / X-Correlation-Id, or one ULID). A raw header is never copied
+ * into the audit row. Off-request the id stays null.
  */
 #[Internal]
 final readonly class RequestContext
@@ -69,28 +69,11 @@ final readonly class RequestContext
     }
 
     /**
-     * Prefer a trace id propagated by the gateway/host (X-Request-Id /
-     * X-Correlation-Id); only when none is present do we mint one ONCE and stash it
-     * on the request, so every activity row recorded within the same logical request
-     * shares the one correlation id.
+     * The same token the response echoes. One assignment per request, shared by every
+     * activity row recorded while that request is current.
      */
     private static function requestIdOf(Request $request): string
     {
-        $header = $request->header('X-Request-Id') ?? $request->header('X-Correlation-Id');
-
-        if (is_string($header) && $header !== '') {
-            return $header;
-        }
-
-        $stashed = $request->attributes->get('vaulter_request_id');
-
-        if (is_string($stashed) && $stashed !== '') {
-            return $stashed;
-        }
-
-        $minted = (string) Str::uuid();
-        $request->attributes->set('vaulter_request_id', $minted);
-
-        return $minted;
+        return AssignCorrelationId::resolve($request);
     }
 }

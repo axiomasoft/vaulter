@@ -380,6 +380,49 @@ describe('VaulterDrive', () => {
     expect(wrapper.get('.vaulter-node-list__name').text()).toBe('renamed-elsewhere.txt')
   })
 
+  it('does not say the item was reloaded when the re-read after 412 is 401 or the network fails', async () => {
+    const stale = node({ id: '3', kind: 'file', name: 'old.txt', etag: '"3.1.old"' })
+    const { client, update } = driveClient([stale])
+    update.mockRejectedValue(new VaulterApiError({ status: 412, code: 'node_sequence_mismatch' }))
+    const get = client.nodes.get as ReturnType<typeof vi.fn>
+    get.mockImplementation((id: string) => {
+      if (id === '3') {
+        return Promise.reject(new VaulterApiError({ status: 401, code: 'http_401', title: 'Unauthenticated' }))
+      }
+
+      return Promise.resolve(node({ id, kind: 'folder', name: 'Root' }))
+    })
+    const wrapper = mount(VaulterDrive, { props: { driveId: '7' }, ...withClient(client) })
+    await flushAll()
+
+    await wrapper.get('.vaulter-node-list__action--rename').trigger('click')
+    await flushAll()
+    await wrapper.get('.vaulter-name-dialog__input').setValue('mine.txt')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await flushAll()
+
+    const message = wrapper.get('.vaulter-drive__error').text()
+    expect(message).not.toContain('reloaded')
+    expect(message).toContain('412')
+    expect(wrapper.get('.vaulter-node-list__name').text()).toBe('old.txt')
+
+    get.mockImplementation((id: string) => {
+      if (id === '3') {
+        return Promise.reject(new TypeError('network down'))
+      }
+
+      return Promise.resolve(node({ id, kind: 'folder', name: 'Root' }))
+    })
+    await wrapper.get('.vaulter-node-list__action--rename').trigger('click')
+    await flushAll()
+    await wrapper.get('.vaulter-name-dialog__input').setValue('mine-again.txt')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await flushAll()
+
+    expect(wrapper.get('.vaulter-drive__error').text()).not.toContain('reloaded')
+    expect(wrapper.get('.vaulter-node-list__name').text()).toBe('old.txt')
+  })
+
   it('offers download through the files route', async () => {
     const target = node({ id: '3', kind: 'file', name: 'x.txt' })
     const { client } = driveClient([target])

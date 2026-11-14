@@ -22,6 +22,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 /*
  * Healing (D49): an ingest of the same sha256 into the same scope rewrites the object and lifts the integrity mark,
  * under the lock of (scope, sha256), as a re-commit lifts a tombstone. Other scopes and other bytes are untouched.
+ * The rewrite lands on a sibling key before the canonical object is replaced, so a failed swap keeps the previous bytes.
  */
 
 beforeEach(function (): void {
@@ -35,11 +36,11 @@ function healCommit(string $bytes, string $tenant = '1'): Blob
 }
 
 /** A driver over the real one whose put() and delete() can be replaced. */
-function healDriver(?Closure $put = null, ?Closure $delete = null): StorageDriver
+function healDriver(?Closure $put = null, ?Closure $delete = null, ?Closure $get = null): StorageDriver
 {
-    return new class(app(StorageDriver::class), $put, $delete) implements StorageDriver
+    return new class(app(StorageDriver::class), $put, $delete, $get) implements StorageDriver
     {
-        public function __construct(private readonly StorageDriver $inner, private readonly ?Closure $put, private readonly ?Closure $delete) {}
+        public function __construct(private readonly StorageDriver $inner, private readonly ?Closure $put, private readonly ?Closure $delete, private readonly ?Closure $get) {}
 
         public function disk(?string $disk = null): Filesystem
         {
@@ -53,7 +54,7 @@ function healDriver(?Closure $put = null, ?Closure $delete = null): StorageDrive
 
         public function get(string $key, ?string $disk = null): mixed
         {
-            return $this->inner->get($key, $disk);
+            return $this->get !== null ? ($this->get)($key, $disk) : $this->inner->get($key, $disk);
         }
 
         public function exists(string $key, ?string $disk = null): bool
@@ -113,7 +114,8 @@ it('rewrites a bad object and lifts the mark when the same bytes are ingested ag
         ->and($blob->fresh()->integrity_failed_at)->toBeNull()
         // The check time is cleared as well, so the next scrub verifies the rewritten object first.
         ->and($blob->fresh()->integrity_checked_at)->toBeNull()
-        ->and(app(BlobScrubber::class)->scrub())->toMatchArray(['checked' => 1, 'failures' => []]);
+        ->and(app(BlobScrubber::class)->scrub())->toMatchArray(['checked' => 1, 'failures' => []])
+        ->and(Storage::disk('local')->allFiles())->toHaveCount(1);
 })->with([
     'missing object' => [null],
     'wrong size' => ['heal'],
@@ -174,6 +176,7 @@ it('keeps the mark when the rewrite fails', function (): void {
     $driver->shouldReceive('keyFor')->andReturnUsing(static fn (BlobScope $scope, string $sha) => $real->keyFor($scope, $sha));
     $driver->shouldReceive('delete')->andReturnUsing(static fn (string $key, ?string $disk = null) => $real->delete($key, $disk));
     $driver->shouldReceive('exists')->andReturnUsing(static fn (string $key, ?string $disk = null) => $real->exists($key, $disk));
+    $driver->shouldReceive('get')->andReturnUsing(static fn (string $key, ?string $disk = null) => $real->get($key, $disk));
     $driver->shouldReceive('promote')->andThrow(new RuntimeException('disk full'));
     $store = new Vaulter\Media\Cas\BlobStore(
         $driver,
@@ -184,10 +187,11 @@ it('keeps the mark when the rewrite fails', function (): void {
     );
 
     expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('rewrite fails'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class, 'disk full')
-        ->and($blob->fresh()->isIntact())->toBeFalse();
+        ->and($blob->fresh()->isIntact())->toBeFalse()
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad');
 });
 
-it('keeps the mark when the driver reports a failed write and the object is not there', function (): void {
+it('keeps the mark and the previous object when the driver reports a failed write', function (): void {
     $blob = healDamage(healCommit('write reports false'), 'bad');
     $inner = app(StorageDriver::class);
     $failing = new class($inner) implements StorageDriver
@@ -235,7 +239,7 @@ it('keeps the mark when the driver reports a failed write and the object is not 
     expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('write reports false'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class)
         ->and($blob->fresh()->integrity_failed_at)->not->toBeNull()
         ->and($blob->fresh()->isIntact())->toBeFalse()
-        ->and(Storage::disk('local')->exists($blob->storage_key))->toBeFalse();
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad');
 });
 
 it('keeps the mark when the store does not remove the bad object', function (): void {
@@ -277,4 +281,147 @@ it('leaves the object alone when the mark was lifted after the commit read the r
         ->and($committed->isIntact())->toBeTrue()
         ->and($blob->fresh()->isIntact())->toBeTrue()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('healed by another');
+});
+
+it('rewrites a same-length corrupt object on a dedup hit and leaves the row unmarked', function (): void {
+    $blob = healCommit('same len');
+    Storage::disk('local')->put($blob->storage_key, 'SAME LEN');
+    expect($blob->fresh()->integrity_failed_at)->toBeNull();
+
+    $again = healCommit('same len');
+
+    expect($again->getKey())->toBe($blob->getKey())
+        ->and($again->isIntact())->toBeTrue()
+        ->and($blob->fresh()->integrity_failed_at)->toBeNull()
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('same len')
+        ->and(stream_get_contents(app(BlobStore::class)->read($again->getKey())))->toBe('same len')
+        ->and(Storage::disk('local')->allFiles())->toHaveCount(1);
+});
+
+it('does not succeed a dedup hit while a same-length object still mismatches', function (): void {
+    $blob = healCommit('same len');
+    Storage::disk('local')->put($blob->storage_key, 'SAME LEN');
+    $store = healStore(healDriver(put: static fn (): bool => false));
+
+    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same len'), BlobScope::tenant('1'))))
+        ->toThrow(RuntimeException::class)
+        ->and($blob->fresh()->integrity_failed_at)->toBeNull()
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('SAME LEN');
+});
+
+final class StalledBlobVerificationStream
+{
+    public $context;
+
+    private int $reads = 0;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        if (++$this->reads > 1) {
+            throw new RuntimeException('Read the stalled object again.');
+        }
+
+        return '';
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [];
+    }
+}
+
+it('refuses a stalled dedup verification without repeatedly reading or replacing the object', function (): void {
+    $blob = healCommit('kept bytes');
+    $inner = app(StorageDriver::class);
+    stream_wrapper_register('vaulterstalled', StalledBlobVerificationStream::class);
+    $store = healStore(healDriver(get: static fn (string $key, ?string $disk): mixed => $key === $blob->storage_key
+        ? fopen('vaulterstalled://object', 'rb')
+        : $inner->get($key, $disk)));
+
+    try {
+        expect(fn () => $store->commit(CasTestHelpers::streamFor('kept bytes'), BlobScope::tenant('1')))
+            ->toThrow(RuntimeException::class, 'Content stream made no progress.');
+        expect(Storage::disk('local')->get($blob->storage_key))->toBe('kept bytes')
+            ->and($blob->fresh()->isIntact())->toBeTrue()
+            ->and(Storage::disk('local')->allFiles())->toHaveCount(1);
+    } finally {
+        stream_wrapper_unregister('vaulterstalled');
+    }
+});
+
+it('refuses a dedup hit when the canonical object cannot be replaced', function (): void {
+    $blob = healCommit('same len');
+    Storage::disk('local')->put($blob->storage_key, 'SAME LEN');
+    $store = healStore(healDriver(delete: static function (): void {}));
+
+    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same len'), BlobScope::tenant('1'))))
+        ->toThrow(RuntimeException::class, 'was not rewritten')
+        ->and($blob->fresh()->integrity_failed_at)->toBeNull()
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('SAME LEN');
+});
+
+it('keeps the mark and restores the previous object when the swap onto the canonical key fails', function (): void {
+    $blob = healDamage(healCommit('restore me'), 'bad bytes');
+    $canonical = $blob->storage_key;
+    $inner = app(StorageDriver::class);
+    $driver = new class($inner, $canonical) implements StorageDriver
+    {
+        private int $canonicalPuts = 0;
+
+        public function __construct(private readonly StorageDriver $inner, private readonly string $canonical) {}
+
+        public function disk(?string $disk = null): Filesystem
+        {
+            return $this->inner->disk($disk);
+        }
+
+        public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
+        {
+            if ($key === $this->canonical) {
+                $this->canonicalPuts++;
+
+                if ($this->canonicalPuts === 1) {
+                    throw new RuntimeException('swap failed');
+                }
+            }
+
+            return $this->inner->put($key, $stream, $disk, $ifNoneMatch, $options);
+        }
+
+        public function get(string $key, ?string $disk = null): mixed
+        {
+            return $this->inner->get($key, $disk);
+        }
+
+        public function exists(string $key, ?string $disk = null): bool
+        {
+            return $this->inner->exists($key, $disk);
+        }
+
+        public function delete(string $key, ?string $disk = null): void
+        {
+            $this->inner->delete($key, $disk);
+        }
+
+        public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
+        {
+            return $this->inner->temporaryUrl($key, $expiresAt, $disk);
+        }
+    };
+
+    expect(fn () => CasTestHelpers::row(healStore($driver)->commit(CasTestHelpers::streamFor('restore me'), BlobScope::tenant('1'))))
+        ->toThrow(RuntimeException::class, 'swap failed')
+        ->and($blob->fresh()->isIntact())->toBeFalse()
+        ->and(Storage::disk('local')->get($canonical))->toBe('bad bytes')
+        ->and(Storage::disk('local')->allFiles())->toHaveCount(1);
 });

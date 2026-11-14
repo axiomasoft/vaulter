@@ -4,6 +4,7 @@ import { useVaulterI18n } from '../../i18n'
 import type { Node } from '../../api/types'
 
 // `vaulter/download`: the item has no preview, only its bytes.
+// An anchor, not fetch: `direct_signed` answers 302, and fetch would follow it into a CORS failure.
 const props = defineProps<{ node: Node }>()
 
 const client = useVaulterClient()

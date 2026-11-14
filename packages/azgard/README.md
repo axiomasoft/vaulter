@@ -129,9 +129,7 @@ Three tiers:
 Both use `axiomasoft/azguard` from a sibling `../azguard` checkout through a path repository
 (the AzGuard monorepo keeps the package in `packages/core`, which a Composer VCS repository
 cannot address). The path repository installs whatever the sibling checkout holds, so keep
-it at the pinned commit locally; the dedicated
-[AzGuard workflow](../../.github/workflows/azgard.yml) checks out exactly that commit of the
-public AzGuard repository and tests Laravel 12 and 13 independently.
+it at the pinned commit locally. CI checks out that same commit and tests the package on Laravel 13.
 
 ```bash
 composer install && composer test

@@ -385,6 +385,13 @@ final readonly class OutboxStore
      * (a done or dead row goes back to pending with a fresh budget) and acknowledges the gaps the range covers.
      * Returns the seqs the range actually covered (null when no event of it is alive) and the rows made pending.
      *
+     * A leased row is not reset. The consumer runs outside the lease transaction, so the worker may already have
+     * performed the side effect: moving the row to pending would deliver it again, and bumping the generation would
+     * let that worker's {@see complete()} miss while the side effect still stands. The gaps stay open while any
+     * leased row remains, so a later replay can redrive it once the lease resolves. Delivery rows are locked first
+     * (consumer row, then deliveries — the order {@see detachExpired()} uses) so a complete cannot land between the
+     * reset and the decision to acknowledge.
+     *
      * `dead` counts the dead rows of the range that went back to pending (they are included in `rows`).
      *
      * @param  list<string>                                                     $types
@@ -393,12 +400,14 @@ final readonly class OutboxStore
     public function replay(string $id, array $types, int $from, int $to, CarbonImmutable $now): array
     {
         return $this->database->transaction(function () use ($id, $types, $from, $to, $now): array {
+            $this->lockReplay($id, $from, $to);
             $live = $this->events()->where('outbox_seq', '>=', $from)->where('outbox_seq', '<=', $to);
             $first = (clone $live)->min('outbox_seq');
             $last = (clone $live)->max('outbox_seq');
             if ($first === null || $last === null || $types === []) {
                 // Nothing alive in the range: the loss is acknowledged only explicitly (--ack-only), never by a replay.
-                if ($first !== null && $last !== null) {
+                // An empty subscription still must not close a gap over a delivery a worker is finishing.
+                if ($first !== null && $last !== null && !$this->leasedInRange($id, $from, $to)) {
                     $this->acknowledge($id, $from, $to, $now);
                 }
 
@@ -406,16 +415,13 @@ final readonly class OutboxStore
             }
 
             $rows = $this->insertMissing($id, $types, $from - 1, $to, $now, onlyMissing: true);
-            $inRange = fn (): Builder => $this->deliveries()
-                ->where('consumer_id', $id)
-                ->where('outbox_seq', '>=', $from)
-                ->where('outbox_seq', '<=', $to);
-            $dead = $inRange()->where('state', DeliveryState::Dead->value)->count();
-            $rows += $inRange()
+            $dead = $this->inRange($id, $from, $to)->where('state', DeliveryState::Dead->value)->count();
+            $rows += $this->inRange($id, $from, $to)
                 ->whereIn('state', [DeliveryState::Done->value, DeliveryState::Dead->value])
                 ->update(['state' => DeliveryState::Pending->value, 'attempts' => 0, 'next_attempt_at' => $now, 'continuation' => null, 'last_error' => null, 'done_at' => null, 'updated_at' => $now]);
             // A range whose head was already pruned is only partly replayed: its gaps stay open for --ack-only.
-            if (self::int($first) <= $from) {
+            // Same when a leased row remains: acknowledging it would drop a delivery the worker can still finish as done.
+            if (self::int($first) <= $from && !$this->leasedInRange($id, $from, $to)) {
                 $this->acknowledge($id, $from, $to, $now);
             }
 
@@ -505,6 +511,26 @@ final readonly class OutboxStore
     public function connection(): Connection
     {
         return $this->database->connection();
+    }
+
+    /** Consumer row first, then the deliveries of the range: {@see detachExpired()} locks in that order. */
+    private function lockReplay(string $id, int $from, int $to): void
+    {
+        $this->consumers()->where('consumer_id', $id)->lockForUpdate()->first();
+        $this->inRange($id, $from, $to)->lockForUpdate()->get(['event_id']);
+    }
+
+    private function leasedInRange(string $id, int $from, int $to): bool
+    {
+        return $this->inRange($id, $from, $to)->where('state', DeliveryState::Leased->value)->exists();
+    }
+
+    private function inRange(string $id, int $from, int $to): Builder
+    {
+        return $this->deliveries()
+            ->where('consumer_id', $id)
+            ->where('outbox_seq', '>=', $from)
+            ->where('outbox_seq', '<=', $to);
     }
 
     /**

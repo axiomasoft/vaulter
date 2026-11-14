@@ -13,6 +13,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
@@ -55,6 +56,7 @@ final readonly class CreateShareLinkAction
         private ShareLinkRules $rules,
         private TenancyConfig $tenancy,
         private EventRecorder $recorder,
+        private AccessSnapshotMapper $accessSnapshots,
     ) {}
 
     public function execute(DriveContext $context, CreateShareLinkInput $input): MintedShareLink
@@ -96,7 +98,7 @@ final readonly class CreateShareLinkAction
             ));
             $minted = new MintedShareLink(share: $share, token: $token);
 
-            $this->recorder->record(new NodeShareCreated(share: $minted->share, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeShareCreated(accessSnapshots: $this->accessSnapshots, share: $minted->share, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareCreated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $minted;

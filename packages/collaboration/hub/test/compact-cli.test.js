@@ -39,6 +39,8 @@ function leaseEntry(document) {
   return {
     document,
     generation: 2,
+    protocol: 'yjs',
+    state_format: 'yjs-update-v1',
     lease_token: `lease-${document}`,
     lease_expires_at: new Date(Date.now() + 60_000).toISOString(),
     checkpoint_seq: 4,

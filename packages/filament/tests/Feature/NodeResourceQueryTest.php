@@ -61,6 +61,23 @@ it('keeps live and trashed nodes apart within the listed rows', function (): voi
         ->and(panelNodeIds(trashed: true))->toContain((string) $trashed->getKey())->not->toContain((string) $live->getKey());
 });
 
+it('does not offer a folder or anything inside it as its own move destination', function (): void {
+    $admin = DriveBuilder::user();
+    $this->actingAs($admin);
+
+    $storage = DriveBuilder::storage();
+    $parent = DriveBuilder::folder($storage, 'Parent');
+    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Child', parent: $parent->getKey());
+    $sibling = DriveBuilder::folder($storage, 'Sibling');
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $admin);
+
+    $destinations = array_map(strval(...), array_keys(PanelNodes::destinations((string) $storage->getKey(), (string) $parent->getKey())));
+
+    expect($destinations)->toContain((string) $sibling->getKey())
+        ->and($destinations)->not->toContain((string) $parent->getKey())
+        ->and($destinations)->not->toContain($child->id);
+});
+
 it('keeps purged nodes out of the rows', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);

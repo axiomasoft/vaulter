@@ -59,19 +59,39 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
             @rewind($stream);
         }
 
-        while (!feof($stream)) {
-            $buffer = fread($stream, self::CHUNK_BYTES);
+        try {
+            while (!feof($stream)) {
+                $buffer = fread($stream, self::CHUNK_BYTES);
 
-            if ($buffer === false) {
-                break;
+                if ($buffer === false || ($buffer === '' && !feof($stream))) {
+                    throw new RuntimeException('Content stream made no progress.');
+                }
+                if ($buffer === '') {
+                    break;
+                }
+
+                hash_update($hash, $buffer);
+                $size += strlen($buffer);
+                $offset = 0;
+                $length = strlen($buffer);
+                while ($offset < $length) {
+                    $written = fwrite($target, substr($buffer, $offset));
+                    if ($written === false || $written === 0) {
+                        throw new RuntimeException('Unable to stage content.');
+                    }
+                    $offset += $written;
+                }
             }
 
-            hash_update($hash, $buffer);
-            $size += strlen($buffer);
-            fwrite($target, $buffer);
-        }
+            fclose($target);
+        } catch (\Throwable $exception) {
+            if (is_resource($target)) {
+                fclose($target);
+            }
+            @unlink($path);
 
-        fclose($target);
+            throw $exception;
+        }
 
         return new StagedTempObject(
             path: $path,

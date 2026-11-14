@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Comments;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\ResolveCommentInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -34,6 +35,7 @@ final readonly class ResolveCommentAction
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private AggregateVersion $versions,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, ResolveCommentInput $data): NodeComment
@@ -58,7 +60,7 @@ final readonly class ResolveCommentAction
             $resolved = $this->comments->resolve($row, $resolvedBy);
             $this->versions->bump($resolved, 'version', NodeComment::AGGREGATE);
             $resolved->setRelation('node', $current);
-            $this->recorder->record(new CommentResolved(comment: $resolved, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new CommentResolved(comment: $resolved, actor: $context->actor->ref(), correlationId: $context->correlationId, documents: $this->documentSnapshots));
 
             return $resolved;
         });

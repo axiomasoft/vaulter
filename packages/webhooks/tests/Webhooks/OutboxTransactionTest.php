@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Models\Activity\Activity;
@@ -32,7 +33,7 @@ beforeEach(function (): void {
 
 function outboxTransactionEvent(object $test): NodeGrantCreated
 {
-    return new NodeGrantCreated(grant: $test->grant, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
+    return new NodeGrantCreated(accessSnapshots: app(AccessSnapshotMapper::class), grant: $test->grant, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
 }
 
 it('stages the outbox row INSIDE the active transaction, not after commit', function (): void {

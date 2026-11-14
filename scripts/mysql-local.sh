@@ -6,7 +6,7 @@
 #   scripts/mysql-local.sh status   up|down
 #
 # A native mysqld cannot keep its data in memory here (its AppArmor profile forbids /dev/shm); on disk the core
-# DatabaseMigrations partition alone took 702 s. This runs the CI image (mysql:8.4, see weekly-full.yml) in Docker with
+# DatabaseMigrations partition alone took 702 s. This runs the CI image line (mysql:9.7, see weekly-full.yml) in Docker with
 # the data directory on tmpfs and the throw-away durability settings of db-test-env.sh: the same partition takes 158 s.
 # While it is up, `scripts/test-db.sh mysql` (so `scripts/t mysql …`) reuses it as a DB_EXTERNAL server.
 # Container: vaulter-mysql-local on 127.0.0.1:${VAULTER_MYSQL_PORT:-33061}. Databases still end in _test. Not for CI.
@@ -16,7 +16,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="$root/var/mysql-local.env"
 name=vaulter-mysql-local
 port="${VAULTER_MYSQL_PORT:-33061}"
-image="${VAULTER_MYSQL_IMAGE:-mysql:8.4}"
+image="${VAULTER_MYSQL_IMAGE:-mysql:9.7}"
 
 alive() {
     [[ "$(docker inspect --format '{{.State.Health.Status}}' "$name" 2>/dev/null)" == healthy ]]

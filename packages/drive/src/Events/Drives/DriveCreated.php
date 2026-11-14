@@ -38,6 +38,8 @@ final readonly class DriveCreated extends DriveEvent
 
     #[Internal]
     public function __construct(
+        DriveSnapshotMapper $driveSnapshots,
+        NodeSnapshotMapper $nodeSnapshots,
         Drive $storage,
         Node $root,
         ActorRef $actor,
@@ -47,9 +49,9 @@ final readonly class DriveCreated extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->storageRow = $storage;
-        $this->storage = app(DriveSnapshotMapper::class)->map($storage);
+        $this->storage = $driveSnapshots->map($storage);
         $this->rootRow = $root;
-        $this->root = app(NodeSnapshotMapper::class)->facts($root);
+        $this->root = $nodeSnapshots->facts($root);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

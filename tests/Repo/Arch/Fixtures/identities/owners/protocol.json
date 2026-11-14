@@ -158,6 +158,12 @@
             "why": "realtime codes belong to the collaboration package"
         },
         {
+            "match": "exact",
+            "value": "problem:collaboration_unavailable",
+            "owner": "documents",
+            "why": "PLAN4-D16 P3.3: documents owns neutral collaboration availability and its protocol slot"
+        },
+        {
             "match": "prefix",
             "value": "problem:document",
             "owner": "documents",

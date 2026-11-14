@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Activity\Activity;
@@ -47,7 +48,7 @@ function eventRecorderRename(object $test, string $name): mixed
 
 function eventRecorderEvent(object $test, ?string $eventId = null): NodeRenamed
 {
-    return new NodeRenamed(
+    return new NodeRenamed(nodeSnapshots: app(NodeSnapshotMapper::class),
         node: DriveTestHelpers::model($test->folder->id),
         fromName: 'alpha',
         toName: 'alpha',

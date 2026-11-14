@@ -89,7 +89,7 @@ it('gives an editor a read-only session when the room could not write', function
     }
     expect(sessions($handle)->collaborationSession($node->getKey(), $clientSchemaVersion)->mode)->toBe(CollaborationMode::Read);
 })->with([
-    'type not installed' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5, content: OpaqueContent::fromArray(['cells' => []]), type: 'acme/gone'), null]],
+    'type not installed' => [static fn (): array => [HubTestHelpers::documentOfRemovedType(actorId: 5), null]],
     'client speaks another schema' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5), 2]],
     'archived drive' => [static function (): array {
         $node = HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5);

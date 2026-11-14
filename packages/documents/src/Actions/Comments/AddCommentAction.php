@@ -7,8 +7,11 @@ namespace Vaulter\Documents\Actions\Comments;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Events\Comments\CommentAdded;
+use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Repositories\Comments\NodeCommentReadRepository;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
@@ -17,6 +20,7 @@ use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Support\Identity;
 
 /**
  * Add a comment to a node (docs/adr/0014-legacy-docvault-strangler.md шаг 1). The author is the operation's actor — a
@@ -36,10 +40,12 @@ final readonly class AddCommentAction
 {
     public function __construct(
         private NodeCommentStoreRepository $comments,
+        private NodeCommentReadRepository $commentReads,
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, Node $node, AddCommentInput $data): NodeComment
@@ -58,6 +64,7 @@ final readonly class AddCommentAction
                 throw NodeNotFoundException::forId($node->id);
             }
             $this->tree->assertLive($current);
+            $this->assertParentOnNode($current, $data->parentId);
 
             $comment = $this->comments->create([
                 'node_id' => $current->getKey(),
@@ -69,9 +76,28 @@ final readonly class AddCommentAction
                 'version' => 0,
             ]);
             $comment->setRelation('node', $current);
-            $this->recorder->record(new CommentAdded(comment: $comment, actor: $author, correlationId: $context->correlationId));
+            $this->recorder->record(new CommentAdded(comment: $comment, actor: $author, correlationId: $context->correlationId, documents: $this->documentSnapshots));
 
             return $comment;
         });
+    }
+
+    /**
+     * A reply must name a comment of this node. Another node's comment and a key the
+     * column cannot hold answer as not found, the same way the public operation does.
+     */
+    private function assertParentOnNode(Node $node, int|string|null $parentId): void
+    {
+        if ($parentId === null) {
+            return;
+        }
+
+        $model = $this->commentReads->forNode($node)->getModel();
+        $parent = Identity::fitsKey($model, $parentId)
+            ? $this->commentReads->forNode($node)->whereKey($parentId)->first()
+            : null;
+        if (!$parent instanceof NodeComment) {
+            throw CommentNotFoundException::forNode($node->getKey(), $parentId);
+        }
     }
 }

@@ -4,8 +4,8 @@ Files, folders and collaborative documents for any Laravel app — authorized by
 
 ## Requirements
 
-- PHP 8.4, Laravel 12 or 13
-- PostgreSQL 15+ (primary), MySQL 8.0+, or SQLite for development
+- PHP 8.4, Laravel 13
+- PostgreSQL 18 (primary), MySQL 9.7 LTS, or SQLite for development
 - Node 22+ for the `@vaulter/vue` client and the optional collaboration hub
 
 ## Install

@@ -128,9 +128,9 @@ are not a public API — change Vaulter data only through its PHP API.
 
 | Engine | Status | Use it for |
 |---|---|---|
-| **PostgreSQL 14+** | **Recommended.** The full test suite runs against Postgres in CI across every id strategy. | Production. Everything below works natively. |
+| **PostgreSQL 18** | **Recommended.** CI qualifies this version, across every id strategy. | Production. Everything below works natively. |
 | **SQLite** | Fully supported. The default test lane runs on in-memory SQLite. | Local development, tests, small single-file installs. |
-| **MySQL 8+** | Supported. Live siblings are unique by a stored `name_key_hash` (sha2 of the binary `name_key`, NULL when trashed); a functional unique index enforces the single drive root; cascading foreign keys are preserved. | Production where Postgres-only locking and index features are not required. |
+| **MySQL 9.7 LTS** | Supported. CI qualifies this version. Live siblings are unique by a stored `name_key_hash` (sha2 of the binary `name_key`, NULL when trashed); a functional unique index enforces the single drive root; cascading foreign keys are preserved. | Production where Postgres-only locking and index features are not required. |
 | **MariaDB** | Host-key DDL is tested. A complete fresh installation is not guaranteed: the `mariadb` driver still guards live siblings and the single drive root with STORED generated columns over `parent_id`, the pattern that conflicts with cascading foreign keys on MySQL. The complete suite is not part of the required database matrix. | Evaluate against your target MariaDB version before production use. |
 
 ::: tip PHP extension
@@ -173,7 +173,7 @@ The primary-key strategy is configurable (see
 
 The recursive folder tree (`v_nodes.parent_id → v_nodes.id`) is a self-referencing foreign
 key and migrates under all three strategies. PostgreSQL and SQLite use partial unique
-indexes for live sibling names and the single root. MySQL 8 expresses the root predicate as
+indexes for live sibling names and the single root. MySQL expresses the root predicate as
 a functional unique index, so `ON DELETE CASCADE` remains valid without stored generated
 columns based on foreign-key fields.
 

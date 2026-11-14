@@ -12,9 +12,11 @@ use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
@@ -62,6 +64,8 @@ final readonly class CreateDocumentAction
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, CreateDocumentInput $data): Node
@@ -132,6 +136,8 @@ final readonly class CreateDocumentAction
                 epoch: $result->document->collab_epoch,
                 actor: $context->actor->ref(),
                 correlationId: $context->correlationId,
+                nodes: $this->nodeSnapshots,
+                documents: $this->documentSnapshots,
             ));
 
             return $node;

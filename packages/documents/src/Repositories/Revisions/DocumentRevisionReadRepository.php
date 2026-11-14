@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
+use Vaulter\Support\Identity;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -51,6 +52,11 @@ final class DocumentRevisionReadRepository
      */
     public function forNode(Node $node, int|string $revisionId): ?DocumentRevision
     {
+        $model = $this->documentsConfig->model('document_revision');
+        if ($revisionId === '' || !Identity::fitsKey(new $model, $revisionId)) {
+            return null;
+        }
+
         return $this->forDocumentOf($node)->whereKey($revisionId)->first();
     }
 

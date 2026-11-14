@@ -77,6 +77,7 @@
     "drive/src/Uploads/StagedUpload.php": 1,
     "drive/src/Uploads/UploadSessionManager.php": 4,
     "filament/src/Resources/ActivityResource.php": 1,
+    "filament/src/Resources/Concerns/ConfiguresNavigationGroup.php": 1,
     "filament/src/Resources/NodeShareResource.php": 1,
     "filament/src/Support/PanelActivity.php": 1,
     "filament/src/VaulterPlugin.php": 2,

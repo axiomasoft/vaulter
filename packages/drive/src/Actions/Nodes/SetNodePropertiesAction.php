@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Nodes;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Nodes\NodeUpdated;
 use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Drive\Models\Node;
@@ -39,6 +40,7 @@ final readonly class SetNodePropertiesAction
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     public function execute(DriveContext $context, SetNodePropertiesInput $data): Node
@@ -62,7 +64,7 @@ final readonly class SetNodePropertiesAction
 
             $this->store->update(node: $current, attributes: ['properties' => $next, 'updated_by' => $context->actor->ref()->id]);
             $this->sequence->bump($current);
-            $this->recorder->record(new NodeUpdated(node: $current, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeUpdated(nodeSnapshots: $this->nodeSnapshots, node: $current, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $current;
         });

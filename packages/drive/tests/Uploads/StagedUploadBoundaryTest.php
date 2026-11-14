@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 
@@ -29,6 +30,36 @@ it('compares a retransmit at its actual offset and length', function (string $by
     'empty retransmit' => ['prefix-tail', '', 7, true],
     'discard crosses buffer boundary' => [str_repeat('p', 2_097_153).'tail', 'tail', 2_097_153, true],
 ]);
+
+it('refuses a retransmit past the chunk ceiling and leaves the staged bytes', function (): void {
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
+    $session = UploadTestHelpers::session(UploadTestHelpers::storage());
+    $staged = app(StagedUpload::class);
+    $staged->write($session, 'abcd');
+    $stream = UploadTestHelpers::streamFor('abcdefgh');
+
+    try {
+        expect(fn () => $staged->rangeMatches($session, $stream, 0))
+            ->toThrow(ValidationException::class, 'maximum chunk size of 4 bytes');
+        expect(Storage::disk('local')->get($staged->keyFor($session)))->toBe('abcd');
+    } finally {
+        fclose($stream);
+    }
+});
+
+it('matches a retransmit that sits exactly on the chunk ceiling', function (): void {
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
+    $session = UploadTestHelpers::session(UploadTestHelpers::storage());
+    $staged = app(StagedUpload::class);
+    $staged->write($session, 'abcd');
+    $stream = UploadTestHelpers::streamFor('abcd');
+
+    try {
+        expect($staged->rangeMatches($session, $stream, 0))->toBeTrue();
+    } finally {
+        fclose($stream);
+    }
+});
 
 it('truncates an unacknowledged suffix before appending at the authoritative offset', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage());

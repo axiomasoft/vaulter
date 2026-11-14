@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Actions\Drives;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
@@ -21,7 +22,7 @@ use Vaulter\Events\EventRecorder;
 #[Internal]
 final readonly class ArchiveDriveAction
 {
-    public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder, private AggregateVersion $versions) {}
+    public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder, private AggregateVersion $versions, private DriveSnapshotMapper $driveSnapshots) {}
 
     /** @param int|null $expectedVersion the drive's version the caller read (If-Match); compared under the row lock, null skips it */
     public function execute(DriveContext $context, ?int $expectedVersion = null): Drive
@@ -36,7 +37,7 @@ final readonly class ArchiveDriveAction
             }
             $drive = $this->drives->setStatus($drive, DriveStatus::Archived);
             $this->versions->bump($drive, 'version', AggregateVersion::DRIVE);
-            $this->recorder->record(new DriveArchived(drive: $drive, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new DriveArchived(driveSnapshots: $this->driveSnapshots, drive: $drive, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forDrive(drive: $drive, reason: DriveEventType::DriveArchived->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $drive;

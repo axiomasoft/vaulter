@@ -6,17 +6,14 @@ namespace Vaulter\Documents\Actions\Revisions;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
-use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Support\DriveLifecycle;
-use Vaulter\Drive\Support\TreeGuard;
 
 /**
  * Pin a checkpoint out of the prune window (keep_forever) or release the pin, the one
@@ -31,12 +28,10 @@ use Vaulter\Drive\Support\TreeGuard;
 final readonly class UpdateRevisionRetentionAction
 {
     public function __construct(
-        private DocumentReadRepository $documents,
         private DocumentRevisionReadRepository $read,
         private DocumentRevisionStoreRepository $store,
         private VaulterDatabase $database,
-        private TreeGuard $tree,
-        private DriveLifecycle $lifecycle,
+        private DocumentWriteLock $writeLock,
     ) {}
 
     public function execute(DriveContext $context, UpdateRevisionRetentionInput $data): DocumentRevision
@@ -45,24 +40,11 @@ final readonly class UpdateRevisionRetentionAction
         $versionId = $data->revision instanceof DocumentRevision ? $data->revision->getKey() : $data->revision;
 
         return $this->database->transaction(function () use ($context, $node, $versionId, $data): DocumentRevision {
-            $driveId = $context->driveId();
             $nodeId = $node->getRawOriginal($node->getKeyName());
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
-            $this->database->lockAggregateShared('drives', $driveId);
-            $this->lifecycle->assertWritable($context);
-            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
-            if (!$this->tree->sameStorage($current, $driveId)) {
-                throw NodeNotFoundException::forId($nodeId);
-            }
-            // A trash that committed before this lock leaves nothing to write to.
-            $this->tree->assertLive($current);
-            if (!$current->kind->isDocument()) {
-                throw NotADocumentException::forNode($nodeId);
-            }
-            $node = $this->tree->sync($node, $current);
-            $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
+            [$node] = $this->writeLock->acquire($context, $node, $nodeId);
 
             $revision = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->read->forNode($node, $versionId) : null;
             if (!$revision instanceof DocumentRevision) {

@@ -151,6 +151,30 @@ describe('useNodes', () => {
       expect(vm.conflict.value?.nodeId).toBe('1')
     })
 
+    it('keeps the row when the re-read is 401 or the network fails, and does not call that a reload', async () => {
+      const stale = makeFile({ id: '1', name: 'old', etag: '"1.1.old"' })
+      const writeError = problem(412, 'node_sequence_mismatch')
+      const children = vi.fn().mockResolvedValue(pageOf([stale]))
+      const update = vi.fn().mockRejectedValue(writeError)
+      const get = vi.fn()
+        .mockRejectedValueOnce(problem(401, 'http_401'))
+        .mockRejectedValueOnce(new TypeError('network down'))
+      const { vm } = mountWith({ nodes: { children, update, get } }, () => useNodes('7'))
+      await vm.refresh()
+
+      await expect(vm.rename(stale, 'mine')).rejects.toBe(writeError)
+
+      expect(vm.nodes.value).toEqual([stale])
+      expect(vm.conflict.value).toBeNull()
+      expect(vm.error.value).toMatchObject({ status: 401, code: 'http_401' })
+
+      await expect(vm.rename(stale, 'mine')).rejects.toBe(writeError)
+
+      expect(vm.nodes.value).toEqual([stale])
+      expect(vm.conflict.value).toBeNull()
+      expect(vm.error.value).toBeInstanceOf(TypeError)
+    })
+
     it('clears the conflict on the next mutation', async () => {
       const node = makeFile({ id: '1' })
       const children = vi.fn().mockResolvedValue(pageOf([node]))

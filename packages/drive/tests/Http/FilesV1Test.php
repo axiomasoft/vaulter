@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Vaulter\Drive\Data\UploadSource;
@@ -100,6 +102,33 @@ it('downloads the head and one exact revision through the strict responder', fun
         ->and($head->headers->get('X-Vaulter-Api-Version'))->toBe('1');
 
     expect(streamedContent($this->get(V1::url('files/'.$file->id.'/revisions/'.$first.'/download'))->assertOk()))->toBe('first');
+});
+
+it('answers a revision id the key cannot hold as node_not_found and does not query it', function (): void {
+    $file = V1::file($this->drive, 'v.txt', 'bytes');
+    $bad = 'no-such-revision';
+    $bound = [];
+    DB::listen(function (QueryExecuted $query) use (&$bound, $bad): void {
+        foreach ($query->bindings as $binding) {
+            if (is_scalar($binding) && (string) $binding === $bad) {
+                $bound[] = $query->sql;
+            }
+        }
+    });
+
+    foreach (['strict', 'direct_signed'] as $mode) {
+        config()->set('vaulter-drive.downloads.delivery_mode', $mode);
+        $this->getJson(V1::url('files/'.$file->id.'/revisions/'.$bad.'/download'))
+            ->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    }
+    $this->deleteJson(V1::url('files/'.$file->id.'/revisions/'.$bad))
+        ->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->patchJson(V1::url('files/'.$file->id.'/revisions/'.$bad), ['keep_forever' => true])
+        ->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->postJson(V1::url('files/'.$file->id.'/revisions/'.$bad.'/restore'), [], ['If-Match' => DriveV1::etag($this, $file->id)])
+        ->assertNotFound()->assertJsonPath('code', 'node_not_found');
+
+    expect($bound)->toBe([]);
 });
 
 it('answers not_a_file for content routes on a folder', function (): void {

@@ -11,6 +11,7 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Changes\ChangeJournal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -163,7 +164,7 @@ it('journals an occurrence once and creates a missing head on first use', functi
     app(VaulterDatabase::class)->connection()->table('v_drive_change_heads')->where('drive_id', $this->drive->model()->getKey())->delete();
     app(VaulterDatabase::class)->connection()->table('v_drive_changes')->where('drive_id', $this->drive->model()->getKey())->delete();
 
-    $event = new NodeRenamed(node: DriveTestHelpers::model($folder->id), fromName: 'alpha', toName: 'alpha', actor: Actor::system('replay')->ref(), correlationId: (string) Str::ulid());
+    $event = new NodeRenamed(nodeSnapshots: app(NodeSnapshotMapper::class), node: DriveTestHelpers::model($folder->id), fromName: 'alpha', toName: 'alpha', actor: Actor::system('replay')->ref(), correlationId: (string) Str::ulid());
     $journal = app(ChangeJournal::class);
     $seqs = app(VaulterDatabase::class)->transaction(static fn (): array => [
         $journal->append($event, $event->journal()),
@@ -177,7 +178,7 @@ it('journals an occurrence once and creates a missing head on first use', functi
 
 it('refuses an entry whose operation contradicts the catalogue', function (): void {
     $folder = $this->drive->folders()->create('alpha');
-    $event = new NodeRenamed(node: DriveTestHelpers::model($folder->id), fromName: 'alpha', toName: 'alpha', actor: Actor::system('replay')->ref(), correlationId: (string) Str::ulid());
+    $event = new NodeRenamed(nodeSnapshots: app(NodeSnapshotMapper::class), node: DriveTestHelpers::model($folder->id), fromName: 'alpha', toName: 'alpha', actor: Actor::system('replay')->ref(), correlationId: (string) Str::ulid());
 
     app(VaulterDatabase::class)->transaction(static fn () => app(ChangeJournal::class)->append($event, JournalEffect::remove($folder->id, ChangeReason::Deleted)));
 })->throws(LogicException::class, 'does not match its catalogue operation');

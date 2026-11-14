@@ -445,6 +445,12 @@ For a custom byte backend (S3 / local), implement `StorageDriver` and bind it â€
 
 The public `CollaborationProtocolDriver` receives a verified `CollaborationGrant` and returns a neutral session; the common policy checks access. See [collaboration protocols](/extending/collaboration-protocols).
 
+`Vaulter\Documents\Access\CollaborationAccessPolicy::evaluateAuthenticationReference()` accepts the same actor,
+drive, node, tenant, correlation id, mode ceiling and optional client schema version as `evaluateReference()`.
+It returns `?CollaborationAccessDecision`: `null` means a live document in that scope whose actor cannot View it,
+and no grant is issued. Invalid references still throw `NodeNotFoundException`. Authorized decisions retain the
+same policy checks. `evaluateReference()` remains the strict entry point for content access.
+
 #### `Vaulter\Documents\State\CollaborativeState` and `PendingStateDrainer`
 
 The neutral state contract documents offers a transport (API): `lock($nodeId)` takes the tree, node and document locks in

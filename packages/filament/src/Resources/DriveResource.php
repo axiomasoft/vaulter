@@ -16,6 +16,7 @@ use Illuminate\Pagination\Paginator;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
 use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelRecord;
@@ -35,6 +36,8 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class DriveResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'drive';

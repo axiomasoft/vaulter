@@ -3,6 +3,9 @@
 declare(strict_types=1);
 use Illuminate\Http\Request;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Exceptions\Configuration\InsecureProductionConfiguration;
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
 
 arch('all package code declares strict types')
     ->expect('Vaulter')
@@ -301,15 +304,21 @@ test('split technical roots keep classes in domain subfolders', function (): voi
     ];
 
     $offenders = [];
+    $checked = 0;
 
     foreach ($rootsWithAllowed as $root => $allowed) {
         $dir = "{$src}/{$root}";
+        // A split can move the entire technical root to its owning package.
+        if (!is_dir($dir)) {
+            continue;
+        }
 
         foreach (scandir($dir) ?: [] as $entry) {
             if (!str_ends_with($entry, '.php')) {
                 continue;
             }
 
+            $checked++;
             $class = substr($entry, 0, -4);
 
             if (!in_array($class, $allowed, true)) {
@@ -318,7 +327,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         }
     }
 
-    expect($offenders)->toBe([]);
+    expect($checked)->toBeGreaterThan(0)
+        ->and($offenders)->toBe([]);
 });
 
 /**
@@ -694,6 +704,8 @@ arch('domain exceptions implement the HTTP problem contract')
     ->ignoring([
         'Vaulter\Exceptions\VaulterException',
         // P2.5 configuration failures stop boot before any endpoint can respond.
+        // Production invariants also stop bootstrap or workers before serving HTTP (P5.1).
+        InsecureProductionConfiguration::class,
         'Vaulter\Exceptions\Configuration\InvalidConfigurationException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
@@ -701,6 +713,12 @@ arch('domain exceptions implement the HTTP problem contract')
         // A mutating operation without a policy (D47) is a developer error: no problem code, a 500 internal_error.
         'Vaulter\Exceptions\Operations\UnknownOperationException',
     ]);
+
+test('production invariant failures remain bootstrap errors outside the HTTP problem contract', function (): void {
+    expect(is_subclass_of(InsecureProductionConfiguration::class, VaulterException::class))->toBeTrue()
+        ->and(is_subclass_of(InsecureProductionConfiguration::class, ProblemException::class))->toBeFalse()
+        ->and((new InsecureProductionConfiguration('bootstrap refused'))->problemCode())->toBe('insecure_production_configuration');
+});
 
 arch('production source never imports testing helpers (D35)')
     ->expect('Vaulter')

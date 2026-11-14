@@ -32,6 +32,7 @@ final readonly class NodeGrantCreated extends DriveEvent
 
     #[Internal]
     public function __construct(
+        AccessSnapshotMapper $accessSnapshots,
         NodeGrant $grant,
         ActorRef $actor,
         string $correlationId,
@@ -40,7 +41,7 @@ final readonly class NodeGrantCreated extends DriveEvent
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->grantRow = $grant;
-        $this->grant = app(AccessSnapshotMapper::class)->grant($grant);
+        $this->grant = $accessSnapshots->grant($grant);
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

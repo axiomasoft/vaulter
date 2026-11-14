@@ -82,16 +82,16 @@
       "digest": "sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d",
       "mediaType": "application/vnd.oci.image.index.v1+json"
     },
-    "postgres:16-alpine": {
-      "tag": "postgres:16-alpine",
-      "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
-      "digest": "sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+    "postgres:18-alpine": {
+      "tag": "postgres:18-alpine",
+      "image": "postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95",
+      "digest": "sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95",
       "mediaType": "application/vnd.oci.image.index.v1+json"
     },
-    "mysql:8.4": {
-      "tag": "mysql:8.4",
-      "image": "mysql:8.4@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7",
-      "digest": "sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7",
+    "mysql:9.7": {
+      "tag": "mysql:9.7",
+      "image": "mysql:9.7@sha256:df90258da46f6e7ff8574ff84f17618aba0765cac749928299c69fd4e7cb8ad8",
+      "digest": "sha256:df90258da46f6e7ff8574ff84f17618aba0765cac749928299c69fd4e7cb8ad8",
       "mediaType": "application/vnd.oci.image.index.v1+json"
     },
     "rhysd/actionlint:1.7.7": {

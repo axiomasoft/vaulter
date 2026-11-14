@@ -22,13 +22,15 @@ use Vaulter\Drive\Models\Node;
  * the MySQL grammar as they run here; the run itself is a PLAN4 line (AppendRaceTest).
  */
 
-function lockingAppend(Node $node, string $payload, string $updateId): void
+function lockingAppend(Node $node, string $payload, string $updateId, bool $seed = false): void
 {
     app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
         generation: Hub::aggregate($node)->collab_epoch,
         updateId: $updateId,
         payload: $payload,
         claimedSha256: hash('sha256', $payload),
+        origin: $seed ? 'server' : 'client',
+        seedStateVersion: $seed ? Hub::aggregate($node)->state_version : null,
     ));
 }
 
@@ -83,8 +85,8 @@ beforeEach(function (): void {
 it('reads the receipt of an appended update id with a locking read, on a first append and on a retry', function (): void {
     $id = (string) Str::uuid();
 
-    $first = lockingSelects(fn () => lockingAppend($this->node, 'update', $id));
-    $retry = lockingSelects(fn () => lockingAppend($this->node, 'update', $id));
+    $first = lockingSelects(fn () => lockingAppend($this->node, 'update', $id, seed: true));
+    $retry = lockingSelects(fn () => lockingAppend($this->node, 'update', $id, seed: true));
 
     foreach ([$first, $retry] as $selects) {
         expect($selects['collaboration_receipts'])->toHaveCount(1)
@@ -95,7 +97,7 @@ it('reads the receipt of an appended update id with a locking read, on a first a
 });
 
 it('reads the document row and the tail of a load with locking reads', function (): void {
-    lockingAppend($this->node, 'first', (string) Str::uuid());
+    lockingAppend($this->node, 'first', (string) Str::uuid(), seed: true);
     lockingAppend($this->node, 'second', (string) Str::uuid());
 
     $snapshot = null;

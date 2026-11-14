@@ -7,9 +7,13 @@ use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Factory;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Collaboration\CollaborationCallResolver;
+use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\HostUserResolver;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -36,8 +40,41 @@ it('fences changed binding and tenant identity before any user backend access', 
     $node = Hub::document();
     $token = Hub::token($node, claims: $claims);
     $response = Hub::call('load', ['room' => Hub::room($node)], $token);
-    $response->assertStatus(array_key_exists('tenant', $claims) ? 404 : 409);
+    $status = array_key_exists('tenant', $claims) ? 404 : (array_key_exists('protocol', $claims) ? 401 : 409);
+    $response->assertStatus($status)->assertJsonPath('code', match ($status) {
+        401 => 'actor_required',
+        404 => 'node_not_found',
+        default => 'collaboration_unavailable',
+    });
 })->with([[['tenant' => '0']], [['tenant' => '']], [['schema_version' => 2]], [['state_format' => 'foreign']], [['protocol' => 'foreign']]]);
+
+it('keeps invalid room references hidden even when the actor has no View', function (string $endpoint, string $case): void {
+    $node = Hub::document(level: null);
+    $claims = [];
+    $room = Hub::room($node, 0);
+    if ($case === 'tenant') {
+        $claims['tenant'] = 'other-tenant';
+    }
+    if ($case === 'drive' || $case === 'missing') {
+        $driveId = $case === 'drive' ? (string) Hub::document()->drive_id : (string) $node->drive_id;
+        $nodeId = $case === 'missing' ? '999999' : (string) $node->getKey();
+        $room = app(CollaborationConfig::class)->room($driveId, $nodeId, 0);
+        $claims = ['drive_id' => $driveId, 'document_id' => $nodeId, 'room' => $room];
+    }
+    if ($case === 'trash') {
+        Vaulter::drive($node->storage()->firstOrFail())->asSystem('test fixture')->nodes()->trash((string) $node->getKey());
+    }
+    if ($case === 'deleting') {
+        app(VaulterDatabase::class)->write(fn () => $node->storage()->update(['status' => 'deleting']));
+    }
+    if ($case === 'folder') {
+        $node = DriveTestHelpers::model(Vaulter::drive($node->storage()->firstOrFail())->asSystem('test fixture')->folders()->create('Folder'));
+        $room = Hub::room($node, 0);
+    }
+
+    Hub::call($endpoint, ['room' => $room], Hub::token($node, epoch: 0, claims: $claims))
+        ->assertNotFound()->assertJsonPath('code', 'node_not_found');
+})->with(['authenticate', 'load'])->with(['drive', 'tenant', 'missing', 'trash', 'deleting', 'folder']);
 
 it('accepts only the trusted provider morph type and the exact resolved id', function (): void {
     $old = Relation::morphMap();

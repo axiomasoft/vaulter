@@ -21,9 +21,11 @@ final class CollaborationSchedule implements ModuleSchedule
         'collaboration_prune' => ['vaulter:collaboration:prune', SchedulingRegistrar::DEFAULT_EXPIRY],
     ];
 
+    public function __construct(private readonly ScheduleConfig $scheduleConfig) {}
+
     public function define(Schedule $schedule, Repository $config): void
     {
-        $frequencies = app(ScheduleConfig::class)->frequencies('vaulter-collaboration', self::KEYS);
+        $frequencies = $this->scheduleConfig->frequencies('vaulter-collaboration', self::KEYS);
         foreach (self::TASKS as $key => [$command, $expiry]) {
             $frequency = $frequencies[$key] ?? null;
             if ($frequency !== null) {

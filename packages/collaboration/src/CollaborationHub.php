@@ -13,6 +13,7 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
+use Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -55,6 +56,35 @@ final readonly class CollaborationHub
      */
     public function open(CollaborationCall $call, mixed $room): HubRoom
     {
+        $actor = $this->actor($call, $room);
+        $ref = $call->ref;
+        $decision = $this->policy->evaluateReference(
+            $actor, $ref->driveId, $ref->nodeId, $call->tenant, $call->jti,
+            ceiling: $call->mayStore() ? CollaborationMode::Write : CollaborationMode::Read,
+            clientSchemaVersion: $call->schemaVersion,
+        );
+
+        return $this->checkedRoom($call, $decision);
+    }
+
+    /** @internal A valid room reference whose actor lost View authenticates as denied, without a grant. */
+    #[Internal]
+    public function authenticate(CollaborationCall $call, mixed $room): ?HubRoom
+    {
+        $actor = $this->actor($call, $room);
+        $ref = $call->ref;
+        $decision = $this->policy->evaluateAuthenticationReference(
+            $actor, $ref->driveId, $ref->nodeId, $call->tenant, $call->jti,
+            ceiling: $call->mayStore() ? CollaborationMode::Write : CollaborationMode::Read,
+            clientSchemaVersion: $call->schemaVersion,
+        );
+
+        return $decision === null ? null : $this->checkedRoom($call, $decision);
+    }
+
+    /** Validate the requested room and the complete principal before consulting document authority. */
+    private function actor(CollaborationCall $call, mixed $room): Actor
+    {
         if (!is_string($room) || $room !== $call->room) {
             throw PermissionDeniedException::forAbility(Ability::View->value);
         }
@@ -69,11 +99,14 @@ final readonly class CollaborationHub
             || Identity::stringify($resolved->ref()->id) !== Identity::stringify($call->principal->id)) {
             throw NodeNotFoundException::forId($ref->nodeId);
         }
-        $decision = $this->policy->evaluateReference(
-            $resolved, $ref->driveId, $ref->nodeId, $call->tenant, $call->jti,
-            ceiling: $call->mayStore() ? CollaborationMode::Write : CollaborationMode::Read,
-            clientSchemaVersion: $call->schemaVersion,
-        );
+
+        return $resolved;
+    }
+
+    /** The generation and binding fences are identical for every authorized hub call. */
+    private function checkedRoom(CollaborationCall $call, CollaborationAccessDecision $decision): HubRoom
+    {
+        $ref = $call->ref;
         $grant = $decision->grant;
         if ($grant->generation !== $ref->epoch) {
             throw new CollaborationEpochMismatchException(expected: $ref->epoch, actual: $grant->generation);

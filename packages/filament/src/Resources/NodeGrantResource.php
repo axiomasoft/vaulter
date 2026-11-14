@@ -19,7 +19,7 @@ use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Carbon;
+use InvalidArgumentException;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
@@ -29,10 +29,14 @@ use Vaulter\Drive\Contracts\Access\AccessOperations;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Rules\Access\RegisteredSubjectType;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
 use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelExpiry;
 use Vaulter\Filament\Support\PanelGrants;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
@@ -53,6 +57,8 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class NodeGrantResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'node grant';
@@ -154,11 +160,13 @@ final class NodeGrantResource extends Resource
                 ->label('Subject type')
                 ->helperText('A registered morph alias (e.g. user, role, team).')
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->rule(new RegisteredSubjectType),
 
             TextInput::make('subject_id')
                 ->label('Subject id')
-                ->required(),
+                ->required()
+                ->maxLength(191),
 
             Select::make('role')
                 ->options(self::roleOptions())
@@ -172,7 +180,8 @@ final class NodeGrantResource extends Resource
 
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
-                ->placeholder('Never'),
+                ->placeholder('Never')
+                ->rules(PanelExpiry::grantRules()),
         ];
     }
 
@@ -180,7 +189,8 @@ final class NodeGrantResource extends Resource
      * Persist a grant from the validated create-form data through the node's drive handle.
      * The node must be one the admin can view and the access operations require Manage on it;
      * a denial surfaces as a warning notification rather than a silent write. A hidden node
-     * and a missing node answer alike.
+     * and a missing node answer alike. A subject or role the grant refuses is that same
+     * warning, and no row is written.
      *
      * @param array<string, mixed> $data
      */
@@ -203,22 +213,28 @@ final class NodeGrantResource extends Resource
             return;
         }
 
-        /** @var string $expiresAt */
-        $expiresAt = $data['expires_at'] ?? '';
+        // A bad date stays a field error. An identity or role GrantInput refuses must not escape as a 500.
+        $expiresAt = PanelExpiry::forGrant($data['expires_at'] ?? null);
 
-        $handle->access()->grant(
-            node: $node->id,
-            grant: new GrantInput(
-                subject: new Subject(
-                    // Filament validation already supplies these enum/string fields with their declared types.
-                    type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast
-                    id: self::scalarId($data['subject_id'] ?? ''),
+        try {
+            $handle->access()->grant(
+                node: $node->id,
+                grant: new GrantInput(
+                    subject: new Subject(
+                        // Filament validation already supplies these enum/string fields with their declared types.
+                        type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast
+                        id: self::scalarId($data['subject_id'] ?? ''),
+                    ),
+                    role: (string) $data['role'], // @pest-mutate-ignore: RemoveStringCast
+                    scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
+                    expiresAt: $expiresAt,
                 ),
-                role: (string) $data['role'], // @pest-mutate-ignore: RemoveStringCast
-                scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
-                expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
-            ),
-        );
+            );
+        } catch (InvalidArgumentException|UnknownRoleException $exception) {
+            self::notifyDenied($exception->getMessage());
+
+            return;
+        }
 
         Notification::make()->title('Grant saved')->success()->send();
     }
@@ -311,9 +327,7 @@ final class NodeGrantResource extends Resource
             return $value; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
-        $string = (string) $value;
-
-        return ctype_digit($string) ? (int) $string : $string;
+        return is_scalar($value) ? (string) $value : '';
     }
 
     private static function notifyDenied(string $body): void

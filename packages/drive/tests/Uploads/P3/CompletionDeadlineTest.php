@@ -130,7 +130,7 @@ it('D19-request starts the budget once before the session critical section of Up
     config()->set('vaulter-drive.uploads.resumable.complete_timeout_seconds', 60);
 
     $uploads = app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('upload test')->uploads();
-    expect(fn () => $uploads->complete($session))->toThrow(UploadConflictException::class, 'did not complete within 60s');
+    expect(fn () => $uploads->complete($session->getKey()))->toThrow(UploadConflictException::class, 'did not complete within 60s');
     expect($reads)->toBe(2)
         ->and($session->refresh()->status)->toBe(UploadStatus::Assembled)
         ->and(FileRevision::query()->count())->toBe(0)
@@ -198,7 +198,7 @@ it('D19-preflight refuses an unboundable remote disk before any staged open, CAS
     app()->instance(CompletionClock::class, new CompletionClock(app(DriveConfig::class), steppingClock(0.001, $reads)));
 
     $uploads = app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('upload test')->uploads();
-    expect(fn () => $uploads->complete($session))->toThrow(UploadConflictException::class, 'does not support a bounded transport timeout');
+    expect(fn () => $uploads->complete($session->getKey()))->toThrow(UploadConflictException::class, 'does not support a bounded transport timeout');
     Storage::set('local', $local);
     foreach ($methods as $method) {
         $spy->shouldNotHaveReceived($method);

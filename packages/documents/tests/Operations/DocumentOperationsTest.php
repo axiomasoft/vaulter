@@ -137,14 +137,14 @@ it('reads a historical revision read-only and refuses a revision of another docu
 it('restores a revision forward with a new epoch and the content precondition', function (): void {
     [, $documents, $node] = documentsFixture('original');
     $original = $documents->revisions($node->id)->items[0];
-    $documents->update($node->id, DocumentTestHelpers::content('changed')->toArray());
+    $updated = $documents->update($node->id, DocumentTestHelpers::content('changed')->toArray());
 
     expect(fn () => $documents->restore($node->id, $original, expectedStateVersion: 1))->toThrow(StaleDocumentStateException::class);
 
     $restored = $documents->restore($node->id, $original->id, expectedStateVersion: 2);
 
     expect($restored->stateVersion)->toBe(3)
-        ->and($restored->epoch)->toBe(1)
+        ->and($restored->epoch)->toBe($updated->epoch + 1)
         ->and($restored->revision?->restoredFromRevisionId)->toBe($original->id)
         ->and(documentText($restored))->toBe('original');
 });

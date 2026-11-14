@@ -76,7 +76,9 @@ function rawDisableServices(array $resolved): array
 {
     $descriptors = [CollaborationModule::class, CollaborationSchema::class];
 
-    return array_values(array_filter($resolved, static fn (string $class): bool => str_starts_with($class, 'Vaulter\\Collaboration\\') && !in_array($class, $descriptors, true)));
+    return array_values(array_filter($resolved, static fn (string $class): bool => str_starts_with($class, 'Vaulter\\Collaboration\\')
+        && !str_starts_with($class, 'Vaulter\\Collaboration\\Tests\\')
+        && !in_array($class, $descriptors, true)));
 }
 
 /**

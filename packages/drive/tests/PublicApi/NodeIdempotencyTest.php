@@ -13,6 +13,7 @@ use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\MoveOptions;
 use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -266,10 +267,14 @@ it('replays an upload initiation with the same session', function (): void {
     $input = new InitiateUploadInput(protocol: UploadProtocol::Tus, targetParent: $folder->id, targetName: 'big.bin', totalSizeBytes: 10);
 
     $first = UploadsOf::handle(($this->keyed)('up-1'))->initiate($input);
+    $session = UploadSession::query()->findOrFail($first->id);
+    $persisted = $session->getRawOriginal();
     $second = UploadsOf::handle(($this->keyed)('up-1'))->initiate($input);
 
-    expect($second)->toBeInstanceOf(UploadSession::class)->and($second->upload_id)->toBe($first->upload_id)->and($second->total_size_bytes)->toBe(10)
-        ->and($second->target_parent_id)->toBe($first->target_parent_id)
+    expect($second)->toBeInstanceOf(UploadSessionSnapshot::class)->toEqual($first)
+        ->and($second->uploadId)->toBe($first->uploadId)->and($second->totalSizeBytes)->toBe(10)
+        ->and($second->targetParentId)->toBe($folder->id)
+        ->and($session->fresh()->getRawOriginal())->toBe($persisted)
         ->and(UploadSession::query()->count())->toBe(1)->and(nodeEvents(DriveEventType::UploadInitiated))->toBe(1);
     expect(fn () => UploadsOf::handle(($this->keyed)('up-1'))->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetParent: $folder->id, targetName: 'big.bin', totalSizeBytes: 11)))->toThrow(IdempotencyKeyReusedException::class);
 });

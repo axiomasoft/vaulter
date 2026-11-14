@@ -473,9 +473,38 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-azgard.permissions.manage` | — | `'documents.manage'` | — |
 | `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `'documents.create'` | — |
 
+### `vaulter-collaboration`
 
 | Key | Env | Default | Description |
 |---|---|---|---|
+| `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
+| `vaulter-collaboration.hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | `null` | The room-token keys (Laravel only, never given to the hub): `kid => secret`, HS256, each at least 32 bytes and different from the webhook secret the hub holds. The environment value is "kid:secret" pairs, comma-separated; a PHP array is accepted too. Tokens are signed with jwt_active_kid and verified with any key of the set: add the new key, switch the active kid, remove the old key once its tokens have expired (docs/key-rotation.md). |
+| `vaulter-collaboration.hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | `null` | — |
+| `vaulter-collaboration.hub.issuer` | `VAULTER_COLLAB_ISSUER` | `null` | The `iss` of a room token, compared as an exact string with the server configuration (null: app.url). |
+| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
+| `vaulter-collaboration.hub.token_ttl` | — | `300` | The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no control message reaches the hub, because a renewal checks the rights again (D26). |
+| `vaulter-collaboration.hub.clock_skew` | — | `30` | The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds, 0..30); part of the exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance). |
+| `vaulter-collaboration.hub.timestamp_tolerance` | — | `300` | — |
+| `vaulter-collaboration.control` | — | — | How a change of effective permissions (drive.access.effective_permissions_changed) reaches the hubs at once: `redis` publishes on the channel vaulter:collab:control of the connection below, `http` POSTs to the management control endpoint of every hub listed (signed with hub.webhook_secret), `none` sends nothing — the hubs then learn of it on the next append or renewal. A lost message is never replayed: the token lifetime bounds the exposure. |
+| `vaulter-collaboration.control.transport` | `VAULTER_COLLAB_CONTROL_TRANSPORT` | `'none'` | — |
+| `vaulter-collaboration.control.redis.connection` | `VAULTER_COLLAB_CONTROL_REDIS` | `'default'` | — |
+| `vaulter-collaboration.control.http.urls` | `VAULTER_COLLAB_CONTROL_URLS` | `''` | The management base URLs of the hubs (comma-separated in the environment), e.g. http://hub-1:1235. |
+| `vaulter-collaboration.control.http.timeout` | — | `2` | — |
+| `vaulter-collaboration.max_state_bytes` | — | `16777216` | The largest binary Yjs state one hub store may write (413 above it). |
+| `vaulter-collaboration.mode` | `VAULTER_COLLAB_MODE` | `'buffered'` | When an edit counts as saved (protocol 2): `buffered` — the hub may sync it before the backend committed it; `durable` — the hub acknowledges an edit only with the backend receipt. |
+| `vaulter-collaboration.limits.update_bytes` | — | `1048576` | The largest decoded Yjs update one append carries, and the largest append request body (413 above either, checked before the body is decoded). |
+| `vaulter-collaboration.limits.request_bytes` | — | `2097152` | — |
+| `vaulter-collaboration.compaction` | — | — | The hub's compaction worker leases a document with uncheckpointed edits once its log holds this many updates, this many bytes of them, or its oldest one is this many seconds old; a drain request always qualifies. A lease lasts lease_ttl seconds. |
+| `vaulter-collaboration.compaction.trigger_updates` | — | `500` | — |
+| `vaulter-collaboration.compaction.trigger_bytes` | — | `1048576` | — |
+| `vaulter-collaboration.compaction.trigger_age` | — | `600` | — |
+| `vaulter-collaboration.compaction.lease_ttl` | — | `60` | — |
+| `vaulter-collaboration.drain.restore_deadline` | — | `10` | How long a restore, REST replace, content read or export of a document with uncheckpointed edits waits for the hub to compact them (seconds); after it the request answers 409 document_state_pending. |
+| `vaulter-collaboration.drain.cache_store` | — | `null` | The cache store of the draining flag vaulter:collaboration:drain sets (null: the default store). Every PHP process must see it, so not an `array` or `null` store (the doctor reports one as an error). |
+| `vaulter-collaboration.drain.max_append_tx` | — | `5` | The longest an append transaction lasts, lock waits included (seconds): a drain reports its outcome no earlier than this after it set the flag, so an append that read the flag before it was set has committed by then. |
+| `vaulter-collaboration.retention.retired_generation_days` | — | `7` | Days the log and receipts of a closed generation stay after its last token and retry could still arrive. |
+| `vaulter-collaboration.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
+| `vaulter-collaboration.schedule.collaboration_prune` | — | `'dailyAt:03:40'` | — |
 
 ### `vaulter`
 
@@ -491,6 +520,8 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.ids.strategies.uuid7` | — | `Uuid7Ids::class` | — |
 | `vaulter.tenancy.enabled` | `VAULTER_TENANT_ENABLED` | `false` | — |
 | `vaulter.tenancy.resolver` | — | `null` | — |
+| `vaulter.security` | — | — | id => nonempty reason: production invariants a host knowingly accepts (ADR-0036); never a structural error. |
+| `vaulter.security.accepted_risks` | — | `[]` | — |
 | `vaulter.modules` | — | `[]` | Module activation overrides (D22): module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
 | `vaulter.routes.prefix` | `VAULTER_ROUTE_PREFIX` | `'api/vaulter'` | — |
 | `vaulter.routes.middleware.authenticated` | — | `['api', 'auth:sanctum']` | — |
@@ -527,6 +558,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 |---|---|---|---|
 | `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add SpreadsheetDocumentType or your own here. |
 | `vaulter-documents.default_type` | — | `'vaulter/rich-text'` | — |
+| `vaulter-documents.collaboration.session_ttl` | — | `300` | — |
 | `vaulter-documents.content.max_size_kb` | — | `5120` | — |
 | `vaulter-documents.revisions.limit` | — | `50` | — |
 | `vaulter-documents.revisions.checkpoint_interval_seconds` | — | `300` | — |
@@ -595,6 +627,8 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-drive.downloads.inline_mime_types` | — | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` | — |
 | `vaulter-drive.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
 | `vaulter-drive.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
+| `vaulter-drive.changes.key_generation` | — | `1` | Raise on every instance together to expire all cursors and sync keys (after key rotation or re-enabling the journal); clients bootstrap again. |
+| `vaulter-drive.changes.cursor_max_age_seconds` | — | `86400` | Seconds a cursor lives after startCursor(): 1..2592000, at most the retention. |
 | `vaulter-drive.handlers` | — | `[]` | — |
 | `vaulter-drive.uploads.scan.required` | — | `null` | — |
 | `vaulter-drive.uploads.scan.mode` | — | `null` | — |
@@ -616,6 +650,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-drive.uploads.resumable.chunk_size` | `VAULTER_UPLOAD_CHUNK_SIZE` | `8_388_608` | — |
 | `vaulter-drive.uploads.resumable.max_chunk_size` | `VAULTER_UPLOAD_MAX_CHUNK_BYTES` | `67_108_864` | — |
 | `vaulter-drive.uploads.resumable.session_ttl_hours` | `VAULTER_UPLOAD_SESSION_TTL_HOURS` | `24` | — |
+| `vaulter-drive.uploads.resumable.complete_timeout_seconds` | `VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS` | `60` | Finite monotonic budget of one completion request, DB retries included (1..300 s). |
 | `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` | `VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS` | `20` | — |
 | `vaulter-drive.uploads.resumable.metadata.allowed_keys` | — | `['filename', 'filetype', 'name', 'mime_type']` | — |
 | `vaulter-drive.uploads.resumable.metadata.max_value_length` | — | `512` | — |

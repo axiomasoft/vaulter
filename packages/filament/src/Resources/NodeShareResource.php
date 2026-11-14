@@ -19,7 +19,6 @@ use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use Override;
 use UnitEnum;
@@ -35,8 +34,10 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
 use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelExpiry;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Support\PanelRecords;
@@ -60,6 +61,8 @@ use Vaulter\Filament\Support\PanelShares;
 #[Internal]
 final class NodeShareResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'node share';
@@ -209,7 +212,8 @@ final class NodeShareResource extends Resource
 
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
-                ->placeholder('Never'),
+                ->placeholder('Never')
+                ->rules(fn (SharingConfig $sharing): array => PanelExpiry::shareRules($sharing->maxTtlHours())),
         ];
     }
 
@@ -221,7 +225,7 @@ final class NodeShareResource extends Resource
      *
      * @param array<string, mixed> $data
      */
-    public static function createFromData(array $data): void
+    public static function createFromData(array $data, SharingConfig $sharing): void
     {
         $nodeId = $data['node_id'] ?? null;
         $found = is_int($nodeId) || is_string($nodeId) ? PanelNodes::find($nodeId) : null;
@@ -242,9 +246,8 @@ final class NodeShareResource extends Resource
 
         /** @var string $password */
         $password = $data['password'] ?? '';
-        /** @var string $expiresAt */
-        $expiresAt = $data['expires_at'] ?? '';
         $maxUses = $data['max_uses'] ?? null;
+        $expiresAt = PanelExpiry::forShare($data['expires_at'] ?? null, $sharing->maxTtlHours());
 
         try {
             $minted = $handle->shares()->create(
@@ -254,7 +257,7 @@ final class NodeShareResource extends Resource
                     role: (string) ($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
                     audience: ShareAudience::from((string) ($data['audience'] ?? ShareAudience::Anyone->value)), // @pest-mutate-ignore: RemoveStringCast
                     scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
-                    expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
+                    expiresAt: $expiresAt,
                     password: $password === '' ? null : $password,
                     maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
                 ),

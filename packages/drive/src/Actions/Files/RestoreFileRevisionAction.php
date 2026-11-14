@@ -10,6 +10,8 @@ use Vaulter\Drive\Content\CopyDestinationAdmission;
 use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -30,7 +32,7 @@ use Vaulter\Events\EventRecorder;
 #[Internal]
 final readonly class RestoreFileRevisionAction
 {
-    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private RevisionBlobLinks $links, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
+    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private RevisionBlobLinks $links, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder, private NodeSnapshotMapper $nodeSnapshots, private FileRevisionSnapshotMapper $revisionSnapshots) {}
 
     public function execute(DriveContext $context, RestoreFileRevisionInput $data): FileRevision
     {
@@ -75,7 +77,7 @@ final readonly class RestoreFileRevisionAction
             $this->files->repointHead($file, $revision->id, $revision->mime_type, $revision->size_bytes, $revision->number);
             $this->nodes->cacheHead($node, $revision->mime_type, $node->extension, $revision->size_bytes, $context->actor->ref()->id);
             $this->sequence->bump($node);
-            $this->recorder->record(new FileRevisionAdded(node: $node, file: $file, version: $revision, versionNo: $revision->number, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new FileRevisionAdded(nodeSnapshots: $this->nodeSnapshots, revisionSnapshots: $this->revisionSnapshots, node: $node, file: $file, version: $revision, versionNo: $revision->number, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $revision;
         });

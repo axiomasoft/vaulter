@@ -8,6 +8,8 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\Role;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -54,6 +56,8 @@ final readonly class SetNodeInheritanceAction
         private GrantStoreRepository $writer,
         private EventRecorder $recorder,
         private AggregateVersion $versions,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private AccessSnapshotMapper $accessSnapshots,
     ) {}
 
     /** @param int|null $expectedAccessVersion the node's access_version the caller read (If-Match); null skips the check */
@@ -72,10 +76,10 @@ final readonly class SetNodeInheritanceAction
                 : [];
             $updated = $this->store->update($locked, ['inherit_grants' => $inherit]);
             $this->versions->bump($updated, 'access_version', AggregateVersion::NODE_ACCESS);
-            $this->recorder->record(new NodeInheritanceChanged(node: $updated, inherits: $inherit, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeInheritanceChanged(nodeSnapshots: $this->nodeSnapshots, node: $updated, inherits: $inherit, actor: $context->actor->ref(), correlationId: $context->correlationId));
             // Recorded after every row of the change is written and locked.
             foreach ($copies as $copy) {
-                $this->recorder->record(new NodeGrantCreated(grant: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(new NodeGrantCreated(accessSnapshots: $this->accessSnapshots, grant: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $updated, reason: DriveEventType::InheritanceChanged->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 

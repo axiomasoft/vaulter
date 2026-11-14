@@ -149,6 +149,12 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
                 ]);
             }
 
+            // A replaced part counts once. The check is before the object write: storage
+            // is not rolled back with the database transaction.
+            $incoming = strlen($bytes);
+            $projected = $this->recordedSize($locked) - $this->parts->sizeOf($locked, $partNo) + $incoming;
+            $this->assertProjectedSize($locked, $projected);
+
             // The per-part key under the session's tmp/ prefix. Reclaimed with the session
             // on commit/abort/sweep.
             $partKey = $this->partKey($locked, $partNo);
@@ -356,6 +362,23 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
     /**
      * The total recorded part size — the sum the manager uses as received_bytes.
      */
+    private function assertProjectedSize(UploadSession $session, int $projected): void
+    {
+        $total = $session->total_size_bytes;
+        if ($total !== null && $projected > $total) {
+            throw ValidationException::withMessages([
+                'parts' => "Upload session {$session->upload_id} would exceed its declared {$total} bytes.",
+            ]);
+        }
+
+        $max = $this->driveConfig->maxFileSize();
+        if ($max > 0 && $projected > $max) {
+            throw ValidationException::withMessages([
+                'received_bytes' => "The upload exceeded the maximum allowed {$max} bytes.",
+            ]);
+        }
+    }
+
     private function recordedSize(UploadSession $session): int
     {
         $sum = $this->parts->forSession($session)->sum('size_bytes');

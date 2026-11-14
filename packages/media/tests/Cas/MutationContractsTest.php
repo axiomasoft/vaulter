@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Process;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Cas\BlobReconciler;
@@ -44,6 +45,77 @@ it('stages the complete seekable stream and exposes its exact digest and size', 
     expect($path)->not->toBeFile()
         ->and(fn () => $staged->readStream())
         ->toThrow(RuntimeException::class, 'Cannot read a discarded staged object.');
+});
+
+it('refuses a stream that stops making progress and leaves no staged file', function (): void {
+    $store = new Sha256ContentStore(Mockery::mock(StorageDriver::class));
+    $unrelated = $store->stage(CasTestHelpers::streamFor('another upload still staging'));
+    $directory = sys_get_temp_dir().'/vaulter-stage-test-'.bin2hex(random_bytes(8));
+    mkdir($directory);
+
+    // A fresh PHP process reads its own TMPDIR: other workers' live staged objects cannot
+    // affect the cleanup assertion, and every file this failed stage leaks is still detected.
+    $code = <<<'PHP'
+require $argv[1];
+
+final class FailingContentStream
+{
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    public function stream_read(int $count): false
+    {
+        return false;
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [];
+    }
+}
+
+stream_wrapper_register('vaulterfail', FailingContentStream::class);
+$stream = fopen('vaulterfail://stopped', 'rb');
+$store = new Vaulter\Media\Cas\Sha256ContentStore(Mockery::mock(Vaulter\Media\Contracts\Cas\StorageDriver::class));
+$error = null;
+try {
+    $store->stage($stream);
+} catch (Throwable $exception) {
+    $error = ['class' => $exception::class, 'message' => $exception->getMessage()];
+}
+fclose($stream);
+echo json_encode(['temp_dir' => sys_get_temp_dir(), 'error' => $error, 'files' => glob(sys_get_temp_dir().'/*') ?: []], JSON_THROW_ON_ERROR);
+PHP;
+
+    try {
+        $process = new Process(
+            command: [PHP_BINARY, '-r', $code, dirname(__DIR__, 2).'/vendor/autoload.php'],
+            env: ['TMPDIR' => $directory],
+            timeout: 15,
+        );
+        $process->mustRun();
+
+        expect(json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR))->toBe([
+            'temp_dir' => $directory,
+            'error' => ['class' => RuntimeException::class, 'message' => 'Content stream made no progress.'],
+            'files' => [],
+        ])->and($unrelated->path())->toBeFile();
+    } finally {
+        $unrelated->discard();
+        foreach (glob($directory.'/*') ?: [] as $path) {
+            unlink($path);
+        }
+        rmdir($directory);
+    }
 });
 
 it('builds the canonical key and promotes the exact checksum and bytes', function (): void {

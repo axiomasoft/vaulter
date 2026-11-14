@@ -43,7 +43,7 @@ final readonly class RoutesConfig
      */
     public function authenticatedMiddleware(): array
     {
-        return $this->withPackageMiddleware($this->stringList(
+        return $this->withPackageMiddleware(StringList::from(
             $this->config->get('vaulter.routes.middleware.authenticated'),
             ['api', 'auth:sanctum'],
         ));
@@ -52,13 +52,13 @@ final readonly class RoutesConfig
     /** @return list<string> */
     public function publicMiddleware(): array
     {
-        return $this->withPackageMiddleware($this->stringList($this->config->get('vaulter.routes.middleware.public'), ['api']));
+        return $this->withPackageMiddleware(StringList::from($this->config->get('vaulter.routes.middleware.public'), ['api']));
     }
 
     /** @return list<string> */
     public function hubMiddleware(): array
     {
-        return $this->withPackageMiddleware($this->stringList($this->config->get('vaulter.routes.middleware.hub'), ['api']));
+        return $this->withPackageMiddleware(StringList::from($this->config->get('vaulter.routes.middleware.hub'), ['api']));
     }
 
     public function publicRateLimit(): int
@@ -97,24 +97,4 @@ final readonly class RoutesConfig
         return $middleware;
     }
 
-    /**
-     * @param  list<string> $default
-     * @return list<string>
-     */
-    private function stringList(mixed $value, array $default): array
-    {
-        if (!is_array($value)) {
-            return $default;
-        }
-
-        $strings = [];
-
-        foreach ($value as $item) {
-            if (is_string($item)) {
-                $strings[] = $item;
-            }
-        }
-
-        return $strings;
-    }
 }

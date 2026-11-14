@@ -61,8 +61,8 @@ final class PanelNodes
     }
 
     /**
-     * Folders of the node's drive the actor may create into, except the node itself; moving
-     * a folder into its own subtree is rejected by the move operation.
+     * Folders of the node's drive the actor may create into, except the node itself and
+     * every folder inside it. The move operation rejects that cycle; the picker does too.
      *
      * @return array<string, string> node id => name
      */
@@ -75,10 +75,7 @@ final class PanelNodes
             return [];
         }
 
-        $folders = array_values(array_filter(
-            self::snapshots($handle, self::LIMIT, live: true),
-            static fn (NodeSnapshot $node): bool => $node->kind === NodeKind::Folder && $node->id !== $exceptId,
-        ));
+        $folders = self::movableFolders($handle, $exceptId);
         $abilities = $handle->nodes()->abilitiesMany(array_map(static fn (NodeSnapshot $node): string => $node->id, $folders));
 
         foreach ($folders as $folder) {
@@ -126,6 +123,43 @@ final class PanelNodes
         }
 
         return $options;
+    }
+
+    /**
+     * Folders the actor could move `$exceptId` into. The node itself and every folder
+     * under it are absent: the move operation rejects that cycle, and the picker
+     * should not offer it.
+     *
+     * @return list<NodeSnapshot>
+     */
+    private static function movableFolders(DriveHandle $handle, string $exceptId): array
+    {
+        $folders = array_values(array_filter(
+            self::snapshots($handle, self::LIMIT, live: true),
+            static fn (NodeSnapshot $node): bool => $node->kind === NodeKind::Folder,
+        ));
+        $children = [];
+        foreach ($folders as $folder) {
+            if ($folder->parentId !== null) {
+                $children[$folder->parentId][] = $folder->id;
+            }
+        }
+        $excluded = [$exceptId => true];
+        $pending = [$exceptId];
+        while ($pending !== []) {
+            $id = array_pop($pending);
+            foreach ($children[$id] ?? [] as $child) {
+                if (!isset($excluded[$child])) {
+                    $excluded[$child] = true;
+                    $pending[] = $child;
+                }
+            }
+        }
+
+        return array_values(array_filter(
+            $folders,
+            static fn (NodeSnapshot $folder): bool => !isset($excluded[$folder->id]),
+        ));
     }
 
     /** @return list<NodeSnapshot> */

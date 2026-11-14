@@ -83,7 +83,17 @@ final class BinaryString implements CastsAttributes
         }
 
         if (is_resource($value)) {
-            $contents = stream_get_contents($value);
+            // Eloquent casts the same PDO bytea resource on every attribute read.
+            // Read the entire value without consuming it for the next getter or checkpoint.
+            $position = ftell($value);
+            $seekable = stream_get_meta_data($value)['seekable'];
+            try {
+                $contents = stream_get_contents($value, offset: $seekable ? 0 : -1);
+            } finally {
+                if ($seekable && $position !== false) {
+                    fseek($value, $position);
+                }
+            }
 
             return $contents === false ? null : $contents;
         }

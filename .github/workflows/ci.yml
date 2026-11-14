@@ -18,7 +18,7 @@ name: CI
 #   static-analysis.yml (Larastan) ......................... quality
 #   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub (+ vue-collaboration, P5.14)
 #   openapi.yml oasdiff breaking ........................... contract-bc (blocking, D14/D18)
-#   new: mysql 8.4 lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
+#   new: mysql lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation, I14)
 on:
   push:
@@ -36,8 +36,8 @@ permissions:
 
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
-  # Laravel 12 pairs with Testbench ^10, Laravel 13 with ^11; filament is Laravel 13 only.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+  # Laravel 13 pairs with Testbench ^11. One line for every package, including filament.
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   changes:
@@ -306,34 +306,20 @@ jobs:
       DB_PASSWORD: secret
     # The data directories live on tmpfs (`--tmpfs` is a docker create option; `services.<id>.command` is not
     # supported by Actions, so server flags such as fsync=off cannot be passed and the image defaults stay).
+    # One service: a Postgres cell does not wait for MySQL to become healthy, and the reverse.
+    # PostgreSQL 18 stores data under /var/lib/postgresql (not .../data). Both images are digest-pinned.
     services:
-      postgres:
-        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+      db:
+        image: ${{ matrix.engine == 'pgsql' && 'postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95' || 'mysql:9.7@sha256:df90258da46f6e7ff8574ff84f17618aba0765cac749928299c69fd4e7cb8ad8' }}
         env:
-          POSTGRES_USER: vaulter
+          POSTGRES_USER: ${{ matrix.username }}
           POSTGRES_PASSWORD: secret
           POSTGRES_DB: vaulter_test
-        ports:
-          - 5432:5432
-        options: >-
-          --tmpfs /var/lib/postgresql/data
-          --health-cmd "pg_isready -U vaulter -d vaulter_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-      mysql:
-        image: mysql:8.4@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7
-        env:
           MYSQL_ROOT_PASSWORD: secret
           MYSQL_DATABASE: vaulter_test
         ports:
-          - 3306:3306
-        options: >-
-          --tmpfs /var/lib/mysql
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -psecret"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+          - ${{ matrix.port }}:${{ matrix.engine == 'pgsql' && '5432' || '3306' }}
+        options: ${{ matrix.engine == 'pgsql' && '--tmpfs /var/lib/postgresql --health-cmd "pg_isready -U vaulter -d vaulter_test" --health-interval 5s --health-timeout 5s --health-retries 10' || '--tmpfs /var/lib/mysql --health-cmd "mysqladmin ping -h 127.0.0.1 -psecret" --health-interval 5s --health-timeout 5s --health-retries 20' }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -408,7 +394,7 @@ jobs:
       DB_PASSWORD: secret
     services:
       postgres:
-        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+        image: postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95
         env:
           POSTGRES_USER: vaulter
           POSTGRES_PASSWORD: secret
@@ -416,7 +402,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --tmpfs /var/lib/postgresql/data
+          --tmpfs /var/lib/postgresql
           --health-cmd "pg_isready -U vaulter -d vaulter_test"
           --health-interval 5s
           --health-timeout 5s

@@ -12,6 +12,7 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Configuration\AccessConfig;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
@@ -49,6 +50,7 @@ final readonly class GrantNodeAccessAction
         private EventRecorder $recorder,
         private NodeStoreRepository $nodes,
         private AggregateVersion $versions,
+        private AccessSnapshotMapper $accessSnapshots,
     ) {}
 
     public function execute(DriveContext $context, GrantNodeAccessInput $input): NodeGrant
@@ -65,7 +67,7 @@ final readonly class GrantNodeAccessAction
             $grant = $this->grants->grant(node: $locked, data: $data, grantedBy: $context->actor->ref()->id);
             $this->versions->bump($locked, 'access_version', AggregateVersion::NODE_ACCESS);
 
-            $this->recorder->record(new NodeGrantCreated(grant: $grant, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeGrantCreated(accessSnapshots: $this->accessSnapshots, grant: $grant, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::GrantCreated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $grant;

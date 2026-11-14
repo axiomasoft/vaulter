@@ -77,7 +77,7 @@ it('preserves the validated grant form contract at the core Action boundary', fu
         ->first(fn (NodeGrant $candidate): bool => $candidate->subject_type === 'user');
 
     expect($grant)->toBeInstanceOf(NodeGrant::class)
-        ->and((string) $grant->subject_id)->toBe('2')
+        ->and((string) $grant->subject_id)->toBe('002')
         ->and($grant->role_key)->toBe(RoleRegistry::WRITER)
         ->and($grant->role_version)->toBe(1)
         ->and($grant->scope)->toBe(GrantScope::Item)
@@ -116,6 +116,34 @@ it('applies grant defaults when optional form values are omitted', function (): 
         ->and($grant->role_key)->toBe(RoleRegistry::READER)
         ->and($grant->scope)->toBe(GrantScope::Subtree)
         ->and($grant->expires_at)->toBeNull();
+});
+
+it('does not saturate a bigint subject id into another subjects grant', function (): void {
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Bigint identity');
+    DriveBuilder::grant($folder, $owner);
+    $other = DriveBuilder::grant($folder, DriveBuilder::user(PHP_INT_MAX), RoleRegistry::READER);
+
+    // Keep the fixture's string columns to observe the panel's input unchanged by SQL casts.
+    // A MySQL unsigned bigint host id can exceed PHP_INT_MAX and must stay a string in PHP.
+    config()->set('vaulter.ids.host_keys', 'bigint');
+    $subjectId = '9223372036854775808';
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => $owner->getMorphClass(),
+        'subject_id' => $subjectId,
+        'role' => RoleRegistry::WRITER,
+        'scope' => GrantScope::Subtree->value,
+    ]);
+
+    $grants = app(GrantReadRepository::class)->forNode($folder)->get();
+
+    expect($other->fresh()->role_key)->toBe(RoleRegistry::READER)
+        ->and($grants->first(fn (NodeGrant $grant): bool => (string) $grant->subject_id === $subjectId)?->role_key)->toBe(RoleRegistry::WRITER);
 });
 
 it('rejects a missing grant node with the declared warning', function (): void {
@@ -268,4 +296,159 @@ it('renders the grant table from the access listings and revokes a row through t
         ->callTableAction('revoke', (string) $writer->getKey());
 
     expect($writer->fresh())->toBeNull();
+});
+
+it('rejects an unregistered subject type on the grant form and writes no row', function (): void {
+    app(DataStore::class)->register();
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Alias');
+    DriveBuilder::grant($folder, $owner);
+    pullSentNotifications();
+
+    Livewire::test(ListNodeGrants::class)
+        ->callAction('create', data: [
+            'node_id' => $folder->getKey(),
+            'subject_type' => 'totally-not-a-model',
+            'subject_id' => '2',
+            'role' => RoleRegistry::READER,
+            'scope' => GrantScope::Subtree->value,
+        ])
+        ->assertHasActionErrors(['subject_type']);
+
+    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(1)
+        ->and(pullSentNotifications())->toBe([]);
+});
+
+it('rejects a subject id longer than 191 characters on the grant form', function (): void {
+    app(DataStore::class)->register();
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Long id');
+    DriveBuilder::grant($folder, $owner);
+    $subjectId = collect(NodeGrantResource::grantFormComponents())
+        ->first(fn (object $component): bool => $component->getName() === 'subject_id');
+    pullSentNotifications();
+
+    expect($subjectId)->not->toBeNull()
+        ->and($subjectId->getMaxLength())->toBe(191);
+
+    Livewire::test(ListNodeGrants::class)
+        ->callAction('create', data: [
+            'node_id' => $folder->getKey(),
+            'subject_type' => $owner->getMorphClass(),
+            'subject_id' => str_repeat('a', 192),
+            'role' => RoleRegistry::READER,
+            'scope' => GrantScope::Subtree->value,
+        ])
+        ->assertHasActionErrors(['subject_id' => 'max']);
+
+    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(1)
+        ->and(pullSentNotifications())->toBe([]);
+});
+
+it('saves a registered subject through the grant form', function (): void {
+    app(DataStore::class)->register();
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Exact id');
+    DriveBuilder::grant($folder, $owner);
+    pullSentNotifications();
+
+    Livewire::test(ListNodeGrants::class)
+        ->callAction('create', data: [
+            'node_id' => $folder->getKey(),
+            'subject_type' => $owner->getMorphClass(),
+            'subject_id' => 'panel-subject',
+            'role' => RoleRegistry::READER,
+            'scope' => GrantScope::Subtree->value,
+        ])
+        ->assertHasNoActionErrors()
+        ->assertNotified('Grant saved');
+
+    $grant = app(GrantReadRepository::class)
+        ->forNode($folder)
+        ->get()
+        ->first(fn (NodeGrant $candidate): bool => (string) $candidate->subject_id === 'panel-subject');
+
+    expect($grant)->toBeInstanceOf(NodeGrant::class)
+        ->and($grant->subject_type)->toBe($owner->getMorphClass())
+        ->and($grant->role_key)->toBe(RoleRegistry::READER);
+});
+
+it('warns and writes nothing when the subject identity is one the grant refuses', function (): void {
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Identity');
+    DriveBuilder::grant($folder, $owner);
+    pullSentNotifications();
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => $owner->getMorphClass(),
+        'subject_id' => '',
+        'role' => RoleRegistry::READER,
+    ]);
+    $empty = pullSentNotifications()[0] ?? null;
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => $owner->getMorphClass(),
+        'subject_id' => str_repeat('c', 192),
+        'role' => RoleRegistry::READER,
+    ]);
+    $longId = pullSentNotifications()[0] ?? null;
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => str_repeat('t', 256),
+        'subject_id' => '2',
+        'role' => RoleRegistry::READER,
+    ]);
+    $longType = pullSentNotifications()[0] ?? null;
+
+    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(1)
+        ->and($empty)->toBeArray()
+        ->and($empty['title'])->toBe('Grant not saved')
+        ->and($empty['body'])->toBe('A grant requires a nonempty scalar subject identity.')
+        ->and($empty['status'])->toBe('warning')
+        ->and($longId['title'])->toBe('Grant not saved')
+        ->and($longId['body'])->toBe($empty['body'])
+        ->and($longId['status'])->toBe('warning')
+        ->and($longType['title'])->toBe('Grant not saved')
+        ->and($longType['body'])->toBe($empty['body'])
+        ->and($longType['status'])->toBe('warning');
+});
+
+it('warns and writes nothing when the role is not registered', function (): void {
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Role');
+    DriveBuilder::grant($folder, $owner);
+    pullSentNotifications();
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => $owner->getMorphClass(),
+        'subject_id' => '2',
+        'role' => 'admin',
+    ]);
+    $notification = pullSentNotifications()[0] ?? null;
+
+    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(1)
+        ->and($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Grant not saved')
+        ->and($notification['status'])->toBe('warning')
+        ->and($notification['body'])->toContain('Unknown role')
+        ->and($notification['body'])->toContain('admin');
 });

@@ -178,6 +178,14 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Configuration\\StringList",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Internal kernel configuration parser shared by package configuration readers; it does not own feature settings."
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Configuration\\TenancyConfig",
             "owner": "core",
             "action": "keep",

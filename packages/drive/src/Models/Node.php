@@ -19,6 +19,7 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Database\Factories\NodeFactory;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
+use Vaulter\Drive\Repositories\NodeQueryBuilder;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -102,6 +103,15 @@ class Node extends Model
     protected static function newFactory(): NodeFactory
     {
         return NodeFactory::new();
+    }
+
+    /**
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return NodeQueryBuilder<$this>
+     */
+    public function newEloquentBuilder($query)
+    {
+        return new NodeQueryBuilder($query, $this);
     }
 
     #[\Override]

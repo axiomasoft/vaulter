@@ -21,6 +21,13 @@ it('loads the package config', function (): void {
         ->and(config('vaulter-filament.resources'))->not->toHaveKey('storage');
 });
 
+it('reads the configured navigation group instead of the hardcoded label', function (): void {
+    config()->set('vaulter-filament.navigation_group', 'Files');
+
+    expect(DriveResource::getNavigationGroup())->toBe('Files')
+        ->and(NodeResource::getNavigationGroup())->toBe('Files');
+});
+
 it('registers the Drive/permissions resources on the panel', function (): void {
     $panel = Filament::getPanel('admin');
 

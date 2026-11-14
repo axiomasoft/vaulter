@@ -16,6 +16,7 @@ export type VaulterErrorCode =
   | 'idempotency_key_reused'
   | 'operation_in_progress'
   | 'stale_write'
+  | 'content_unavailable'
   | (string & {})
 
 /**

@@ -118,11 +118,34 @@ final readonly class CollaborationAccessPolicy
      */
     public function evaluateReference(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): CollaborationAccessDecision
     {
+        $context = $this->referenceContext($actor, $driveId, $nodeId, $tenant, $correlationId);
+
+        return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
+    }
+
+    /**
+     * Authenticate a live reference without issuing a grant to an actor whose View was revoked.
+     * A denied View returns null; invalid references retain evaluateReference's strict 404.
+     */
+    public function evaluateAuthenticationReference(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): ?CollaborationAccessDecision
+    {
+        $context = $this->referenceContext($actor, $driveId, $nodeId, $tenant, $correlationId);
+        $node = $this->scopedNode($context, $nodeId);
+        $user = $actor->authorizable() ?? throw MissingActorException::required();
+        if ($node->kind->isDocument() && !$this->resolver->can($user, Ability::View, $node)) {
+            return null;
+        }
+
+        return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
+    }
+
+    /** The live node, drive and tenant checks shared by strict reads and authentication. */
+    private function referenceContext(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId): DriveContext
+    {
         if ($actor->isSystem() || $actor->ref()->id === null) {
             throw MissingActorException::required();
         }
-        $model = $this->drives->model('node');
-        $node = $model::query()->find($nodeId);
+        $node = $this->nodeById($nodeId);
         if (!$node instanceof Node
             || Identity::stringify($node->getRawOriginal('drive_id')) !== $driveId
             || $node->trashed_at !== null
@@ -130,11 +153,12 @@ final readonly class CollaborationAccessPolicy
             throw NodeNotFoundException::forId($nodeId);
         }
         $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($nodeId);
-        if (($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $tenant) {
+        if (($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $tenant
+            || $drive->status === DriveStatus::Deleting) {
             throw NodeNotFoundException::forId($nodeId);
         }
 
-        return $this->evaluate(DriveContext::for($drive, $actor, $correlationId), $nodeId, $ceiling, $clientSchemaVersion);
+        return DriveContext::for($drive, $actor, $correlationId);
     }
 
     /**
@@ -143,24 +167,44 @@ final readonly class CollaborationAccessPolicy
      */
     public function canViewDocumentNode(Authorizable $user, int|string $nodeId): bool
     {
-        $model = $this->drives->model('node');
-        $node = $model::query()->find($nodeId);
+        $node = $this->nodeById($nodeId);
 
         return $node instanceof Node && $node->kind->isDocument() && $this->resolver->can($user, Ability::View, $node);
     }
 
+    /** A key the id column cannot hold is missing: PostgreSQL rejects the cast instead of returning no row. */
+    private function nodeById(int|string $nodeId): ?Node
+    {
+        $model = $this->drives->model('node');
+        if ($nodeId === '' || !Identity::fitsKey(new $model, $nodeId)) {
+            return null;
+        }
+
+        $node = $model::query()->find($nodeId);
+
+        return $node instanceof Node ? $node : null;
+    }
+
     private function document(DriveContext $context, NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node
     {
-        $node = $this->locator->find($context, $key);
-        $tenant = $node->tenant_id === null ? null : Identity::stringify($node->tenant_id);
-        if ($tenant !== $context->operation->tenant->id) {
-            throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
-        }
+        $node = $this->scopedNode($context, $key);
         // Authorize before the kind check, so a node the actor cannot see stays
         // indistinguishable from a missing one.
         $this->guard->authorize($context, $ability, $node, $operation);
         if (!$node->kind->isDocument()) {
             throw NotADocumentException::forNode($node->getKey());
+        }
+
+        return $node;
+    }
+
+    /** Apply the same current tenant check to the located node before any ACL decision. */
+    private function scopedNode(DriveContext $context, NodeSnapshot|string|int $key): Node
+    {
+        $node = $this->locator->find($context, $key);
+        $tenant = $node->tenant_id === null ? null : Identity::stringify($node->tenant_id);
+        if ($tenant !== $context->operation->tenant->id) {
+            throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
         }
 
         return $node;

@@ -12,6 +12,7 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
@@ -90,7 +91,7 @@ it('refuses a forged move into it with permission_denied through the handle', fu
 
     expect($this->v27Source->fresh()->parent_id)->toBe($parent)
         ->and(collect($this->v27Calls)->contains(fn (array $call): bool => $call[0] === 'nodes.move' && (string) $call[1][1] === (string) $this->v27Target->getKey()))->toBeTrue();
-    Notification::assertNotified(Notification::make()->title('Move not allowed')->danger());
+    Notification::assertNotified(Notification::make()->title('Move not allowed')->body(PermissionDeniedException::forAbility('create')->getMessage())->danger());
 });
 
 it('moves through the handle once Create is granted on the destination', function (): void {

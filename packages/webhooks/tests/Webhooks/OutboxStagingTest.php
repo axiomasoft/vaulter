@@ -6,6 +6,8 @@ use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
@@ -65,7 +67,7 @@ it('stages a folder.created row carrying the actor and a thin payload', function
     OutboxEvent::query()->delete();
 
     $folder = AccessTestHelpers::folder($storage, null, 'reports');
-    outboxStagingRecord(new FolderCreated(node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
+    outboxStagingRecord(new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
 
     $row = OutboxEvent::query()->where('type', DriveEventType::FolderCreated->value)->sole();
 
@@ -83,7 +85,7 @@ it('is idempotent by event_id: staging the same occurrence again inserts nothing
     $storage = AccessTestHelpers::storage();
     OutboxEvent::query()->delete();
     $folder = AccessTestHelpers::folder($storage, null, 'dup');
-    $event = new FolderCreated(node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid());
+    $event = new FolderCreated(nodeSnapshots: app(NodeSnapshotMapper::class), node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid());
     $writer = app(OutboxWriter::class);
 
     [$first, $second] = app(VaulterDatabase::class)->transaction(fn (): array => [
@@ -103,8 +105,8 @@ it('keeps distinct grant occurrences with identical parameters and deduplicates 
     $subject = new Subject(type: $grant->subject_type, id: $grant->subject_id);
     OutboxEvent::query()->delete();
 
-    $created = static fn (?string $eventId = null): NodeGrantCreated => new NodeGrantCreated(grant: $grant, actor: outboxStagingActor(), correlationId: 'c', eventId: $eventId);
-    $revoked = static fn (?string $eventId = null): NodeGrantRevoked => new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actor: outboxStagingActor(), correlationId: 'c', eventId: $eventId);
+    $created = static fn (?string $eventId = null): NodeGrantCreated => new NodeGrantCreated(accessSnapshots: app(AccessSnapshotMapper::class), grant: $grant, actor: outboxStagingActor(), correlationId: 'c', eventId: $eventId);
+    $revoked = static fn (?string $eventId = null): NodeGrantRevoked => new NodeGrantRevoked(nodeSnapshots: app(NodeSnapshotMapper::class), node: $node, subject: $subject, revoked: 1, actor: outboxStagingActor(), correlationId: 'c', eventId: $eventId);
 
     foreach ([$created, $created, $revoked, $revoked] as $make) {
         $event = $make();
@@ -128,7 +130,7 @@ it('never serializes a share secret, token or token prefix', function (): void {
     $share = ShareTestHelpers::share($node, token: 'tok-outbox');
     OutboxEvent::query()->delete();
 
-    outboxStagingRecord(new NodeShareCreated(share: $share, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
+    outboxStagingRecord(new NodeShareCreated(accessSnapshots: app(AccessSnapshotMapper::class), share: $share, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
 
     $payload = OutboxEvent::query()->where('type', DriveEventType::ShareCreated->value)->sole()->payload;
 

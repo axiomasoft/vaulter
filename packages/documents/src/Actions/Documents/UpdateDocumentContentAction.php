@@ -14,19 +14,17 @@ use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
-use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\State\PendingStateGuard;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Support\DriveLifecycle;
-use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 
 /**
@@ -46,15 +44,15 @@ use Vaulter\Events\EventRecorder;
 final readonly class UpdateDocumentContentAction
 {
     public function __construct(
-        private DocumentReadRepository $documents,
         private DocumentStateWriter $writer,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
-        private TreeGuard $tree,
         private ContentDecoder $decoder,
-        private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private PendingStateGuard $pending,
+        private DocumentWriteLock $writeLock,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     /**
@@ -80,20 +78,7 @@ final readonly class UpdateDocumentContentAction
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '' || $driveId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
-            $this->database->lockAggregateShared('drives', $driveId);
-            $this->lifecycle->assertWritable($context);
-            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
-            if (!$this->tree->sameStorage($current, $driveId)) {
-                throw NodeNotFoundException::forId($nodeId);
-            }
-            // A trash that committed before this lock leaves nothing to write to.
-            $this->tree->assertLive($current);
-            if (!$current->kind->isDocument()) {
-                throw NotADocumentException::forNode($nodeId);
-            }
-            $node = $this->tree->sync($node, $current);
-            $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
-            $document->setRelation('node', $node);
+            [$node, $document] = $this->writeLock->acquire($context, $node, $nodeId);
             // Saved collaboration edits the working state does not hold yet would be overwritten (C8).
             $this->pending->assertSettled($document);
             // A restore may have committed between the caller's check and this lock.
@@ -121,6 +106,8 @@ final readonly class UpdateDocumentContentAction
                     epoch: $result->document->collab_epoch,
                     actor: $context->actor->ref(),
                     correlationId: $context->correlationId,
+                    nodes: $this->nodeSnapshots,
+                    documents: $this->documentSnapshots,
                 ));
             }
 

@@ -92,11 +92,20 @@ async function load(): Promise<void> {
   loading.value = true
   error.value = null
   try {
-    const page = await client.nodes.children(props.driveId, { parent: currentParentId.value })
-    if (seq !== loadSeq) {
-      return
-    }
-    folders.value = keepFolders(page.data)
+    const collected: Node[] = []
+    let cursor: string | null | undefined
+    do {
+      const page = await client.nodes.children(props.driveId, {
+        parent: currentParentId.value,
+        ...(cursor ? { cursor } : {}),
+      })
+      if (seq !== loadSeq) {
+        return
+      }
+      collected.push(...page.data)
+      cursor = page.meta.next_cursor
+    } while (cursor)
+    folders.value = keepFolders(collected)
     await refreshBreadcrumb(seq)
   } catch (caught) {
     if (seq !== loadSeq) {

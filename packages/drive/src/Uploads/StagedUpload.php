@@ -180,7 +180,7 @@ final readonly class StagedUpload
      *
      * @param resource $chunk
      */
-    public function append(UploadSession $session, mixed $chunk, int $offset): int
+    public function append(UploadSession $session, mixed $chunk, int $offset, ?int $declaredTotal = null, ?int $maxBytes = null): int
     {
         $this->assertChunkWithinLimit($chunk);
 
@@ -220,6 +220,16 @@ final readonly class StagedUpload
             $this->copyChunkWithinLimit($chunk, $buffer);
 
             $size = ftell($buffer);
+            if ($declaredTotal !== null && is_int($size) && $size > $declaredTotal) {
+                throw ValidationException::withMessages([
+                    'received_bytes' => "Upload session {$session->upload_id} would exceed its declared {$declaredTotal} bytes.",
+                ]);
+            }
+            if ($maxBytes !== null && $maxBytes > 0 && is_int($size) && $size > $maxBytes) {
+                throw ValidationException::withMessages([
+                    'received_bytes' => "The upload exceeded the maximum allowed {$maxBytes} bytes.",
+                ]);
+            }
             rewind($buffer);
             $disk->writeStream($key, $buffer);
         } finally {
@@ -235,18 +245,24 @@ final readonly class StagedUpload
      * permits treating an `offset < server` PATCH as an idempotent retransmit rather
      * than a 409 Conflict. A chunk longer than what is already staged, or whose
      * bytes disagree anywhere in the overlap, is NOT a match — the caller rejects it.
-     * The chunk is read into memory (bounded by the same per-request body size the
-     * controller already materialises for every PATCH — no new ceiling introduced);
-     * the ALREADY-staged range is read back in bounded blocks, never the whole file.
+     * A retransmit has no Content-Length the controller can refuse, so the read stops
+     * at the same per-chunk ceiling as an append (`uploads.max_chunk_bytes`). One byte
+     * past that ceiling is a refusal, before any staged byte is compared. The
+     * already-staged range is read back in bounded blocks, never the whole file.
      *
      * @param resource $chunk
      */
     public function rangeMatches(UploadSession $session, mixed $chunk, int $offset): bool
     {
-        $chunkBytes = stream_get_contents($chunk);
+        $max = $this->driveConfig->maxChunkSize();
+        $chunkBytes = $max > 0 ? stream_get_contents($chunk, $max + 1) : stream_get_contents($chunk);
 
         if ($chunkBytes === false) {
             return false;
+        }
+
+        if ($max > 0 && strlen($chunkBytes) > $max) {
+            $this->rejectOversizeChunk(null, $max);
         }
 
         $length = strlen($chunkBytes);

@@ -180,7 +180,7 @@ final class VaulterDatabase
     }
 
     /**
-     * The lock of an aggregate root, shared: for writes under a single locked parent (create, upload, copy, rename).
+     * The lock of an aggregate root, shared: for writes under a single locked parent (create, upload, rename).
      * On PostgreSQL they run concurrently with each other and wait only for an exclusive holder. Elsewhere the lock is
      * the root row, which these writes update (quota) or reference (foreign-key check) anyway, so it is taken
      * exclusively.

@@ -599,10 +599,10 @@ final class DriveSchema implements ModuleSchema
         $this->helpers->ipColumn(table: $table);
         $table->text('user_agent')->nullable();
 
-        // request_id is an opaque per-request CORRELATION id (X-Request-Id / a
-        // minted uuid), NOT a Vaulter entity reference — so it is a fixed nullable
-        // uuid column independent of the panel id strategy ("request_id uuid").
-        $table->uuid('request_id')->nullable();
+        // request_id is the correlation token from AssignCorrelationId: an accepted
+        // X-Request-Id (at most 64 of [A-Za-z0-9._:-]) or a minted ULID. A uuid
+        // column rejects those tokens on PostgreSQL and rolls the whole operation back.
+        $table->string('request_id', 64)->nullable();
 
         // Append-only: created_at ONLY. No timestamps()/softDeletes() — there is no
         // update or delete path for an audit row. No inline ->index() here

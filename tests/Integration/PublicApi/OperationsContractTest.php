@@ -228,7 +228,8 @@ it('matches lifecycle signatures against AD17 and exposes canonical operation fa
     preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $body[1], $methods, PREG_SET_ORDER);
     $ref = new ReflectionClass(NodeContentLifecycle::class);
     foreach ($methods as $method) {
-        p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3]);
+        // The accepted snapshot boundary applies to lifecycle hooks as well as operations.
+        p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3], snapshots: true);
     }
     expect($methods)->toHaveCount(3)
         ->and(method_exists(DriveHandle::class, 'upload'))->toBeFalse()

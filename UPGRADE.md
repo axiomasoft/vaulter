@@ -9,6 +9,7 @@ changes that require action from consumers of the package.
 **There is no migration bridge from 0.x.** Vaulter 1.0 is the first release meant for real projects:
 no 0.x installation existed, so the 0.x upgrade path was removed instead of being carried forward.
 
+- The qualified platform is PHP 8.4, Laravel 13, PostgreSQL 18 and MySQL 9.7 LTS. Laravel 12 is not a target. SQLite remains the fast test lane. There is no install to move off Laravel 12: 1.0 has not shipped.
 - Install 1.0 on an empty database: `php artisan migrate` creates the schema, one `create` migration per table
   (`v_<table>`), and `migrate:rollback` drops it again. There are no data backfills, no renames of earlier tables and
   no preflight.

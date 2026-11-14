@@ -27,6 +27,7 @@ use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Support\Identity;
 
 #[Internal]
 final readonly class CopyNodeAction
@@ -54,9 +55,12 @@ final readonly class CopyNodeAction
 
         try {
             return $this->database->transaction(function () use ($source, $parentId, $name, $data, $context): Node {
-                $this->database->lockAggregateShared('drives', $context->driveId());
+                // Exclusive, like move and trash. A shared lock on PostgreSQL lets a create
+                // commit a child under the source after this subtree is read and before
+                // the row locks, and the copy then omits that child.
+                $this->database->lockAggregate('drives', $context->driveId());
                 $this->lifecycle->assertWritable($context);
-                $sourceIds = array_values($this->nodes->subtree($source)->modelKeys());
+                $sourceIds = array_map(Identity::stringify(...), $this->nodes->subtree($source)->modelKeys());
                 $locked = $this->tree->lock([...$sourceIds, $parentId]);
                 $current = $this->tree->locked($locked, $source->id);
                 $destination = $this->tree->locked($locked, $parentId);
@@ -65,7 +69,7 @@ final readonly class CopyNodeAction
                     throw CrossDriveOperationException::between(fromStorageId: $context->driveId(), toStorageId: $destination->drive_id);
                 }
                 $this->tree->assertActiveFolder($destination);
-                $sources = $locked->filter(fn (Node $node): bool => in_array($node->id, $sourceIds, true));
+                $sources = $locked->filter(fn (Node $node): bool => in_array(Identity::stringify($node->id), $sourceIds, true));
                 // Freeze supported membership before creating even the destination root.
                 foreach ($sources as $member) {
                     if (!$this->tree->sameStorage($member, $context->driveId())) {
@@ -113,7 +117,7 @@ final readonly class CopyNodeAction
                 if ($copiedBytes !== $addedBytes) {
                     throw new \LogicException('Copy lifecycle byte accounting is inconsistent.');
                 }
-                $this->recorder->record(new NodeCopied(source: $current, copy: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(new NodeCopied(nodeSnapshots: $this->snapshots, source: $current, copy: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
                 return $copy;
             }, 3);
@@ -185,6 +189,9 @@ final readonly class CopyNodeAction
         if ($source->kind !== NodeKind::Folder) {
             // Both rows are held in this lock transaction; the lifecycle reads their facts, its own aggregates by id.
             $addedBytes += $this->lifecycles->forKind($source->kind)->copy(context: $context, source: $this->snapshots->facts($source), copy: $this->snapshots->facts($copy))->addedBytes;
+            // Capturing the new row's facts cached a missing payload before the
+            // lifecycle created it. The returned snapshot must load that payload.
+            $copy->unsetRelation('file');
         } else {
             foreach ($sources as $child) {
                 if ((string) $child->parent_id === (string) $source->id && $child->trashed_at === null) {

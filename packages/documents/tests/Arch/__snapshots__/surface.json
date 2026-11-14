@@ -118,6 +118,86 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:evaluateauthenticationreference": {
+                    "kind": "method",
+                    "name": "evaluateAuthenticationReference",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Vaulter\\ValueObjects\\Access\\Actor",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "driveId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "nodeId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "tenant",
+                            "type": "null|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "correlationId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "ceiling",
+                            "type": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationMode",
+                            "default": "\\Vaulter\\Documents\\Data\\Collaboration\\CollaborationMode::Write",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "clientSchemaVersion",
+                            "type": "int|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationAccessDecision|null",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:evaluatereference": {
                     "kind": "method",
                     "name": "evaluateReference",

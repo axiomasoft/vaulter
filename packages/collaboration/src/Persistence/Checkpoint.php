@@ -71,7 +71,7 @@ final readonly class Checkpoint
             if ($locked->binding === null || !$request->binding->sameAs($locked->binding) || $request->documentType !== $locked->type) {
                 throw new CollaborationCheckpointConflictException(CollaborationCheckpointConflictException::VERSION);
             }
-            $this->compatibility->assert($locked->type, $locked->binding);
+            $this->compatibility->assert($locked->type, $locked->binding, $locked->collabState !== null);
             $now = Carbon::now();
             $head = $this->log->lockHead($locked->documentId, $locked->generation);
             if ($head?->retiredAt !== null) {

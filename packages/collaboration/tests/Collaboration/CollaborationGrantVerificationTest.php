@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Firebase\JWT\JWT;
 use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\AssertionFailedError;
@@ -63,7 +64,14 @@ it('makes the adapter kit fail when the DTO hides a credential escape', function
     if ($field === 'notAfter') {
         $grant = new CollaborationGrant(...array_replace(get_object_vars($grant), ['notAfter' => 1120]));
     }
-    $minted = app(RoomTokens::class)->mint(...array_replace($arguments, [$field => $value]));
+    $minted = app(RoomTokens::class)->mint(...array_replace($arguments, $field === 'protocol' ? [] : [$field => $value]));
+    if ($field === 'protocol') {
+        // The honest Yjs issuer refuses another protocol. Mutate and re-sign its
+        // actual credential to exercise the verifier against a lying adapter.
+        $claims = json_decode(base64_decode(strtr(explode('.', $minted['token'])[1], '-_', '+/')), true, flags: JSON_THROW_ON_ERROR);
+        $claims['protocol'] = $value;
+        $minted['token'] = JWT::encode($claims, Hub::JWT_SECRET, 'HS256', Hub::JWT_KID);
+    }
     $honest = app(HocuspocusCollaborationDriver::class)->issueSession($grant);
     $lying = new CollaborationSession(...array_replace(get_object_vars($honest), ['token' => $minted['token']]));
     expect(fn () => verifyGrantCredential($grant, $lying))->toThrow(AssertionFailedError::class);

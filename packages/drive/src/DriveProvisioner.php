@@ -12,6 +12,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -56,6 +58,8 @@ final readonly class DriveProvisioner
         private DriveConfig $config,
         private EventRecorder $recorder,
         private ChangeHeadRepository $heads,
+        private DriveSnapshotMapper $driveSnapshots,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     /**
@@ -123,7 +127,7 @@ final readonly class DriveProvisioner
             // The journal counter exists from the start, so the first mutation finds it.
             $this->heads->create(Identity::key($storage->getKey()) ?? throw new LogicException('A provisioned drive needs a key.'), self::tenant($storage));
 
-            $this->recorder->record(new DriveCreated(storage: $storage->refresh(), root: $root, actor: Actor::system('drive provisioning')->ref(), correlationId: (string) Str::ulid()));
+            $this->recorder->record(new DriveCreated(driveSnapshots: $this->driveSnapshots, nodeSnapshots: $this->nodeSnapshots, storage: $storage->refresh(), root: $root, actor: Actor::system('drive provisioning')->ref(), correlationId: (string) Str::ulid()));
 
             return $storage;
         });

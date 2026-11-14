@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Trash;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -44,6 +45,7 @@ final readonly class RestoreNodeAction
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
     ) {}
 
     /**
@@ -86,7 +88,7 @@ final readonly class RestoreNodeAction
             $this->database->lockAggregate('drives', $context->driveId());
             $this->lifecycle->assertWritable($context);
             $fresh = $this->locator->find(context: $context, key: $node, includeTrashed: true);
-            $ids = $this->nodes->subtree($fresh)->modelKeys();
+            $ids = array_map(Identity::stringify(...), $this->nodes->subtree($fresh)->modelKeys());
             $locked = $this->tree->lock([...$ids, $data->destination->id]);
             $current = $this->tree->locked($locked, $node->id);
             // On the locked row and before anything moves, so a stale caller changes nothing.
@@ -107,12 +109,12 @@ final readonly class RestoreNodeAction
                 throw new RestoreDestinationChangedException;
             }
             // A destination inside the subtree being restored would detach it.
-            if (in_array($destination->id, $ids, true)) {
+            if (in_array(Identity::stringify($destination->id), $ids, true)) {
                 throw InvalidDestinationException::trashed($destination);
             }
             // Only the members trashed together with this root come back; descendants
             // trashed earlier on their own stay in the trash under their own roots.
-            $changed = $locked->filter(fn (Node $member): bool => in_array($member->id, $ids, true)
+            $changed = $locked->filter(fn (Node $member): bool => in_array(Identity::stringify($member->id), $ids, true)
                 && $member->trashed_at !== null
                 && $member->trash_root_id !== null
                 && Identity::stringify($member->trash_root_id) === Identity::stringify($current->id));
@@ -138,7 +140,7 @@ final readonly class RestoreNodeAction
                 $this->sequence->bump($member);
             }
             $fresh = $current->refresh();
-            $this->recorder->record(new NodeRestored(node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeRestored(nodeSnapshots: $this->nodeSnapshots, node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $fresh, reason: DriveEventType::NodeRestored->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $fresh;

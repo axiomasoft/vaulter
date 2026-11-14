@@ -371,6 +371,12 @@ interface BlobPins
 
 Публичный `CollaborationProtocolDriver` получает проверенный `CollaborationGrant` и возвращает нейтральную сессию; доступ проверяет общая policy. См. [протоколы коллаборации](/ru/extending/collaboration-protocols).
 
+`Vaulter\Documents\Access\CollaborationAccessPolicy::evaluateAuthenticationReference()` принимает те же actor,
+drive, node, tenant, correlation id, потолок режима и необязательную версию схемы клиента, что `evaluateReference()`.
+Результат — `?CollaborationAccessDecision`: `null` означает живой документ в указанной области, на который актор
+потерял View; грант не выдаётся. Невалидная ссылка по-прежнему даёт `NodeNotFoundException`. Разрешённое решение
+проходит те же проверки policy. Для доступа к содержимому остаётся строгий `evaluateReference()`.
+
 #### `Vaulter\Documents\State\CollaborativeState` и `PendingStateDrainer`
 
 Нейтральный контракт состояния, который documents предлагает транспорту (API): `lock($nodeId)` берёт блокировки дерева,

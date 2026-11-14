@@ -30,6 +30,9 @@ it('копия файла переиспользует ОДИН блоб чер�
     expect($copy->kind)->toBe(NodeKind::File)
         ->and($copy->name)->toBe('a-copy.txt')
         ->and($copy->id)->not->toEqual($original->id)
+        ->and($copy->file)->not->toBeNull()
+        ->and($copy->file->sizeBytes)->toBe(strlen('shared content'))
+        ->and($copy->file->sha256)->toBe(hash('sha256', 'shared content'))
         // One physical blob, two File handles, two versions referencing it.
         ->and(Blob::query()->count())->toBe(1)
         ->and(File::query()->count())->toBe(2);
@@ -58,6 +61,28 @@ it('глубокая копия папки клонирует всё подде�
 
     // Folder deep-copy of a file still shares the single blob.
     expect(Blob::query()->count())->toBe(1);
+});
+
+it('copies every descendant when its id is a suffix of an ancestor id', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $parentId = $drive->model()->root_node_id;
+    foreach ([[2100, 'Source'], [50, 'Middle'], [100, 'Suffix'], [60, 'Leaf']] as [$id, $name]) {
+        $node = new Node;
+        $node->forceFill([
+            'id' => $id,
+            'drive_id' => $drive->model()->getKey(),
+            'parent_id' => $parentId,
+            'kind' => NodeKind::Folder,
+            'name' => $name,
+        ])->save();
+        $parentId = $id;
+    }
+
+    $copy = $drive->nodes()->copy(2100, destination: null, options: new CopyOptions(name: 'Copied'));
+
+    $middle = DriveTestHelpers::model($copy)->children()->where('name', 'Middle')->sole();
+    $suffix = $middle->children()->where('name', 'Suffix')->sole();
+    expect($suffix->children()->pluck('name')->all())->toBe(['Leaf']);
 });
 
 it('copy отклоняет конфликт имён в месте назначения', function (): void {

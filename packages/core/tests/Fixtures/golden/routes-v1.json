@@ -279,7 +279,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/collaboration/session",
         "middleware": [
-            "vaulter.module:collaboration",
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",

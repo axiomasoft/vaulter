@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks\Repositories;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Tenancy\TenantIdentityPredicate;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
@@ -59,7 +60,14 @@ final readonly class WebhookEndpointReadRepository
             return $query;
         }
         $tenant = $this->tenancy->current();
+        $column = $query->getModel()->qualifyColumn('tenant_id');
+        $driver = $query->getModel()->getConnection()->getDriverName();
 
-        return $query->where(static fn (Builder $visible): Builder => $visible->where('tenant_id', $tenant)->orWhereNull('tenant_id'));
+        return $query->where(static function (Builder $visible) use ($tenant, $column, $driver): void {
+            $visible->where(static function (Builder $same) use ($tenant, $column, $driver): void {
+                $same->where($column, $tenant)
+                    ->whereRaw(new TenantIdentityPredicate($column, $driver), [$tenant]);
+            })->orWhereNull($column);
+        });
     }
 }

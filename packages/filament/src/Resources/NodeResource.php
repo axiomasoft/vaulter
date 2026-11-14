@@ -28,8 +28,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Support\DriveNameRules;
+use Vaulter\Exceptions\VaulterException;
+use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelNodes;
@@ -52,6 +54,8 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class NodeResource extends Resource
 {
+    use ConfiguresNavigationGroup;
+
     protected static ?string $model = PanelRecord::class;
 
     protected static ?string $modelLabel = 'node';
@@ -210,15 +214,21 @@ final class NodeResource extends Resource
             ->visible(fn (array $record): bool => $record['trashed_at'] === null && self::allows(Ability::Edit, $record))
             ->schema([
                 TextInput::make('name')
-                    ->required()
-                    ->maxLength(255)
+                    ->rules(DriveNameRules::rules())
+                    ->validationMessages(DriveNameRules::messages())
                     ->default(fn (array $record): string => self::field($record, 'name')),
             ])
             ->action(function (array $record, array $data): void {
                 /** @var string $name */
                 $name = $data['name'];
 
-                self::driveFor($record)->nodes()->rename(node: self::nodeId($record), name: $name);
+                try {
+                    self::driveFor($record)->nodes()->rename(node: self::nodeId($record), name: $name);
+                } catch (VaulterException $exception) {
+                    self::notifyFailed('Rename failed', $exception->getMessage());
+
+                    return;
+                }
 
                 self::notifyDone('Node renamed');
             });
@@ -252,8 +262,8 @@ final class NodeResource extends Resource
                 }
                 try {
                     self::driveFor($record)->nodes()->move(node: self::nodeId($record), destination: $destination);
-                } catch (PermissionDeniedException) {
-                    Notification::make()->title('Move not allowed')->danger()->send();
+                } catch (VaulterException $exception) {
+                    self::notifyFailed('Move not allowed', $exception->getMessage());
                     $action->halt();
                 }
 
@@ -273,7 +283,13 @@ final class NodeResource extends Resource
             ->requiresConfirmation()
             ->visible(fn (array $record): bool => $record['trashed_at'] === null && self::allows(Ability::Trash, $record))
             ->action(function (array $record): void {
-                self::driveFor($record)->nodes()->trash(node: self::nodeId($record));
+                try {
+                    self::driveFor($record)->nodes()->trash(node: self::nodeId($record));
+                } catch (VaulterException $exception) {
+                    self::notifyFailed('Trash failed', $exception->getMessage());
+
+                    return;
+                }
 
                 self::notifyDone('Node trashed');
             });
@@ -290,7 +306,13 @@ final class NodeResource extends Resource
             ->icon('heroicon-o-arrow-uturn-left')
             ->visible(fn (array $record): bool => $record['trashed_at'] !== null && self::allows(Ability::Restore, $record))
             ->action(function (array $record): void {
-                self::driveFor($record)->trash()->restore(node: self::nodeId($record));
+                try {
+                    self::driveFor($record)->trash()->restore(node: self::nodeId($record));
+                } catch (VaulterException $exception) {
+                    self::notifyFailed('Restore failed', $exception->getMessage());
+
+                    return;
+                }
 
                 self::notifyDone('Node restored');
             });
@@ -309,7 +331,13 @@ final class NodeResource extends Resource
             ->requiresConfirmation()
             ->visible(fn (array $record): bool => $record['trashed_at'] !== null && self::allows(Ability::Delete, $record))
             ->action(function (array $record): void {
-                self::driveFor($record)->trash()->purge(node: self::nodeId($record));
+                try {
+                    self::driveFor($record)->trash()->purge(node: self::nodeId($record));
+                } catch (VaulterException $exception) {
+                    self::notifyFailed('Delete failed', $exception->getMessage());
+
+                    return;
+                }
 
                 self::notifyDone('Node permanently deleted');
             });
@@ -347,6 +375,11 @@ final class NodeResource extends Resource
     private static function notifyDone(string $title): void
     {
         Notification::make()->title($title)->success()->send();
+    }
+
+    private static function notifyFailed(string $title, string $body): void
+    {
+        Notification::make()->title($title)->body($body)->danger()->send();
     }
 
     /**

@@ -209,7 +209,11 @@ final class ModuleApplier
                 return;
             }
             foreach ($schedules as $class) {
-                (new $class)->define($scheduler, $config);
+                $schedule = $app->make($class);
+                if (!$schedule instanceof ModuleSchedule) {
+                    throw new InvalidConfigurationException('[Vaulter] Module schedule '.$class.' must resolve to '.ModuleSchedule::class.'.');
+                }
+                $schedule->define($scheduler, $config);
             }
         };
         $app->afterResolving(Schedule::class, $define);

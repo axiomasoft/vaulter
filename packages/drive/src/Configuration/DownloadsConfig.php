@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Api;
+use Vaulter\Configuration\StringList;
 use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
@@ -52,7 +53,7 @@ final readonly class DownloadsConfig
     public function inlineMimeTypes(): array
     {
         $default = self::DEFAULT_DOWNLOAD_INLINE_MIME_WHITELIST;
-        $configured = $this->stringList($this->config->get('vaulter-drive.downloads.inline_mime_types', $default), $default);
+        $configured = StringList::from($this->config->get('vaulter-drive.downloads.inline_mime_types', $default), $default);
 
         $mimes = [];
 
@@ -65,24 +66,4 @@ final readonly class DownloadsConfig
         return $mimes === [] ? $default : array_values(array_unique($mimes));
     }
 
-    /**
-     * @param  list<string> $default
-     * @return list<string>
-     */
-    private function stringList(mixed $value, array $default): array
-    {
-        if (!is_array($value)) {
-            return $default;
-        }
-
-        $strings = [];
-
-        foreach ($value as $item) {
-            if (is_string($item)) {
-                $strings[] = $item;
-            }
-        }
-
-        return $strings;
-    }
 }

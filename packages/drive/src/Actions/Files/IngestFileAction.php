@@ -15,6 +15,8 @@ use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\IngestReceipt;
+use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
@@ -91,6 +93,8 @@ final readonly class IngestFileAction
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private RevisionBlobLinks $links,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private FileRevisionSnapshotMapper $revisionSnapshots,
     ) {}
 
     public function execute(DriveContext $context, IngestFileInput $data): Node
@@ -261,7 +265,7 @@ final readonly class IngestFileAction
 
         $this->scans->admit($context, $version);
 
-        $this->recorder->record(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actor: $context->actor->ref(), correlationId: $context->correlationId));
+        $this->recorder->record(new FileUploaded(nodeSnapshots: $this->nodeSnapshots, revisionSnapshots: $this->revisionSnapshots, node: $node->refresh(), file: $file, version: $version, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
         return new IngestReceipt($node, $version);
     }
@@ -316,7 +320,7 @@ final readonly class IngestFileAction
 
         $this->scans->admit($context, $version);
 
-        $this->recorder->record(new FileRevisionAdded(
+        $this->recorder->record(new FileRevisionAdded(nodeSnapshots: $this->nodeSnapshots, revisionSnapshots: $this->revisionSnapshots,
             node: $node->refresh(),
             file: $file,
             version: $version,

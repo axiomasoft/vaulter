@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing;
 
-use RuntimeException;
+use PHPUnit\Framework\Assert;
 use Throwable;
 use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -95,6 +95,7 @@ final class FakeMetricsRecorder implements MetricsRecorder
     private function assertType(string $type, string $name, ?array $labels): void
     {
         $normalized = $labels === null ? null : $this->normalizeLabels($labels);
+        $matched = false;
 
         foreach ($this->emissions as $emission) {
             if ($emission['type'] !== $type || $emission['name'] !== $name) {
@@ -105,14 +106,16 @@ final class FakeMetricsRecorder implements MetricsRecorder
                 continue;
             }
 
-            return;
+            $matched = true;
+
+            break;
         }
 
-        throw new RuntimeException(sprintf(
+        Assert::assertTrue($matched, $matched ? '' : sprintf(
             'Expected %s emission for %s%s',
             $type,
             $name,
-            $normalized === null ? '' : ' with labels '.json_encode($normalized, JSON_THROW_ON_ERROR),
+            $normalized === null ? '' : ' with labels '.json_encode($normalized, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),
         ));
     }
 
