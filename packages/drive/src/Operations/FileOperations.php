@@ -190,8 +190,13 @@ final readonly class FileOperations implements Contract
     {
         $file = $node->file()->firstOrFail();
         $id = $key instanceof FileRevision ? $key->getRawOriginal($key->getKeyName()) : ($key instanceof FileRevisionSnapshot ? $key->id : ($key ?? $file->current_revision_id));
+        $versions = $file->versions();
+        // A key the revision id cannot hold names no row; PostgreSQL would fail the cast.
+        if ((!is_int($id) && !is_string($id)) || $id === '' || !Identity::fitsKey($versions->getModel(), $id)) {
+            throw NodeNotFoundException::forId($node->id);
+        }
 
-        return $file->versions()->whereKey($id)->whereIn('status', ['committed', 'superseded'])->first() ?? throw NodeNotFoundException::forId($node->id);
+        return $versions->whereKey($id)->whereIn('status', ['committed', 'superseded'])->first() ?? throw NodeNotFoundException::forId($node->id);
     }
 
     /**

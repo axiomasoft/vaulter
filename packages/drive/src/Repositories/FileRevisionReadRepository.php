@@ -11,6 +11,7 @@ use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Support\Identity;
 
 /**
  * Read-side lookups over the immutable v_file_revisions for the HTTP layer:
@@ -59,7 +60,13 @@ final class FileRevisionReadRepository
             return null;
         }
 
-        return $this->query()
+        $query = $this->query();
+        // A key the revision id cannot hold names no row; PostgreSQL would fail the cast.
+        if (!Identity::fitsKey($query->getModel(), $versionId)) {
+            return null;
+        }
+
+        return $query
             ->where('file_id', $file->getKey())
             ->whereKey($versionId)
             ->first();
