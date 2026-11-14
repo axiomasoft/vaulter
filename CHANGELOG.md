@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed: the Azgard guard SPI receives the decision actor explicitly; a shared guard no longer has to infer it from the authenticated request. Roles require all their mapped abilities, preventing a single permission from expanding into unconfirmed rights.
-- Fixed: strict webhook management excludes null-tenant endpoints and updates preserve ownership. An endpoint id that cannot fit its key column answers not found before PostgreSQL attempts a cast.
+- Fixed: bigint model keys retain their full database value through Eloquent reads, key-list queries, relations, writes and auto-generated IDs; an unsigned MySQL key above PHP's integer range stays a decimal string.
+- Fixed: strict webhook management excludes null-tenant endpoints and updates preserve ownership. Every management write rechecks the locked row's owner, including after an administrative ownership transfer. An endpoint id that cannot fit its key column answers not found before PostgreSQL attempts a cast.
 - Fixed: signed local storage stages interrupted writes away from canonical keys. Opaque CAS scope and storage keys use exact non-padding comparisons without narrowing UTF-8 character limits.
 - Fixed: comment anchors are bounded to 16384 encoded JSON bytes and 16 levels in HTTP and PHP, before storage or receipt fingerprinting.
 - Fixed: document update, snapshot and restore receipts cannot return a missing document through permissions on its former ancestor or the drive root.

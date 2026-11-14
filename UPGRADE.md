@@ -25,9 +25,14 @@ no 0.x installation existed, so the 0.x upgrade path was removed instead of bein
   evaluate that actor. Do not capture the request user. The standard `AzgardBackedUser` integration and upstream
   AzGuard require no change. A Vaulter role now requires every mapped permission of that role; one Comment or Edit
   permission no longer implies its other abilities.
+- Built-in `bigint` models retain native integer keys within PHP's integer range and decimal strings above it.
+  This includes MySQL unsigned keys, auto-generated IDs and key-list lookups. `HasVaulterKeys` reports string
+  key metadata to keep Eloquent's integer-list optimization from truncating those IDs. Code consuming
+  `IdStrategy::cast()` must use the returned Eloquent cast rather than assume the literal `integer`.
 - Strict webhook management includes only the exact current tenant. Null-tenant endpoints are not visible or
   adopted by tenant managers. Assign them through an explicit administrative data migration when enabling tenancy;
-  an ordinary update preserves the endpoint's tenant. Tenantless event delivery remains tenantless-only.
+  an ordinary update preserves the endpoint's tenant. Every management write rechecks ownership after locking
+  the stored row. Tenantless event delivery remains tenantless-only.
 - Comment anchors must encode to at most 16384 JSON bytes with PHP's default escaping and at most 16 levels.
   HTTP rejects larger anchors with `422 validation_failed` on `anchor`; `AddCommentInput` rejects them with
   `InvalidArgumentException` before an operation or idempotency fingerprint is created.
