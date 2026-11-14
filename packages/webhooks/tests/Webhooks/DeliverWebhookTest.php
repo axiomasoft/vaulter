@@ -18,6 +18,7 @@ use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Schema\WebhooksSchema;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
+use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 use Vaulter\Webhooks\WebhookSecret;
 use Vaulter\Webhooks\WebhookSigner;
@@ -419,3 +420,129 @@ it('delivers when the endpoint is switched back on between the read and the kill
     expect($delivery->refresh()->status)->toBe('delivered');
     Http::assertSentCount(1);
 });
+
+it('sends the signature headers through the cURL handler', function (): void {
+    // Http::fake never builds Guzzle's cURL handler, so it cannot see the options that
+    // handler rejects before the signed bytes are written. Loopback is pinned here only
+    // so this process can read the request the handler actually sends.
+    $portFile = tempnam(sys_get_temp_dir(), 'vaulter-wh-port-');
+    $dumpFile = tempnam(sys_get_temp_dir(), 'vaulter-wh-dump-');
+    expect($portFile)->toBeString()->and($dumpFile)->toBeString();
+    file_put_contents($portFile, '');
+    file_put_contents($dumpFile, '');
+
+    $pipes = [];
+    $process = proc_open(
+        [PHP_BINARY, '-r', signatureCaptureServer(), $portFile, $dumpFile],
+        [0 => ['pipe', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
+        $pipes,
+    );
+
+    try {
+        expect(is_resource($process))->toBeTrue();
+        $port = 0;
+        for ($attempt = 0; $attempt < 50 && $port === 0; $attempt++) {
+            $port = (int) file_get_contents((string) $portFile);
+            if ($port === 0) {
+                usleep(20_000);
+            }
+        }
+        expect($port)->toBeGreaterThan(0);
+
+        app()->instance(OutboundUrlGuard::class, new LoopbackDeliveryGuard);
+        $endpoint = WebhookTestHelpers::endpoint(['url' => 'http://127.0.0.1:'.$port.'/hook']);
+        $delivery = WebhookTestHelpers::delivery($endpoint, ['payload' => ['id' => 'evt-live', 'type' => 'folder.created']]);
+
+        runDeliver($delivery);
+
+        $raw = (string) file_get_contents((string) $dumpFile);
+        expect($delivery->refresh()->status)->toBe('delivered')
+            ->and($delivery->last_error)->toBeNull()
+            ->and($raw)->toContain("\r\n\r\n");
+        [$headers, $body] = explode("\r\n\r\n", $raw, 2);
+        $headers = str_replace("\r\n", "\n", $headers);
+        preg_match('/^webhook-timestamp: (\d+)$/m', $headers, $timestamp);
+        preg_match('/^webhook-signature: (\S+)$/m', $headers, $signature);
+        $expected = (new WebhookSigner)->sign(
+            webhookId: 'evt-live',
+            timestamp: (int) ($timestamp[1] ?? 0),
+            body: $body,
+            secret: WebhookTestHelpers::SECRET,
+        );
+
+        expect($headers)->toContain('webhook-id: evt-live')
+            ->and($signature[1] ?? null)->toBe($expected);
+    } finally {
+        if (is_resource($pipes[0] ?? null)) {
+            fclose($pipes[0]);
+        }
+        if (is_resource($process)) {
+            proc_terminate($process);
+            proc_close($process);
+        }
+        if (is_string($portFile)) {
+            @unlink($portFile);
+        }
+        if (is_string($dumpFile)) {
+            @unlink($dumpFile);
+        }
+    }
+});
+
+function signatureCaptureServer(): string
+{
+    return <<<'PHP'
+$server = stream_socket_server('tcp://127.0.0.1:0');
+if ($server === false) {
+    exit(1);
+}
+$name = stream_socket_get_name($server, false);
+$port = (int) substr((string) $name, (int) strrpos((string) $name, ':') + 1);
+file_put_contents($argv[1], (string) $port);
+$connection = stream_socket_accept($server, 5);
+if ($connection === false) {
+    exit(1);
+}
+$raw = '';
+while (!str_contains($raw, "\r\n\r\n")) {
+    $chunk = fread($connection, 8192);
+    if ($chunk === false || $chunk === '') {
+        break;
+    }
+    $raw .= $chunk;
+}
+$length = 0;
+if (preg_match('/^Content-Length: (\d+)$/mi', $raw, $match) === 1) {
+    $length = (int) $match[1];
+}
+$split = strpos($raw, "\r\n\r\n");
+$body = $split === false ? '' : substr($raw, $split + 4);
+while (strlen($body) < $length) {
+    $chunk = fread($connection, 8192);
+    if ($chunk === false || $chunk === '') {
+        break;
+    }
+    $raw .= $chunk;
+    $body .= $chunk;
+}
+file_put_contents($argv[2], $raw);
+fwrite($connection, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+fclose($connection);
+PHP;
+}
+
+/** Pins the delivery onto the local capture socket. The real guard refuses loopback. */
+final class LoopbackDeliveryGuard implements OutboundUrlGuard
+{
+    public function isAllowed(string $url): void {}
+
+    public function pin(string $url): PinnedOutboundEndpoint
+    {
+        $parts = parse_url($url);
+        $scheme = is_array($parts) && is_string($parts['scheme'] ?? null) ? $parts['scheme'] : 'http';
+        $host = is_array($parts) && is_string($parts['host'] ?? null) ? $parts['host'] : '127.0.0.1';
+        $port = is_array($parts) ? (int) ($parts['port'] ?? 80) : 80;
+
+        return new PinnedOutboundEndpoint(scheme: $scheme, host: $host, ip: '127.0.0.1', port: $port);
+    }
+}
