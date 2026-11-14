@@ -100,6 +100,7 @@ final readonly class OutboxWriter
     /**
      * Null fits the nullable column. Anything else must match the column {@see IdsConfig::hostKeys()} builds:
      * varchar(64), a non-negative bigint (signed on PostgreSQL, unsigned on MySQL), a uuid, or char(26).
+     * The varchar and char limits count characters, including multibyte tenant keys.
      * A value that already fits is stored unchanged.
      */
     private function guardTenantId(?string $tenantId, string $driver): void
@@ -114,10 +115,10 @@ final readonly class OutboxWriter
     private function tenantFits(string $tenantId, string $driver): bool
     {
         return match ($this->ids->hostKeys()) {
-            'string' => strlen($tenantId) <= 64,
+            'string' => mb_strlen($tenantId, 'UTF-8') <= 64,
             'bigint' => self::fitsBigint($tenantId, $driver),
             'uuid' => Str::isUuid($tenantId),
-            'ulid' => strlen($tenantId) <= 26,
+            'ulid' => mb_strlen($tenantId, 'UTF-8') <= 26,
         };
     }
 

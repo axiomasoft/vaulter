@@ -44,10 +44,12 @@ it('rejects a tenant id the host key column cannot store before the insert', fun
 })->with([
     'varchar(64) and a 191-byte token' => ['string', str_repeat('a', 191)],
     'varchar(64) and 65 bytes' => ['string', str_repeat('b', 65)],
+    'varchar(64) and 65 multibyte characters' => ['string', str_repeat('я', 65)],
     'uuid column and a ulid' => ['uuid', (string) Str::ulid()],
     'bigint column and a ulid' => ['bigint', (string) Str::ulid()],
     'bigint column past the signed maximum' => ['bigint', '9223372036854775808'],
     'char(26) and a uuid' => ['ulid', (string) Str::uuid()],
+    'char(26) and 27 multibyte characters' => ['ulid', str_repeat('я', 27)],
 ]);
 
 it('stores a tenant id the host key column can hold, including null', function (string $hostKeys, ?string $tenant): void {
@@ -69,9 +71,11 @@ it('stores a tenant id the host key column can hold, including null', function (
 })->with([
     'null' => ['string', null],
     '64 bytes' => ['string', str_repeat('c', 64)],
+    '64 multibyte characters' => ['string', str_repeat('я', 64)],
     'uuid' => ['uuid', '018f4c3a-7c3e-7b2a-8f1d-6a5b4c3d2e1f'],
     'ulid' => ['ulid', '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
     'short token in char(26)' => ['ulid', 'tenant-1'],
+    '26 multibyte characters in char(26)' => ['ulid', str_repeat('я', 26)],
     'bigint' => ['bigint', '42'],
     'signed bigint maximum' => ['bigint', '9223372036854775807'],
 ]);
