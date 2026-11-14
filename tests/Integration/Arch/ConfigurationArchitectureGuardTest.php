@@ -96,7 +96,7 @@ test('AST configuration guard fails closed on unresolved inventory', function ()
 
 test('AST inventory covers every package scope and applies only the owning source exception', function (): void {
     $temporary = sys_get_temp_dir().'/vaulter-architecture-'.bin2hex(random_bytes(12));
-    $packages = ['core', 'drive', 'documents', 'media', 'filament', 'azgard'];
+    $packages = ['core', 'drive', 'documents', 'media', 'filament', 'azguard'];
 
     try {
         foreach ($packages as $package) {
@@ -158,7 +158,7 @@ test('core never reads another package\'s configuration keys directly', function
             // P3-security-contracts C01: the canonical `vaulter.scan.*` keys accept the
             // published `vaulter-drive.uploads.scan.*` names as a compatibility alias.
             $alias = $file->getRelativePathname() === 'Configuration/ScanConfig.php' && $literal->value === 'vaulter-drive.uploads.scan.';
-            if (!$alias && preg_match('/^vaulter-(?:drive|documents|media|azgard|filament)\./', $literal->value) === 1) {
+            if (!$alias && preg_match('/^vaulter-(?:drive|documents|media|azguard|filament)\./', $literal->value) === 1) {
                 $offenders[] = $file->getRelativePathname().':'.$literal->getStartLine().' '.$literal->value;
             }
         }

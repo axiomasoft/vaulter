@@ -9,7 +9,7 @@
 - One canonical document path in core (v_nodes, kind=document).
 - CHANGELOG `[Unreleased]` breaking note (pre-1.0).
 - Arch tests (split-roots, controller-no-static-query, canonical-domain spot-checks) stay green.
-- Core stays azgard-free.
+- Core stays azguard-free.
 
 ## DELETE (legacy, document_id-bound)
 

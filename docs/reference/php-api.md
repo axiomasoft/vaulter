@@ -118,8 +118,8 @@ signatures and the binding point you swap it through.
 | Domain | Contract | Swap via |
 |---|---|---|
 | Access | `PermissionDriver` | `config('vaulter-drive.access.permission_driver')` + `vaulter-drive.access.permission_drivers` map |
-| Access | `AzgardGuard` (azgard) | config key `vaulter-azgard.guard` (default: the bridge's adapter) |
-| Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
+| Access | `AzGuardGuard` (azguard) | config key `vaulter-azguard.guard` (default: the bridge's adapter) |
+| Access | `AzGuardBackedUser` (azguard) | implemented by the host `User` model when `drivers.permission=azguard` |
 | Access | `GrantAuthoritativeDriver` | opt-in capability a `PermissionDriver` implements |
 | Cas | `BlobStore` | `config('vaulter-media.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter-media.content_store')` |
@@ -182,7 +182,7 @@ interface PermissionDriver
   existing node to resolve against.
 
 ::: info Frozen from M2a
-Every bundled driver (`database`, `gate`, `spatie`, `azgard`, `null`) implements
+Every bundled driver (`database`, `gate`, `spatie`, `azguard`, `null`) implements
 exactly this surface, and a contract test asserts they all yield identical
 `AccessResolver` decisions on a shared fixture.
 :::
@@ -190,17 +190,17 @@ exactly this surface, and a contract test asserts they all yield identical
 **Implement when** you have a role system the bundled drivers don't cover. See
 [Recipes → Custom resolver](/guides/recipes).
 
-#### `Vaulter\Azgard\Contracts\AzgardGuard`
+#### `Vaulter\AzGuard\Contracts\AzGuardGuard`
 
 The narrow Vaulter-owned seam the host's AzGuard-backed actor satisfies, so
-`vaulter-core` carries **no** dependency on AzGuard. The `azgard` permission driver
+`vaulter-core` carries **no** dependency on AzGuard. The `azguard` permission driver
 talks only to this interface — never AzGuard's classes. Both methods are AzGuard v1
 decisions (`hasPermission(on: $entity)` and `hasPermission(on: AssignmentScopeRef::of($type, $id))`);
 there is no super-admin method — an AzGuard super-admin reaches the owner role through
 these decisions.
 
 ```php
-interface AzgardGuard
+interface AzGuardGuard
 {
     public function hasScopedPermission(string $permission, object $entity): bool;
 
@@ -208,29 +208,29 @@ interface AzgardGuard
 }
 ```
 
-The contract ships in `axioma-studio/vaulter-azgard`, alongside the real
-`AzgardGuardAdapter` and `Vaulter\Azgard\Testing\FakeAzgardGuard` test double.
-Its provider registers the driver and adapter automatically; select a custom guard with `vaulter-azgard.guard`.
+The contract ships in `axioma-studio/vaulter-azguard`, alongside the real
+`AzGuardGuardAdapter` and `Vaulter\AzGuard\Testing\FakeAzGuardGuard` test double.
+Its provider registers the driver and adapter automatically; select a custom guard with `vaulter-azguard.guard`.
 
-**Use when** `config('vaulter-drive.access.permission_driver') = 'azgard'`: install with
-`composer require axioma-studio/vaulter-azgard`, add
-`Vaulter\Azgard\Contracts\AzgardBackedUser` to your user model, register morph aliases for
+**Use when** `config('vaulter-drive.access.permission_driver') = 'azguard'`: install with
+`composer require axioma-studio/vaulter-azguard`, add
+`Vaulter\AzGuard\Contracts\AzGuardBackedUser` to your user model, register morph aliases for
 the user and workspace models and declare the workspace aliases as assignment scope types
 of the AzGuard panel.
 Fake-based tests also require the bridge and its installed dependencies.
 See [Permission drivers](/extending/permission-drivers).
 
-#### `Vaulter\Azgard\Contracts\AzgardBackedUser` (azgard)
+#### `Vaulter\AzGuard\Contracts\AzGuardBackedUser` (azguard)
 
-The host `User` model contract the `AzgardGuardAdapter` bridges into Vaulter: AzGuard v1's
+The host `User` model contract the `AzGuardGuardAdapter` bridges into Vaulter: AzGuard v1's
 own public subject contract `AzGuard\Contracts\AzGuardSubject` — no re-declared signature
 to drift out of sync.
 
 ```php
-interface AzgardBackedUser extends AzGuardSubject {}
+interface AzGuardBackedUser extends AzGuardSubject {}
 ```
 
-**Implement when** `config('vaulter-drive.access.permission_driver') = 'azgard'` — the host
+**Implement when** `config('vaulter-drive.access.permission_driver') = 'azguard'` — the host
 `User` model satisfies it with no extra method bodies through the
 `AzGuard\Concerns\HasAzGuard` trait, and is a subject model of the AzGuard panel.
 
@@ -689,7 +689,7 @@ interface IdStrategy
   users table).
 
 ::: info Default is `ulid`
-ULID is the default so morph keys line up with the Corex/Azgard ecosystem; `uuid7`
+ULID is the default so morph keys line up with the Corex/AzGuard ecosystem; `uuid7`
 maps onto native Postgres `uuid` columns; `bigint` is the legacy auto-increment path.
 See [Auth → Multi-tenancy](/concepts/tenancy) for morph alignment.
 :::

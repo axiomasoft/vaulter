@@ -2498,11 +2498,11 @@
         {
             "call": "getMorphClass",
             "calls": 1,
-            "id": "morph:Vaulter\\Azgard\\Testing\\FakeAzgardGuard::entityKey#getMorphClass",
-            "owner": "azgard",
+            "id": "morph:Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard::entityKey#getMorphClass",
+            "owner": "azguard",
             "source": {
-                "file": "packages/azgard/src/Testing/FakeAzgardGuard.php",
-                "symbol": "Vaulter\\Azgard\\Testing\\FakeAzgardGuard::entityKey"
+                "file": "packages/azguard/src/Testing/FakeAzGuardGuard.php",
+                "symbol": "Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard::entityKey"
             }
         },
         {

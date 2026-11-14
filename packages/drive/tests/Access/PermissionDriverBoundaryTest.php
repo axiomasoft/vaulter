@@ -44,5 +44,5 @@ it('rejects the open testing driver in production through a neutral contract', f
 it('rejects an uninstalled bridge driver as unknown', function (): void {
     $manager = app(PermissionDriverManager::class);
 
-    expect(fn () => $manager->driver('azgard'))->toThrow(MissingPermissionDriverException::class);
+    expect(fn () => $manager->driver('azguard'))->toThrow(MissingPermissionDriverException::class);
 });

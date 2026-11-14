@@ -39,7 +39,7 @@ it('has an errors.md heading for every self::docs() anchor actually used in code
         dirname(__DIR__, 3).'/packages/media/src',
         dirname(__DIR__, 3).'/packages/documents/src',
         dirname(__DIR__, 3).'/packages/filament/src',
-        dirname(__DIR__, 3).'/packages/azgard/src',
+        dirname(__DIR__, 3).'/packages/azguard/src',
     ])->name('*.php') as $file) {
         if (preg_match_all("/self::docs\\('([a-z-]+)'\\)/", $file->getContents(), $matches)) {
             foreach ($matches[1] as $anchor) {
@@ -113,7 +113,7 @@ it('documents all 7 previously-undocumented public contracts in contracts.md, F-
         'DocumentContent',
         'FileHandlerRegistry',
         'NodePresenter',
-        'AzgardBackedUser',
+        'AzGuardBackedUser',
     ] as $contract) {
         expect($doc)->toContain($contract);
     }

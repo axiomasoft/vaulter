@@ -20,7 +20,7 @@ outline: deep
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azgard)
+Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azguard)
 or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
@@ -42,13 +42,13 @@ or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 
 ```dotenv
 # .env (production)
-VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
+VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azguard
 ```
 
 - **`database`** — автономный дефолт. Авторизует чисто из строк `v_node_grants`, без зависимости
   от хоста. Берите его, если нужны только гранты на узлы.
-- **`gate` / `spatie` / `azgard`** — мост к вашей существующей системе ролей; заполните
-  соответствующий блок конфига `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`.
+- **`gate` / `spatie` / `azguard`** — мост к вашей существующей системе ролей; заполните
+  соответствующий блок конфига `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azguard.*`.
 - **Свой** драйвер — см. [рецепт](/ru/guides/recipes#permission-driver).
 
 ::: warning Кэш конфига прячет env, который вы забыли
@@ -57,28 +57,28 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 (или `config:clear`) после изменения `.env`.
 :::
 
-## Панель AzGuard или morph-алиасы не согласованы {#azgard-morphs}
+## Панель AzGuard или morph-алиасы не согласованы {#azguard-morphs}
 
-**Симптом.** При `access.permission_driver = 'azgard'` проверки отказывают пользователям, которые
+**Симптом.** При `access.permission_driver = 'azguard'` проверки отказывают пользователям, которые
 явно держат разрешение, либо AzGuard бросает `InvalidAssignmentScopeException`,
 `PanelNotResolvedException` или `PrefixConflictException`, либо всплывает ошибка вида
 `Class "AzGuard\…" not found`.
 
-**Почему.** Драйвер и шов `Vaulter\Azgard\Contracts\AzgardGuard` находятся в `vaulter-azgard`,
+**Почему.** Драйвер и шов `Vaulter\AzGuard\Contracts\AzGuardGuard` находятся в `vaulter-azguard`,
 а не в core. Обе проверки шва — решения AzGuard v1, поэтому панель AzGuard хоста должна знать
 пользователя, workspace и разрешения, о которых спрашивает Vaulter.
 
 **Решение.**
 
 1. Установите мост; он требует AzGuard v1 (`axiomasoft/azguard`, закреплён на коммите), а его
-   provider сам регистрирует драйвер `azgard` и реальный адаптер:
+   provider сам регистрирует драйвер `azguard` и реальный адаптер:
 
    ```bash
-   composer require axioma-studio/vaulter-azgard
+   composer require axioma-studio/vaulter-azguard
    ```
 
-   Модель пользователя `implements Vaulter\Azgard\Contracts\AzgardBackedUser` и использует
-   `AzGuard\Concerns\HasAzGuard`. Настройки моста — `vaulter-azgard.*`.
+   Модель пользователя `implements Vaulter\AzGuard\Contracts\AzGuardBackedUser` и использует
+   `AzGuard\Concerns\HasAzGuard`. Настройки моста — `vaulter-azguard.*`.
 
 2. Зарегистрируйте **morph-алиасы** для пользователя и каждой модели workspace (владельца диска)
    (`Relation::enforceMorphMap([...])`). Идентичности AzGuard — алиасы вида
@@ -91,11 +91,11 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
    панелью, получает отказ. При `isolated(...)` грант на весь тенант — включая роль super-admin —
    внутри workspace не действует; выдавайте грант внутри workspace.
 
-4. Проверьте выбор панели: карта `vaulter-azgard.permissions` по умолчанию называет локальные
+4. Проверьте выбор панели: карта `vaulter-azguard.permissions` по умолчанию называет локальные
    ключи (`documents.view`, …), поэтому префикс ресурсов панели не должен быть `documents`
    (AzGuard не загрузит такую панель — `PrefixConflictException`; задайте другой
    `resourcePrefix()`). Если модель пользователя входит в несколько панелей, задайте
-   `VAULTER_AZGARD_PANEL`.
+   `VAULTER_AZGUARD_PANEL`.
 
 ::: tip Шов — это два решения AzGuard
 `hasScopedPermission($perm, $entity)` — это `hasPermission($perm, on: $entity)`, а

@@ -14,7 +14,7 @@ The package set is right, but its declared dependencies are not honest:
 - `vaulter-documents` cannot create a drive without `vaulter-drive` (its tests boot
   `VaulterDriveServiceProvider`), while the README claims the opposite (audit finding N15).
 - `vaulter-filament` calls the drive facade but `composer.json` requires only core (N14).
-- AzGuard-specific code (`AzgardGuard`, the AzGuard permission driver, `AzgardConfig`, `azgard.*`
+- AzGuard-specific code (`AzGuardGuard`, the AzGuard permission driver, `AzGuardConfig`, `azguard.*`
   keys) lives in core, and the bridge requires `azguard-core: dev-main` (N21).
 
 An installation of "core without drive" does not exist: without `DriveProvisioner` no drive can be
@@ -24,7 +24,7 @@ config.
 ## Decision
 
 **1. Package set is kept.** Composer packages stay `vaulter-core`, `vaulter-media`, `vaulter-drive`,
-`vaulter-documents`, `vaulter-filament`, `vaulter-azgard`; npm — `@vaulter/vue`; plus
+`vaulter-documents`, `vaulter-filament`, `vaulter-azguard`; npm — `@vaulter/vue`; plus
 the Node hub (now `@vaulter/collaboration-hub`, [ADR-0031](/adr/0031-collaboration-package-and-durability)). A metapackage **`axioma-studio/vaulter`** (`core + media + drive + documents`)
 is added.
 
@@ -41,7 +41,7 @@ is added.
   module config and the models only it reads and writes (`UploadSession`, `UploadPart`, `Document`,
   `DocumentRevision`, `NodeComment`);
 - **media** is the CAS engine (content store, storage driver, GC, reconcile, repair);
-- **bridges** (azgard, filament) contain no domain logic.
+- **bridges** (azguard, filament) contain no domain logic.
 
 | Artifact | Owner | Rule |
 | --- | --- | --- |
@@ -55,8 +55,8 @@ is added.
 | Contracts called only by a module | module | `DocumentType`, `DocumentExporter`, `CollaborationDriver`, `UploadProtocolHandler` |
 | Kernel HTTP (grants, shares, activity, public links) | core | Works through `Vaulter::drive()`; core registers these routes only if `DriveHandleFactory` is bound (vaulter-drive installed). Webhook endpoints — always |
 
-**4. AzGuard specifics leave core.** Everything AzGuard-specific (`AzgardGuard`, the driver, the
-permission map, `azgard.*` keys) moves from core to `vaulter-azgard` (N21).
+**4. AzGuard specifics leave core.** Everything AzGuard-specific (`AzGuardGuard`, the driver, the
+permission map, `azguard.*` keys) moves from core to `vaulter-azguard` (N21).
 
 ## Consequences
 

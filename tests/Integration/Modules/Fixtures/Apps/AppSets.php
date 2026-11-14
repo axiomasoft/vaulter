@@ -12,24 +12,24 @@ use Vaulter\VaulterServiceProvider;
 use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 /**
- * The application sets of the install matrix: core; +media; +drive; +documents; +collaboration; +webhooks; +azgard; +filament —
- * each downward-closed by the package graph (D6): collaboration needs the documents, webhooks, azgard and filament need the drive, the
+ * The application sets of the install matrix: core; +media; +drive; +documents; +collaboration; +webhooks; +azguard; +filament —
+ * each downward-closed by the package graph (D6): collaboration needs the documents, webhooks, azguard and filament need the drive, the
  * drive needs the media.
  *
- * The azgard and filament packages are not a dev dependency of the core (the azgard bridge pulls the external AzGuard
+ * The azguard and filament packages are not a dev dependency of the core (the azguard bridge pulls the external AzGuard
  * package, the Filament admin the Filament framework): their manifests and offering providers need neither, so the matrix
  * makes the two source trees loadable by its own PSR-4 map unless Composer already does.
  */
 final class AppSets
 {
     /** The module ids of every package of the monorepo that offers one. */
-    public const array ALL_MODULES = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azgard', 'filament'];
+    public const array ALL_MODULES = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azguard', 'filament'];
 
     /** Modules that mount routes of their own. */
     public const array ROUTE_MODULES = ['drive', 'documents', 'collaboration', 'webhooks'];
 
     private const array SIBLING_PACKAGES = [
-        'Vaulter\\Azgard\\' => 'azgard',
+        'Vaulter\\AzGuard\\' => 'azguard',
         'Vaulter\\Filament\\' => 'filament',
     ];
 
@@ -52,7 +52,7 @@ final class AppSets
             new AppSet('+documents', $documents, ['core', 'media', 'drive', 'documents'], 'documents', 'core+media+drive', requiredOff: 'drive'),
             new AppSet('+collaboration', [...$documents, VaulterCollaborationServiceProvider::class], ['core', 'media', 'drive', 'documents', 'collaboration'], 'collaboration', '+documents', ['vaulter.modules.collaboration' => true], 'documents'),
             new AppSet('+webhooks', [...$drive, VaulterWebhooksServiceProvider::class], ['core', 'media', 'drive', 'webhooks'], 'webhooks', 'core+media+drive', ['vaulter.modules.webhooks' => true], 'drive'),
-            new AppSet('+azgard', [...$drive, 'Vaulter\\Azgard\\VaulterAzgardServiceProvider'], ['core', 'media', 'drive', 'azgard'], 'azgard', 'core+media+drive', requiredOff: 'drive'),
+            new AppSet('+azguard', [...$drive, 'Vaulter\\AzGuard\\VaulterAzGuardServiceProvider'], ['core', 'media', 'drive', 'azguard'], 'azguard', 'core+media+drive', requiredOff: 'drive'),
             new AppSet('+filament', [...$drive, 'Vaulter\\Filament\\VaulterFilamentServiceProvider'], ['core', 'media', 'drive', 'filament'], 'filament', 'core+media+drive', requiredOff: 'drive'),
         ];
 

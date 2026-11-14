@@ -44,13 +44,13 @@ $file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), 
 | `axioma-studio/vaulter-documents` | editor, versions, comments, export |
 | `axioma-studio/vaulter-collaboration` | commercial realtime editing with committed save receipts (opt-in module); the Node hub lives in `packages/collaboration/hub` |
 | `axioma-studio/vaulter-webhooks` | outbound webhooks (opt-in module) |
-| `axioma-studio/vaulter-azgard` | AzGuard permission resolver |
+| `axioma-studio/vaulter-azguard` | AzGuard permission resolver |
 | `axioma-studio/vaulter-filament` | Filament admin (optional, Laravel 13) |
 | `axioma-studio/vaulter` | metapackage: core, media, drive and documents |
 | `@vaulter/vue` | TypeScript / Vue 3 client and components |
 | `@vaulter/vue-collaboration` | commercial browser client for realtime editing: update queue and save status |
 
-Each package owns its tables, models and config file (`vaulter-<package>`); webhooks, collaboration, azgard and
+Each package owns its tables, models and config file (`vaulter-<package>`); webhooks, collaboration, azguard and
 filament are installed separately. See [ADR-0030](docs/adr/0030-package-ownership-and-schema.md) and
 [ADR-0031](docs/adr/0031-collaboration-package-and-durability.md). The optional collaboration hub (Node, Docker image
 `ghcr.io/axiomasoft/vaulter-collaboration-hub`) lives in `packages/collaboration/hub/`.
@@ -94,7 +94,7 @@ vaulter/
 │   ├── collaboration/         # axioma-studio/vaulter-collaboration — realtime editing (Vaulter\Collaboration\)
 │   │   └── hub/               # @vaulter/collaboration-hub — the Node Hocuspocus hub (+ Docker)
 │   ├── webhooks/              # axioma-studio/vaulter-webhooks — outbound webhooks (Vaulter\Webhooks\)
-│   ├── azgard/                # axioma-studio/vaulter-azgard — AzGuard permission driver
+│   ├── azguard/                # axioma-studio/vaulter-azguard — AzGuard permission driver
 │   ├── vaulter/               # axioma-studio/vaulter — metapackage
 │   ├── vue/                   # @vaulter/vue — TypeScript Vue 3 client, composables & components
 │   ├── vue-collaboration/     # @vaulter/vue-collaboration — Yjs transport, update queue, save status

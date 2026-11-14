@@ -1,6 +1,6 @@
 ---
 title: Permission Drivers
-description: The four PermissionDriver lanes — Database (default), Gate, Spatie v8 teams, and the AzGuard seam — how to select and configure each, and the separate bridge’s AzgardGuard adapter.
+description: The four PermissionDriver lanes — Database (default), Gate, Spatie v8 teams, and the AzGuard seam — how to select and configure each, and the separate bridge’s AzGuardGuard adapter.
 outline: deep
 ---
 
@@ -8,7 +8,7 @@ outline: deep
 
 The [`AccessResolver`](/concepts/access-model) owns the per-node ACL and the final decision.
 The **role lane** it folds in is swappable: it is the `PermissionDriver` contract, and
-Core ships `database`, `gate` and `spatie`; the separate bridge supplies `azgard`. This is where you bridge your application's identity
+Core ships `database`, `gate` and `spatie`; the separate bridge supplies `azguard`. This is where you bridge your application's identity
 and role system into Vaulter.
 
 ::: info The contract is node-blind
@@ -66,7 +66,7 @@ The active driver is a single config key (and env var):
 
 ```bash
 # .env
-VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
+VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azguard | null
 ```
 
 The key → FQCN map is `vaulter-drive.access.permission_drivers`. Register your own driver by adding an FQCN
@@ -255,21 +255,21 @@ This is a no-op when Spatie is not installed.
 
 ## AzGuard — the per-resource seam
 
-`Vaulter\Azgard\AzgardPermissionDriver` lives in the separate
-`axioma-studio/vaulter-azgard` package; core does not depend on AzGuard. The bridge
+`Vaulter\AzGuard\AzGuardPermissionDriver` lives in the separate
+`axioma-studio/vaulter-azguard` package; core does not depend on AzGuard. The bridge
 requires AzGuard v1 (`axiomasoft/azguard`). AzGuard publishes no tagged release, so the
 bridge pins one commit: `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (the full sha is in
-`packages/azgard/composer.json`).
+`packages/azguard/composer.json`).
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-azgard
+composer require axioma-studio/vaulter-azguard
 ```
 
-Its Laravel-discovered provider offers the `azgard` module, which registers `azgard` in
+Its Laravel-discovered provider offers the `azguard` module, which registers `azguard` in
 `vaulter-drive.access.permission_drivers`, preserving an explicit host override. Then select
-`VAULTER_PERMISSION_DRIVER=azgard`. Without the installed bridge, the key is unknown
+`VAULTER_PERMISSION_DRIVER=azguard`. Without the installed bridge, the key is unknown
 and throws `MissingPermissionDriverException`.
 
 The composite resolution order is node-ACL → workspace-scoped role → global. This driver
@@ -299,7 +299,7 @@ of a role to grant that complete bundle.
 The host declares the AzGuard v1 panel that owns Vaulter's permissions:
 
 - the user model is a subject of the panel and implements
-  `Vaulter\Azgard\Contracts\AzgardBackedUser` — AzGuard's own `AzGuardSubject`, satisfied
+  `Vaulter\AzGuard\Contracts\AzGuardBackedUser` — AzGuard's own `AzGuardSubject`, satisfied
   by the `AzGuard\Concerns\HasAzGuard` trait with no extra methods;
 - the mapped permissions (`documents.view`, …) are permissions of the panel;
 - every drive-owner morph alias the driver checks in (`team`, `project`, …) is an
@@ -347,7 +347,7 @@ keyed by `Ability`:
 <!-- snippet: config -->
 
 ```php
-// config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
+// config/vaulter-azguard.php — used only when access.permission_driver = 'azguard'
 return [
     'panel_id' => null, // AzGuard `guard:`; null lets AzGuard select the panel
     'permissions' => [
@@ -364,7 +364,7 @@ return [
         'share'    => 'documents.manage',
         'manage'   => 'documents.manage',
     ],
-    'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
+    'create_permission' => env('VAULTER_AZGUARD_CREATE_PERMISSION', 'documents.create'),
 ];
 ```
 
@@ -374,23 +374,23 @@ the request, else the panel of the user model; the default map names local keys 
 panel, so that panel's resource prefix must not be `documents`: AzGuard refuses to boot a
 panel whose prefix is the first segment of one of its permissions (`PrefixConflictException`).
 Give the panel another `resourcePrefix()` (or `resourcePrefix(false)`), or map the abilities to
-permissions that do not start with the prefix. Set `VAULTER_AZGARD_PANEL` when the user model belongs to
+permissions that do not start with the prefix. Set `VAULTER_AZGUARD_PANEL` when the user model belongs to
 several panels or the checks must not depend on the request panel; AzGuard throws when no
 panel can be selected. A panel with tenants needs its current tenant; without one AzGuard
 denies the check.
 
-### The AzgardGuard adapter
+### The AzGuardGuard adapter
 
-`Vaulter\Azgard\Contracts\AzgardGuard` is the narrow seam the driver talks to. It
+`Vaulter\AzGuard\Contracts\AzGuardGuard` is the narrow seam the driver talks to. It
 exposes exactly the two AzGuard decisions the driver needs — and nothing of AzGuard's own
 API:
 
-<!-- snippet: signature Vaulter\Azgard\Contracts\AzgardGuard -->
+<!-- snippet: signature Vaulter\AzGuard\Contracts\AzGuardGuard -->
 
 ```php
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
-interface AzgardGuard
+interface AzGuardGuard
 {
     public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool;
 
@@ -400,10 +400,10 @@ interface AzgardGuard
 
 The driver always answers for the decision's **actor**, never for whoever the request is:
 
-1. If the actor itself implements `AzgardGuard`, the driver uses it directly.
-2. Otherwise, the guard class the **host** named in `vaulter-azgard.guard` is used (see the override below).
-3. Otherwise, for an actor implementing `Vaulter\Azgard\Contracts\AzgardBackedUser`, the
-   driver uses a stateless `AzgardGuardAdapter` in the `vaulter-azgard.panel_id` panel and passes that actor to each check.
+1. If the actor itself implements `AzGuardGuard`, the driver uses it directly.
+2. Otherwise, the guard class the **host** named in `vaulter-azguard.guard` is used (see the override below).
+3. Otherwise, for an actor implementing `Vaulter\AzGuard\Contracts\AzGuardBackedUser`, the
+   driver uses a stateless `AzGuardGuardAdapter` in the `vaulter-azguard.panel_id` panel and passes that actor to each check.
 4. Any other actor gets no AzGuard lane (nothing is raised, `canCreateIn` is `false`).
 
 The bridge binds no guard of its own: no guard is ever built from the **request** user for a
@@ -412,10 +412,10 @@ rights, and a call without a request user — the collaboration hub resolves the
 itself — is decided by the actor's own AzGuard rights.
 
 ::: details Optionally naming one guard for every actor
-Set `vaulter-azgard.guard` to a class implementing `AzgardGuard` (validated at boot; `null` by
+Set `vaulter-azguard.guard` to a class implementing `AzGuardGuard` (validated at boot; `null` by
 default). The driver passes the actor explicitly to every guard call. A shared guard must use
 that argument; it must not resolve or capture the request user. The supplied
-`AzgardGuardAdapter` is stateless and delegates to AzGuard v1 on the supplied actor:
+`AzGuardGuardAdapter` is stateless and delegates to AzGuard v1 on the supplied actor:
 
 <!-- snippet: host -->
 
@@ -423,20 +423,20 @@ that argument; it must not resolve or capture the request user. The supplied
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Azgard\Contracts\AzgardBackedUser;
+use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
 
-// config/vaulter-azgard.php: 'guard' => \App\Support\HostAzgardGuard::class,
-final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
+// config/vaulter-azguard.php: 'guard' => \App\Support\HostAzGuardGuard::class,
+final class HostAzGuardGuard implements \Vaulter\AzGuard\Contracts\AzGuardGuard
 {
     public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
     {
-        return $actor instanceof AzgardBackedUser && $entity instanceof Model
+        return $actor instanceof AzGuardBackedUser && $entity instanceof Model
             && $actor->hasPermission($permission, on: $entity);
     }
 
     public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
     {
-        return $actor instanceof AzgardBackedUser
+        return $actor instanceof AzGuardBackedUser
             && $actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
     }
 }
@@ -448,23 +448,23 @@ alias itself.
 
 ### Testing the AzGuard lane
 
-`Vaulter\Azgard\Testing\FakeAzgardGuard` is an in-memory guard supplied by
-`vaulter-azgard`. Install the bridge and its Composer dependencies even for fake-based
+`Vaulter\AzGuard\Testing\FakeAzGuardGuard` is an in-memory guard supplied by
+`vaulter-azguard`. Install the bridge and its Composer dependencies even for fake-based
 tests; the fake replaces live AzGuard checks, not the package's installation requirements.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Azgard\Testing\FakeAzgardGuard;
+use Vaulter\AzGuard\Testing\FakeAzGuardGuard;
 
 // name the fake as the host's explicit guard, then hand out the configured instance
-config()->set('vaulter-azgard.guard', FakeAzgardGuard::class);
+config()->set('vaulter-azguard.guard', FakeAzGuardGuard::class);
 
 // grant one workspace permission
-app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
+app()->instance(FakeAzGuardGuard::class, FakeAzGuardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
 
 // or a super-admin (every check allowed → owner role)
-app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::superAdmin());
+app()->instance(FakeAzGuardGuard::class, FakeAzGuardGuard::superAdmin());
 ```
 
 For end-to-end tests against the real engine, use AzGuard's own helpers
@@ -476,7 +476,7 @@ grants through AzGuard's change pipeline.
 
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
-| Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | `axioma-studio/vaulter-azgard` + its dependencies |
+| Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | `axioma-studio/vaulter-azguard` + its dependencies |
 | Map keyed by | — | role key | role key | `Ability` |
 | Enumerates role/team subjects | subclass | no | yes | no |
 | Super-admin override | no | `vaulter.super` ability | super permission | no — AzGuard super-admin → owner role by decisions |

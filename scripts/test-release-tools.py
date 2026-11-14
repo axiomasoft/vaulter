@@ -105,9 +105,9 @@ class CheckVersionsTest(unittest.TestCase):
         self.assertIn("firebase/php-jwt", result.stderr)
 
     def test_excluded_bridge_may_pin_its_untagged_upstream(self):
-        # The shipped azgard composer.json does exactly this and the current tree passes.
-        azgard = json.loads((ROOT / "packages/azgard/composer.json").read_text())
-        self.assertTrue(azgard["require"]["axiomasoft/azguard"].startswith("dev-"))
+        # The shipped azguard composer.json does exactly this and the current tree passes.
+        azguard = json.loads((ROOT / "packages/azguard/composer.json").read_text())
+        self.assertTrue(azguard["require"]["axiomasoft/azguard"].startswith("dev-"))
 
     def test_dev_upstream_is_only_exempt_while_the_package_is_actually_excluded(self):
         # azguard is tagged in require, yet a dev constraint remains in require-dev: the package ships, so it must fail.
@@ -115,7 +115,7 @@ class CheckVersionsTest(unittest.TestCase):
             d["require"]["axiomasoft/azguard"] = "^0.2"
             d["require-dev"] = {**d.get("require-dev", {}), "axiomasoft/azguard": "dev-main"}
 
-        result = self.mutated(lambda tree: self.edit_composer(tree, "azgard", change))
+        result = self.mutated(lambda tree: self.edit_composer(tree, "azguard", change))
         self.assertEqual(result.returncode, 1)
         self.assertIn("require-dev axiomasoft/azguard uses dev constraint", result.stderr)
 
@@ -271,9 +271,9 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("channel must be", result.stderr)
 
-    def test_azgard_is_skipped_while_its_upstream_is_a_dev_require(self):
-        self.assertFalse((self.out / "axioma-studio-vaulter-azgard-0.3.0.zip").exists())
-        self.assertIn("skip axioma-studio/vaulter-azgard", self.result.stdout)
+    def test_azguard_is_skipped_while_its_upstream_is_a_dev_require(self):
+        self.assertFalse((self.out / "axioma-studio-vaulter-azguard-0.3.0.zip").exists())
+        self.assertIn("skip axioma-studio/vaulter-azguard", self.result.stdout)
         self.assertIn("dev-main", self.result.stdout)
 
     def test_export_ignore_keeps_tests_and_dev_config_out(self):
@@ -793,7 +793,7 @@ for ref, sha in tags.items():
     def setUpClass(cls):
         cls.splits = [
             p["split"] for p in MANIFEST["php"]
-            if p["split"] != "axioma-studio/vaulter-azgard" and p["channel"] == "public"
+            if p["split"] != "axioma-studio/vaulter-azguard" and p["channel"] == "public"
         ]
 
     def run_verify(self, remote_tags, expected=None, tag="v0.3.0"):
@@ -823,11 +823,11 @@ for ref, sha in tags.items():
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f"{len(self.splits)} split repositories", result.stdout)
 
-    def test_azgard_is_not_queried_while_excluded(self):
-        # The stub fails with 128 for an unknown repository, so any query for azgard would surface as an error.
+    def test_azguard_is_not_queried_while_excluded(self):
+        # The stub fails with 128 for an unknown repository, so any query for azguard would surface as an error.
         result = self.run_verify(self.tags(), self.expected())
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("skip axioma-studio/vaulter-azgard", result.stdout)
+        self.assertIn("skip axioma-studio/vaulter-azguard", result.stdout)
 
     def test_annotated_tag_is_compared_by_its_peeled_commit(self):
         tags = self.tags()
@@ -881,7 +881,7 @@ for ref, sha in tags.items():
     def test_excluded_listing_names_the_bridge(self):
         result = subprocess.run([str(RELEASE / "verify-split-tags.sh"), "--excluded"], text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.split(), ["axioma-studio/vaulter-azgard"])
+        self.assertEqual(result.stdout.split(), ["axioma-studio/vaulter-azguard"])
 
 
 class WorkflowAndShellTest(unittest.TestCase):
@@ -1006,7 +1006,7 @@ class RouteReleaseTest(unittest.TestCase):
                 self.assertTrue(set(routed["entries"]) <= members)
         public = json.loads(self.route("v1.2.3").stdout)["entries"]
         self.assertNotIn("axioma-studio/vaulter-collaboration", public)
-        self.assertNotIn("axioma-studio/vaulter-azgard", public)
+        self.assertNotIn("axioma-studio/vaulter-azguard", public)
 
     def test_strict_semver_and_prefix(self):
         for tag in ("v1.2.3-rc.1", "v01.2.3", "v1.2", "collaboration-v1.0.2-beta", "latest", "x1.0.0", "vaulter-collaboration-hub-v1.0.0", "collaboration-hub-v1.0"):

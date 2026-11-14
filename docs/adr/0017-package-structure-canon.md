@@ -3,8 +3,8 @@
 **Status:** accepted
 
 > **Amendment (VLT-CANON P2.1).** The AzGuard bridge package was renamed
-> `permissions-azgard` → **`azgard`** (`axioma-studio/vaulter-azgard`, namespace
-> `Vaulter\Azgard\*`). This ADR's canon is unchanged — only the package's name is.
+> `permissions-azguard` → **`azguard`** (`axioma-studio/vaulter-azguard`, namespace
+> `Vaulter\AzGuard\*`). This ADR's canon is unchanged — only the package's name is.
 > Both mentions below are written in the current name.
 
 > **Amendment (PLAN2 P3 / ADR-0020).** `Operations/` and `Queries/` join the canonical layers.
@@ -14,7 +14,7 @@
 ## Context
 
 vaulter is a monorepo of six PHP packages (`core`, `drive`, `media`, `documents`,
-`filament`, `azgard`) over one shared kernel (ADR-0005 / ADR-0015).
+`filament`, `azguard`) over one shared kernel (ADR-0005 / ADR-0015).
 Their internal `src/**` layout drifted into three incompatible schemes, which
 breaks the layer-mirror navigation the monorepo depends on (VLT-REMED D10, owner
 decision 2026-07-10):
@@ -88,7 +88,7 @@ reference is `vaulter-core`. Two structural laws, both machine-checked:
 - **`vaulter-filament`** follows the **Filament** plugin convention
   (`src/Resources/<XResource>/Pages/`), which is itself a canon owned by the
   framework. Canon A does NOT apply; P4.10 does not restructure it.
-- **`vaulter-media`** and **`vaulter-azgard`** are minimal (a CAS
+- **`vaulter-media`** and **`vaulter-azguard`** are minimal (a CAS
   domain-service folder / a guard adapter). They conform to Canon A in its narrow
   form; P4.10 only verifies them, it does not force a layer tree onto packages
   that have none.

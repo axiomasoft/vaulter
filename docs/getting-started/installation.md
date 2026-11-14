@@ -58,7 +58,7 @@ composer require axioma-studio/vaulter-webhooks
 composer require axioma-studio/vaulter-filament
 
 # AzGuard permission driver
-composer require axioma-studio/vaulter-azgard
+composer require axioma-studio/vaulter-azguard
 
 ```
 

@@ -11,7 +11,7 @@
                 "documents",
                 "webhooks",
                 "filament",
-                "azgard",
+                "azguard",
                 "vaulter"
             ]
         },
@@ -33,13 +33,13 @@
     },
     "surfaces": [
         {
-            "id": "php:azgard",
+            "id": "php:azguard",
             "adapter": "php-surface",
             "schema_version": 1,
-            "owner": "azgard",
+            "owner": "azguard",
             "release_line": "php-public",
             "inputs": [
-                "packages/azgard/tests/Arch/__snapshots__/surface.json"
+                "packages/azguard/tests/Arch/__snapshots__/surface.json"
             ],
             "required": true,
             "status": "current",

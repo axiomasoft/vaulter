@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Fixed: the Azgard guard SPI receives the decision actor explicitly; a shared guard no longer has to infer it from the authenticated request. Roles require all their mapped abilities, preventing a single permission from expanding into unconfirmed rights.
+- Fixed: the AzGuard guard SPI receives the decision actor explicitly; a shared guard no longer has to infer it from the authenticated request. Roles require all their mapped abilities, preventing a single permission from expanding into unconfirmed rights.
 - Fixed: bigint model keys retain their full database value through Eloquent reads, key-list queries, relations, writes and auto-generated IDs; an unsigned MySQL key above PHP's integer range stays a decimal string.
 - Fixed: strict webhook management excludes null-tenant endpoints and updates preserve ownership. Every management write rechecks the locked row's owner, including after an administrative ownership transfer. An endpoint id that cannot fit its key column answers not found before PostgreSQL attempts a cast.
 - Fixed: signed local storage stages interrupted writes away from canonical keys. Opaque CAS scope and storage keys use exact non-padding comparisons without narrowing UTF-8 character limits.
@@ -177,7 +177,7 @@ every moved identity is recorded in `tests/Repo/Arch/Fixtures/identities/changes
 - Added: the `verify-tags` job in `monorepo-split.yml` fails the release when a split repository lacks the tag or has
   it on another commit; the split matrix now includes `vaulter`.
 - Added: `@vaulter/vue` declares `"vaulter": { "api": "1" }` in `package.json`.
-- Changed: `vaulter-azgard` is excluded from the release until AzGuard is tagged; its `dev-main` require is unchanged.
+- Changed: `vaulter-azguard` is excluded from the release until AzGuard is tagged; its `dev-main` require is unchanged.
 
 ### Generators write a contract test (PLAN2.P7.3)
 
@@ -597,7 +597,7 @@ every moved identity is recorded in `tests/Repo/Arch/Fixtures/identities/changes
 - Fixed (R2, blocker): with Redis a read-only first connection to a document without Yjs state
   cached an empty `Y.Doc` that the first writer then projected over the saved JSON. The hub now
   refuses that connection until a writer has seeded the document.
-- Fixed (R3): `AzgardPermissionDriver` built its guard from the request's user, so an actor other
+- Fixed (R3): `AzGuardPermissionDriver` built its guard from the request's user, so an actor other
   than the request user inherited the request user's rights and a hub call (no request user) was
   denied. The guard is now built over the actor (host-bound guards are still honoured).
 - Fixed (R4): a store refused with `401`/`403`/`413`/`422` was logged and treated as saved. The
@@ -625,14 +625,14 @@ every moved identity is recorded in `tests/Repo/Arch/Fixtures/identities/changes
 
 ### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
 
-- Changed: `vaulter-azgard` requires AzGuard v1 `axiomasoft/azguard` pinned to commit
+- Changed: `vaulter-azguard` requires AzGuard v1 `axiomasoft/azguard` pinned to commit
   `9a6dc0e` (`dev-main#<sha>`; AzGuard has no tagged release) instead of
   `axioma-studio/azguard-core: dev-main`, and drops `axioma-studio/azguard-context`. The AzGuard
   CI workflow checks out the same commit.
-- Changed: `AzgardBackedUser` extends AzGuard v1 `AzGuardSubject`; `AzgardGuardAdapter` checks
+- Changed: `AzGuardBackedUser` extends AzGuard v1 `AzGuardSubject`; `AzGuardGuardAdapter` checks
   resources with `hasPermission(on: $entity)` and workspaces with `hasPermission(on:
-  AssignmentScopeRef::of($type, $id))`, passing `vaulter-azgard.panel_id` as `guard:`.
-- Removed: `AzgardGuard::isSuperAdmin()` and the azgard super-admin override. An AzGuard
+  AssignmentScopeRef::of($type, $id))`, passing `vaulter-azguard.panel_id` as `guard:`.
+- Removed: `AzGuardGuard::isSuperAdmin()` and the azguard super-admin override. An AzGuard
   super-admin reaches the owner role through AzGuard's workspace decisions, so an `isolated`
   scope policy and AzGuard restrictions are no longer bypassed (review finding P4.14 F1).
 - Changed: the real-engine tests of the bridge run on AzGuard v1 panels (stored grants,
@@ -1065,7 +1065,7 @@ public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
   HTTP policy boundaries now use the frozen profile (AD05, PLAN2.P3.6).
 
 - Configuration now belongs to each package (`vaulter`, `vaulter-media`, `vaulter-drive`,
-  `vaulter-documents`, `vaulter-azgard`, `vaulter-filament`) and is read through typed
+  `vaulter-documents`, `vaulter-azguard`, `vaulter-filament`) and is read through typed
   `final readonly` `Configuration\*Config` singletons (AD26, P2.5). Removed the static
   configuration/model helpers; architecture checks prohibit direct Vaulter-key reads
   outside configuration classes. Media publishes `vaulter-media.php` in place of
@@ -1082,8 +1082,8 @@ public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
   `enabled_document_types` and `features.spreadsheets` remain core keys in this transition.
 
 - AzGuard's driver, guard contract, permission map and fake now live in
-  `vaulter-azgard`, which automatically registers the `azgard` driver and real
-  adapter. Its permission configuration uses `vaulter-azgard.*`; core no longer
+  `vaulter-azguard`, which automatically registers the `azguard` driver and real
+  adapter. Its permission configuration uses `vaulter-azguard.*`; core no longer
   contains the integration (P2.4; see UPGRADE.md).
 - Media GC and reconcile commands are `vaulter:blobs:gc` and
   `vaulter:blobs:reconcile`; previous signatures have no aliases.
@@ -1145,7 +1145,7 @@ public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
   Name conflicts now return 409 `node_name_conflict` (previously 422); assembled
   upload MIME mismatches return 422 `upload_rejected` with `reason: mime_mismatch`
   (previously 415). Existing validation fields and tus headers are preserved.
-- `vaulter-azgard` now follows the public AzGuard 0.3 line and its widened
+- `vaulter-azguard` now follows the public AzGuard 0.3 line and its widened
   `BackedEnum` panel/role contracts; CI checks out the latest public AzGuard commit
   directly from GitHub without a private repository token.
 
@@ -1211,7 +1211,7 @@ public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
   backed by a content-addressable blob store (CAS). Collaboration became **node-attached** and
   standardised on **Hocuspocus** (Reverb is now for notifications, not collaboration). The
   release artifacts are the six split Composer packages `vaulter-core`, `vaulter-media`,
-  `vaulter-drive`, `vaulter-documents`, `vaulter-filament` and `vaulter-azgard`.
+  `vaulter-drive`, `vaulter-documents`, `vaulter-filament` and `vaulter-azguard`.
 - **`@vaulter/vue` (npm) ships outside this git tag, on its own track** (D3). The monorepo git
   tag `v0.2.0` is a Composer/PHP versioning event covering the six packages above; the Vue client
   (`@vaulter/vue`, `0.0.0`) versions on its independent npm cycle and is not part of this
@@ -1351,16 +1351,16 @@ public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
   instead of silently rendering blank content. `CreateDocumentInput::$format`'s default
   changed from the invalid literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`).
   See `UPGRADE.md`.
-- **The AzGuard bridge is named `axioma-studio/vaulter-azgard`, not
-  `axioma-studio/vaulter-permissions-azgard`** (VLT-CANON P2.1, final structural canon). The
-  package directory moved `packages/permissions-azgard/` → `packages/azgard/` and the namespace
-  `Vaulter\Permissions\Azgard\*` → `Vaulter\Azgard\*`. The core-owned contract seam
-  `Vaulter\Contracts\Access\AzgardGuard` is unaffected — only the bridge package's own name and
+- **The AzGuard bridge is named `axioma-studio/vaulter-azguard`, not
+  `axioma-studio/vaulter-permissions-azguard`** (VLT-CANON P2.1, final structural canon). The
+  package directory moved `packages/permissions-azguard/` → `packages/azguard/` and the namespace
+  `Vaulter\Permissions\AzGuard\*` → `Vaulter\AzGuard\*`. The core-owned contract seam
+  `Vaulter\Contracts\Access\AzGuardGuard` is unaffected — only the bridge package's own name and
   namespace changed. **Note this is not a released-package break:** the bridge has never been
   published (the repo carries no tag, and the split/Packagist pipeline is tag-triggered), so
-  `vaulter-permissions-azgard` never existed on Packagist and the `Added` entry below lists the
+  `vaulter-permissions-azguard` never existed on Packagist and the `Added` entry below lists the
   bridge under its final name. Only a host tracking this monorepo's dev branch — requiring the old
-  package name via a path/VCS repo, or importing `Vaulter\Permissions\Azgard\*` FQCNs — has to
+  package name via a path/VCS repo, or importing `Vaulter\Permissions\AzGuard\*` FQCNs — has to
   update. See `UPGRADE.md`.
 - **BREAKING (pre-1.0): catch-all folders resolved by role** (VLT-CANON P2.3, final structural
   canon). `documents/src/Documents/` (tautological name), the TipTap-only slice of
@@ -1428,7 +1428,7 @@ public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
   owner and idempotent delivery.
 - **Handler-aware documents** — rich-text (TipTap) and opaque snapshots (e.g. the Univer
   spreadsheet handler), plus a handler-aware create-path (`mime` resolves the node's handler).
-- **AzGuard bridge** (`axioma-studio/vaulter-azgard`) — a real `AzgardGuard` adapter
+- **AzGuard bridge** (`axioma-studio/vaulter-azguard`) — a real `AzGuardGuard` adapter
   delegating to AzGuard scoped roles and workspace-context checks, keeping core AzGuard-free.
 - **Vue client** (`@vaulter/vue`) — Drive components (folder-picker, no `window.prompt`),
   shared-with-me view, node-collaboration composables and the headless spreadsheet shell.

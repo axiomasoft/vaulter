@@ -1,0 +1,37 @@
+Vaulter\AzGuard\Contracts\AzGuardBackedUser
+  azguard(): \AzGuard\Concerns\SubjectPanels
+  azguardDefaultPanel(): ?string
+  azguardRef(): \AzGuard\Kernel\Identity\SubjectRef
+  grantPermission(\UnitEnum|array|string $permissions, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?\DateTimeInterface $until = null, array $fields = []): \AzGuard\Changes\ChangeResult
+  grantRole(\UnitEnum|array|string $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?\DateTimeInterface $until = null, array $fields = []): \AzGuard\Changes\ChangeResult
+  hasAllPermissions(array $permissions, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  hasAllRoles(array $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  hasAnyPermission(array $permissions, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  hasAnyRole(array $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  hasPermission(\UnitEnum|string $permission, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  hasRole(\UnitEnum|array|string $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  inTenant(\AzGuard\Kernel\Identity\TenantRef|\Illuminate\Database\Eloquent\Model $tenant): \AzGuard\Concerns\SubjectAccess
+  isSuperAdmin(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
+  permissionNames(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): \Illuminate\Support\Collection
+  permissionSet(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): \AzGuard\Kernel\Permissions\PermissionSet
+  revokePermission(\UnitEnum|string $permission, \AzGuard\Kernel\Identity\AnyAssignmentScope|\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null): \AzGuard\Changes\ChangeResult
+  revokeRole(\UnitEnum|string $role, \AzGuard\Kernel\Identity\AnyAssignmentScope|\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null): \AzGuard\Changes\ChangeResult
+  roleNames(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): \Illuminate\Support\Collection
+  syncPermissions(array $permissions, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null): \AzGuard\Changes\ChangeResult
+  syncRoles(array $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null): \AzGuard\Changes\ChangeResult
+
+Vaulter\AzGuard\Contracts\AzGuardGuard
+  hasPermissionIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
+  hasScopedPermission(\Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
+
+Vaulter\AzGuard\Configuration\AzGuardConfig
+  createPermission(): string
+  guard(): ?string
+  panelId(): ?string
+  permissions(): array
+
+Vaulter\AzGuard\AzGuardPermissionDriver
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): bool
+  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Enums\Access\Effect
+  resolve(\Vaulter\Drive\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Access\ValueObjects\Decision
+  subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array

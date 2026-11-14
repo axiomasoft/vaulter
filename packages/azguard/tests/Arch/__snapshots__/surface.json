@@ -1,0 +1,695 @@
+{
+    "format": "vaulter.surface",
+    "version": 1,
+    "package": "azguard",
+    "types": {
+        "Vaulter\\AzGuard\\AzGuardPermissionDriver": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Vaulter\\Drive\\Contracts\\Access\\NonEnumeratingPermissionDriver",
+                "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Vaulter\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:cancreatein": {
+                    "kind": "method",
+                    "name": "canCreateIn",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "scope",
+                            "type": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:override": {
+                    "kind": "method",
+                    "name": "override",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "scope",
+                            "type": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Drive\\Enums\\Access\\Effect|null",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:resolve": {
+                    "kind": "method",
+                    "name": "resolve",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "subject",
+                            "type": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "scope",
+                            "type": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Drive\\Access\\ValueObjects\\Decision|null",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:subjectsfor": {
+                    "kind": "method",
+                    "name": "subjectsFor",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<Subject>"
+                    ]
+                }
+            }
+        },
+        "Vaulter\\AzGuard\\Configuration\\AzGuardConfig": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Vaulter\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:createpermission": {
+                    "kind": "method",
+                    "name": "createPermission",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:guard": {
+                    "kind": "method",
+                    "name": "guard",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "null|string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return class-string<AzGuardGuard>|null"
+                    ]
+                },
+                "method:panelid": {
+                    "kind": "method",
+                    "name": "panelId",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "null|string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:permissions": {
+                    "kind": "method",
+                    "name": "permissions",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array<string, string>"
+                    ]
+                }
+            }
+        },
+        "Vaulter\\AzGuard\\Contracts\\AzGuardBackedUser": {
+            "kind": "interface",
+            "surface": "Spi:Implement",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [
+                "AzGuard\\Contracts\\AzGuardSubject"
+            ],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {}
+        },
+        "Vaulter\\AzGuard\\Contracts\\AzGuardGuard": {
+            "kind": "interface",
+            "surface": "Spi:Implement",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:haspermissionin": {
+                    "kind": "method",
+                    "name": "hasPermissionIn",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "contextType",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "contextId",
+                            "type": "int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "permission",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:hasscopedpermission": {
+                    "kind": "method",
+                    "name": "hasScopedPermission",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "permission",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "entity",
+                            "type": "object",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Vaulter\\AzGuard\\Contracts\\AzGuardGuard"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Vaulter\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "superAdmin",
+                            "type": "bool",
+                            "default": "false",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "scopedGrants",
+                            "type": "array",
+                            "default": "[]",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "workspaceGrants",
+                            "type": "array",
+                            "default": "[]",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param bool $superAdmin",
+                        "@param list<array{string, int|string, string}> $workspaceGrants",
+                        "@param list<array{string, string}> $scopedGrants"
+                    ]
+                },
+                "method:grantingworkspace": {
+                    "kind": "method",
+                    "name": "grantingWorkspace",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "contextType",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "contextId",
+                            "type": "int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "permission",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:haspermissionin": {
+                    "kind": "method",
+                    "name": "hasPermissionIn",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "contextType",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "contextId",
+                            "type": "int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "permission",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:hasscopedpermission": {
+                    "kind": "method",
+                    "name": "hasScopedPermission",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Illuminate\\Contracts\\Auth\\Access\\Authorizable",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "permission",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "entity",
+                            "type": "object",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:superadmin": {
+                    "kind": "method",
+                    "name": "superAdmin",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\AzGuard\\VaulterAzGuardServiceProvider": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [
+                "Illuminate\\Support\\ServiceProvider"
+            ],
+            "implements": [],
+            "traits": [
+                "Vaulter\\Modules\\OffersModules"
+            ],
+            "adaptations": [],
+            "attributes": [
+                "Vaulter\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        }
+    }
+}

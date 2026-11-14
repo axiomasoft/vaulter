@@ -591,8 +591,8 @@ test('core source never references the extracted vaulter-documents package (P2 #
  * The optional permission bridge owns its complete guard seam and driver.
  * Core source has no dependency on the bridge package.
  */
-test('core source never references the vaulter-azgard package (P2.1)', function (): void {
-    expect(coreReferencesTo('Azgard'))->toBe([]);
+test('core source never references the vaulter-azguard package (P2.1)', function (): void {
+    expect(coreReferencesTo('AzGuard'))->toBe([]);
 });
 
 /**
@@ -750,7 +750,7 @@ test('core source and configuration contain no bridge implementation names (P2.5
                 $code .= is_array($token) ? $token[1] : $token;
             }
 
-            if (preg_match('/azgard|hocuspocus|filament/i', $code) === 1) {
+            if (preg_match('/azguard|hocuspocus|filament/i', $code) === 1) {
                 $offenders[] = $file->getPathname();
             }
         }

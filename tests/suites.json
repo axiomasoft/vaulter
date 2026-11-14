@@ -2025,12 +2025,12 @@
         }
       ]
     },
-    "azgard": {
+    "azguard": {
       "kind": "pest",
-      "cwd": "packages/azgard",
+      "cwd": "packages/azguard",
       "vendor": "vendor/bin/pest",
       "config": "phpunit.xml",
-      "tests_dir": "packages/azgard/tests",
+      "tests_dir": "packages/azguard/tests",
       "path_base": "package",
       "default": true,
       "discovery": [
@@ -2050,9 +2050,9 @@
             "serial"
           ],
           "files": [
-            "packages/azgard/tests/Arch/ConfigurationBoundaryTest.php",
-            "packages/azgard/tests/Arch/PublicApiSnapshotTest.php",
-            "packages/azgard/tests/ArchTest.php"
+            "packages/azguard/tests/Arch/ConfigurationBoundaryTest.php",
+            "packages/azguard/tests/Arch/PublicApiSnapshotTest.php",
+            "packages/azguard/tests/ArchTest.php"
           ]
         },
         {
@@ -2070,12 +2070,12 @@
             "serial"
           ],
           "files": [
-            "packages/azgard/tests/Access/AzgardDriverTest.php",
-            "packages/azgard/tests/Access/PermissionDriverContractTest.php"
+            "packages/azguard/tests/Access/AzGuardDriverTest.php",
+            "packages/azguard/tests/Access/PermissionDriverContractTest.php"
           ]
         },
         {
-          "key": "InteractsWithAzGuard+IsolatedRealAzgardTestCase+RefreshDatabase",
+          "key": "InteractsWithAzGuard+IsolatedRealAzGuardTestCase+RefreshDatabase",
           "fingerprint": "d5564ef8821b",
           "lifecycle": "refresh",
           "database": true,
@@ -2089,11 +2089,11 @@
             "serial"
           ],
           "files": [
-            "packages/azgard/tests/RealAzgardIsolated/IsolatedScopeTest.php"
+            "packages/azguard/tests/RealAzGuardIsolated/IsolatedScopeTest.php"
           ]
         },
         {
-          "key": "InteractsWithAzGuard+RealAzgardTestCase+RefreshDatabase",
+          "key": "InteractsWithAzGuard+RealAzGuardTestCase+RefreshDatabase",
           "fingerprint": "801f224726c2",
           "lifecycle": "refresh",
           "database": true,
@@ -2107,7 +2107,7 @@
             "serial"
           ],
           "files": [
-            "packages/azgard/tests/RealAzgard/RealAzgardIntegrationTest.php"
+            "packages/azguard/tests/RealAzGuard/RealAzGuardIntegrationTest.php"
           ]
         },
         {
@@ -2125,12 +2125,12 @@
             "serial"
           ],
           "files": [
-            "packages/azgard/tests/ActorGuardTest.php",
-            "packages/azgard/tests/AdapterTest.php",
-            "packages/azgard/tests/ConfigurationTest.php",
-            "packages/azgard/tests/Doctor/AzgardDoctorCheckTest.php",
-            "packages/azgard/tests/ProviderBindingTest.php",
-            "packages/azgard/tests/VaulterResolverIntegrationTest.php"
+            "packages/azguard/tests/ActorGuardTest.php",
+            "packages/azguard/tests/AdapterTest.php",
+            "packages/azguard/tests/ConfigurationTest.php",
+            "packages/azguard/tests/Doctor/AzGuardDoctorCheckTest.php",
+            "packages/azguard/tests/ProviderBindingTest.php",
+            "packages/azguard/tests/VaulterResolverIntegrationTest.php"
           ]
         }
       ]

@@ -532,7 +532,7 @@ function pcbGuardedBase(array $body, string $variable, callable $named): ?string
 
 function pcbInternalConstructor(string $fqcn): bool
 {
-    foreach (['Vaulter\\Drive\\' => 'drive', 'Vaulter\\Documents\\' => 'documents', 'Vaulter\\Media\\' => 'media', 'Vaulter\\Azgard\\' => 'azgard', 'Vaulter\\' => 'core'] as $prefix => $package) {
+    foreach (['Vaulter\\Drive\\' => 'drive', 'Vaulter\\Documents\\' => 'documents', 'Vaulter\\Media\\' => 'media', 'Vaulter\\AzGuard\\' => 'azguard', 'Vaulter\\' => 'core'] as $prefix => $package) {
         if (!str_starts_with($fqcn, $prefix)) {
             continue;
         }

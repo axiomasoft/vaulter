@@ -18,9 +18,9 @@
         {
             "change": "added",
             "decision": "D22",
-            "id": "config:vaulter-azgard.guard",
+            "id": "config:vaulter-azguard.guard",
             "kind": "config",
-            "reason": "P3.5: explicit AzgardGuard class (providesFromConfig); replaces the container-bound probe of AzgardPermissionDriver::guardFor"
+            "reason": "P3.5: explicit AzGuardGuard class (providesFromConfig); replaces the container-bound probe of AzGuardPermissionDriver::guardFor"
         },
         {
             "change": "redefined",
@@ -53,9 +53,9 @@
         {
             "change": "redefined",
             "decision": "D22",
-            "id": "publish:vaulter-azgard-config",
+            "id": "publish:vaulter-azguard-config",
             "kind": "config",
-            "reason": "P3.4: published by the module kernel from the AzgardModule config declaration instead of the provider"
+            "reason": "P3.4: published by the module kernel from the AzGuardModule config declaration instead of the provider"
         },
         {
             "change": "redefined",
@@ -1410,172 +1410,172 @@
         {
             "default": {
                 "default": "documents.create",
-                "env": "VAULTER_AZGARD_CREATE_PERMISSION"
+                "env": "VAULTER_AZGUARD_CREATE_PERMISSION"
             },
-            "env": "VAULTER_AZGARD_CREATE_PERMISSION",
-            "id": "config:vaulter-azgard.create_permission",
-            "owner": "azgard",
+            "env": "VAULTER_AZGUARD_CREATE_PERMISSION",
+            "id": "config:vaulter-azguard.create_permission",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": null,
-            "id": "config:vaulter-azgard.guard",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.guard",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": {
-                "env": "VAULTER_AZGARD_PANEL"
+                "env": "VAULTER_AZGUARD_PANEL"
             },
-            "env": "VAULTER_AZGARD_PANEL",
-            "id": "config:vaulter-azgard.panel_id",
-            "owner": "azgard",
+            "env": "VAULTER_AZGUARD_PANEL",
+            "id": "config:vaulter-azguard.panel_id",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.comment",
-            "id": "config:vaulter-azgard.permissions.comment",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.comment",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.update",
-            "id": "config:vaulter-azgard.permissions.copy",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.copy",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.create",
-            "id": "config:vaulter-azgard.permissions.create",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.create",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.delete",
-            "id": "config:vaulter-azgard.permissions.delete",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.delete",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.download",
-            "id": "config:vaulter-azgard.permissions.download",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.download",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.update",
-            "id": "config:vaulter-azgard.permissions.edit",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.edit",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.manage",
-            "id": "config:vaulter-azgard.permissions.manage",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.manage",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.update",
-            "id": "config:vaulter-azgard.permissions.move",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.move",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.delete",
-            "id": "config:vaulter-azgard.permissions.restore",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.restore",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.manage",
-            "id": "config:vaulter-azgard.permissions.share",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.share",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.delete",
-            "id": "config:vaulter-azgard.permissions.trash",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.trash",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": "documents.view",
-            "id": "config:vaulter-azgard.permissions.view",
-            "owner": "azgard",
+            "id": "config:vaulter-azguard.permissions.view",
+            "owner": "azguard",
             "registered_defaults": true,
-            "root": "vaulter-azgard",
+            "root": "vaulter-azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
@@ -4255,29 +4255,29 @@
         },
         {
             "config_keys": [
-                "vaulter-azgard.create_permission"
+                "vaulter-azguard.create_permission"
             ],
             "defaults": [
                 "documents.create"
             ],
-            "id": "env:VAULTER_AZGARD_CREATE_PERMISSION",
-            "owner": "azgard",
+            "id": "env:VAULTER_AZGUARD_CREATE_PERMISSION",
+            "owner": "azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
         {
             "config_keys": [
-                "vaulter-azgard.panel_id"
+                "vaulter-azguard.panel_id"
             ],
             "defaults": [
                 null
             ],
-            "id": "env:VAULTER_AZGARD_PANEL",
-            "owner": "azgard",
+            "id": "env:VAULTER_AZGUARD_PANEL",
+            "owner": "azguard",
             "source": {
-                "file": "packages/azgard/config/vaulter-azgard.php",
+                "file": "packages/azguard/config/vaulter-azguard.php",
                 "symbol": "<file>"
             }
         },
@@ -4994,11 +4994,11 @@
             }
         },
         {
-            "id": "publish:vaulter-azgard-config",
-            "owner": "azgard",
+            "id": "publish:vaulter-azguard-config",
+            "owner": "azguard",
             "source": {
-                "file": "packages/azgard/src/AzgardModule.php",
-                "symbol": "Vaulter\\Azgard\\AzgardModule::register"
+                "file": "packages/azguard/src/AzGuardModule.php",
+                "symbol": "Vaulter\\AzGuard\\AzGuardModule::register"
             },
             "via": "module:config"
         },
@@ -5123,7 +5123,7 @@
     "kind": "config",
     "roots": [
         "vaulter",
-        "vaulter-azgard",
+        "vaulter-azguard",
         "vaulter-collaboration",
         "vaulter-documents",
         "vaulter-drive",

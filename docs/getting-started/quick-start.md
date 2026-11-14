@@ -29,7 +29,7 @@ config key:
 ```php
 // config/vaulter.php
 'access' => [
-    'permission_driver' => 'gate', // database (default) | gate | spatie | azgard | <your FQCN>
+    'permission_driver' => 'gate', // database (default) | gate | spatie | azguard | <your FQCN>
 ],
 ```
 

@@ -329,7 +329,7 @@ it('skips a prose-only change as docs_only with no runs, and a prose file mixed 
 });
 
 it('allowlists only prose in the real map: AGENTS, CLAUDE, workflows and root configs are not docs', function (): void {
-    [$code, $plan] = s_select(['--paths=docs/guide/index.md,plans/x/log.jsonl,README.md,CONTRIBUTING.md,packages/azgard/README.md']);
+    [$code, $plan] = s_select(['--paths=docs/guide/index.md,plans/x/log.jsonl,README.md,CONTRIBUTING.md,packages/azguard/README.md']);
     expect($code)->toBe(0)->and($plan['status'])->toBe('docs_only')->and($plan['runs'])->toBe([]);
 
     foreach (['AGENTS.md', 'CLAUDE.md', '.github/workflows/ci.yml', 'CHANGELOG.md', 'packages/core/phpstan.neon'] as $path) {
@@ -455,16 +455,16 @@ it('refuses an unknown argument and an unreadable map instead of guessing', func
 it('plans a media change for media and its Composer consumers only', function (): void {
     [$code, $plan] = s_select(['--paths=packages/media/src/Cas/BlobStore.php']);
 
-    // azgard consumes media since P3.4: its module requires drive, whose manifest requires media.
-    expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'integration'])
-        ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p webhooks', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p collaboration', 'scripts/t sqlite -p azgard', 'scripts/t sqlite -p filament', 'scripts/t sqlite -p integration']);
+    // azguard consumes media since P3.4: its module requires drive, whose manifest requires media.
+    expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'webhooks', 'documents', 'collaboration', 'azguard', 'filament', 'integration'])
+        ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p webhooks', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p collaboration', 'scripts/t sqlite -p azguard', 'scripts/t sqlite -p filament', 'scripts/t sqlite -p integration']);
 });
 
 it('plans a core sub-zone change by group and pulls the dependent sub-zones and packages, never load', function (): void {
     [$code, $plan] = s_select(['--paths=packages/core/src/Events/EventRecorder.php']);
 
     expect($code)->toBe(0)->and($plan['touched'])->toBe(['core-events'])
-        ->and($plan['affected'])->toBe(['core-operations', 'core-events', 'core-http', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'integration'])
+        ->and($plan['affected'])->toBe(['core-operations', 'core-events', 'core-http', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azguard', 'filament', 'integration'])
         ->and($plan['affected'])->not->toContain('load')
         ->and($plan['runs'][0]['command'])->toBe('scripts/t sqlite -p core --group=zone:core-operations,zone:core-events,zone:core-http,zone:core-observability');
 
@@ -491,7 +491,7 @@ it('refuses a core TestCase change with the whole of core and its consumers', fu
     [$code, $plan] = s_select(['--paths=packages/core/tests/TestCase.php']);
 
     expect($code)->toBe(2)->and($plan['status'])->toBe('harness')
-        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-events', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'integration'])
+        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-events', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azguard', 'filament', 'integration'])
         ->and(s_runs($plan)[0])->toBe('scripts/t sqlite -p core');
 });
 
@@ -634,7 +634,7 @@ it('routes --db through the database classification and refuses it while that is
 
 
 it('plans integration for every PHP source dependency and excludes consumers with quick', function (): void {
-    foreach (['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament'] as $package) {
+    foreach (['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament'] as $package) {
         $path = $package === 'core' ? 'packages/core/src/Events/EventRecorder.php' : "packages/$package/src/Example.php";
         [$code, $plan] = s_select(["--paths=$path"]);
         expect($code)->toBe(0, $package)->and($plan['affected'])->toContain('integration')

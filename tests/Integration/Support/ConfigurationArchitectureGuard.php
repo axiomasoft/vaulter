@@ -27,7 +27,7 @@ use Throwable;
  */
 final class ConfigurationArchitectureGuard
 {
-    private const PACKAGES = ['core', 'drive', 'documents', 'media', 'filament', 'azgard'];
+    private const PACKAGES = ['core', 'drive', 'documents', 'media', 'filament', 'azguard'];
 
     private const RETIRED_CLASSES = [
         'vaulter\\support\\config',

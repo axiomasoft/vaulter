@@ -326,7 +326,7 @@ it('keeps the data of a module while it is off and serves it again when the modu
 });
 
 // The install matrix (P4.18): the same price rules on the downward-closed application sets of the package graph (D6) — core;
-// +media; +drive; +documents; +webhooks; +azgard; +filament. Each set is a fresh application with exactly its providers
+// +media; +drive; +documents; +webhooks; +azguard; +filament. Each set is a fresh application with exactly its providers
 // (Fixtures/Apps). route:cache and config:cache before an activation change: ActivationCacheTest.
 
 /** @param array<string, mixed> $config */

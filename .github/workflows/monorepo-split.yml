@@ -9,21 +9,21 @@ name: Monorepo split (PHP)
 # PREREQUISITES (one-time, NOT done here):
 #   1. Create the empty target repos: axioma-studio/vaulter (metapackage), axioma-studio/vaulter-core,
 #      axioma-studio/vaulter-media, axioma-studio/vaulter-drive, axioma-studio/vaulter-documents,
-#      axioma-studio/vaulter-webhooks, axioma-studio/vaulter-collaboration, axioma-studio/vaulter-filament, axioma-studio/vaulter-azgard.
+#      axioma-studio/vaulter-webhooks, axioma-studio/vaulter-collaboration, axioma-studio/vaulter-filament, axioma-studio/vaulter-azguard.
 #   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
 #      those split repos.
-#   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-azgard
+#   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-azguard
 #      hard-depends on axioma-studio/azguard-core (^0.2), so keep that package resolvable on
 #      Packagist before registering the bridge (its local path-repositories are dev-only and
 #      Composer ignores a dependency's own `repositories`, so consumers are unaffected).
-#   4. VLT-CANON P2.1 renamed the bridge (permissions-azgard → azgard). If the old target repo
-#      axioma-studio/vaulter-permissions-azgard was already created (or registered on Packagist)
+#   4. VLT-CANON P2.1 renamed the bridge (permissions-azguard → azguard). If the old target repo
+#      axioma-studio/vaulter-permissions-azguard was already created (or registered on Packagist)
 #      under the pre-rename prerequisites, delete/abandon it — this workflow will never push to
 #      it again, and an abandoned empty package under the old name would outrank nothing but
 #      confuse everyone.
 #
 # The matrix is computed by scripts/release/route-release.php from release/packages.json (check-versions.php proves the
-# workflow consumes it). vaulter-azgard is skipped while its AzGuard require is a dev constraint, and the
+# workflow consumes it). vaulter-azguard is skipped while its AzGuard require is a dev constraint, and the
 # verify-tags job then proves every other split repo carries the tag on the commit just pushed.
 #
 # Release handshake (PLAN3 P1.6): a tag first runs the full qualification (weekly-full.yml as a reusable workflow)

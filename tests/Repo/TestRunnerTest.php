@@ -232,7 +232,7 @@ it('selects the repo suite and keeps the default suites free of load', function 
     expect($plan['suites'])->toBe(['repo'])->and($plan['steps'][0]['files'])->toBe($inventory['suites']['repo']['partitions'][0]['files']);
 
     $default = t_plan(['sqlite']);
-    expect($default['suites'])->toBe(['core', 'integration', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'repo', 'hub', 'vue', 'vue-collaboration']);
+    expect($default['suites'])->toBe(['core', 'integration', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azguard', 'filament', 'repo', 'hub', 'vue', 'vue-collaboration']);
 });
 
 it('runs a package path from the package cwd with a generated config holding only the selected files', function (): void {

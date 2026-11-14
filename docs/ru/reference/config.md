@@ -8,7 +8,7 @@ outline: deep
 
 Ключи ядра и каждого установленного пакета, разбитые по секциям. У каждого пакета один корень конфига, и он
 публикует свой файл под своим тегом: `vaulter` (`vaulter-config`, ядро), `vaulter-media`, `vaulter-drive`,
-`vaulter-documents`, `vaulter-webhooks`, `vaulter-azgard` и `vaulter-filament` (`<корень>-config`). Ключ переехал
+`vaulter-documents`, `vaulter-webhooks`, `vaulter-azguard` и `vaulter-filament` (`<корень>-config`). Ключ переехал
 вместе со своим понятием: доступ, sharing, профили, фичи, обработчики и модели drive лежат в `vaulter-drive`,
 настройки вебхуков — в `vaulter-webhooks`, модель блоба — в `vaulter-media`. Опубликовать всё сразу —
 `php artisan vaulter:install`.
@@ -122,7 +122,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `vaulter-drive.access.permission_drivers.database` | — | `Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
 | `vaulter-drive.access.permission_drivers.gate` | — | `Vaulter\Drive\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
 | `vaulter-drive.access.permission_drivers.spatie` | — | `Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
-| `vaulter-drive.access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | регистрируется provider установленного `vaulter-azgard` |
+| `vaulter-drive.access.permission_drivers.azguard` | — | `Vaulter\AzGuard\AzGuardPermissionDriver` | регистрируется provider установленного `vaulter-azguard` |
 | `vaulter-drive.access.permission_drivers.null` | — | `Vaulter\Drive\Testing\NullPermissionDriver` | открытый, **только не для продакшена** |
 
 ::: danger Null-драйвер в продакшене
@@ -162,37 +162,37 @@ php artisan vendor:publish --tag=vaulter-config
 
 `vaulter-drive.access.spatie.teams` используется как запасной вариант только тогда, когда собственный `config('permission.teams')` хоста не задан. `role_subject_type`/`team_subject_type` — это morph-алиасы, на которые адресуются строки грантов роли/команды.
 
-### Карта драйвера AzGuard — `vaulter-azgard.*`
+### Карта драйвера AzGuard — `vaulter-azguard.*`
 
-Отдельный пакет: `composer require axioma-studio/vaulter-azgard`. Настройки ниже
-читаются из `config/vaulter-azgard.php`, не из конфига ядра.
-
-| Ключ | По умолчанию |
-|---|---|
-| `vaulter-azgard.panel_id` | `null` (панель определяется из ключа разрешения) |
-
-Используется только когда `vaulter-drive.access.permission_driver = 'azgard'`. Ориентирована на действия — маппит право (ability) Vaulter на ключ разрешения AzGuard.
+Отдельный пакет: `composer require axioma-studio/vaulter-azguard`. Настройки ниже
+читаются из `config/vaulter-azguard.php`, не из конфига ядра.
 
 | Ключ | По умолчанию |
 |---|---|
-| `vaulter-azgard.permissions.view` | `documents.view` |
-| `vaulter-azgard.permissions.download` | `documents.download` |
-| `vaulter-azgard.permissions.comment` | `documents.comment` |
-| `vaulter-azgard.permissions.edit` | `documents.update` |
-| `vaulter-azgard.permissions.create` | `documents.create` |
-| `vaulter-azgard.permissions.move` | `documents.update` |
-| `vaulter-azgard.permissions.copy` | `documents.update` |
-| `vaulter-azgard.permissions.trash` | `documents.delete` |
-| `vaulter-azgard.permissions.delete` | `documents.delete` |
-| `vaulter-azgard.permissions.restore` | `documents.delete` |
-| `vaulter-azgard.permissions.share` | `documents.manage` |
-| `vaulter-azgard.permissions.manage` | `documents.manage` |
+| `vaulter-azguard.panel_id` | `null` (панель определяется из ключа разрешения) |
+
+Используется только когда `vaulter-drive.access.permission_driver = 'azguard'`. Ориентирована на действия — маппит право (ability) Vaulter на ключ разрешения AzGuard.
+
+| Ключ | По умолчанию |
+|---|---|
+| `vaulter-azguard.permissions.view` | `documents.view` |
+| `vaulter-azguard.permissions.download` | `documents.download` |
+| `vaulter-azguard.permissions.comment` | `documents.comment` |
+| `vaulter-azguard.permissions.edit` | `documents.update` |
+| `vaulter-azguard.permissions.create` | `documents.create` |
+| `vaulter-azguard.permissions.move` | `documents.update` |
+| `vaulter-azguard.permissions.copy` | `documents.update` |
+| `vaulter-azguard.permissions.trash` | `documents.delete` |
+| `vaulter-azguard.permissions.delete` | `documents.delete` |
+| `vaulter-azguard.permissions.restore` | `documents.delete` |
+| `vaulter-azguard.permissions.share` | `documents.manage` |
+| `vaulter-azguard.permissions.manage` | `documents.manage` |
 
 | Ключ | Env | По умолчанию |
 |---|---|---|
-| `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `documents.create` |
+| `vaulter-azguard.create_permission` | `VAULTER_AZGUARD_CREATE_PERMISSION` | `documents.create` |
 
-Мост поставляет реальный адаптер guard. Хост должен реализовать `AzgardBackedUser`
+Мост поставляет реальный адаптер guard. Хост должен реализовать `AzGuardBackedUser`
 и согласовать ULID-morph — см. [Драйверы прав](/ru/extending/permission-drivers).
 
 ## Контент-адресуемое хранилище блобов — `vaulter-media.*`
@@ -424,26 +424,26 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 ## Все ключи (генерируется)
 
 <!-- vaulter:config-reference:start -->
-### `vaulter-azgard`
+### `vaulter-azguard`
 
 | Key | Env | Default | Description |
 |---|---|---|---|
-| `vaulter-azgard.panel_id` | `VAULTER_AZGARD_PANEL` | `null` | AzGuard panel The AzGuard v1 panel the adapter passes as `guard:` to every check. null (the default) lets AzGuard select the panel — by a full name (`app:documents.view`) or a panel prefix in the permission, else the panel of the request, else the panel of the user model. The default map below names local keys (`documents.view`) of that panel, so the panel's resource prefix must not be `documents` (AzGuard refuses such a panel with PrefixConflictException): give the panel another resourcePrefix() or map the abilities below to other permissions. Set an explicit panel id when the user model belongs to several panels or the checks must not depend on the request panel; AzGuard throws when no panel can be selected. |
-| `vaulter-azgard.guard` | — | `null` | Explicit guard A class implementing `Vaulter\Azgard\Contracts\AzgardGuard` that answers for the required `$actor` argument of each check. It must not substitute the request user or switch authentication state. null (the default) uses the actor itself when it is a guard, else an adapter over the actor when it is AzGuard-backed, else the lane passes through and grants nothing. |
-| `vaulter-azgard.permissions` | — | — | A role is granted only when every ability of its registered version has a mapping and the actor holds every mapped permission. Missing mappings never imply permission. |
-| `vaulter-azgard.permissions.view` | — | `'documents.view'` | — |
-| `vaulter-azgard.permissions.download` | — | `'documents.download'` | — |
-| `vaulter-azgard.permissions.comment` | — | `'documents.comment'` | — |
-| `vaulter-azgard.permissions.edit` | — | `'documents.update'` | — |
-| `vaulter-azgard.permissions.create` | — | `'documents.create'` | — |
-| `vaulter-azgard.permissions.move` | — | `'documents.update'` | — |
-| `vaulter-azgard.permissions.copy` | — | `'documents.update'` | — |
-| `vaulter-azgard.permissions.trash` | — | `'documents.delete'` | — |
-| `vaulter-azgard.permissions.delete` | — | `'documents.delete'` | — |
-| `vaulter-azgard.permissions.restore` | — | `'documents.delete'` | — |
-| `vaulter-azgard.permissions.share` | — | `'documents.manage'` | — |
-| `vaulter-azgard.permissions.manage` | — | `'documents.manage'` | — |
-| `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `'documents.create'` | — |
+| `vaulter-azguard.panel_id` | `VAULTER_AZGUARD_PANEL` | `null` | AzGuard panel The AzGuard v1 panel the adapter passes as `guard:` to every check. null (the default) lets AzGuard select the panel — by a full name (`app:documents.view`) or a panel prefix in the permission, else the panel of the request, else the panel of the user model. The default map below names local keys (`documents.view`) of that panel, so the panel's resource prefix must not be `documents` (AzGuard refuses such a panel with PrefixConflictException): give the panel another resourcePrefix() or map the abilities below to other permissions. Set an explicit panel id when the user model belongs to several panels or the checks must not depend on the request panel; AzGuard throws when no panel can be selected. |
+| `vaulter-azguard.guard` | — | `null` | Explicit guard A class implementing `Vaulter\AzGuard\Contracts\AzGuardGuard` that answers for the required `$actor` argument of each check. It must not substitute the request user or switch authentication state. null (the default) uses the actor itself when it is a guard, else an adapter over the actor when it is AzGuard-backed, else the lane passes through and grants nothing. |
+| `vaulter-azguard.permissions` | — | — | A role is granted only when every ability of its registered version has a mapping and the actor holds every mapped permission. Missing mappings never imply permission. |
+| `vaulter-azguard.permissions.view` | — | `'documents.view'` | — |
+| `vaulter-azguard.permissions.download` | — | `'documents.download'` | — |
+| `vaulter-azguard.permissions.comment` | — | `'documents.comment'` | — |
+| `vaulter-azguard.permissions.edit` | — | `'documents.update'` | — |
+| `vaulter-azguard.permissions.create` | — | `'documents.create'` | — |
+| `vaulter-azguard.permissions.move` | — | `'documents.update'` | — |
+| `vaulter-azguard.permissions.copy` | — | `'documents.update'` | — |
+| `vaulter-azguard.permissions.trash` | — | `'documents.delete'` | — |
+| `vaulter-azguard.permissions.delete` | — | `'documents.delete'` | — |
+| `vaulter-azguard.permissions.restore` | — | `'documents.delete'` | — |
+| `vaulter-azguard.permissions.share` | — | `'documents.manage'` | — |
+| `vaulter-azguard.permissions.manage` | — | `'documents.manage'` | — |
+| `vaulter-azguard.create_permission` | `VAULTER_AZGUARD_CREATE_PERMISSION` | `'documents.create'` | — |
 
 ### `vaulter-collaboration`
 

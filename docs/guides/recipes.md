@@ -293,10 +293,10 @@ Register it as a named driver and select it:
 
 ::: tip Use a shipped lane first
 For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom class — set
-`vaulter-drive.access.permission_driver` to `gate` / `spatie` / `azgard` and fill the matching config block
-(`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`). For AzGuard install
-`composer require axioma-studio/vaulter-azgard`: its provider registers the driver
-and adapter automatically. The user model must implement `AzgardBackedUser` — see
+`vaulter-drive.access.permission_driver` to `gate` / `spatie` / `azguard` and fill the matching config block
+(`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azguard.*`). For AzGuard install
+`composer require axioma-studio/vaulter-azguard`: its provider registers the driver
+and adapter automatically. The user model must implement `AzGuardBackedUser` — see
 [Permission drivers](/extending/permission-drivers).
 :::
 
@@ -656,7 +656,7 @@ real role system:
 
 - **`NullPermissionDriver`** — an open driver (every actor is a super-admin) for tests / local dev.
   It is rejected in production, so it can never silently open a prod install.
-- **`Vaulter\Azgard\Testing\FakeAzgardGuard`** — a guard double for the `azgard` lane;
+- **`Vaulter\AzGuard\Testing\FakeAzGuardGuard`** — a guard double for the `azguard` lane;
   the bridge and its Composer dependencies must be installed.
 
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#testing-open-driver -->

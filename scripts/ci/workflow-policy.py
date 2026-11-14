@@ -44,17 +44,17 @@ from pathlib import Path
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
 # PLAN3 P1.6: the single CI.
-PHP_PACKAGES = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament']
+PHP_PACKAGES = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament']
 TESTBENCH_TO_LARAVEL = {'10': '12', '11': '13'}  # the Testbench major that supports each Laravel major
 LARAVEL_TO_TESTBENCH = {'12': '^10.0', '13': '^11.0'}
 REMOVED_WORKFLOWS = [
-    'tests.yml', 'drive.yml', 'media.yml', 'documents.yml', 'filament.yml', 'azgard.yml',
+    'tests.yml', 'drive.yml', 'media.yml', 'documents.yml', 'filament.yml', 'azguard.yml',
     'static-analysis.yml', 'code-style.yml', 'frontend.yml',
 ]
 GATE_JOB = 'ci-gate'
 GATE_CHECK_NAME = 'CI gate'
 LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboration', 'hub', 'repo', 'openapi', 'contract_bc']
-# PLAN3 P4.19 (I14): packages whose split archive must stand alone. azgard is the external gate (D20), filament has its
+# PLAN3 P4.19 (I14): packages whose split archive must stand alone. azguard is the external gate (D20), filament has its
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
 CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
 LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration', 'contract_bc': 'contract-bc'}

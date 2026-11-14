@@ -113,7 +113,7 @@ is confirmed real, reinforcing D4.
   (WOPI/office-class engines return a fundamentally different payload shape than TipTap's), a
   `schemaVersion` recommendation, and the `@univerjs/*` vs `@univerjs-pro/*` licensing boundary
   (P0.5).
-- **Final structural canon (Part 3, P2).** `permissions-azgard` → `azgard` package/namespace
+- **Final structural canon (Part 3, P2).** `permissions-azguard` → `azguard` package/namespace
   rename (P2.1); `vaulter-media` kept standalone (D9, P2.2); catch-all folders (`Documents/`,
   `Uploads/`, `Support/`) resolved per ADR-0017 (P2.3); Access/Uploads structural sweep (P2.4).
 - **Arch-test regression net (P3.2).** `core/tests/Arch/ArchTest.php` gained: a file-scan asserting
@@ -140,7 +140,7 @@ is confirmed real, reinforcing D4.
   3. `docs/ru/reference/contracts.md` lags the English `HandlerRegistry`/`NodeHandlerResolver`
      sections.
   4. `docs/plan/*` design-phase artifacts (`00-master-plan.md`, `p2-5-*`) still name the pre-rename
-     `permissions-azgard`/`Documents\Documents` FQCNs; they are historical design records, not in
+     `permissions-azguard`/`Documents\Documents` FQCNs; they are historical design records, not in
      the `docs:build` navigation, and were left as-is.
 - Pre-1.0 status made every rename in this ADR (D7, D10, package rename D9/P2.1) a free, immediate
   hard rename — no alias phase, recorded in `UPGRADE.md`/`CHANGELOG.md [Unreleased]` per item.

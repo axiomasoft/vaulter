@@ -46,12 +46,12 @@ const I5_SHARED_CONFIG_ROOTS = [];
 const I5_UNMOUNTED_ROUTES = [];
 
 /**
- * Modules whose packages the monorepo root does not install (azgard needs AzGuard, filament needs Filament): their
+ * Modules whose packages the monorepo root does not install (azguard needs AzGuard, filament needs Filament): their
  * identities are proven by their own suites, and this test pins how many there are.
  *
  * @var array<string, array<string, int>>
  */
-const I5_OUTSIDE_THIS_SUITE = ['azgard' => ['config' => 15], 'filament' => ['config' => 6]];
+const I5_OUTSIDE_THIS_SUITE = ['azguard' => ['config' => 15], 'filament' => ['config' => 6]];
 
 function i5App(): Application
 {
@@ -209,7 +209,7 @@ it('declares every config root once, by the owner of its keys', function (): voi
     // The roots of the modules this suite does not install are the only undeclared ones.
     $undeclared = array_values(array_diff(array_keys($owners), array_keys($declared)));
     sort($undeclared);
-    expect($undeclared)->toBe(['vaulter-azgard', 'vaulter-filament']);
+    expect($undeclared)->toBe(['vaulter-azguard', 'vaulter-filament']);
     foreach (I5_OUTSIDE_THIS_SUITE as $module => $counts) {
         $keys = array_filter(i5Identities('config'), static fn (array $item, string $id): bool => str_starts_with($id, 'config:') && $item['owner'] === $module, ARRAY_FILTER_USE_BOTH);
         expect(count($keys))->toBe($counts['config'], $module);

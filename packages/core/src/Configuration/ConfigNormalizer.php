@@ -30,7 +30,7 @@ final class ConfigNormalizer
         'vaulter-drive.access.permission_drivers',
         'vaulter-drive.access.gate.abilities',
         'vaulter-drive.access.spatie.permissions',
-        'vaulter-azgard.permissions',
+        'vaulter-azguard.permissions',
         'vaulter.routes.middleware.authenticated',
         'vaulter-drive.downloads.inline_mime_types',
         'vaulter-drive.uploads.allowed_mime_types',

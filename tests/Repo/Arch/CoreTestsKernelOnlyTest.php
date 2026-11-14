@@ -13,14 +13,14 @@ function kernelTestDependencies(string $source): array
     $found = [];
     foreach ((new NodeFinder)->find($nodes, static fn (Node $node): bool => $node instanceof Node\Name || $node instanceof Node\Scalar\String_ || $node instanceof Node\Scalar\EncapsedStringPart) as $node) {
         $value = $node instanceof Node\Name ? $node->toString() : $node->value;
-        if (preg_match('~Vaulter\\\\(?:Media|Drive|Documents|Webhooks|Collaboration|Azgard|Filament|Integration|Load)(?:\\\\|$)|axioma-studio/vaulter-(?:media|drive|documents|webhooks|collaboration|azgard|filament)|(?:^|[/\\s])scripts/|tests/Integration|packages/[^/]+/tests|(?:\.\./)+(?:media|drive|documents|webhooks|collaboration|azgard|filament)/~', $value) === 1) {
+        if (preg_match('~Vaulter\\\\(?:Media|Drive|Documents|Webhooks|Collaboration|AzGuard|Filament|Integration|Load)(?:\\\\|$)|axioma-studio/vaulter-(?:media|drive|documents|webhooks|collaboration|azguard|filament)|(?:^|[/\\s])scripts/|tests/Integration|packages/[^/]+/tests|(?:\.\./)+(?:media|drive|documents|webhooks|collaboration|azguard|filament)/~', $value) === 1) {
             $found[] = $value;
         }
     }
 
     // Material runtime lookups couple a test to a module even without a type import.
     // Inert strings in expected arrays, comments and negative fixtures are not lookups.
-    $upper = '/^(?:media|drive|documents|webhooks|collaboration|azgard|filament)$/';
+    $upper = '/^(?:media|drive|documents|webhooks|collaboration|azguard|filament)$/';
     foreach ((new NodeFinder)->find($nodes, static fn (Node $node): bool => $node instanceof Node\Expr\New_ || $node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\StaticCall || $node instanceof Node\Expr\FuncCall || $node instanceof Node\Expr\ArrayDimFetch) as $node) {
         if ($node instanceof Node\Expr\ArrayDimFetch) {
             if ($node->dim instanceof Node\Scalar\String_ && preg_match('/^(?:drive|media|webhooks|documents|collaboration)\./', $node->dim->value) === 1) {
@@ -36,7 +36,7 @@ function kernelTestDependencies(string $source): array
         $name = $node instanceof Node\Expr\New_ ? ($node->class instanceof Node\Name ? $node->class->getLast() : '') : ($node->name instanceof Node\Name || $node->name instanceof Node\Identifier ? $node->name->toString() : '');
         $value = $arg->value;
         if (($name === 'ModuleId' || $name === 'entitiesOf') && preg_match($upper, $value) === 1
-            || in_array($name, ['config_path'], true) && preg_match('/^vaulter-(?:media|drive|documents|webhooks|collaboration|azgard|filament)(?:\.|$)/', $value) === 1
+            || in_array($name, ['config_path'], true) && preg_match('/^vaulter-(?:media|drive|documents|webhooks|collaboration|azguard|filament)(?:\.|$)/', $value) === 1
             || in_array($name, ['hasTable', 'getColumns'], true) && preg_match('/^(?:v_)?(?:drives|nodes|node_grants|file_revisions|upload_sessions|blobs|blob_references)$/', $value) === 1) {
             $found[] = $value;
         }

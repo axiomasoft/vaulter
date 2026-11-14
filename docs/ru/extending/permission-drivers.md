@@ -1,6 +1,6 @@
 ---
 title: Драйверы прав
-description: Четыре полосы PermissionDriver — Database (по умолчанию), Gate, Spatie v8 teams и шов AzGuard — как выбрать и настроить каждую, и адаптер AzgardGuard из отдельного моста.
+description: Четыре полосы PermissionDriver — Database (по умолчанию), Gate, Spatie v8 teams и шов AzGuard — как выбрать и настроить каждую, и адаптер AzGuardGuard из отдельного моста.
 outline: deep
 ---
 
@@ -8,7 +8,7 @@ outline: deep
 
 [`AccessResolver`](/ru/concepts/access-model) владеет ACL на уровне узла и итоговым решением.
 **Ролевая полоса**, которую он подмешивает, — сменяемая: это контракт `PermissionDriver`, и
-Core поставляет `database`, `gate` и `spatie`; отдельный мост поставляет `azgard`. Именно здесь вы мостите систему идентичности и
+Core поставляет `database`, `gate` и `spatie`; отдельный мост поставляет `azguard`. Именно здесь вы мостите систему идентичности и
 ролей вашего приложения в Vaulter.
 
 ::: info Контракт не видит узла
@@ -67,7 +67,7 @@ interface PermissionDriver
 
 ```bash
 # .env
-VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
+VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azguard | null
 ```
 
 Карта ключ → FQCN лежит в `vaulter-drive.access.permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
@@ -258,20 +258,20 @@ SpatiePermissionDriver::forgetCachedPermissions($actor);
 
 ## AzGuard — шов на уровне ресурса
 
-`Vaulter\Azgard\AzgardPermissionDriver` находится в отдельном пакете
-`axioma-studio/vaulter-azgard`; ядро не зависит от AzGuard. Мост требует AzGuard v1
+`Vaulter\AzGuard\AzGuardPermissionDriver` находится в отдельном пакете
+`axioma-studio/vaulter-azguard`; ядро не зависит от AzGuard. Мост требует AzGuard v1
 (`axiomasoft/azguard`). Тегированного релиза AzGuard нет, поэтому мост закреплён на коммите:
-`"axiomasoft/azguard": "dev-main#9a6dc0e…"` (полный sha — в `packages/azgard/composer.json`).
+`"axiomasoft/azguard": "dev-main#9a6dc0e…"` (полный sha — в `packages/azguard/composer.json`).
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-azgard
+composer require axioma-studio/vaulter-azguard
 ```
 
-Обнаруживаемый Laravel provider предлагает модуль `azgard`, который регистрирует ключ `azgard` в
+Обнаруживаемый Laravel provider предлагает модуль `azguard`, который регистрирует ключ `azguard` в
 `vaulter-drive.access.permission_drivers`, сохраняя явное переопределение хоста. Затем выберите
-`VAULTER_PERMISSION_DRIVER=azgard`. Без установленного моста этот ключ неизвестен
+`VAULTER_PERMISSION_DRIVER=azguard`. Без установленного моста этот ключ неизвестен
 и вызывает `MissingPermissionDriverException`.
 
 Составной порядок разрешения — node-ACL → роль в области workspace → global. Этот драйвер владеет
@@ -300,7 +300,7 @@ Download. Для выдачи полного набора актор долже�
 Хост объявляет панель AzGuard v1, которой принадлежат разрешения Vaulter:
 
 - модель пользователя — субъект панели и реализует
-  `Vaulter\Azgard\Contracts\AzgardBackedUser` — собственный `AzGuardSubject` AzGuard,
+  `Vaulter\AzGuard\Contracts\AzGuardBackedUser` — собственный `AzGuardSubject` AzGuard,
   который трейт `AzGuard\Concerns\HasAzGuard` закрывает без дополнительных методов;
 - разрешения из карты (`documents.view`, …) — разрешения панели;
 - каждый morph-алиас владельца диска, в котором проверяет драйвер (`team`, `project`, …), —
@@ -348,7 +348,7 @@ final class AppPanel extends PanelProvider
 <!-- snippet: config -->
 
 ```php
-// config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
+// config/vaulter-azguard.php — used only when access.permission_driver = 'azguard'
 return [
     'panel_id' => null, // AzGuard `guard:`; null lets AzGuard select the panel
     'permissions' => [
@@ -365,7 +365,7 @@ return [
         'share'    => 'documents.manage',
         'manage'   => 'documents.manage',
     ],
-    'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
+    'create_permission' => env('VAULTER_AZGUARD_CREATE_PERMISSION', 'documents.create'),
 ];
 ```
 
@@ -375,22 +375,22 @@ return [
 Поэтому префикс ресурсов этой панели не должен быть `documents`: AzGuard не загрузит панель,
 префикс которой совпадает с первым сегментом одного из её разрешений (`PrefixConflictException`).
 Задайте панели другой `resourcePrefix()` (или `resourcePrefix(false)`) либо сопоставьте права с
-разрешениями, которые не начинаются с префикса. Задайте `VAULTER_AZGARD_PANEL`, если модель пользователя входит в
+разрешениями, которые не начинаются с префикса. Задайте `VAULTER_AZGUARD_PANEL`, если модель пользователя входит в
 несколько панелей или проверки не должны зависеть от панели запроса; если панель выбрать
 нельзя, AzGuard бросает исключение. Панели с тенантами нужен текущий тенант; без него AzGuard
 отказывает в проверке.
 
-### Адаптер AzgardGuard
+### Адаптер AzGuardGuard
 
-`Vaulter\Azgard\Contracts\AzgardGuard` — это узкий шов, с которым говорит драйвер. Он выставляет
+`Vaulter\AzGuard\Contracts\AzGuardGuard` — это узкий шов, с которым говорит драйвер. Он выставляет
 ровно те два решения AzGuard, которые нужны драйверу, — и ничего из собственного API AzGuard:
 
-<!-- snippet: signature Vaulter\Azgard\Contracts\AzgardGuard -->
+<!-- snippet: signature Vaulter\AzGuard\Contracts\AzGuardGuard -->
 
 ```php
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
-interface AzgardGuard
+interface AzGuardGuard
 {
     public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool;
 
@@ -400,10 +400,10 @@ interface AzgardGuard
 
 Драйвер всегда отвечает за **актора** решения, а не за того, кто сейчас делает запрос:
 
-1. Если актор сам реализует `AzgardGuard`, драйвер использует его напрямую.
-2. Иначе используется класс guard, который **хост** назвал в `vaulter-azgard.guard` (см. переопределение ниже).
-3. Иначе для актора, реализующего `Vaulter\Azgard\Contracts\AzgardBackedUser`, драйвер строит
-   stateless `AzgardGuardAdapter` в панели `vaulter-azgard.panel_id`, передавая актора каждой проверке.
+1. Если актор сам реализует `AzGuardGuard`, драйвер использует его напрямую.
+2. Иначе используется класс guard, который **хост** назвал в `vaulter-azguard.guard` (см. переопределение ниже).
+3. Иначе для актора, реализующего `Vaulter\AzGuard\Contracts\AzGuardBackedUser`, драйвер строит
+   stateless `AzGuardGuardAdapter` в панели `vaulter-azguard.panel_id`, передавая актора каждой проверке.
 4. Любой другой актор не получает полосу AzGuard (ничего не повышается, `canCreateIn` — `false`).
 
 Мост не привязывает собственный guard: guard никогда не строится из пользователя **запроса** для
@@ -412,10 +412,10 @@ interface AzgardGuard
 субъекта токена — решается собственными правами актора в AzGuard.
 
 ::: details Необязательное назначение одного guard для всех акторов
-Задайте в `vaulter-azgard.guard` класс, реализующий `AzgardGuard` (проверяется на boot; по умолчанию
+Задайте в `vaulter-azguard.guard` класс, реализующий `AzGuardGuard` (проверяется на boot; по умолчанию
 `null`). Драйвер явно передаёт актора каждому вызову guard. Общий guard должен использовать
 этот аргумент, а не получать или сохранять пользователя текущего запроса. Поставляемый
-`AzgardGuardAdapter` не хранит пользователя и вызывает AzGuard v1 для переданного актора:
+`AzGuardGuardAdapter` не хранит пользователя и вызывает AzGuard v1 для переданного актора:
 
 <!-- snippet: host -->
 
@@ -423,20 +423,20 @@ interface AzgardGuard
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Azgard\Contracts\AzgardBackedUser;
+use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
 
-// config/vaulter-azgard.php: 'guard' => \App\Support\HostAzgardGuard::class,
-final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
+// config/vaulter-azguard.php: 'guard' => \App\Support\HostAzGuardGuard::class,
+final class HostAzGuardGuard implements \Vaulter\AzGuard\Contracts\AzGuardGuard
 {
     public function hasScopedPermission(Authorizable $actor, string $permission, object $entity): bool
     {
-        return $actor instanceof AzgardBackedUser && $entity instanceof Model
+        return $actor instanceof AzGuardBackedUser && $entity instanceof Model
             && $actor->hasPermission($permission, on: $entity);
     }
 
     public function hasPermissionIn(Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
     {
-        return $actor instanceof AzgardBackedUser
+        return $actor instanceof AzGuardBackedUser
             && $actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
     }
 }
@@ -448,23 +448,23 @@ final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
 
 ### Тестирование полосы AzGuard
 
-`Vaulter\Azgard\Testing\FakeAzgardGuard` — настраиваемый in-memory guard
-из `vaulter-azgard`. Установите мост со всеми его Composer-зависимостями даже для
+`Vaulter\AzGuard\Testing\FakeAzGuardGuard` — настраиваемый in-memory guard
+из `vaulter-azguard`. Установите мост со всеми его Composer-зависимостями даже для
 тестов с фейком; фейк заменяет проверки AzGuard, но не требования установки пакета.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Azgard\Testing\FakeAzgardGuard;
+use Vaulter\AzGuard\Testing\FakeAzGuardGuard;
 
 // name the fake as the host's explicit guard, then hand out the configured instance
-config()->set('vaulter-azgard.guard', FakeAzgardGuard::class);
+config()->set('vaulter-azguard.guard', FakeAzGuardGuard::class);
 
 // grant one workspace permission
-app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
+app()->instance(FakeAzGuardGuard::class, FakeAzGuardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
 
 // or a super-admin (every check allowed → owner role)
-app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::superAdmin());
+app()->instance(FakeAzGuardGuard::class, FakeAzGuardGuard::superAdmin());
 ```
 
 Для end-to-end тестов на настоящем движке используйте собственные хелперы AzGuard
@@ -476,7 +476,7 @@ on: AssignmentScopeRef::of('team', $teamId))` и `actingAsSuperAdmin($user)` с�
 
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
-| Дополнительная зависимость | нет | нет (встроенный) | опциональная `spatie/laravel-permission` | `axioma-studio/vaulter-azgard` + его зависимости |
+| Дополнительная зависимость | нет | нет (встроенный) | опциональная `spatie/laravel-permission` | `axioma-studio/vaulter-azguard` + его зависимости |
 | Карта с ключами по | — | ключ роли | ключ роли | `Ability` |
 | Перечисляет субъектов-роли/команды | через наследование | нет | да | нет |
 | Обход для супер-админа | нет | право `vaulter.super` | супер-разрешение | нет — super-admin AzGuard → роль owner через решения |

@@ -1,0 +1,97 @@
+{
+    "name": "axioma-studio/vaulter-azguard",
+    "description": "AzGuard permission bridge for Vaulter — a real AzGuardGuard adapter delegating to AzGuard v1 panel checks on resources and assignment scopes, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "authorization", "permissions", "azguard", "vaulter"],
+    "homepage": "https://github.com/axiomasoft/vaulter",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/axiomasoft/vaulter/issues",
+        "source": "https://github.com/axiomasoft/vaulter"
+    },
+    "require": {
+        "php": "^8.4",
+        "axioma-studio/vaulter-core": "self.version",
+        "axioma-studio/vaulter-drive": "self.version",
+        "axiomasoft/azguard": "dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "axioma-studio/vaulter-media": "self.version",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vaulter\\AzGuard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Vaulter\\AzGuard\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vaulter\\AzGuard\\VaulterAzGuardServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../core",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../drive",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../media",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../../azguard/packages/core",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "../../scripts/t sqlite -p azguard",
+        "lint": "vendor/bin/pint",
+        "lint:check": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"
+    }
+}

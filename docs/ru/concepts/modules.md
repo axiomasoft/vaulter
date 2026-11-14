@@ -19,7 +19,7 @@ outline: deep
 | `media` | `vaulter-media` | auto | `core` |
 | `drive` | `vaulter-drive` | auto | `core`, `media` |
 | `documents` | `vaulter-documents` | auto | `core`, `drive` |
-| `azgard` | `vaulter-azgard` | auto (выбирается через `vaulter-drive.access.permission_driver`) | `core`, `drive` |
+| `azguard` | `vaulter-azguard` | auto (выбирается через `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (плагин панели хост подключает сам) | `drive` |
 | `webhooks` | `vaulter-webhooks` (ставится отдельно) | **opt-in** | `core`, `drive` |
 

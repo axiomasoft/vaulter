@@ -335,15 +335,15 @@ it('identities: a removed auth middleware is a security BREAK, a config env insi
     $open = $http;
     $open['items'][$route]['middleware'] = array_values(array_diff($http['items'][$route]['middleware'], ['auth:sanctum']));
     $config = bc_identities('config');
-    $key = bc_item($config, 'config:vaulter-azgard.create_permission');
+    $key = bc_item($config, 'config:vaulter-azguard.create_permission');
     $renamed = $config;
-    $renamed['items'][$key]['default']['env'] = 'VAULTER_AZGARD_OTHER';
+    $renamed['items'][$key]['default']['env'] = 'VAULTER_AZGUARD_OTHER';
     $cli = bc_identities('cli');
     $codes = $cli;
     $codes['items'][0]['exit_codes'][] = 'INVALID';
 
     expect(bc_identity_rows('http', $http, $open))->toBe(['BREAK route:vaulter.v1.access.inheritance.restore.middleware.auth:sanctum security-middleware-removed'])
-        ->and(bc_identity_rows('config', $config, $renamed))->toBe(['REVIEW config:vaulter-azgard.create_permission.default config-default'])
+        ->and(bc_identity_rows('config', $config, $renamed))->toBe(['REVIEW config:vaulter-azguard.create_permission.default config-default'])
         ->and(bc_identity_rows('cli', $cli, $codes))->toBe(["REVIEW {$cli['items'][0]['id']}.exit_codes cli-exit-codes"]);
 });
 

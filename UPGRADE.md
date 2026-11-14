@@ -20,9 +20,9 @@ no 0.x installation existed, so the 0.x upgrade path was removed instead of bein
 
 ### Corrections before the first 1.0 installation
 
-- Custom classes implementing `Vaulter\Azgard\Contracts\AzgardGuard` must accept
+- Custom classes implementing `Vaulter\AzGuard\Contracts\AzGuardGuard` must accept
   `Illuminate\Contracts\Auth\Access\Authorizable $actor` as the first argument of both permission methods and
-  evaluate that actor. Do not capture the request user. The standard `AzgardBackedUser` integration and upstream
+  evaluate that actor. Do not capture the request user. The standard `AzGuardBackedUser` integration and upstream
   AzGuard require no change. A Vaulter role now requires every mapped permission of that role; one Comment or Edit
   permission no longer implies its other abilities.
 - Built-in `bigint` models retain native integer keys within PHP's integer range and decimal strings above it.

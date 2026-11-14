@@ -247,14 +247,14 @@
                 "documents"
             ]
         },
-        "azgard": {
-            "suite": "azgard",
+        "azguard": {
+            "suite": "azguard",
             "src": [
-                "packages/azgard/src",
-                "packages/azgard/config"
+                "packages/azguard/src",
+                "packages/azguard/config"
             ],
             "tests": [
-                "packages/azgard/tests"
+                "packages/azguard/tests"
             ],
             "uses": [
                 "core",
@@ -344,7 +344,7 @@
                 "documents",
                 "webhooks",
                 "collaboration",
-                "azgard",
+                "azguard",
                 "filament"
             ]
         }
@@ -639,33 +639,33 @@
             ]
         },
         {
-            "path": "packages/azgard/composer.json",
+            "path": "packages/azguard/composer.json",
             "zones": [
-                "azgard"
+                "azguard"
             ]
         },
         {
-            "path": "packages/azgard/phpunit.xml",
+            "path": "packages/azguard/phpunit.xml",
             "zones": [
-                "azgard"
+                "azguard"
             ]
         },
         {
-            "path": "packages/azgard/tests/Pest.php",
+            "path": "packages/azguard/tests/Pest.php",
             "zones": [
-                "azgard"
+                "azguard"
             ]
         },
         {
-            "path": "packages/azgard/tests/TestCase.php",
+            "path": "packages/azguard/tests/TestCase.php",
             "zones": [
-                "azgard"
+                "azguard"
             ]
         },
         {
-            "path": "packages/azgard/tests/Stubs",
+            "path": "packages/azguard/tests/Stubs",
             "zones": [
-                "azgard"
+                "azguard"
             ]
         },
         {
@@ -772,8 +772,8 @@
         }
     ],
     "database": [
-        "packages/azgard/tests/RealAzgard",
-        "packages/azgard/tests/RealAzgardIsolated",
+        "packages/azguard/tests/RealAzGuard",
+        "packages/azguard/tests/RealAzGuardIsolated",
         "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
         "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
         "packages/collaboration/tests/Concurrency",

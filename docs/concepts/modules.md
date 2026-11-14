@@ -19,7 +19,7 @@ module registers nothing at runtime; its database schema is still installed.
 | `media` | `vaulter-media` | auto | `core` |
 | `drive` | `vaulter-drive` | auto | `core`, `media` |
 | `documents` | `vaulter-documents` | auto | `core`, `drive` |
-| `azgard` | `vaulter-azgard` | auto (selected with `vaulter-drive.access.permission_driver`) | `core`, `drive` |
+| `azguard` | `vaulter-azguard` | auto (selected with `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (the panel plugin is added to a panel by the host) | `drive` |
 | `webhooks` | `vaulter-webhooks` (installed separately) | **opt-in** | `core`, `drive` |
 

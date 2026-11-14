@@ -213,9 +213,9 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Azgard\\",
-            "owner": "azgard",
-            "why": "azgard adapter"
+            "value": "morph:Vaulter\\AzGuard\\",
+            "owner": "azguard",
+            "why": "azguard adapter"
         },
         {
             "match": "prefix",

@@ -189,7 +189,7 @@ class RouteGateTest(unittest.TestCase):
         self.assertIn("qualified=true", output)
         matrix = json.loads(next(l for l in output.splitlines() if l.startswith("matrix="))[7:])
         self.assertNotIn("collaboration", matrix)
-        self.assertNotIn("azgard", matrix)
+        self.assertNotIn("azguard", matrix)
         self.assertIn("core", matrix)
 
     def test_refusals_leave_no_qualified_output(self):

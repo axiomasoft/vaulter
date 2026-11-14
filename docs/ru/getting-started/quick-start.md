@@ -29,7 +29,7 @@ Laravel-приложению **не нужна никакая настройка
 ```php
 // config/vaulter.php
 'access' => [
-    'permission_driver' => 'gate', // database (по умолчанию) | gate | spatie | azgard | <ваш FQCN>
+    'permission_driver' => 'gate', // database (по умолчанию) | gate | spatie | azguard | <ваш FQCN>
 ],
 ```
 

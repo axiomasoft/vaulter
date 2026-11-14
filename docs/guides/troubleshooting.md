@@ -20,7 +20,7 @@ production:
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azgard)
+Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azguard)
 or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
@@ -42,13 +42,13 @@ silently open a prod install ([ADR-0007](/adr/0007-pluggable-authorization)).
 
 ```dotenv
 # .env (production)
-VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
+VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azguard
 ```
 
 - **`database`** — the standalone default. Authorizes purely from `v_node_grants` rows, zero
   host dependency. Use it if you only need per-node grants.
-- **`gate` / `spatie` / `azgard`** — bridge your existing role system; fill the matching
-  `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*` config block.
+- **`gate` / `spatie` / `azguard`** — bridge your existing role system; fill the matching
+  `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azguard.*` config block.
 - A **custom** driver — see the [recipe](/guides/recipes#permission-driver).
 
 ::: warning Config cache hides the env you forgot
@@ -57,27 +57,27 @@ config still has the old value. Re-run `php artisan config:cache` (or `config:cl
 changing `.env`.
 :::
 
-## AzGuard panel or morph aliases not aligned {#azgard-morphs}
+## AzGuard panel or morph aliases not aligned {#azguard-morphs}
 
-**Symptom.** With `access.permission_driver = 'azgard'`, checks deny users who clearly hold the
+**Symptom.** With `access.permission_driver = 'azguard'`, checks deny users who clearly hold the
 permission, or AzGuard throws `InvalidAssignmentScopeException`, `PanelNotResolvedException` or
 `PrefixConflictException`, or a `Class "AzGuard\…" not found` style error surfaces.
 
-**Why.** The driver and the `Vaulter\Azgard\Contracts\AzgardGuard` seam live in
-`vaulter-azgard`, rather than core. Both checks of the seam are AzGuard v1 decisions, so the
+**Why.** The driver and the `Vaulter\AzGuard\Contracts\AzGuardGuard` seam live in
+`vaulter-azguard`, rather than core. Both checks of the seam are AzGuard v1 decisions, so the
 host's AzGuard panel must know the user, the workspace and the permissions Vaulter asks about.
 
 **Fix.**
 
 1. Install the bridge; it requires AzGuard v1 (`axiomasoft/azguard`, pinned to one commit) and
-   its provider registers the `azgard` driver and the real adapter automatically:
+   its provider registers the `azguard` driver and the real adapter automatically:
 
    ```bash
-   composer require axioma-studio/vaulter-azgard
+   composer require axioma-studio/vaulter-azguard
    ```
 
-   The user model `implements Vaulter\Azgard\Contracts\AzgardBackedUser` and uses
-   `AzGuard\Concerns\HasAzGuard`. Bridge settings use `vaulter-azgard.*`.
+   The user model `implements Vaulter\AzGuard\Contracts\AzGuardBackedUser` and uses
+   `AzGuard\Concerns\HasAzGuard`. Bridge settings use `vaulter-azguard.*`.
 
 2. Register **morph aliases** for the user and every workspace (drive owner) model
    (`Relation::enforceMorphMap([...])`). AzGuard identities are aliases matching
@@ -90,10 +90,10 @@ host's AzGuard panel must know the user, the workspace and the permissions Vault
    not declare is denied. Under `isolated(...)` a tenant-wide grant — the super-admin role
    included — does not hold inside a workspace; grant inside the workspace instead.
 
-4. Check the panel selection: the default `vaulter-azgard.permissions` map names local keys
+4. Check the panel selection: the default `vaulter-azguard.permissions` map names local keys
    (`documents.view`, …), so the panel's resource prefix must not be `documents` (AzGuard
    refuses such a panel with `PrefixConflictException`; give it another `resourcePrefix()`).
-   When the user model belongs to several panels, set `VAULTER_AZGARD_PANEL`.
+   When the user model belongs to several panels, set `VAULTER_AZGUARD_PANEL`.
 
 ::: tip The seam is two AzGuard decisions
 `hasScopedPermission($perm, $entity)` is `hasPermission($perm, on: $entity)` and

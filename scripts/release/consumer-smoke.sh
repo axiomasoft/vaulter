@@ -23,9 +23,9 @@ sets=(
     "$core_media_drive axioma-studio/vaulter-documents axioma-studio/vaulter-filament"
 )
 # The bridge ships only when its artifact was built, i.e. once its upstream is tagged.
-if has_artifact vaulter-azgard; then
-    names+=("+azgard")
-    sets+=("$core_media_drive axioma-studio/vaulter-documents axioma-studio/vaulter-azgard")
+if has_artifact vaulter-azguard; then
+    names+=("+azguard")
+    sets+=("$core_media_drive axioma-studio/vaulter-documents axioma-studio/vaulter-azguard")
 fi
 
 app="$work/app"

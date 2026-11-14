@@ -70,7 +70,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
  * contract interface (`src/Contracts/**`), so the frozen surface records that emptiness:
  * an accidentally-added public contract (which would need its own snapshot freeze + a D#
  * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
- * packages with real contracts (core/drive/documents/azgard) carry PublicApiSnapshotTest.
+ * packages with real contracts (core/drive/documents/azguard) carry PublicApiSnapshotTest.
  */
 test('the contracts of the package are the CAS seams under Contracts/Cas and nothing else (D6)', function (): void {
     $contractsDir = realpath(__DIR__.'/../../src/Contracts');

@@ -72,7 +72,7 @@ PSR-4 у Composer резолвит **самый длинный совпадаю�
 | 3 | `Http/Requests/Drive/` | `{Store,Destroy}NodeGrantRequest.php` (core/Access — см. D26) | `{CopyNode,CreateFolder,DriveNameRules,MoveNode,RenameNode,UploadFile}Request.php` → drive; `{CreateDocumentNode,CreateNamedVersion,UpdateDocumentContent}Request.php` → docdrive |
 | 4 | `Http/Resources/Drive/` | `NodeGrantResource.php` (core/Access) | `{Node,Storage,FileVersion}Resource.php` → drive; `{NodeComment,NodeDocumentVersion}Resource.php` → docdrive |
 | 5 | `Data/` (плоский, без под-папки) | `CollaborationSession.php`* (core-seam, см. сноску) | `{CreateDriveFolder,UploadFile,MoveNode,RenameNode,CopyNode}Data.php` → drive; `{CreateDocumentNode,CreateNamedVersion,CreateNodeComment,PersistYjsSnapshot,UpdateDocumentContent}Data.php` → docdrive |
-| 6 | `Support/` (плоский) | `{AzgardConfig,Config,DefaultStorageAdapter,EnumCaseAttributeResolver,GateConfig,Identity,RandomShareTokenGenerator,RequestContext,ShareToken,SpatieConfig,VaulterSchema}.php` (core, 11 файлов) | `{TipTapRenderer,DocumentContentHasher}.php` → docdrive |
+| 6 | `Support/` (плоский) | `{AzGuardConfig,Config,DefaultStorageAdapter,EnumCaseAttributeResolver,GateConfig,Identity,RandomShareTokenGenerator,RequestContext,ShareToken,SpatieConfig,VaulterSchema}.php` (core, 11 файлов) | `{TipTapRenderer,DocumentContentHasher}.php` → docdrive |
 | 7 | `Support/Concerns/` | `{HasIcon,HasLabel}.php` (core) | `HasTiptapExtensions.php` → docdrive |
 | 8 | `Http/Middleware/` (плоский) | `ResolveShareToken.php` (core/Sharing) | `ResolveCollaborationCall.php` → docdrive |
 | 9 | `Http/Requests/` (плоский, корень) | `VaulterFormRequest.php` (core, база) | `StoreNodeCommentRequest.php` → docdrive |

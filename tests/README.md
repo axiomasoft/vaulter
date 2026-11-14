@@ -13,7 +13,7 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 | Suite (`-p`) | cwd | Zones |
 |---|---|---|
 | `core` | repo root | `core-kernel`, `core-access`, `core-sharing`, `core-events`, `core-http`, `core-schema`, `core-observability` (aggregator `core`) |
-| `media`, `drive`, `webhooks`, `documents`, `azgard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, webhooks and documents use core+media+drive, …) |
+| `media`, `drive`, `webhooks`, `documents`, `azguard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, webhooks and documents use core+media+drive, …) |
 | `integration` | repo root | `tests/Integration`; consumes every PHP package, preserves each schema partition and group |
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
 | `hub` | `packages/collaboration/hub` | Node tests of the collaboration hub (not Pest) |
@@ -193,8 +193,8 @@ What a machine needs, and why:
 | CI | service containers `postgres:18` / `mysql:9.7` with `DB_EXTERNAL=1` and the `DB_*` variables; a cell starts only its own engine. MySQL flags: `--innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0 --skip-log-bin --log-bin-trust-function-creators=1`. Postgres 18 keeps its data under `/var/lib/postgresql` | same speed settings as the private server; see the `ci.yml` / `weekly-full.yml` service definitions |
 | Several runs at once | `VAULTER_DB_PRIVATE=1` (set by `scripts/t-matrix`) | ignores the shared local Docker servers, which would make the runs wait for each other |
 
-The package suites that need a sibling checkout pin it in `composer.json` (azgard: `axiomasoft/azguard` at a commit): a local
-`../azguard` that has moved on makes `RealAzgard` fail with errors such as `PanelBuilder::scopes()`; check out the pinned commit.
+The package suites that need a sibling checkout pin it in `composer.json` (azguard: `axiomasoft/azguard` at a commit): a local
+`../azguard` that has moved on makes `RealAzGuard` fail with errors such as `PanelBuilder::scopes()`; check out the pinned commit.
 
 `scripts/t-matrix` (= `make test-full`) runs every engine/package pair as its own `scripts/t --full` on its own private
 server, a few at a time: the wall time is that of the slowest cell, not the sum.

@@ -53,7 +53,7 @@ Reconnaissance plus an owner decision establish four load-bearing facts.
    back-fill and no released consumer to protect** — an in-core deprecation window
    would guard no one.
 
-4. **Core must stay azgard-free** — talk only through the `AzgardGuard` seam /
+4. **Core must stay azguard-free** — talk only through the `AzGuardGuard` seam /
    `HostRoleDriver`. (spatie/laravel-medialibrary current stable is 11.22.1,
    PHP 8.2+ / Laravel 10–13 — verified 2026-07, but irrelevant to the coupling.)
 
@@ -125,7 +125,7 @@ the data level.
   (Univer/XLSX, OnlyOffice/Collabora, PDF/DOCX exporters) plug in through the
   `DocumentHandlerRegistry` seam (D21, ADR-0004) — a handler class + registration, no
   migration and no core change — so the hybrid stays organically extensible.
-- Comments code stays azgard-free (talks only through `AzgardGuard` / `HostRoleDriver`),
+- Comments code stays azguard-free (talks only through `AzGuardGuard` / `HostRoleDriver`),
   preserving the core invariant.
 - ADR-0008 (medialibrary) is untouched and explicitly de-coupled here; the
   `vaulter-medialibrary-bridge` remains a separate future import path into `v_nodes`.

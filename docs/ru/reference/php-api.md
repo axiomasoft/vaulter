@@ -122,7 +122,7 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 | Домен | Контракт | Подмена через |
 |---|---|---|
 | Access | `PermissionDriver` | `config('vaulter-drive.access.permission_driver')` + карта `vaulter-drive.access.permission_drivers` |
-| Access | `AzgardGuard` (azgard) | привязка из `vaulter-azgard` |
+| Access | `AzGuardGuard` (azguard) | привязка из `vaulter-azguard` |
 | Cas | `BlobStore` | `config('vaulter-media.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter-media.content_store')` |
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
@@ -179,7 +179,7 @@ interface PermissionDriver
   относительно которого резолвить.
 
 ::: info Заморожено с M2a
-Каждый драйвер из комплекта (`database`, `gate`, `spatie`, `azgard`, `null`) реализует ровно
+Каждый драйвер из комплекта (`database`, `gate`, `spatie`, `azguard`, `null`) реализует ровно
 эту поверхность, а контрактный тест утверждает, что все они выдают идентичные решения
 `AccessResolver` на общей фикстуре.
 :::
@@ -187,16 +187,16 @@ interface PermissionDriver
 **Реализуйте, когда** у вас система ролей, которую драйверы из комплекта не покрывают. См.
 [Рецепты → Свой резолвер](/ru/guides/recipes).
 
-#### `Vaulter\Azgard\Contracts\AzgardGuard`
+#### `Vaulter\AzGuard\Contracts\AzGuardGuard`
 
 Узкий принадлежащий Vaulter шов, который удовлетворяет актор хоста на базе AzGuard, так что
-`vaulter-core` не зависит от AzGuard **никак**. Драйвер прав `azgard` общается только с этим
+`vaulter-core` не зависит от AzGuard **никак**. Драйвер прав `azguard` общается только с этим
 интерфейсом — никогда с классами AzGuard. Оба метода — решения AzGuard v1
 (`hasPermission(on: $entity)` и `hasPermission(on: AssignmentScopeRef::of($type, $id))`);
 метода super-admin нет — super-admin AzGuard получает роль owner через эти решения.
 
 ```php
-interface AzgardGuard
+interface AzGuardGuard
 {
     public function hasScopedPermission(string $permission, object $entity): bool;
 
@@ -204,13 +204,13 @@ interface AzgardGuard
 }
 ```
 
-Контракт поставляется `axioma-studio/vaulter-azgard`, вместе с реальным
-`AzgardGuardAdapter` и тестовым `Vaulter\Azgard\Testing\FakeAzgardGuard`.
+Контракт поставляется `axioma-studio/vaulter-azguard`, вместе с реальным
+`AzGuardGuardAdapter` и тестовым `Vaulter\AzGuard\Testing\FakeAzGuardGuard`.
 Provider регистрирует драйвер и адаптер автоматически.
 
-**Используйте, когда** `config('vaulter-drive.access.permission_driver') = 'azgard'`:
-установите `composer require axioma-studio/vaulter-azgard`, добавьте
-`Vaulter\Azgard\Contracts\AzgardBackedUser` на модель пользователя, зарегистрируйте
+**Используйте, когда** `config('vaulter-drive.access.permission_driver') = 'azguard'`:
+установите `composer require axioma-studio/vaulter-azguard`, добавьте
+`Vaulter\AzGuard\Contracts\AzGuardBackedUser` на модель пользователя, зарегистрируйте
 morph-алиасы моделей пользователя и workspace и объявите алиасы workspace типами assignment
 scope панели AzGuard. Фейк также требует установленного моста и его зависимостей.
 См. [Драйверы прав](/ru/extending/permission-drivers).
@@ -576,7 +576,7 @@ interface IdStrategy
   пользователей владеет хост).
 
 ::: info По умолчанию — `ulid`
-ULID стоит по умолчанию, чтобы морф-ключи совпадали с экосистемой Corex/Azgard; `uuid7`
+ULID стоит по умолчанию, чтобы морф-ключи совпадали с экосистемой Corex/AzGuard; `uuid7`
 ложится на нативные Postgres-колонки `uuid`; `bigint` — легаси-путь с автоинкрементом.
 См. [Авторизация → Мультитенантность](/ru/concepts/tenancy) для выравнивания морфов.
 :::

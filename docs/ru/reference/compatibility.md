@@ -49,7 +49,7 @@ enum'а, ключ конфигурации или событие — **MINOR**.
 Все PHP-пакеты выходят с одной версией и одним тегом, и каждый split-репозиторий
 (`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-webhooks`, `-filament` и метапакет
 `axioma-studio/vaulter`) получает один и тот же тег. Пакеты требуют друг друга как `self.version`,
-поэтому смешать версии нельзя. `axioma-studio/vaulter-azgard` выходит только после тега самого AzGuard;
+поэтому смешать версии нельзя. `axioma-studio/vaulter-azguard` выходит только после тега самого AzGuard;
 до тех пор он исключён из релиза. У `@vaulter/vue` своя semver-линия, а поддерживаемую линию REST API
 он объявляет в `package.json` (`"vaulter": { "api": "1" }`). Состав релиза — в `release/packages.json`.
 
@@ -167,7 +167,7 @@ Vaulter на Postgres.
 
 | Стратегия | Колонка | Примечания |
 |---|---|---|
-| `ulid` (по умолчанию) | `char(26)` | Сортируется лексикографически; совпадает с morph-ключами Corex/Azgard. |
+| `ulid` (по умолчанию) | `char(26)` | Сортируется лексикографически; совпадает с morph-ключами Corex/AzGuard. |
 | `bigint` | `bigserial` / auto-increment | Классические целочисленные ключи. |
 | `uuid7` | нативный `uuid` на Postgres | Упорядоченные по времени UUID; использует нативный тип `uuid` в Postgres. |
 

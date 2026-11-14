@@ -14,7 +14,7 @@
     "Vaulter\\Documents\\",
     "Vaulter\\Webhooks\\",
     "Vaulter\\Collaboration\\",
-    "Vaulter\\Azgard\\",
+    "Vaulter\\AzGuard\\",
     "Vaulter\\Filament\\"
   ],
   "forbidden_dev_packages_prefix": "axioma-studio/",

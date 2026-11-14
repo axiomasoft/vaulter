@@ -79,7 +79,7 @@ Vaulter splits authorization into a part it **owns** and a part you **plug in**:
    deny-veto).
 2. The **host-role driver** *is* swappable. It is the lane that answers "what role does this
    actor have in this workspace?". Ship with the standalone `database` driver, or swap to
-   `gate`, `spatie`, `azgard`, or your own.
+   `gate`, `spatie`, `azguard`, or your own.
 
 This is why Vaulter never needs its own login: roles come from your app through the driver,
 and the resolver combines them with node grants. The design is recorded in

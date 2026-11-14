@@ -21,7 +21,7 @@ Split the contract into two lanes (master plan §H.2):
   (actor → users + roles + teams, so Vaulter builds `WHERE subject IN (...)`), and
   `canCreateInWorkspace(...)`. Drivers shipped: `database` (default, standalone),
   `spatie` (v8, with the team-switch dance encapsulated), `gate`, and the non-prod
-  `null` (open). An `azgard` lane is reserved in the config map but deferred until
+  `null` (open). An `azguard` lane is reserved in the config map but deferred until
   the Corex/AzGuard morph alignment lands.
 - **`AccessResolver` — Vaulter-owned, NOT swappable.** A concrete `final` class
   that runs the effective-permission algorithm over `v_node_grants` + the driver.
@@ -57,11 +57,11 @@ algorithm; they align the code's documented guarantees and add a fail-loud guard
   un-pierceable wall-deny would be a NEW product decision (tracked as VLT-REMED Q4),
   not the current behaviour.
 
-- **The `gate` and `azgard` lanes narrow `subjectsFor()` to `[actor]` (F-P1.2-01).**
+- **The `gate` and `azguard` lanes narrow `subjectsFor()` to `[actor]` (F-P1.2-01).**
   The `subjectsFor(actor) → users + roles + teams` contract is fully honoured only by
   the `spatie` lane (and any host driver marked
   `Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects`). The `gate` lane (abilities are
-  evaluated per-user, not enumerable) and the `azgard` lane (per-resource checks, no
+  evaluated per-user, not enumerable) and the `azguard` lane (per-resource checks, no
   role enumeration) — like the standalone `database` base and the `null` lane —
   contribute only the actor itself. A `v_node_grants` row addressed to a role/team is
   therefore inert under those lanes. This is safe (fail-closed: access is never

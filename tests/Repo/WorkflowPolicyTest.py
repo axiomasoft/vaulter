@@ -232,9 +232,9 @@ class SingleCiTest(unittest.TestCase):
         support = self.support
         self.assertEqual(['13'], support['core']['lines'])
         self.assertEqual(['13'], support['filament']['lines'], 'filament requires Testbench ^11 only')
-        self.assertEqual(['13'], support['azgard']['lines'])
-        self.assertTrue(support['azgard']['azguard'])
-        self.assertFalse(support['azgard']['serial'])
+        self.assertEqual(['13'], support['azguard']['lines'])
+        self.assertTrue(support['azguard']['azguard'])
+        self.assertFalse(support['azguard']['serial'])
         self.assertTrue(support['drive']['serial'])
 
         doc = ci_doc()
@@ -371,7 +371,7 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('true', out['has_openapi'])
 
     def test_exit_2_plan_is_the_full_affected_set(self):
-        suites = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament', 'load', 'repo', 'hub', 'vue',
+        suites = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament', 'load', 'repo', 'hub', 'vue',
                   'vue-collaboration']
         out = self.plan(selector('unknown', 2, suites))
         self.assertEqual('true', out['has_vue'])
@@ -445,12 +445,12 @@ class SingleCiTest(unittest.TestCase):
                          [(r['package'], r['engine']) for r in json.loads(out['db_matrix'])['include']])
 
     def test_consumer_lane_follows_the_changed_consumer_packages(self):
-        out = self.plan(selector('ok', 0, ['drive', 'documents', 'filament', 'azgard']))
+        out = self.plan(selector('ok', 0, ['drive', 'documents', 'filament', 'azguard']))
         self.assertEqual('true', out['has_consumer'])
         self.assertEqual(['drive', 'documents'], [r['package'] for r in json.loads(out['consumer_matrix'])['include']],
-                         'filament and azgard are not consumer packages (external gate D20 / own composer check)')
+                         'filament and azguard are not consumer packages (external gate D20 / own composer check)')
 
-        out = self.plan(selector('ok', 0, ['azgard', 'filament']))
+        out = self.plan(selector('ok', 0, ['azguard', 'filament']))
         self.assertEqual('false', out['has_consumer'])
         self.assertEqual({'include': []}, json.loads(out['consumer_matrix']))
 

@@ -256,7 +256,7 @@ names followed by `@`, and hub image tags use `collaboration-hub-v`.
   `@vaulter/vue` declares the REST API line.
 - `scripts/php84 scripts/release/build-artifacts.php --version=X.Y.Z --out=DIR` — one zip per package from `git archive`
   (so `export-ignore` applies), with the version written into `composer.json`. No network. A package whose upstream is a
-  dev require (`vaulter-azgard` until AzGuard is tagged) is skipped with the reason.
+  dev require (`vaulter-azguard` until AzGuard is tagged) is skipped with the reason.
 - `scripts/release/consumer-smoke.sh DIR X.Y.Z` — installs the artifacts into a fresh Laravel app without path
   repositories and runs `vaulter:install`, config/route cache and `vaulter:doctor --json`. Needs network and takes
   minutes; run it before tagging, not in a feature branch.

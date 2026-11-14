@@ -18,7 +18,7 @@
 | `drive` | Папки/файлы, uploads (Tus/S3) |
 | `documents` | Редактор, версии, комментарии, collab (opt-in) |
 | `media` | Content-addressed storage |
-| `azgard` | PermissionResolver для AzGuard |
+| `azguard` | PermissionResolver для AzGuard |
 | `vue` | TypeScript/Vue 3 UI |
 | `filament` | Admin (Laravel 13, optional) |
 

@@ -192,10 +192,10 @@ it('states the zone graph as the Composer graph for packages', function (): void
     expect($declared('media'))->toBe(['core'])
         ->and($declared('drive'))->toBe(['core', 'media'])
         ->and($declared('documents'))->toContain('core', 'media', 'drive')
-        ->and($declared('azgard'))->toBe(['core', 'media', 'drive'])
+        ->and($declared('azguard'))->toBe(['core', 'media', 'drive'])
         ->and($declared('filament'))->toContain('core', 'drive');
 
-    foreach (['media', 'drive', 'documents', 'azgard', 'filament'] as $package) {
+    foreach (['media', 'drive', 'documents', 'azguard', 'filament'] as $package) {
         $composer = z_json(z_root().'/packages/'.$package.'/composer.json');
         $required = [];
         foreach (array_merge($composer['require'] ?? [], $composer['require-dev'] ?? []) as $name => $_) {
@@ -257,10 +257,10 @@ it('goes red when a test directory loses its zone', function (): void {
 
 it('goes red when a test directory is claimed by a zone of another suite', function (): void {
     $broken = z_broken(static function (array &$map): void {
-        $map['zones']['azgard']['suite'] = 'media';
+        $map['zones']['azguard']['suite'] = 'media';
     });
 
-    expect(implode("\n", $broken['problems']))->toContain('runs in suite azgard but zone azgard says media');
+    expect(implode("\n", $broken['problems']))->toContain('runs in suite azguard but zone azguard says media');
 });
 
 it('goes red on a dead path, a dead tests entry and a suite without a zone', function (): void {
@@ -284,9 +284,9 @@ it('goes red on a dead path, a dead tests entry and a suite without a zone', fun
 
 it('goes red on an unknown dependency and on a cycle', function (): void {
     $unknown = z_broken(static function (array &$map): void {
-        $map['zones']['azgard']['uses'][] = 'ghost';
+        $map['zones']['azguard']['uses'][] = 'ghost';
     });
-    expect($unknown['problems'])->toContain('zone azgard uses unknown zone ghost');
+    expect($unknown['problems'])->toContain('zone azguard uses unknown zone ghost');
 
     $cycle = z_broken(static function (array &$map): void {
         $map['zones']['core-kernel']['uses'] = ['media'];

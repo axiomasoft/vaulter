@@ -21,7 +21,7 @@ function g_suites(): array
         'webhooks' => 'packages/webhooks/tests',
         'documents' => 'packages/documents/tests',
         'collaboration' => 'packages/collaboration/tests',
-        'azgard' => 'packages/azgard/tests',
+        'azguard' => 'packages/azguard/tests',
         'filament' => 'packages/filament/tests',
         'load' => 'load/tests',
     ];

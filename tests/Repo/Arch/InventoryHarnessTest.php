@@ -518,7 +518,7 @@ it('indexes the real repository: DriveSchema keeps its private define methods an
 
     expect($builder)->not->toBeNull()->and($private)->toContain('defineNodes')
         ->and(array_keys($index->references()[0]))->toBe(['file', 'symbol', 'kind', 'target'])
-        ->and(array_unique(array_map(static fn (array $d): string => (string) $d['package'], $index->declarations())))->toContain('core', 'media', 'drive', 'documents', 'azgard', 'filament');
+        ->and(array_unique(array_map(static fn (array $d): string => (string) $d['package'], $index->declarations())))->toContain('core', 'media', 'drive', 'documents', 'azguard', 'filament');
 });
 
 // --- Allowlist ------------------------------------------------------------------------------------------------

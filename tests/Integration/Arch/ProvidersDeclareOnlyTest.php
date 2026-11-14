@@ -103,7 +103,7 @@ it('finds the provider of every package', function (): void {
     sort($names, SORT_STRING);
 
     expect($names)->toBe([
-        'VaulterAzgardServiceProvider.php',
+        'VaulterAzGuardServiceProvider.php',
         'VaulterCollaborationServiceProvider.php',
         'VaulterDocumentsServiceProvider.php',
         'VaulterDriveServiceProvider.php',

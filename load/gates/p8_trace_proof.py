@@ -23,7 +23,7 @@ PACKAGE_ROOTS = (
     REPO_ROOT / 'packages' / 'drive' / 'composer.json',
     REPO_ROOT / 'packages' / 'documents' / 'composer.json',
     REPO_ROOT / 'packages' / 'media' / 'composer.json',
-    REPO_ROOT / 'packages' / 'azgard' / 'composer.json',
+    REPO_ROOT / 'packages' / 'azguard' / 'composer.json',
     REPO_ROOT / 'packages' / 'filament' / 'composer.json',
 )
 DELTA_CEILING = 0.10

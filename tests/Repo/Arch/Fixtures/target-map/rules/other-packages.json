@@ -6,14 +6,14 @@
         "Vaulter\\Documents\\Database\\Factories\\",
         "Vaulter\\Collaboration\\",
         "Vaulter\\Webhooks\\",
-        "Vaulter\\Azgard\\",
+        "Vaulter\\AzGuard\\",
         "Vaulter\\Filament\\",
         "path:packages/media/",
         "path:packages/drive/",
         "path:packages/documents/",
         "path:packages/collaboration/",
         "path:packages/webhooks/",
-        "path:packages/azgard/",
+        "path:packages/azguard/",
         "path:packages/filament/"
     ],
     "rules": [
@@ -450,59 +450,59 @@
         },
         {
             "match": "prefix",
-            "value": "Vaulter\\Azgard\\",
-            "owner": "azgard",
+            "value": "Vaulter\\AzGuard\\",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
-            "why": "architecture#packages: vaulter-azgard is only the PermissionDriver adapter"
+            "why": "architecture#packages: vaulter-azguard is only the PermissionDriver adapter"
         },
         {
             "match": "prefix",
-            "value": "Vaulter\\Azgard\\Contracts\\",
-            "owner": "azgard",
+            "value": "Vaulter\\AzGuard\\Contracts\\",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
-            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: AzgardBackedUser/AzgardGuard are implemented by the host or the AzGuard bridge"
+            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: AzGuardBackedUser/AzGuardGuard are implemented by the host or the AzGuard bridge"
         },
         {
             "match": "prefix",
-            "value": "Vaulter\\Azgard\\Configuration\\",
-            "owner": "azgard",
+            "value": "Vaulter\\AzGuard\\Configuration\\",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
-            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: AzgardConfig"
+            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: AzGuardConfig"
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Azgard\\AzgardPermissionDriver",
-            "owner": "azgard",
+            "value": "Vaulter\\AzGuard\\AzGuardPermissionDriver",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: the driver a host selects"
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Azgard\\VaulterAzgardServiceProvider",
-            "owner": "azgard",
+            "value": "Vaulter\\AzGuard\\VaulterAzGuardServiceProvider",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
             "why": "host-registered provider of the package (architecture#api-surface)"
         },
         {
             "match": "prefix",
-            "value": "Vaulter\\Azgard\\Testing\\",
-            "owner": "azgard",
+            "value": "Vaulter\\AzGuard\\Testing\\",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: testing kit for hosts of the adapter"
         },
         {
             "match": "file",
-            "value": "packages/azgard/config/vaulter-azgard.php",
-            "owner": "azgard",
+            "value": "packages/azguard/config/vaulter-azguard.php",
+            "owner": "azguard",
             "action": "keep",
             "phase": "stay",
-            "why": "architecture#packages: azgard section stays in vaulter-azgard"
+            "why": "architecture#packages: azguard section stays in vaulter-azguard"
         },
         {
             "match": "prefix",

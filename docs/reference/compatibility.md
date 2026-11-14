@@ -48,7 +48,7 @@ After P6.3 the PHP API/SPI catalog follows the current source: I13 uses block mo
 Every PHP package is released with one version and one tag, and each split repository
 (`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-webhooks`, `-filament`, plus the
 `axioma-studio/vaulter` metapackage) receives the same tag. Packages require each other as
-`self.version`, so mixing versions is not possible. `axioma-studio/vaulter-azgard` is released
+`self.version`, so mixing versions is not possible. `axioma-studio/vaulter-azguard` is released
 only once AzGuard itself has a tagged version; until then it is left out of the release.
 `@vaulter/vue` has its own semver line and declares the REST API line it speaks in `package.json`
 (`"vaulter": { "api": "1" }`). The release set is listed in `release/packages.json`.
@@ -166,7 +166,7 @@ The primary-key strategy is configurable (see
 
 | Strategy | Column | Notes |
 |---|---|---|
-| `ulid` (default) | `char(26)` | Lexicographically sortable; lines up with the Corex/Azgard morph keys. |
+| `ulid` (default) | `char(26)` | Lexicographically sortable; lines up with the Corex/AzGuard morph keys. |
 | `bigint` | `bigserial` / auto-increment | Classic integer keys. |
 | `uuid7` | native `uuid` on Postgres | Time-ordered UUIDs; uses Postgres' native `uuid` type. |
 

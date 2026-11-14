@@ -22,7 +22,7 @@ depends on, never back. The dependency graph is the Composer graph:
 ```text
 core  <-  media  <-  drive  <-  documents  <-  collaboration (ADR-0031)
                       ^   ^   ^
-          webhooks  azgard  filament
+          webhooks  azguard  filament
 ```
 
 | Package | Namespace | Owns |
@@ -33,7 +33,7 @@ core  <-  media  <-  drive  <-  documents  <-  collaboration (ADR-0031)
 | `vaulter-documents` | `Vaulter\Documents\` | documents, document revisions, comments, exporters |
 | `vaulter-webhooks` | `Vaulter\Webhooks\` | `v_webhook_endpoints`, `v_webhook_deliveries`, the fan-out consumer, signing, URL guard, retries |
 
-`vaulter-azgard` and `vaulter-filament` own no tables. The metapackage `axioma-studio/vaulter` is core, media, drive
+`vaulter-azguard` and `vaulter-filament` own no tables. The metapackage `axioma-studio/vaulter` is core, media, drive
 and documents; webhooks is installed separately because it opens outbound network traffic (opt-in, ADR-0027).
 
 **2. Schema lives with its owner, in create migrations.** Each package ships `database/migrations/` with one create
@@ -71,7 +71,7 @@ tables belong to the drive (D28): scanner evidence has no foreign key to media.
 **4. Configuration is one root per package.** `vaulter` (kernel: database, ids, tenancy, modules, routes, outbox,
 idempotency, schedule, observability, outbox model), `vaulter-media`, `vaulter-drive` (profiles, features, access,
 sharing, downloads, scan, uploads, trash, changes, handlers, drive models), `vaulter-documents`, `vaulter-webhooks`,
-`vaulter-azgard`, `vaulter-filament`. A key moved with its concept without an alias: `vaulter.access.*` is
+`vaulter-azguard`, `vaulter-filament`. A key moved with its concept without an alias: `vaulter.access.*` is
 `vaulter-drive.access.*`, `vaulter.webhooks.*` is `vaulter-webhooks.*`, `vaulter.models.blob` is
 `vaulter-media.models.blob`. Typed readers sit with the keys they read (`Vaulter\Drive\Configuration\DriveConfig`,
 `Vaulter\Media\Configuration\MediaConfig`, `Vaulter\Webhooks\Configuration\WebhooksConfig`); the kernel validates

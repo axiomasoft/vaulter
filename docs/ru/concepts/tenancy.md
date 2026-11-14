@@ -223,8 +223,8 @@ Vaulter по умолчанию выбирает стратегию первич
 ```
 
 Это важно, когда вы используете **драйвер ролей хоста AzGuard** для авторизации в приложении со
-скоупом по тенантам. Этот драйвер (`Vaulter\Azgard\AzgardPermissionDriver`) общается только со
-швом `Vaulter\Azgard\Contracts\AzgardGuard`, которым владеет Vaulter, — так что vaulter-core от
+скоупом по тенантам. Этот драйвер (`Vaulter\AzGuard\AzGuardPermissionDriver`) общается только со
+швом `Vaulter\AzGuard\Contracts\AzGuardGuard`, которым владеет Vaulter, — так что vaulter-core от
 AzGuard **не зависит** — и задаёт вопросы в области workspace как решения AzGuard v1 в
 **assignment scope**: `hasPermission($permission, on: AssignmentScopeRef::of($type, $id))`, где
 `$type`/`$id` — morph-алиас и ключ владельца диска.
@@ -253,11 +253,11 @@ AzGuard **не зависит** — и задаёт вопросы в облас
    ключей ваших моделей.
 
 ::: info Установите мост AzGuard
-`composer require axioma-studio/vaulter-azgard` устанавливает драйвер, реальный
-адаптер и `Vaulter\Azgard\Testing\FakeAzgardGuard`. Provider сам регистрирует
-драйвер; guard выбирается ключом конфига `vaulter-azgard.guard`; модель пользователя должна реализовать
-`Vaulter\Azgard\Contracts\AzgardBackedUser`. Для тестов с фейком нужны установленные
-зависимости моста. См. [Драйверы прав](/ru/extending/permission-drivers) и конфиг `vaulter-azgard.*`.
+`composer require axioma-studio/vaulter-azguard` устанавливает драйвер, реальный
+адаптер и `Vaulter\AzGuard\Testing\FakeAzGuardGuard`. Provider сам регистрирует
+драйвер; guard выбирается ключом конфига `vaulter-azguard.guard`; модель пользователя должна реализовать
+`Vaulter\AzGuard\Contracts\AzGuardBackedUser`. Для тестов с фейком нужны установленные
+зависимости моста. См. [Драйверы прав](/ru/extending/permission-drivers) и конфиг `vaulter-azguard.*`.
 :::
 
 ## Собираем всё вместе
@@ -282,4 +282,4 @@ AzGuard **не зависит** — и задаёт вопросы в облас
   впадают `tenant_id` и `vaulter-media.dedup.scope`.
 - [Конфигурация](/ru/guides/configuration) — полные ключи `tenant`, `dedup`, `ids` и `models`.
 - [Авторизация › Драйвер ролей хоста](/ru/extending/permission-drivers) — драйвер AzGuard и
-  конфиг `vaulter-azgard.*`.
+  конфиг `vaulter-azguard.*`.

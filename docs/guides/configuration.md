@@ -23,7 +23,7 @@ php artisan vendor:publish --tag=vaulter-documents-config
 | Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
 | Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
 | Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksConfig` |
-| AzGuard | `config/vaulter-azgard.php` | `vaulter-azgard-config` | `Vaulter\Azgard\Configuration\AzgardConfig` |
+| AzGuard | `config/vaulter-azguard.php` | `vaulter-azguard-config` | `Vaulter\AzGuard\Configuration\AzGuardConfig` |
 | Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
 
 All bindings use FQCN strings. Closures are rejected at boot, so the files remain safe
@@ -113,7 +113,7 @@ the matching built-in model: `vaulter-drive.models.drive`, `node`, `file`, `file
 
 The standalone `database` permission driver is the default. Gate and Spatie maps live at
 `vaulter-drive.access.gate.*` and `vaulter-drive.access.spatie.*`. The installed AzGuard bridge registers
-`vaulter-drive.access.permission_drivers.azgard`; its own settings remain in `vaulter-azgard.*`.
+`vaulter-drive.access.permission_drivers.azguard`; its own settings remain in `vaulter-azguard.*`.
 The open `null` driver is rejected in production. See [Permission drivers](/extending/permission-drivers).
 
 `vaulter-drive.handlers` contains additional `FileHandler` FQCNs. Providers register built-in handlers

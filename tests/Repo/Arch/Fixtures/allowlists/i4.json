@@ -3,11 +3,11 @@
         {
             "category": "config-validation",
             "count": 1,
-            "file": "packages/azgard/src/Doctor/AzgardDependencyCheck.php",
+            "file": "packages/azguard/src/Doctor/AzGuardDependencyCheck.php",
             "kind": "probe",
             "reason": "doctor проверяет наличие зависимости azguard у выбранного адаптера: диагностика остаётся, не активация",
             "removed_in": "never",
-            "symbol": "Vaulter\\Azgard\\Doctor\\AzgardDependencyCheck::run",
+            "symbol": "Vaulter\\AzGuard\\Doctor\\AzGuardDependencyCheck::run",
             "target": "\\AzGuard\\Kernel\\Identity\\AssignmentScopeRef::class",
             "view": "current"
         },

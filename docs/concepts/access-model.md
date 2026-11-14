@@ -327,7 +327,7 @@ is explicit:
 > The open null host-role driver is forbidden in production. Why: it grants every actor
 > full access; running it in prod would expose every node. Fix: set
 > `config('vaulter-drive.access.permission_driver')` to a real driver (`database`/`gate`/`spatie`/
-> `azgard`) or bind your own `PermissionDriver`.
+> `azguard`) or bind your own `PermissionDriver`.
 
 ::: danger Never ship the null driver
 `null` is selectable only outside production and exists purely so a consumer can boot
@@ -335,9 +335,9 @@ and exercise Vaulter without wiring a real role system. A missing or `null` driv
 **never** silently open a production install — it fails loud at resolve time.
 :::
 
-The `azgard` key requires `composer require axioma-studio/vaulter-azgard`.
+The `azguard` key requires `composer require axioma-studio/vaulter-azguard`.
 Its provider registers the driver and real guard adapter; bridge settings live under
-`vaulter-azgard.*`, and the user model must implement `AzgardBackedUser`.
+`vaulter-azguard.*`, and the user model must implement `AzGuardBackedUser`.
 
 An **unknown** driver key fails the same way, via
 `MissingPermissionDriverException::unknownDriver($key, $known)`, listing the registered

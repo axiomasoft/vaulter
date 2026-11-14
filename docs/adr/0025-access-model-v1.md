@@ -77,7 +77,7 @@ where inheritance stopped.
 
 ### Drivers
 
-`gate`, `spatie` and `azgard` map role keys to host abilities/permissions (the maps gain
+`gate`, `spatie` and `azguard` map role keys to host abilities/permissions (the maps gain
 `previewer => vaulter.preview`); a driver returns the union of the roles it grants as one
 `Decision`. A map key that is not a role throws `UnknownRoleException`. `AccessScope` no longer
 carries the node owner; the Gate context has no `node_owner`.

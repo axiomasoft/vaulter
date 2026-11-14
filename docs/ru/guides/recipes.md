@@ -297,10 +297,10 @@ final class AppRoleDriver implements PermissionDriver
 
 ::: tip Сначала возьмите готовую полосу
 Для Laravel Gate, Spatie Permission v8 или AzGuard свой класс **не** нужен — выставьте
-`vaulter-drive.access.permission_driver` в `gate` / `spatie` / `azgard` и заполните соответствующий блок конфига
-(`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`). Для AzGuard установите
-`composer require axioma-studio/vaulter-azgard`: provider сам регистрирует драйвер
-и адаптер. Модель пользователя должна реализовать `AzgardBackedUser` — см.
+`vaulter-drive.access.permission_driver` в `gate` / `spatie` / `azguard` и заполните соответствующий блок конфига
+(`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azguard.*`). Для AzGuard установите
+`composer require axioma-studio/vaulter-azguard`: provider сам регистрирует драйвер
+и адаптер. Модель пользователя должна реализовать `AzGuardBackedUser` — см.
 [Драйверы прав](/ru/extending/permission-drivers).
 :::
 
@@ -663,8 +663,8 @@ Vaulter поставляет тестовые дубли под `Vaulter\Testing
 
 - **`NullPermissionDriver`** — открытый драйвер (каждый актор — супер-админ) для тестов / локальной
   разработки. В production он отклоняется, так что не может тихо открыть боевую установку.
-- **`Vaulter\Azgard\Testing\FakeAzgardGuard`** — дубль guard для тестирования `azgard`;
-  нужны установленный `vaulter-azgard` и его Composer-зависимости.
+- **`Vaulter\AzGuard\Testing\FakeAzGuardGuard`** — дубль guard для тестирования `azguard`;
+  нужны установленный `vaulter-azguard` и его Composer-зависимости.
 
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#testing-open-driver -->
 

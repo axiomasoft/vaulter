@@ -46,7 +46,7 @@ outline: deep
 
 Публикует конфиг каждого установленного пакета Vaulter (`vaulter-config`,
 `vaulter-media-config`, `vaulter-drive-config`, `vaulter-documents-config`,
-`vaulter-webhooks-config`, `vaulter-filament-config`, `vaulter-azgard-config`), выводит настройки хоста, которые команда
+`vaulter-webhooks-config`, `vaulter-filament-config`, `vaulter-azguard-config`), выводит настройки хоста, которые команда
 **не** редактирует, и при желании выполняет миграции. Повторный запуск безопасен: уже
 опубликованный файл пропускается (`--force` перезаписывает его), а `config/*.php` и `.env`
 никогда не переписываются.
@@ -177,7 +177,7 @@ JSON-документ описан схемой `packages/core/resources/schemas
 | `drive.drives.deleting` | Drive в статусе `deleting` дольше 24 ч (`vaulter:drives:purge`) | warning → warning |
 | `drive.drives.usage` | Сохранённый `used_bytes` против формулы квоты, тот же калькулятор, что у `vaulter:drives:recount`, без блокировки | warning → warning |
 | `documents.types` | Тип по умолчанию зарегистрирован; документы незарегистрированных типов, счётчик | warning → warning |
-| `azgard.dependency` | AzGuard установлен и guard моста разрешается | error → error |
+| `azguard.dependency` | AzGuard установлен и guard моста разрешается | error → error |
 
 Проверки `drive.scan.*` выполняются независимо от `vaulter.modules.webhooks`: сканирование — обязательная
 работа по безопасности контента, а не вебхук. `media.disk.probe` — единственная проверка, которая пишет;

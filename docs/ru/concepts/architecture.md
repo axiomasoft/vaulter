@@ -118,7 +118,7 @@ Vaulter никогда не ссылается на конкретный кла�
 
 ## Доменная структура
 
-Владение следует графу Composer (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azgard` и
+Владение следует графу Composer (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azguard` и
 `filament` строятся поверх `drive`) и зафиксировано в [ADR-0030](/adr/0030-package-ownership-and-schema) и
 [ADR-0031](/adr/0031-collaboration-package-and-durability).
 **`axioma-studio/vaulter-core`** (namespace `Vaulter\`) — только ядро: в нём нет доменных таблиц, моделей и
@@ -143,13 +143,13 @@ Vaulter никогда не ссылается на конкретный кла�
 | `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/события/модели документных узлов, реестр типов документов (`Types\*`), презентер документов, экспорт, контракты коллаборации (`CollaborationDriver`, `SupportsCollaboration`) и нейтральный контракт состояния `State\CollaborativeState` с pending-маркером, формы контента (`Content\OpaqueContent`, `Content\TipTap\*`). |
 | `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Исходящие вебхуки: эндпоинты, `WebhookFanoutConsumer` (outbox-потребитель `webhooks.fanout`), `WebhookSigner`, URL-guard, повторы, админский HTTP и команды `vaulter:webhooks:*`. Opt-in. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Admin-плагин Filament 5 поверх авторизованных Operations drive. |
-| `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | Драйвер прав AzGuard, контракт guard, карта прав, реальный адаптер и тестовый fake. |
+| `axioma-studio/vaulter-azguard` | `Vaulter\AzGuard\` | Драйвер прав AzGuard, контракт guard, карта прав, реальный адаптер и тестовый fake. |
 | `@vaulter/vue` | — | UI Drive + composables (npm). `src/api` не импортирует Vue, редактор и realtime-пакеты и ничего из `src/` вне `src/api` (arch-тест `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
-Метапакет `axioma-studio/vaulter` ставит core, media, drive и documents; webhooks, collaboration, azgard и filament
+Метапакет `axioma-studio/vaulter` ставит core, media, drive и documents; webhooks, collaboration, azguard и filament
 ставятся отдельно (см. [Установку](/ru/getting-started/installation)). Каждый пакет поставляет свои миграции
 (не публикуются), свой файл конфига (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
-`vaulter-webhooks`, `vaulter-azgard`, `vaulter-filament`) и свой тестовый кит.
+`vaulter-webhooks`, `vaulter-azguard`, `vaulter-filament`) и свой тестовый кит.
 
 ## Drive-хэндл
 
@@ -255,7 +255,7 @@ arch-тестом — см. [Устранение неполадок](/ru/guides
   `resolve(Subject, Authorizable, AccessScope)`, `override(...)` (супер-админ / `Gate::before`),
   `subjectsFor(Authorizable)` (актор → пользователи + роли + команды) и
   `canCreateInWorkspace(...)`. Поставляемые полосы: `database` (по умолчанию, автономная),
-  `gate`, `spatie`, `azgard` и не-прод `null`. Меняется через
+  `gate`, `spatie`, `azguard` и не-прод `null`. Меняется через
   `config('vaulter-drive.access.permission_driver')`.
 - **`AccessResolver`** — принадлежит Vaulter, `final`, **не** сменяем. Прогоняет канонический
   алгоритм поверх `v_node_grants` в комбинации с драйвером.
@@ -320,7 +320,7 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 | Контракт | Привязка через | Задокументировано в |
 |---|---|---|
 | `Vaulter\Drive\Contracts\Access\PermissionDriver` | `config('vaulter-drive.access.permission_driver')` | [Рецепты — кастомный драйвер прав](/ru/guides/recipes#permission-driver) |
-| `Vaulter\Azgard\Contracts\AzgardGuard` | ключ конфига `vaulter-azgard.guard` (по умолчанию — адаптер моста) | [Устранение неполадок — морфы Azgard](/ru/guides/troubleshooting#azgard-morphs) |
+| `Vaulter\AzGuard\Contracts\AzGuardGuard` | ключ конфига `vaulter-azguard.guard` (по умолчанию — адаптер моста) | [Устранение неполадок — морфы AzGuard](/ru/guides/troubleshooting#azguard-morphs) |
 | `Vaulter\Media\Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Рецепты — переход на S3](/ru/guides/recipes#s3-disk) |
 | `Vaulter\Drive\Contracts\Handlers\FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` | [Рецепты — кастомный обработчик формата](/ru/guides/recipes#format-handler) |
 | `Vaulter\Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
@@ -368,7 +368,7 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 ## Правила зависимостей и бюджет ядра
 
 Runtime-зависимости направлены вниз: `core ← media ← drive ← documents ← collaboration`;
-webhooks, azgard и filament зависят от drive. Core владеет общими operations, typed context,
+webhooks, azguard и filament зависят от drive. Core владеет общими operations, typed context,
 слотами модулей, idempotency и outbox. Node, Document, Blob, Share и Revision принадлежат доменным пакетам.
 Доменные таблицы, HTTP endpoints и скрытая активация через `class_exists` не относятся к ядру;
 эти границы проверяют существующие boundary и surface guards.

@@ -25,7 +25,7 @@ final class TargetMap
     /** The commit the P2 inventory is taken at (p2-design#base). */
     public const BASE = '35718fd2';
 
-    public const OWNERS = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azgard', 'filament'];
+    public const OWNERS = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azguard', 'filament'];
 
     public const ACTIONS = ['keep', 'move', 'split', 'replace', 'delete'];
 
@@ -53,7 +53,7 @@ final class TargetMap
     /** @var array<string, string> owner => namespace segment of its package */
     private const OWNER_NAMESPACES = [
         'core' => '', 'media' => 'Media', 'drive' => 'Drive', 'documents' => 'Documents', 'collaboration' => 'Collaboration',
-        'webhooks' => 'Webhooks', 'azgard' => 'Azgard', 'filament' => 'Filament',
+        'webhooks' => 'Webhooks', 'azguard' => 'AzGuard', 'filament' => 'Filament',
     ];
 
     private const ROLES = ['config' => 'config', 'database/migrations' => 'migration', 'database/factories' => 'factory', 'routes' => 'routes'];

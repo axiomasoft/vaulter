@@ -318,7 +318,7 @@ from it.
 `MissingPermissionDriverException` — either the open `null` host-role driver was selected in
 production (forbidden — it grants every actor full access), or `config('vaulter-drive.access.permission_driver')`
 names a driver key not in the `vaulter-drive.access.permission_drivers` map. Set a real driver
-(`database`/`gate`/`spatie`/`azgard`) or bind your own `PermissionDriver`.
+(`database`/`gate`/`spatie`/`azguard`) or bind your own `PermissionDriver`.
 
 ## missing-package
 

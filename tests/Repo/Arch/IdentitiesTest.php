@@ -388,7 +388,7 @@ describe('committed fixtures', function (): void {
             ->and($items['publish:vaulter-config'])->toMatchArray(['owner' => 'core', 'via' => 'module:config'])
             ->and($items['config:vaulter.modules'])->toMatchArray(['default' => [], 'owner' => 'core'])
             ->and($items)->not->toHaveKey('config:vaulter.features.webhooks')
-            ->and($items)->toHaveKeys(['publish:vaulter-media-config', 'publish:vaulter-drive-translations', 'publish:vaulter-azgard-config']);
+            ->and($items)->toHaveKeys(['publish:vaulter-media-config', 'publish:vaulter-drive-translations', 'publish:vaulter-azguard-config']);
     });
 
     it('parse the signatures of the commands', function (): void {

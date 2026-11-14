@@ -85,7 +85,7 @@ arch('internal namespaces are not used outside the package (E3.1)')
  * contract interface (`src/Contracts/**`), so the frozen surface records that emptiness:
  * an accidentally-added public contract (which would need its own snapshot freeze + a D#
  * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
- * packages with real contracts (core/drive/documents/azgard) carry PublicApiSnapshotTest.
+ * packages with real contracts (core/drive/documents/azguard) carry PublicApiSnapshotTest.
  */
 test('the package exposes no public contract surface (VLT-REL P2.2)', function (): void {
     $contractsDir = __DIR__.'/../../src/Contracts';

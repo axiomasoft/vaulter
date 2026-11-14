@@ -17,7 +17,7 @@ use Vaulter\Drive\Testing\Fixtures\Access\SubclassedRoleDriver;
 
 /**
  * F-P1.2-01 — a grant addressed to a role/team subject under a host-role driver that
- * does NOT enumerate role subjects (gate/azgard/database/null) is silently inert. The
+ * does NOT enumerate role subjects (gate/azguard/database/null) is silently inert. The
  * GrantNodeAccessAction now makes that loud: a warning always, and a thrown
  * UnenumerableGrantSubjectException outside production. The spatie lane — which DOES
  * enumerate role subjects — is the control that must NOT throw.

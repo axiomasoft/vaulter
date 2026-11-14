@@ -51,7 +51,7 @@ Reliability/webhooks, Panels, Config, node/file/version/blob-репозитор�
 
 **Ключевые следствия:** цикла нет (все стрелки внутрь, к core); `filament` остаётся **core-only** (использует
 Node/Storage/ACL/NodeReadRepository — всё kernel; правка composer НЕ нужна); `vue` не затрагивается (HTTP-клиент);
-`permissions-azgard` не затрагивается. `PanelTablesBuilder` **не режется** — самый рискованный кусок остаётся
+`permissions-azguard` не затрагивается. `PanelTablesBuilder` **не режется** — самый рискованный кусок остаётся
 целым в kernel. Отложенный вынос `v_blobs`-схемы **снимается как «не выносим»**: core — постоянный владелец
 схемы by design (см. §Обсуждение, ревизия прежней заметки).
 
@@ -82,7 +82,7 @@ Node/Storage/ACL/NodeReadRepository — всё kernel; правка composer Н�
    (+Flysystem)           (→core, →media)      (→core)                 (→core)   [без изменений]
    requires core          requires core+media  requires core
 
-   vaulter-permissions-azgard → core (ACL-шов; без изменений)
+   vaulter-permissions-azguard → core (ACL-шов; без изменений)
    @vaulter/vue (npm)         → HTTP only; PHP-split не влияет
 ```
 
@@ -212,7 +212,7 @@ yjs_state bytea round-trip + jsonb gin) + matrix `+docdrive`. **Критерий
 контракт больше не в core. **HIGH:** collab/webhook-провод, broadcast-канал, yjs-персист, большой домен.
 
 ### Фаза R — Release Option B (owner, one-shot) — вне /task:dev
-Создать split-репо `axioma-studio/vaulter-{drive,docdrive}` (media/core/filament/permissions-azgard уже в matrix),
+Создать split-репо `axioma-studio/vaulter-{drive,docdrive}` (media/core/filament/permissions-azguard уже в matrix),
 секрет `GH_ACCESS_TOKEN`, Packagist, первый `v0.1.0` (subtree-split + Changesets для npm), ghcr hocuspocus-образ.
 
 ## Ops-хвосты media (закрыть параллельно, вне зависимостей) — ЗАКРЫТО
@@ -254,7 +254,7 @@ yjs_state bytea round-trip + jsonb gin) + matrix `+docdrive`. **Критерий
 2. **Нет цикла**: arch-тест «0 ссылок `core/src` → `Vaulter\Drive`/`Vaulter\DocDrive`»; feature→core только.
 3. Ноль изменений поведения (механическое извлечение); dedup-scope и все feature-флаги целы.
 4. Контракты (`Contracts\Cas/Access/Collaboration/Documents/Sharing/Uploads`) = швы, phpstan-clean с обеих сторон.
-5. `filament`/`vue`/`permissions-azgard` не сломаны (filament остаётся core-only — проверить composer + гейт).
+5. `filament`/`vue`/`permissions-azguard` не сломаны (filament остаётся core-only — проверить composer + гейт).
 6. Единый поток миграций в core; порядок `000007..` не нарушен; именованные индексы деривятся из имени таблицы.
 7. Breaking (пре-релиз 0.1.0) — запись в `CHANGELOG.md [Unreleased]` на каждый вынос.
 

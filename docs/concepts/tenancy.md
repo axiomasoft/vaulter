@@ -225,8 +225,8 @@ ecosystem's host models:
 ```
 
 This matters when you run the **AzGuard host-role driver** for authorization in a
-tenant-scoped app. That driver (`Vaulter\Azgard\AzgardPermissionDriver`) talks only to the
-Vaulter-owned `Vaulter\Azgard\Contracts\AzgardGuard` seam — so vaulter-core carries **no**
+tenant-scoped app. That driver (`Vaulter\AzGuard\AzGuardPermissionDriver`) talks only to the
+Vaulter-owned `Vaulter\AzGuard\Contracts\AzGuardGuard` seam — so vaulter-core carries **no**
 dependency on AzGuard — and asks its workspace-scoped questions as AzGuard v1 decisions in an
 **assignment scope**: `hasPermission($permission, on: AssignmentScopeRef::of($type, $id))`,
 where `$type`/`$id` are the drive owner's morph alias and key.
@@ -254,11 +254,11 @@ For those identities to match, the host aligns three things:
    (`azguard.ids.host_keys` / `azguard.storages.*.host_keys`) to your models' key strategy.
 
 ::: info Install the AzGuard bridge
-`composer require axioma-studio/vaulter-azgard` installs the driver, real adapter and
-`Vaulter\Azgard\Testing\FakeAzgardGuard`. Its provider registers the driver; the guard
-is selected by the `vaulter-azgard.guard` config key; the user model must implement `Vaulter\Azgard\Contracts\AzgardBackedUser`.
+`composer require axioma-studio/vaulter-azguard` installs the driver, real adapter and
+`Vaulter\AzGuard\Testing\FakeAzGuardGuard`. Its provider registers the driver; the guard
+is selected by the `vaulter-azguard.guard` config key; the user model must implement `Vaulter\AzGuard\Contracts\AzGuardBackedUser`.
 Fake-based tests require the bridge's installed dependencies too. See
-[Permission drivers](/extending/permission-drivers) and the `vaulter-azgard.*` configuration.
+[Permission drivers](/extending/permission-drivers) and the `vaulter-azguard.*` configuration.
 :::
 
 ## Putting it together
@@ -284,4 +284,4 @@ your model layer — not Vaulter — enforces what each tenant can see.
 - [Configuration](/guides/configuration) — the full `tenant`, `dedup`, `ids` and
   `models` keys.
 - [Authorization › Host role driver](/extending/permission-drivers) — the AzGuard driver and
-  the `vaulter-azgard.*` configuration.
+  the `vaulter-azguard.*` configuration.

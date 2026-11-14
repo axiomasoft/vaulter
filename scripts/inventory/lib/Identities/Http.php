@@ -40,7 +40,7 @@ final class Http
     public static function build(Repo $repo): array
     {
         $problems = [];
-        foreach (['azgard', 'filament'] as $package) {
+        foreach (['azguard', 'filament'] as $package) {
             if (is_dir($repo->path("packages/{$package}/routes"))) {
                 $problems[] = ['code' => 'unscanned-routes', 'message' => "http: packages/{$package}/routes exists — the boot lists only core, media, drive, documents, collaboration and webhooks; add the package to boot/routes.php", 'exit' => 1];
             }

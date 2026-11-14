@@ -23,7 +23,7 @@ php artisan vendor:publish --tag=vaulter-documents-config
 | Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
 | Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
 | Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksConfig` |
-| AzGuard | `config/vaulter-azgard.php` | `vaulter-azgard-config` | `Vaulter\Azgard\Configuration\AzgardConfig` |
+| AzGuard | `config/vaulter-azguard.php` | `vaulter-azguard-config` | `Vaulter\AzGuard\Configuration\AzGuardConfig` |
 | Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
 
 Привязки задаются строками FQCN. Замыкания отклоняются при boot, поэтому
@@ -114,7 +114,7 @@ Laravel по умолчанию. Имя таблицы состоит из пр�
 
 Драйвер по умолчанию — автономный `database`. Карты Gate и Spatie находятся в
 `vaulter-drive.access.gate.*` и `vaulter-drive.access.spatie.*`. Установленный мост AzGuard регистрирует
-`vaulter-drive.access.permission_drivers.azgard`; настройки моста остаются в `vaulter-azgard.*`.
+`vaulter-drive.access.permission_drivers.azguard`; настройки моста остаются в `vaulter-azguard.*`.
 Открытый драйвер `null` запрещён в production. См. [Драйверы прав](/ru/extending/permission-drivers).
 
 `vaulter-drive.handlers` содержит дополнительные FQCN `FileHandler`. Провайдеры регистрируют встроенные

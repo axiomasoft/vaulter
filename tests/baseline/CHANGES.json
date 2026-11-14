@@ -4194,25 +4194,25 @@
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_AzgardGuard_is_bound",
       "replacement": [
-        "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_explicit_guard_is_configured"
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_explicit_guard_is_configured"
       ],
-      "reason": "renamed: the explicit guard is the vaulter-azgard.guard config key (P3.5)",
+      "reason": "renamed: the explicit guard is the vaulter-azguard.guard config key (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_honouring_a_guard_the_host_bound_itself__for_any_actor",
       "replacement": [
         "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_honouring_the_guard_the_host_configured__for_any_actor"
       ],
-      "reason": "renamed: the host names its guard in vaulter-azgard.guard (P3.5)",
+      "reason": "renamed: the host names its guard in vaulter-azguard.guard (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ActorGuardTest::__pest_evaluable_it_still_uses_the_request_bound_guard_for_the_request_user_itself",
       "replacement": [
         "P\\Tests\\ActorGuardTest::__pest_evaluable_it_answers_the_request_user_through_an_adapter_over_that_very_actor"
@@ -4221,52 +4221,52 @@
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_reports_a_guard_that_cannot_be_built_as_an_error_in_both_modes",
       "replacement": [
-        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_reports_a_configured_guard_that_cannot_be_built_as_an_error_in_both_modes"
+        "P\\Tests\\Doctor\\AzGuardDoctorCheckTest::__pest_evaluable_it_reports_a_configured_guard_that_cannot_be_built_as_an_error_in_both_modes"
       ],
       "reason": "renamed: only a configured guard can fail to build (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_resolves_the_bridge_guard_for_a_console_run_without_a_user",
       "replacement": [
-        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_is_ok_without_an_explicit_guard__the_driver_builds_one_per_actor"
+        "P\\Tests\\Doctor\\AzGuardDoctorCheckTest::__pest_evaluable_it_is_ok_without_an_explicit_guard__the_driver_builds_one_per_actor"
       ],
       "reason": "renamed: without an explicit guard the driver builds one per actor (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_binds_an_adapter_over_the_authenticated_AzGuard_backed_user",
       "replacement": [
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_the_configured_guard_class_as_the_capability"
       ],
-      "reason": "the request-bound AzgardGuard binding is removed; the guard is the vaulter-azgard.guard capability (P3.5)",
+      "reason": "the request-bound AzGuardGuard binding is removed; the guard is the vaulter-azguard.guard capability (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_binds_the_deny_all_null_guard_for_a_guest",
       "replacement": [
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one"
       ],
-      "reason": "the request-bound AzgardGuard binding is removed; no guard is provided until the host names one (P3.5)",
+      "reason": "the request-bound AzGuardGuard binding is removed; no guard is provided until the host names one (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_binds_the_deny_all_null_guard_for_a_user_that_is_not_AzGuard_backed",
       "replacement": [
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one"
       ],
-      "reason": "the request-bound AzgardGuard binding is removed; no guard is provided until the host names one (P3.5)",
+      "reason": "the request-bound AzGuardGuard binding is removed; no guard is provided until the host names one (P3.5)",
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_preserves_an_explicitly_configured_null_driver_key",
       "replacement": [
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam"
@@ -4275,12 +4275,12 @@
       "decision": "D8"
     },
     {
-      "suite": "azgard",
+      "suite": "azguard",
       "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_registers_its_permission_driver_and_keeps_a_host_driver_override",
       "replacement": [
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_contributes_its_permission_driver_to_the_drive_slot_and_lets_the_host_map_override_the_key"
       ],
-      "reason": "renamed: azgard contributes its driver to the PermissionDriver slot; the host map still overrides the key (P3.5)",
+      "reason": "renamed: azguard contributes its driver to the PermissionDriver slot; the host map still overrides the key (P3.5)",
       "decision": "D8"
     },
     {
@@ -13703,7 +13703,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_vaulter_azgard_package__P2_1_",
-      "new": "P\\Tests\\Integration\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_vaulter_azgard_package__P2_1_",
+      "new": "P\\Tests\\Integration\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_vaulter_azguard_package__P2_1_",
       "new_suite": "integration",
       "reason": "Mechanical core integration split, same case/dataset and assertions",
       "decision": "PLAN4-D6"
@@ -18188,6 +18188,195 @@
       ],
       "reason": "P3.6 neutral state rename; identical immutability payload/provenance dataset, reconciled at P3.2 V91",
       "decision": "PLAN4-D16"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_composite_order__a_workspace_role_grant_raises_access_when_NO_node_ACL_row_exists",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_composite_order__a_workspace_role_grant_raises_access_when_NO_node_ACL_row_exists",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_composite_order__an_inheritance_boundary_cuts_node_grants_but_not_the_workspace_role",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_composite_order__an_inheritance_boundary_cuts_node_grants_but_not_the_workspace_role",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_defers__no_override__when_the_actor_is_not_a_super_admin",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_defers__no_override__when_the_actor_is_not_a_super_admin",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_exposes_only_the_actor_in_its_subject_set__AzGuard_enumerates_no_role_subjects_",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_exposes_only_the_actor_in_its_subject_set__AzGuard_enumerates_no_role_subjects_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_gates_workspace_creation_through_hasPermissionIn_with_the_create_permission",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_gates_workspace_creation_through_hasPermissionIn_with_the_create_permission",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_honours_a_host_override_of_the_ability_map",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_honours_a_host_override_of_the_ability_map",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_lets_a_super_admin_see_every_node_through_the_AccessResolver",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_lets_a_super_admin_see_every_node_through_the_AccessResolver",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_maps_a_workspace_scoped_AzGuard_permission_to_a_role",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_maps_a_workspace_scoped_AzGuard_permission_to_a_role",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_maps_abilities_to_AzGuard_permissions_with_the_master_plan_defaults",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_maps_abilities_to_AzGuard_permissions_with_the_master_plan_defaults",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_never_overrides__an_AzGuard_super_admin_resolves_to_the_owner_role_through_decisions",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_never_overrides__an_AzGuard_super_admin_resolves_to_the_owner_role_through_decisions",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_returns_no_role_decision_for_an_ungranted_owner_identity",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_returns_no_role_decision_for_an_ungranted_owner_identity",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_returns_no_role_decision_when_the_workspace_grants_nothing__pass_through_with_a_guard_",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_returns_no_role_decision_when_the_workspace_grants_nothing__pass_through_with_a_guard_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_uses_the_actor_itself_as_the_guard_when_the_actor_implements_the_AzgardGuard_seam",
+      "new": "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_uses_the_actor_itself_as_the_guard_when_the_actor_implements_the_AzGuardGuard_seam",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Arch\\ConfigurationBoundaryTest::__pest_evaluable_azgard_reads_configuration_through_typed_package_accessors__P2_5_",
+      "new": "P\\Tests\\Arch\\ConfigurationBoundaryTest::__pest_evaluable_azguard_reads_configuration_through_typed_package_accessors__P2_5_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Arch\\ConfigurationBoundaryTest::__pest_evaluable_azgard_source_has_no_direct_Vaulter_configuration_reads__P2_5_",
+      "new": "P\\Tests\\Arch\\ConfigurationBoundaryTest::__pest_evaluable_azguard_source_has_no_direct_Vaulter_configuration_reads__P2_5_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Arch\\PublicApiSnapshotTest::__pest_evaluable_vaulter_azgard_public_API_surface_matches_the_frozen_golden__VLT_REL_P2_2_",
+      "new": "P\\Tests\\Arch\\PublicApiSnapshotTest::__pest_evaluable_vaulter_azguard_public_API_surface_matches_the_frozen_golden__VLT_REL_P2_2_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_notes_whether_the_azgard_driver_is_the_selected_one",
+      "new": "P\\Tests\\Doctor\\AzGuardDoctorCheckTest::__pest_evaluable_it_notes_whether_the_azguard_driver_is_the_selected_one",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgardIsolated\\IsolatedScopeTest::__pest_evaluable_it_grants_the_owner_role_to_a_super_admin_of_that_workspace_only",
+      "new": "P\\Tests\\RealAzGuardIsolated\\IsolatedScopeTest::__pest_evaluable_it_grants_the_owner_role_to_a_super_admin_of_that_workspace_only",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgardIsolated\\IsolatedScopeTest::__pest_evaluable_it_honours_an_AzGuard_restriction_that_binds_super_admins",
+      "new": "P\\Tests\\RealAzGuardIsolated\\IsolatedScopeTest::__pest_evaluable_it_honours_an_AzGuard_restriction_that_binds_super_admins",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgardIsolated\\IsolatedScopeTest::__pest_evaluable_it_keeps_a_tenant_wide_super_admin_out_of_an_isolated_workspace",
+      "new": "P\\Tests\\RealAzGuardIsolated\\IsolatedScopeTest::__pest_evaluable_it_keeps_a_tenant_wide_super_admin_out_of_an_isolated_workspace",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_denies_a_workspace_whose_type_is_not_an_assignment_scope_type_of_the_panel__fail_closed_",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_denies_a_workspace_whose_type_is_not_an_assignment_scope_type_of_the_panel__fail_closed_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_folds_a_real_assignment_scope_permission_into_the_matching_Vaulter_role__only_in_that_workspace",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_folds_a_real_assignment_scope_permission_into_the_matching_Vaulter_role__only_in_that_workspace",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_gates_real_workspace_creation_through_the_create_permission",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_gates_real_workspace_creation_through_the_create_permission",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_lets_a_tenant_wide_grant_hold_in_every_inheriting_workspace",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_lets_a_tenant_wide_grant_hold_in_every_inheriting_workspace",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_resolves_a_real_AzGuard_super_admin_to_the_owner_role_through_AzGuard_decisions__never_an_override",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_resolves_a_real_AzGuard_super_admin_to_the_owner_role_through_AzGuard_decisions__never_an_override",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_resolves_a_real_entity_check_through_the_adapter__entity_lane_",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_resolves_a_real_entity_check_through_the_adapter__entity_lane_",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
+    },
+    {
+      "suite": "azguard",
+      "old": "P\\Tests\\RealAzgard\\RealAzgardIntegrationTest::__pest_evaluable_it_yields_no_decision_when_the_real_user_holds_nothing_in_the_workspace",
+      "new": "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_yields_no_decision_when_the_real_user_holds_nothing_in_the_workspace",
+      "reason": "Rename azgard package and test classes to azguard",
+      "decision": "owner request"
     }
   ],
   "additions": {
@@ -19870,18 +20059,55 @@
         "P\\Tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_each_independently_lying_verified_credential_without_exposing_it\"dataset \"typed principal\"\""
       ]
     },
-    "azgard": {
-      "count": 9,
+    "azguard": {
+      "count": 46,
       "names": [
-        "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_explicit_guard_is_configured",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_composite_order__a_workspace_role_grant_raises_access_when_NO_node_ACL_row_exists",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_composite_order__an_inheritance_boundary_cuts_node_grants_but_not_the_workspace_role",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_defers__no_override__when_the_actor_is_not_a_super_admin",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_does_not_turn_View_and_Comment_without_Download_into_a_commenter_grant\"(false)\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_does_not_turn_View_and_Comment_without_Download_into_a_commenter_grant\"(true)\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_exposes_only_the_actor_in_its_subject_set__AzGuard_enumerates_no_role_subjects_",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_gates_workspace_creation_through_hasPermissionIn_with_the_create_permission",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_no_role_when_a_required_ability_has_no_permission_mapping",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_the_complete_registered_role_when_every_mapped_ability_is_allowed\"('commenter')\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_the_complete_registered_role_when_every_mapped_ability_is_allowed\"('organizer')\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_the_complete_registered_role_when_every_mapped_ability_is_allowed\"('owner')\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_the_complete_registered_role_when_every_mapped_ability_is_allowed\"('previewer')\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_the_complete_registered_role_when_every_mapped_ability_is_allowed\"('reader')\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_grants_the_complete_registered_role_when_every_mapped_ability_is_allowed\"('writer')\"",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_honours_a_host_override_of_the_ability_map",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_explicit_guard_is_configured",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_lets_a_super_admin_see_every_node_through_the_AccessResolver",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_maps_a_workspace_scoped_AzGuard_permission_to_a_role",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_maps_abilities_to_AzGuard_permissions_with_the_master_plan_defaults",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_never_overrides__an_AzGuard_super_admin_resolves_to_the_owner_role_through_decisions",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_returns_no_role_decision_for_an_ungranted_owner_identity",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_returns_no_role_decision_when_the_workspace_grants_nothing__pass_through_with_a_guard_",
+        "P\\Tests\\Access\\AzGuardDriverTest::__pest_evaluable_it_uses_the_actor_itself_as_the_guard_when_the_actor_implements_the_AzGuardGuard_seam",
         "P\\Tests\\ActorGuardTest::__pest_evaluable_it_answers_the_request_user_through_an_adapter_over_that_very_actor",
         "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_honouring_the_guard_the_host_configured__for_any_actor",
-        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_is_ok_without_an_explicit_guard__the_driver_builds_one_per_actor",
-        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_reports_a_configured_guard_that_cannot_be_built_as_an_error_in_both_modes",
+        "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_two_target_actors_separate_through_the_same_explicit_guard_regardless_of_the_request_user",
+        "P\\Tests\\Arch\\ConfigurationBoundaryTest::__pest_evaluable_azguard_reads_configuration_through_typed_package_accessors__P2_5_",
+        "P\\Tests\\Arch\\ConfigurationBoundaryTest::__pest_evaluable_azguard_source_has_no_direct_Vaulter_configuration_reads__P2_5_",
+        "P\\Tests\\Arch\\PublicApiSnapshotTest::__pest_evaluable_vaulter_azguard_public_API_surface_matches_the_frozen_golden__VLT_REL_P2_2_",
+        "P\\Tests\\Doctor\\AzGuardDoctorCheckTest::__pest_evaluable_it_is_ok_without_an_explicit_guard__the_driver_builds_one_per_actor",
+        "P\\Tests\\Doctor\\AzGuardDoctorCheckTest::__pest_evaluable_it_notes_whether_the_azguard_driver_is_the_selected_one",
+        "P\\Tests\\Doctor\\AzGuardDoctorCheckTest::__pest_evaluable_it_reports_a_configured_guard_that_cannot_be_built_as_an_error_in_both_modes",
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_contributes_its_permission_driver_to_the_drive_slot_and_lets_the_host_map_override_the_key",
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one",
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_the_configured_guard_class_as_the_capability",
-        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam"
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam",
+        "P\\Tests\\RealAzGuardIsolated\\IsolatedScopeTest::__pest_evaluable_it_grants_the_owner_role_to_a_super_admin_of_that_workspace_only",
+        "P\\Tests\\RealAzGuardIsolated\\IsolatedScopeTest::__pest_evaluable_it_honours_an_AzGuard_restriction_that_binds_super_admins",
+        "P\\Tests\\RealAzGuardIsolated\\IsolatedScopeTest::__pest_evaluable_it_keeps_a_tenant_wide_super_admin_out_of_an_isolated_workspace",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_denies_a_workspace_whose_type_is_not_an_assignment_scope_type_of_the_panel__fail_closed_",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_folds_a_real_assignment_scope_permission_into_the_matching_Vaulter_role__only_in_that_workspace",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_gates_real_workspace_creation_through_the_create_permission",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_lets_a_tenant_wide_grant_hold_in_every_inheriting_workspace",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_resolves_a_real_AzGuard_super_admin_to_the_owner_role_through_AzGuard_decisions__never_an_override",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_resolves_a_real_entity_check_through_the_adapter__entity_lane_",
+        "P\\Tests\\RealAzGuard\\RealAzGuardIntegrationTest::__pest_evaluable_it_yields_no_decision_when_the_real_user_holds_nothing_in_the_workspace"
       ]
     },
     "filament": {
@@ -20846,7 +21072,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_vaulter_azgard_package__P2_1_",
-      "new": "P\\Tests\\Integration\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_vaulter_azgard_package__P2_1_",
+      "new": "P\\Tests\\Integration\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_vaulter_azguard_package__P2_1_",
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"
@@ -21478,7 +21704,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterAzgardServiceProvider.php\"\"",
-      "new": "P\\Tests\\Integration\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterAzgardServiceProvider.php\"\"",
+      "new": "P\\Tests\\Integration\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterAzGuardServiceProvider.php\"\"",
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"
@@ -24574,7 +24800,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Modules\\ActivationMatrixTest::__pest_evaluable_it_activates_nothing_at_all_while_a_module_the_top_of_the_set_requires_is_switched_off__and_keeps_the_diagnostics\"dataset \"+azgard\"\"",
-      "new": "P\\Tests\\Integration\\Modules\\ActivationMatrixTest::__pest_evaluable_it_activates_nothing_at_all_while_a_module_the_top_of_the_set_requires_is_switched_off__and_keeps_the_diagnostics\"dataset \"+azgard\"\"",
+      "new": "P\\Tests\\Integration\\Modules\\ActivationMatrixTest::__pest_evaluable_it_activates_nothing_at_all_while_a_module_the_top_of_the_set_requires_is_switched_off__and_keeps_the_diagnostics\"dataset \"+azguard\"\"",
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"
@@ -24622,7 +24848,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Modules\\ActivationMatrixTest::__pest_evaluable_it_boots_a_set_with_exactly_the_modules_of_its_packages_active__mounts_routes_only_for_those_that_have_them__and_runs_no_query\"dataset \"+azgard\"\"",
-      "new": "P\\Tests\\Integration\\Modules\\ActivationMatrixTest::__pest_evaluable_it_boots_a_set_with_exactly_the_modules_of_its_packages_active__mounts_routes_only_for_those_that_have_them__and_runs_no_query\"dataset \"+azgard\"\"",
+      "new": "P\\Tests\\Integration\\Modules\\ActivationMatrixTest::__pest_evaluable_it_boots_a_set_with_exactly_the_modules_of_its_packages_active__mounts_routes_only_for_those_that_have_them__and_runs_no_query\"dataset \"+azguard\"\"",
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"
@@ -24702,7 +24928,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Modules\\ActivationMatrixTest::__pest_evaluable_it_costs_nothing_for_the_module_a_set_adds_when_it_is_switched_off__the_application_shows_what_its_parent_set_shows\"dataset \"+azgard\"\"",
-      "new": "P\\Tests\\Integration\\Modules\\ActivationMatrixTest::__pest_evaluable_it_costs_nothing_for_the_module_a_set_adds_when_it_is_switched_off__the_application_shows_what_its_parent_set_shows\"dataset \"+azgard\"\"",
+      "new": "P\\Tests\\Integration\\Modules\\ActivationMatrixTest::__pest_evaluable_it_costs_nothing_for_the_module_a_set_adds_when_it_is_switched_off__the_application_shows_what_its_parent_set_shows\"dataset \"+azguard\"\"",
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"
@@ -24918,7 +25144,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Modules\\CleanInstallMatrixTest::__pest_evaluable_it_installs_a_set_from_nothing__rolls_it_back_to_an_empty_database_without_a_pin_left__and_installs_it_again\"dataset \"+azgard\"\"",
-      "new": "P\\Tests\\Integration\\Modules\\CleanInstallMatrixTest::__pest_evaluable_it_installs_a_set_from_nothing__rolls_it_back_to_an_empty_database_without_a_pin_left__and_installs_it_again\"dataset \"+azgard\"\"",
+      "new": "P\\Tests\\Integration\\Modules\\CleanInstallMatrixTest::__pest_evaluable_it_installs_a_set_from_nothing__rolls_it_back_to_an_empty_database_without_a_pin_left__and_installs_it_again\"dataset \"+azguard\"\"",
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"

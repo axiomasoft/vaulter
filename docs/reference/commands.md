@@ -46,7 +46,7 @@ themselves — see [Scheduling](#scheduling).
 
 Publishes the config file of every installed Vaulter package (`vaulter-config`,
 `vaulter-media-config`, `vaulter-drive-config`, `vaulter-documents-config`,
-`vaulter-webhooks-config`, `vaulter-filament-config`, `vaulter-azgard-config`), prints the host settings it will **not**
+`vaulter-webhooks-config`, `vaulter-filament-config`, `vaulter-azguard-config`), prints the host settings it will **not**
 edit, and runs the migrations when asked. Safe to run again: an already published file is
 skipped (`--force` overwrites it) and nothing in `config/*.php` or `.env` is ever rewritten.
 
@@ -177,7 +177,7 @@ The JSON document is described by `packages/core/resources/schemas/doctor-v1.sch
 | `drive.drives.deleting` | Drives in `deleting` for more than 24 h (`vaulter:drives:purge`) | warning → warning |
 | `drive.drives.usage` | Stored `used_bytes` against the quota formula, same calculator as `vaulter:drives:recount`, without a lock | warning → warning |
 | `documents.types` | The default type is registered; documents of unregistered types, counted | warning → warning |
-| `azgard.dependency` | AzGuard is installed and the bridge guard resolves | error → error |
+| `azguard.dependency` | AzGuard is installed and the bridge guard resolves | error → error |
 
 The `drive.scan.*` checks run whether or not `vaulter.modules.webhooks` is on: scan work is mandatory
 content-safety work, not a webhook. `media.disk.probe` is the only check that writes; it removes

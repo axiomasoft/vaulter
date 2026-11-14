@@ -11,7 +11,7 @@ use Vaulter\Kernel;
 
 /**
  * The permission drivers a host can select by key: the contributions of the active modules to the
- * {@see PermissionDriver} slot (database, gate, spatie, null; azgard from its module), overlaid by the
+ * {@see PermissionDriver} slot (database, gate, spatie, null; azguard from its module), overlaid by the
  * host's own `vaulter-drive.access.permission_drivers` map, where the host wins on the same key.
  */
 #[Internal]

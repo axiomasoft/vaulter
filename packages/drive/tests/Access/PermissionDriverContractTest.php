@@ -19,7 +19,7 @@ use Vaulter\Drive\Testing\Fixtures\Access\RoleStubDriver;
  * The PermissionDriver contract test (master plan §12 / H.2): ANY driver that only
  * contributes the actor to the subject-set and adds no roles/override MUST yield
  * the SAME AccessResolver decision on a shared ACL fixture. This is the stub M2b's
- * Gate/Spatie/Azgard drivers reuse — pointing the resolver at each driver over one
+ * Gate/Spatie/AzGuard drivers reuse — pointing the resolver at each driver over one
  * fixture and asserting identical results.
  *
  * The fixture: a writer subtree grant on a parent and an inheritance boundary on its

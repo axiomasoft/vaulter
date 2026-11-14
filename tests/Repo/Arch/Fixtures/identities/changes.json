@@ -143,9 +143,9 @@
         {
             "change": "added",
             "decision": "D22",
-            "id": "config:vaulter-azgard.guard",
+            "id": "config:vaulter-azguard.guard",
             "kind": "config",
-            "reason": "P3.5: explicit AzgardGuard class (providesFromConfig); replaces the container-bound probe of AzgardPermissionDriver::guardFor"
+            "reason": "P3.5: explicit AzGuardGuard class (providesFromConfig); replaces the container-bound probe of AzGuardPermissionDriver::guardFor"
         },
         {
             "change": "redefined",
@@ -178,9 +178,9 @@
         {
             "change": "redefined",
             "decision": "D22",
-            "id": "publish:vaulter-azgard-config",
+            "id": "publish:vaulter-azguard-config",
             "kind": "config",
-            "reason": "P3.4: published by the module kernel from the AzgardModule config declaration instead of the provider"
+            "reason": "P3.4: published by the module kernel from the AzGuardModule config declaration instead of the provider"
         },
         {
             "change": "redefined",

@@ -13,7 +13,7 @@ name: CI
 #   tests.yml test-pgsql (per TestCase schema steps) ....... db (pgsql, schema partitions) + serial (pgsql)
 #   {drive,media,documents}.yml SQLite lane ................ fast, quality (own Pint + PHPStan)
 #   {drive,media,documents}.yml *-pgsql lane ............... db (pgsql) + serial (pgsql)
-#   azgard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
+#   azguard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
 #   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub (+ vue-collaboration, P5.14)
@@ -37,7 +37,7 @@ permissions:
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
   # Laravel 13 pairs with Testbench ^11. One line for every package, including filament.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   changes:
@@ -142,11 +142,11 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      # no tagged release: the bridge pins the commit required in packages/azgard/composer.json (dev-main#<sha>).
+      # no tagged release: the bridge pins the commit required in packages/azguard/composer.json (dev-main#<sha>).
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
         run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
           git init ../azguard
           git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
           git -C ../azguard fetch --depth=1 origin "$sha"
@@ -210,7 +210,7 @@ jobs:
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
         run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
           git init ../azguard
           git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
           git -C ../azguard fetch --depth=1 origin "$sha"
@@ -329,7 +329,7 @@ jobs:
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
         run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
           git init ../azguard
           git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
           git -C ../azguard fetch --depth=1 origin "$sha"

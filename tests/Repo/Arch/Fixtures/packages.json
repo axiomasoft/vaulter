@@ -1,15 +1,15 @@
 {
     "packages": {
-        "azgard": {
-            "composer": "axioma-studio/vaulter-azgard",
+        "azguard": {
+            "composer": "axioma-studio/vaulter-azguard",
             "current_require": [
                 "core",
                 "drive"
             ],
-            "dir": "packages/azgard",
+            "dir": "packages/azguard",
             "exists": true,
             "psr4": {
-                "Vaulter\\Azgard\\": "src/"
+                "Vaulter\\AzGuard\\": "src/"
             },
             "target_require": [
                 "core",

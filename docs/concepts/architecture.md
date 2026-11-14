@@ -117,7 +117,7 @@ any handler's content (`TipTapContent` and friends live in `vaulter-documents`).
 
 ## Domain structure
 
-Ownership follows the Composer graph (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azgard` and
+Ownership follows the Composer graph (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azguard` and
 `filament` build on `drive`) and is recorded in [ADR-0030](/adr/0030-package-ownership-and-schema) and
 [ADR-0031](/adr/0031-collaboration-package-and-durability). **`axioma-studio/vaulter-core`**
 (namespace `Vaulter\`) is the kernel only: it contains no domain table, model or service of a module.
@@ -141,13 +141,13 @@ Ownership follows the Composer graph (`core <- media <- drive <- documents <- co
 | `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`), the document presenter, export, the collaboration contracts (`CollaborationDriver`, `SupportsCollaboration`) and the neutral state contract `State\CollaborativeState` with the pending marker, the content shapes (`Content\OpaqueContent`, `Content\TipTap\*`). |
 | `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Outbound webhooks: endpoints, `WebhookFanoutConsumer` (the `webhooks.fanout` outbox consumer), `WebhookSigner`, the URL guard, retries, the admin HTTP and `vaulter:webhooks:*` commands. Opt-in. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin, built on the drive's authorized Operations. |
-| `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
+| `axioma-studio/vaulter-azguard` | `Vaulter\AzGuard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). `src/api` imports no Vue, editor or realtime packages and nothing from `src/` outside `src/api` (arch test `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
-The metapackage `axioma-studio/vaulter` installs core, media, drive and documents; webhooks, collaboration, azgard and
+The metapackage `axioma-studio/vaulter` installs core, media, drive and documents; webhooks, collaboration, azguard and
 filament are installed separately (see [Installation](/getting-started/installation)). Each package ships its own migrations
 (not published), its own config file (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
-`vaulter-webhooks`, `vaulter-azgard`, `vaulter-filament`) and its own test kit.
+`vaulter-webhooks`, `vaulter-azguard`, `vaulter-filament`) and its own test kit.
 
 ## The Drive handle
 
@@ -248,7 +248,7 @@ Two lanes, evaluated by the Vaulter-owned `AccessResolver` ([ADR-0007](/adr/0007
   never deals in magic-string actions; it answers `resolve(Subject, Authorizable, AccessScope)`,
   `override(...)` (super-admin / `Gate::before`), `subjectsFor(Authorizable)` (actor → users +
   roles + teams) and `canCreateInWorkspace(...)`. Shipped lanes: `database` (default,
-  standalone), `gate`, `spatie`, `azgard`, and the non-prod `null`. Swap via
+  standalone), `gate`, `spatie`, `azguard`, and the non-prod `null`. Swap via
   `config('vaulter-drive.access.permission_driver')`.
 - **`AccessResolver`** — Vaulter-owned, `final`, **not** swappable. It runs the canonical
   algorithm over `v_node_grants` combined with the driver.
@@ -312,7 +312,7 @@ Every seam a host plugs into, and where it is documented:
 | Contract | Bind via | Documented in |
 |---|---|---|
 | `Vaulter\Drive\Contracts\Access\PermissionDriver` | `config('vaulter-drive.access.permission_driver')` | [Recipes — custom permission driver](/guides/recipes#permission-driver) |
-| `Vaulter\Azgard\Contracts\AzgardGuard` | config key `vaulter-azgard.guard` (default: the bridge's adapter) | [Troubleshooting — Azgard morphs](/guides/troubleshooting#azgard-morphs) |
+| `Vaulter\AzGuard\Contracts\AzGuardGuard` | config key `vaulter-azguard.guard` (default: the bridge's adapter) | [Troubleshooting — AzGuard morphs](/guides/troubleshooting#azguard-morphs) |
 | `Vaulter\Media\Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guides/recipes#s3-disk) |
 | `Vaulter\Drive\Contracts\Handlers\FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guides/recipes#format-handler) |
 | `Vaulter\Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
@@ -360,7 +360,7 @@ delegation), **0019 → 0027 → 0030** (who owns what) and **0001 → 0031** (c
 ## Dependency rules and kernel budget
 
 Runtime dependencies point down the package graph: `core ← media ← drive ← documents ← collaboration`;
-webhooks, azgard and filament depend on drive. Core owns generic operations, typed context, module slots,
+webhooks, azguard and filament depend on drive. Core owns generic operations, typed context, module slots,
 idempotency and outbox; Node, Document, Blob, Share and Revision remain in their domain packages.
 A domain table, HTTP endpoint or implicit `class_exists` activation does not belong in core.
 The existing boundary and surface guards enforce these ownership rules.
