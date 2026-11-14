@@ -3,9 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
+use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 it('move = ОДИН UPDATE по parent_id, поддерево не трогается', function (): void {
@@ -45,6 +50,36 @@ it('цикл-гард: запрет перемещения в собственн
 
     expect(fn () => $drive->nodes()->move($a, $child))
         ->toThrow(NodeCycleException::class);
+});
+
+it('цикл-гард: id потомка — суффикс id предка, перенос в потомка не проходит', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $rootId = $drive->model()->root_node_id;
+    $storageId = $drive->model()->getKey();
+    $make = static function (int $id, int|string|null $parentId, string $name) use ($storageId): Node {
+        $node = new Node;
+        $node->forceFill([
+            'id' => $id,
+            'drive_id' => $storageId,
+            'parent_id' => $parentId,
+            'kind' => NodeKind::Folder,
+            'name' => $name,
+        ])->save();
+
+        return $node->refresh();
+    };
+    // 2100 → 50 → 100. The path "2100.50" contains "100.", so the CTE cycle guard drops 100.
+    $ancestor = $make(2100, $rootId, 'ancestor');
+    $make(50, 2100, 'middle');
+    $descendant = $make(100, 50, 'descendant');
+
+    expect(fn () => app(MoveNodeAction::class)->execute(
+        DriveContext::system($drive->model(), 'suffix id cycle'),
+        new MoveNodeInput(node: $ancestor, into: $descendant),
+    ))->toThrow(NodeCycleException::class);
+
+    expect($ancestor->refresh()->parent_id)->toEqual($rootId)
+        ->and($descendant->refresh()->parent_id)->toEqual(50);
 });
 
 it('move отклоняет конфликт имён в месте назначения', function (): void {
