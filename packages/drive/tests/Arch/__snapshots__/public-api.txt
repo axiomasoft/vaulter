@@ -23,7 +23,7 @@ Vaulter\Drive\Contracts\Activity\ActivityOperations
   forNode(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
 
 Vaulter\Drive\Contracts\DownloadGuard
-  check(\Vaulter\Drive\Operations\DriveContext|\Vaulter\Drive\Sharing\ShareContext $context, \Vaulter\Drive\Models\Node $node, \Vaulter\Drive\Models\FileRevision $revision): void
+  check(\Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node, \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot $revision): void
 
 Vaulter\Drive\Contracts\DriveExtension
 
@@ -77,12 +77,12 @@ Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
   resolve(\Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $file, \Vaulter\Drive\Enums\Handlers\Capability $capability = Vaulter\Drive\Enums\Handlers\Capability::Download): \Vaulter\Drive\Contracts\Handlers\FileHandler
 
 Vaulter\Drive\Contracts\Handlers\NodePresenter
-  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|\Vaulter\Drive\Models\Node $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Drive\Contracts\NodeContentLifecycle
-  copy(\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Models\Node $source, \Vaulter\Drive\Models\Node $copy): \Vaulter\Drive\Data\CopyResult
+  copy(\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Data\Snapshots\NodeSnapshot $source, \Vaulter\Drive\Data\Snapshots\NodeSnapshot $copy): \Vaulter\Drive\Data\CopyResult
   kind(): \Vaulter\Drive\Enums\NodeKind
-  purge(\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Models\Node $node): void
+  purge(\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node): void
 
 Vaulter\Drive\Contracts\NodeOperations
   abilities(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Access\ValueObjects\NodeAbilities
@@ -106,7 +106,7 @@ Vaulter\Drive\Contracts\NodeSnapshotContributor
 
 Vaulter\Drive\Contracts\Presentation\KindPresenter
   kind(): \Vaulter\Drive\Enums\NodeKind
-  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|\Vaulter\Drive\Models\Node $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Drive\Contracts\Profiles\ProfileOption
   enabled(): bool
@@ -135,9 +135,9 @@ Vaulter\Drive\Contracts\Uploads\UploadInspector
   priority(): int
 
 Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
-  abort(\Vaulter\Drive\Models\Uploads\UploadSession $session): void
-  initialise(\Vaulter\Drive\Models\Uploads\UploadSession $session): array
-  isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
+  abort(\Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session): void
+  initialise(\Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session): array
+  isComplete(\Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
 Vaulter\Drive\Configuration\AccessConfig
@@ -154,6 +154,8 @@ Vaulter\Drive\Configuration\AccessConfig
   spatieTeamsEnabled(): bool
 
 Vaulter\Drive\Configuration\ChangesConfig
+  cursorMaxAgeSeconds(): int
+  keyGeneration(): int
   maxPageSize(): int
   retentionDays(): int
 
@@ -168,6 +170,7 @@ Vaulter\Drive\Configuration\DriveConfig
   blockedExtensions(): array
   changes(): \Vaulter\Drive\Configuration\ChangesConfig
   chunkSize(): int
+  completeTimeoutSeconds(): int
   defaultQuota(): ?int
   downloads(): \Vaulter\Drive\Configuration\DownloadsConfig
   featureEnabled(string $feature, ?string $profile = null): bool
@@ -236,7 +239,7 @@ Vaulter\Drive\Events\Access\NodeGrantCreated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Access\NodeGrant $grant
+  readonly \Vaulter\Drive\Data\Snapshots\GrantSnapshot $grant
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -253,7 +256,7 @@ Vaulter\Drive\Events\Access\NodeGrantRevoked
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Access\ValueObjects\Subject $subject
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $revoked
   readonly string $correlationId
@@ -270,7 +273,7 @@ Vaulter\Drive\Events\Access\NodeInheritanceChanged
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly bool $inherits
   readonly string $correlationId
@@ -303,7 +306,7 @@ Vaulter\Drive\Events\Drives\DriveArchived
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Drive $drive
+  readonly \Vaulter\Drive\Data\Snapshots\DriveSnapshot $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -319,8 +322,8 @@ Vaulter\Drive\Events\Drives\DriveCreated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Drive $storage
-  readonly \Vaulter\Drive\Models\Node $root
+  readonly \Vaulter\Drive\Data\Snapshots\DriveSnapshot $storage
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $root
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -357,7 +360,7 @@ Vaulter\Drive\Events\Drives\DriveUnarchived
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Drive $drive
+  readonly \Vaulter\Drive\Data\Snapshots\DriveSnapshot $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -373,9 +376,9 @@ Vaulter\Drive\Events\Files\FileRevisionAdded
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\File $file
-  readonly \Vaulter\Drive\Models\FileRevision $version
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\FileHeadSnapshot $file
+  readonly \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot $version
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $versionNo
   readonly string $correlationId
@@ -392,8 +395,8 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\File $file
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\FileHeadSnapshot $file
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $revisionNo
   readonly int $sizeBytes
@@ -412,9 +415,9 @@ Vaulter\Drive\Events\Files\FileUploaded
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\File $file
-  readonly \Vaulter\Drive\Models\FileRevision $version
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\FileHeadSnapshot $file
+  readonly \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot $version
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -430,7 +433,7 @@ Vaulter\Drive\Events\Nodes\FolderCreated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -446,8 +449,8 @@ Vaulter\Drive\Events\Nodes\NodeCopied
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $copy
-  readonly \Vaulter\Drive\Models\Node $source
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $copy
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $source
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -463,7 +466,7 @@ Vaulter\Drive\Events\Nodes\NodeMoved
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int|null|string $fromParentId
   readonly int|null|string $toParentId
@@ -502,7 +505,7 @@ Vaulter\Drive\Events\Nodes\NodeRenamed
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -520,7 +523,7 @@ Vaulter\Drive\Events\Nodes\NodeRestored
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -536,7 +539,7 @@ Vaulter\Drive\Events\Nodes\NodeTrashed
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -552,7 +555,7 @@ Vaulter\Drive\Events\Nodes\NodeUpdated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -568,7 +571,7 @@ Vaulter\Drive\Events\Sharing\NodeShareCreated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -584,7 +587,7 @@ Vaulter\Drive\Events\Sharing\NodeShareRevoked
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -600,7 +603,7 @@ Vaulter\Drive\Events\Sharing\NodeShareRotated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -616,7 +619,7 @@ Vaulter\Drive\Events\Sharing\NodeShareUpdated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly array $changed
   readonly string $correlationId
@@ -633,7 +636,7 @@ Vaulter\Drive\Events\Uploads\UploadAborted
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
+  readonly \Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -649,7 +652,7 @@ Vaulter\Drive\Events\Uploads\UploadExpired
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
+  readonly \Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -665,7 +668,7 @@ Vaulter\Drive\Events\Uploads\UploadInitiated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
+  readonly \Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId

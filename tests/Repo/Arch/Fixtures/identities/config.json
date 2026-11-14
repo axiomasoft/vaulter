@@ -4842,6 +4842,18 @@
             }
         },
         {
+            "config_keys": [],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_TEST_WRITE_GUARD",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Testing/Concerns/UsesSuiteDatabase.php",
+                "symbol": "Vaulter\\Testing\\Concerns\\UsesSuiteDatabase::pinSuiteConnection"
+            }
+        },
+        {
             "config_keys": [
                 "vaulter.observability.tracing.enabled"
             ],

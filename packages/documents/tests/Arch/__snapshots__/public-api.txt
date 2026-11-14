@@ -31,7 +31,7 @@ Vaulter\Documents\Contracts\DocumentType
   viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Contracts\ExportFilenameResolver
-  resolve(\Vaulter\Drive\Models\Node $node, string $extension): string
+  resolve(\Vaulter\Drive\Data\Snapshots\NodeSnapshot $node, string $extension): string
 
 Vaulter\Documents\Contracts\SupportsCollaboration
   collaborationProtocol(): string
@@ -49,7 +49,6 @@ Vaulter\Documents\Configuration\DocumentsConfig
   defaultType(): string
   exporters(): array
   maxContentSizeKb(): int
-  model(string $key): string
   revisionLimit(): int
   tiptapExtraAttributes(): array
   tiptapExtraMarks(): array
@@ -71,7 +70,7 @@ Vaulter\Documents\Events\Comments\CommentAdded
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly \Vaulter\Documents\Data\Snapshots\CommentSnapshot $comment
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -90,7 +89,7 @@ Vaulter\Documents\Events\Comments\CommentDeleted
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly \Vaulter\Documents\Data\Snapshots\CommentSnapshot $comment
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -109,7 +108,7 @@ Vaulter\Documents\Events\Comments\CommentResolved
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly \Vaulter\Documents\Data\Snapshots\CommentSnapshot $comment
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -118,6 +117,7 @@ Vaulter\Documents\Events\Documents\DocumentContentUpdated
   activityContext(): array
   activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
+  documentId(): int|string
   isExternal(): bool
   journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
@@ -125,8 +125,8 @@ Vaulter\Documents\Events\Documents\DocumentContentUpdated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $version
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly bool $created
   readonly int $epoch
@@ -145,8 +145,8 @@ Vaulter\Documents\Events\Documents\DocumentCreated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $version
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $epoch
   readonly int $stateVersion
@@ -157,6 +157,7 @@ Vaulter\Documents\Events\Revisions\DocumentRestored
   activityContext(): array
   activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
+  documentId(): int|string
   isExternal(): bool
   journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
@@ -164,9 +165,9 @@ Vaulter\Documents\Events\Revisions\DocumentRestored
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom
-  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $restoredFrom
+  readonly \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $version
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $epoch
   readonly int $stateVersion
@@ -184,8 +185,8 @@ Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Documents\Enums\DocumentEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
-  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $version
+  readonly \Vaulter\Drive\Data\Snapshots\NodeSnapshot $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly bool $restored
   readonly int $epoch
@@ -406,7 +407,6 @@ Vaulter\Documents\Content\TipTap\TipTapContent
 Vaulter\Documents\Content\TipTap\TipTapCodec
   __construct(\Vaulter\Documents\Content\TipTap\TipTapSchema $schema, ?int $maxSizeBytes = null)
   decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
-  decodeForRead(array $stored): \Vaulter\Documents\Content\ReadContent
   maxSizeBytes(): ?int
   schema(): \Vaulter\Documents\Content\TipTap\TipTapSchema
 
@@ -422,7 +422,7 @@ Vaulter\Documents\Content\TipTap\TipTapSchema
 
 Vaulter\Documents\Presentation\DocumentPresenter
   kind(): \Vaulter\Drive\Enums\NodeKind
-  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|\Vaulter\Drive\Models\Node $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests
   assertDocumentTypeContract(\Vaulter\Documents\Contracts\DocumentType $type, array $historicalFixtures = []): void

@@ -1884,6 +1884,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Configuration/StringList.php",
+            "fqcn": "Vaulter\\Configuration\\StringList",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\StringList",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Configuration\\StringList"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Configuration/TenancyConfig.php",
             "fqcn": "Vaulter\\Configuration\\TenancyConfig",
             "kind": "final-class",
@@ -2724,6 +2738,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Actions/Documents/DocumentWriteLock.php",
+            "fqcn": "Vaulter\\Documents\\Actions\\Documents\\DocumentWriteLock",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Actions\\Documents\\DocumentWriteLock"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
             "fqcn": "Vaulter\\Documents\\Actions\\Documents\\UpdateDocumentContentAction",
             "kind": "final-class",
@@ -3208,7 +3236,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Comments\\DeleteCommentInput"
         },
         {
@@ -3222,7 +3250,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Comments\\ResolveCommentInput"
         },
         {
@@ -3236,7 +3264,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Documents\\CreateDocumentInput"
         },
         {
@@ -3278,7 +3306,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Documents\\UpdateDocumentContentInput"
         },
         {
@@ -3292,7 +3320,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Export\\ExportDocumentInput"
         },
         {
@@ -3306,7 +3334,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Revisions\\CreateNamedRevisionInput"
         },
         {
@@ -3320,7 +3348,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Revisions\\RestoreDocumentRevisionInput"
         },
         {
@@ -3334,7 +3362,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Revisions\\UpdateRevisionRetentionInput"
         },
         {
@@ -3427,12 +3455,12 @@
             "file": "packages/documents/database/factories/DocumentFactory.php",
             "fqcn": "Vaulter\\Documents\\Database\\Factories\\DocumentFactory",
             "kind": "final-class",
-            "note": null,
+            "note": "The factory is Internal after PLAN4.P6.3 snapshot boundaries; it is retained in the legacy testing manifest for drift detection, not a public runtime contract.",
             "owner": "documents",
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Database\\Factories\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Database\\Factories\\DocumentFactory"
         },
         {
@@ -5098,7 +5126,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Access\\PermissionDriverManager"
         },
         {
@@ -5210,7 +5238,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities"
         },
         {
@@ -6462,6 +6490,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Content/VerifiedScanStream.php",
+            "fqcn": "Vaulter\\Drive\\Content\\VerifiedScanStream",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Content\\VerifiedScanStream"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Contracts/Access/AccessOperations.php",
             "fqcn": "Vaulter\\Drive\\Contracts\\Access\\AccessOperations",
             "kind": "interface",
@@ -6932,7 +6974,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Data\\Changes\\ChangePage"
         },
         {
@@ -6946,7 +6988,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Data\\Changes\\NodeChange"
         },
         {
@@ -7030,7 +7072,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Files\\IngestFileInput"
         },
         {
@@ -7044,7 +7086,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Files\\IngestReceipt"
         },
         {
@@ -7058,7 +7100,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Files\\RestoreFileRevisionInput"
         },
         {
@@ -7128,7 +7170,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Nodes\\CopyNodeInput"
         },
         {
@@ -7142,7 +7184,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Nodes\\CreateFolderInput"
         },
         {
@@ -7156,7 +7198,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Nodes\\MoveNodeInput"
         },
         {
@@ -7170,7 +7212,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Nodes\\RenameNodeInput"
         },
         {
@@ -7184,7 +7226,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Nodes\\SetNodePropertiesInput"
         },
         {
@@ -7310,7 +7352,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Data\\Sharing\\ShareLinkUpdate"
         },
         {
@@ -7540,6 +7582,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Data/Snapshots/UploadSessionSnapshot.php",
+            "fqcn": "Vaulter\\Drive\\Data\\Snapshots\\UploadSessionSnapshot",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Data\\Snapshots\\UploadSessionSnapshot"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Data/Snapshots/ViewerStateSnapshot.php",
             "fqcn": "Vaulter\\Drive\\Data\\Snapshots\\ViewerStateSnapshot",
             "kind": "final-class",
@@ -7562,7 +7618,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Trash\\PurgeNodeInput"
         },
         {
@@ -7576,7 +7632,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Trash\\RestoreNodeInput"
         },
         {
@@ -7590,7 +7646,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Trash\\TrashNodeInput"
         },
         {
@@ -7646,7 +7702,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Database\\Factories\\DriveFactory"
         },
         {
@@ -7660,7 +7716,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Database\\Factories\\FileRevisionFactory"
         },
         {
@@ -7674,7 +7730,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Database\\Factories\\NodeFactory"
         },
         {
@@ -7716,7 +7772,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Database\\Factories\\VaulterFactory"
         },
         {
@@ -8052,7 +8108,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Enums\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Enums\\Changes\\ChangeOperation"
         },
         {
@@ -8066,7 +8122,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Enums\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Enums\\Changes\\ChangeReason"
         },
         {
@@ -11216,7 +11272,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Operations\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Operations\\ChangeOperations"
         },
         {
@@ -11286,7 +11342,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Operations\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Operations\\NodeLocator"
         },
         {
@@ -11964,6 +12020,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Repositories/NodeQueryBuilder.php",
+            "fqcn": "Vaulter\\Drive\\Repositories\\NodeQueryBuilder",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Repositories\\NodeQueryBuilder"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Repositories/NodeReadRepository.php",
             "fqcn": "Vaulter\\Drive\\Repositories\\NodeReadRepository",
             "kind": "final-class",
@@ -11974,6 +12044,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Repositories\\NodeReadRepository"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Repositories/NodeSqliteGrammar.php",
+            "fqcn": "Vaulter\\Drive\\Repositories\\NodeSqliteGrammar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Repositories\\NodeSqliteGrammar"
         },
         {
             "action": "keep",
@@ -12910,7 +12994,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget"
         },
         {
@@ -12924,7 +13008,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect"
         },
         {
@@ -13700,6 +13784,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/filament/src/Resources/Concerns/ConfiguresNavigationGroup.php",
+            "fqcn": "Vaulter\\Filament\\Resources\\Concerns\\ConfiguresNavigationGroup",
+            "kind": "trait",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Resources\\Concerns\\ConfiguresNavigationGroup"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/filament/src/Resources/DriveResource.php",
             "fqcn": "Vaulter\\Filament\\Resources\\DriveResource",
             "kind": "final-class",
@@ -13878,6 +13976,20 @@
             "rule": "other-packages:prefix:Vaulter\\Filament\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Filament\\Support\\PanelDrives"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/Support/PanelExpiry.php",
+            "fqcn": "Vaulter\\Filament\\Support\\PanelExpiry",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Support\\PanelExpiry"
         },
         {
             "action": "keep",
@@ -14872,6 +14984,20 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Media\\Contracts\\Cas\\StorageDriver"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Data/Snapshots/BlobSnapshot.php",
+            "fqcn": "Vaulter\\Media\\Data\\Snapshots\\BlobSnapshot",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Media\\Data\\Snapshots\\BlobSnapshot"
         },
         {
             "action": "keep",
@@ -16346,6 +16472,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Testing/Concerns/UsesSuiteDatabase.php",
+            "fqcn": "Vaulter\\Testing\\Concerns\\UsesSuiteDatabase",
+            "kind": "trait",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:prefix:Vaulter\\Testing\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Testing\\Concerns\\UsesSuiteDatabase"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Testing/Concerns/WithoutDatabaseSchema.php",
             "fqcn": "Vaulter\\Testing\\Concerns\\WithoutDatabaseSchema",
             "kind": "trait",
@@ -17656,7 +17796,7 @@
             "package": "webhooks",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Webhooks\\ValueObjects\\PinnedOutboundEndpoint"
         },
         {

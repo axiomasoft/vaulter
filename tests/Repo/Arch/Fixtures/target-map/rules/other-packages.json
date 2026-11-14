@@ -405,7 +405,8 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentFactory is part of the public testing surface"
+            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentFactory is part of the public testing surface",
+            "note": "The factory is Internal after PLAN4.P6.3 snapshot boundaries; it is retained in the legacy testing manifest for drift detection, not a public runtime contract."
         },
         {
             "match": "fqcn",
