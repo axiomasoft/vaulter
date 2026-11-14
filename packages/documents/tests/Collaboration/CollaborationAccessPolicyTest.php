@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
@@ -152,6 +153,18 @@ it('answers the room channel View check by the ordinary resolver and false for a
     expect($policy->canViewDocumentNode($viewer, $this->node->id))->toBeTrue()
         ->and($policy->canViewDocumentNode($stranger, $this->node->id))->toBeFalse()
         ->and($policy->canViewDocumentNode($viewer, 999999))->toBeFalse();
+});
+
+it('treats a node id the key column cannot hold as a missing node', function (): void {
+    $policy = app(CollaborationAccessPolicy::class);
+    $viewer = AccessTestHelpers::user(42);
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    expect($policy->canViewDocumentNode($viewer, 'no-such-node'))->toBeFalse();
+    expect(fn () => $policy->evaluateReference($this->context->actor, $this->node->driveId, 'no-such-node', null, 'ref-bad'))
+        ->toThrow(NodeNotFoundException::class);
+    expect(json_encode(DB::getQueryLog(), JSON_THROW_ON_ERROR))->not->toContain('no-such-node');
 });
 
 it('hides unavailable adapters until View and rejects system principals', function (): void {

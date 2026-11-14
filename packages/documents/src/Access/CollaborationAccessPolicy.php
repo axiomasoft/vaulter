@@ -121,8 +121,7 @@ final readonly class CollaborationAccessPolicy
         if ($actor->isSystem() || $actor->ref()->id === null) {
             throw MissingActorException::required();
         }
-        $model = $this->drives->model('node');
-        $node = $model::query()->find($nodeId);
+        $node = $this->nodeById($nodeId);
         if (!$node instanceof Node
             || Identity::stringify($node->getRawOriginal('drive_id')) !== $driveId
             || $node->trashed_at !== null
@@ -143,10 +142,22 @@ final readonly class CollaborationAccessPolicy
      */
     public function canViewDocumentNode(Authorizable $user, int|string $nodeId): bool
     {
-        $model = $this->drives->model('node');
-        $node = $model::query()->find($nodeId);
+        $node = $this->nodeById($nodeId);
 
         return $node instanceof Node && $node->kind->isDocument() && $this->resolver->can($user, Ability::View, $node);
+    }
+
+    /** A key the id column cannot hold is missing: PostgreSQL rejects the cast instead of returning no row. */
+    private function nodeById(int|string $nodeId): ?Node
+    {
+        $model = $this->drives->model('node');
+        if ($nodeId === '' || !Identity::fitsKey(new $model, $nodeId)) {
+            return null;
+        }
+
+        $node = $model::query()->find($nodeId);
+
+        return $node instanceof Node ? $node : null;
     }
 
     private function document(DriveContext $context, NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node
