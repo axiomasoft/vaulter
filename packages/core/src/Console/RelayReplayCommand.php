@@ -13,8 +13,9 @@ use Vaulter\Events\Outbox\OutboxRelay;
 /**
  * Closes a gap of an outbox consumer (D29): makes the events of [--from, --to] that retention still holds pending
  * again for the consumer (done and dead rows included, with a fresh attempt budget) and acknowledges the gaps the
- * range covers. --ack-only acknowledges the loss without a replay. Exits 1 when part of the range is no longer in
- * the outbox, and prints the range it covered.
+ * range covers. A leased row is left to its worker and the gap stays open while one remains. --ack-only
+ * acknowledges the loss without a replay. Exits 1 when part of the range is no longer in the outbox, and prints
+ * the range it covered.
  */
 #[Internal]
 final class RelayReplayCommand extends Command

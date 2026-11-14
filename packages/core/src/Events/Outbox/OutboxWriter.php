@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Events\Outbox;
 
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Events\DomainEvent;
@@ -31,6 +34,7 @@ final readonly class OutboxWriter
     public function __construct(
         private VaulterConfig $config,
         private DatabaseConfig $tables,
+        private IdsConfig $ids,
         private Kernel $kernel,
         private Container $container,
         private MetricsRecorder $metrics,
@@ -42,6 +46,8 @@ final readonly class OutboxWriter
             name: 'vaulter_outbox_stage_duration_seconds',
             operation: function () use ($event, $writer): SinkResult {
                 $scope = $event->scope();
+                // PostgreSQL aborts the operation transaction when this value cannot be cast into the host-key column.
+                $this->guardTenantId($scope->tenantId, $writer->connection()->getDriverName());
                 $subject = $event->subject();
                 $seq = $writer->shared(SinkWriter::JOURNAL_SEQ);
                 $now = now();
@@ -89,6 +95,46 @@ final readonly class OutboxWriter
                 return SinkResult::Stored;
             },
         );
+    }
+
+    /**
+     * Null fits the nullable column. Anything else must match the column {@see IdsConfig::hostKeys()} builds:
+     * varchar(64), a non-negative bigint (signed on PostgreSQL, unsigned on MySQL), a uuid, or char(26).
+     * A value that already fits is stored unchanged.
+     */
+    private function guardTenantId(?string $tenantId, string $driver): void
+    {
+        if ($tenantId === null || $this->tenantFits($tenantId, $driver)) {
+            return;
+        }
+
+        throw new InvalidArgumentException('[Vaulter] The tenant id does not fit ids.host_keys ['.$this->ids->hostKeys().'].');
+    }
+
+    private function tenantFits(string $tenantId, string $driver): bool
+    {
+        return match ($this->ids->hostKeys()) {
+            'string' => strlen($tenantId) <= 64,
+            'bigint' => self::fitsBigint($tenantId, $driver),
+            'uuid' => Str::isUuid($tenantId),
+            'ulid' => strlen($tenantId) <= 26,
+        };
+    }
+
+    /** Non-negative digits, capped at the signed bigint maximum, or the unsigned maximum on MySQL. */
+    private static function fitsBigint(string $tenantId, string $driver): bool
+    {
+        if (preg_match('/^[0-9]{1,20}$/', $tenantId) !== 1) {
+            return false;
+        }
+        $max = in_array($driver, ['mysql', 'mariadb'], true) ? '18446744073709551615' : '9223372036854775807';
+        $normalized = ltrim($tenantId, '0');
+        if ($normalized === '') {
+            return true;
+        }
+
+        return strlen($normalized) < strlen($max)
+            || (strlen($normalized) === strlen($max) && strcmp($normalized, $max) <= 0);
     }
 
     /**
