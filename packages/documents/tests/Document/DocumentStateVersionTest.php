@@ -8,6 +8,7 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
+use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
@@ -18,6 +19,8 @@ use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\StateWrites;
+use Vaulter\Documents\Tests\Types\TypesTestCase;
+use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
@@ -41,13 +44,24 @@ function stateVersionDocument(): Node
 }
 
 it('starts at one and counts each changed write once; an identical write is a no-op', function (): void {
-    $node = stateVersionDocument();
+    // Collaborative JSON saves reseed even identical content. This case exercises
+    // the noncollaborative no-op; CollaborationBindingTransitionTest pins the fence.
+    TypesTestCase::installTypes([SpreadsheetDocumentType::class]);
+    $drive = DocumentTestHelpers::drive();
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive), new CreateDocumentInput(
+        storage: $drive->model(),
+        name: 'Noncollaborative state version',
+        content: OpaqueContent::fromArray(['cells' => ['initial']]),
+        parent: DriveTestHelpers::model($drive->root()),
+        type: SpreadsheetDocumentType::KEY,
+    ));
     $action = app(UpdateDocumentContentAction::class);
     expect(DocumentTestHelpers::document($node)->state_version)->toBe(1);
 
-    $first = $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('first'), expectedStateVersion: 1));
+    $content = OpaqueContent::fromArray(['cells' => ['first']]);
+    $first = $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: $content, expectedStateVersion: 1));
     Event::fake([DocumentContentUpdated::class]);
-    $same = $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('first'), expectedStateVersion: 2));
+    $same = $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: $content, expectedStateVersion: 2));
 
     expect($first->changed)->toBeTrue()
         ->and($first->document->state_version)->toBe(2)
