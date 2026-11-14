@@ -7,12 +7,12 @@ namespace Vaulter\Documents\Actions\Comments;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentReadRepository;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
-use Vaulter\Support\Identity;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -20,6 +20,7 @@ use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Support\Identity;
 
 /**
  * Add a comment to a node (docs/adr/0014-legacy-docvault-strangler.md шаг 1). The author is the operation's actor — a
@@ -44,6 +45,7 @@ final readonly class AddCommentAction
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, Node $node, AddCommentInput $data): NodeComment
@@ -74,7 +76,7 @@ final readonly class AddCommentAction
                 'version' => 0,
             ]);
             $comment->setRelation('node', $current);
-            $this->recorder->record(new CommentAdded(comment: $comment, actor: $author, correlationId: $context->correlationId));
+            $this->recorder->record(new CommentAdded(comment: $comment, actor: $author, correlationId: $context->correlationId, documents: $this->documentSnapshots));
 
             return $comment;
         });

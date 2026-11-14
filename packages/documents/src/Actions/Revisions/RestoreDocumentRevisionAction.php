@@ -12,6 +12,7 @@ use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
@@ -19,6 +20,7 @@ use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\State\PendingStateGuard;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Events\EventRecorder;
@@ -45,6 +47,8 @@ final readonly class RestoreDocumentRevisionAction
         private EventRecorder $recorder,
         private PendingStateGuard $pending,
         private DocumentWriteLock $writeLock,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
@@ -92,6 +96,8 @@ final readonly class RestoreDocumentRevisionAction
                 restored: true,
                 actor: $context->actor->ref(),
                 correlationId: $context->correlationId,
+                nodes: $this->nodeSnapshots,
+                documents: $this->documentSnapshots,
             ));
             $this->recorder->record(new DocumentRestored(
                 node: $node,
@@ -101,6 +107,8 @@ final readonly class RestoreDocumentRevisionAction
                 stateVersion: $result->document->state_version,
                 actor: $context->actor->ref(),
                 correlationId: $context->correlationId,
+                nodes: $this->nodeSnapshots,
+                documents: $this->documentSnapshots,
             ));
 
             return $revision;

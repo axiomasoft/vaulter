@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Comments;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\DeleteCommentInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -35,6 +36,7 @@ final readonly class DeleteCommentAction
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
         private AggregateVersion $versions,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, DeleteCommentInput $data): void
@@ -54,7 +56,7 @@ final readonly class DeleteCommentAction
 
             $this->comments->delete($row);
             $row->setRelation('node', $current);
-            $this->recorder->record(new CommentDeleted(comment: $row, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new CommentDeleted(comment: $row, actor: $context->actor->ref(), correlationId: $context->correlationId, documents: $this->documentSnapshots));
         });
     }
 }

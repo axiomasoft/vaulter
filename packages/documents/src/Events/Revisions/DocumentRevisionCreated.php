@@ -48,14 +48,16 @@ final readonly class DocumentRevisionCreated extends DriveEvent
         public bool $restored,
         ActorRef $actor,
         string $correlationId,
+        NodeSnapshotMapper $nodes,
+        DocumentSnapshotMapper $documents,
         ?string $eventId = null,
         ?CarbonImmutable $occurredAt = null,
     ) {
         // The public facts are captured here, in the transaction that raised the event; the hooks keep the row.
         $this->nodeRow = $node;
-        $this->node = app(NodeSnapshotMapper::class)->facts($node);
+        $this->node = $nodes->facts($node);
         $this->versionRow = $version;
-        $this->version = app(DocumentSnapshotMapper::class)->revision($version, $version->document()->firstOrFail());
+        $this->version = $documents->revision($version, $version->document()->firstOrFail());
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 

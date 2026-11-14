@@ -9,8 +9,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Events\EventRecorder;
@@ -31,6 +33,8 @@ final readonly class CreateNamedRevisionAction
         private VaulterDatabase $database,
         private EventRecorder $recorder,
         private DocumentWriteLock $writeLock,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     public function execute(DriveContext $context, CreateNamedRevisionInput $data): DocumentRevision
@@ -61,6 +65,8 @@ final readonly class CreateNamedRevisionAction
                 restored: false,
                 actor: $context->actor->ref(),
                 correlationId: $context->correlationId,
+                nodes: $this->nodeSnapshots,
+                documents: $this->documentSnapshots,
             ));
 
             return $revision;

@@ -14,6 +14,7 @@ use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
@@ -21,6 +22,7 @@ use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\State\PendingStateGuard;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Events\EventRecorder;
@@ -49,6 +51,8 @@ final readonly class UpdateDocumentContentAction
         private EventRecorder $recorder,
         private PendingStateGuard $pending,
         private DocumentWriteLock $writeLock,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
     /**
@@ -102,6 +106,8 @@ final readonly class UpdateDocumentContentAction
                     epoch: $result->document->collab_epoch,
                     actor: $context->actor->ref(),
                     correlationId: $context->correlationId,
+                    nodes: $this->nodeSnapshots,
+                    documents: $this->documentSnapshots,
                 ));
             }
 

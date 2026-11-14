@@ -16,6 +16,7 @@ use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
@@ -23,6 +24,7 @@ use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
@@ -56,6 +58,8 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         private DocumentStateWriter $writer,
         private ContentDecoder $decoder,
         private EventRecorder $recorder,
+        private NodeSnapshotMapper $nodeSnapshots,
+        private DocumentSnapshotMapper $documentSnapshots,
     ) {
         $this->issued = new WeakMap;
     }
@@ -191,6 +195,8 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
                 epoch: $document->collab_epoch,
                 actor: $publication->actor ?? Actor::system('collaboration checkpoint')->ref(),
                 correlationId: (string) Str::ulid(),
+                nodes: $this->nodeSnapshots,
+                documents: $this->documentSnapshots,
             ));
         }
 
@@ -243,10 +249,12 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         $this->recorder->record(new DocumentRevisionCreated(
             node: $node, version: $revision, stateVersion: $document->state_version, epoch: $document->collab_epoch,
             restored: false, actor: $transition->actor, correlationId: $transition->correlationId,
+            nodes: $this->nodeSnapshots, documents: $this->documentSnapshots,
         ));
         $this->recorder->record(new DocumentContentUpdated(
             node: $node, version: $revision, created: true, stateVersion: $document->state_version,
             epoch: $document->collab_epoch, actor: $transition->actor, correlationId: $transition->correlationId,
+            nodes: $this->nodeSnapshots, documents: $this->documentSnapshots,
         ));
 
         return new CheckpointOutcome(true, true, $document->collab_epoch, $document->state_version, null);
