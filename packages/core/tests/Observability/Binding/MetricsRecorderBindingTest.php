@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\AssertionFailedError;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Testing\FakeMetricsRecorder;
@@ -97,3 +98,48 @@ it('normalizes bool labels to true and false strings', function (): void {
 
     expect($fake->emissions()[0]['labels'])->toBe(['filtered' => 'true', 'tier' => 'M']);
 });
+
+it('registers a successful metrics check as a PHPUnit assertion', function (string $type, string $assertion): void {
+    $fake = new FakeMetricsRecorder;
+    $fake->{$type}(name: 'metric', value: 1, labels: ['tier' => 'S']);
+
+    $fake->{$assertion}(name: 'metric', labels: ['tier' => 'S']);
+})->with([
+    'gauge' => ['gauge', 'assertGauge'],
+    'histogram' => ['histogram', 'assertHistogram'],
+]);
+
+it('registers a successful counter check as a PHPUnit assertion', function (): void {
+    $fake = new FakeMetricsRecorder;
+    $fake->counter(name: 'metric', labels: ['tier' => 'S']);
+
+    $fake->assertCounter(name: 'metric', labels: ['tier' => 'S']);
+});
+
+it('asserts a matching metric whose label contains arbitrary bytes', function (): void {
+    $fake = new FakeMetricsRecorder;
+    $fake->counter(name: 'metric', labels: ['source' => "\xff"]);
+
+    $fake->assertCounter(name: 'metric', labels: ['source' => "\xff"]);
+});
+
+it('reports an unmatched byte label as an assertion failure with a readable diagnostic', function (): void {
+    $fake = new FakeMetricsRecorder;
+    $fake->counter(name: 'metric', labels: ['source' => 'stored']);
+
+    expect(fn () => $fake->assertCounter(name: 'metric', labels: ['source' => "\xff"]))
+        ->toThrow(AssertionFailedError::class, 'Expected counter emission for metric with labels {"source":"\ufffd"}');
+});
+
+it('fails a metrics assertion when no emission matches its type, name and exact labels', function (string $assertion, string $name, ?array $labels): void {
+    $fake = new FakeMetricsRecorder;
+    $fake->counter(name: 'metric', labels: ['tier' => 'S', 'outcome' => 'ok']);
+
+    expect(fn () => $fake->{$assertion}(name: $name, labels: $labels))
+        ->toThrow(AssertionFailedError::class, 'Expected ');
+})->with([
+    'wrong type' => ['assertHistogram', 'metric', null],
+    'missing name' => ['assertCounter', 'missing', null],
+    'different labels' => ['assertCounter', 'metric', ['tier' => 'M', 'outcome' => 'ok']],
+    'partial labels' => ['assertCounter', 'metric', ['tier' => 'S']],
+]);
