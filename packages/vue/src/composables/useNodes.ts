@@ -26,8 +26,9 @@ export interface UseNodesReturn {
   loading: Ref<boolean>
   error: Ref<unknown>
   /**
-   * Set when a mutation answered 412: the node was re-read (the list already shows its
-   * current state) and the user has to look again before retrying. Cleared by the next mutation.
+   * Set when a mutation answered 412 and the list now shows what the server has: the re-read
+   * node, or no row when that read was 404 or 403. A 401 or a network failure on the re-read
+   * leaves this null and keeps the row. Cleared by the next mutation.
    */
   conflict: ShallowRef<NodeConflict | null>
   /** (Re)load the current folder's first page. */
@@ -183,18 +184,24 @@ export function useNodes(
       return await run()
     } catch (caught) {
       if (isStaleError(caught)) {
+        // `conflict` means the list matches the server. A 401 or a dropped connection does not.
+        let reloaded = false
         try {
           replace(await client.nodes.get(node.id))
+          reloaded = true
         } catch (readError) {
-          // Only a missing or forbidden node leaves the list. A 503 or a network
-          // error on the re-read must not pretend the file was deleted.
+          // Only a missing or forbidden node leaves the list. A 401, a 503 or a network
+          // error keeps the row: the file was not deleted and was not reloaded.
           if (readError instanceof VaulterApiError && (readError.status === 404 || readError.status === 403)) {
             drop(node.id)
+            reloaded = true
           } else {
             error.value = readError
           }
         }
-        conflict.value = { nodeId: node.id, error: caught }
+        if (reloaded) {
+          conflict.value = { nodeId: node.id, error: caught }
+        }
       }
       throw caught
     }
