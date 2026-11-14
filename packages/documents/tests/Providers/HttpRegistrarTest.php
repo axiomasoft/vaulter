@@ -6,6 +6,7 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Documents\DocumentsModule;
+use Vaulter\Documents\Http\Controllers\Documents\CreateCollaborationSessionController;
 use Vaulter\Documents\Http\Controllers\Documents\UpdateDocumentContentController;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
@@ -33,8 +34,9 @@ it('declares the existing route file during package configuration and mounts ins
             ->and($route->middleware())->toContain('host.auth')
             // A disabled feature never unregisters a route: the operations refuse it.
             ->and($routes->contains(fn ($route): bool => $route->getName() === 'vaulter.v1.comments.index'))->toBeTrue()
-            // The realtime session and the hub stack are the routes of the collaboration package, not of this one.
-            ->and($routes->contains(fn ($route): bool => str_contains((string) $route->getName(), 'collaboration')))->toBeFalse();
+            // Documents owns protocol-neutral issuance; transport hub routes belong to the adapter.
+            ->and($routes->first(fn ($route): bool => $route->getName() === 'vaulter.v1.documents.collaboration.session')?->getActionName())->toBe(CreateCollaborationSessionController::class)
+            ->and($routes->contains(fn ($route): bool => str_starts_with((string) $route->getName(), 'vaulter.v1.collaboration.hub.')))->toBeFalse();
     } finally {
         Route::swap($original);
     }
