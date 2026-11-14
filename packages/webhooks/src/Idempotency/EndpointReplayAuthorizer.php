@@ -33,7 +33,7 @@ final readonly class EndpointReplayAuthorizer implements ReplayAuthorizer
 
     public function scope(mixed $result): ResourceRef
     {
-        // The tenant the right was proven in (the caller's now), not the endpoint's: a pre-tenancy endpoint has none.
+        // The tenant scope in which the caller proved the management right.
         $tenant = $result instanceof EndpointDeleteReceipt ? $result->tenantId : $this->currentTenant();
 
         return new ResourceRef(self::COLLECTION, $tenant ?? self::ALL);

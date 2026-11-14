@@ -38,6 +38,12 @@ The schema is migrated whether the module is active or not, and switching it off
 the module and its tables use `php artisan vaulter:module:uninstall webhooks` (a dry run by default; `--force`
 rolls the migrations back once the tables are empty, `--purge` deletes the rows first).
 
+With strict tenancy enabled, management lists and requests expose only the current tenant's endpoints. Endpoints
+with no tenant, including subscriptions created before tenancy was enabled, answer 404 to tenant managers. Assign
+their tenant explicitly in an administrative data migration, validating any drive filter against that tenant.
+Ordinary updates preserve ownership. Without strict tenancy, existing management access remains available.
+Delivery scope is unchanged: an endpoint without a tenant receives only events without a tenant.
+
 ## Development in the monorepo
 
 The package lives in `packages/webhooks` and is split to the `axioma-studio/vaulter-webhooks` repository by

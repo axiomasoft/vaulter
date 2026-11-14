@@ -13,6 +13,7 @@ use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\Data\UpdateWebhookEndpointInput;
+use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookDeliveryStoreRepository;
 use Vaulter\Webhooks\Repositories\WebhookEndpointStoreRepository;
@@ -25,9 +26,9 @@ use Vaulter\Webhooks\Repositories\WebhookEndpointStoreRepository;
  * deliveries as dead, as DeactivateWebhookEndpointAction does; switching it on clears
  * the failure run and the disable reason.
  *
- * The endpoint is (re)assigned to the current tenant, as at registration, so a
- * pre-tenancy endpoint (tenant null) is brought into its manager's tenant by any
- * update. A new drive filter must name a drive visible in that tenant.
+ * An update keeps the endpoint's tenant. Under strict tenancy the locked row must belong to the current tenant;
+ * assigning legacy endpoints to a tenant requires an explicit administrative migration. A new drive filter must
+ * name a drive visible in the current tenant.
  *
  * Authorization is enforced by the caller before the Action runs.
  */
@@ -49,6 +50,10 @@ final readonly class UpdateWebhookEndpointAction
             // Decide from the row as it is now, not from the copy the caller loaded earlier: a
             // stale "inactive" copy would skip killing the deliveries created since.
             $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
+            $tenant = TenancyBoundary::normalize($endpoint->tenant_id);
+            if ($this->tenancy->enforced() && $tenant !== $this->tenancy->current()) {
+                throw WebhookEndpointNotFoundException::forId(Identity::stringify($endpoint->getKey()));
+            }
             // CC1: the version the caller read is compared on the locked row.
             $this->versions->assertExpected($endpoint, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
             $wasActive = $endpoint->is_active;
@@ -58,7 +63,7 @@ final readonly class UpdateWebhookEndpointAction
                 url: $data->url,
                 events: $data->events,
                 isActive: $data->isActive,
-                tenantId: $this->tenancy->enforced() ? $this->tenancy->current() : null,
+                tenantId: $tenant,
                 driveId: $data->driveId === null ? null : $this->visibleDrive(driveId: $data->driveId),
             );
 

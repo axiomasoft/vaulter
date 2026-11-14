@@ -16,8 +16,8 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
  * admin listing + single lookup for the management surface. Authorization is the
  * controller's job (a global manage ability); this repository only shapes queries.
  *
- * Under strict tenancy a caller sees the endpoints of the current tenant and those registered before tenancy (no
- * tenant); an endpoint of another tenant is as unknown as a missing one (R2, P6.11).
+ * Under strict tenancy a caller sees only the endpoints of the current tenant. An endpoint without a tenant,
+ * or of another tenant, is as unknown as a missing one.
  */
 #[Internal]
 final readonly class WebhookEndpointReadRepository
@@ -63,11 +63,7 @@ final readonly class WebhookEndpointReadRepository
         $column = $query->getModel()->qualifyColumn('tenant_id');
         $driver = $query->getModel()->getConnection()->getDriverName();
 
-        return $query->where(static function (Builder $visible) use ($tenant, $column, $driver): void {
-            $visible->where(static function (Builder $same) use ($tenant, $column, $driver): void {
-                $same->where($column, $tenant)
-                    ->whereRaw(new TenantIdentityPredicate($column, $driver), [$tenant]);
-            })->orWhereNull($column);
-        });
+        return $query->where($column, $tenant)
+            ->whereRaw(new TenantIdentityPredicate($column, $driver), [$tenant]);
     }
 }
