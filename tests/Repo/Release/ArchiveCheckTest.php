@@ -104,6 +104,7 @@ it('reads canonical prepared ZIP bytes from a dirty isolated snapshot', function
     $manifest = json_decode((string) file_get_contents($root.'/release/packages.json'), true);
     $manifest['php'] = [['name' => 'fixture/package', 'path' => 'packages/core', 'split' => 'fixture/package', 'channel' => 'public', 'release_line' => 'php-public', 'tag_prefix' => 'v', 'metapackage' => true]];
     file_put_contents($temp.'/release/packages.json', json_encode($manifest));
+    copy($root.'/SECURITY.md', $temp.'/SECURITY.md');
     file_put_contents($temp.'/packages/core/composer.json', ac_files(true)['composer.json']);
     file_put_contents($temp.'/packages/core/.gitattributes', '/.gitattributes export-ignore');
     try {
