@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Rules\CommentAnchorBounds;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -24,7 +25,7 @@ final class AddCommentRequest extends VaulterFormRequest
         return [
             'body' => ['required', 'string', 'max:5000'],
             'parent_id' => ['nullable', 'string', 'max:191'],
-            'anchor' => ['nullable', 'array'],
+            'anchor' => ['nullable', 'array', new CommentAnchorBounds],
         ];
     }
 

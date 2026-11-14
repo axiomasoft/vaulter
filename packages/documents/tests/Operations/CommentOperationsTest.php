@@ -75,6 +75,25 @@ it('refuses a comment from the system: nobody to attribute it to', function (): 
     expect(fn () => Documents::comments($handle)->add($node->id, new AddCommentInput('system')))->toThrow(MissingActorException::class);
 });
 
+it('refuses oversized, deeply nested or invalid UTF-8 anchors through the PHP operation', function (string $case): void {
+    [$handle, $node] = commentsFixture();
+    $alice = commenter($handle, $node, RoleRegistry::COMMENTER, 1);
+    $anchor = match ($case) {
+        'bytes' => ['value' => str_repeat('a', 16373)],
+        'utf8' => ['value' => "\xff"],
+        default => ['offset' => 1],
+    };
+    if ($case === 'depth') {
+        for ($level = 1; $level < 17; $level++) {
+            $anchor = ['range' => $anchor];
+        }
+    }
+
+    expect(fn () => Documents::comments($alice)->add($node->id, new AddCommentInput('invalid', anchor: $anchor)))
+        ->toThrow(InvalidArgumentException::class);
+    expect(NodeComment::query()->count())->toBe(0);
+})->with(['bytes', 'depth', 'utf8']);
+
 it('lists a thread oldest first in pages', function (): void {
     [$handle, $node] = commentsFixture();
     $alice = commenter($handle, $node, RoleRegistry::COMMENTER, 1);
