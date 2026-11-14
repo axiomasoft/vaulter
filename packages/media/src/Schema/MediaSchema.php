@@ -77,7 +77,7 @@ final class MediaSchema implements ModuleSchema
         // scope's live bytes. BlobScope bounds canonical keys below 255 bytes;
         // VARCHAR keeps the full-value UNIQUE portable to MySQL without a lossy
         // prefix index or a hash surrogate.
-        $table->string('storage_key');
+        $this->exactKeyColumn($table, 'storage_key', 255);
 
         // Blob state machine (logic is; the columns exist now): pending →
         // committed → tombstoned → deleting → deleted. No standalone index on
@@ -102,7 +102,7 @@ final class MediaSchema implements ModuleSchema
         $table->timestamp('committed_at')->nullable();
         $table->timestamp('delete_after_at')->nullable();
 
-        $table->string('scope_key', 191);
+        $this->exactKeyColumn($table, 'scope_key', 191);
         $name = $table->getTable();
         $table->unique(['scope_key', 'sha256'], $name.'_scope_sha_uniq');
         $table->unique('storage_key', $name.'_storage_key_uniq');
@@ -111,6 +111,18 @@ final class MediaSchema implements ModuleSchema
         $table->index(['status', 'ref_count', 'delete_after_at'], $name.'_gc_idx');
         // Scrub scan support: the least recently verified blobs first.
         $table->index('integrity_checked_at', $name.'_integrity_idx');
+    }
+
+    /** Scope identifiers and object keys are opaque: case, accents and trailing spaces are significant. */
+    private function exactKeyColumn(Blueprint $table, string $name, int $length): void
+    {
+        $column = $table->string($name, $length);
+        if ($this->helpers->dbConnection()->getDriverName() === 'mysql') {
+            $column->charset('utf8mb4')->collation('utf8mb4_0900_bin');
+
+            return;
+        }
+        $column->collation($this->helpers->dbConnection()->getDriverName() === 'pgsql' ? 'C' : 'BINARY');
     }
 
     /**

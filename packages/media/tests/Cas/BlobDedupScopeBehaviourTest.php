@@ -64,6 +64,22 @@ it('tenant: одинаковые байты в разных тенантах →
         ->and(Storage::disk('local')->allFiles())->toHaveCount(2);
 });
 
+it('keeps opaque tenant scopes byte exact under the database collation', function (string $first, string $second): void {
+    $store = app(BlobStore::class);
+    $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same scoped bytes'), BlobScope::tenant($first)));
+    $b = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same scoped bytes'), BlobScope::tenant($second)));
+    $repeated = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same scoped bytes'), BlobScope::tenant($first)));
+
+    expect($a->id)->not->toBe($b->id)->and($repeated->id)->toBe($a->id)
+        ->and($a->scope_key)->toBe('tenant:'.$first)->and($b->scope_key)->toBe('tenant:'.$second)
+        ->and($a->storage_key)->not->toBe($b->storage_key)->and(Blob::query()->count())->toBe(2)
+        ->and(Storage::disk('local')->allFiles())->toHaveCount(2);
+})->with([
+    'ASCII case' => ['Acme', 'acme'],
+    'Unicode case' => ['Équipe', 'équipe'],
+    'trailing space' => ['Acme', 'Acme '],
+]);
+
 it('storage: одинаковые байты в разных хранилищах → ДВА блоба', function (): void {
     config()->set('vaulter-media.dedup.scope', 'drive');
     $store = app(BlobStore::class);
