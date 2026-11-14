@@ -54,6 +54,28 @@ function fenceRows(string $entity): int
     return DB::table(app(DatabaseConfig::class)->table($entity))->count();
 }
 
+/** @return array<string, mixed> */
+function fenceStoredAttributes(Node $node): array
+{
+    return array_map(static function (mixed $value): mixed {
+        if (!is_resource($value)) {
+            return $value;
+        }
+        // PDO returns bytea as a fresh stream on each read: compare every stored byte, not resource identities.
+        $position = ftell($value);
+        $seekable = stream_get_meta_data($value)['seekable'];
+        try {
+            $bytes = stream_get_contents($value, offset: $seekable ? 0 : -1);
+        } finally {
+            if ($seekable && $position !== false) {
+                fseek($value, $position);
+            }
+        }
+
+        return $bytes === false ? throw new RuntimeException('Unable to read stored aggregate bytes.') : $bytes;
+    }, Hub::aggregate($node)->getAttributes());
+}
+
 beforeEach(function (): void {
     Hub::configure();
     $this->node = Hub::document();
@@ -130,10 +152,10 @@ it('refuses incompatible stored schema or format on load and lease with or witho
         fenceAppend($this->node, 0, 'tail');
     }
     app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill([$field => $value])->save());
-    $before = Hub::aggregate($this->node)->getAttributes();
+    $before = fenceStoredAttributes($this->node);
     Hub::call('load', ['room' => Hub::room($this->node)], Hub::token($this->node))->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
     expect(fn () => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
-    expect(Hub::aggregate($this->node)->getAttributes())->toBe($before)
+    expect(fenceStoredAttributes($this->node))->toBe($before)
         ->and(fenceRows('collaboration_updates'))->toBe(1);
 })->with(['pre-seed schema' => [false, 'schema_version', 2], 'checkpoint schema' => [true, 'schema_version', 2], 'pre-seed format' => [false, 'collab_state_format', 'unsupported-v2'], 'checkpoint format' => [true, 'collab_state_format', 'unsupported-v2']]);
 
@@ -154,7 +176,7 @@ it('never serves or leases old bytes under a newly installed type schema or form
         fenceAppend($node, 0, 'accepted-tail');
     }
     $token = Hub::token($node);
-    $before = Hub::aggregate($node)->getAttributes();
+    $before = fenceStoredAttributes($node);
     if ($changed === 'schema') {
         $type->version = 2;
     } else {
@@ -177,7 +199,7 @@ it('never serves or leases old bytes under a newly installed type schema or form
     }
     Hub::call('load', ['room' => Hub::room($node)], $token)->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
     expect(fn () => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
-    expect(Hub::aggregate($node)->getAttributes())->toBe($before)->and(Hub::aggregate($node)->schema_version)->toBe(1)->and(Hub::aggregate($node)->collab_state_format)->toBe('yjs-update-v1');
+    expect(fenceStoredAttributes($node))->toBe($before)->and(Hub::aggregate($node)->schema_version)->toBe(1)->and(Hub::aggregate($node)->collab_state_format)->toBe('yjs-update-v1');
 })->with(['pre-seed schema change' => [false, 'schema'], 'checkpoint schema change' => [true, 'schema'], 'pre-seed format change' => [false, 'format'], 'checkpoint format change' => [true, 'format']]);
 
 it('serves Markdown session load lease checkpoint and drain for both checkpoint states', function (bool $checkpoint): void {
