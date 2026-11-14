@@ -528,7 +528,8 @@ describe('neutral session preflight', () => {
     { endpoint: 'https://hub.test' }, { options: {} }, { options: { room: null } },
     { options: { room: [] } }, { options: { room: '   ', drive_id: '7' } },
     { options: { room: 'valid', drive_id: 7 } }, { mode: 'rw' }, { generation: 0.5 },
-    { schema_version: 0 },
+    { schema_version: 0 }, { node_id: '' }, { node_id: '99' },
+    { options: { room: 'vaulter.documents.7.99.0', drive_id: '7' } },
   ])('refuses invalid wire before constructing a provider: %j', async (invalid) => {
     const session = { ...hocuspocusSession(), ...invalid } as CollaborationSession
     const factory = vi.fn()
@@ -536,6 +537,21 @@ describe('neutral session preflight', () => {
     await expect(vm.connect()).rejects.toThrow()
     expect(factory).not.toHaveBeenCalled()
     expect(vm.error.value).toBeInstanceOf(Error)
+    expect(vm.connected.value).toBe(false)
+    vm.dispose()
+  })
+
+  it('refuses a session minted for another document before any append can reach its room', async () => {
+    const session = hocuspocusSession({
+      node_id: '99',
+      options: { room: 'vaulter.documents.7.99.0', drive_id: '7' },
+    })
+    const factory = vi.fn()
+    const vm = collaboration(vi.fn().mockResolvedValue(session), { providers: { createHocuspocusProvider: factory } })
+
+    await expect(vm.connect()).rejects.toThrow(/another document/)
+    expect(factory).not.toHaveBeenCalled()
+    expect(vm.handle.value).toBeNull()
     expect(vm.connected.value).toBe(false)
     vm.dispose()
   })

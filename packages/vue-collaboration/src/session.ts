@@ -31,6 +31,10 @@ export async function fetchCollaborationSession(
     options.supportedSchemaVersion === undefined ? undefined : { schemaVersion: options.supportedSchemaVersion },
   )
   validateCollaborationSession(session)
+  // A coherent session for a different document must not be opened: its room is where appends go.
+  if (session.node_id !== nodeId) {
+    throw new Error('Collaboration session is for another document')
+  }
   const schemaOutdated = options.supportedSchemaVersion !== undefined
     && session.schema_version > options.supportedSchemaVersion
 
@@ -52,12 +56,23 @@ export function validateCollaborationSession(session: CollaborationSession): { e
     throw new Error('Invalid collaboration endpoint')
   }
   const room = session.options?.room
-  if (typeof room !== 'string' || room.trim() === '' || typeof session.options?.drive_id !== 'string') {
+  const driveId = session.options?.drive_id
+  if (typeof room !== 'string' || room.trim() === '' || typeof driveId !== 'string' || driveId === '') {
     throw new Error('Invalid collaboration options')
   }
   if (!['read', 'write'].includes(session.mode) || !Number.isInteger(session.generation)
-      || session.generation < 0 || !Number.isInteger(session.schema_version) || session.schema_version < 1) {
+      || session.generation < 0 || !Number.isInteger(session.schema_version) || session.schema_version < 1
+      || typeof session.node_id !== 'string' || session.node_id === '') {
     throw new Error('Invalid collaboration session')
+  }
+  // Appends follow the room, not the node the editor asked for. The name must end in
+  // ".<drive>.<node>.<generation>" for THIS session's node. The trailing generation is the
+  // room's own; `session.generation` is checked separately when the document is replaced.
+  const bound = `.${driveId}.${session.node_id}.`
+  const at = room.lastIndexOf(bound)
+  const embedded = at < 0 ? '' : room.slice(at + bound.length)
+  if (!/^(0|[1-9][0-9]*)$/.test(embedded)) {
+    throw new Error('Invalid collaboration options')
   }
   return { endpoint: session.endpoint, room }
 }
