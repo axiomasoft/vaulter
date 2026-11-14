@@ -10,7 +10,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\SharingConfig;
 
 /**
  * Optional expiry typed into the grant and share-link forms.
@@ -36,9 +35,9 @@ final class PanelExpiry
     /**
      * @return list<string>
      */
-    public static function shareRules(): array
+    public static function shareRules(int $maxTtlHours): array
     {
-        $latest = Carbon::now()->addHours(app(SharingConfig::class)->maxTtlHours())->toDateTimeString();
+        $latest = Carbon::now()->addHours($maxTtlHours)->toDateTimeString();
 
         return ['nullable', 'date', 'after:now', 'before_or_equal:'.$latest];
     }
@@ -48,9 +47,9 @@ final class PanelExpiry
         return self::parse(value: $value, rules: self::grantRules());
     }
 
-    public static function forShare(mixed $value): ?Carbon
+    public static function forShare(mixed $value, int $maxTtlHours): ?Carbon
     {
-        return self::parse(value: $value, rules: self::shareRules());
+        return self::parse(value: $value, rules: self::shareRules($maxTtlHours));
     }
 
     /**

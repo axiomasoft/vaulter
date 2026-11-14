@@ -213,7 +213,7 @@ final class NodeShareResource extends Resource
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
                 ->placeholder('Never')
-                ->rules(PanelExpiry::shareRules()),
+                ->rules(fn (SharingConfig $sharing): array => PanelExpiry::shareRules($sharing->maxTtlHours())),
         ];
     }
 
@@ -225,7 +225,7 @@ final class NodeShareResource extends Resource
      *
      * @param array<string, mixed> $data
      */
-    public static function createFromData(array $data): void
+    public static function createFromData(array $data, SharingConfig $sharing): void
     {
         $nodeId = $data['node_id'] ?? null;
         $found = is_int($nodeId) || is_string($nodeId) ? PanelNodes::find($nodeId) : null;
@@ -247,7 +247,7 @@ final class NodeShareResource extends Resource
         /** @var string $password */
         $password = $data['password'] ?? '';
         $maxUses = $data['max_uses'] ?? null;
-        $expiresAt = PanelExpiry::forShare($data['expires_at'] ?? null);
+        $expiresAt = PanelExpiry::forShare($data['expires_at'] ?? null, $sharing->maxTtlHours());
 
         try {
             $minted = $handle->shares()->create(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Facades\Vaulter;
@@ -94,7 +95,7 @@ it('NodeShareResource lists a share on a reachable node and hides one on an unre
         'node_id' => $reachable->getKey(),
         'level' => RoleRegistry::READER,
         'permissions' => 1,
-    ]);
+    ], app(SharingConfig::class));
 
     // A stranger with zero grants anywhere sees NO share row.
     $this->actingAs(DriveBuilder::user(99));
@@ -150,7 +151,7 @@ it('isolates database resources from a sibling profile with an open candidate la
     $hiddenGrant = DriveBuilder::grant($hiddenNode, $stranger);
     DriveBuilder::openDrive($hidden, $stranger);
     $this->actingAs($stranger);
-    NodeShareResource::createFromData(['node_id' => $hiddenNode->id, 'level' => 'reader', 'permissions' => 1]);
+    NodeShareResource::createFromData(['node_id' => $hiddenNode->id, 'level' => 'reader', 'permissions' => 1], app(SharingConfig::class));
     $this->actingAs($owner);
     $open->profile = 'open';
     $open->save();
