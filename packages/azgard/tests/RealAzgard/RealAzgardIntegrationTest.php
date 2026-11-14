@@ -56,7 +56,7 @@ it('folds a real assignment-scope permission into the matching Vaulter role, onl
     // A grant stored in the project:1 assignment scope; the adapter asks hasPermission
     // on that scope, which the Vaulter driver maps to the writer role.
     $user = realUser();
-    $this->actingAsWithPermissions($user, ['documents.update'], on: AssignmentScopeRef::of('project', 1));
+    $this->actingAsWithPermissions($user, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete'], on: AssignmentScopeRef::of('project', 1));
     bindRealAdapter();
 
     $decision = driver()->resolve(Subject::ofModel($user), $user, projectScope(1));

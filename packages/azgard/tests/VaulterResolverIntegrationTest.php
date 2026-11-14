@@ -47,8 +47,8 @@ it('never overrides for a non super-admin', function (): void {
 });
 
 it('folds a workspace-scoped permission into the matching role', function (): void {
-    // documents.update is the Writer probe (Edit → documents.update) in the ability map.
-    $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.update']);
+    // A writer requires the permissions of its whole registered ability set.
+    $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete']);
     bindStatelessAdapter();
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);

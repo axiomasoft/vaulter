@@ -103,6 +103,17 @@ super-admin gets the **owner** role through the same workspace decisions, so AzG
 policy (`isolated` keeps a tenant-wide super-admin out of a workspace), restrictions,
 policies and tenant rules all hold.
 
+A Vaulter role is granted only if the actor holds **every mapped ability** of that role's
+registered version. A missing mapping refuses that role. For example, `documents.view`
+and `documents.comment` without `documents.download` yield only `previewer`: neither
+Download nor Comment is added. Comment alone grants no role. This conservative bridge
+returns complete Vaulter roles; it does not represent arbitrary partial ability sets.
+Node grants remain independent and are still unioned by the drive's resolver.
+
+Previously one defining permission expanded to a whole role. Hosts relying on that
+expansion must grant the complete role bundle or deliberately map its abilities to the
+host permission that represents that bundle. Review those mappings before upgrading.
+
 Custom implementations of **Vaulter's** `AzgardGuard` must add the required actor argument:
 
 ```php
@@ -133,7 +144,7 @@ Three tiers:
   a real panel (stored grants, `project` assignment scopes, the super-admin role) granted
   through AzGuard's `InteractsWithAzGuard` helpers, and the real adapter → real Vaulter
   resolver. Proves the adapter's calls actually resolve through AzGuard's own engine
-  (super-admin → owner, assignment-scope permission → Writer, tenant-wide inheritance,
+  (super-admin → owner, complete assignment-scope bundle → Writer, tenant-wide inheritance,
   create gate, scope-precise entity check, undeclared scope type denied).
 - **`tests/RealAzgardIsolated/`** — the same engine on an `isolated` panel with a lock
   restriction: a tenant-wide super-admin gets nothing inside a workspace, a workspace

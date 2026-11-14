@@ -37,6 +37,8 @@ return [
     */
     'guard' => null,
 
+    // A role is granted only when every ability of its registered version has a mapping
+    // and the actor holds every mapped permission. Missing mappings never imply permission.
     'permissions' => [
         'view' => 'documents.view',
         'download' => 'documents.download',
