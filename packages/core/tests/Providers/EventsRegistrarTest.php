@@ -99,7 +99,8 @@ it('never treats an unstaged event as settled because its creation time is old',
         ->where('event_id', $event['event_id'])
         ->update(['created_at' => now()->subDay(), 'staged_at' => null]);
 
-    expect(app(OutboxStore::class)->settledSeq(CarbonImmutable::now()))->toBe(0);
+    expect(app(OutboxStore::class)->settledSeq(CarbonImmutable::now()))->toBe(0)
+        ->and(OutboxEvent::query()->where('event_id', $event['event_id'])->sole()->staged_at)->toBeNull();
 });
 
 it('preserves fractional staging time when deciding the settle cutoff', function (): void {
@@ -120,6 +121,83 @@ it('preserves fractional staging time when deciding the settle cutoff', function
     } finally {
         $this->travelBack();
     }
+});
+
+it('stores and reads staging as UTC across a repeated local DST hour without changing the occurrence time', function (string $instant): void {
+    $local = CarbonImmutable::parse($instant)->setTimezone('America/New_York');
+    eventsRegistrarInTimezone('America/New_York', function () use ($local): void {
+        $this->travelTo($local);
+        $database = app(VaulterDatabase::class);
+        $event = new OutboxTimestampProbeEvent(occurredAt: $local);
+
+        try {
+            $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+            $row = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+
+            expect($row->getRawOriginal('created_at'))->toBe($local->format('Y-m-d H:i:s'))
+                ->and($row->getRawOriginal('staged_at'))->toBe($local->utc()->format('Y-m-d H:i:s.u'))
+                ->and($row->staged_at?->getTimestamp())->toBe($local->getTimestamp())
+                ->and($row->staged_at?->format('u'))->toBe('900123')
+                ->and($row->staged_at?->timezoneName)->toBe('UTC')
+                ->and($row->payload['time'])->toBe($local->utc()->format('Y-m-d\TH:i:s.v\Z'));
+        } finally {
+            $this->travelBack();
+        }
+    });
+})->with(['before the fall-back' => ['2026-11-01T05:59:59.900123Z'], 'after the fall-back' => ['2026-11-01T06:00:01.900123Z']]);
+
+it('compares UTC staging against absolute cutoffs with all microseconds through a DST fall-back', function (): void {
+    eventsRegistrarInTimezone('America/New_York', function (): void {
+        $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z');
+        $this->travelTo($staged->setTimezone('America/New_York'));
+        $database = app(VaulterDatabase::class);
+
+        try {
+            $event = eventsRegistrarOutboxRow();
+            $database->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::EVENTS))
+                ->where('event_id', $event['event_id'])
+                ->update(['staged_at' => $staged->format('Y-m-d H:i:s.u')]);
+
+            foreach ([
+                'fresh after the repeated hour' => ['2026-11-01T05:55:02.900123Z', false],
+                'one microsecond before staging' => ['2026-11-01T06:00:01.900122Z', false],
+                'equal to staging' => ['2026-11-01T06:00:01.900123Z', false],
+                'one microsecond after staging' => ['2026-11-01T06:00:01.900124Z', true],
+                'settled after the window' => ['2026-11-01T06:05:02.900123Z', true],
+            ] as $label => [$instant, $settled]) {
+                $cutoff = CarbonImmutable::parse($instant)->setTimezone('America/New_York');
+                expect(app(OutboxStore::class)->settledSeq($cutoff))->toBe($settled ? $event['outbox_seq'] : 0, $label)
+                    ->and($cutoff->timezoneName)->toBe('America/New_York');
+            }
+        } finally {
+            $this->travelBack();
+        }
+    });
+});
+
+it('keeps a UTC staging model write within the same second precise without changing created_at', function (): void {
+    $staged = CarbonImmutable::parse('2026-11-01T06:00:01.900123Z')->setTimezone('America/New_York');
+    eventsRegistrarInTimezone('America/New_York', function () use ($staged): void {
+        $this->travelTo($staged);
+        $database = app(VaulterDatabase::class);
+        $event = new OutboxTimestampProbeEvent(occurredAt: $staged);
+
+        try {
+            $database->transaction(fn (): SinkResult => app(OutboxWriter::class)->append($event, new SinkWriter($database)));
+            $row = OutboxEvent::query()->where('event_id', $event->eventId)->sole();
+            $createdAt = $row->getRawOriginal('created_at');
+            $payload = $row->payload;
+            $database->write(static fn (): bool => $row->forceFill(['staged_at' => $staged->addMicrosecond()])->save());
+            $fresh = $row->fresh();
+
+            expect($fresh->getRawOriginal('staged_at'))->toBe('2026-11-01 06:00:01.900124')
+                ->and($fresh->staged_at?->format('Y-m-d H:i:s.uP'))->toBe('2026-11-01 06:00:01.900124+00:00')
+                ->and($fresh->getRawOriginal('created_at'))->toBe($createdAt)
+                ->and($fresh->payload)->toBe($payload);
+        } finally {
+            $this->travelBack();
+        }
+    });
 });
 
 it('does not refresh a stored occurrence or its timestamp on replay', function (): void {
@@ -241,6 +319,20 @@ it('acknowledges a replay gap once no delivery in the range is leased', function
         ->and(app(OutboxStore::class)->consumer('events.registrar.probe')['gaps'][0]['acknowledged_at'] ?? null)->not->toBeNull();
 });
 
+function eventsRegistrarInTimezone(string $timezone, Closure $check): void
+{
+    $previous = date_default_timezone_get();
+    $configured = config('app.timezone');
+    try {
+        config()->set('app.timezone', $timezone);
+        date_default_timezone_set($timezone);
+        $check();
+    } finally {
+        date_default_timezone_set($previous);
+        config()->set('app.timezone', $configured);
+    }
+}
+
 /** @return array{event_id: string, outbox_seq: int} */
 function eventsRegistrarOutboxRow(): array
 {
@@ -357,9 +449,9 @@ final readonly class HostKeyColumnProbeEvent extends DomainEvent
 
 final readonly class OutboxTimestampProbeEvent extends DomainEvent
 {
-    public function __construct(private ?Closure $duringBody = null)
+    public function __construct(private ?Closure $duringBody = null, ?CarbonImmutable $occurredAt = null)
     {
-        parent::__construct(actor: new ActorRef(type: 'user', id: '1'), correlationId: 'corr-outbox-timestamp');
+        parent::__construct(actor: new ActorRef(type: 'user', id: '1'), correlationId: 'corr-outbox-timestamp', occurredAt: $occurredAt);
     }
 
     public function type(): HostKeyColumnProbeType

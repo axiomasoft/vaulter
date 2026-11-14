@@ -48,7 +48,7 @@ final readonly class OutboxStore
     /** The highest seq staged after sequence allocation and before the settle-window cutoff. */
     public function settledSeq(CarbonImmutable $before): int
     {
-        return self::int($this->events()->where('staged_at', '<', $before)->max('outbox_seq'));
+        return self::int($this->events()->where('staged_at', '<', $before->utc()->format('Y-m-d H:i:s.u'))->max('outbox_seq'));
     }
 
     /**

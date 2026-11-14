@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Outbox\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -73,7 +74,20 @@ class OutboxEvent extends Model
             'external' => 'boolean',
             'payload' => 'array',
             'created_at' => 'datetime',
-            'staged_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Staging is an absolute UTC instant, including when the application's local hour repeats at DST.
+     * Keep its precision independent of the model's occurrence timestamp format.
+     */
+    protected function getStagedAtAttribute(?string $value): ?Carbon
+    {
+        return $value === null ? null : Carbon::parse($value, 'UTC');
+    }
+
+    protected function setStagedAtAttribute(DateTimeInterface|string|null $value): void
+    {
+        $this->attributes['staged_at'] = $value === null ? null : Carbon::parse($value, 'UTC')->utc()->format('Y-m-d H:i:s.u');
     }
 }
