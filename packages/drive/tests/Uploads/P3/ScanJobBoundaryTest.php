@@ -113,7 +113,7 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
 });
 
-it('SEC-R12 does not record the row hash when the streamed bytes differ', function (): void {
+it('SEC-R12 does not record the row hash when the streamed bytes differ', function (string $corrupt): void {
     Storage::fake('local');
     Bus::fake();
     $scanner = new class implements ContentScanner
@@ -149,7 +149,7 @@ it('SEC-R12 does not record the row hash when the streamed bytes differ', functi
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $blob = $revision->blob()->firstOrFail();
-    Storage::disk($blob->disk)->put($blob->storage_key, 'replaced bytes');
+    Storage::disk($blob->disk)->put($blob->storage_key, $corrupt);
     $row = $revision->scanObligations()->firstOrFail();
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
     expect($scanner->reads)->toBe(0)
@@ -161,4 +161,7 @@ it('SEC-R12 does not record the row hash when the streamed bytes differ', functi
         ->and($revision->refresh()->scan_status)->not->toBe('clean');
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision->fresh()))
         ->toThrow(ContentUnavailableException::class);
-});
+})->with([
+    'different length' => ['replaced bytes'],
+    'same length, different digest' => ['SCAN BYTES'],
+]);
