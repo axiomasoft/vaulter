@@ -15,6 +15,7 @@ use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
@@ -77,6 +78,15 @@ final class HubTestHelpers
         if ($level !== null) {
             AccessTestHelpers::grant($node, $level, subjectId: $actorId);
         }
+
+        return $node;
+    }
+
+    /** A stored legacy type can disappear; the production create action refuses uninstalled types. */
+    public static function documentOfRemovedType(int $actorId = 1): Node
+    {
+        $node = self::document(actorId: $actorId);
+        app(VaulterDatabase::class)->write(fn () => self::aggregate($node)->forceFill(['type' => 'acme/gone'])->save());
 
         return $node;
     }

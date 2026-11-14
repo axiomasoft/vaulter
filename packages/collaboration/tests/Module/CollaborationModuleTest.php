@@ -96,7 +96,8 @@ it('stays off by default: no routes, no driver, no operations, and the host stil
         ->and(collaborationState($app)->activeReason)->toBe(ModuleState::REASON_DEFAULT)
         ->and(collaborationRoutes($app))->toBe([])
         ->and($app['router']->has('vaulter.v1.collaboration.hub.append'))->toBeFalse()
-        ->and($app['router']->has('vaulter.v1.documents.collaboration.session'))->toBeFalse()
+        // Neutral session issuance belongs to documents, even without a transport adapter.
+        ->and($app['router']->has('vaulter.v1.documents.collaboration.session'))->toBeTrue()
         ->and($kernel->extensions()->handlerKeys(CollaborationProtocolDriver::class) !== [])->toBeFalse()
         ->and($app->bound(CollaborationOperations::class))->toBeFalse()
         ->and($app['config']->has('vaulter-collaboration'))->toBeFalse()
@@ -111,7 +112,6 @@ it('mounts the session and the hub routes behind the module middleware once it i
         ->and($kernel->isActive('collaboration'))->toBeTrue()
         ->and(collaborationState($app)->activeReason)->toBe(ModuleState::REASON_OVERRIDE)
         ->and(array_map(static fn (Route $route): string => (string) $route->getName(), collaborationRoutes($app)))->toEqualCanonicalizing([
-            'vaulter.v1.documents.collaboration.session',
             'vaulter.v1.collaboration.hub.authenticate',
             'vaulter.v1.collaboration.hub.load',
             'vaulter.v1.collaboration.hub.append',

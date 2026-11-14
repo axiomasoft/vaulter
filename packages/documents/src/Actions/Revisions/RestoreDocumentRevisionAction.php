@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Revisions;
 use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
@@ -15,13 +16,11 @@ use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
-use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
-
 use Vaulter\Events\EventRecorder;
 
 /**

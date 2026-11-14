@@ -6,15 +6,14 @@ namespace Vaulter\Documents\Actions\Revisions;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
-use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
-
 
 /**
  * Pin a checkpoint out of the prune window (keep_forever) or release the pin, the one

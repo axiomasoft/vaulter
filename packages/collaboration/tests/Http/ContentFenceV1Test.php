@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Vaulter\Collaboration\CollaborationCallResolver;
 use Vaulter\Collaboration\CollaborationHub;
-use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -106,5 +106,7 @@ it('keeps ordinary JSON editing after the adapter is disabled and never drops pe
     expect(fn () => $pendingDocuments->update($pending->getKey(), Hub::tiptap('Lose pending edits')))->toThrow(DocumentStatePendingException::class);
     expect($rows())->toBe($unchanged);
     $call = app(CollaborationCallResolver::class)->verifyToken($oldToken);
-    expect(fn () => app(CollaborationHub::class)->open($call, $oldRoom))->toThrow(CollaborationEpochMismatchException::class);
+    // Without a registered adapter, the old backend cannot open any room. The
+    // active-adapter epoch fence is exercised by the preceding two cases.
+    expect(fn () => app(CollaborationHub::class)->open($call, $oldRoom))->toThrow(CollaborationUnavailableException::class, 'protocol_unavailable');
 });

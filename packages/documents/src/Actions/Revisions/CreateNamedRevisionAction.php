@@ -6,10 +6,10 @@ namespace Vaulter\Documents\Actions\Revisions;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
-use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;

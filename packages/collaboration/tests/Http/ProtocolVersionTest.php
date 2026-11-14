@@ -28,7 +28,7 @@ function protocolCall(string $route, Node $node): array
 {
     return match ($route) {
         'authenticate', 'load' => [['room' => Hub::room($node)], Hub::token($node)],
-        'append' => [Hub::appendBody($node, 'update'), Hub::token($node)],
+        'append' => [Hub::seedBody($node, 'update'), Hub::token($node)],
         'compaction/lease' => [['hub_id' => Compaction::HUB, 'max' => 5], null],
         'checkpoint' => [[
             'document' => (string) $node->getKey(), 'generation' => 0, 'lease_token' => 'none', 'covered_from' => 0, 'covered_through' => 1,

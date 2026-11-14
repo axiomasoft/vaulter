@@ -106,7 +106,8 @@ it('makes the reusable kit reject genuinely signed lying tokens', function (stri
     'null tenant' => ['tenant', null, 'Verified credential tenant'],
     'format' => ['state_format', 'foreign', 'Verified credential state_format'],
     'schema' => ['schema_version', 2, 'Verified credential schema_version'],
-    'protocol' => ['protocol', 'foreign', 'Verified credential protocol'],
+    // The production verifier rejects a foreign wire protocol before lifting any claims.
+    'protocol' => ['protocol', 'foreign', 'Credential verifier rejected'],
     'expiry bound' => ['exp', 1301, 'Verified credential expires_at'],
     'room option' => ['options.room', 'wrong-room', 'Credential verifier rejected'],
     'empty type' => ['sub_type', '', 'Credential verifier rejected'],
