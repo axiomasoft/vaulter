@@ -4,6 +4,7 @@
 Vaulter\Documents\Access\CollaborationAccessPolicy api since 1.0 final readonly class
   public function canViewDocumentNode(Illuminate\Contracts\Auth\Access\Authorizable $user, int|string $nodeId): bool
   public function evaluate(Vaulter\Drive\Operations\DriveContext $context, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
+  public function evaluateAuthenticationReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): ?Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
   public function evaluateReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
 
 Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly class

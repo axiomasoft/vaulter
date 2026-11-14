@@ -124,10 +124,9 @@ final readonly class CollaborationAccessPolicy
     }
 
     /**
-     * @internal Authentication alone distinguishes a denied View from an invalid reference.
-     * No grant is issued for a denied actor; other callers retain evaluateReference's strict 404.
+     * Authenticate a live reference without issuing a grant to an actor whose View was revoked.
+     * A denied View returns null; invalid references retain evaluateReference's strict 404.
      */
-    #[Internal]
     public function evaluateAuthenticationReference(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): ?CollaborationAccessDecision
     {
         $context = $this->referenceContext($actor, $driveId, $nodeId, $tenant, $correlationId);
