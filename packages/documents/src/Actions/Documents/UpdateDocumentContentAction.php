@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Actions\Documents;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Actions\DocumentWriteLock;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Actions;
+namespace Vaulter\Documents\Actions\Documents;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
