@@ -262,7 +262,7 @@ final readonly class BlobStore implements BlobStoreContract
             while (!feof($stream)) {
                 $chunk = fread($stream, self::CHUNK_BYTES);
 
-                if ($chunk === false) {
+                if ($chunk === false || ($chunk === '' && !feof($stream))) {
                     return false;
                 }
 

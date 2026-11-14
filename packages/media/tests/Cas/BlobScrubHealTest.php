@@ -36,11 +36,11 @@ function healCommit(string $bytes, string $tenant = '1'): Blob
 }
 
 /** A driver over the real one whose put() and delete() can be replaced. */
-function healDriver(?Closure $put = null, ?Closure $delete = null): StorageDriver
+function healDriver(?Closure $put = null, ?Closure $delete = null, ?Closure $get = null): StorageDriver
 {
-    return new class(app(StorageDriver::class), $put, $delete) implements StorageDriver
+    return new class(app(StorageDriver::class), $put, $delete, $get) implements StorageDriver
     {
-        public function __construct(private readonly StorageDriver $inner, private readonly ?Closure $put, private readonly ?Closure $delete) {}
+        public function __construct(private readonly StorageDriver $inner, private readonly ?Closure $put, private readonly ?Closure $delete, private readonly ?Closure $get) {}
 
         public function disk(?string $disk = null): Filesystem
         {
@@ -54,7 +54,7 @@ function healDriver(?Closure $put = null, ?Closure $delete = null): StorageDrive
 
         public function get(string $key, ?string $disk = null): mixed
         {
-            return $this->inner->get($key, $disk);
+            return $this->get !== null ? ($this->get)($key, $disk) : $this->inner->get($key, $disk);
         }
 
         public function exists(string $key, ?string $disk = null): bool
@@ -307,6 +307,56 @@ it('does not succeed a dedup hit while a same-length object still mismatches', f
         ->toThrow(RuntimeException::class)
         ->and($blob->fresh()->integrity_failed_at)->toBeNull()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('SAME LEN');
+});
+
+final class StalledBlobVerificationStream
+{
+    public $context;
+
+    private int $reads = 0;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        if (++$this->reads > 1) {
+            throw new RuntimeException('Read the stalled object again.');
+        }
+
+        return '';
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [];
+    }
+}
+
+it('refuses a stalled dedup verification without repeatedly reading or replacing the object', function (): void {
+    $blob = healCommit('kept bytes');
+    $inner = app(StorageDriver::class);
+    stream_wrapper_register('vaulterstalled', StalledBlobVerificationStream::class);
+    $store = healStore(healDriver(get: static fn (string $key, ?string $disk): mixed => $key === $blob->storage_key
+        ? fopen('vaulterstalled://object', 'rb')
+        : $inner->get($key, $disk)));
+
+    try {
+        expect(fn () => $store->commit(CasTestHelpers::streamFor('kept bytes'), BlobScope::tenant('1')))
+            ->toThrow(RuntimeException::class, 'Content stream made no progress.');
+        expect(Storage::disk('local')->get($blob->storage_key))->toBe('kept bytes')
+            ->and($blob->fresh()->isIntact())->toBeTrue()
+            ->and(Storage::disk('local')->allFiles())->toHaveCount(1);
+    } finally {
+        stream_wrapper_unregister('vaulterstalled');
+    }
 });
 
 it('refuses a dedup hit when the canonical object cannot be replaced', function (): void {
