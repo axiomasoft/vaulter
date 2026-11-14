@@ -295,6 +295,44 @@ it('stores the correlation token the response echoes, including one that is not 
         ->and(AssignCorrelationId::of($request))->toBe('cached-1');
 });
 
+it('keeps the write when the client ip or user agent cannot be stored', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $bad = Request::create('/v1/nodes', 'POST', server: ['REMOTE_ADDR' => 'not-an-ip']);
+    // A NUL is valid UTF-8 and still illegal in PostgreSQL text; a non-address is illegal in inet.
+    $bad->headers->set('User-Agent', "curl\0agent");
+    app()->instance('request', $bad);
+    Activity::query()->delete();
+
+    $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 7))->folders()->create('kept');
+
+    $row = ActivityTestHelpers::only(DriveEventType::FolderCreated->value);
+    expect($folder->id)->not->toBeNull()
+        ->and(DriveTestHelpers::model($drive->root()->id)->children()->where('name', 'kept')->exists())->toBeTrue()
+        ->and($row->target_id)->toEqual($folder->id)
+        ->and($row->ip)->toBeNull()
+        ->and($row->user_agent)->toBeNull();
+
+    $binary = Request::create('/v1/nodes', 'POST', server: ['REMOTE_ADDR' => '127.0.0.1']);
+    $binary->headers->set('User-Agent', "curl\xFFagent");
+    app()->instance('request', $binary);
+    Activity::query()->delete();
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->folders()->create('binary-agent');
+
+    expect(ActivityTestHelpers::only(DriveEventType::FolderCreated->value)->user_agent)->toBeNull()
+        ->and(ActivityTestHelpers::only(DriveEventType::FolderCreated->value)->ip)->toBe('127.0.0.1');
+
+    $good = Request::create('/v1/nodes', 'POST', server: ['REMOTE_ADDR' => '2001:db8::1']);
+    $good->headers->set('User-Agent', "curl/8\u{00A0}");
+    app()->instance('request', $good);
+    Activity::query()->delete();
+    $again = $drive->actingAs(DriveTestHelpers::actor($drive, 7))->folders()->create('traced');
+    $kept = ActivityTestHelpers::only(DriveEventType::FolderCreated->value);
+
+    expect($again->id)->not->toBeNull()
+        ->and($kept->ip)->toBe('2001:db8::1')
+        ->and($kept->user_agent)->toBe("curl/8\u{00A0}");
+});
+
 it('does not copy a rejected correlation header into the activity row', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'rejected-trace');

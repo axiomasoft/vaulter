@@ -57,8 +57,10 @@ class ActivityStoreRepository
             'target_type' => $command->targetType,
             'target_id' => $command->targetId,
             'context' => $command->context,
-            'ip' => $command->ip,
-            'user_agent' => $command->userAgent,
+            // inet rejects a non-address, and text rejects a NUL or a non-UTF-8 byte.
+            // Either error aborts the PostgreSQL transaction and rolls the operation back.
+            'ip' => self::storableIp($command->ip),
+            'user_agent' => self::storableUserAgent($command->userAgent),
             'request_id' => $command->requestId,
             'created_at' => Carbon::now(),
         ]);
@@ -66,5 +68,23 @@ class ActivityStoreRepository
         $row = $id === null ? $activity->getAttributes() : [$activity->getKeyName() => $id, ...$activity->getAttributes()];
 
         return $this->database->insertOnce(table: $activity->getTable(), row: $row, uniqueColumn: 'event_id');
+    }
+
+    private static function storableIp(?string $ip): ?string
+    {
+        if ($ip === null || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            return null;
+        }
+
+        return $ip;
+    }
+
+    private static function storableUserAgent(?string $userAgent): ?string
+    {
+        if ($userAgent === null || str_contains($userAgent, "\0") || !mb_check_encoding($userAgent, 'UTF-8')) {
+            return null;
+        }
+
+        return $userAgent;
     }
 }
