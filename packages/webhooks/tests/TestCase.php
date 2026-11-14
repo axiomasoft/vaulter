@@ -63,6 +63,7 @@ abstract class TestCase extends OrchestraTestCase
         $this->validateOpenApiResponses($app);
         $this->pinSuiteConnection($app);
         $this->pinOpenSuite($app);
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
         WebhookTestHelpers::enableModule($app);
     }
 

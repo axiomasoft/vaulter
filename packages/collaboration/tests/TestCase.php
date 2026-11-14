@@ -60,6 +60,7 @@ abstract class TestCase extends OrchestraTestCase
 
         $this->pinSuiteConnection($app);
         $this->pinOpenSuite($app);
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // A whole-application scenario (CollaborationBootMatrixTest) sets these before refreshing the application; empty otherwise.
         foreach (self::$configOverrides as $key => $value) {

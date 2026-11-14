@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Concerns;
 
 use Illuminate\Foundation\Application;
+use Orchestra\Testbench\TestCase;
 use Vaulter\Attributes\Internal;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 
@@ -12,15 +13,13 @@ use Vaulter\Testing\Support\SuiteDatabaseConnection;
  * The suite connection and the open-suite pins that each package TestCase repeated.
  * Provider lists, OpenAPI middleware and a package's own overrides stay in that case.
  *
- * @phpstan-require-extends \Orchestra\Testbench\TestCase
+ * @phpstan-require-extends TestCase
  */
 #[Internal]
 trait UsesSuiteDatabase
 {
     /**
      * Point the suite at the testing connection and isolate its storage disk.
-     *
-     * @param Application $app
      */
     protected function pinSuiteConnection(Application $app): void
     {
@@ -31,16 +30,13 @@ trait UsesSuiteDatabase
     }
 
     /**
-     * Cache, empty auth middleware, the null permission driver and bigint ids.
-     * Core does not call this: it keeps the published permission driver.
-     *
-     * @param Application $app
+     * Shared cache, auth middleware and id defaults. Domain settings belong to
+     * the package TestCase that consumes this helper.
      */
     protected function pinOpenSuite(Application $app): void
     {
         $app['config']->set('cache.default', 'array');
         $app['config']->set('vaulter.routes.middleware.authenticated', []);
-        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
         $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
