@@ -14,6 +14,7 @@ return [
         7 => 'IdStrategy/Uuid7/VaulterSchemaUuid7Test.php',
         8 => 'Idempotency/IdempotencyContractTest.php',
         9 => 'Operations/OperationRunnerContractTest.php',
+        10 => 'Providers/EventsRegistrarTest.php',
     ],
     'engine:server' => [
         0 => 'Concurrency/ForkRaceTest.php',

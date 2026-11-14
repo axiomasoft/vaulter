@@ -18,6 +18,8 @@ return [
         'Webhooks/OutboxTransactionTest.php',
         'Webhooks/SigningSecretEncryptionTest.php',
         'Webhooks/WebhookAutoDisableTest.php',
+        'Webhooks/WebhookEndpointCrudTest.php',
+        'Webhooks/WebhookEndpointScopeTest.php',
         'Webhooks/WebhookPruneSafetyTest.php',
         'Webhooks/WebhookRetryDispatcherTest.php',
         'Webhooks/WebhookSchemaTest.php',
