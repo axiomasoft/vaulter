@@ -46,6 +46,8 @@ function leaseEntry(document = '42', { attributes = {}, expiresInMs = 60_000, ..
   return {
     document,
     generation: 3,
+    protocol: 'yjs',
+    state_format: 'yjs-update-v1',
     lease_token: `lease-${document}`,
     lease_expires_at: new Date(Date.now() + expiresInMs).toISOString(),
     checkpoint_seq: 4,

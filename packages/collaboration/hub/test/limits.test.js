@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { append, publishCheckpoint, SEED_HEADER } from '../src/backend.js'
 import { buildConfig, validateConfig } from '../src/config.js'
+import { roomClaims, token } from './support/revocation.js'
 import {
   appendRequestBytes,
   base64Length,
@@ -511,10 +512,8 @@ async function hooksFor(t, conf = {}, answer = { allowed: true, mode: 'rw', user
   return { room, hooks }
 }
 
-function jwt(claims) {
-  const part = (value) => Buffer.from(JSON.stringify(value)).toString('base64url')
-
-  return `${part({ alg: 'HS256' })}.${part({ exp: Math.floor(Date.now() / 1000) + 600, ...claims })}.signature`
+function jwt(claims, document = '42') {
+  return token({ ...roomClaims({ sub: '1', document, exp: Math.floor(Date.now() / 1000) + 600 }), ...claims })
 }
 
 test('a raw message above its size closes the connection 4413 before Hocuspocus decodes it', async (t) => {
@@ -571,7 +570,7 @@ test('a new room of a tenant at MAX_ROOMS_PER_TENANT is refused at authenticatio
   const { hooks } = await hooksFor(t, { maxRoomsPerTenant: 1 })
   const other = 'vaulter.documents.1.43.0'
 
-  const context = await hooks.onAuthenticate({ token: jwt({ tenant: 't1' }), documentName: other, connectionConfig: {}, requestParameters: new URLSearchParams('protocol=2') })
+  const context = await hooks.onAuthenticate({ token: jwt({ tenant: 't1' }, '43'), documentName: other, connectionConfig: {}, requestParameters: new URLSearchParams('protocol=2') })
   assert.equal(context.tenant, 't1')
   await hooks.connected({ connection: fakeConnection(), context: writerContext({ tenant: 't1' }), documentName: other, socketId: 's1' })
 
@@ -579,7 +578,7 @@ test('a new room of a tenant at MAX_ROOMS_PER_TENANT is refused at authenticatio
     hooks.onAuthenticate({ token: jwt({ tenant: 't1' }), documentName: ROOM, connectionConfig: {}, requestParameters: new URLSearchParams('protocol=2') }),
     (error) => error.reason === 'too_many_rooms',
   )
-  await assert.doesNotReject(hooks.onAuthenticate({ token: jwt({ tenant: 't1' }), documentName: other, connectionConfig: {}, requestParameters: new URLSearchParams('protocol=2') }), 'its open room')
+  await assert.doesNotReject(hooks.onAuthenticate({ token: jwt({ tenant: 't1' }, '43'), documentName: other, connectionConfig: {}, requestParameters: new URLSearchParams('protocol=2') }), 'its open room')
   await assert.doesNotReject(hooks.onAuthenticate({ token: jwt({ tenant: 't2' }), documentName: ROOM, connectionConfig: {}, requestParameters: new URLSearchParams('protocol=2') }), 'another tenant')
   assert.equal(hooks.limits.rejections().rooms_per_tenant, 1)
 })
