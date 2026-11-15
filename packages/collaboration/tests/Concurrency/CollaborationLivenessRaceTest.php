@@ -19,7 +19,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * PLAN2.F05/F06 on real backends, for the collaboration log: a hub append racing a trash, an archive or a deletion of
+ * Liveness on real backends, for the collaboration log: a hub append racing a trash, an archive or a deletion of
  * the node/drive either lands entirely before it or is refused after it (the log reads the trash flag and the drive's
  * status under the locks its append takes), with state, log and events matching the outcome. Two forked processes on
  * two PostgreSQL connections, released together by the barrier.
@@ -29,10 +29,12 @@ beforeEach(function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);
 });
 
-function hubAppend(Node $node): mixed
+/** The hub's first record of the empty generation, so its seed, built from the JSON of `$stateVersion`. */
+function hubAppend(Node $node, int $stateVersion): mixed
 {
     return app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
         generation: 0, updateId: (string) Str::uuid(), payload: 'raced-update', claimedSha256: hash('sha256', 'raced-update'),
+        origin: 'server', seedStateVersion: $stateVersion,
     ));
 }
 
@@ -45,7 +47,7 @@ it('a hub append racing a trash lands before it or is refused after it, never af
         static fn (): array => RaceFixtures::attempt(static fn () => app(TrashNodeAction::class)->execute(
             DocumentTestHelpers::context(Node::query()->findOrFail($nodeId)), new TrashNodeInput(Node::query()->findOrFail($nodeId)),
         )),
-        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId))),
+        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
     ]);
 
     $fresh = Node::query()->findOrFail($nodeId);
@@ -68,7 +70,7 @@ it('a hub append racing an archive of its drive lands before it or is refused af
         static fn (): array => RaceFixtures::attempt(static fn () => app(ArchiveDriveAction::class)->execute(
             DocumentTestHelpers::context(Node::query()->findOrFail($nodeId)),
         )),
-        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId))),
+        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
     ]);
 
     $fresh = Node::query()->findOrFail($nodeId);
@@ -88,7 +90,7 @@ it('a collaboration append racing drive deletion either commits before deletion 
     $before = [DocumentTestHelpers::document($node)->state_version, DocumentTestHelpers::revisions($node)->count()];
     $results = RaceFixtures::race([
         static fn (): array => RaceFixtures::attempt(static fn () => app(DeleteDriveAction::class)->execute(DocumentTestHelpers::context(Node::query()->findOrFail($nodeId)))),
-        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId))),
+        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
     ]);
     $fresh = Node::query()->findOrFail($nodeId);
     expect($results[0]['kind'])->toBe('committed')
