@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Connection;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\MySqlGrammar;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
@@ -18,8 +19,8 @@ use Vaulter\Drive\Models\Node;
  * C1–C3 on MySQL (REPEATABLE READ): the transaction of an append or a load begins with a plain read (the node, in
  * CollaborativeState::lock()), which fixes its snapshot. Every read of the log and the document after the locks must be a
  * locking read, or it answers from that older snapshot: a load would report a head without its tail, and a retry of an
- * update id committed meanwhile would miss its receipt. SQLite drops the lock clause, so the queries are rendered through
- * the MySQL grammar as they run here; the run itself is a PLAN4 line (AppendRaceTest).
+ * update id committed meanwhile would miss its receipt. On MySQL the statements are read as the server receives them;
+ * SQLite and PostgreSQL render them through the MySQL grammar as they run.
  */
 
 function lockingAppend(Node $node, string $payload, string $updateId, bool $seed = false): void
@@ -42,6 +43,17 @@ function lockingAppend(Node $node, string $payload, string $updateId, bool $seed
 function lockingSelects(Closure $run): array
 {
     $connection = app(VaulterDatabase::class)->connection();
+    if ($connection->getDriverName() === 'mysql') {
+        // On MySQL itself the statements the server receives are the ones to check.
+        $received = [];
+        $connection->listen(static function (QueryExecuted $query) use (&$received): void {
+            $received[] = $query->sql;
+        });
+        $run();
+
+        return lockingSelectsByEntity(array_values(array_filter($received, static fn (string $sql): bool => str_starts_with($sql, 'select'))));
+    }
+
     $recorder = new class($connection, new MySqlGrammar($connection)) extends SQLiteGrammar
     {
         /** @var list<string> */
@@ -67,14 +79,23 @@ function lockingSelects(Closure $run): array
         $connection->useDefaultQueryGrammar();
     }
 
+    return lockingSelectsByEntity($recorder->selects);
+}
+
+/**
+ * @param  list<string>                $selects MySQL selects
+ * @return array<string, list<string>> by entity
+ */
+function lockingSelectsByEntity(array $selects): array
+{
     $tables = app(DatabaseConfig::class);
-    $selects = [];
+    $byEntity = [];
     foreach (['documents', 'collaboration_heads', 'collaboration_updates', 'collaboration_receipts'] as $entity) {
         $from = 'from `'.$tables->table($entity).'`';
-        $selects[$entity] = array_values(array_filter($recorder->selects, static fn (string $sql): bool => str_contains($sql, $from)));
+        $byEntity[$entity] = array_values(array_filter($selects, static fn (string $sql): bool => str_contains($sql, $from)));
     }
 
-    return $selects;
+    return $byEntity;
 }
 
 beforeEach(function (): void {
