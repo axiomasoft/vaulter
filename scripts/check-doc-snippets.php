@@ -307,7 +307,11 @@ function vueComponentMisuse(string $root, string $code): array
     $problems = [];
     preg_match_all('/<(Vaulter[A-Z]\w*)\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>/s', $code, $tags, PREG_SET_ORDER);
     foreach ($tags as [, $component, $attributes]) {
-        $files = glob($root.'/packages/vue/src/{components,viewers}/{,*/}'.$component.'.vue', GLOB_BRACE) ?: [];
+        // No GLOB_BRACE: it is undefined on musl builds of PHP (Alpine), so each pattern is globbed on its own.
+        $files = [];
+        foreach (['components', 'components/*', 'viewers', 'viewers/*'] as $dir) {
+            $files = [...$files, ...(glob($root.'/packages/vue/src/'.$dir.'/'.$component.'.vue') ?: [])];
+        }
         if ($files === []) {
             $problems[] = "<{$component}> is not a component of @vaulter/vue";
 

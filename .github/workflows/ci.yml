@@ -677,6 +677,13 @@ jobs:
           export PHP84_BIN
           scripts/t sqlite -p repo
 
+      # The guides' links, en/ru mirror and code fragments stay in step with the code (scripts/check-doc-*.php).
+      - name: Documentation links and fragments
+        run: |
+          php scripts/check-doc-links.php docs README.md
+          php scripts/check-doc-links.php --mirror docs
+          php scripts/check-doc-snippets.php docs
+
       - name: actionlint
         run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
 
