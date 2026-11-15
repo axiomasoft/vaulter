@@ -75,14 +75,12 @@ final class DocumentsSchema implements ModuleSchema
     }
 
     /**
-     * v_node_comments — the NODE-attached, threaded, anchorable comment (docs/adr/0014-legacy-docvault-strangler.md
-     * шаг 1 — parity with the legacy document_id-attached v_document_comments, which
-     * stays untouched). Gated on 'comments'. A comment hangs off ANY node via node_id
+     * v_node_comments — the NODE-attached, threaded, anchorable comment. Gated on 'comments'. A comment hangs off ANY node via node_id
      * (cascade); parent_id is a self-FK for threading (a reply cascades when its parent
      * is deleted). The author is a morph to a REGISTERED alias (user|…) written via
      * getMorphClass(), never a raw FQCN. anchor is the optional text-range descriptor
      * (jsonb on Postgres, json/text elsewhere). resolved_at/resolved_by mark a thread
-     * closed. No soft-delete — a delete is permanent (legacy parity: hard delete).
+     * closed. No soft-delete — a delete is permanent.
      */
     private function defineNodeComments(Blueprint $table, IdStrategy $ids): void
     {

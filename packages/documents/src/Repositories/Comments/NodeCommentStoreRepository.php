@@ -10,9 +10,9 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
 
 /**
- * Write-side persistence for the NODE-attached comments (docs/adr/0014-legacy-docvault-strangler.md шаг 1). resolve()
- * stamps the (resolved_at, resolved_by) tombstone; delete() is permanent (legacy
- * parity — there is no soft-delete on this table).
+ * Write-side persistence for the NODE-attached comments. resolve()
+ * stamps the (resolved_at, resolved_by) tombstone; delete() is permanent (there is no
+ * soft-delete on this table).
  */
 #[Internal]
 final class NodeCommentStoreRepository

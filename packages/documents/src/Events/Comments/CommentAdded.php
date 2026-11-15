@@ -23,7 +23,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A comment was added to a node (docs/adr/0014-legacy-docvault-strangler.md шаг 1). Broadcast on the node's private
+ * A comment was added to a node. Broadcast on the node's private
  * collaboration channel (channel_prefix.{node_id}) — the SAME room open editors join
  * — so a live thread updates without a poll. Recorded inside the Action's unit
  * of work and dispatched after the OUTERMOST commit: a rollback sends nothing.

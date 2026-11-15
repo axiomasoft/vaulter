@@ -8,8 +8,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Idempotency\ReceiptFields;
 
 /**
- * What an endpoint deletion keeps in its receipt («для delete квитанция содержит доказуемый исходный authorization
- * scope», ID2): the id of the removed endpoint and the scope the right to manage was proven in — the `manage` ability
+ * What an endpoint deletion keeps in its receipt (a delete receipt carries the provable original authorization
+ * scope): the id of the removed endpoint and the scope the right to manage was proven in — the `manage` ability
  * on the endpoints of a tenant (`tenantId`, null without tenancy) — never its url, events or secrets. The endpoint is
  * gone, so a replay checks that scope now: the ability still held, in the same tenant.
  */
