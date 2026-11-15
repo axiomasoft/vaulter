@@ -962,11 +962,11 @@ components:
           const: true
         permissions_stale:
           type: boolean
-          description: True when the token predates a change of its drive's or of every drive's permissions (D46). The append
+          description: True when the token predates a change of its drive's or of every drive's permissions. The append
             was allowed by the rights now; the hub renews the token.
     HubPermissionsVersion:
       type: object
-      description: The permission versions (D46) of the token's drive and of every drive.
+      description: The permission versions of the token's drive and of every drive.
       required:
       - drive
       - global
