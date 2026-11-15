@@ -7,14 +7,17 @@ use Illuminate\Support\Facades\DB;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
-use Vaulter\Drive\Changes\ChangeCursor;
+use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Changes\NodeChange;
+use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * The change journal under real concurrency (P5-I14, P5-I15): seqs are allocated under
@@ -43,7 +46,14 @@ function changeRaceSkipOnSqlite(object $test): void
     }
 }
 
-/** Raw journal rows of nodes that do not exist: each reads back as remove(moved_out) with its node id. */
+/** The sync key a user reader gets for $nodeId in $drive: a remove names the node only by it. */
+function changeRaceKey(DriveHandle $drive, TestUser $user, int|string $nodeId): string
+{
+    return (new ReaderSyncIdentity((string) config('app.key'), 1))
+        ->syncKey($drive->model()->getRawOriginal('tenant_id'), $drive->model()->getKey(), new ActorRef($user->getMorphClass(), (string) $user->getKey()), $nodeId);
+}
+
+/** Raw journal rows of nodes that do not exist: a typed reader reads each back as a remove keyed by its node. */
 function changeRaceSeedOldEntries(DriveHandle $drive, int $count): void
 {
     $db = app(VaulterDatabase::class)->connection();
@@ -118,20 +128,26 @@ it('allocates seqs without gaps and a concurrent reader sees every committed ren
 it('expires a concurrent reader\'s cursor or lets it read everything, never a gap, while a prune runs', function (): void {
     ForkRace::skipUnlessSupported($this);
     $drive = DriveTestHelpers::drive();
+    $user = AccessTestHelpers::user(1);
+    $reader = $drive->actingAs($user);
     $total = 3000;
+    $start = $reader->changes()->startCursor();
     changeRaceSeedOldEntries($drive, $total);
-    $start = (new ChangeCursor(tenantId: null, driveId: (string) $drive->model()->getKey(), epoch: 1, after: 0))->encode((string) config('app.key'));
+    $seqOf = [];
+    foreach (range(1, $total) as $seq) {
+        $seqOf[changeRaceKey($drive, $user, 900000 + $seq)] = $seq;
+    }
 
     $outcomes = ForkRace::run([
         static fn (): int => Artisan::call('vaulter:changes:prune', ['--days' => '1']),
-        static function () use ($drive, $start): array {
+        static function () use ($reader, $start, $seqOf): array {
             $seen = [];
             $cursor = $start;
             try {
                 do {
-                    $page = $drive->changes()->list($cursor, limit: 50);
+                    $page = $reader->changes()->list($cursor, limit: 50);
                     foreach ($page->changes as $change) {
-                        $seen[] = (int) $change->nodeId - 900000;
+                        $seen[] = $seqOf[$change->syncKey] ?? 0;
                     }
                     $cursor = $page->cursor;
                 } while ($page->hasMore);
@@ -181,16 +197,16 @@ it('never skips an entry committed after a transaction snapshot, nor projects it
     });
     $after = $reader->changes()->list($inside->cursor);
 
-    $seen = array_map(static fn (NodeChange $change): array => [$change->nodeId, $change->operation->value, $change->reason?->value],
+    $seen = array_map(static fn (NodeChange $change): array => [$change->operation, $change->syncKey, $change->nodeId],
         [...$inside->changes, ...$after->changes]);
-    expect($seen)->toBe([[(string) $doc->id, 'remove', 'moved_out']]);
+    expect($seen)->toBe([[ChangeOperation::Remove, changeRaceKey($drive, AccessTestHelpers::user(1), $doc->id), null]]);
 });
 
 it('expires a cursor inside a transaction when a prune committed after its snapshot', function (): void {
     changeRaceSkipOnSqlite($this);
     $drive = DriveTestHelpers::drive();
+    $start = $drive->changes()->startCursor();
     changeRaceSeedOldEntries($drive, 5);
-    $start = (new ChangeCursor(tenantId: null, driveId: (string) $drive->model()->getKey(), epoch: 1, after: 0))->encode((string) config('app.key'));
     $side = changeRaceSideConnection();
     $db = app(VaulterDatabase::class)->connection();
 
@@ -208,8 +224,8 @@ it('expires a cursor inside a transaction when a prune committed after its snaps
 it('expires a cursor outside a transaction when a prune lands between head and entries', function (): void {
     changeRaceSkipOnSqlite($this);
     $drive = DriveTestHelpers::drive();
+    $start = $drive->changes()->startCursor();
     changeRaceSeedOldEntries($drive, 5);
-    $start = (new ChangeCursor(tenantId: null, driveId: (string) $drive->model()->getKey(), epoch: 1, after: 0))->encode((string) config('app.key'));
     $side = changeRaceSideConnection();
     $pruned = false;
     app(VaulterDatabase::class)->connection()->listen(static function ($query) use (&$pruned, $side, $drive): void {
