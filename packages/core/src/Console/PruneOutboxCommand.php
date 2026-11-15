@@ -23,7 +23,7 @@ final class PruneOutboxCommand extends Command
 
     protected $signature = 'vaulter:outbox:prune';
 
-    protected $description = 'Delete outbox events and deliveries past their retention without losing undelivered ones (D29).';
+    protected $description = 'Delete outbox events and deliveries past their retention without losing undelivered ones.';
 
     public function handle(OutboxRelay $relay, MetricsRecorder $metrics): int
     {

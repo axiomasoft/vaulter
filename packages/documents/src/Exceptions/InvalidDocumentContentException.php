@@ -126,7 +126,7 @@ final class InvalidDocumentContentException extends VaulterException implements 
     {
         return new self(
             sprintf('[Vaulter] Invalid TipTap content: link href "%s" uses a disallowed URL scheme. ', $href)
-            .'Why: only http, https and mailto schemes are allowed (F-P1.11-01, stored XSS). '
+            .'Why: only http, https and mailto schemes are allowed (stored XSS). '
             .'Fix: use an http(s)/mailto link. '
             .'Docs: '.self::docs('invalid-tiptap-content'),
         );

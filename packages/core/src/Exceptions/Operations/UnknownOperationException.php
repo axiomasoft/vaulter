@@ -8,7 +8,7 @@ use LogicException;
 use Vaulter\Attributes\Api;
 
 /**
- * A mutating operation ran that no active module declares a policy for (I12), or one declared by another
+ * A mutating operation ran that no active module declares a policy for, or one declared by another
  * module than the one the spec names. A developer error, never a client one: it carries no problem code (the
  * HTTP surface answers 500 `internal_error`) and is thrown before any claim or transaction.
  */

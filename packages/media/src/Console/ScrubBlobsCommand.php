@@ -32,7 +32,7 @@ final class ScrubBlobsCommand extends Command
         {--scope= : Only the blobs of one scope key (tenant:<id>, drive:<id> or off:<id>)}
         {--dry-run : Read and report, write nothing}';
 
-    protected $description = 'Verify the size and sha256 of a sample of stored blobs and mark the damaged ones (D49)';
+    protected $description = 'Verify the size and sha256 of a sample of stored blobs and mark the damaged ones';
 
     public function handle(BlobScrubber $scrubber): int
     {

@@ -10,7 +10,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
-/** The current revision of a file is its content; it goes only with the file (P4-I19). */
+/** The current revision of a file is its content; it goes only with the file. */
 #[Api]
 final class CannotDeleteHeadRevisionException extends VaulterException implements ProblemException
 {

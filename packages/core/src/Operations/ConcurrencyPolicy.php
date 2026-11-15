@@ -7,7 +7,7 @@ namespace Vaulter\Operations;
 use Vaulter\Attributes\Api;
 
 /**
- * How an operation keeps a concurrent writer from losing its change (I12):
+ * How an operation keeps a concurrent writer from losing its change:
  *
  * - `if_match` — a change of an existing aggregate against its own version; `If-Match` is required (428, then 412);
  * - `append` — the creation of a new row, which has no version yet;

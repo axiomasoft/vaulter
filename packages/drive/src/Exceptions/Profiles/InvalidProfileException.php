@@ -42,7 +42,7 @@ final class InvalidProfileException extends VaulterException
             "Storage panel [{$panel}] sets idStrategy() but has no own tables. A per-panel id "
             .'strategy is incoherent on the shared v_* schema (one nodes table = one PK type). '
             .'Fix: either drop idStrategy() (use config(vaulter.ids.strategy)) or declare own tables '
-            .'via tablePrefix()/tables() (advanced per-panel mode, D12).',
+            .'via tablePrefix()/tables() (advanced per-panel mode).',
         );
     }
 }

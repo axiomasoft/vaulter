@@ -28,7 +28,7 @@ final class RelayReplayCommand extends Command
         {--to= : The last outbox seq}
         {--ack-only : Acknowledge the gaps of the range without replaying it}';
 
-    protected $description = 'Replay a range of the outbox to one consumer, or acknowledge its gap (D29).';
+    protected $description = 'Replay a range of the outbox to one consumer, or acknowledge its gap.';
 
     public function handle(OutboxRelay $relay): int
     {

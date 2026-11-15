@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Vaulter\Attributes\Api;
 
 /**
- * The concurrency and idempotency policy of one mutating operation (I11, I12): the aggregate it changes
+ * The concurrency and idempotency policy of one mutating operation: the aggregate it changes
  * (`<module>.<aggregate>`), how a concurrent writer is kept from losing its change, what a repeat does and the
  * REST routes that run it (names without the `vaulter.v1.` prefix; none for an operation of the PHP API only).
  */

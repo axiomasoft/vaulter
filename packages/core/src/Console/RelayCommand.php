@@ -26,7 +26,7 @@ final class RelayCommand extends Command
         {--once : Run a single pass}
         {--max-seconds=50 : Stop starting passes after this many seconds}';
 
-    protected $description = 'Relay the outbox to its consumers: register, reconcile, deliver, hold (D29).';
+    protected $description = 'Relay the outbox to its consumers: register, reconcile, deliver, hold.';
 
     public function handle(OutboxRelay $relay): int
     {

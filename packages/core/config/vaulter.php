@@ -27,7 +27,7 @@ return [
     'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false), 'resolver' => null],
     // id => nonempty reason: production invariants a host knowingly accepts (ADR-0036); never a structural error.
     'security' => ['accepted_risks' => []],
-    // Module activation overrides (D22): module id => true|false. Auto modules (media, drive, documents…)
+    // Module activation overrides: module id => true|false. Auto modules (media, drive, documents…)
     // are active unless switched off; opt-in modules (webhooks) only when switched on.
     'modules' => [],
     'routes' => [
@@ -42,7 +42,7 @@ return [
             'uploads' => env('VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE', 120),
         ],
     ],
-    // The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its
+    // The transactional outbox: every domain event is written to v_outbox in the transaction of its
     // operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once.
     // settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events
     // older than it, so a long transaction committing a smaller seq later is not skipped.
@@ -59,7 +59,7 @@ return [
         'backoff_base_seconds' => 2,
         'backoff_cap_seconds' => 3600,
     ],
-    // Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome.
+    // Idempotency-Key receipts: how long a retry with the same key gets the stored outcome.
     // vaulter:idempotency:prune deletes expired receipts.
     'idempotency' => [
         'ttl_seconds' => 86400,

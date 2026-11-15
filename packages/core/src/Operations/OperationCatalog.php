@@ -9,7 +9,7 @@ use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 
 /**
- * The policy of every mutating operation (I11, I12): the policies the active modules declare with
+ * The policy of every mutating operation: the policies the active modules declare with
  * `ModuleBuilder::operations()`. The {@see OperationRunner} refuses a mutating operation that is not here, and
  * `vaulter:operations` prints it.
  */

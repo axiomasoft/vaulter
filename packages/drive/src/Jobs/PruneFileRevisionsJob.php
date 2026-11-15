@@ -37,7 +37,7 @@ use Vaulter\Tenancy\Tenancy;
  *
  * Files are scanned in batches of 500; every chosen revision is deleted through
  * DeleteFileRevisionAction as the system actor 'revision-retention', which re-checks
- * head and pin under the file and revision locks (P4-I19). A revision that became
+ * head and pin under the file and revision locks. A revision that became
  * the head or was pinned after the choice is skipped, not an error. Re-running
  * converges: a revision is either still a candidate or gone.
  */

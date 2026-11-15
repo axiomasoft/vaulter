@@ -10,7 +10,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
-/** A pinned (keep_forever) revision is never deleted, by the API or by the pruning (P4-I19). */
+/** A pinned (keep_forever) revision is never deleted, by the API or by the pruning. */
 #[Api]
 final class RevisionPinnedException extends VaulterException implements ProblemException
 {

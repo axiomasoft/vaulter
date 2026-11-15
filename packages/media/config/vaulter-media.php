@@ -15,7 +15,7 @@ return [
         'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24),
         'orphan_grace_hours' => env('VAULTER_ORPHAN_GRACE_HOURS', env('VAULTER_GC_GRACE_HOURS', 24)),
     ],
-    // The integrity scrub (vaulter:blobs:scrub, D49): the sample and budget of one run — the first one used up ends it.
+    // The integrity scrub (vaulter:blobs:scrub): the sample and budget of one run — the first one used up ends it.
     // Reading a whole object store is expensive, so a run covers a sample; null: no byte or time budget. Not scheduled.
     'scrub' => [
         'limit' => env('VAULTER_SCRUB_LIMIT', 100),
