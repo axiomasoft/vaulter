@@ -100,7 +100,7 @@ final class DriveTestHelpers
      *
      * @return resource
      */
-    public static function streamFor(string $bytes)
+    public static function streamFor(string $bytes): mixed
     {
         $stream = fopen('php://temp', 'r+b') ?: throw new \RuntimeException('Cannot open a memory stream.');
         fwrite($stream, $bytes);

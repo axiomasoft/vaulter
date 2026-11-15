@@ -11,6 +11,7 @@ use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\NodePage;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\NodeSort;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\NodeUserState;
@@ -44,7 +45,7 @@ final readonly class NodePageQuery
     public function page(DriveContext $context, Builder $query, ListOptions $options, string $kind, array $filter = []): NodePage
     {
         if ($options->kinds !== []) {
-            $query->whereIn('kind', array_map(static fn ($kind): string => $kind->value, $options->kinds));
+            $query->whereIn('kind', array_map(static fn (NodeKind $kind): string => $kind->value, $options->kinds));
         }
         $columns = match ($options->sort) {
             NodeSort::Default => ['name', 'id'], NodeSort::Name => ['name', 'id'], NodeSort::UpdatedAt => ['updated_at', 'id'], NodeSort::Size => ['size_bytes', 'id'],

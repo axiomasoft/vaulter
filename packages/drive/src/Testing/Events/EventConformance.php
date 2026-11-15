@@ -18,7 +18,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 final class EventConformance
 {
     /** Keys that must not appear anywhere in an envelope (names, secrets, request details). */
-    public const FORBIDDEN = [
+    public const array FORBIDDEN = [
         'name', 'from_name', 'to_name', 'path', 'mime', 'content', 'token', 'token_hash', 'token_prefix',
         'secret', 'password', 'ip', 'user_agent', 'request_id', 'storage_path',
     ];

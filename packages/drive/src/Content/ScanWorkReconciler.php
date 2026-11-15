@@ -58,11 +58,11 @@ final readonly class ScanWorkReconciler
         $counts = ['scanned' => 0, 'published' => 0, 'failed' => 0, 'stalled_configuration' => 0, 'remaining_due' => 0];
         $class = $this->config->model('scan_obligation');
         $query = app(TenancyBoundary::class)->constrain($class::query())->whereIn('state', ['pending', 'retry_wait', 'leased'])
-            ->where(function ($query) use ($now, $cooldown): void {
-                $query->where(function ($query) use ($now, $cooldown): void {
+            ->where(function (Builder $query) use ($now, $cooldown): void {
+                $query->where(function (Builder $query) use ($now, $cooldown): void {
                     $query->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<=', $now)
-                        ->where(fn ($q) => $q->whereNull('last_published_at')->orWhere('last_published_at', '<=', $now->modify('-'.$cooldown.' seconds')));
-                })->orWhere(fn ($q) => $q->where('state', 'leased')->where('lease_expires_at', '<=', $now));
+                        ->where(fn (Builder $q): Builder => $q->whereNull('last_published_at')->orWhere('last_published_at', '<=', $now->modify('-'.$cooldown.' seconds')));
+                })->orWhere(fn (Builder $q): Builder => $q->where('state', 'leased')->where('lease_expires_at', '<=', $now));
             });
         if ($driveIds !== null) {
             $query->whereIn('drive_id', $driveIds);
@@ -81,7 +81,7 @@ final readonly class ScanWorkReconciler
                     continue;
                 }
                 $specs = $this->policies->forDrive($drive);
-                if (!array_any($specs, fn ($spec): bool => $spec->specKey() === $row->spec_key)) {
+                if (!array_any($specs, fn (ScanPolicySpec $spec): bool => $spec->specKey() === $row->spec_key)) {
                     if (!$dryRun) {
                         $this->supersede->execute($row);
                     }

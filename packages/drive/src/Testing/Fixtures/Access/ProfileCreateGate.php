@@ -20,6 +20,6 @@ final class ProfileCreateGate
         $registry->freeze();
         app()->instance(ProfileRegistry::class, $registry);
         Gate::define('vaulter.manage', static fn (): bool => true);
-        Gate::define('vaulter.create', static fn ($actor, array $context): bool => $allow && $context['profile'] === 'default');
+        Gate::define('vaulter.create', static fn (mixed $actor, array $context): bool => $allow && $context['profile'] === 'default');
     }
 }

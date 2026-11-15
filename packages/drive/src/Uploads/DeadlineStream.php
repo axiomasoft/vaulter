@@ -55,7 +55,7 @@ final class DeadlineStream implements StreamInterface
 
     public function close(): void {}
 
-    public function detach()
+    public function detach(): mixed
     {
         return null;
     }
@@ -112,7 +112,7 @@ final class DeadlineStream implements StreamInterface
         return $contents;
     }
 
-    public function getMetadata(?string $key = null)
+    public function getMetadata(?string $key = null): mixed
     {
         $meta = stream_get_meta_data($this->stream);
 

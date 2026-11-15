@@ -29,7 +29,7 @@ final readonly class UploadCleanupReconciler
     {
         $class = $this->config->model('upload_session');
         $query = $class::query()->where('status', UploadStatus::Committed->value)->where('cleanup_pending', true)
-            ->where(fn ($query) => $query->whereNull('cleanup_available_at')->orWhere('cleanup_available_at', '<=', now()));
+            ->where(fn (Builder $query): Builder => $query->whereNull('cleanup_available_at')->orWhere('cleanup_available_at', '<=', now()));
         if ($driveIds !== null) {
             $query->whereIn('drive_id', $driveIds);
         }

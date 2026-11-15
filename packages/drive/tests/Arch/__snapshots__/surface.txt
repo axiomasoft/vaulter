@@ -617,7 +617,7 @@ Vaulter\Drive\Data\UploadSource api since 1.0 final readonly class
   public function declaredSize(): ?int
   public static function fromPath(string $path, ?string $name = null): self
   public static function fromPsrStream(Psr\Http\Message\StreamInterface $stream, string $name): self
-  public static function fromStream($stream, string $name, ?int $size = null): self
+  public static function fromStream(mixed $stream, string $name, ?int $size = null): self
   public static function fromString(string $bytes, string $name): self
   public static function fromUploadedFile(Illuminate\Http\UploadedFile $file): self
   public function name(): string

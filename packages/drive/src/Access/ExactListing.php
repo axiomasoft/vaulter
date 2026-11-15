@@ -26,9 +26,9 @@ use WeakMap;
 #[Internal]
 final readonly class ExactListing
 {
-    private const PURPOSE = 'node-list';
+    private const string PURPOSE = 'node-list';
 
-    private const MAX_CURSOR_BYTES = 2048;
+    private const int MAX_CURSOR_BYTES = 2048;
 
     /** @var WeakMap<Node, GrantSet> */
     private WeakMap $grants;

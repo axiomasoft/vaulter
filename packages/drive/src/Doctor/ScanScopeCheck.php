@@ -11,6 +11,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Support\Identity;
 
@@ -73,7 +74,7 @@ final readonly class ScanScopeCheck implements DoctorCheck
         $required = [];
         foreach ($this->config->model('drive')::query()->whereIn('id', array_unique($driveIds))->get() as $drive) {
             try {
-                $required[Identity::stringify($drive->getKey())] = array_any($this->policies->desired($drive), static fn ($spec): bool => $spec->mode === ScanMode::AllContent);
+                $required[Identity::stringify($drive->getKey())] = array_any($this->policies->desired($drive), static fn (ScanPolicySpec $spec): bool => $spec->mode === ScanMode::AllContent);
             } catch (\Throwable) {
                 $required[Identity::stringify($drive->getKey())] = false;
             }
