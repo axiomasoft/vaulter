@@ -3,8 +3,8 @@
 **Status:** accepted
 
 > Transfers decisions D06–D09 of the 2026-09-29 stable audit
-> (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d06` … `#d09`) into the project ADR set.
-> Normative signatures live in `audits/2026-09-29-stable-audit/opus/05-php-api.md` §3–§7.
+> (git history at `d1deaf6d`; the audit is no longer in the tree) into the project ADR set.
+> The supported signatures are listed in [PHP API](/reference/php-api) and pinned by each package's `tests/Arch/__snapshots__/surface.json`.
 
 ## Context
 
@@ -113,9 +113,4 @@ class is one entry point named after its sub-API, listed in the Law 2 allow-list
 
 ## References
 
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d06`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d07`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d08`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d09`
-- `audits/2026-09-29-stable-audit/opus/05-php-api.md` §3–§7
-- `audits/2026-09-29-stable-audit/opus/01-review.md` — N14, N27
+- The 2026-09-29 stable audit: removed from the tree, read it in the git history at `d1deaf6d`.

@@ -3,7 +3,7 @@
 **Status:** accepted
 
 > Transfers decision D05 of the 2026-09-29 stable audit
-> (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d05`) into the project ADR set.
+> (git history at `d1deaf6d`; the audit is no longer in the tree) into the project ADR set.
 > **Amends [ADR-0009 — Storage Panels](/adr/0009-storage-panels):** Panel is renamed to Profile and the
 > own-tables mode is removed. The rest of ADR-0009 (zero-migration default on the shared `v_*` schema)
 > stays in force.
@@ -49,6 +49,5 @@ trash retention. Effective policy = global ∧ profile (a profile only narrows).
 
 ## References
 
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d05`
-- `audits/2026-09-29-stable-audit/opus/01-review.md` — N01, N12
+- The 2026-09-29 stable audit: removed from the tree, read it in the git history at `d1deaf6d`.
 - [ADR-0009 — Storage Panels](/adr/0009-storage-panels) (amended)

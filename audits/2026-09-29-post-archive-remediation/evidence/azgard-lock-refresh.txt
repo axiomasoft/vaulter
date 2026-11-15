@@ -1,5 +1,0 @@
-Loading composer repositories with package information
-https://repo.packagist.org could not be fully loaded (Network disabled, request canceled: https://repo.packagist.org/p2/staudenmeir/eloquent-has-many-deep-contracts~dev.json), package information was loaded from the local cache and may be out of date
-Updating dependencies
-Nothing to modify in lock file
-Writing lock file

@@ -3,7 +3,7 @@
 **Status:** proposed
 
 > Transfers decisions D29–D31 of the 2026-09-29 stable audit
-> (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d29` … `#d31`) into the project ADR set.
+> (git history at `d1deaf6d`; the audit is no longer in the tree) into the project ADR set.
 
 ## Context
 
@@ -54,8 +54,4 @@ The source decisions D29–D31 record no rejected alternatives.
 
 ## References
 
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d29`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d30`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d31`
-- `audits/2026-09-29-stable-audit/opus/10-http-api-v1.md` (resource map, §6 error codes)
-- `audits/2026-09-29-stable-audit/opus/01-review.md` — N09, N10
+- The 2026-09-29 stable audit: removed from the tree, read it in the git history at `d1deaf6d`.
