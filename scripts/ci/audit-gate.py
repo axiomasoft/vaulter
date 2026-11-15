@@ -30,8 +30,13 @@ def composer_findings(doc, status):
     # Composer 2.x JSON audit protocol: advisories by package, abandoned separately.
     if not isinstance(doc.get('advisories'), (dict, list)) or not isinstance(doc.get('abandoned'), (dict, list)):
         raise ValueError('missing Composer advisories/abandoned schema')
-    if set(doc) - {'advisories', 'abandoned'}:
+    if set(doc) - {'advisories', 'abandoned', 'filter', 'cooldown'}:
         raise ValueError('unsupported Composer report category')
+    # Composer 2.9 also reports advisories its audit config filtered out and packages held back by a release cooldown;
+    # either one hides a finding from this gate, so only the empty form is accepted.
+    for key in ('filter', 'cooldown'):
+        if doc.get(key, []) not in ([], {}):
+            raise ValueError('Composer ' + key + ' entries require explicit owner disposition')
     if doc['abandoned']:
         raise ValueError('abandoned packages require explicit owner disposition')
     advisories = doc['advisories']
