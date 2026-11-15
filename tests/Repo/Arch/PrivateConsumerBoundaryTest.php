@@ -688,7 +688,15 @@ it('rejects the negative fixtures and accepts the positive ones', function (stri
     } else {
         expect($violations)->not->toBe([]);
     }
-})->with(fn (): array => array_map(static fn (string $f): array => [$f], glob(__DIR__.'/Fixtures/private-consumer-boundary/*.php.stub') ?: []));
+})->with(static function (): array {
+    // Keyed by file name: the case names stay the same on every machine.
+    $fixtures = [];
+    foreach (glob(__DIR__.'/Fixtures/private-consumer-boundary/*.php.stub') ?: [] as $file) {
+        $fixtures[basename($file, '.php.stub')] = [$file];
+    }
+
+    return $fixtures;
+});
 
 it('audits the whole map: an empty scan, unscanned shipped code, and a stale, wildcard, duplicate or orphaned declaration fail', function (): void {
     $surface = pcbSurface();
