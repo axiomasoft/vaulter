@@ -201,10 +201,9 @@ final class DeliverWebhook implements ShouldQueue
      * REDIRECTS ARE NEVER FOLLOWED. The pin covers only the
      * ORIGINAL host:port; a redirect hop is resolved again, with no guard and no pin, so a
      * receiver answering `302 Location: http://169.254.169.254/…` walks the request straight
-     * onto the metadata service and reopens the Blocker in full. This used to be a config
-     * key (`webhooks.follow_redirects`) — a boolean that switched a security barrier off is
-     * not flexibility, it is a mine, so the key is GONE and the behaviour is unconditional.
-     * A webhook receiver is expected to answer for itself, not to bounce us elsewhere.
+     * onto the metadata service and reopens the Blocker in full. There is deliberately no
+     * setting to switch this off: a webhook receiver answers for itself, it does not bounce
+     * the request elsewhere.
      */
     private function post(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhookDelivery $delivery, WebhookEndpoint $endpoint): Response
     {

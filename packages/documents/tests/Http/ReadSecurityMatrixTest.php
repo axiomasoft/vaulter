@@ -13,6 +13,7 @@ use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
@@ -173,7 +174,7 @@ it('covers every GET/HEAD route of the package, with a reason for each row that 
             $registered[] = substr($name, strlen('vaulter.v1.'));
         }
     }
-    $spec = Yaml::parseFile(dirname(__DIR__, 4).'/openapi/vaulter-v1.yaml');
+    $spec = Yaml::parseFile(OpenApiContract::specPath());
     $operations = [];
     foreach ($spec['paths'] as $item) {
         foreach (['get', 'head'] as $method) {

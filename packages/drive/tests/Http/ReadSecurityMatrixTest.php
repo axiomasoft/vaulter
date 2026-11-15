@@ -16,6 +16,7 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
@@ -257,7 +258,7 @@ it('covers every GET/HEAD route of the package, with a reason for each row that 
     }
 
     // Every GET/HEAD operation of the OpenAPI document owned by the drive is a route, and the other way round.
-    $spec = Yaml::parseFile(dirname(__DIR__, 4).'/openapi/vaulter-v1.yaml');
+    $spec = Yaml::parseFile(OpenApiContract::specPath());
     $operations = [];
     foreach ($spec['paths'] as $item) {
         foreach (['get', 'head'] as $method) {
