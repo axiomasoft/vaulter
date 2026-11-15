@@ -18,7 +18,7 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
  * DocumentContentLifecycle::purge() checks the marker again under the purge's locks — still set, the purge answers
  * 409 document_state_pending and removes nothing.
  *
- * The system purges run as this same root operation (D48): the retention command (actor reason `retention`) and
+ * The system purges run as this same root operation: the retention command (actor reason `retention`) and
  * the drive purge step (reason `drive-purge`) purge each root as one `drive.trash.purge`, so they are drained here
  * too; the drive purge step removes a drive being deleted, so it drains every marked document of the drive, not only
  * the trashed ones. A purge composed into another operation, or inside a transaction, is not drained and stays 409

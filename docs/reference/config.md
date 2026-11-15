@@ -483,7 +483,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-collaboration.hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | `null` | — |
 | `vaulter-collaboration.hub.issuer` | `VAULTER_COLLAB_ISSUER` | `null` | The `iss` of a room token, compared as an exact string with the server configuration (null: app.url). |
 | `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
-| `vaulter-collaboration.hub.token_ttl` | — | `300` | The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no control message reaches the hub, because a renewal checks the rights again (D26). |
+| `vaulter-collaboration.hub.token_ttl` | — | `300` | The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no control message reaches the hub, because a renewal checks the rights again. |
 | `vaulter-collaboration.hub.clock_skew` | — | `30` | The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds, 0..30); part of the exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance). |
 | `vaulter-collaboration.hub.timestamp_tolerance` | — | `300` | — |
 | `vaulter-collaboration.control` | — | — | How a change of effective permissions (drive.access.effective_permissions_changed) reaches the hubs at once: `redis` publishes on the channel vaulter:collab:control of the connection below, `http` POSTs to the management control endpoint of every hub listed (signed with hub.webhook_secret), `none` sends nothing — the hubs then learn of it on the next append or renewal. A lost message is never replayed: the token lifetime bounds the exposure. |
@@ -523,14 +523,14 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.tenancy.resolver` | — | `null` | — |
 | `vaulter.security` | — | — | id => nonempty reason: production invariants a host knowingly accepts (ADR-0036); never a structural error. |
 | `vaulter.security.accepted_risks` | — | `[]` | — |
-| `vaulter.modules` | — | `[]` | Module activation overrides (D22): module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
+| `vaulter.modules` | — | `[]` | Module activation overrides: module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
 | `vaulter.routes.prefix` | `VAULTER_ROUTE_PREFIX` | `'api/vaulter'` | — |
 | `vaulter.routes.middleware.authenticated` | — | `['api', 'auth:sanctum']` | — |
 | `vaulter.routes.middleware.public` | — | `['api']` | — |
 | `vaulter.routes.middleware.hub` | — | `['api']` | — |
 | `vaulter.routes.rate_limits.public` | `VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE` | `60` | — |
 | `vaulter.routes.rate_limits.uploads` | `VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE` | `120` | — |
-| `vaulter.outbox` | — | — | The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
+| `vaulter.outbox` | — | — | The transactional outbox: every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
 | `vaulter.outbox.settle_window_seconds` | — | `300` | — |
 | `vaulter.outbox.retention_seconds` | — | `604800` | — |
 | `vaulter.outbox.max_consumer_hold_seconds` | — | `604800` | How long a paused consumer (switched off, missing from the module graph) holds retention before it is detached with an explicit gap. |
@@ -540,7 +540,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.outbox.max_attempts` | — | `10` | — |
 | `vaulter.outbox.backoff_base_seconds` | — | `2` | — |
 | `vaulter.outbox.backoff_cap_seconds` | — | `3600` | — |
-| `vaulter.idempotency` | — | — | Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune deletes expired receipts. |
+| `vaulter.idempotency` | — | — | Idempotency-Key receipts: how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune deletes expired receipts. |
 | `vaulter.idempotency.ttl_seconds` | — | `86400` | — |
 | `vaulter.schedule` | — | — | Maintenance tasks put on the host scheduler. Value: null (off) \| everyMinute \| everyFiveMinutes hourly \| daily \| weekly \| 'dailyAt:HH:MM' \| 'hourlyAt:M' \| 'weeklyOn:D,HH:MM' \| a 5-field cron expression. Set enabled to false when the host schedules the commands itself. |
 | `vaulter.schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | — |
@@ -589,7 +589,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-drive.scan.rollout_key` | — | `null` | — |
 | `vaulter-drive.features.grants` | — | `true` | — |
 | `vaulter-drive.features.activity` | — | `true` | — |
-| `vaulter-drive.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes() (PLAN2.D50). |
+| `vaulter-drive.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes(). |
 | `vaulter-drive.features.share_links` | — | `false` | — |
 | `vaulter-drive.features.public_listing` | — | `false` | — |
 | `vaulter-drive.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | HasDrives: delete the drives of an owner when the owner is deleted. |
@@ -701,7 +701,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-media.dedup.scope` | `VAULTER_DEDUP_SCOPE` | `'tenant'` | — |
 | `vaulter-media.gc.grace_hours` | `VAULTER_GC_GRACE_HOURS` | `24` | — |
 | `vaulter-media.gc.orphan_grace_hours` | `VAULTER_ORPHAN_GRACE_HOURS` | `env('VAULTER_GC_GRACE_HOURS', 24)` | — |
-| `vaulter-media.scrub` | — | — | The integrity scrub (vaulter:blobs:scrub, D49): the sample and budget of one run — the first one used up ends it. Reading a whole object store is expensive, so a run covers a sample; null: no byte or time budget. Not scheduled. |
+| `vaulter-media.scrub` | — | — | The integrity scrub (vaulter:blobs:scrub): the sample and budget of one run — the first one used up ends it. Reading a whole object store is expensive, so a run covers a sample; null: no byte or time budget. Not scheduled. |
 | `vaulter-media.scrub.limit` | `VAULTER_SCRUB_LIMIT` | `100` | — |
 | `vaulter-media.scrub.max_bytes` | `VAULTER_SCRUB_MAX_BYTES` | `null` | — |
 | `vaulter-media.scrub.max_seconds` | `VAULTER_SCRUB_MAX_SECONDS` | `null` | — |

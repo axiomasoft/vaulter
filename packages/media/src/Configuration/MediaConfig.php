@@ -66,7 +66,7 @@ final readonly class MediaConfig
         return max($hours, 1);
     }
 
-    /** The most blobs one scrub run visits: vaulter-media.scrub.limit (D49), a positive integer; an override wins. */
+    /** The most blobs one scrub run visits: vaulter-media.scrub.limit, a positive integer; an override wins. */
     #[Internal]
     public function scrubLimit(?int $override = null): int
     {
@@ -145,7 +145,7 @@ final readonly class MediaConfig
     }
 
     /**
-     * The blob model, swappable in vaulter-media.models.blob (D6: the key moved from vaulter.models.blob with the model).
+     * The blob model, swappable in vaulter-media.models.blob (the key moved from vaulter.models.blob with the model).
      *
      * @return class-string<Blob>
      */

@@ -55,7 +55,7 @@ class Drive extends Model
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 
-    /** The type under which a drive is stored in a polymorphic column (D34). */
+    /** The type under which a drive is stored in a polymorphic column. */
     public const string MORPH_ALIAS = 'vaulter.drive';
 
     /**

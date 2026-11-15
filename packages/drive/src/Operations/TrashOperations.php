@@ -66,7 +66,7 @@ final readonly class TrashOperations implements Contract
     {
         $options ??= new RestoreOptions;
         $nodeId = self::idOf($node);
-        // Idempotent by key (D25): the receipt is the restored node's snapshot; a replay needs Restore on it where it is now.
+        // Idempotent by key: the receipt is the restored node's snapshot; a replay needs Restore on it where it is now.
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
             authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Restore, $nodeId, includeTrashed: true),
@@ -102,7 +102,7 @@ final readonly class TrashOperations implements Contract
     public function purge(NodeSnapshot|string|int $node, ?int $expectedSequence = null): void
     {
         $nodeId = self::idOf($node);
-        // Idempotent by key (D25): the receipt keeps the id and its parent as the surviving replay scope (ID2).
+        // Idempotent by key: the receipt keeps the id and its parent as the surviving replay scope (ID2).
         // A replay needs current Delete there; a grant only on the purged node disappeared with that node.
         $idempotency = new IdempotentWrite(
             codec: new PurgeReceiptCodec,
@@ -133,7 +133,7 @@ final readonly class TrashOperations implements Contract
 
     public function empty(): int
     {
-        // Idempotent by key (D25): the keyed call is one operation of its own that holds every root purge, so its
+        // Idempotent by key: the keyed call is one operation of its own that holds every root purge, so its
         // receipt is the count and a retry never purges what a later upload put into the trash. A replay returns the
         // count only to an actor who may still purge on the drive's root. Without a key every root stays its own
         // atomic operation, as before.

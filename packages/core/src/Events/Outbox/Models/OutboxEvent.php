@@ -14,7 +14,7 @@ use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
- * One row of the neutral transactional outbox (D29): a domain event written in the transaction of the
+ * One row of the neutral transactional outbox: a domain event written in the transaction of the
  * operation that caused it, whatever modules are active. event_id is UNIQUE — the outbox writer stores one
  * row per occurrence. outbox_seq is the internal monotonic order of the outbox (independent of the id
  * strategy); payload is the envelope every consumer receives. The delivery state of each consumer lives in

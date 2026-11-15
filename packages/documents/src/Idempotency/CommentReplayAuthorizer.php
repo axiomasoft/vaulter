@@ -17,7 +17,7 @@ use Vaulter\Idempotency\ResourceRef;
 use Vaulter\Support\Identity;
 
 /**
- * The current authorization of a replayed comment write (D25, ID2), with the same guard as the write itself, on the
+ * The current authorization of a replayed comment write (ID2), with the same guard as the write itself, on the
  * comment's node (a node that is trashed, gone or invisible now, a revoked ability or a disabled comments feature:
  * the replay is refused exactly as a new request would be).
  *

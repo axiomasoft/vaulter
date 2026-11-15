@@ -9,7 +9,7 @@ use Vaulter\Attributes\Api;
 
 /**
  * A neutral reference to the resource an idempotency receipt is about, or to the authorization scope it was
- * granted in (D25): a kind of the owning module (`node`, `drive`) and the string id. The kernel stores and
+ * granted in: a kind of the owning module (`node`, `drive`) and the string id. The kernel stores and
  * returns it; only the owner's {@see ReplayAuthorizer} resolves it.
  */
 #[Api]

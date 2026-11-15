@@ -12,8 +12,8 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * The document carries committed collaboration edits its working state does not hold yet (the pending-state marker,
- * D26), and they could not be brought in before the deadline: no realtime transport is active, or it did not drain the
+ * The document carries committed collaboration edits its working state does not hold yet (the pending-state marker),
+ * and they could not be brought in before the deadline: no realtime transport is active, or it did not drain the
  * log in time. Reading or replacing the working state now would serve stale content or drop saved edits, so the
  * request is refused untouched; repeating it later with backoff is safe.
  */

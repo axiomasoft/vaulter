@@ -48,11 +48,14 @@ class AuditGateTest(unittest.TestCase):
         mismatch = npm();mismatch['metadata']['vulnerabilities']['total']=1;broken.append(mismatch)
         for doc in broken:
             with self.assertRaises(ValueError):gate.npm_findings(doc,1)
-        for doc in ({}, {'advisories':[],'abandoned':{'old':'replacement'}}, {'advisories':[],'abandoned':[],'malware':[]}):
+        for doc in ({}, {'advisories':[],'abandoned':{'old':'replacement'}}, {'advisories':[],'abandoned':[],'malware':[]}, {'advisories':[],'abandoned':[],'filter':[{'advisoryId':'PKSA-x'}]}, {'advisories':[],'abandoned':[],'cooldown':{'vendor/package':'1.0.1'}}):
             with self.assertRaises(ValueError):gate.composer_findings(doc,0)
         for status in (2,3,125):
             with self.assertRaises(ValueError):gate.composer_findings(composer(),status)
         with self.assertRaises(ValueError):gate.npm_findings(npm(),1)
+
+    def test_composer_29_empty_filter_and_cooldown_are_clean(self):
+        self.assertEqual(gate.composer_findings({'advisories':[],'abandoned':[],'filter':[],'cooldown':[]},0),[])
 
     def test_missing_malformed_error_report_fail_closed_with_no_waivers(self):
         import contextlib,io

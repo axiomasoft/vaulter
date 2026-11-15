@@ -10,7 +10,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * The `If-Match` of a write names a version of the aggregate that is no longer current (D47, I12): someone
+ * The `If-Match` of a write names a version of the aggregate that is no longer current: someone
  * changed it since the client read it. The client refetches and decides again; the outcome is deterministic,
  * so an idempotency receipt stores it.
  */

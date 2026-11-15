@@ -34,12 +34,12 @@ use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * The collaboration module (D1, D22): the manifest of the vaulter-collaboration package, offered by its provider.
+ * The collaboration module: the manifest of the vaulter-collaboration package, offered by its provider.
  * Opt-in, because it opens a network channel and needs secrets; it edits documents, so it requires the documents
  * module. It provides the `CollaborationProtocolDriver` and `PendingStateDrainer` capabilities the documents module defines (the
  * realtime transport and the drain of a pending document through the hub), and brings its session and hub routes,
  * problem codes, doctor check, generation closing and prune, the managed drain, the permission versions and control
- * channel of revocations (D26, D46), and `vaulter-collaboration.*` configuration. Its removal is refused while a document carries saved edits not in a checkpoint yet.
+ * channel of revocations, and `vaulter-collaboration.*` configuration. Its removal is refused while a document carries saved edits not in a checkpoint yet.
  */
 #[Internal]
 final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterModule
@@ -79,7 +79,7 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
     {
         $module
             ->config('vaulter-collaboration', dirname(__DIR__).'/config/vaulter-collaboration.php')
-            // The update log, receipts and heads of a document generation (D26) and the permission versions (D46); installed
+            // The update log, receipts and heads of a document generation and the permission versions; installed
             // with the package, kept when off.
             ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/collaboration.php')
@@ -94,7 +94,7 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
             ->slot(ProductionInvariant::class, HubUrlInvariant::class, 'collaboration.hub-url', key: 'collaboration.hub-url')
             // A restore or REST replace that moves a document's generation on closes the old generation's log in its transaction.
             ->slot(EventSink::class, GenerationCloser::class, 'collaboration.generations')
-            // A change of effective permissions counts in the version of its drive (or the global one) in its transaction (D46)…
+            // A change of effective permissions counts in the version of its drive (or the global one) in its transaction…
             ->slot(EventSink::class, PermissionVersionSink::class, PermissionVersionSink::ID)
             // …and reaches the hubs after its commit, best effort (ephemeral: no retention, no replay).
             ->slot(OutboxConsumer::class, ControlConsumer::class, ControlConsumer::ID)

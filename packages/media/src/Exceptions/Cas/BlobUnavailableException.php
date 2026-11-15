@@ -12,7 +12,7 @@ use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Support\Identity;
 
 /**
- * A pin was refused because the blob's bytes are gone (D23): the blob is being deleted or was deleted by the
+ * A pin was refused because the blob's bytes are gone: the blob is being deleted or was deleted by the
  * garbage collector, or it is tombstoned and its object is missing. A caller that still holds the bytes commits
  * them again and pins the returned blob; a caller that only references the blob cannot recover it. The answer
  * depends on a concurrent sweep, so it is never cached as an idempotency receipt.

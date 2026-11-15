@@ -18,7 +18,7 @@ use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 
 /**
- * The two checks of a live session's rights the hub asks for (D26): the renewal of one connection's token before it
+ * The two checks of a live session's rights the hub asks for: the renewal of one connection's token before it
  * expires, and the batch recheck of the connections of a drive after a control message. Both open the room exactly as
  * every hub call does ({@see CollaborationHub::open()}): the document, its generation, its drive and the subject's
  * rights now. A renewal therefore never extends authority the subject lost: write without Edit any more is renewed

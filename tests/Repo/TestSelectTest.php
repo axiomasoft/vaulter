@@ -632,7 +632,6 @@ it('routes --db through the database classification and refuses it while that is
         ->and($plan['plans'][0]['engines'])->toBe(['pgsql']);
 });
 
-
 it('plans integration for every PHP source dependency and excludes consumers with quick', function (): void {
     foreach (['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament'] as $package) {
         $path = $package === 'core' ? 'packages/core/src/Events/EventRecorder.php' : "packages/$package/src/Example.php";

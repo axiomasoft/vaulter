@@ -103,7 +103,7 @@ it('rules: I13 entries may be removed in P7, and only a host input stays for eve
 
 /**
  * @param  array<string, string> $sources
- * @return list<string>                   `symbol kind target category` of the classifier findings the gated scan does not see
+ * @return list<string>          `symbol kind target category` of the classifier findings the gated scan does not see
  */
 function sr_extended(array $sources): array
 {

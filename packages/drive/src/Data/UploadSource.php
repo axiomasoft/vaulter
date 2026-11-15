@@ -64,7 +64,7 @@ final readonly class UploadSource
     }
 
     /** @param resource $stream Read from the current position; never close or rewind it. */
-    public static function fromStream($stream, string $name, ?int $size = null): self
+    public static function fromStream(mixed $stream, string $name, ?int $size = null): self
     {
         if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
             throw new InvalidArgumentException('An open readable stream is required.');

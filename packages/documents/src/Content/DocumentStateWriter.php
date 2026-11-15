@@ -154,7 +154,7 @@ final readonly class DocumentStateWriter
     }
 
     /**
-     * Set the pending-state marker (D26) — the generation and the last committed collaboration sequence the working
+     * Set the pending-state marker — the generation and the last committed collaboration sequence the working
      * state does not cover yet — or clear it with two nulls. The validators and the working state stay as they are.
      */
     public function mark(Document $locked, ?int $generation, ?int $throughSeq): void

@@ -23,7 +23,7 @@ use Vaulter\Support\Identity;
  * Stage and hash outside the transaction, then lock (scope_key, sha256) before
  * row lookup, resurrection and promotion. SQL rollback can leave orphan bytes;
  * the reconciler uses this same lock before collecting them. Keeping a blob alive
- * is the owner's pin (BlobPins, D23), not this store's. A dedup hit whose row
+ * is the owner's pin (BlobPins), not this store's. A dedup hit whose row
  * records another size for the same digest is refused, never overwritten. The
  * same size with different bytes is rewritten from the staged object.
  */
@@ -83,7 +83,7 @@ final readonly class BlobStore implements BlobStoreContract
                 storageId: $scope->storageId(),
             );
 
-            // The same digest with another size is a collision or a corrupted row (D23): refuse the ingest, never
+            // The same digest with another size is a collision or a corrupted row: refuse the ingest, never
             // overwrite. The throw rolls back the resurrection findOrCreate() may have written.
             if (!$result['created'] && $result['blob']->size_bytes !== $staged->sizeBytes()) {
                 throw new RuntimeException(
@@ -95,7 +95,7 @@ final readonly class BlobStore implements BlobStoreContract
 
             $blob = $result['blob'];
 
-            // The scrub marked this blob (D49). Claim the heal before the object is touched, so a commit that read
+            // The scrub marked this blob. Claim the heal before the object is touched, so a commit that read
             // the mark before another heal lifted it does not rewrite the restored object. A failure rolls the mark back.
             $heal = !$result['created'] && $blob->integrity_failed_at !== null && $this->blobs->claimHeal($blob);
 

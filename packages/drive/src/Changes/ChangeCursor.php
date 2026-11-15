@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
 
 /**
- * The position of one reader in a drive's change journal (format 2, PLAN4.D20): the
+ * The position of one reader in a drive's change journal (format 2): the
  * tenant, the drive, the typed principal it was issued to (type, id, system reason), the
  * sync key generation, the journal epoch, the last seq applied and the issued_at/not_after
  * clock. The token is opaque to clients and authenticated, not encrypted:

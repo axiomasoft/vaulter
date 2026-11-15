@@ -7,7 +7,6 @@ namespace Vaulter\Documents\Queries;
 use Illuminate\Pagination\CursorPaginator;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Support\Identity;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
@@ -20,6 +19,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Enums\NodeSort;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Support\Identity;
 
 /**
  * Reads behind the documents operations. Every lookup is bound to the node the caller

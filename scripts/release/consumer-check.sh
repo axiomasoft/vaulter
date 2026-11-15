@@ -185,12 +185,12 @@ if [[ -f "$root/tests/suites.json" ]] \
     && [[ "$(jq -r --arg s "$short" '.suites[$s].path_base // "package"' "$root/tests/suites.json")" == repo ]]; then
     layout=repo
 fi
-harness_files=()
+# openapi/ is the contract the HTTP tests validate every v1 response against: the testing kit of core reads it
+# next to the directory that holds the core package (the repository root, or the consumer root over .deps/core).
+harness_files=(openapi)
 pest_args=(--ci --exclude-group=nofast)
 if [[ "$layout" == repo ]]; then
-    # phpunit.xml, tests/Pest.php and the zone map are read from the repository root by the core suite; openapi/ is the
-    # contract its HTTP tests validate against. The load suite is not part of a consumer, so its group file stays empty.
-    harness_files=() # Generated below from core-only bindings; no integration/load/OpenAPI harness.
+    # phpunit.xml and tests/Pest.php of the core suite are generated below from the root ones, core bindings only.
     pest_args+=("--testsuite=${short}")
 fi
 
@@ -240,12 +240,6 @@ copy_tree() { # <source dir> <destination dir> [extra tar exclude]: the package 
 if [[ "$layout" == repo ]]; then
     project="$work"
     copy_tree "$root/$path" "$work/$path"
-    for item in "${harness_files[@]}"; do
-        if [[ -e "$root/$item" ]]; then
-            mkdir -p "$work/$(dirname "$item")"
-            cp -R "$root/$item" "$work/$item"
-        fi
-    done
     mkdir -p "$work/tests"
     "$php_bin" /dev/stdin "$root" "$work" <<'PHP'
 <?php
@@ -274,6 +268,11 @@ else
     copy_tree "$root/$path" "$work"
     composer_source="$root/$path/composer.json"
 fi
+
+for item in "${harness_files[@]}"; do
+    # merged into the package's own directory of that name (collaboration ships openapi/hub.yaml)
+    [[ ! -d "$root/$item" ]] || { mkdir -p "$work/$item" && cp -R "$root/$item/." "$work/$item/"; }
+done
 
 repositories='[]'
 for dep in "${closure[@]}"; do

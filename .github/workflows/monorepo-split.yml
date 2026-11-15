@@ -189,11 +189,13 @@ jobs:
         id: plan
         run: |
           split="$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .split' release/packages.json)"
-          echo "channel=${{ needs.route.outputs.channel }}" >> "$GITHUB_OUTPUT"
-          echo "split=${split}" >> "$GITHUB_OUTPUT"
-          echo "package=$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .name' release/packages.json)" >> "$GITHUB_OUTPUT"
-          echo "name=${split#axioma-studio/}" >> "$GITHUB_OUTPUT"
-          echo "excluded=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "channel=${{ needs.route.outputs.channel }}"
+            echo "split=${split}"
+            echo "package=$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .name' release/packages.json)"
+            echo "name=${split#axioma-studio/}"
+            echo "excluded=false"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Download the prepared record
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

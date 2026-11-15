@@ -13,7 +13,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 
 /**
- * The finite, monotonic budget of one upload completion request (D19). It is
+ * The finite, monotonic budget of one upload completion request. It is
  * started ONCE before the session critical section and its DB retries, so a
  * deadlock retry spends the same budget instead of resetting it. It is checked
  * between staged-stream chunks, and every blocking staged read gets a transport
@@ -67,7 +67,7 @@ final readonly class CompletionDeadline
     /**
      * Refuse, BEFORE any staged open, CAS prepare/receipt or S3-proxy assemble, a disk
      * whose blocking calls cannot be bounded by the remaining budget. Flysystem gives
-     * remote adapters no per-call timeout, so only local adapters qualify (D19).
+     * remote adapters no per-call timeout, so only local adapters qualify.
      */
     public function preflight(Filesystem $disk, string $uploadId): void
     {

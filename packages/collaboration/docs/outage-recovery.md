@@ -7,4 +7,4 @@
 - On missing ACKed state or other data loss, keep admission closed, record the loss, restore a verified backup and require clients to resync against the authoritative generation. Do not silently acknowledge lost writes or replay stale buffers into a replacement room.
 - Re-run tenant, principal, capability and document access checks on resync. Recovery must never bypass current policy, revocation or expiry.
 - Redact JWTs, room tokens, webhook secrets, authorization headers and document payloads from logs, incident tickets and exported diagnostics. Rotate exposed credentials through the documented rotation procedure.
-- Reopen only after state reconciliation and current authorization checks succeed. Real Redis/two-hub kill/restart qualification remains P8.2, including committed ACK recovery and stale-generation rejection.
+- Reopen only after state reconciliation and current authorization checks succeed. Real Redis/two-hub kill/restart qualification remains owner qualification, including committed ACK recovery and stale-generation rejection.

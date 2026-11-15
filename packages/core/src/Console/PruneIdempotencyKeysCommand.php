@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\IdempotencyStore;
 
 /**
- * Delete expired idempotency receipts (D25, `vaulter.idempotency.ttl_seconds`, 24 hours by default), in batches of
+ * Delete expired idempotency receipts (`vaulter.idempotency.ttl_seconds`, 24 hours by default), in batches of
  * {@see self::BATCH}. Only completed receipts are deleted: a claim is never committed, so there is none to prune.
  * An expired receipt is already ignored by a retry; pruning only reclaims space. Scheduled daily.
  */

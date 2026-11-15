@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\State;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
@@ -70,7 +71,7 @@ final readonly class PendingStateGuard
         do {
             $query = Document::query()
                 ->whereNotNull('pending_generation')
-                ->whereHas('node', static fn ($node) => $wholeDrive
+                ->whereHas('node', static fn (Builder $node): Builder => $wholeDrive
                     ? $node->where('drive_id', $driveId)
                     : $node->where('drive_id', $driveId)->whereNotNull('trashed_at'))
                 ->orderBy('id')

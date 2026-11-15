@@ -83,7 +83,7 @@ register the provider FQCN in `config/vaulter.php`:
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'profiles' => ['providers' => [
     \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
 ]],
@@ -162,7 +162,7 @@ final class Node extends BaseNode
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'models' => [
     // ...
     'node'    => \App\Models\Vaulter\Node::class,
@@ -179,10 +179,14 @@ Per-tenant dedup is already the default, so a global dedup namespace can't leak 
 
 ```php
 // config/vaulter-media.php
-// config/vaulter-media.php
 'dedup' => ['scope' => 'tenant'], // the default; never use 'global' for untrusted tenants
+```
+
+<!-- snippet: config -->
+
+```php
 // config/vaulter.php
-'ids'   => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
+'ids' => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
 ```
 
 ::: warning Tenant scope is the host's responsibility
@@ -278,7 +282,7 @@ Register it as a named driver and select it:
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
@@ -361,11 +365,11 @@ Register it any of three ways — config FQCN (cache-safe), a runtime call, or a
 <!-- snippet: config -->
 
 ```php [config]
-// config/vaulter.php
+// config/vaulter-drive.php
 'handlers' => [
     \App\Vaulter\Handlers\CadHandler::class, // before the fallbacks
-    \Vaulter\Handlers\Builtin\PreviewHandler::class,
-    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
+    \Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
+    \Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -543,7 +547,7 @@ final class ShortTokenGenerator implements ShareTokenGenerator
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'sharing' => [
     'token_generator' => \App\Vaulter\ShortTokenGenerator::class,
     'url_base'        => env('VAULTER_SHARE_URL_BASE', '/share'),

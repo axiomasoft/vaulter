@@ -31,17 +31,17 @@ config key or an event is **MINOR**.
 
 A new config key is added this way, for example the upload completion budget
 `vaulter-drive.uploads.resumable.complete_timeout_seconds` (`VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS`,
-integer 1..300, default 60, PLAN4-D19). It bounds one completion request, DB retries included; when it runs
+integer 1..300, default 60). It bounds one completion request, DB retries included; when it runs
 out the completion is refused with `upload_conflict` (409), nothing is published and the staged bytes stay
 for a repeat.
 
-The budget is enforceable only on a local staging disk. Resumable completion (`tus`, `s3-multipart`; the names are protocols, not storage capabilities) on a remote, S3 or opaque custom disk is **unsupported**: it is refused with `upload_conflict` (409) before any storage I/O. Upgrade note: stage resumable uploads on a local disk; single-shot `direct` upload and the content-addressed store on S3 are unaffected. A session already committed before this change may still run its pending staged cleanup on the staged disk without a hard deadline (known limitation, owner runbook P8.2).
+The budget is enforceable only on a local staging disk. Resumable completion (`tus`, `s3-multipart`; the names are protocols, not storage capabilities) on a remote, S3 or opaque custom disk is **unsupported**: it is refused with `upload_conflict` (409) before any storage I/O. Upgrade note: stage resumable uploads on a local disk; single-shot `direct` upload and the content-addressed store on S3 are unaffected. A session already committed before this change may still run its pending staged cleanup on the staged disk without a hard deadline (known limitation).
 
-### I13: current PHP surface
+### Current PHP surface
 
-After P6.3 the PHP API/SPI catalog follows the current source: I13 uses block mode with zero temporary exceptions and zero permanent host-input entries. Readonly results include `UploadSessionSnapshot`, change pages and nested snapshot facts; events carry snapshots and scalar facts instead of domain ORM models.
+The PHP API/SPI catalog follows the current source: the `scan-i13` boundary scan runs in block mode with no temporary exceptions and no permanent host-input entries. Readonly results include `UploadSessionSnapshot`, change pages and nested snapshot facts; events carry snapshots and scalar facts instead of domain ORM models.
 
-`NodeSnapshotContributor` remains a supported implement-SPI: `contribute()` receives model-free `list<NodeSnapshot>` before fragments, viewer state or reader keys are added. Load owned aggregates by node id. `HasDrives` remains an available trait, with an internal ORM `drives()` relation; supported listing uses `Vaulter::drives($actor)` returning `Page<DriveSnapshot>`. ORM configuration getters and native factories are internal; configuration keys remain valid. Shared BC qualification and the common guard/corpus belong to P6.2; this catalog update does not claim they passed.
+`NodeSnapshotContributor` remains a supported implement-SPI: `contribute()` receives model-free `list<NodeSnapshot>` before fragments, viewer state or reader keys are added. Load owned aggregates by node id. `HasDrives` remains an available trait, with an internal ORM `drives()` relation; supported listing uses `Vaulter::drives($actor)` returning `Page<DriveSnapshot>`. ORM configuration getters and native factories are internal; configuration keys remain valid.
 
 ## Packages and versions
 
@@ -103,8 +103,6 @@ each engine gives you and the handful of Postgres specifics the schema depends o
 Install 1.0 on an empty database. Each offered module installs its tables even when
 disabled at runtime: one create migration per table, with a rollback that drops it.
 `vaulter.database.table_prefix` applies to every table; per-table overrides are unsupported.
-There is no migration bridge from 0.x, preflight or data backfill. See
-[the upgrade guide](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
 
 ### Aggregate head integrity
 
@@ -293,19 +291,19 @@ Each `TestCase` migrates its own schema on start, so run one schema group per in
 
 ## Public contract catalog
 
-> PHP source inputs refreshed by P6.3 I13 closure; structural adapters and CI wiring are implemented. No row is a runtime qualification; "not_checked" means no machine snapshot exists and none is invented.
+> Structural adapters and CI wiring are implemented. No row is a runtime qualification; "not_checked" means no machine snapshot exists and none is invented.
 
 | Surface | Machine source | 1.x promise | Detection | Qualification |
 |:--|:--|:--|:--|:--|
-| PHP API (`#[Api]`) | `packages/<p>/tests/Arch/__snapshots__/surface.{txt,json}` | no removal or narrowing of types, methods, parameters (parameter names are API: named arguments), constants, enum cases | machine drift | conservative BREAK-REVIEW guard (P6.2) |
+| PHP API (`#[Api]`) | `packages/<p>/tests/Arch/__snapshots__/surface.{txt,json}` | no removal or narrowing of types, methods, parameters (parameter names are API: named arguments), constants, enum cases | machine drift | conservative BREAK-REVIEW guard |
 | PHP SPI (`#[Spi]`) | same snapshots (`surface.json` and readable `surface.txt`) | no new required members on an implement-SPI; extend via a new interface or explicit decision | machine drift | owner qualification |
 | Internal | `#[Internal]` / Internal namespace | none | attribute scan | n/a |
-| REST (public) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR is forbidden; includes confidential cursors and bounded grants/shares pages (paging to `next_cursor=null`, empty page with continuation) | machine drift (P6.2) | consumer-runtime |
-| REST (private hub) | `packages/collaboration/openapi/hub.yaml`; protocol claim `protocol` | version via claim; private, no 1.x promise to hosts | machine drift (P6.2) | owner qualification |
-| Problem codes | `vaulter:errors`, `x-vaulter-problems` | codes not removed, status unchanged | command output | manual / not_checked until P6.3 |
+| REST (public) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR is forbidden; includes confidential cursors and bounded grants/shares pages (paging to `next_cursor=null`, empty page with continuation) | machine drift | consumer-runtime |
+| REST (private hub) | `packages/collaboration/openapi/hub.yaml`; protocol claim `protocol` | version via claim; private, no 1.x promise to hosts | machine drift | owner qualification |
+| Problem codes | `vaulter:errors`, `x-vaulter-problems` | codes not removed, status unchanged | command output | manual / not_checked |
 | Events | event catalog; no machine payload schema yet | fields not removed; new fields optional; envelope versioned | not_checked (no machine snapshot) | manual; no schema path invented |
 | Config / env / publish tags | `tests/Repo/Arch/Fixtures/identities/*` | keys not removed without an alias cycle | identities-config drift | owner qualification |
-| Container bindings / tags | documented provider `register()` bindings/tags plus an explicit container-contract fixture; no universal bindings snapshot (`identities-bindings.json` does not exist) | documented ids and tags stay resolvable | manual / not_checked | owner: `packages/core`, line 1.x; P6.3 |
+| Container bindings / tags | documented provider `register()` bindings/tags plus an explicit container-contract fixture; no universal bindings snapshot (`identities-bindings.json` does not exist) | documented ids and tags stay resolvable | manual / not_checked | owner: `packages/core`, line 1.x |
 | Commands | identities-cli | names, options, exit codes | names/options drift; exit codes not_checked | manual |
 | DB schema | `packages/core/tests/Fixtures/Schema/expected/**` | additive migrations only in 1.x; upgrade fixtures from 1.0 | fixture drift | owner qualification |
 | Operation catalog | `vaulter:operations`, `tests/Repo/Arch/MutationContractCoverageTest.php` | operation names stable; no second manual catalog | machine drift | consumer-runtime |
@@ -313,18 +311,18 @@ Each `TestCase` migrates its own schema on start, so run one schema group per in
 | Storage key/layout and integrity versions | manual / not_checked (no machine snapshot) | layout and integrity version not changed in 1.x without migration | not_checked | owner: `packages/media` (CAS), line 1.x |
 | Queued job / receipt serialization, retry/drain | manual / not_checked | serialized jobs and receipts from 1.x readable by later 1.x; retry/drain semantics unchanged. A passing signature check does not qualify rolling workers: mixed versions need a drain-old-workers policy or an owner tuple test | not_checked | owner: `packages/drive`/`core`, line 1.x; no BC pass claimed |
 | Persisted document schema, protocol wire versions | manual / not_checked | versions only grow compatibly | not_checked | owner: `packages/documents`/`collaboration`, line 1.x |
-| Hub/image environment variables | `packages/collaboration/hub` source/config and private docs; manual / not_checked, Docker runtime deferred to P8.2 | names not removed without alias | not_checked | owner: `packages/collaboration`, line 1.x |
-| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | each package’s `etc/index.api.md`, `etc/components.surface.txt`, public entrypoints and consumer type fixtures | removed exports are BREAK; changed declarations, required props or emits are REVIEW | `api:surface:check` checks declaration freshness in each Vue CI job; the trusted `npm-surface` coordinator compares with the independent release-line predecessor | declaration guard only; packed/runtime qualification is P8.2 |
-| Root-only `composer.json` keys (D8) | root `composer.json` | split packages do not inherit root-only keys; not a package promise | not_checked | manual |
+| Hub/image environment variables | `packages/collaboration/hub` source/config and private docs; manual / not_checked, Docker runtime is owner qualification | names not removed without alias | not_checked | owner: `packages/collaboration`, line 1.x |
+| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | each package’s `etc/index.api.md`, `etc/components.surface.txt`, public entrypoints and consumer type fixtures | removed exports are BREAK; changed declarations, required props or emits are REVIEW | `api:surface:check` checks declaration freshness in each Vue CI job; the trusted `npm-surface` coordinator compares with the independent release-line predecessor | declaration guard only; packed/runtime qualification is owner work |
+| Root-only `composer.json` keys | root `composer.json` | split packages do not inherit root-only keys; not a package promise | not_checked | manual |
 
-Named arguments are part of the API for `#[Api]` types; unstable constructors are `#[Internal]` (D27, `tests/Repo/Arch/SurfaceRulesTest.php`). Attributes do not guarantee behavior.
+Named arguments are part of the API for `#[Api]` types; unstable constructors are `#[Internal]` (`tests/Repo/Arch/SurfaceRulesTest.php`). Attributes do not guarantee behavior.
 
 ### Deprecation policy (1.x)
 
 Deprecated items live at least one minor cycle, warn once per process (`E_USER_DEPRECATED` or log, never in the hot path), name the replacement and removal version; a config alias reads the old value and doctor reports the migration. Removal happens only in 2.0, except security exceptions with an advisory. See ADR-0037.
 
 
-### BC gate: source, freeze and trusted tool identities (D18)
+### BC gate: source, freeze and trusted tool identities
 
 | Identity | Authority and purpose | Boundary |
 |:--|:--|:--|
@@ -334,14 +332,19 @@ Deprecated items live at least one minor cycle, warn once per process (`E_USER_D
 | A | Protected external exact approval bundle for S, policy, exceptions and tool closure | Identical surface hashes do not transfer approval to another S |
 
 `contract-bc` participates in CI lane selection, `needs` and the final `CI gate` verdict.
-A required failed, cancelled, missing or skipped job blocks the gate. The standalone
+A required failed, cancelled, missing or skipped job blocks the gate. The lane is required
+only on a repository whose owner provisioned the trusted host: when neither
+`BC_HOST_BOOTSTRAP` nor `BC_HOST_PYTHON` is set as a repository variable, the plan reports
+`contract_bc_provisioned=false`, the job is not run, and `CI gate` accepts that skip with a
+notice. Such a run makes no BC claim. Once either variable is set the lane runs and
+blocks, and an incomplete setup fails it. The standalone
 OpenAPI workflow calls the same externally provisioned host bootstrap. Both public
 `openapi/vaulter-v1.yaml` (core / php-public) and private hub spec (collaboration /
 php-collaboration) use their resolved release-line bases. Local referenced files and
 JSON-pointer fragments must resolve on both sides, including shared schemas. Remote
 refs, missing inputs and an unavailable oasdiff are `not_checked` / exit 2 in CI.
 The transitional tested pin is `tufin/oasdiff:v1.33.0`, in the trusted wrapper's
-`Contract/openapi-check.py`; P7.1 has not yet supplied a pins manifest.
+`Contract/openapi-check.py`; there is no pins manifest yet.
 Synthetic oasdiff records argv and exit propagation only; it proves no REST compatibility.
 
 Owner host provisioning is required before this lane can pass: provision an externally
@@ -350,7 +353,7 @@ supply `BC_HOST_PYTHON`, `BC_HOST_BOOTSTRAP`, `BC_TOOL_ROOT`, `BC_TOOL_REV`,
 `BC_SHA256SUMS`, `BC_RUNTIME_APPROVAL`, and `BC_RUNTIME_APPROVAL_SHA256` through the
 protected control plane. Never obtain approval from candidate files. No such external
 provisioning or branch-protection enforcement is claimed by these repository fixtures.
-Missing provisioning blocks, rather than qualifying a release.
+Partial provisioning blocks, rather than qualifying a release.
 
 The bootstrap is invoked with isolated Python (`-I`) outside the candidate cwd. Its
 external SHA256SUMS must enumerate exactly every regular file in T, including ignored
@@ -394,9 +397,9 @@ and applies the exact exception policy. The public `api:check` continues to chec
 OpenAPI types and is not a replacement for either declaration check.
 
 A known missing release is a tooling error. No predecessor is
-`initial_bootstrap`, never a self-baseline BC pass; only external exact D18 approval
+`initial_bootstrap`, never a self-baseline BC pass; only an external exact approval (A)
 can admit an initial release. Reports distinguish changes, errors, selected bases,
 policy/source SHAs, `not_checked`, and pending qualification. Structural signatures,
 identity/schema and npm declaration guards do not qualify runtime semantics, serial
 workers, actual tgz/ZIP consumers, Docker, installs or upgrades. Those remain pending
-owner P8.2 runs; actual runtime qualification is false in synthetic reports.
+owner runs; actual runtime qualification is false in synthetic reports.

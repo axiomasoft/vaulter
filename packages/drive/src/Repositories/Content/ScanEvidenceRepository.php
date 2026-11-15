@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Content;
 
 use DateTimeImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanEvidence;
@@ -51,7 +52,7 @@ final readonly class ScanEvidenceRepository
         $edgeClass = $this->config->model('file_revision_blob');
 
         return $revisionClass::query()->where('tenant_id', $snapshot['drive']->tenant_id)->where('scan_status', 'infected')
-            ->where(function ($query) use ($blob, $edgeClass): void {
+            ->where(function (Builder $query) use ($blob, $edgeClass): void {
                 $query->where('blob_id', $blob->id)->orWhereIn('id', $edgeClass::query()->select('file_revision_id')->where('blob_id', $blob->id));
             })->exists();
     }

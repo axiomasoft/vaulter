@@ -18,7 +18,7 @@ use Vaulter\Webhooks\Repositories\WebhookDeliveryStoreRepository;
  * status 'delivered' or 'dead' (DLQ), whose updated_at (the terminalisation time) is
  * older than the window. A 'pending'/'failed' row is in-flight / retryable — the
  * due-retry sweep still owns it — and is NEVER touched. The outbox itself has its own
- * retention, vaulter:outbox:prune (D29).
+ * retention, vaulter:outbox:prune.
  *
  * The window comes from configuration key vaulter-webhooks.retention_days (default 30, floored
  * at 0) unless --days overrides it. Deleted rows cannot be restored or replayed, so

@@ -1,7 +1,7 @@
 import type { Change, ChangeRemove, ChangeUpsert, ChangePage, Node } from './types'
 
 /**
- * A client copy of what the change feed shows one reader (PLAN4.D20). The cursor and the nodes
+ * A client copy of what the change feed shows one reader. The cursor and the nodes
  * move together: a page is applied as a whole and the next cursor is stored with its result.
  */
 export interface SyncCache {

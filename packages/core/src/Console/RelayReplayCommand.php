@@ -11,7 +11,7 @@ use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Events\Outbox\OutboxRelay;
 
 /**
- * Closes a gap of an outbox consumer (D29): makes the events of [--from, --to] that retention still holds pending
+ * Closes a gap of an outbox consumer: makes the events of [--from, --to] that retention still holds pending
  * again for the consumer (done and dead rows included, with a fresh attempt budget) and acknowledges the gaps the
  * range covers. A leased row is left to its worker and the gap stays open while one remains. --ack-only
  * acknowledges the loss without a replay. Exits 1 when part of the range is no longer in the outbox, and prints
@@ -28,7 +28,7 @@ final class RelayReplayCommand extends Command
         {--to= : The last outbox seq}
         {--ack-only : Acknowledge the gaps of the range without replaying it}';
 
-    protected $description = 'Replay a range of the outbox to one consumer, or acknowledge its gap (D29).';
+    protected $description = 'Replay a range of the outbox to one consumer, or acknowledge its gap.';
 
     public function handle(OutboxRelay $relay): int
     {

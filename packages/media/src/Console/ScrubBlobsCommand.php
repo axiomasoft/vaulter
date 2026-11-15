@@ -11,7 +11,7 @@ use Vaulter\Media\Cas\BlobScrubber;
 use Vaulter\Tenancy\Tenancy;
 
 /**
- * The integrity scrub of the CAS (D49): reads a sample of committed blobs back from the storage and marks the ones
+ * The integrity scrub of the CAS: reads a sample of committed blobs back from the storage and marks the ones
  * whose object is missing, has another size or another sha256. It never deletes bytes, pins or rows. ACL-blind,
  * system context. The sample is the never-checked blobs first, then the least recently checked; the run ends at the
  * first of --limit, --max-bytes and --max-seconds (defaults: vaulter-media.scrub.*). --dry-run reads and reports
@@ -32,7 +32,7 @@ final class ScrubBlobsCommand extends Command
         {--scope= : Only the blobs of one scope key (tenant:<id>, drive:<id> or off:<id>)}
         {--dry-run : Read and report, write nothing}';
 
-    protected $description = 'Verify the size and sha256 of a sample of stored blobs and mark the damaged ones (D49)';
+    protected $description = 'Verify the size and sha256 of a sample of stored blobs and mark the damaged ones';
 
     public function handle(BlobScrubber $scrubber): int
     {

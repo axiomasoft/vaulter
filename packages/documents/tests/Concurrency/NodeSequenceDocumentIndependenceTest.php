@@ -23,13 +23,14 @@ beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this, app(VaulterDatabase::class)->connection()->getName());
 });
 
+// A JSON update of a document with a collaboration binding fences its open rooms, as a restore does: both move the epoch.
 dataset('content writers', [
-    'collaboration store' => ['store', 2, 0],
-    'JSON update' => ['update', 2, 0],
-    'restore' => ['restore', 2, 1],
+    'collaboration store' => ['store', 2, 0, 0],
+    'JSON update' => ['update', 2, 1, 1],
+    'restore' => ['restore', 2, 1, 2],
 ]);
 
-it('lets a rename with expectedSequence succeed beside a parallel content write: :dataset', function (string $writer, int $stateVersion, int $epoch): void {
+it('lets a rename with expectedSequence succeed beside a parallel content write: :dataset', function (string $writer, int $stateVersion, int $epoch, int $events): void {
     $node = RaceFixtures::document(sequence: 7);
     $drive = $node->storage;
     $first = DocumentTestHelpers::head($node);
@@ -51,8 +52,9 @@ it('lets a rename with expectedSequence succeed beside a parallel content write:
 
     $document = DocumentTestHelpers::document($node);
     expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])
-        // Restore raises two content events (revision created + restored), the rest one.
-        ->and($results[0]['events'])->toBe($writer === 'restore' ? 2 : 1)
+        // Restore raises two content events (revision created + restored), an update one; the store writes the state
+        // directly and raises none.
+        ->and($results[0]['events'])->toBe($events)
         ->and($results[1]['events'])->toBe(1)
         // Only the rename moves the node validator; only the content writer moves the content ones.
         ->and($node->refresh()->sequence)->toBe(8)

@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\StringList;
 use Vaulter\Attributes\Internal;
+use Vaulter\Configuration\StringList;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
@@ -65,5 +65,4 @@ final readonly class DownloadsConfig
 
         return $mimes === [] ? $default : array_values(array_unique($mimes));
     }
-
 }

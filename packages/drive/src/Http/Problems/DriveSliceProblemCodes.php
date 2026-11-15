@@ -50,7 +50,7 @@ use Vaulter\Http\Problems\Retryable;
  * lang/{en,ru}/problems.php and in the reference docs together.
  *
  * Visibility (404), authentication and authorization codes are never cached as an idempotency receipt; a
- * deterministic domain refusal (409, 412, 413, 422) is (D25).
+ * deterministic domain refusal (409, 412, 413, 422) is.
  */
 #[Internal]
 final class DriveSliceProblemCodes implements ProblemCodeSource
@@ -84,10 +84,10 @@ final class DriveSliceProblemCodes implements ProblemCodeSource
             'node_sequence_mismatch' => new ProblemSpec(412, StaleNodeException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             'node_trashed_by_ancestor' => new ProblemSpec(409, NodeTrashedByAncestorException::class, receipt: ReceiptPolicy::Cacheable),
             'not_a_file' => new ProblemSpec(422, NotAFileException::class, receipt: ReceiptPolicy::Cacheable),
-            // A 403 of the profile policy is an authorization refusal: never cached (D25).
+            // A 403 of the profile policy is an authorization refusal: never cached.
             'profile_restriction' => new ProblemSpec(403, ProfileRestrictionException::class),
             'quota_exceeded' => new ProblemSpec(413, QuotaExceededException::class, receipt: ReceiptPolicy::Cacheable),
-            // The destination may come back between two attempts of the same request: not a deterministic outcome, never cached (D25).
+            // The destination may come back between two attempts of the same request: not a deterministic outcome, never cached.
             'restore_destination_changed' => new ProblemSpec(409, RestoreDestinationChangedException::class, Retryable::AfterRefetch),
             'restore_destination_required' => new ProblemSpec(409, RestoreDestinationRequiredException::class, receipt: ReceiptPolicy::Cacheable),
             'revision_not_found' => new ProblemSpec(404),

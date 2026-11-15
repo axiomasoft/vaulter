@@ -22,7 +22,7 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
 
 /**
- * How the host tells the drive that effective permissions changed outside it (D26): the roles its
+ * How the host tells the drive that effective permissions changed outside it: the roles its
  * {@see PermissionDriver} answers, a drive's policy or profile, a deactivated tenant. The drive cannot see those
  * changes, so whoever keeps derived authority (a collaboration session) would not check it again before it expires.
  *
@@ -32,8 +32,8 @@ use Vaulter\ValueObjects\Operations\TenantRef;
  * before the commit would still read the old rights.
  *
  * In the same transaction, after the event is recorded, the change journal epoch of that drive (or of every drive,
- * in one UPDATE) is raised, so every change cursor expires (410) and its reader bootstraps against the new rights
- * (PLAN4.D20). The journal seq does not move; the event itself is not journaled. A failure rolls back both, and the
+ * in one UPDATE) is raised, so every change cursor expires (410) and its reader bootstraps against the new rights.
+ * The journal seq does not move; the event itself is not journaled. A failure rolls back both, and the
  * host may call again.
  */
 #[Api]

@@ -15,11 +15,30 @@ outline: deep
 сначала пройдите [Установку](/ru/getting-started/installation) (это две команды).
 :::
 
-## 1. (Авторизация работает «из коробки»)
+## 1. Выдать пользователю доступ
 
 Vaulter по умолчанию использует автономный драйвер ролей **`database`**, поэтому чистому
-Laravel-приложению **не нужна никакая настройка авторизации**, чтобы начать — доступ решают
-гранты на узлы (`v_node_grants`), которые читает собственный `AccessResolver` Vaulter.
+Laravel-приложению **не нужно подключать драйвер**, чтобы начать — доступ решают
+гранты на узлы (`v_node_grants`), которые читает собственный `AccessResolver` Vaulter. У нового диска
+грантов нет, поэтому даже пользователь его сущности ничего не видит, пока не получит грант. Выдайте
+пользователю роль владельца на корне один раз, например при создании сущности диска:
+
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-grant -->
+
+```php
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Facades\Vaulter;
+
+// A new drive grants nobody: give the user the owner role on its root once, as the system.
+$system = Vaulter::drive($project)->asSystem('drive owner setup');
+$system->access()->grant($system->root(), new GrantInput(
+    subject: Subject::ofModel($user),
+    role: RoleRegistry::OWNER,
+));
+```
+
 
 К этому возвращаются, только когда нужно, чтобы роли из *вашего* приложения учитывались. Чтобы
 сменить полосу, задайте один ключ конфига:
@@ -27,7 +46,7 @@ Laravel-приложению **не нужна никакая настройка
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => 'gate', // database (по умолчанию) | gate | spatie | azguard | <ваш FQCN>
 ],

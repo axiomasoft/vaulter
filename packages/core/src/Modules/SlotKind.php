@@ -7,7 +7,7 @@ namespace Vaulter\Modules;
 use Vaulter\Attributes\Api;
 
 /**
- * What a contribution to a slot may do (D8). The kind is fixed by the module that defines the slot;
+ * What a contribution to a slot may do. The kind is fixed by the module that defines the slot;
  * an observer is an ordinary Laravel listener, not a slot.
  */
 #[Api]

@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
 /**
- * The references one module keeps in the data of another that no foreign key shows — the media pins (D23): an owner
+ * The references one module keeps in the data of another that no foreign key shows — the media pins: an owner
  * module pins blobs under its own `<module>.<what>` owner type. `vaulter:module:uninstall` reads them from the module
  * that holds them (its manifest implements {@see HoldsReferences}): references kept on the data of the module being
  * removed refuse the removal, and its own are released by `--purge` only. The kernel knows no table of the holder.

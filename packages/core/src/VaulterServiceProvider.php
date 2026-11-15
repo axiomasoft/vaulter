@@ -27,7 +27,7 @@ use Vaulter\Security\ProductionInvariants;
 /**
  * The core provider offers the core manifest and runs the module kernel:
  * it compiles every offered manifest once all providers registered, seals the result and applies the
- * declarations of the active modules (ADR-0027). It registers nothing else itself.
+ * declarations of the active modules (docs/adr/0027-kernel-boundaries-and-modules.md). It registers nothing else itself.
  */
 #[Api]
 final class VaulterServiceProvider extends PackageServiceProvider

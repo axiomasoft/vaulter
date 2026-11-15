@@ -10,7 +10,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * The canonical forms of D25. The scope digest is SHA-256 over the tagged tuple (tenant kind/id, scope kind/id,
+ * The canonical forms of. The scope digest is SHA-256 over the tagged tuple (tenant kind/id, scope kind/id,
  * actor kind/id, operation, key), each field length-prefixed (`<len>:<bytes>`, a null as `~`), so no two
  * tuples share an encoding and a null tenant or system actor stays a distinct value; the actor id itself prefixes
  * the length of the actor type, so a type or id holding the delimiter stays apart. The request hash is

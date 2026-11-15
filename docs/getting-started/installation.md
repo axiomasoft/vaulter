@@ -11,8 +11,8 @@ package. The optional realtime collaboration uses a small Node service. Install 
 first.
 
 ::: tip Requirements
-PHP `^8.4`, Laravel `^12.0 || ^13.0`, and (for the UI) Vue `^3.4` / Node `>=20`. See
-[Requirements](/getting-started/installation) for the full matrix.
+PHP `^8.4`, Laravel `^13.0`, and (for the UI) Vue `^3.4` / Node `>=26`. See
+[Compatibility](/reference/compatibility) for the supported versions and release lines.
 :::
 
 ## 1. Backend — the Laravel package
@@ -45,8 +45,7 @@ Either command also pulls in `axioma-studio/vaulter-core` as a dependency, so a
 plain `composer require axioma-studio/vaulter-core` alone is only useful if you build your own modules
 on the kernel.
 
-Four packages are not in the metapackage and are installed on demand. Each requires `vaulter-drive` (collaboration also
-requires `vaulter-documents`):
+Three packages are not in the metapackage and are installed on demand. Each requires `vaulter-drive`:
 
 <!-- snippet: shell -->
 
@@ -59,7 +58,6 @@ composer require axioma-studio/vaulter-filament
 
 # AzGuard permission driver
 composer require axioma-studio/vaulter-azguard
-
 ```
 
 `vaulter-webhooks` opens outbound network traffic, so its module stays off until you switch it on in
@@ -89,7 +87,8 @@ php artisan vaulter:install
   edits `config/*.php` or `.env`; choose the permission driver with `vaulter-drive.access.permission_driver`
   (`VAULTER_PERMISSION_DRIVER`),
 - asks to run `php artisan migrate` (or runs it with `--migrate`),
-- asks to star the repo on GitHub.
+- runs `php artisan vaulter:doctor` and reports its findings (they never fail the install),
+- offers the link to star the repository on GitHub.
 
 Without a terminal it takes the options or the defaults and does not migrate unless `--migrate`
 is given. Running it again is safe. See [Commands → `vaulter:install`](/reference/commands#vaulter-install).
@@ -97,34 +96,27 @@ is given. Running it again is safe. See [Commands → `vaulter:install`](/refere
 
 ### Manual install
 
-Prefer to do it step by step? The install command is equivalent to:
-
-::: code-group
-
-<!-- snippet: shell -->
-
-```bash [publish + migrate]
-php artisan vendor:publish --tag=vaulter-config
-php artisan migrate
-```
+Prefer to do it step by step? Publish the config of each installed package (one tag per package), then
+migrate and check the install:
 
 <!-- snippet: shell -->
 
-```bash [config only]
-# Vaulter's migrations run from vendor/ and are never published,
-# so the minimum is just the config file:
+```bash
 php artisan vendor:publish --tag=vaulter-config
+php artisan vendor:publish --tag=vaulter-media-config
+php artisan vendor:publish --tag=vaulter-drive-config
+php artisan vendor:publish --tag=vaulter-documents-config
 php artisan migrate
+php artisan vaulter:doctor
 ```
-
-:::
 
 ::: info Migrations are not published
 Every package runs the migrations of the tables it owns straight from `vendor/`: `vaulter-core` the
 outbox and idempotency keys, `vaulter-media` the blobs and their pins, `vaulter-drive` the drive tables,
 `vaulter-documents` the document tables, `vaulter-webhooks` the endpoints and deliveries. There is no publish tag for them, so there are no published
-copies to drift from the package, and a table you did not install a package for is never created. The
-published config lands at `config/vaulter.php`.
+copies to drift from the package, and a table you did not install a package for is never created. Each
+package publishes its own config file: `config/vaulter.php` for the kernel, `config/vaulter-media.php`,
+`config/vaulter-drive.php`, `config/vaulter-documents.php` and so on.
 :::
 
 ## 2. Frontend — the Vue package
@@ -164,18 +156,19 @@ Commercial add-on operations are documented in its private guide.
 
 ## Verify the install
 
-A quick sanity check from `tinker`:
+A quick sanity check from `tinker`. There is no signed-in user there, so the call names the system actor
+explicitly (every Vaulter call runs as a user or as the system):
 
 <!-- snippet: host -->
 
 ```php
 use Vaulter\Drive\Facades\Vaulter;
 
-$drive = Vaulter::drive($user);   // any Eloquent model
-$drive->root();                 // the auto-provisioned root folder Node
+$drive = Vaulter::drive($user);         // any Eloquent model
+$drive->asSystem('install check')->root(); // the auto-provisioned root folder
 ```
 
-If that returns a `Node`, the backend is wired correctly.
+If that returns a `Vaulter\Drive\Data\Snapshots\NodeSnapshot`, the backend is wired correctly.
 
 ## Next steps
 

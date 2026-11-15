@@ -22,7 +22,7 @@ use Vaulter\Kernel;
 use Vaulter\Modules\SlotContribution;
 
 /**
- * The relay of the outbox (D29), run by `vaulter:relay`. One pass:
+ * The relay of the outbox, run by `vaulter:relay`. One pass:
  *
  *  1. Register — every consumer of the sealed registry gets its row (a new one starts at the current seq, a paused
  *     one resumes, a detached one starts over); rows of consumers the registry does not hold are paused.

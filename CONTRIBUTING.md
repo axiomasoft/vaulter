@@ -31,7 +31,7 @@ access to the private source; public consumers can install the public packages i
 ## Prerequisites
 
 - PHP `^8.4` with `composer`
-- Node `>=22` with `npm`
+- Node `>=26` with `npm`
 - Docker (optional — only for the collaboration hub stands, `scripts/collab-stand.sh`)
 
 ## Setup

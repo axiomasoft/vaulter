@@ -27,9 +27,9 @@ use Vaulter\Support\Identity;
  * Delete one non-current revision of a file — the single path of the API
  * and of the retention pruning. Lock order T(shared) → N(file node) → F(v_files) →
  * R(revision) → Q(drive quota) → C(CAS edges). Under the file and revision locks the
- * head and pinned revisions are refused (P4-I19), so a concurrent new revision or pin
+ * head and pinned revisions are refused, so a concurrent new revision or pin
  * cannot slip between the choice and the delete. The revision's bytes leave the
- * quota in one conditional UPDATE (P4-I18); its blobs lose their edges and pins and
+ * quota in one conditional UPDATE; its blobs lose their edges and pins and
  * become GC candidates on the existing path. The node's sequence does not move: the file's
  * content is unchanged.
  *
@@ -85,7 +85,7 @@ final readonly class DeleteFileRevisionAction
                 $this->drives->adjustUsedBytes(storage: $context->drive, delta: -$locked->size_bytes);
             }
 
-            // The edges and their pins go before the row: the cascade would leave the pins behind (D23).
+            // The edges and their pins go before the row: the cascade would leave the pins behind.
             $this->links->detachAll([$locked->id]);
 
             $this->revisions->delete($locked);

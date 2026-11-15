@@ -12,7 +12,7 @@ use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
 
 /**
- * Counts a change of effective permissions (`collaboration.permissions`, an event sink, D46): in the transaction of
+ * Counts a change of effective permissions (`collaboration.permissions`, an event sink): in the transaction of
  * drive.access.effective_permissions_changed it increments the version of the event's drive (`drive:<id>`, for a node,
  * subtree or drive scope) or the global version. The change and its count commit or roll back together.
  *

@@ -11,7 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\SinkWriter;
 
 /**
- * The permission versions of v_collaboration_permission_versions (D46): one monotonic counter per scope key,
+ * The permission versions of v_collaboration_permission_versions: one monotonic counter per scope key,
  * `drive:<id>` or `global`. A missing row is version 0. Only {@see PermissionVersionSink} increments, in the
  * transaction of the drive's effective-permissions event, so a version never moves without the change it counts and
  * never moves back.

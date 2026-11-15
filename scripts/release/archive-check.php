@@ -27,6 +27,7 @@ function archiveContentErrors(string $path, array $package, array $manifest): ar
         $zip->getExternalAttributesIndex($i, $opsys, $attrs);
         if (!archiveSafePath($name) || (($attrs >> 16) & 0170000) === 0120000) {
             $errors[] = "unsafe path or symlink: {$name}";
+
             continue;
         }
         if (array_key_exists($name, $files)) {
@@ -155,11 +156,13 @@ function archiveMain(array $args): int
             $selection = $arg;
         } else {
             fwrite(STDERR, "archive-check: ambiguous/unknown argument {$arg}\n");
+
             return 2;
         }
     }
     if ($selection === null || ($worktree === ($ref !== null))) {
         fwrite(STDERR, "usage: archive-check.php <package>|--all --ref=COMMIT|--worktree\n");
+
         return 2;
     }
     $temp = sys_get_temp_dir().'/vaulter-archive-check-'.bin2hex(random_bytes(8));
@@ -221,6 +224,7 @@ function archiveMain(array $args): int
             $recordPath = $out.'/prepared/'.str_replace('/', '-', $package['name']).'.json';
             if (!is_file($recordPath) && ($package['excluded_unless_tagged'] ?? false)) {
                 $reports[] = ['package' => $package['name'], 'status' => 'excluded_untagged'];
+
                 continue;
             }
             $record = json_decode((string) file_get_contents($recordPath), true, 512, JSON_THROW_ON_ERROR);

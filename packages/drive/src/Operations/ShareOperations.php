@@ -58,7 +58,7 @@ final readonly class ShareOperations implements Contract
     public function create(NodeSnapshot|string|int $node, ShareLinkInput $input): MintedShareLink
     {
         $nodeId = self::idOf($node);
-        // An append (D47(4)); the receipt holds the token only as ciphertext (ID5).
+        // An append ((4)); the receipt holds the token only as ciphertext (ID5).
         $idempotency = $this->idempotent($nodeId, [
             'node' => $nodeId, 'role' => $input->role, 'audience' => $input->audience->value, 'scope' => $input->scope->value,
             'expires_at' => self::time($input->expiresAt), 'password' => $this->secret($input->password), 'max_uses' => $input->maxUses,

@@ -98,7 +98,7 @@ final readonly class DriveHandle implements Contract
     }
 
     /**
-     * A lifecycle change runs as the operation `drive.drives.<verb>` (D47(6)): admitted by the runner, keyed by an
+     * A lifecycle change runs as the operation `drive.drives.<verb>` ((6)): admitted by the runner, keyed by an
      * idempotency key when the handle carries one (the receipt is the drive snapshot at commit), authorized inside the
      * attempt — Manage on the root, or the system actor; an archived drive still allows its own lifecycle — and
      * compared with the expected version under the drive's row lock by the Action.

@@ -110,7 +110,7 @@ final readonly class FileOperations implements Contract
     public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, ?int $expectedSequence = null): FileRevisionSnapshot
     {
         $fileId = $file instanceof NodeSnapshot ? $file->id : (string) $file;
-        // Idempotent by key (D25): the receipt is the new head revision; a replay needs Edit on the file where it is now.
+        // Idempotent by key: the receipt is the new head revision; a replay needs Edit on the file where it is now.
         $idempotency = new IdempotentWrite(
             codec: new RevisionReceiptCodec,
             authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $fileId),
@@ -127,7 +127,7 @@ final readonly class FileOperations implements Contract
     public function deleteRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): void
     {
         $fileId = $file instanceof NodeSnapshot ? $file->id : (string) $file;
-        // Idempotent by key (D25): the receipt keeps the revision id and the file it hung under (ID2); a replay checks
+        // Idempotent by key: the receipt keeps the revision id and the file it hung under (ID2); a replay checks
         // Manage on that file, because the revision itself is gone.
         $idempotency = new IdempotentWrite(
             codec: new PurgeReceiptCodec,

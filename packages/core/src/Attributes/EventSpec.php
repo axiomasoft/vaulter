@@ -14,7 +14,7 @@ use Vaulter\Events\EventTypeContract;
  *
  * `data` maps each key to a short type (`string`, `int`, `bool`, `string|null`, `list<string>`, `object`);
  * a trailing `?` on the key marks a key that may be absent. `external` says the type may leave the process
- * through the outbox consumers (D38): the kernel knows no webhook. `activity` and `journal` are data for
+ * through the outbox consumers: the kernel knows no webhook. `activity` and `journal` are data for
  * the drive's event sinks — the activity feed and the change journal (`upsert`, `remove`, or null when the
  * type is not journalled); the kernel does not read them.
  */

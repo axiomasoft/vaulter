@@ -13,7 +13,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
 /**
- * The outbox settle window must outlast the longest Vaulter transaction (D29): reconciliation trusts only events
+ * The outbox settle window must outlast the longest Vaulter transaction: reconciliation trusts only events
  * older than the window, so a transaction the database lets run longer could commit a smaller seq that
  * reconciliation has already passed. The window is compared with the server's transaction limits — PostgreSQL
  * idle_in_transaction_session_timeout and statement_timeout, MySQL innodb_lock_wait_timeout. SQLite serialises

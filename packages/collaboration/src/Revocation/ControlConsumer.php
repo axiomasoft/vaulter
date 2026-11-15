@@ -19,7 +19,7 @@ use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Events\Outbox\OutboxEnvelope;
 
 /**
- * The collaboration module's control consumer (`collaboration.control`, ephemeral, D29): after a change of effective
+ * The collaboration module's control consumer (`collaboration.control`, ephemeral): after a change of effective
  * permissions commits, it tells the hubs `{v: 1, drive_id|null, scope, permissions_version, at}` through the
  * configured {@see ControlTransport}, so they re-check the rights of the connections of that drive (every connection
  * for a global change) at once instead of on the next append or renewal. `permissions_version` is the version of the

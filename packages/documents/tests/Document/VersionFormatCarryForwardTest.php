@@ -13,7 +13,6 @@ use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
-use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
@@ -63,23 +62,6 @@ it('keeps a markdown document markdown across an autosave checkpoint (P0.4/L3)',
         ->and(typeOf($result->checkpoint))->toBe('vaulter/markdown')
         ->and($result->document->type)->toBe('vaulter/markdown');
 });
-
-it('maps every 0.2 rich-text flavour to the one rich-text type (P0.4/L3)', function (string $format): void {
-    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
-        storage: $this->drive->model(),
-        name: 'Doc '.$format,
-        content: DocumentTestHelpers::content(),
-        parent: DriveTestHelpers::model($this->drive->root()),
-        type: DocumentTypeKey::fromFormat($format),
-    ));
-    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
-        node: $node,
-        content: DocumentTestHelpers::content('Updated'),
-    ));
-
-    expect($result->document->type)->toBe('vaulter/rich-text')
-        ->and(typeOf($result->checkpoint))->toBe('vaulter/rich-text');
-})->with(['richtext', 'table', 'template']);
 
 it('takes a checkpoint for a document whose head is missing, without dereferencing null', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 300);

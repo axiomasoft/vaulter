@@ -20,7 +20,7 @@ use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 
 /**
- * Permanently delete a node comment (docs/adr/0014-legacy-docvault-strangler.md шаг 1 — no soft-delete), under T
+ * Permanently delete a node comment (no soft-delete), under T
  * (shared) → N → the comment row with the drive writable and the node live
  * ({@see AddCommentAction}): deleting a comment is a mutation, whoever wrote it.
  * {@see CommentDeleted} is delivered after the outermost commit; the in-memory model

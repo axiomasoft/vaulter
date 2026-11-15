@@ -39,6 +39,7 @@ import os
 import re
 import shlex
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
@@ -57,6 +58,8 @@ LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboratio
 # PLAN3 P4.19 (I14): packages whose split archive must stand alone. azguard is the external gate (D20), filament has its
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
 CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
+# The repository variables that provision the trusted BC host; the plan step of ci.yml reads them.
+BC_HOST_VARIABLES = ('BC_HOST_BOOTSTRAP', 'BC_HOST_PYTHON')
 LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration', 'contract_bc': 'contract-bc'}
 REQUIRED_BC_LINES = ('php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration')
 
@@ -194,9 +197,12 @@ def derive_support(root: Path) -> dict:
         groups = root / 'tests' / 'Integration' / 'groups.php' if pkg == 'integration' else root / 'packages' / pkg / 'tests' / 'groups.php'
         text = re.sub(r'//[^\n]*|/\*.*?\*/', '', groups.read_text(encoding='utf-8') if groups.exists() else '', flags=re.S)
         serial = re.search(r"'serial'\s*=>\s*(?:\[|array\s*\()(.*?)(?:\]|\))\s*,", text, re.S)
+        database = re.search(r"'database'\s*=>\s*(?:\[|array\s*\()(.*?)(?:\]|\))\s*,", text, re.S)
         support[pkg] = {
             'dir': directory,
             'lines': lines,
+            # A package without database tests has no database partition for scripts/t to run, so no db lane.
+            'database': bool(database and database.group(1).strip()),
             'serial': bool(serial and serial.group(1).strip()),
             'types': 'pestphp/pest-plugin-type-coverage' in tooling,
             'rector': (root / directory / 'rector.php').exists(),
@@ -295,9 +301,13 @@ def check_ci(doc: dict, root: Path) -> list[str]:
     errors += check_sca(jobs.get('sca') or {})
     for job_id, workspace, lane in (('vue', '@vaulter/vue', 'vue'), ('vue-collaboration', '@vaulter/vue-collaboration', 'vue_collaboration')):
         errors += check_npm_declaration_job(job_id, workspace, lane, jobs.get(job_id) or {})
-    for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
+    for output in ('has_contract_bc', 'contract_bc_provisioned', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
         if (jobs.get('changes', {}).get('outputs') or {}).get(output) != '${{ steps.plan.outputs.' + output + ' }}':
             errors.append(f'{name}: changes must expose {output} from the actual plan')
+    plan_env = next((step.get('env') or {} for step in (jobs.get('changes') or {}).get('steps', []) if step.get('id') == 'plan'), {})
+    for variable in BC_HOST_VARIABLES:
+        if plan_env.get(variable) != '${{ vars.' + variable + ' }}':
+            errors.append(f'{name}: the plan step must read {variable} from the repository variables')
     errors += check_bc_release_policy(root)
     errors += check_support(name, doc, root)
     return errors
@@ -875,8 +885,9 @@ def _bool(value: bool) -> str:
     return 'true' if value else 'false'
 
 
-def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict | None = None) -> dict[str, str]:
-    """Matrices and lane flags of ci.yml. `all` (no usable base commit) is every default lane; `changed` follows the selector."""
+def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict | None = None, bc_provisioned: bool = True) -> dict[str, str]:
+    """Matrices and lane flags of ci.yml. `all` (no usable base commit) is every default lane; `changed` follows the selector.
+    `bc_provisioned` is false on a repository without the trusted BC host: contract-bc is then not planned."""
     php = [pkg for pkg in PHP_PACKAGES if pkg in support]
     skip_reason = ''
     if mode == 'all':
@@ -910,7 +921,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     quality_matrix = [{**package(pkg), 'rector': support[pkg]['rector']} for pkg in quality]
     db_matrix = [{**package(pkg), 'engine': engine, 'port': '5432' if engine == 'pgsql' else '3306',
                   'username': 'vaulter' if engine == 'pgsql' else 'root'}
-                 for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine]]
+                 for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine] and support[pkg]['database']]
     serial = [package(pkg) for pkg in affected if support[pkg]['serial']]
     # I14: a change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
     harness = 'repo' in suites
@@ -920,11 +931,12 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
         'quality': bool(quality_matrix), 'fast': bool(fast), 'db': bool(db_matrix), 'serial': bool(serial),
         'consumer': bool(consumer),
         'vue': 'vue' in suites, 'vue_collaboration': 'vue-collaboration' in suites, 'hub': 'hub' in suites, 'repo': 'repo' in suites,
-        'openapi': skip_reason == '', 'contract_bc': skip_reason == '',
+        'openapi': skip_reason == '', 'contract_bc': skip_reason == '' and bc_provisioned,
     }
     out = {'skip_reason': skip_reason, 'mode': mode}
+    out['contract_bc_provisioned'] = _bool(bc_provisioned)
     out['contract_bc_required_lines'] = json.dumps(list(REQUIRED_BC_LINES), separators=(',', ':'))
-    out['contract_bc_selected_lines'] = json.dumps(list(REQUIRED_BC_LINES) if skip_reason == '' else [], separators=(',', ':'))
+    out['contract_bc_selected_lines'] = json.dumps(list(REQUIRED_BC_LINES) if flags['contract_bc'] else [], separators=(',', ':'))
     for lane, value in flags.items():
         out[f'has_{lane}'] = _bool(value and skip_reason == '')
     for lane, rows in (('quality', quality_matrix), ('fast', fast), ('db', db_matrix), ('serial', serial), ('consumer', consumer)):
@@ -945,7 +957,9 @@ def gate_errors(needs: dict) -> list[str]:
     outputs = changes.get('outputs') or {}
     skip_reason = outputs.get('skip_reason', '')
     expected = {lane: outputs.get(f'has_{lane}') == 'true' for lane in LANES}
-    if not skip_reason and any(expected.values()) and not expected['contract_bc']:
+    # Only an explicit `false` from the plan excuses the contract gate: a missing output still requires it.
+    bc_provisioned = outputs.get('contract_bc_provisioned') != 'false'
+    if not skip_reason and any(expected.values()) and not expected['contract_bc'] and bc_provisioned:
         errors.append('contract_bc: every active CI plan requires the four-line contract gate')
     if expected['contract_bc']:
         for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
@@ -978,10 +992,17 @@ def gate_errors(needs: dict) -> list[str]:
     return errors
 
 
+def bc_host_provisioned(env: Mapping[str, str]) -> bool:
+    """Whether the owner provisioned the trusted BC host: any BC_HOST_* variable set. A partial setup still counts, so
+    contract-bc runs and fails on what is missing instead of being skipped."""
+    return any(env.get(name, '').strip() for name in BC_HOST_VARIABLES)
+
+
 def main_plan(argv: list[str]) -> int:
     options = dict(zip(argv[::2], argv[1::2]))
     mode = options.get('--mode', 'changed')
     support = json.loads(os.environ['PHP_SUPPORT'])
+    bc_provisioned = bc_host_provisioned(os.environ)
 
     def read(flag: str) -> dict:
         return json.loads(Path(options[flag]).read_text(encoding='utf-8'))
@@ -989,7 +1010,7 @@ def main_plan(argv: list[str]) -> int:
     changes = read('--changes') if mode == 'changed' else None
     db = {'pgsql': read('--db-pgsql'), 'mysql': read('--db-mysql')} if mode == 'changed' else None
     try:
-        outputs = plan_outputs(support, mode, changes, db)
+        outputs = plan_outputs(support, mode, changes, db, bc_provisioned)
     except ValueError as exc:
         print(f'plan: {exc}', file=sys.stderr)
         return 1
@@ -1004,7 +1025,10 @@ def main_gate() -> int:
         print(f'FAIL {error}', file=sys.stderr)
     if errors:
         return 1
-    reason = (json.loads(os.environ['NEEDS']).get('changes') or {}).get('outputs', {}).get('skip_reason', '')
+    outputs = (json.loads(os.environ['NEEDS']).get('changes') or {}).get('outputs', {})
+    reason = outputs.get('skip_reason', '')
+    if not reason and outputs.get('contract_bc_provisioned') == 'false':
+        print('::notice::contract-bc skipped: the trusted BC host (BC_HOST_*) is not provisioned on this repository')
     print(f'ci gate OK{f" (intended skip: {reason})" if reason else ""}')
     return 0
 

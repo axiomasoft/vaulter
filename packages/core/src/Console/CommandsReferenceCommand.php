@@ -22,9 +22,9 @@ use Vaulter\Modules\VaulterModule;
 #[Internal]
 final class CommandsReferenceCommand extends Command
 {
-    public const START = '<!-- vaulter:commands-reference:start -->';
+    public const string START = '<!-- vaulter:commands-reference:start -->';
 
-    public const END = '<!-- vaulter:commands-reference:end -->';
+    public const string END = '<!-- vaulter:commands-reference:end -->';
 
     protected $signature = 'vaulter:commands:reference
         {--check : Exit 1 when a page differs from the generated table, without writing}

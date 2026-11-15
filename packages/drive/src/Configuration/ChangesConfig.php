@@ -39,7 +39,7 @@ final readonly class ChangesConfig
     }
 
     /**
-     * The sync key generation (PLAN4.D20): raising it on every instance expires every
+     * The sync key generation: raising it on every instance expires every
      * cursor and changes every sync_key, so clients bootstrap again.
      */
     public function keyGeneration(): int

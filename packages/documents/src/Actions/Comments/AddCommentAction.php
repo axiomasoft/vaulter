@@ -23,7 +23,7 @@ use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Support\Identity;
 
 /**
- * Add a comment to a node (docs/adr/0014-legacy-docvault-strangler.md шаг 1). The author is the operation's actor — a
+ * Add a comment to a node. The author is the operation's actor — a
  * system operation has nobody to attribute the comment to and is refused.
  *
  * Lock order T (shared) → N (the node) → the comment row (F06): under both

@@ -89,7 +89,7 @@ they stay `final` (H.5).
 
 ## 2. The capability-policy invariants (read before you ship)
 
-`ContentCapabilities` is an **additive, open axis set** (P0.5). Three rules keep your handler
+`ContentCapabilities` is an **additive, open axis set**. Three rules keep your handler
 (and every handler that comes after it) safe to compose:
 
 1. **A capability you don't declare is `false`, never inferred** (except `downloadable`, which

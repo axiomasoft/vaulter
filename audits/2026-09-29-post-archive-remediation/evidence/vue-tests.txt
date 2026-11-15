@@ -1,8 +1,0 @@
-
- RUN  v4.1.10 /home/vostrikov/projects/packages/vaulter/packages/vue
-
-
- Test Files  11 passed (11)
-      Tests  112 passed (112)
-   Start at  12:26:12
-   Duration  760ms (transform 1.35s, setup 0ms, import 2.84s, tests 328ms, environment 1.89s)

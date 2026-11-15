@@ -170,7 +170,7 @@ final class GrantReadRepository
 
     /**
      * The earliest expiry, as a UTC unix time, of the live grants a subject-set holds in
-     * one drive (PLAN4.D20): the change cursor of that reader must not outlive it. Null
+     * one drive: the change cursor of that reader must not outlive it. Null
      * when every live grant is permanent or there is none, so there is no such bound.
      * The drive is reached through the node, as in {@see self::nodeIdsGrantedIn()}.
      *

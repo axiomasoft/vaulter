@@ -16,8 +16,8 @@ name: CI
 #   azguard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
-#   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub (+ vue-collaboration, P5.14)
-#   openapi.yml oasdiff breaking ........................... contract-bc (blocking, D14/D18)
+#   frontend.yml vue and hocuspocus ......................... vue, hub (+ vue-collaboration, P5.14)
+#   openapi.yml oasdiff breaking ........................... contract-bc (blocking where the BC host is provisioned)
 #   new: mysql lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation, I14)
 on:
@@ -37,7 +37,7 @@ permissions:
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
   # Laravel 13 pairs with Testbench ^11. One line for every package, including filament.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"database":true,"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"database":false,"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   changes:
@@ -58,6 +58,7 @@ jobs:
       has_repo: ${{ steps.plan.outputs.has_repo }}
       has_openapi: ${{ steps.plan.outputs.has_openapi }}
       has_contract_bc: ${{ steps.plan.outputs.has_contract_bc }}
+      contract_bc_provisioned: ${{ steps.plan.outputs.contract_bc_provisioned }}
       contract_bc_required_lines: ${{ steps.plan.outputs.contract_bc_required_lines }}
       contract_bc_selected_lines: ${{ steps.plan.outputs.contract_bc_selected_lines }}
       quality_matrix: ${{ steps.plan.outputs.quality_matrix }}
@@ -84,6 +85,9 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
+          # contract-bc is planned only when the trusted BC host is provisioned (any BC_HOST_* variable set).
+          BC_HOST_BOOTSTRAP: ${{ vars.BC_HOST_BOOTSTRAP }}
+          BC_HOST_PYTHON: ${{ vars.BC_HOST_PYTHON }}
         run: |
           set -euo pipefail
           PHP84_BIN="$(command -v php)"
@@ -254,18 +258,18 @@ jobs:
           TESTBENCH: ${{ matrix.testbench }}
         run: |
           set -euo pipefail
-          laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
-          testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
-          echo "laravel/framework $laravel, orchestra/testbench $testbench"
-          laravel="${laravel#v}"
-          testbench="${testbench#v}"
+          installed_laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
+          installed_testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
+          echo "laravel/framework $installed_laravel, orchestra/testbench $installed_testbench"
+          installed_laravel="${installed_laravel#v}"
+          installed_testbench="${installed_testbench#v}"
           expected_testbench="${TESTBENCH#^}"
-          if [[ "${laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
-            echo "::error::expected Laravel ${LARAVEL}, installed ${laravel}"
+          if [[ "${installed_laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
+            echo "::error::expected Laravel ${LARAVEL}, installed ${installed_laravel}"
             exit 1
           fi
-          if [[ "${testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
-            echo "::error::expected Testbench ${TESTBENCH}, installed ${testbench}"
+          if [[ "${installed_testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
+            echo "::error::expected Testbench ${TESTBENCH}, installed ${installed_testbench}"
             exit 1
           fi
 
@@ -508,8 +512,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Node 20 is end-of-life (2026-04-30). A PR checks the oldest supported LTS; weekly-full.yml adds Node 24.
-        node: ['22']
+        # Only the current Node line is supported (engines.node >=26).
+        node: ['26']
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -552,8 +556,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # engines.node >=22 (@hocuspocus/provider@4).
-        node: ['22']
+        # Only the current Node line is supported (engines.node >=26).
+        node: ['26']
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -590,8 +594,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # @hocuspocus/server@4 declares engines.node >=22; `npm ci` fails Node 20 under engine-strict.
-        node: ['22']
+        # Only the current Node line is supported (engines.node >=26).
+        node: ['26']
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -664,6 +668,11 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      # TestGroupsTest lists the drive suite's groups with the drive phpunit.xml, whose bootstrap is the drive vendor.
+      - name: Install drive dependencies
+        working-directory: packages/drive
+        run: composer update --prefer-dist --no-interaction --no-progress
+
       - name: Workflow policy
         run: |
           python3 -m pip install 'pyyaml==6.0.2'
@@ -676,6 +685,13 @@ jobs:
           PHP84_BIN="$(command -v php)"
           export PHP84_BIN
           scripts/t sqlite -p repo
+
+      # The guides' links, en/ru mirror and code fragments stay in step with the code (scripts/check-doc-*.php).
+      - name: Documentation links and fragments
+        run: |
+          php scripts/check-doc-links.php docs README.md
+          php scripts/check-doc-links.php --mirror docs
+          php scripts/check-doc-snippets.php docs
 
       - name: actionlint
         run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
@@ -745,6 +761,9 @@ jobs:
           sys.exit(1 if errors else 0)
           PY
 
+  # Runs only where the owner provisioned the trusted BC host (repository variables BC_HOST_*); the plan reports
+  # contract_bc_provisioned=false otherwise, and ci-gate accepts the skip for that reason alone. Once any BC_HOST_*
+  # variable is set the job runs and blocks, and an incomplete setup fails it.
   contract-bc:
     name: Contract BC (trusted policy)
     needs: changes
@@ -801,35 +820,35 @@ jobs:
           coverage: none
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: '26'
       - name: Resolve one Composer lock and capture provenance
         run: |
-          mkdir -p var/plan4/P7.2
+          mkdir -p var/advisories
           # Root lock is ignored: resolve once without scripts/plugins or installing archives.
           composer update --no-install --no-scripts --no-plugins --no-interaction
-          sha256sum composer.lock package-lock.json > var/plan4/P7.2/input-locks.sha256
-          composer --version > var/plan4/P7.2/composer.version
-          npm --version > var/plan4/P7.2/npm.version
-          echo 'Composer locked including dev; npm runtime omit=dev high threshold; optional package matrices and build-dev pending P8.2' > var/plan4/P7.2/profile.txt
+          sha256sum composer.lock package-lock.json > var/advisories/input-locks.sha256
+          composer --version > var/advisories/composer.version
+          npm --version > var/advisories/npm.version
+          echo 'Composer locked including dev; npm runtime omit=dev high threshold; optional package matrices and build-dev not scanned' > var/advisories/profile.txt
       - name: Capture both raw advisory reports and statuses
         run: |
           set +e
-          composer audit --locked --format=json > var/plan4/P7.2/composer.json 2> var/plan4/P7.2/composer.stderr
+          composer audit --locked --format=json > var/advisories/composer.json 2> var/advisories/composer.stderr
           vaulter_composer_exit=$?
-          printf '%s\n' "$vaulter_composer_exit" > var/plan4/P7.2/composer.exit
-          npm audit --omit=dev --audit-level=high --json > var/plan4/P7.2/npm.json 2> var/plan4/P7.2/npm.stderr
+          printf '%s\n' "$vaulter_composer_exit" > var/advisories/composer.exit
+          npm audit --omit=dev --audit-level=high --json > var/advisories/npm.json 2> var/advisories/npm.stderr
           vaulter_npm_exit=$?
-          printf '%s\n' "$vaulter_npm_exit" > var/plan4/P7.2/npm.exit
+          printf '%s\n' "$vaulter_npm_exit" > var/advisories/npm.exit
           # Acquisition statuses are data for the blocking gate, not a clean verdict.
       - name: Reject incomplete reports and unapproved high or critical findings
         run: |
-          python3 scripts/ci/audit-gate.py --composer-report=var/plan4/P7.2/composer.json --composer-exit="$(cat var/plan4/P7.2/composer.exit)" --npm-report=var/plan4/P7.2/npm.json --npm-exit="$(cat var/plan4/P7.2/npm.exit)" --suppressions=release/audit-suppressions.json --format=json
+          python3 scripts/ci/audit-gate.py --composer-report=var/advisories/composer.json --composer-exit="$(cat var/advisories/composer.exit)" --npm-report=var/advisories/npm.json --npm-exit="$(cat var/advisories/npm.exit)" --suppressions=release/audit-suppressions.json --format=json
       - name: Preserve advisory acquisition bundle
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dependency-advisory-reports
-          path: var/plan4/P7.2
+          path: var/advisories
 
   ci-gate:
     name: CI gate

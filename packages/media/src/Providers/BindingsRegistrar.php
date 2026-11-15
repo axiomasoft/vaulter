@@ -20,7 +20,7 @@ use Vaulter\Modules\ModuleBindings;
 
 /**
  * The container wiring of the media module: the configured CAS engine (ContentStore, BlobStore; the
- * StorageDriver is a capability of the manifest), the pins (BlobPins, D23 — not configurable: the GC reads the
+ * StorageDriver is a capability of the manifest), the pins (BlobPins, — not configurable: the GC reads the
  * same store) and the config validation, failing at boot on a bad class or value.
  */
 #[Internal]

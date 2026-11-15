@@ -50,8 +50,8 @@ use Vaulter\Modules\VaulterModule;
 use Vaulter\Operations\OperationMiddleware;
 
 /**
- * The documents module (D22): document types, revisions, comments and export, their routes and commands. The
- * realtime transport is a capability it defines and the collaboration module (D1) provides.
+ * The documents module: document types, revisions, comments and export, their routes and commands. The
+ * realtime transport is a capability it defines and the collaboration module provides.
  */
 #[Internal]
 final class DocumentsModule implements OwnsSchema, VaulterModule
@@ -105,7 +105,7 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             ->slot(OperationMiddleware::class, PendingPurgeDrain::class, 'documents.pending-purge-drain')
             ->slot(ProfileOption::class, CommentsProfileOption::class, 'documents.profile.comments', key: CommentsProfileOption::NAME)
             ->slot(ProfileOption::class, AllowedDocumentTypesProfileOption::class, 'documents.profile.allowed-document-types', key: AllowedDocumentTypesProfileOption::NAME)
-            // The slots the module defines (D8) and its built-in contributions; a host adds its own through config class-strings.
+            // The slots the module defines and its built-in contributions; a host adds its own through config class-strings.
             ->defineSlot(DocumentType::class, SlotKind::Handler, Cardinality::Many)
             ->defineSlot(DocumentExporter::class, SlotKind::Handler, Cardinality::Many)
             ->slot(DocumentType::class, RichTextDocumentType::class, 'documents.type.rich-text', key: RichTextDocumentType::KEY)
@@ -113,11 +113,11 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             ->slot(DocumentExporter::class, HtmlExporter::class, 'documents.exporter.html', key: 'vaulter/html')
             ->slot(DocumentExporter::class, MarkdownExporter::class, 'documents.exporter.markdown', key: 'vaulter/markdown')
             // The export filename scheme and the realtime transport are capabilities. The transport is optional: the
-            // collaboration module (a package of its own, D1) provides it, and without it documents are edited one at a time.
+            // collaboration module (a package of its own) provides it, and without it documents are edited one at a time.
             ->defineCapability(ExportFilenameResolver::class, Cardinality::RequiredSingle)
             ->provides(ExportFilenameResolver::class, DefaultExportFilenameResolver::class)
             ->defineSlot(CollaborationProtocolDriver::class, SlotKind::Handler, Cardinality::Many)
-            // Brings a pending document's working state up to the collaboration log (D26): without a provider such a
+            // Brings a pending document's working state up to the collaboration log: without a provider such a
             // document answers 409 document_state_pending instead of serving or replacing stale content.
             ->defineSlot(PendingStateDrainer::class, SlotKind::Handler, Cardinality::Many);
     }

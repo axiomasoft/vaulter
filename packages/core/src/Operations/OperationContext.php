@@ -73,7 +73,7 @@ final readonly class OperationContext
     /**
      * The key arrives already decoded (opaque bytes, 1–255, compared exactly: never trimmed or lowercased).
      * A transport that fingerprints its own request (the HTTP middleware) passes that digest; it then
-     * replaces the operation's own fingerprint in the request hash (D25).
+     * replaces the operation's own fingerprint in the request hash.
      */
     public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): self
     {

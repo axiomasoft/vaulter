@@ -52,7 +52,7 @@ use Vaulter\Webhooks\Configuration\WebhooksConfig;
 #[Internal]
 class WebhookEndpoint extends Model
 {
-    /** The aggregate of the operation catalogue the refusal of a stale endpoint write names (D47). */
+    /** The aggregate of the operation catalogue the refusal of a stale endpoint write names. */
     public const string AGGREGATE = 'webhooks.endpoint';
 
     use GuardsWrites;

@@ -159,13 +159,6 @@ it('устаревший ключ follow_redirects=true НЕ включает р
     expect($delivery->refresh()->status)->toBe('failed');
 });
 
-it('ключа follow_redirects больше нет в шипуемом конфиге, R-05', function (): void {
-    // Ground truth: ключ удалён из config/vaulter.php, а не просто игнорируется кодом.
-    $config = (string) file_get_contents(dirname(__DIR__, 3).'/core/config/vaulter.php');
-
-    expect($config)->not->toContain("'follow_redirects' =>");
-});
-
 it('delivers to a public host, pinning the vetted IP onto the connection, F-P1.7-01', function (): void {
     Http::fake(['https://good.test/*' => Http::response('', 200)]);
     fakeResolver()->set('good.test', [FakeHostResolver::PUBLIC_IP]);

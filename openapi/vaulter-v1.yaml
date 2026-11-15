@@ -4688,7 +4688,7 @@ components:
           type:
           - string
           - 'null'
-          description: Opaque reader-scoped handle of the node (PLAN4.D20); the change feed names a remove by it. Null for a reader without a sync identity.
+          description: Opaque reader-scoped handle of the node; the change feed names a remove by it. Null for a reader without a sync identity.
         trash_root:
           type: boolean
         presentation:

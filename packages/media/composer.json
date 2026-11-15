@@ -36,9 +36,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Vaulter\\Media\\Tests\\": "tests/",
-            "Vaulter\\Drive\\": "../drive/src/",
-            "Vaulter\\Drive\\Database\\Factories\\": "../drive/database/factories/"
+            "Vaulter\\Media\\Tests\\": "tests/"
         }
     },
     "extra": {

@@ -21,7 +21,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * A content-addressable, immutable payload: identified by its
  * sha256 within a dedup scope and stored once on the Flysystem disk under a
  * scope-qualified storage_key. ref_count is a reconciled cache; the liveness
- * truth is its pins in v_blob_references (D23). The byte handling and GC
+ * truth is its pins in v_blob_references. The byte handling and GC
  * commit-flow live in the Cas services — this is the schema + model only.
  *
  * Swappable via configuration key vaulter-media.models.blob.
@@ -78,7 +78,7 @@ class Blob extends Model
     }
 
     /**
-     * Whether the integrity scrub (D49) found nothing wrong with the bytes of this blob: false from the moment it
+     * Whether the integrity scrub found nothing wrong with the bytes of this blob: false from the moment it
      * marks the blob (missing object, wrong size or wrong digest) until an ingest of the same bytes rewrites the
      * object. The mark is media's own state — the drive's scan quarantine is a different thing — and a consumer that
      * hands the bytes out refuses a blob that is not intact.

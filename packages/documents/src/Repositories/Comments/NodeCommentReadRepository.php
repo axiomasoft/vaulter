@@ -11,7 +11,7 @@ use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Drive\Models\Node;
 
 /**
- * Read-side access to the NODE-attached comments (docs/adr/0014-legacy-docvault-strangler.md шаг 1). The per-node feed
+ * Read-side access to the NODE-attached comments. The per-node feed
  * is oldest-first (a thread reads top-to-bottom); find() resolves a single comment for
  * the resolve/delete paths.
  */

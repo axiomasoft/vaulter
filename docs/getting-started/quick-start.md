@@ -15,11 +15,30 @@ You have installed `axioma-studio/vaulter-drive` (this walkthrough uses `Vaulter
 [Installation](/getting-started/installation) first (it is two commands).
 :::
 
-## 1. (Authorization works out of the box)
+## 1. Give the user access
 
 Vaulter ships with the standalone **`database`** host-role driver as the default, so a clean
-Laravel app needs **no authorization wiring** to get started — access is decided purely by the
-per-node grants (`v_node_grants`) that the Vaulter-owned `AccessResolver` reads.
+Laravel app needs **no driver wiring** to get started — access is decided purely by the
+per-node grants (`v_node_grants`) that the Vaulter-owned `AccessResolver` reads. A new drive has
+no grant, so even its owner entity's user sees nothing until it gets one. Grant the user the owner
+role on the root once, for example when the drive's entity is created:
+
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-grant -->
+
+```php
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Facades\Vaulter;
+
+// A new drive grants nobody: give the user the owner role on its root once, as the system.
+$system = Vaulter::drive($project)->asSystem('drive owner setup');
+$system->access()->grant($system->root(), new GrantInput(
+    subject: Subject::ofModel($user),
+    role: RoleRegistry::OWNER,
+));
+```
+
 
 You only touch this when you want roles from *your* app to count. To swap the lane, set one
 config key:
@@ -27,7 +46,7 @@ config key:
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => 'gate', // database (default) | gate | spatie | azguard | <your FQCN>
 ],

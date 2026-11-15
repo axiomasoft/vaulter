@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use Illuminate\Config\Repository;
 use Vaulter\Drive\Configuration\ChangesConfig;
 use Vaulter\Drive\Configuration\DownloadsConfig;
@@ -140,7 +141,7 @@ it('resolves a swappable drive model from vaulter-drive.models and refuses a for
 it('resolves the upload models, the blob model of the media package and the accessors of the drive sections', function (): void {
     $repository = new Repository([
         'vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php',
-        'vaulter-media' => require __DIR__.'/../../../media/config/vaulter-media.php',
+        'vaulter-media' => require InstalledVersions::getInstallPath('axioma-studio/vaulter-media').'/config/vaulter-media.php',
     ]);
     $config = new DriveConfig($repository);
 

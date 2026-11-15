@@ -7,4 +7,4 @@
 - При потере ACKed данных сохраняйте закрытый admission, фиксируйте потерю, восстанавливайте проверенную копию и требуйте resync клиентов на авторитетное поколение. Не подтверждайте потерянные записи и не переносите старые буферы молча.
 - При resync повторно проверяйте tenant, principal, capabilities, доступ, отзыв и срок действия. Восстановление не разрешает обход policy.
 - Удаляйте JWT, room tokens, webhook secrets, Authorization и содержимое документов из логов, incident tickets и диагностики. Раскрытые секреты ротируйте по процедуре.
-- Открывайте admission только после сверки состояния и актуальной авторизации. Реальный Redis/two-hub kill/restart drill с ACK recovery и stale-generation rejection остаётся P8.2.
+- Открывайте admission только после сверки состояния и актуальной авторизации. Реальный Redis/two-hub kill/restart drill с ACK recovery и stale-generation rejection остаётся квалификацией владельца.

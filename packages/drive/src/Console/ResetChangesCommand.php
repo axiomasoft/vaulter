@@ -30,11 +30,12 @@ final class ResetChangesCommand extends Command
 
     public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, DriveConfig $config): int
     {
+        // A required argument is always one string; the check narrows Symfony's argument type.
         $label = $this->argument('drive');
+        $label = is_string($label) ? $label : '';
         $model = $config->model('drive');
         // Reject an invalid or overflowing key before a server engine attempts its column cast.
-        $wellFormed = Identity::fitsKey(new $model, $label);
-        $drive = $wellFormed
+        $drive = $label !== '' && Identity::fitsKey(new $model, $label)
             ? Tenancy::without(static fn () => $model::query()->whereKey($label)->first())
             : null;
         $driveId = Identity::key($drive?->getKey());

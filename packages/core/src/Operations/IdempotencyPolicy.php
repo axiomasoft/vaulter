@@ -7,7 +7,7 @@ namespace Vaulter\Operations;
 use Vaulter\Attributes\Api;
 
 /**
- * What a repeat of an operation does (D25, D47, I11):
+ * What a repeat of an operation does:
  *
  * - `receipt` — the claim and receipt of an `Idempotency-Key` (its routes carry the `ReadIdempotencyKey` middleware);
  * - `natural` — a repeat without a key has no second effect;

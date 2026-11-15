@@ -13,7 +13,7 @@ use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 
 /**
- * One outbox event as an outbox consumer receives it (D29): the neutral columns of the row — seq, type, the
+ * One outbox event as an outbox consumer receives it: the neutral columns of the row — seq, type, the
  * `external` flag, tenant, scope and aggregate — and the payload, built once by {@see body()} when the event
  * was written. The payload is the webhook body: a consumer that forwards it sends the bytes Vaulter built.
  *

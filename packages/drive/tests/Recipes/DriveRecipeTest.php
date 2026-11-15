@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\RestoreOptions;
 use Vaulter\Drive\Data\UploadOptions;
@@ -12,6 +15,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are
 // the imports of this file.
@@ -22,8 +26,19 @@ beforeEach(function (): void {
 
 it('opens a drive, creates a folder, uploads and lists (quick start)', function (): void {
     $project = DriveTestHelpers::host();
-    $user = DriveTestHelpers::actor(Vaulter::drive($project)->asSystem('recipe fixture'), 1);
+    $user = new TestUser;
+    $user->forceFill(['id' => 1]);
+    $user->exists = true;
     request()->files->set('document', UploadedFile::fake()->createWithContent('q3.pdf', 'quarterly numbers'));
+
+    // [recipe:quick-start-grant]
+    // A new drive grants nobody: give the user the owner role on its root once, as the system.
+    $system = Vaulter::drive($project)->asSystem('drive owner setup');
+    $system->access()->grant($system->root(), new GrantInput(
+        subject: Subject::ofModel($user),
+        role: RoleRegistry::OWNER,
+    ));
+    // [/recipe]
 
     // [recipe:quick-start-open]
     // $project is any Eloquent model; $user is the signed-in user who acts on the drive.

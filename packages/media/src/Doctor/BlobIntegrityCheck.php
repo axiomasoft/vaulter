@@ -12,7 +12,7 @@ use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Support\Identity;
 
 /**
- * The blobs the integrity scrub marked as damaged (D49): their object is missing or has another size or sha256, and
+ * The blobs the integrity scrub marked as damaged: their object is missing or has another size or sha256, and
  * no download hands them out. Only an ingest of the same bytes into the same scope rewrites the object and lifts the
  * mark, so the finding is a warning that names the blobs and the way to heal them. Reads the rows only.
  */

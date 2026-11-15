@@ -9,7 +9,7 @@ use Vaulter\Attributes\SpiKind;
 
 /**
  * A module manifest whose module can refuse its own removal while its data is in a state only it can judge (the
- * collaboration edits not in a checkpoint yet, D26): it names the class that reports what stops the removal. Static,
+ * collaboration edits not in a checkpoint yet): it names the class that reports what stops the removal. Static,
  * so the kernel reads it from the compiled manifest class of an inactive module too — and a module is switched off
  * before `vaulter:module:uninstall` removes it.
  */

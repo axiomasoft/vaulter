@@ -251,7 +251,7 @@
         {
             "arguments": [],
             "class": "Vaulter\\Media\\Console\\ScrubBlobsCommand",
-            "description": "Verify the size and sha256 of a sample of stored blobs and mark the damaged ones (D49)",
+            "description": "Verify the size and sha256 of a sample of stored blobs and mark the damaged ones",
             "exit_codes": [
                 "FAILURE",
                 "INVALID",
@@ -1120,7 +1120,7 @@
         {
             "arguments": [],
             "class": "Vaulter\\Console\\PruneOutboxCommand",
-            "description": "Delete outbox events and deliveries past their retention without losing undelivered ones (D29).",
+            "description": "Delete outbox events and deliveries past their retention without losing undelivered ones.",
             "exit_codes": [
                 "SUCCESS"
             ],
@@ -1137,7 +1137,7 @@
         {
             "arguments": [],
             "class": "Vaulter\\Console\\RelayCommand",
-            "description": "Relay the outbox to its consumers: register, reconcile, deliver, hold (D29).",
+            "description": "Relay the outbox to its consumers: register, reconcile, deliver, hold.",
             "exit_codes": [
                 "FAILURE",
                 "INVALID",
@@ -1193,7 +1193,7 @@
         {
             "arguments": [],
             "class": "Vaulter\\Console\\RelayReplayCommand",
-            "description": "Replay a range of the outbox to one consumer, or acknowledge its gap (D29).",
+            "description": "Replay a range of the outbox to one consumer, or acknowledge its gap.",
             "exit_codes": [
                 "FAILURE",
                 "INVALID",

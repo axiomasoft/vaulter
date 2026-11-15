@@ -8,13 +8,13 @@ use Vaulter\Release\Contract\Change;
 use Vaulter\Release\Contract\ContractError;
 use Vaulter\Release\Contract\Identities;
 use Vaulter\Release\Contract\NpmSurface;
+use Vaulter\Release\Contract\PhpSurface;
 use Vaulter\Release\Contract\ReleaseBases;
 use Vaulter\Release\Contract\ReleaseCheck;
-use Vaulter\Release\Contract\TrustPolicy;
-use Vaulter\Release\Contract\PhpSurface;
 use Vaulter\Release\Contract\SchemaDdl;
 use Vaulter\Release\Contract\SnapshotManifest;
 use Vaulter\Release\Contract\SourceReader;
+use Vaulter\Release\Contract\TrustPolicy;
 
 /*
  * The structural adapters of the BC check (D14, PLAN4 P6.2/U1; knowledge p6-surface#acceptance cases 1–7): the PHP surface
@@ -255,8 +255,8 @@ it('php: a changed member of an Internal base or trait is visible at the exporte
         ->and(array_keys(PhpSurface::resolve($types, 'Vaulter\Child')['members']))->toBe(['method:greet', 'method:hello', 'method:read', 'method:say'])
         ->and(bc_php($code, str_replace('read(string $key)', 'read(int $key)', $code)))->toBe(['REVIEW Vaulter\Child::read($key) parameter-type'])
         ->and(bc_php($code, str_replace("greet(): string { return ''; }", 'greet(): int { return 0; }', $code)))->toBe(['REVIEW Vaulter\Child::greet() return-type', 'REVIEW Vaulter\Child::hello() return-type'])
-        ->and(bc_php($code, str_replace("trait Quiet { public function say(): string { return ''; }", "trait Quiet { public function say(): int { return 0; }", $code)))->toBe([])
-        ->and(bc_php($code, str_replace("trait Loud { public function say(): string { return ''; }", "trait Loud { public function say(): int { return 0; }", $code)))->toBe(['REVIEW Vaulter\Child::say() return-type'])
+        ->and(bc_php($code, str_replace("trait Quiet { public function say(): string { return ''; }", 'trait Quiet { public function say(): int { return 0; }', $code)))->toBe([])
+        ->and(bc_php($code, str_replace("trait Loud { public function say(): string { return ''; }", 'trait Loud { public function say(): int { return 0; }', $code)))->toBe(['REVIEW Vaulter\Child::say() return-type'])
         ->and(bc_php($code, str_replace('public function read(string $key): string { return $key; }', '', $code)))->toBe(['BREAK Vaulter\Child::read() member-removed']);
 });
 
@@ -322,11 +322,21 @@ it('identities: a changed problem status and a removed event payload field are B
         return bc_identity_rows('protocol', $before, $after);
     };
 
-    expect($variant(static function (array &$d) use ($problem): void { $d['items'][$problem]['status'] = 403; }))->toBe(['BREAK problem:actor_required.status problem-status'])
-        ->and($variant(static function (array &$d) use ($event): void { $d['items'][$event]['data'] = []; }))->toBe(['BREAK event:access.inheritance_changed.data.inherits payload-field-removed'])
-        ->and($variant(static function (array &$d) use ($event): void { $d['items'][$event]['data']['extra'] = 'string'; }))->toBe(['REVIEW event:access.inheritance_changed.data.extra payload-field-added'])
-        ->and($variant(static function (array &$d) use ($event): void { $d['items'][$event]['sinks']['external'] = false; }))->toBe(['REVIEW event:access.inheritance_changed.sinks event-sinks'])
-        ->and($variant(static function (array &$d) use ($event): void { array_splice($d['items'], $event, 1); }))->toBe(['BREAK event:access.inheritance_changed identity-removed']);
+    expect($variant(static function (array &$d) use ($problem): void {
+        $d['items'][$problem]['status'] = 403;
+    }))->toBe(['BREAK problem:actor_required.status problem-status'])
+        ->and($variant(static function (array &$d) use ($event): void {
+            $d['items'][$event]['data'] = [];
+        }))->toBe(['BREAK event:access.inheritance_changed.data.inherits payload-field-removed'])
+        ->and($variant(static function (array &$d) use ($event): void {
+            $d['items'][$event]['data']['extra'] = 'string';
+        }))->toBe(['REVIEW event:access.inheritance_changed.data.extra payload-field-added'])
+        ->and($variant(static function (array &$d) use ($event): void {
+            $d['items'][$event]['sinks']['external'] = false;
+        }))->toBe(['REVIEW event:access.inheritance_changed.sinks event-sinks'])
+        ->and($variant(static function (array &$d) use ($event): void {
+            array_splice($d['items'], $event, 1);
+        }))->toBe(['BREAK event:access.inheritance_changed identity-removed']);
 });
 
 it('identities: a removed auth middleware is a security BREAK, a config env inside a default is not lost in a string, CLI exit codes are REVIEW', function (): void {
@@ -461,19 +471,33 @@ it('schema: JSON order is no change; a new NOT NULL column, a nullable column ma
         $d['tables']['v_activity']['columns'] = array_reverse($d['tables']['v_activity']['columns']);
         $d['tables']['v_activity']['create_sql'] = 'reprinted';
     }))->toBe([])
-        ->and($variant(static function (array &$d): void { $d['tables']['v_activity']['columns'][] = ['name' => 'kind', 'type' => 'varchar', 'notnull' => 1, 'default' => null, 'pk' => 0, 'hidden' => 0]; }))
+        ->and($variant(static function (array &$d): void {
+            $d['tables']['v_activity']['columns'][] = ['name' => 'kind', 'type' => 'varchar', 'notnull' => 1, 'default' => null, 'pk' => 0, 'hidden' => 0];
+        }))
         ->toBe(["REVIEW {$at}v_activity.kind column-added-required"])
-        ->and($variant(static function (array &$d) use ($column): void { $d['tables']['v_activity']['columns'][$column($d, 'actor_id')]['notnull'] = 1; }))
+        ->and($variant(static function (array &$d) use ($column): void {
+            $d['tables']['v_activity']['columns'][$column($d, 'actor_id')]['notnull'] = 1;
+        }))
         ->toBe(["REVIEW {$at}v_activity.actor_id column-not-null"])
-        ->and($variant(static function (array &$d) use ($column): void { $d['tables']['v_activity']['columns'][$column($d, 'verb')]['default'] = "'x'"; }))
+        ->and($variant(static function (array &$d) use ($column): void {
+            $d['tables']['v_activity']['columns'][$column($d, 'verb')]['default'] = "'x'";
+        }))
         ->toBe(["REVIEW {$at}v_activity.verb column-changed"])
-        ->and($variant(static function (array &$d): void { $d['tables']['v_blob_references']['foreign_keys'] = []; }))
+        ->and($variant(static function (array &$d): void {
+            $d['tables']['v_blob_references']['foreign_keys'] = [];
+        }))
         ->toBe(["REVIEW {$at}v_blob_references#blob_id->v_blobs.id foreign-key-removed"])
-        ->and($variant(static function (array &$d) use ($column): void { array_splice($d['tables']['v_activity']['columns'], $column($d, 'actor_id'), 1); }))
+        ->and($variant(static function (array &$d) use ($column): void {
+            array_splice($d['tables']['v_activity']['columns'], $column($d, 'actor_id'), 1);
+        }))
         ->toBe(["BREAK {$at}v_activity.actor_id column-removed"])
-        ->and($variant(static function (array &$d): void { unset($d['tables']['v_activity']); }))
+        ->and($variant(static function (array &$d): void {
+            unset($d['tables']['v_activity']);
+        }))
         ->toBe(["BREAK {$at}v_activity table-removed"])
-        ->and($variant(static function (array &$d): void { $d['tables']['v_new'] = ['columns' => [['name' => 'id', 'type' => 'INTEGER', 'notnull' => 1, 'default' => null, 'pk' => 1, 'hidden' => 0]], 'indexes' => [], 'foreign_keys' => []]; }))
+        ->and($variant(static function (array &$d): void {
+            $d['tables']['v_new'] = ['columns' => [['name' => 'id', 'type' => 'INTEGER', 'notnull' => 1, 'default' => null, 'pk' => 1, 'hidden' => 0]], 'indexes' => [], 'foreign_keys' => []];
+        }))
         ->toBe(["ADD {$at}v_new table-added"]);
 });
 
@@ -728,8 +752,8 @@ it('exception: the CLI runs from the tool checkout, reads the candidate as data 
 /**
  * A scratch repo with one full-snapshot commit per entry (an unchanged snapshot is still a commit) and the given tags.
  *
- * @param  list<array<string, string>> $commits path => bytes
- * @param  array<string, int>          $tags    tag => commit index
+ * @param  list<array<string, string>>            $commits path => bytes
+ * @param  array<string, int>                     $tags    tag => commit index
  * @return array{dir: string, shas: list<string>}
  */
 function bc_review_repo(array $commits, array $tags): array
@@ -758,7 +782,7 @@ function bc_review_repo(array $commits, array $tags): array
 
 /**
  * @param  array{dir: string, shas: list<string>} $repo
- * @return array<string, mixed> the whole coordinator against a candidate of the repo
+ * @return array<string, mixed>                   the whole coordinator against a candidate of the repo
  */
 function bc_review_run(array $repo, int $candidate, array $policy): array
 {

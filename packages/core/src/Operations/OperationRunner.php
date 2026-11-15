@@ -17,16 +17,16 @@ use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Kernel;
 
 /**
- * The one way a write operation runs (ADR-0028, architecture#operation-chains). The stages are a
+ * The one way a write operation runs (docs/adr/0028-extension-slots-and-operation-pipeline.md, architecture#operation-chains). The stages are a
  * contract and no contribution removes one:
  *
  * 1. admission — a valid module graph, a ready module, a mutating operation the catalogue declares for that
- *    module (D47), a system actor with a reason;
+ *    module, a system actor with a reason;
  * 2. the OperationMiddleware chain, each calling `$next` exactly once and returning its result;
  * 3. the root transaction, repeated as a whole attempt after a serialization failure or a deadlock
  *    (never a nested one: a write inside a write runs in the same transaction, with no claim, no
  *    receipt and no own after-commit callbacks);
- * 4. the idempotency claim inside that transaction (D25, ADR-0029): a keyed write with an
+ * 4. the idempotency claim inside that transaction (docs/adr/0029-idempotency.md): a keyed write with an
  *    {@see IdempotentWrite} claims its key, or answers from a committed receipt after the owner's
  *    current authorization; a key without one is refused before the transaction;
  * 5–8. the owner's attempt: load and lock, current authorization, validators and guards, the
@@ -79,7 +79,7 @@ final class OperationRunner
     }
 
     /**
-     * A mutating operation runs only with a policy its own module declares (D47): checked for a composed write too,
+     * A mutating operation runs only with a policy its own module declares: checked for a composed write too,
      * before any middleware, claim or transaction.
      *
      * @throws UnknownOperationException

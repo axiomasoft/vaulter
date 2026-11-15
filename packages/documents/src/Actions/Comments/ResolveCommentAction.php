@@ -20,7 +20,7 @@ use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 
 /**
- * Mark a node comment thread resolved (docs/adr/0014-legacy-docvault-strangler.md шаг 1). Stamps (resolved_at,
+ * Mark a node comment thread resolved. Stamps (resolved_at,
  * resolved_by = the operation's actor, null for the system) under T (shared) → N → the
  * comment row, with the drive writable and the node live ({@see AddCommentAction}).
  * {@see CommentResolved} is delivered after the outermost commit.

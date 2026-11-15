@@ -11,8 +11,8 @@ outline: deep
 бэкенд.
 
 ::: tip Требования
-PHP `^8.4`, Laravel `^12.0 || ^13.0` и (для UI) Vue `^3.4` / Node `>=20`. Полная матрица —
-в разделе требований.
+PHP `^8.4`, Laravel `^13.0` и (для UI) Vue `^3.4` / Node `>=26`. Поддерживаемые версии и линии
+релизов — в разделе [Совместимость](/ru/reference/compatibility).
 :::
 
 ## 1. Бэкенд — Laravel-пакет
@@ -45,8 +45,7 @@ composer require axioma-studio/vaulter-documents
 установка одного `axioma-studio/vaulter-core` имеет смысл только если вы строите собственные модули
 поверх ядра.
 
-Четыре пакета не входят в метапакет и ставятся по необходимости. Каждый требует `vaulter-drive` (коллаборация ещё и
-`vaulter-documents`):
+Три пакета не входят в метапакет и ставятся по необходимости. Каждый требует `vaulter-drive`:
 
 <!-- snippet: shell -->
 
@@ -59,7 +58,6 @@ composer require axioma-studio/vaulter-filament
 
 # Драйвер прав AzGuard
 composer require axioma-studio/vaulter-azguard
-
 ```
 
 `vaulter-webhooks` открывает исходящий сетевой трафик, поэтому его модуль выключен, пока вы не включите его в
@@ -89,7 +87,8 @@ php artisan vaulter:install
   `.env` она никогда не редактирует; драйвер прав выбирайте через `vaulter-drive.access.permission_driver`
   (`VAULTER_PERMISSION_DRIVER`),
 - предлагает выполнить `php artisan migrate` (или выполняет с `--migrate`),
-- предлагает поставить звезду репозиторию на GitHub.
+- запускает `php artisan vaulter:doctor` и показывает его находки (установку они не валят),
+- предлагает ссылку, чтобы поставить звезду репозиторию на GitHub.
 
 Без терминала берутся опции или значения по умолчанию, миграции без `--migrate` не
 выполняются. Повторный запуск безопасен. См. [Команды → `vaulter:install`](/ru/reference/commands#vaulter-install).
@@ -97,34 +96,27 @@ php artisan vaulter:install
 
 ### Установка вручную
 
-Предпочитаете по шагам? Команда установки эквивалентна следующему:
-
-::: code-group
-
-<!-- snippet: shell -->
-
-```bash [публикация + миграции]
-php artisan vendor:publish --tag=vaulter-config
-php artisan migrate
-```
+Предпочитаете по шагам? Опубликуйте конфиг каждого установленного пакета (по тегу на пакет), затем
+выполните миграции и проверьте установку:
 
 <!-- snippet: shell -->
 
-```bash [только конфиг]
-# Миграции Vaulter запускаются из vendor/ и никогда не публикуются,
-# поэтому минимум — это только файл конфигурации:
+```bash
 php artisan vendor:publish --tag=vaulter-config
+php artisan vendor:publish --tag=vaulter-media-config
+php artisan vendor:publish --tag=vaulter-drive-config
+php artisan vendor:publish --tag=vaulter-documents-config
 php artisan migrate
+php artisan vaulter:doctor
 ```
-
-:::
 
 ::: info Миграции не публикуются
 Каждый пакет запускает миграции своих таблиц прямо из `vendor/`: `vaulter-core` — outbox и ключи
 идемпотентности, `vaulter-media` — блобы и их пины, `vaulter-drive` — таблицы диска, `vaulter-documents` —
 таблицы документов, `vaulter-webhooks` — эндпоинты и доставки. Тега публикации для них нет, поэтому опубликованных копий, которые расходятся с пакетом, не
-бывает, а таблица пакета, который вы не ставили, не создаётся. Опубликованный конфиг ложится в
-`config/vaulter.php`.
+бывает, а таблица пакета, который вы не ставили, не создаётся. Каждый пакет
+публикует свой файл конфига: `config/vaulter.php` для ядра, `config/vaulter-media.php`,
+`config/vaulter-drive.php`, `config/vaulter-documents.php` и так далее.
 :::
 
 ## 2. Фронтенд — Vue-пакет
@@ -162,18 +154,19 @@ app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 
 ## Проверка установки
 
-Быстрая проверка из `tinker`:
+Быстрая проверка из `tinker`. Вошедшего пользователя там нет, поэтому вызов явно называет системного
+актора (любой вызов Vaulter идёт от пользователя или от системы):
 
 <!-- snippet: host -->
 
 ```php
 use Vaulter\Drive\Facades\Vaulter;
 
-$drive = Vaulter::drive($user);   // любая Eloquent-модель
-$drive->root();                 // автоматически созданная корневая папка (Node)
+$drive = Vaulter::drive($user);         // любая Eloquent-модель
+$drive->asSystem('install check')->root(); // автоматически созданная корневая папка
 ```
 
-Если вернулся `Node` — бэкенд подключён правильно.
+Если вернулся `Vaulter\Drive\Data\Snapshots\NodeSnapshot` — бэкенд подключён правильно.
 
 ## Дальше
 

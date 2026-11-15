@@ -18,7 +18,7 @@ use Vaulter\Idempotency\ReplayAuthorizer;
 use Vaulter\Idempotency\ResourceRef;
 
 /**
- * The current authorization of a replayed node write (D25, architecture#operation-chains «Replay»), with the same
+ * The current authorization of a replayed node write (architecture#operation-chains «Replay»), with the same
  * guard as the write itself: the receipt's node where it is now (after a move, in its new place), else the
  * recorded scope — the parent it was written under — else, when that is gone too, the drive's root. A node the
  * actor cannot see any more, a revoked grant or a gone drive answers like a new request would.

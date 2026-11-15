@@ -41,7 +41,8 @@ it('lets one of two updates with expectedStateVersion N through and refuses the 
         // The winner's update raises its single event; the refused one raises none.
         ->and($winner['events'])->toBe(1)
         ->and($document->state_version)->toBe(2)
-        ->and($document->collab_epoch)->toBe(0)
+        // The document has a collaboration binding, so the winning JSON update fences its rooms.
+        ->and($document->collab_epoch)->toBe(1)
         ->and($document->revision_count)->toBe(2)
         ->and(DocumentTestHelpers::revisions($node))->toHaveCount(2)
         ->and($document->tipTapContent()->toArray())->toBeIn([
@@ -69,6 +70,6 @@ it('shares the validator between an update and a restore: one wins, the other is
     expect($kinds)->toBe(['committed', 'document_state_mismatch'])
         ->and($document->state_version)->toBe(2)
         ->and($document->revision_count)->toBe(2)
-        // Only a restore moves the epoch; whoever lost wrote nothing.
-        ->and($document->collab_epoch)->toBe($results[1]['kind'] === 'committed' ? 1 : 0);
+        // Either winner fences the rooms of the bound document once; whoever lost wrote nothing.
+        ->and($document->collab_epoch)->toBe(1);
 });

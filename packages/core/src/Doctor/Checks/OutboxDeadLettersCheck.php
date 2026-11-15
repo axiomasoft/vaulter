@@ -12,7 +12,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Events\Outbox\OutboxStore;
 
-/** Dead-lettered outbox deliveries a consumer gave up on and retention still holds: replay them or accept the loss (D29). */
+/** Dead-lettered outbox deliveries a consumer gave up on and retention still holds: replay them or accept the loss. */
 #[Internal]
 final readonly class OutboxDeadLettersCheck implements DoctorCheck
 {

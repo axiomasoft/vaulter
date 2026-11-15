@@ -75,14 +75,12 @@ final class DocumentsSchema implements ModuleSchema
     }
 
     /**
-     * v_node_comments — the NODE-attached, threaded, anchorable comment (docs/adr/0014-legacy-docvault-strangler.md
-     * шаг 1 — parity with the legacy document_id-attached v_document_comments, which
-     * stays untouched). Gated on 'comments'. A comment hangs off ANY node via node_id
+     * v_node_comments — the NODE-attached, threaded, anchorable comment. Gated on 'comments'. A comment hangs off ANY node via node_id
      * (cascade); parent_id is a self-FK for threading (a reply cascades when its parent
      * is deleted). The author is a morph to a REGISTERED alias (user|…) written via
      * getMorphClass(), never a raw FQCN. anchor is the optional text-range descriptor
      * (jsonb on Postgres, json/text elsewhere). resolved_at/resolved_by mark a thread
-     * closed. No soft-delete — a delete is permanent (legacy parity: hard delete).
+     * closed. No soft-delete — a delete is permanent.
      */
     private function defineNodeComments(Blueprint $table, IdStrategy $ids): void
     {
@@ -109,7 +107,7 @@ final class DocumentsSchema implements ModuleSchema
         $table->timestamp('resolved_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'resolved_by', nullable: true, index: false);
 
-        // The comment's own version (D47, CC2): resolve and delete are conditional on it (If-Match); a resolution raises
+        // The comment's own version (CC2): resolve and delete are conditional on it (If-Match); a resolution raises
         // it with UPDATE … WHERE version = ?.
         $this->helpers->counterColumn(table: $table, column: 'version');
 
@@ -194,7 +192,7 @@ final class DocumentsSchema implements ModuleSchema
     }
 
     /**
-     * The pending-state marker (D26): (pending_generation, pending_through_seq) — the collaboration generation and the
+     * The pending-state marker: (pending_generation, pending_through_seq) — the collaboration generation and the
      * last committed log sequence the working state does not cover yet. Both NULL means the checkpoint covers every
      * saved edit; one without the other is refused by a CHECK. SQLite and PostgreSQL take the pair CHECK on the column,
      * MySQL refuses a column CHECK naming another column, so afterCreate() adds it there as a named constraint.

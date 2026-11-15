@@ -23,7 +23,7 @@ permissions:
 
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"database":true,"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"database":false,"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   plan:
@@ -90,18 +90,18 @@ jobs:
           TESTBENCH: ${{ matrix.testbench }}
         run: |
           set -euo pipefail
-          laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
-          testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
-          echo "laravel/framework $laravel, orchestra/testbench $testbench"
-          laravel="${laravel#v}"
-          testbench="${testbench#v}"
+          installed_laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
+          installed_testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
+          echo "laravel/framework $installed_laravel, orchestra/testbench $installed_testbench"
+          installed_laravel="${installed_laravel#v}"
+          installed_testbench="${installed_testbench#v}"
           expected_testbench="${TESTBENCH#^}"
-          if [[ "${laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
-            echo "::error::expected Laravel ${LARAVEL}, installed ${laravel}"
+          if [[ "${installed_laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
+            echo "::error::expected Laravel ${LARAVEL}, installed ${installed_laravel}"
             exit 1
           fi
-          if [[ "${testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
-            echo "::error::expected Testbench ${TESTBENCH}, installed ${testbench}"
+          if [[ "${installed_testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
+            echo "::error::expected Testbench ${TESTBENCH}, installed ${installed_testbench}"
             exit 1
           fi
 
@@ -230,10 +230,10 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 26
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: '26'
 
       - name: Install dependencies
         run: |
@@ -254,7 +254,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['22', '24']  # the maintained LTS lines; Node 20 is end-of-life (2026-04-30)
+        node: ['26']  # only the current Node line is supported (engines.node >=26)
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -288,7 +288,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['22', '24']  # engines.node >=22 (@hocuspocus/provider@4)
+        node: ['26']  # only the current Node line is supported (engines.node >=26)
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -316,7 +316,7 @@ jobs:
         run: npm run build --workspace @vaulter/vue-collaboration
 
   hub:
-    name: "@vaulter/collaboration-hub (Node 22)"
+    name: "@vaulter/collaboration-hub (Node 26)"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -325,10 +325,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 26
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: '26'
 
       - name: Install dependencies
         working-directory: ./packages/collaboration/hub

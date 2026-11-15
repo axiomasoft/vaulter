@@ -79,7 +79,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(VaulterDatabase::class);
         // One runner per process: it counts the writes inside its root transaction (nesting).
         $app->scoped(OperationRunner::class);
-        // The policies of the active modules' operations (D47): the runner refuses a mutating operation outside them.
+        // The policies of the active modules' operations: the runner refuses a mutating operation outside them.
         $app->singleton(OperationCatalog::class, static fn (Application $app): OperationCatalog => new OperationCatalog(
             static fn (): array => OperationSources::active($app->make(Kernel::class)),
         ));
@@ -88,7 +88,7 @@ final class BindingsRegistrar implements ModuleBindings
             static fn (): array => OperationSources::offered($app),
         )));
         $app->singleton(ModuleReadiness::class);
-        // Stage 4 of the pipeline (D25): scoped with the runner and the outcome the HTTP middleware reads.
+        // Stage 4 of the pipeline: scoped with the runner and the outcome the HTTP middleware reads.
         $app->scoped(OperationClaim::class, IdempotencyClaim::class);
         $app->scoped(IdempotencyOutcome::class);
         $app->singleton(IdempotencyStore::class);

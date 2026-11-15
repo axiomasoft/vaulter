@@ -12875,7 +12875,7 @@
                     "params": [
                         {
                             "name": "stream",
-                            "type": null,
+                            "type": "mixed",
                             "default": null,
                             "variadic": false,
                             "by_ref": false,

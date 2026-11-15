@@ -33,7 +33,7 @@ return [
     'features' => [
         'grants' => true,
         'activity' => true,
-        // The drive change journal behind DriveHandle::changes() (PLAN2.D50).
+        // The drive change journal behind DriveHandle::changes().
         'changes' => true,
         'share_links' => false,
         'public_listing' => false,

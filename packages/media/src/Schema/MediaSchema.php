@@ -12,7 +12,7 @@ use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
 use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
-/** The tables the media module owns: the content-addressed blobs and the pins that keep them alive (D23). */
+/** The tables the media module owns: the content-addressed blobs and the pins that keep them alive. */
 #[Internal]
 final class MediaSchema implements ModuleSchema
 {
@@ -63,7 +63,7 @@ final class MediaSchema implements ModuleSchema
     {
         $ids->key(table: $table);
         $this->helpers->tenant(table: $table);
-        // The opaque storage the blob deduplicates within under dedup_scope 'drive' (D23): no foreign key, media
+        // The opaque storage the blob deduplicates within under dedup_scope 'drive': no foreign key, media
         // knows no drive table.
         $ids->reference(table: $table, column: 'storage_id', nullable: true);
 
@@ -88,7 +88,7 @@ final class MediaSchema implements ModuleSchema
         $table->bigInteger('ref_count')->default(0);
         $table->string('dedup_scope', 8)->default('tenant');
         $table->timestamp('quarantined_at')->nullable();
-        // The integrity scrub (D49): when the bytes were last verified, and since when they are known to be wrong.
+        // The integrity scrub: when the bytes were last verified, and since when they are known to be wrong.
         // Media's own state, apart from the drive's scan quarantine.
         $table->timestamp('integrity_checked_at')->nullable();
         $table->timestamp('integrity_failed_at')->nullable();
@@ -126,7 +126,7 @@ final class MediaSchema implements ModuleSchema
     }
 
     /**
-     * v_blob_references — the pins (D23): the liveness truth of a blob. Every row is one opaque owner reference
+     * v_blob_references — the pins: the liveness truth of a blob. Every row is one opaque owner reference
      * (owner_type, e.g. `drive.revision_blob`, and a reference_key derived from the owner's row), written only
      * through BlobPins. The foreign key points from the pin to the blob and restricts its deletion; media never
      * references a table of an owner.

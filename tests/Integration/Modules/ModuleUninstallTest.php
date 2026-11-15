@@ -25,6 +25,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 uses(TestCase::class, DatabaseMigrations::class);
@@ -38,12 +39,13 @@ uses(TestCase::class, DatabaseMigrations::class);
 // changes nothing, exit 1), elsewhere a failure after the purge is exit 3 (applied partially). A module's removal guard
 // (GuardsRemoval, D26 — the collaboration edits not in a checkpoint) refuses it while it names a blocker: in the dry run,
 // in the purge transaction and before each rollback (the fixture GuardedModule). The suite application is
-// core+media+drive+webhooks; the sets without webhooks or with documents are fresh applications on their own database.
+// core+media+drive+webhooks; the sets without webhooks or with documents are fresh applications that start from an empty
+// database: their own in-memory one on SQLite, the wiped suite database on a server engine (restored after the test).
 
 /** @return list<string> the tables of the connection, sorted */
 function uninstallTables(): array
 {
-    $tables = array_map(static fn (array $table): string => (string) $table['name'], Schema::getTables());
+    $tables = array_map(static fn (array $table): string => (string) $table['name'], Schema::getTables(Schema::getCurrentSchemaName()));
     sort($tables);
 
     return $tables;
@@ -104,6 +106,11 @@ function uninstallApp(array $providers, array $config = []): Application
     $app = FreshApplication::boot($config, case: $case);
     uninstallIn($app, static function () use ($app): void {
         $console = $app->make(ConsoleKernel::class);
+        if (SuiteDatabaseConnection::engine() !== 'sqlite') {
+            // A server database is the suite's: the set starts without the suite's tables, as on its own database.
+            expect($console->call('db:wipe', ['--force' => true]))->toBe(0, $console->output());
+            uninstallWipedSuite(true);
+        }
         expect($console->call('migrate', ['--force' => true]))->toBe(0, $console->output());
     });
 
@@ -151,8 +158,27 @@ const UNINSTALL_DOCUMENTS_SET = [...UNINSTALL_DRIVE_SET, VaulterDocumentsService
 
 const UNINSTALL_GUARDED_SET = [VaulterServiceProvider::class, GuardedProvider::class];
 
+/** Whether a set wiped the shared server database during the running test; `$wiped` records it. */
+function uninstallWipedSuite(?bool $wiped = null): bool
+{
+    static $state = false;
+    if ($wiped !== null) {
+        $state = $wiped;
+    }
+
+    return $state;
+}
+
 beforeEach(function (): void {
     Storage::fake('local');
+    uninstallWipedSuite(false);
+});
+
+afterEach(function (): void {
+    // The suite's DatabaseMigrations rolls its schema back after the test: give it back the schema a set wiped.
+    if (uninstallWipedSuite()) {
+        $this->artisan('migrate:fresh', $this->migrateFreshUsing())->assertExitCode(0);
+    }
 });
 
 it('rolls back only the webhooks migrations on --force: its tables go, the drive and the media stay, migrate installs it again', function (): void {
@@ -310,7 +336,8 @@ function uninstallAfterQuery(Application $app, string $needle, Closure $callback
 {
     $done = false;
     $app->make('events')->listen(QueryExecuted::class, static function (QueryExecuted $query) use (&$done, $needle, $callback): void {
-        if (!$done && str_contains($query->sql, $needle)) {
+        // `$needle` quotes identifiers with double quotes; MySQL quotes them with backticks.
+        if (!$done && str_contains(str_replace('`', '"', $query->sql), $needle)) {
             $done = true;
             $callback();
         }
@@ -371,12 +398,27 @@ it('stops without --purge when a pin of its own appears after the plan was read'
         ->and(uninstallPins())->toBe(['acme.attachment' => 1, 'drive.revision_blob' => 1]));
 });
 
-it('undoes the purge when a rollback fails on a transactional-DDL driver: exit 1, nothing changed', function (): void {
+it('undoes the purge when a rollback fails where DDL is transactional (exit 1), and reports it applied partially where DDL commits (exit 3)', function (): void {
     uninstallWebhookEndpointRow();
     uninstallAfterQuery($this->app, 'drop table if exists "v_webhook_endpoints"', static function (): void {
         throw new RuntimeException('DROP is not allowed');
     });
     $ran = uninstallRan();
+
+    if (DB::connection()->getDriverName() === 'mysql') {
+        // Every statement commits: the purge, the deliveries' rollback, and the endpoints' DROP that ran before the failure.
+        // The ledger still records the endpoints migration, so repeating --force finishes it.
+        $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true, '--purge' => true])
+            ->expectsOutputToContain('DROP is not allowed')
+            ->expectsOutputToContain('applied partially')
+            ->assertExitCode(3);
+
+        expect(Schema::hasTable('v_webhook_deliveries'))->toBeFalse()
+            ->and(uninstallRan())->not->toContain('0001_01_01_000402_create_v_webhook_deliveries_table')
+            ->and(uninstallRan())->toContain('0001_01_01_000401_create_v_webhook_endpoints_table');
+
+        return;
+    }
 
     $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true, '--purge' => true])
         ->expectsOutputToContain('DROP is not allowed')
@@ -458,8 +500,9 @@ it('removes a guarded module as before while its guard names none, reading it in
     expect($run['exit'])->toBe(0, $run['output'])
         ->and($run['output'])->toContain('1 row(s), 0 reference(s)')->toContain('The schema of "guarded" is removed.')
         ->and(GuardedRemovalGuard::$reads)->each->toMatchArray(['module' => 'guarded'])
-        // The plan outside any transaction, then inside the one transaction: before the purge and before the rollback.
-        ->and(array_column(GuardedRemovalGuard::$reads, 'transactionLevel'))->toBe([0, 1, 1]);
+        // The plan outside any transaction, then before the purge inside its transaction, then before the rollback: in the
+        // same transaction where DDL is transactional, after the purge committed where it is not (MySQL).
+        ->and(array_column(GuardedRemovalGuard::$reads, 'transactionLevel'))->toBe([0, 1, DB::connection()->getDriverName() === 'mysql' ? 0 : 1]);
     uninstallIn($app, static fn () => expect(Schema::hasTable('v_guarded_notes'))->toBeFalse()
         ->and(uninstallRan())->not->toContain('2026_10_17_000001_create_v_guarded_notes_table'));
 });

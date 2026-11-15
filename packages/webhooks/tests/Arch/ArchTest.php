@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -86,7 +87,7 @@ it('binds no route model in the package', function (): void {
 });
 
 it('is not named by the kernel: no file of the core source references Vaulter\Webhooks', function (): void {
-    $core = dirname(__DIR__, 3).'/core/src';
+    $core = InstalledVersions::getInstallPath('axioma-studio/vaulter-core').'/src';
     $offenders = [];
     foreach ((new Finder)->files()->in($core)->name('*.php') as $file) {
         $code = '';

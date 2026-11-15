@@ -155,7 +155,7 @@ resolver.
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php — used only when access.permission_driver = 'gate'
+// config/vaulter-drive.php — used only when access.permission_driver = 'gate'
 'access' => ['gate' => [
     'abilities' => [
         'previewer' => 'vaulter.preview',
@@ -213,7 +213,7 @@ to a safe deny (`null`/`false`), never a fatal error.
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php — used only when access.permission_driver = 'spatie'
+// config/vaulter-drive.php — used only when access.permission_driver = 'spatie'
 'access' => ['spatie' => [
     'permissions' => [
         'previewer' => 'vaulter.preview',

@@ -37,4 +37,4 @@ welcomed; this policy makes no legal immunity or third-party safe-harbor promise
 
 CODEOWNERS supplies review routing only. Required code-owner reviews, branch and
 environment protection, private reporting, and external release approvals must
-be configured and verified by the owner under P8.2 before enforcement is qualified.
+be configured and verified by the owner before enforcement is qualified.

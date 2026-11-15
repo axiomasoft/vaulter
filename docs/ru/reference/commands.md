@@ -566,6 +566,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 |---|---|---|
 | `vaulter:blobs:gc` | Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3) | `[--grace [GRACE]] [--pending]` |
 | `vaulter:blobs:reconcile` | Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
+| `vaulter:blobs:scrub` | Verify the size and sha256 of a sample of stored blobs and mark the damaged ones | `[--limit [LIMIT]] [--max-bytes [MAX-BYTES]] [--max-seconds [MAX-SECONDS]] [--scope [SCOPE]] [--dry-run]` |
 | `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
 | `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
 | `vaulter:collaboration:drain` | Refuse new collaboration updates and checkpoint every pending document through the hub before the module is switched off. | `[--deadline [DEADLINE]] [--release]` |
@@ -575,7 +576,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:doctor` | Diagnose the Vaulter setup of this host (read-only) | `[--production] [--json] [--check [CHECK]] [--sample [SAMPLE]] [--probe-storage]` |
 | `vaulter:drives:purge` | Purge drives with status deleting: nodes, revisions and blob references, then the drive row. | `[--drive [DRIVE]] [--dry-run] [--sync]` |
 | `vaulter:drives:recount` | Recount the used bytes of drives from their retained file revisions. | `[--drive [DRIVE]] [--dry-run]` |
-| `vaulter:errors:reference` | Generate the problem-code reference in the docs. | `[--check] [--path [PATH]]` |
+| `vaulter:errors:reference` | Generate the problem-code reference in the docs. | `[--openapi] [--check] [--path [PATH]]` |
 | `vaulter:events:reference` | Generate the event catalogue table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:idempotency:prune` | Delete expired idempotency receipts. | `[--limit [LIMIT]]` |
 | `vaulter:install` | Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor | `[--middleware [MIDDLEWARE]] [--migrate] [--force]` |
@@ -586,9 +587,10 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:make:profile` | Scaffold a Vaulter profile provider (zero-migration config envelope) | `[--host [HOST]] [--no-grants] [--force] [--] <name>` |
 | `vaulter:module:uninstall` | Plan (dry run) or perform the removal of a Vaulter module's schema | `[--force] [--purge] [--] <module>` |
 | `vaulter:modules` | List the Vaulter modules, their activation and what they contribute | `[--json]` |
-| `vaulter:outbox:prune` | Delete outbox events and deliveries past their retention without losing undelivered ones (D29). | — |
-| `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold (D29). | `[--consumer [CONSUMER]] [--limit [LIMIT]] [--once] [--max-seconds [MAX-SECONDS]]` |
-| `vaulter:relay:replay` | Replay a range of the outbox to one consumer, or acknowledge its gap (D29). | `[--consumer [CONSUMER]] [--from [FROM]] [--to [TO]] [--ack-only]` |
+| `vaulter:operations` | List the mutating operations with their concurrency and idempotency policies. | `[--json]` |
+| `vaulter:outbox:prune` | Delete outbox events and deliveries past their retention without losing undelivered ones. | — |
+| `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold. | `[--consumer [CONSUMER]] [--limit [LIMIT]] [--once] [--max-seconds [MAX-SECONDS]]` |
+| `vaulter:relay:replay` | Replay a range of the outbox to one consumer, or acknowledge its gap. | `[--consumer [CONSUMER]] [--from [FROM]] [--to [TO]] [--ack-only]` |
 | `vaulter:revisions:prune` | Delete non-current file revisions past their profile retention policy. | `[--drive [DRIVE]] [--dry-run]` |
 | `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
 | `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |

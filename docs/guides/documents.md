@@ -26,7 +26,7 @@ a commercial add-on; the public contract is [collaboration protocols](/extending
 
 ## The data model
 
-A document has two parts (ADR-0022, amendment D34):
+A document has two parts (ADR-0022 and its working-state amendment):
 
 - **The working state** — one `v_documents` row per `kind=document` node (`node_id` unique,
   cascade on node delete). It holds the content every editor sees right now and is rewritten by
@@ -72,14 +72,14 @@ deleting it (SQLite: see [Database compatibility](/reference/compatibility)).
 
 The content validator is **independent of the node**: `v_nodes.sequence` moves on rename, move
 and trash, `state_version` on content writes. Renaming a document never invalidates an open
-editor, and saving it never invalidates a rename (PLAN2.D35).
+editor, and saving it never invalidates a rename.
 The full writer matrix and the ETag formats are in [Concurrency](../reference/concurrency.md).
 
 Every generation has an immutable stored `(protocol, state_format, schema_version, generation)` binding. A newly installed type never relabels old bytes. Load and compaction lease return that exact descriptor; incompatible adapters refuse with `collaboration_unavailable`. Checkpoint publication compares the complete leased descriptor and state version, and clears pending only when the same binding covers its sequence.
 
 `CollaborativeState` is the sole binary write port. Its immutable `lock()` object is a write token only in the exact connection and transaction attempt that issued it; constructed, cloned, expired, rolled-back and abandoned retry tokens are refused. A host authorizes the operation, drains the old journal and prepares a lossless conversion outside locks, then obtains a fresh T → N → D lock for `transition()`. The transition compares the source binding/version and pending marker, atomically writes content and metadata, advances state version and generation, and checkpoints even identical JSON. Caller-supplied actor and correlation identify every revision/event; they grant no authority.
 
-Ordinary `Documents::update()` accepts JSON, never binary state. A supported settled collaborative document remains editable without an active driver: replacement preserves its protocol/format/schema and reseeds with null bytes in a new generation. Pending ACKed records must first drain; disabling the adapter never permits dropping them. Restore copies the immutable revision's source type/schema/format/bytes forward into a new current generation; copy creates an independent aggregate without pending records. Historical binding evaluation is nonmutating and refuses ambiguous provenance; server migrations/backfill and real races remain owner qualification P8.2.
+Ordinary `Documents::update()` accepts JSON, never binary state. A supported settled collaborative document remains editable without an active driver: replacement preserves its protocol/format/schema and reseeds with null bytes in a new generation. Pending ACKed records must first drain; disabling the adapter never permits dropping them. Restore copies the immutable revision's source type/schema/format/bytes forward into a new current generation; copy creates an independent aggregate without pending records. Historical binding evaluation is nonmutating and refuses ambiguous provenance; server migrations/backfill and real races remain owner qualification.
 
 ## The PHP API
 

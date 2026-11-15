@@ -80,7 +80,7 @@ class Node extends Model
     use ResolvesVaulterConnection;
     use StampsDriveTenant;
 
-    /** The type under which a node is stored in a polymorphic column (D34). */
+    /** The type under which a node is stored in a polymorphic column. */
     public const string MORPH_ALIAS = 'vaulter.node';
 
     /**

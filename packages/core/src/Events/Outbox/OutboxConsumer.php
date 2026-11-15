@@ -10,7 +10,7 @@ use Vaulter\Events\EventTypeContract;
 
 /**
  * A slot (`SlotKind::OutboxConsumer`, defined by core) that receives the outbox events after commit, at least
- * once, under its own delivery rows (D29). The contribution id is the consumer id: `webhooks.fanout`, … The
+ * once, under its own delivery rows. The contribution id is the consumer id: `webhooks.fanout`, … The
  * outbox writer gives every consumer of the sealed registry that {@see subscribes()} to a type a delivery row in
  * the transaction of the operation; `vaulter:relay` reconciles the rows a process with an older module graph
  * missed, then leases due rows and calls {@see consume()} outside any transaction.

@@ -11,7 +11,11 @@ fi
 bin="$(cd "$(dirname "$bin")" && pwd)/$(basename "$bin")"
 shim="$root/build/php84/bin"
 mkdir -p "$shim"
-ln -sf "$bin" "$shim/php"
+# Parallel partitions share the shim: replace it by an atomic rename, since `ln -sf` unlinks first and races.
+if [[ "$(readlink "$shim/php" || :)" != "$bin" ]]; then
+    ln -sfn "$bin" "$shim/.php.$$"
+    mv -f "$shim/.php.$$" "$shim/php"
+fi
 export PATH="$shim:$PATH"
 
 if [[ "${1:-}" == "--check" ]]; then

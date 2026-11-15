@@ -17,7 +17,7 @@ use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * The AzGuard bridge module (D22): Auto, because it is an adapter the host still selects explicitly in its
+ * The AzGuard bridge module: Auto, because it is an adapter the host still selects explicitly in its
  * config (`vaulter-drive.access.permission_driver = 'azguard'`). It extends the drive's access, so it requires the
  * drive module.
  */

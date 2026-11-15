@@ -110,7 +110,7 @@ final class ContentScannerContractTests
     }
 
     /** @param resource $stream */
-    private function input($stream, string $bytes): ScanInput
+    private function input(mixed $stream, string $bytes): ScanInput
     {
         return new ScanInput(
             stream: $stream,

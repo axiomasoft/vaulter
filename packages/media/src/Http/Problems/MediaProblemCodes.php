@@ -24,7 +24,7 @@ final class MediaProblemCodes implements ProblemCodeSource
     public function codes(): array
     {
         return [
-            // The bytes went with a concurrent sweep: the answer depends on another transaction, never cached (D23, D25).
+            // The bytes went with a concurrent sweep: the answer depends on another transaction, never cached.
             'blob_unavailable' => new ProblemSpec(409, BlobUnavailableException::class),
         ];
     }

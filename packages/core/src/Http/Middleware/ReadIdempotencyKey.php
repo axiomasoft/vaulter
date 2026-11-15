@@ -15,7 +15,7 @@ use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
 
 /**
- * Reads `Idempotency-Key` on the routes of operations that declare idempotency (D25, ADR-0029; alias
+ * Reads `Idempotency-Key` on the routes of operations that declare idempotency (docs/adr/0029-idempotency.md; alias
  * `vaulter.idempotency`). The value is one Structured Field String (`"…"` with `\"` and `\\` escapes) or one
  * plain token without whitespace, controls or commas; it is decoded once and never trimmed or lowercased. Several
  * headers, a list or anything malformed is refused before the operation runs. The request is fingerprinted here
@@ -87,7 +87,7 @@ final readonly class ReadIdempotencyKey
         if (count($values) !== 1 || !is_string($values[0])) {
             throw self::invalid('Send exactly one Idempotency-Key header.');
         }
-        // Optional whitespace around a field value is not part of it (RFC 9110 §5.5).
+        // Optional whitespace around a field value is not part of it (RFC 9110).
         $value = trim($values[0], " \t");
         $key = str_starts_with($value, '"') ? self::sfString($value) : self::token($value);
         if ($key === null || $key === '' || strlen($key) > 255) {
@@ -97,7 +97,7 @@ final readonly class ReadIdempotencyKey
         return $key;
     }
 
-    /** A Structured Field String (RFC 8941 §3.3.3) and nothing after it; null when malformed. */
+    /** A Structured Field String (RFC 8941) and nothing after it; null when malformed. */
     private static function sfString(string $value): ?string
     {
         $decoded = '';

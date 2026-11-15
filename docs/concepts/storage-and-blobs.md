@@ -147,7 +147,7 @@ The dedup scope decides the boundary a content address is unique within:
 | `drive` | `UNIQUE (scope_key, sha256)` | One object per drive (`storage` is read as `drive`). |
 | `off` | `UNIQUE (scope_key, sha256)` | Every upload is stored on its own. |
 
-Deduplication never crosses a tenant (PLAN2.D49): an install-wide scope lets one tenant
+Deduplication never crosses a tenant: an install-wide scope lets one tenant
 learn that another stored a given file. A `global` setting is refused at boot with
 `InvalidConfigurationException`. Upload responses and the
 quota never depend on whether bytes deduplicated.
@@ -234,7 +234,7 @@ In the Drive, `IngestFileAction` prepares and hashes bytes through
 locks follow **drive → nodes by id → file aggregate → quota → CAS**. A revision
 reads its previous head and `revision_count` from the locked file; its new number is
 `revision_count + 1` and it reserves its full size: every retained revision counts
-against the quota, without a dedup discount (PLAN2.D48).
+against the quota, without a dedup discount.
 
 `DriveStoreRepository::reserveBytes()` applies a conditional atomic UPDATE:
 `used_bytes = used_bytes + delta` only when the quota is unlimited or the result

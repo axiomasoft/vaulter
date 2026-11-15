@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use LogicException;
@@ -36,7 +37,7 @@ use Vaulter\Tenancy\Tenancy;
  *
  * Files are scanned in batches of 500; every chosen revision is deleted through
  * DeleteFileRevisionAction as the system actor 'revision-retention', which re-checks
- * head and pin under the file and revision locks (P4-I19). A revision that became
+ * head and pin under the file and revision locks. A revision that became
  * the head or was pinned after the choice is skipped, not an error. Re-running
  * converges: a revision is either still a candidate or gone.
  */
@@ -87,7 +88,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
                 $rows = $database->connection()->table($tables->table('files').' as f')
                     ->join($tables->table('nodes').' as n', 'n.id', '=', 'f.node_id')
                     ->where('n.drive_id', $drive->id)
-                    ->when($after !== null, static fn ($query) => $query->where('f.id', '>', $after))
+                    ->when($after !== null, static fn (Builder $query): Builder => $query->where('f.id', '>', $after))
                     ->orderBy('f.id')->limit(self::BATCH)
                     ->get(['f.id', 'f.node_id', 'f.current_revision_id']);
                 $files = [];

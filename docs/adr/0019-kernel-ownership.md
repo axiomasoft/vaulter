@@ -3,8 +3,7 @@
 **Status:** superseded by [ADR-0027](/adr/0027-kernel-boundaries-and-modules)
 
 > Transfers decision D02 and the ownership table §2 of the 2026-09-29 stable audit
-> (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d02`,
-> `audits/2026-09-29-stable-audit/opus/04-packages-and-layout.md`) into the project ADR set.
+> (git history at `d1deaf6d`; the audit is no longer in the tree) into the project ADR set.
 > Implementation belongs to later work; this record fixes the rule.
 
 ## Context
@@ -77,7 +76,5 @@ permission map, `azguard.*` keys) moves from core to `vaulter-azguard` (N21).
 
 ## References
 
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d02`
-- `audits/2026-09-29-stable-audit/opus/04-packages-and-layout.md` §2
-- `audits/2026-09-29-stable-audit/opus/01-review.md` — N14, N15, N21
+- The 2026-09-29 stable audit: removed from the tree, read it in the git history at `d1deaf6d`.
 - [ADR-0017 — Internal package structure canon](/adr/0017-package-structure-canon)

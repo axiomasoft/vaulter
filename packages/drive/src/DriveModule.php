@@ -85,7 +85,7 @@ use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * The drive module (D22): everything of the drive package — the REST routes (nodes, files, uploads, grants,
+ * The drive module: everything of the drive package — the REST routes (nodes, files, uploads, grants,
  * shares, activity and the change feed), access, the change journal, the scaffolding commands, the doctor
  * checks, the event types with the activity and change-journal event sinks, and the bindings.
  * `vaulter.modules.drive = false` removes all of it.
@@ -103,7 +103,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
         'drive.scan.scope' => ScanScopeCheck::class,
         'drive.drives.deleting' => DrivesDeletingCheck::class,
         'drive.drives.usage' => DrivesUsageCheck::class,
-        // The checks of the disks of the profiles (D33): the profiles are the drive's, the keys keep the media.* identity.
+        // The checks of the disks of the profiles: the profiles are the drive's, the keys keep the media.* identity.
         'media.disk.probe' => DiskProbeCheck::class,
         'media.dedup.scope' => DedupScopeCheck::class,
         // The kernel's own check of the route stack, run while the drive routes are mounted.
@@ -193,7 +193,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
     }
 
     /**
-     * The slots the drive defines (D8) and its own contributions, in the order the drive ran them before the
+     * The slots the drive defines and its own contributions, in the order the drive ran them before the
      * slots existed.
      */
     private function slots(ModuleBuilder $module): void

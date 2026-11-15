@@ -96,5 +96,4 @@ final readonly class RoutesConfig
 
         return $middleware;
     }
-
 }

@@ -101,7 +101,7 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
         ],
         DocumentRevision::class => [
             'document_id' => Document::forceCreate(['node_id' => $node->getKey(), 'type' => 'tiptap', 'schema_version' => 1])->getKey(),
-            'number' => 1, 'schema_version' => 1,
+            'number' => 1, 'type' => 'tiptap', 'schema_version' => 1,
         ],
     };
     $before = $modelClass::query()->count();

@@ -11,7 +11,7 @@ use Vaulter\Operations\OperationPolicy;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
- * The policies of the drive's mutating operations (D47, knowledge p6-design#coverage): nodes, trash, files, uploads,
+ * The policies of the drive's mutating operations (knowledge p6-design#coverage): nodes, trash, files, uploads,
  * access, shares and the drive lifecycle. `drive.uploads.append` is the Tus PATCH / S3 part protocol, which runs no
  * operation of its own: the policy names its routes.
  */

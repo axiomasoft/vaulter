@@ -117,7 +117,7 @@ final class NodeResource extends JsonResource
                 'collab_epoch' => $node->document->epoch,
                 'revision_id' => $node->document->headRevisionId,
             ],
-            // Reader-scoped (PLAN4.D20): another reader, or the same reader after a key generation bump, gets another tag.
+            // Reader-scoped: another reader, or the same reader after a key generation bump, gets another tag.
             'sync_key' => $node->syncKey,
         ];
     }

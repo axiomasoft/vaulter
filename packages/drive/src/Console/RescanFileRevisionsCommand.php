@@ -17,6 +17,7 @@ use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Models\Drive;
@@ -135,7 +136,7 @@ final class RescanFileRevisionsCommand extends Command
                 'tenant' => $scope['tenant'], 'drive' => $scope['drive'], 'all_tenants' => $scope['all'], 'filters' => $this->revisionKeys(), 'dry_run' => (bool) $this->option('dry-run'), 'spec_keys' => []];
             $drives = self::drives($scope);
             foreach (app(ProfileRegistry::class)->all() as $profile) {
-                $base['spec_keys'][$profile->getKey()] = array_map(fn ($spec) => $spec->configFingerprint(),
+                $base['spec_keys'][$profile->getKey()] = array_map(fn (ScanPolicySpec $spec): string => $spec->configFingerprint(),
                     app(ProfilePolicy::class)->scanSpecs($profile));
             }
             $cursor = null;
@@ -154,7 +155,7 @@ final class RescanFileRevisionsCommand extends Command
             $revisionClass = app(DriveConfig::class)->model('file_revision');
             // Validate every explicit key before any mutation; keys never derive tenant privilege.
             foreach ($this->revisionKeys() as $key) {
-                if (!$revisionClass::query()->whereKey($key)->whereHas('file.node', fn ($q) => $q->whereIn('drive_id', self::drives($scope)->select('id')))->exists()) {
+                if (!$revisionClass::query()->whereKey($key)->whereHas('file.node', fn (Builder $q): Builder => $q->whereIn('drive_id', self::drives($scope)->select('id')))->exists()) {
                     throw new InvalidArgumentException('Selected revision is outside the maintenance scope.');
                 }
             }
@@ -184,13 +185,13 @@ final class RescanFileRevisionsCommand extends Command
                 }
                 $last = ['last_drive_id' => $drive->id, 'last_revision_id' => null, 'last_admission_sequence' => 0];
                 $specs = $policies->forDrive($drive);
-                $revisions = $revisionClass::query()->whereHas('file.node', fn ($q) => $q->where('drive_id', $drive->id));
+                $revisions = $revisionClass::query()->whereHas('file.node', fn (Builder $q): Builder => $q->where('drive_id', $drive->id));
                 if ($this->revisionKeys() !== []) {
                     $revisions->whereKey($this->revisionKeys());
                 }
                 if ($cursor !== null && $cursor['last_revision_id'] !== null && $drive->id === $cursor['last_drive_id']) {
-                    $revisions->where(fn ($q) => $q->where('scan_admission_sequence', '>', $cursor['last_admission_sequence'])
-                        ->orWhere(fn ($q) => $q->where('scan_admission_sequence', $cursor['last_admission_sequence'])->where('id', '>', $cursor['last_revision_id'])));
+                    $revisions->where(fn (Builder $q): Builder => $q->where('scan_admission_sequence', '>', $cursor['last_admission_sequence'])
+                        ->orWhere(fn (Builder $q): Builder => $q->where('scan_admission_sequence', $cursor['last_admission_sequence'])->where('id', '>', $cursor['last_revision_id'])));
                 }
                 foreach ($revisions->orderBy('scan_admission_sequence')->orderBy('id')->limit($scope['limit'] - $out['scanned'])->get() as $revision) {
                     $out['scanned']++;
@@ -264,7 +265,7 @@ final class RescanFileRevisionsCommand extends Command
     private function revisionKeys(): array
     {
         $keys = $this->option('revision');
-        if (!is_array($keys) || !array_is_list($keys) || !array_all($keys, fn ($key): bool => is_string($key) && trim($key) !== '')) {
+        if (!is_array($keys) || !array_is_list($keys) || !array_all($keys, static fn (mixed $key): bool => is_string($key) && trim($key) !== '')) {
             throw new InvalidArgumentException('Invalid revision selection.');
         }
         $validated = [];

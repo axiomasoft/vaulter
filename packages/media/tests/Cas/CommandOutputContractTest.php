@@ -78,6 +78,8 @@ it('reports exact orphan walk totals, disk and grace', function (): void {
     $first = CasTestHelpers::seedOrphan(bytes: 'command orphan one', scope: 't-1', ageHours: 48);
     $second = CasTestHelpers::seedOrphan(bytes: 'command orphan two', scope: 't-1', ageHours: 48);
     Storage::disk('local')->put('foreign/readme.txt', 'not CAS');
+    $orphans = [$first, $second];
+    sort($orphans, SORT_STRING);
 
     $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,
@@ -88,7 +90,7 @@ it('reports exact orphan walk totals, disk and grace', function (): void {
     expect($exit)->toBe(Command::FAILURE)
         ->and(Artisan::output())
         ->toContain('Orphan walk (report-only): scanned 3, found 2, pruned 0, skipped 1 (disk local, grace 24h).')
-        ->toContain('Orphan objects (bytes with no blob row): '.$first.', '.$second);
+        ->toContain('Orphan objects (bytes with no blob row): '.implode(', ', $orphans));
 });
 
 it('reports the explicit orphan disk and the configured grace', function (): void {

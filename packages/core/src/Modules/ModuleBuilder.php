@@ -238,7 +238,7 @@ final class ModuleBuilder
     }
 
     /**
-     * The module's event types (D38): a backed string enum implementing `EventTypeContract`, one case per type.
+     * The module's event types: a backed string enum implementing `EventTypeContract`, one case per type.
      * The event catalogue lists them while the module is active, and a value declared by two installed modules
      * makes the graph invalid.
      *
@@ -267,7 +267,7 @@ final class ModuleBuilder
     }
 
     /**
-     * The policies of the module's mutating operations (D47): the catalogue lists them while the module is active,
+     * The policies of the module's mutating operations: the catalogue lists them while the module is active,
      * the operation runner refuses a mutating operation it does not list, and an operation name declared by two
      * installed modules makes the graph invalid.
      *

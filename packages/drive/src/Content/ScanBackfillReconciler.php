@@ -41,7 +41,7 @@ final readonly class ScanBackfillReconciler
                 continue;
             }
             try {
-                $spec = array_find($this->policies->forDrive($drive), fn ($spec): bool => $spec->specKey() === $run->spec_key);
+                $spec = array_find($this->policies->forDrive($drive), fn (ScanPolicySpec $spec): bool => $spec->specKey() === $run->spec_key);
             } catch (InvalidConfigurationException) {
                 $counts['stalled_configuration']++;
 
@@ -55,12 +55,12 @@ final readonly class ScanBackfillReconciler
                 continue;
             }
             $revisionClass = $this->config->model('file_revision');
-            $query = $revisionClass::query()->whereHas('file.node', fn ($nodes) => $nodes->where('drive_id', $drive->id))
+            $query = $revisionClass::query()->whereHas('file.node', fn (Builder $nodes): Builder => $nodes->where('drive_id', $drive->id))
                 ->where('scan_admission_sequence', '<=', $run->target_sequence)
-                ->where(function ($query) use ($run): void {
+                ->where(function (Builder $query) use ($run): void {
                     $query->where('scan_admission_sequence', '>', $run->last_admission_sequence);
                     if ($run->last_revision_id !== null) {
-                        $query->orWhere(function ($query) use ($run): void {
+                        $query->orWhere(function (Builder $query) use ($run): void {
                             $query->where('scan_admission_sequence', $run->last_admission_sequence)->where('id', '>', $run->last_revision_id);
                         });
                     } else {

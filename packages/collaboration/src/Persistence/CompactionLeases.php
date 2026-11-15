@@ -184,9 +184,9 @@ final readonly class CompactionLeases
 
         $tail = $this->log->rows('collaboration_updates', $head->documentId, $head->generation)
             ->where('seq', '>', $head->checkpointSeq)
-            ->selectRaw('min(created_at) as oldest, sum(length(payload)) as stored')
+            ->selectRaw('min(created_at) as oldest, sum(length(payload)) as stored_bytes')
             ->first();
-        $stored = $tail === null ? null : $tail->stored;
+        $stored = $tail === null ? null : $tail->stored_bytes;
         // A payload is stored base64: four stored bytes for every three of the update.
         $bytes = is_numeric($stored) ? intdiv((int) $stored * 3, 4) : 0;
         $oldest = LogTables::time($tail === null ? null : $tail->oldest);
@@ -258,9 +258,9 @@ final readonly class CompactionLeases
         $stored = $this->log->rows('collaboration_updates', $documentId, $head->generation)
             ->where('seq', '>', $head->checkpointSeq)
             ->where('seq', '<=', $head->headSeq)
-            ->selectRaw('length(payload) as stored')
+            ->selectRaw('length(payload) as stored_bytes')
             ->lockForUpdate()
-            ->pluck('stored');
+            ->pluck('stored_bytes');
 
         return $stored->reduce(static fn (int $bytes, mixed $size): int => $bytes + (is_numeric($size) ? (int) $size : 0), is_numeric($checkpoint) ? (int) $checkpoint : 0);
     }

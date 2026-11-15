@@ -11,7 +11,7 @@ use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
 
-/** Retry and prune of the webhooks module on the host scheduler; the outbox relay is core's (D29). */
+/** Retry and prune of the webhooks module on the host scheduler; the outbox relay is core's. */
 #[Internal]
 final class WebhooksSchedule implements ModuleSchedule
 {

@@ -6,11 +6,11 @@ namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
-use Vaulter\Support\Identity;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Support\Identity;
 
 /**
  * Read-side lookups over the immutable checkpoints in v_document_revisions: the head

@@ -12,11 +12,11 @@ use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\State\PendingStateGuard;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Operations\DriveContext;
 
 /**

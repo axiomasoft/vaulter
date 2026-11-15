@@ -28,14 +28,14 @@ use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * The media module (D22): the content-addressed store engine, the pins that keep blobs alive (D23), its blob
+ * The media module: the content-addressed store engine, the pins that keep blobs alive, its blob
  * maintenance commands and schedules, the blob_unavailable problem, the pins doctor check and the content-scanner
  * and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
  */
 #[Internal]
 final class MediaModule implements HoldsReferences, OwnsSchema, VaulterModule
 {
-    /** The pins other modules keep on the media's blobs (D23), for vaulter:module:uninstall. */
+    /** The pins other modules keep on the media's blobs, for vaulter:module:uninstall. */
     public static function heldReferences(): string
     {
         return BlobPinReferences::class;
@@ -81,9 +81,9 @@ final class MediaModule implements HoldsReferences, OwnsSchema, VaulterModule
             // The CAS storage engine the host picks in `vaulter-media.storage_driver` (Flysystem by default).
             ->defineCapability(StorageDriver::class, Cardinality::RequiredSingle)
             ->providesFromConfig(StorageDriver::class, 'vaulter-media.storage_driver', FlysystemStorageDriver::class)
-            // The pins per owner type, warning about owners whose module is not active (D23).
+            // The pins per owner type, warning about owners whose module is not active.
             ->slot(DoctorCheck::class, BlobPinsCheck::class, 'media.blobs.pins', key: 'media.blobs.pins')
-            // The blobs the integrity scrub marked as damaged (D49).
+            // The blobs the integrity scrub marked as damaged.
             ->slot(DoctorCheck::class, BlobIntegrityCheck::class, 'media.blobs.integrity', key: 'media.blobs.integrity');
     }
 }

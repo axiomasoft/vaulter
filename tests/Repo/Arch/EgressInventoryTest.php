@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 it('SEC-R17 inventory keeps descriptors metadata-only and installed delivery mediated without a conditional 304 branch', function (): void {
-    $root = dirname(__DIR__, 4);
+    $root = dirname(__DIR__, 3);
     $paths = [
         'packages/drive/src/Handlers/FileDescriptorFactory.php',
         'packages/drive/src/Handlers/NodePresenter.php',

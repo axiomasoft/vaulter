@@ -8,8 +8,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Idempotency\ReceiptFields;
 
 /**
- * What a comment deletion keeps in its receipt (D25 «для delete квитанция содержит доказуемый исходный authorization
- * scope», ID2): the id of the removed comment, the node it hung on and whether the right to delete it was proven as
+ * What a comment deletion keeps in its receipt (a delete receipt carries the provable original authorization
+ * scope): the id of the removed comment, the node it hung on and whether the right to delete it was proven as
  * its author or by Manage on the node — never its body or author. A replay checks that basis now, because the comment
  * itself is gone: an author keeps the right to what was theirs, a deletion by Manage needs Manage still.
  */

@@ -316,7 +316,7 @@ final readonly class CollaborationConfig
         return max($seconds, 1);
     }
 
-    /** The longest a room token may live (seconds): D26 bounds the exposure of a lost control message by it. */
+    /** The longest a room token may live (seconds): bounds the exposure of a lost control message by it. */
     public const int MAX_TOKEN_TTL = 300;
 
     /** The control transports: Redis pub/sub, HTTP to every hub's management port, or nothing. */
@@ -324,7 +324,7 @@ final readonly class CollaborationConfig
 
     /**
      * The lifetime of a room token. A hub renews it before it expires, and a renewal checks the rights again, so a
-     * token that missed a revocation lives at most this long (D26).
+     * token that missed a revocation lives at most this long.
      *
      * @throws InvalidConfigurationException outside 1..300 seconds
      */

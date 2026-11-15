@@ -37,6 +37,14 @@ uses(TestCase::class, DatabaseMigrations::class);
 // only (D41); the server engines are the deferred run of knowledge/deferred-runs. A set's application has its own database on
 // sqlite; on a server engine it wipes the suite database first (the name ends in _test) and leaves it empty.
 
+afterEach(function (): void {
+    // A server engine's sets ran on the suite database and left it empty: the suite's DatabaseMigrations rolls its own
+    // schema back after the test, so it gets that schema again.
+    if (SuiteDatabaseConnection::engine() !== 'sqlite') {
+        $this->artisan('migrate:fresh', $this->migrateFreshUsing())->assertExitCode(0);
+    }
+});
+
 /** The presets the matrix installs every set with: together all ids strategies, host key types, both prefixes, both tenancy modes. */
 const CLEAN_INSTALL_PRESETS = ['bigint.string.v.off', 'ulid.bigint.custom.on', 'uuid7.uuid.v.on', 'bigint.ulid.custom.off'];
 
@@ -68,7 +76,7 @@ function cleanIn(Application $app, Closure $callback): mixed
 function cleanTables(): array
 {
     $tables = array_values(array_filter(
-        array_map(static fn (array $table): string => (string) $table['name'], Schema::getTables()),
+        array_map(static fn (array $table): string => (string) $table['name'], Schema::getTables(Schema::getCurrentSchemaName())),
         static fn (string $name): bool => $name !== 'migrations',
     ));
     sort($tables);

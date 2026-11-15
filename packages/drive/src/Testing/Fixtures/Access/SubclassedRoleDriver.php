@@ -12,7 +12,7 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Configuration\AccessConfig;
 
 /**
- * A host driver following the DOCUMENTED extension path (F-P1.2-01 review): it
+ * A host driver following the DOCUMENTED extension path (review): it
  * subclasses the standalone {@see DatabasePermissionDriver} and OVERRIDES
  * subjectsFor() to append a role Subject — exactly as that driver's own docblock
  * promotes — but does NOT implement the {@see EnumeratesRoleSubjects}

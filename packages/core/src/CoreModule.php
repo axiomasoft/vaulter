@@ -57,12 +57,12 @@ use Vaulter\Schema\KernelSchema;
 use Vaulter\Security\TenancyInvariant;
 
 /**
- * The kernel's own module (ADR-0027): the `vaulter` config root, the schema of every create-migration
- * still shipped by core until P4 splits them (D36), the kernel commands and doctor checks, the
+ * The kernel's own module (docs/adr/0027-kernel-boundaries-and-modules.md): the `vaulter` config root, the schema of every create-migration
+ * still shipped by core until P4 splits them, the kernel commands and doctor checks, the
  * DoctorCheck slot every module contributes its checks to, the OperationMiddleware slot of the
- * operation pipeline with its telemetry middleware (ADR-0028), the EventSink slot of the event
- * recorder (D38) and the outbox: its OutboxConsumer slot, relay, replay and retention commands, schedule
- * and doctor checks (D29).
+ * operation pipeline with its telemetry middleware (docs/adr/0028-extension-slots-and-operation-pipeline.md), the EventSink slot of the event
+ * recorder and the outbox: its OutboxConsumer slot, relay, replay and retention commands, schedule
+ * and doctor checks.
  */
 #[Internal]
 final class CoreModule implements OwnsSchema, VaulterModule

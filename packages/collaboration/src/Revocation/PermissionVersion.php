@@ -7,7 +7,7 @@ namespace Vaulter\Collaboration\Revocation;
 use Vaulter\Attributes\Internal;
 
 /**
- * The pair of permission versions (D46) a room token was issued under, or the current pair of its drive: the version
+ * The pair of permission versions a room token was issued under, or the current pair of its drive: the version
  * of the drive (`drive:<id>`) and the version of every drive (`global`). A token whose pair is older than the current
  * one predates a change of rights; the rights are checked on every call anyway, the pair only tells the hub its
  * session is stale.

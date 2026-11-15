@@ -20,7 +20,7 @@ function kb_errors(array $manifest, array $actual, array $budget): array
     }
     foreach (['php_files', 'loc', 'api_types'] as $key) {
         $base = $key === 'api_types' ? $budget[$key] : $budget['src'][$key];
-        if ($actual[$key] * 100 > $base * (100 + $budget['src']['max_growth_percent'])) {
+        if ($base * (100 + $budget['src']['max_growth_percent']) < $actual[$key] * 100) {
             $errors[] = $key;
         }
     }

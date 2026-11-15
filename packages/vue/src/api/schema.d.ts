@@ -1305,7 +1305,7 @@ export interface components {
             /** Format: date-time */
             trashed_at: string | null;
             trashed_by: string | null;
-            /** @description Opaque reader-scoped handle of the node (PLAN4.D20); the change feed names a remove by it. Null for a reader without a sync identity. */
+            /** @description Opaque reader-scoped handle of the node; the change feed names a remove by it. Null for a reader without a sync identity. */
             sync_key: string | null;
             trash_root: boolean;
             /** @description null for folders. */

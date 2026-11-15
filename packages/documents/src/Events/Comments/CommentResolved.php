@@ -23,7 +23,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A node comment thread was marked resolved (docs/adr/0014-legacy-docvault-strangler.md шаг 1). Broadcast on the node's
+ * A node comment thread was marked resolved. Broadcast on the node's
  * private collaboration channel so open editors reflect the resolution live. The
  * actor who resolved it is also stamped as resolved_by on the row.
  */

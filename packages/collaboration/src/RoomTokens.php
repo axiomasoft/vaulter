@@ -19,7 +19,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * Mints the room JWT of a session and of its renewals (HS256, the hub.jwt_active_kid key of hub.jwt_keys, named by the `kid` header). Claims: `iss` (hub.issuer), `aud`
  * (the hub), `sub` (the host user),
  * `document_id` (the document's node), `drive_id`, `tenant`, `generation` (the document's collab epoch),
- * `schema_version`, `scope` (`read`|`write`), `permissions_version` (`{drive, global}`, D46, the versions it was
+ * `schema_version`, `scope` (`read`|`write`), `permissions_version` (`{drive, global}`, the versions it was
  * issued under), `room` (`<prefix>.<drive_id>.<document_id>.<generation>`), `iat` and `nbf` (the application clock), `protocol` (`yjs/2`), `exp` =
  * iat + hub.token_ttl and a fresh `jti`. The room repeats drive, document and generation, so a token is bound to
  * exactly one generation of one document; {@see CollaborationCallResolver} refuses a token whose claims disagree.

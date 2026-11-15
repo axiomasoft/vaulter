@@ -121,7 +121,8 @@ def npm_job(workspace, lane):
 
 def ci_doc():
     lanes = [policy.lane_job(lane) for lane in policy.LANES]
-    jobs = {'changes': {'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}}
+    plan_env = {variable: '${{ vars.' + variable + ' }}' for variable in policy.BC_HOST_VARIABLES}
+    jobs = {'changes': {'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': [{'id': 'plan', 'env': plan_env, 'run': 'true'}]}}
     for lane in lanes:
         jobs[lane] = {'needs': 'changes', 'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}
     jobs['sca'] = copy.deepcopy(policy.load_workflow(ROOT / '.github/workflows/ci.yml')['jobs']['sca'])
@@ -129,7 +130,7 @@ def ci_doc():
     jobs['contract-bc'] = contract_job()
     jobs['vue'] = npm_job('@vaulter/vue', 'vue')
     jobs['vue-collaboration'] = npm_job('@vaulter/vue-collaboration', 'vue_collaboration')
-    jobs['changes']['outputs'] = {output: '${{ steps.plan.outputs.' + output + ' }}' for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines')}
+    jobs['changes']['outputs'] = {output: '${{ steps.plan.outputs.' + output + ' }}' for output in ('has_contract_bc', 'contract_bc_provisioned', 'contract_bc_required_lines', 'contract_bc_selected_lines')}
     jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes + ['sca'],
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
     return {
@@ -401,7 +402,10 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('', out['skip_reason'])
         self.assertEqual('true', out['has_fast'])
         self.assertEqual('true', out['has_vue_collaboration'])
-        self.assertEqual(18, len(json.loads(out['db_matrix'])['include']))
+        db = json.loads(out['db_matrix'])['include']
+        # Every package with database tests on both engines; filament has none, so no db lane.
+        self.assertEqual(16, len(db))
+        self.assertNotIn('filament', {row['package'] for row in db})
         self.assertEqual(7, len(json.loads(out['serial_matrix'])['include']))
         self.assertEqual(6, len(json.loads(out['consumer_matrix'])['include']))
         with self.assertRaises(ValueError):
@@ -550,7 +554,7 @@ class SingleCiTest(unittest.TestCase):
             doc = policy.load_workflow(ROOT / '.github' / 'workflows' / name)
             self.assertIn('vue-collaboration', doc['jobs'], name)
             self.assertIn('@vaulter/vue-collaboration', doc['jobs']['vue-collaboration']['name'], name)
-            self.assertEqual('@vaulter/collaboration-hub (Node 22)' if name == 'weekly-full.yml' else '@vaulter/collaboration-hub (Node ${{ matrix.node }})',
+            self.assertEqual('@vaulter/collaboration-hub (Node 26)' if name == 'weekly-full.yml' else '@vaulter/collaboration-hub (Node ${{ matrix.node }})',
                              doc['jobs']['hub']['name'], name)
         ci = policy.load_workflow(ROOT / '.github' / 'workflows' / 'ci.yml')
         self.assertIn('vue-collaboration', ci['jobs']['ci-gate']['needs'])
@@ -799,6 +803,35 @@ class ContractBoundaryTest(unittest.TestCase):
         job['steps'][-1]['continue-on-error'] = True
         self.assertTrue(policy.check_contract_bc(job))
         self.assertEqual([], policy.check_contract_bc(contract_job()))
+
+    def test_contract_lane_is_not_planned_without_a_provisioned_bc_host(self):
+        support = policy.derive_support(ROOT)
+        self.assertFalse(policy.bc_host_provisioned({}))
+        self.assertFalse(policy.bc_host_provisioned({'BC_HOST_BOOTSTRAP': ' ', 'BC_HOST_PYTHON': ''}))
+        # A partial setup counts: the job runs and fails on what is missing.
+        self.assertTrue(policy.bc_host_provisioned({'BC_HOST_PYTHON': '/opt/bc/python'}))
+
+        out = policy.plan_outputs(support, 'all', bc_provisioned=False)
+        self.assertEqual('false', out['has_contract_bc'])
+        self.assertEqual('false', out['contract_bc_provisioned'])
+        self.assertEqual('[]', out['contract_bc_selected_lines'])
+        green = {policy.lane_job(lane): 'success' for lane in policy.LANES if lane != 'contract_bc'}
+        self.assertEqual([], policy.gate_errors(needs({**green, 'contract-bc': 'skipped'}, **out)))
+        # The skip is excused by the plan's explicit `false` alone: without it the gate still requires the lane.
+        unexplained = {key: value for key, value in out.items() if key != 'contract_bc_provisioned'}
+        self.assertTrue(any('four-line contract gate' in e for e in policy.gate_errors(needs({**green, 'contract-bc': 'skipped'}, **unexplained))))
+        # Provisioned, the lane is planned and blocks like every other.
+        provisioned = policy.plan_outputs(support, 'all', bc_provisioned=True)
+        self.assertEqual('true', provisioned['has_contract_bc'])
+        self.assertTrue(any('contract_bc: required lane' in e for e in policy.gate_errors(needs({**green, 'contract-bc': 'skipped'}, **provisioned))))
+
+    def test_the_plan_step_reads_the_bc_host_variables(self):
+        doc = ci_doc()
+        doc['jobs']['changes']['steps'][0]['env'].pop('BC_HOST_PYTHON')
+        self.assertTrue(any('BC_HOST_PYTHON' in e for e in policy.check_ci(doc, ROOT)))
+        doc = ci_doc()
+        del doc['jobs']['changes']['outputs']['contract_bc_provisioned']
+        self.assertTrue(any('contract_bc_provisioned' in e for e in policy.check_ci(doc, ROOT)))
 
     def test_host_exact_inventory_runtime_and_readonly_tool(self):
         import hashlib

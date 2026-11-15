@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Attributes\Internal;
@@ -40,7 +41,7 @@ final class PurgeDrivesCommand extends Command
 
         $drives = Tenancy::without(fn (): array => $config->model('drive')::query()
             ->where('status', DriveStatus::Deleting->value)
-            ->when($only !== [], static fn ($query) => $query->whereKey($only))
+            ->when($only !== [], static fn (Builder $query): Builder => $query->whereKey($only))
             ->orderBy('id')->pluck('id')->all());
         foreach ($drives as $id) {
             $key = Identity::key($id);

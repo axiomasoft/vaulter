@@ -20,7 +20,7 @@ return [
         'issuer' => env('VAULTER_COLLAB_ISSUER'),
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
         // The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no
-        // control message reaches the hub, because a renewal checks the rights again (D26).
+        // control message reaches the hub, because a renewal checks the rights again.
         'token_ttl' => 300,
         // The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds, 0..30);
         // part of the exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance).

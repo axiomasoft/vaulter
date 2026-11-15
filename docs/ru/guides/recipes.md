@@ -83,7 +83,7 @@ php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'profiles' => ['providers' => [
     \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
 ]],
@@ -164,7 +164,7 @@ final class Node extends BaseNode
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'models' => [
     // ...
     'node'    => \App\Models\Vaulter\Node::class,
@@ -181,10 +181,14 @@ final class Node extends BaseNode
 
 ```php
 // config/vaulter-media.php
-// config/vaulter-media.php
 'dedup' => ['scope' => 'tenant'], // the default; never use 'global' for untrusted tenants
+```
+
+<!-- snippet: config -->
+
+```php
 // config/vaulter.php
-'ids'   => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
+'ids' => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
 ```
 
 ::: warning Область тенанта — ответственность хоста
@@ -282,7 +286,7 @@ final class AppRoleDriver implements PermissionDriver
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
@@ -366,11 +370,11 @@ final class CadHandler implements FileHandler
 <!-- snippet: config -->
 
 ```php [config]
-// config/vaulter.php
+// config/vaulter-drive.php
 'handlers' => [
     \App\Vaulter\Handlers\CadHandler::class, // before the fallbacks
-    \Vaulter\Handlers\Builtin\PreviewHandler::class,
-    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
+    \Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
+    \Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -548,7 +552,7 @@ final class ShortTokenGenerator implements ShareTokenGenerator
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'sharing' => [
     'token_generator' => \App\Vaulter\ShortTokenGenerator::class,
     'url_base'        => env('VAULTER_SHARE_URL_BASE', '/share'),

@@ -3,7 +3,7 @@
 **Status:** proposed
 
 > Transfers decisions D22–D23 of the 2026-09-29 stable audit
-> (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d22`, `#d23`) into the project ADR set.
+> (git history at `d1deaf6d`; the audit is no longer in the tree) into the project ADR set.
 
 ## Context
 
@@ -80,7 +80,5 @@ The decision above stands; these amendments refine it.
 
 ## References
 
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d22`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d23`
-- `audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md` §6 (event catalogue)
+- The 2026-09-29 stable audit: removed from the tree, read it in the git history at `d1deaf6d`.
 - [ADR-0020 — Authorized public API](/adr/0020-authorized-public-api) (Actions publish through `EventRecorder`)

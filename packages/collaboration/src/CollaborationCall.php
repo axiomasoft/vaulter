@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  *                          endpoints re-check it against the live document and rights.
  *   - schemaVersion      — the schema the session was issued for.
  *   - tenant             — the node's tenant when the token was issued, or null.
- *   - permissionsVersion — the drive and global permission versions it was issued under (D46).
+ *   - permissionsVersion — the drive and global permission versions it was issued under.
  *   - jti, expiresAt     — the token's id and exp.
  */
 #[Internal]

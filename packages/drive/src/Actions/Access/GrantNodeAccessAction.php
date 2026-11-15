@@ -32,7 +32,7 @@ use Vaulter\Events\EventRecorder;
  * re-granting the same subject the same scope replaces the role and expiry. The
  * write runs in a transaction under the node's row lock, raises the node's
  * access_version (never its sequence: CC2) and emits NodeGrantCreated. A grant is
- * an append (D47(4)): it expects no version.
+ * an append ((4)): it expects no version.
  *
  * Authorization (the actor may Manage the node) is enforced by the caller
  * (controller/policy) before reaching the Action — the Action persists, it does

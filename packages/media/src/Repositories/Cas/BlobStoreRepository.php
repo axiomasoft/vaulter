@@ -123,7 +123,7 @@ final readonly class BlobStoreRepository
     }
 
     /**
-     * Record one integrity check of the bytes (the scrub, D49). The check time always moves, so the blob goes to the
+     * Record one integrity check of the bytes (the scrub). The check time always moves, so the blob goes to the
      * back of the scrub queue; a failure also sets integrity_failed_at, keeping the first one of a blob that stays bad.
      * Only the ingest heals (clearIntegrity()): a later clean check never clears the mark. Caller holds the lock.
      */
@@ -140,7 +140,7 @@ final readonly class BlobStoreRepository
     }
 
     /**
-     * Claim the heal of a marked blob (D49) before its object is touched: a write that lands only while the mark is
+     * Claim the heal of a marked blob before its object is touched: a write that lands only while the mark is
      * still set, then the row is read again and decides. On SQLite the write takes the single-writer lock, and a
      * transaction whose snapshot predates another heal's commit fails here (and is retried) instead of deleting the
      * object that heal restored. The affected-row count is not trusted (MySQL counts changed rows, not matched ones).
@@ -156,7 +156,7 @@ final readonly class BlobStoreRepository
     }
 
     /**
-     * Lift the integrity mark after the ingest rewrote the object (D49). The check time is cleared too, so the next
+     * Lift the integrity mark after the ingest rewrote the object. The check time is cleared too, so the next
      * scrub verifies the rewritten bytes first. Caller holds the lock.
      */
     public function clearIntegrity(Blob $blob): void
@@ -228,7 +228,7 @@ final readonly class BlobStoreRepository
 
     /**
      * Re-read a single blob FOR UPDATE on every driver that has row locks (SQLite
-     * ignores the clause and serialises writers anyway): the pin protocol (D23) takes
+     * ignores the clause and serialises writers anyway): the pin protocol takes
      * the row lock after the per-(scope,sha256) lock, so a sweep and a pin of the
      * same blob are ordered on PostgreSQL by both.
      */
@@ -291,7 +291,7 @@ final readonly class BlobStoreRepository
      * (→ committed, clear delete_after_at) in the same locked transaction. A
      * deleting/deleted row is also resurrected — its bytes will be re-promoted by
      * BlobStore since the canonical object may already be gone. A pending row is left
-     * to its commit; a pin that found its bytes asks for $pending (D23).
+     * to its commit; a pin that found its bytes asks for $pending.
      */
     public function resurrect(Blob $blob, bool $pending = false): void
     {

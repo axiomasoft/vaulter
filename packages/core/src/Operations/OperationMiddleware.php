@@ -9,7 +9,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 
 /**
- * A slot contribution that wraps every write operation (D8). It calls `$next` exactly once with the
+ * A slot contribution that wraps every write operation. It calls `$next` exactly once with the
  * operation it was given and returns exactly what `$next` returned; anything else fails the
  * operation with `extension_failed`. Throwing before `$next` vetoes the operation without a mutation.
  * It never replaces the transaction, the authorization or the events of the operation.

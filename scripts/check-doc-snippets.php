@@ -186,10 +186,15 @@ function region(string $file, string $name): ?string
     return null;
 }
 
-/** @return list<string> */
+/** @return array<string, string> config file name (`vaulter-drive.php`) => source */
 function configSources(string $root): array
 {
-    return array_map(static fn (string $f): string => (string) file_get_contents($f), glob($root.'/packages/*/config/*.php') ?: []);
+    $sources = [];
+    foreach (glob($root.'/packages/*/config/*.php') ?: [] as $file) {
+        $sources[basename($file)] = (string) file_get_contents($file);
+    }
+
+    return $sources;
 }
 
 /** @return list<string> */
@@ -307,7 +312,11 @@ function vueComponentMisuse(string $root, string $code): array
     $problems = [];
     preg_match_all('/<(Vaulter[A-Z]\w*)\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>/s', $code, $tags, PREG_SET_ORDER);
     foreach ($tags as [, $component, $attributes]) {
-        $files = glob($root.'/packages/vue/src/{components,viewers}/{,*/}'.$component.'.vue', GLOB_BRACE) ?: [];
+        // No GLOB_BRACE: it is undefined on musl builds of PHP (Alpine), so each pattern is globbed on its own.
+        $files = [];
+        foreach (['components', 'components/*', 'viewers', 'viewers/*'] as $dir) {
+            $files = [...$files, ...(glob($root.'/packages/vue/src/'.$dir.'/'.$component.'.vue') ?: [])];
+        }
         if ($files === []) {
             $problems[] = "<{$component}> is not a component of @vaulter/vue";
 
@@ -550,16 +559,33 @@ foreach ($byFile as $file => $blocks) {
             // A line marked `// your …` names the reader's own entry (a driver key, say), not a package key.
             $own = implode("\n", array_filter(explode("\n", $block['code']), static fn (string $row): bool => !str_contains($row, '// your ')));
             preg_match_all("/'([a-z_]+)'\s*=>/", $own, $keys);
+            // A block that names its file (`// config/vaulter-drive.php`) must use the keys of that file.
+            $sources = $configs;
+            if (preg_match('#\A\s*//\s*config/([a-z-]+\.php)\b#', $block['code'], $named)) {
+                $sources = array_intersect_key($configs, [$named[1] => true]);
+                if ($sources === []) {
+                    $fail($file, $line, "config/{$named[1]} is not the config file of any package");
+
+                    continue;
+                }
+            }
             foreach (array_unique($keys[1]) as $key) {
                 $found = false;
-                foreach ($configs as $source) {
+                foreach ($sources as $source) {
                     if (preg_match("/'".preg_quote($key, '/')."'\s*=>/", $source)) {
                         $found = true;
                         break;
                     }
                 }
                 if (!$found) {
-                    $fail($file, $line, "config key '{$key}' is in no packages/*/config/*.php");
+                    $fail($file, $line, "config key '{$key}' is in no ".(count($sources) === 1 ? 'config/'.array_key_first($sources) : 'packages/*/config/*.php'));
+                }
+            }
+            // A class a config value names must exist: a stale namespace is a silent boot failure for the reader.
+            preg_match_all('/(?<![\w\\\\])\\\\?(Vaulter\\\\[\w\\\\]+)::class/', $block['code'], $classes);
+            foreach (array_unique($classes[1]) as $class) {
+                if (!declared($class)) {
+                    $fail($file, $line, "class {$class} does not exist");
                 }
             }
         } elseif ($marker === 'snippet: shell') {

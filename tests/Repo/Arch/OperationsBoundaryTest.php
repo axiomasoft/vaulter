@@ -48,7 +48,7 @@ function forbiddenBoundaryDependencies(string $source, string $layers = 'Actions
 }
 
 it('keeps migrated HTTP and Filament boundaries on Operations including aliases and literal class calls', function (): void {
-    $root = dirname(__DIR__, 3);
+    $root = dirname(__DIR__, 3).'/packages';
     $paths = [
         'drive/src/Http/Controllers/Nodes/UpdateNodeController.php',
         'drive/src/Http/Controllers/Trash/PurgeNodeController.php',
@@ -100,7 +100,7 @@ PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\D
  * design or still do; the list can only shrink, and a file that is clean again must be removed from it.
  */
 it('keeps every HTTP and Filament boundary on Operations except the shrinking exemption list', function (): void {
-    $root = dirname(__DIR__, 3);
+    $root = dirname(__DIR__, 3).'/packages';
     // The webhook admin is a global surface with no drive handle: its controllers call the webhook Actions and
     // repositories by design. The HTTP support classes resolve route ids into the models that the content and
     // share machinery take.
@@ -137,7 +137,7 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
 });
 
 it('covers the HTTP layer of every package that serves routes', function (): void {
-    $root = dirname(__DIR__, 3);
+    $root = dirname(__DIR__, 3).'/packages';
 
     foreach (['drive', 'documents', 'webhooks'] as $package) {
         expect(is_dir($root.'/'.$package.'/src/Http/Controllers'))->toBeTrue($package)
@@ -151,7 +151,7 @@ it('covers the HTTP layer of every package that serves routes', function (): voi
  * model on purpose (an upload session found by its id, a webhook delivery found for a redelivery); the list can only shrink.
  */
 it('keeps the controllers off the domain models except the shrinking exemption list', function (): void {
-    $root = dirname(__DIR__, 3);
+    $root = dirname(__DIR__, 3).'/packages';
     $exempt = [
         'drive/src/Http/Controllers/Sharing/ListPublicShareNodesController.php',
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',

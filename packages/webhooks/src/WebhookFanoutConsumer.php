@@ -27,7 +27,7 @@ use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
- * The webhooks module's outbox consumer `webhooks.fanout` (D29, durable): turns each external event into one
+ * The webhooks module's outbox consumer `webhooks.fanout` (durable): turns each external event into one
  * WebhookDelivery per eligible endpoint and queues their jobs.
  *
  * Endpoints are materialized fanout_chunk at a time, each chunk in its own transaction. The chunk first saves its

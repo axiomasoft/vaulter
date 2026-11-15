@@ -70,7 +70,7 @@ final readonly class UploadOperations
     {
         $node = $input->targetNode === null ? null : self::idOf($input->targetNode);
         $parent = $input->targetParent === null ? null : self::idOf($input->targetParent);
-        // Idempotent by key (D25): the receipt is the opened session. A replay needs Edit on the target file (a new
+        // Idempotent by key: the receipt is the opened session. A replay needs Edit on the target file (a new
         // revision) or Create in the parent folder (a new file) where they are now.
         $idempotency = new IdempotentWrite(
             codec: new UploadSessionCodec($this->config),
@@ -104,7 +104,7 @@ final readonly class UploadOperations
     public function complete(UploadSessionSnapshot|int|string $session): NodeSnapshot
     {
         $session = $this->find($session);
-        // One finite monotonic budget for the whole request (D19), started outside every
+        // One finite monotonic budget for the whole request, started outside every
         // DB attempt: a retry spends what is left, it never gets a fresh deadline.
         $deadline = $this->clock->start();
 

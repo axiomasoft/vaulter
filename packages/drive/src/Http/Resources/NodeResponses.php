@@ -124,7 +124,7 @@ final readonly class NodeResponses
     }
 
     /**
-     * {@see expectedSequence()} for the route of a receipt operation (D25): a retry under its Idempotency-Key repeats
+     * {@see expectedSequence()} for the route of a receipt operation: a retry under its Idempotency-Key repeats
      * the If-Match of the first request, stale once that one committed — and its node may be in the trash or gone
      * from the caller's view since. The operation answers it from the receipt, or — without one — refuses it as stale
      * or missing and stores that refusal. It gets a sequence no live node holds: PHP_INT_MAX, or the one below it for

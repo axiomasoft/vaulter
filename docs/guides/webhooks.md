@@ -288,6 +288,4 @@ is generated from it, so the reference cannot drift from the code. The 1.0 catal
 `data.changed`, and no envelope ever carries a share token, its hash or prefix, a
 password, a name, a path or request details.
 
-The admin REST resources use the v1 shape described above. See
-[UPGRADE.md](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) for safety
-checks, backups and the irreversible parts of rollback.
+The admin REST resources use the v1 shape described above.

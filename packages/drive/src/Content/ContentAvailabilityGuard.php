@@ -89,7 +89,7 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
             throw NodeNotFoundException::forId($node->id);
         }
         $blob = $actualRevision->blob()->first();
-        // A blob the integrity scrub marked (D49) is media's state, read through the Api: its bytes are not handed out.
+        // A blob the integrity scrub marked is media's state, read through the Api: its bytes are not handed out.
         if (!$blob instanceof Blob || $blob->status !== BlobStatus::Committed || $blob->chunked || !$blob->isIntact()
             || !$actualRevision->blobs()->whereKey($blob->id)->exists()
             || $blob->size_bytes !== $actualRevision->size_bytes || !hash_equals($blob->sha256, $actualRevision->sha256)

@@ -122,7 +122,7 @@ final readonly class CompleteUploadAction
         }, attempts: 1);
     }
 
-    /** D19: the session's staged/CAS disk must take a bounded transport timeout before any storage call. */
+    /** the session's staged/CAS disk must take a bounded transport timeout before any storage call. */
     public function preflight(UploadSession $session, CompletionDeadline $deadline): void
     {
         $deadline->preflight(disk: $this->staged->diskFor($session), uploadId: $session->upload_id);

@@ -11,7 +11,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Events\Outbox\OutboxStore;
 
-/** An outbox delivery leased by a relay that died keeps its lease until the next relay takes it over (D29). */
+/** An outbox delivery leased by a relay that died keeps its lease until the next relay takes it over. */
 #[Internal]
 final readonly class OutboxLeasesCheck implements DoctorCheck
 {

@@ -8,6 +8,7 @@ use Symfony\Component\Yaml\Yaml;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -162,7 +163,7 @@ it('covers every GET/HEAD route of the package, with a reason for each row that 
             $registered[] = substr($name, strlen('vaulter.v1.'));
         }
     }
-    $spec = Yaml::parseFile(dirname(__DIR__, 4).'/openapi/vaulter-v1.yaml');
+    $spec = Yaml::parseFile(OpenApiContract::specPath());
     $operations = [];
     foreach ($spec['paths'] as $item) {
         foreach (['get', 'head'] as $method) {

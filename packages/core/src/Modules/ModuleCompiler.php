@@ -551,7 +551,7 @@ final class ModuleCompiler
     }
 
     /**
-     * The event type values each module declares (D38): every declared class is a backed string enum
+     * The event type values each module declares: every declared class is a backed string enum
      * implementing {@see EventTypeContract}; reading its cases keeps the compiler free of container and I/O.
      *
      * @param  array<string, ModuleBuilder> $builders
@@ -590,7 +590,7 @@ final class ModuleCompiler
     }
 
     /**
-     * The operation names each module declares a policy for (D47). A source is a value object without constructor
+     * The operation names each module declares a policy for. A source is a value object without constructor
      * arguments whose `policies()` is a constant table; the aggregate of a policy belongs to the declaring module.
      *
      * @param  array<string, ModuleBuilder> $builders

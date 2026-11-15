@@ -44,7 +44,7 @@
                     "internal": false,
                     "final": false,
                     "type": "array",
-                    "value": "['max_attempts' => 'vaulter-webhooks.retry_schedule (attempts = entries + 1)', 'backoff' => 'vaulter-webhooks.retry_schedule', 'disable_after_failures' => 'vaulter-webhooks.disable_after_days', 'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'event_header' => 'the event type, which is the \"type\" field of the delivery body', 'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease, D29)']",
+                    "value": "['max_attempts' => 'vaulter-webhooks.retry_schedule (attempts = entries + 1)', 'backoff' => 'vaulter-webhooks.retry_schedule', 'disable_after_failures' => 'vaulter-webhooks.disable_after_days', 'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'event_header' => 'the event type, which is the \"type\" field of the delivery body', 'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease)']",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,

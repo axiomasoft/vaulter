@@ -20,7 +20,7 @@ use WeakMap;
  * The only way a domain event is recorded. Called as the last step of an operation's transaction, it hands
  * the occurrence to the {@see EventSink} contributions of the active modules in the order (priority, id) —
  * the drive's activity feed and change journal — then writes the outbox row and the delivery rows of the
- * subscribed outbox consumers on the Vaulter connection, whatever modules are active (D29), and dispatches
+ * subscribed outbox consumers on the Vaulter connection, whatever modules are active, and dispatches
  * the event to host listeners after the commit. The outbox comes last: its envelope carries the journal seq
  * a sink shared.
  *
@@ -61,7 +61,7 @@ final readonly class EventRecorder
         foreach ($this->kernel->extensions()->resolve(EventSink::class) as $sink) {
             $sinks[] = static fn (): SinkResult => $sink->record($event, $writer);
         }
-        // The outbox is written always and last (D29): its envelope carries the journal seq a sink shared.
+        // The outbox is written always and last: its envelope carries the journal seq a sink shared.
         $sinks[] = fn (): SinkResult => $this->container->make(OutboxWriter::class)->append($event, $writer);
 
         // The first sink that keeps the event tells a new occurrence from a replay of one already stored

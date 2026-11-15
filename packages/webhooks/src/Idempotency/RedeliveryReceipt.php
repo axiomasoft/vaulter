@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Idempotency\ReceiptFields;
 
 /**
- * What a redelivery keeps in its receipt (D25): the id of the re-armed delivery and of its endpoint, never the payload.
+ * What a redelivery keeps in its receipt: the id of the re-armed delivery and of its endpoint, never the payload.
  * A keyed retry is answered from it with the delivery as it is now, and queues nothing: the delivery is sent again once
  * per key, even when it was delivered before the retry came.
  */

@@ -96,8 +96,9 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
                     $wait(static function () use ($db, $pid): bool {
                         $db->select('SELECT pg_stat_clear_snapshot()');
 
-                        return $db->table('pg_stat_activity')->where('pid', $pid)
-                            ->where('wait_event_type', 'Lock')->where('query', 'like', 'update "v_drives" set used_bytes%')->exists();
+                        // The copy queues behind this upload while it holds the quota: on the shared blob's
+                        // advisory lock or on the drive row, whichever the copy reaches first.
+                        return $db->table('pg_stat_activity')->where('pid', $pid)->where('wait_event_type', 'Lock')->exists();
                     });
                 });
 

@@ -11,7 +11,7 @@ use Vaulter\Operations\OperationPolicy;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
- * The policies of the webhook endpoint operations (D47, knowledge p6-design#coverage), named as
+ * The policies of the webhook endpoint operations (knowledge p6-design#coverage), named as
  * {@see WebhookEndpointWrites} runs them. A redelivery re-arms a finished delivery under its lock (a repeat while it is
  * pending again is refused) and is a receipt operation: once the delivery has finished again, only the Idempotency-Key
  * tells a retry from a new redelivery, so a keyed retry is answered from the receipt and sends nothing.

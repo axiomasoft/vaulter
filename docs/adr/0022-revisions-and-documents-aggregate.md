@@ -3,7 +3,7 @@
 **Status:** proposed
 
 > Transfers decisions D15–D17 of the 2026-09-29 stable audit
-> (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d15` … `#d17`) into the project ADR set.
+> (git history at `d1deaf6d`; the audit is no longer in the tree) into the project ADR set.
 > **Amends [ADR-0018 — Pluggable editor-engine canon](/adr/0018-editor-engine-canon):** structured
 > documents get their type, schema version and viewer from a document-type registry and a `Document`
 > aggregate instead of the node row. The `FileHandler` contract, its naming (ADR-0018 D7) and the
@@ -109,10 +109,6 @@ The source decisions D15–D17 record no rejected alternatives.
 
 ## References
 
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d15`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d16`
-- `audits/2026-09-29-stable-audit/opus/02-decisions.md#d17`
-- `audits/2026-09-29-stable-audit/opus/06-extension-points.md` §3
-- `audits/2026-09-29-stable-audit/opus/01-review.md` — N03, N06
+- The 2026-09-29 stable audit: removed from the tree, read it in the git history at `d1deaf6d`.
 - [ADR-0018 — Pluggable editor-engine canon](/adr/0018-editor-engine-canon) (amended)
 - `plans/2026.09.29-№1-VAULTER-STABLE/decisions/D34.json`, `D35.json` — the amendment

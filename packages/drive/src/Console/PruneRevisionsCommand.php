@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Attributes\Internal;
@@ -41,7 +42,7 @@ final class PruneRevisionsCommand extends Command
         $failed = false;
 
         $ids = Tenancy::without(fn (): array => $config->model('drive')::query()
-            ->when($only !== [], static fn ($query) => $query->whereKey($only))
+            ->when($only !== [], static fn (Builder $query): Builder => $query->whereKey($only))
             ->orderBy('id')->pluck('id')->all());
         foreach ($ids as $id) {
             $key = Identity::key($id);

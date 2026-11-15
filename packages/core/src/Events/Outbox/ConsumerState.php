@@ -6,7 +6,7 @@ namespace Vaulter\Events\Outbox;
 
 use Vaulter\Attributes\Internal;
 
-/** The lifecycle of a registered outbox consumer (D29). */
+/** The lifecycle of a registered outbox consumer. */
 #[Internal]
 enum ConsumerState: string
 {

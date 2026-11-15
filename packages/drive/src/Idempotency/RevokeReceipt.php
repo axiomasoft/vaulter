@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Idempotency;
 use Vaulter\Attributes\Internal;
 
 /**
- * What a revocation keeps in its receipt (D25 «для delete квитанция содержит доказуемый исходный authorization
- * scope», ID2): the id of the revoked grant or share link and the node the right to revoke it was proven on, never
+ * What a revocation keeps in its receipt (a delete receipt carries the provable original authorization
+ * scope): the id of the revoked grant or share link and the node the right to revoke it was proven on, never
  * its content. A replay checks the recorded ability on that node, because the grant itself is gone.
  *
  * `$kind` is `grant` (drive.access.revoke) or `share` (drive.shares.revoke).

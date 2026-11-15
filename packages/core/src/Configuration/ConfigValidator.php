@@ -35,7 +35,7 @@ final readonly class ConfigValidator
         }
 
         if ($this->config->has('vaulter.features.webhooks')) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter.features.webhooks was removed: webhooks are a module, switch them with vaulter.modules.webhooks (D22).');
+            throw new InvalidConfigurationException('[Vaulter] vaulter.features.webhooks was removed: webhooks are a module, switch them with vaulter.modules.webhooks.');
         }
 
         if ($config->tenancy()->enabled()) {

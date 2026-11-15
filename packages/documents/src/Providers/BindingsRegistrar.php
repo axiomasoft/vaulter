@@ -57,7 +57,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
         $app->alias(DocumentsManager::class, 'vaulter.documents');
-        // The state contract of the realtime transport (D27): stateless, every call works in the caller's transaction.
+        // The state contract of the realtime transport: stateless, every call works in the caller's transaction.
         $app->singleton(CollaborativeState::class, DatabaseCollaborativeState::class);
 
         // The export filename seam is a capability of DocumentsModule (the node's basename plus the exporter's

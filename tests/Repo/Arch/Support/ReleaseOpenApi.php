@@ -7,6 +7,7 @@ namespace Vaulter\Repo\Tests\Support;
 use Illuminate\Routing\Route;
 use LogicException;
 use ReflectionClass;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 
@@ -46,6 +47,7 @@ final class ReleaseOpenApi
         if (count($matches) !== 1) {
             throw new LogicException('Expected one route owner: '.$route->getName());
         }
+
         return $matches[0];
     }
 
@@ -59,6 +61,7 @@ final class ReleaseOpenApi
             }
         }
         ksort($owned);
+
         return $owned;
     }
 
@@ -97,7 +100,7 @@ final class ReleaseOpenApi
         foreach ($routes as $id => $route) {
             $entry = $operations[$id];
             $methods = array_values(array_diff($route->methods(), ['HEAD'])) ?: ['HEAD'];
-            if ($methods !== [$entry['method']] || '/'.ltrim($route->uri(), '/') !== '/'.app(\Vaulter\Configuration\RoutesConfig::class)->versionedPrefix().$entry['path']) {
+            if ($methods !== [$entry['method']] || '/'.ltrim($route->uri(), '/') !== '/'.app(RoutesConfig::class)->versionedPrefix().$entry['path']) {
                 throw new LogicException('Method/path mismatch: '.$id);
             }
             $operation = $entry['operation'];

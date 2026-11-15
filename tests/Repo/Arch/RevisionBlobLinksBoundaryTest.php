@@ -11,7 +11,7 @@ declare(strict_types=1);
 /** @return array<string, string> repo-relative path => code without comments */
 function revisionLinksCode(string ...$roots): array
 {
-    $repo = dirname(__DIR__, 4);
+    $repo = dirname(__DIR__, 3);
     $files = [];
     foreach ($roots as $root) {
         foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($repo.'/'.$root, FilesystemIterator::SKIP_DOTS)) as $file) {

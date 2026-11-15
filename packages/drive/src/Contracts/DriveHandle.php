@@ -67,7 +67,7 @@ interface DriveHandle
     public function withCorrelationId(string $correlationId): static;
 
     /**
-     * The idempotency key of the writes made through this handle (D25): opaque bytes, 1–255, compared exactly.
+     * The idempotency key of the writes made through this handle: opaque bytes, 1–255, compared exactly.
      * Only an operation that declares idempotency accepts it (the receipt operations of the catalogue,
      * `vaulter:operations`); any other write refuses a key before it runs. A retry with the same key and the same
      * request returns the stored outcome after a fresh authorization check; another request under the key fails

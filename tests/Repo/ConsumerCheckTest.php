@@ -401,7 +401,7 @@ it('stages the root Pest harness next to core, which keeps phpunit.xml and tests
         ->and($composer['autoload-dev']['psr-4'])->toBe(['Vaulter\\Tests\\' => 'packages/core/tests/'])
         ->and(array_column($composer['repositories'], 'url'))->not->toContain('.deps/core')
         ->and(json_encode($composer))->not->toContain('self.version');
-    foreach (['phpunit.xml', 'tests/Pest.php', 'packages/core/src', 'packages/core/tests'] as $staged) {
+    foreach (['phpunit.xml', 'tests/Pest.php', 'openapi/vaulter-v1.yaml', 'packages/core/src', 'packages/core/tests'] as $staged) {
         expect(file_exists("{$work}/consumer/{$staged}"))->toBeTrue("{$staged} is staged for core");
     }
     expect(file_exists("{$work}/consumer/packages/core/vendor"))->toBeFalse()

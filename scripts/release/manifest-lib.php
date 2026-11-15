@@ -169,10 +169,9 @@ function entryDestination(string $kind, array $entry): string
  * the routed line/channel and an exact artifact identity for every routed entry; a private channel additionally needs a
  * probed private destination. Missing evidence is "not qualified", never a fallback to the SHA alone.
  *
- * @param array<string, mixed> $route
- * @param array<string, mixed>|null $evidence
- * @param array<string, string>|null $visibility destination => private|restricted|public
- *
+ * @param  array<string, mixed>       $route
+ * @param  array<string, mixed>|null  $evidence
+ * @param  array<string, string>|null $visibility destination => private|restricted|public
  * @return list<string>
  */
 function qualificationErrors(array $route, ?array $evidence, string $sha, ?array $visibility): array

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
+
 /**
  * spatie/laravel-permission's create_permission_tables migration, registered so
  * RefreshDatabase's migrate:fresh runs it once (committed) instead of the TestCase
@@ -12,5 +14,6 @@ declare(strict_types=1);
  * Migration whose up() reads config('permission.*') at run time, so the teams columns are
  * honoured because SpatieTestCase::defineEnvironment sets permission.teams first.
  */
-return require dirname(__DIR__, 5)
-    .'/vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub';
+// Resolved through Composer: the drive suite runs on its own packages/drive/vendor, not the repository's.
+return require InstalledVersions::getInstallPath('spatie/laravel-permission')
+    .'/database/migrations/create_permission_tables.php.stub';
