@@ -11,7 +11,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 
 /**
- * The Blocker race (F-P1.4-01 / N3): two concurrent tus PATCH that read the SAME
+ * The Blocker race: two concurrent tus PATCH that read the SAME
  * server offset must NOT both append — that silently corrupts the assembled file
  * (the losing chunk's bytes vanish while received_bytes still advances). SQLite
  * serialises writes and would show green on the defective code (pre-mortem R4), so

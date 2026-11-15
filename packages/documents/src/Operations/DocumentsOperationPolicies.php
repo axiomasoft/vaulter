@@ -11,7 +11,7 @@ use Vaulter\Operations\OperationPolicy;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
- * The policies of the documents' mutating operations (knowledge p6-design#coverage): documents, their content
+ * The policies of the documents' mutating operations: documents, their content
  * and revisions, and comments. The content PUT is conditional: a repeat with the same `If-Match` after the commit
  * answers 412 `document_state_mismatch` without a second revision. The export is safe and not listed.
  */

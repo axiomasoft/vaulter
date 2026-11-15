@@ -7,8 +7,8 @@ use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;
 use Vaulter\Drive\Vaulter;
 
 /**
- * VLT-REL P2.2 — executable freeze of vaulter-drive's public composer surface for the `0.1.0`
- * tag. Counterpart to the P2.1 SSOT (`plans/archive/VLT-REL/root/contracts/public-api-surface.md`):
+ * Executable freeze of vaulter-drive's public composer surface for the `0.1.0`
+ * tag. Counterpart to the public API reference:
  * reflects every `Vaulter\\Drive\\Contracts\**` contract into a canonical manifest and compares it to a
  * committed golden, reddening the build on any unplanned signature change (removed/renamed
  * method, narrowed type, a new contract). Same canonicalisation and AMEND procedure as
@@ -267,7 +267,7 @@ test('vaulter-drive public API surface matches the frozen golden (VLT-REL P2.2)'
     // The host-facing scan lifecycle suite.
     $blocks[] = vaulterSnapshotInterface(ScanLifecycleContractTests::class);
 
-    // D10: the typed entry point and its facade (the `Vaulter` alias) are drive's.
+    // The typed entry point and its facade (the `Vaulter` alias) are drive's.
     $blocks[] = vaulterSnapshotFacade(VaulterFacade::class);
     $blocks[] = vaulterSnapshotInterface(Vaulter::class);
 

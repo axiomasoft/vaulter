@@ -33,9 +33,9 @@ final class CollaborationProblemCodes implements ProblemCodeSource
     public function codes(): array
     {
         return [
-            // A lost checkpoint CAS: the hub takes a new lease and merges again (C6).
+            // A lost checkpoint CAS: the hub takes a new lease and merges again.
             'collaboration_checkpoint_conflict' => new ProblemSpec(409, CollaborationCheckpointConflictException::class, Retryable::AfterRefetch),
-            // A managed disable drains the log (C10): the hub keeps the update and repeats it after the flag is released.
+            // A managed disable drains the log: the hub keeps the update and repeats it after the flag is released.
             'collaboration_draining' => new ProblemSpec(503, CollaborationDrainingException::class, Retryable::WithBackoff),
             'collaboration_epoch_mismatch' => new ProblemSpec(409, CollaborationEpochMismatchException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             // Protocol 2: a deployment mismatch and a refused update are answered the same however often they are sent.

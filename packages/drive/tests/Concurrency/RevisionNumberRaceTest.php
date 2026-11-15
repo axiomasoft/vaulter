@@ -38,7 +38,7 @@ it('V03 serializes revisions and accounts for every retained revision', function
         ->and($file->revision_count)->toBe(3)
         ->and($head->number)->toBe(3)
         ->and(DriveTestHelpers::model($node)->file()->value('current_revision_id'))->toBe($head->id)
-        // Every retained revision counts (PLAN2.D48).
+        // Every retained revision counts.
         ->and($drive->model()->refresh()->used_bytes)->toBe(strlen('old') + strlen('short') + strlen('a much longer head'))
         ->and(DriveTestHelpers::model($node)->size_bytes)->toBe($head->size_bytes);
 });

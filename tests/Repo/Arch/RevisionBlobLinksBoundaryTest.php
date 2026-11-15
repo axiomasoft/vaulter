@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /*
- * D23, P4/P5: the revision edge and its media pin are written together, so RevisionBlobLinks is the only writer of
+ * The revision edge and its media pin are written together, so RevisionBlobLinks is the only writer of
  * v_file_revision_blobs (through FileRevisionBlobStoreRepository) and every revision delete path detaches first.
- * The drive slices still located in core (D39) are scanned too.
+ * The drive slices still located in core are scanned too.
  */
 
 /** @return array<string, string> repo-relative path => code without comments */

@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Data\Comments;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Comments\NodeComment;
 
-/** Command for ResolveCommentAction: the comment, already resolved inside its node, and the version the caller read (checked under the row lock, CC1). */
+/** Command for ResolveCommentAction: the comment, already resolved inside its node, and the version the caller read (checked under the row lock). */
 #[Internal]
 final readonly class ResolveCommentInput
 {

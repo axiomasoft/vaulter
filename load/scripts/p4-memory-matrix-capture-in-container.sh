@@ -1,5 +1,5 @@
 #!/bin/sh
-# P4.3 — one matrix attempt: fixtures + CAS CLI or FPM path (k6 triggered from host).
+# One matrix attempt: fixtures + CAS CLI or FPM path (k6 triggered from host).
 set -eu
 
 RUN_DIR="${1:?run dir}"

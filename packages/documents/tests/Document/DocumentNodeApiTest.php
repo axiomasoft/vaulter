@@ -10,7 +10,7 @@ use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The Documents REST surface (§5 / §7 / M4a): create a document, read/autosave its
+ * The Documents REST surface: create a document, read/autosave its
  * content, snapshot + restore revisions and export — end to end through the v1 API. Runs
  * open (the null driver), so a bare authenticated actor suffices.
  */

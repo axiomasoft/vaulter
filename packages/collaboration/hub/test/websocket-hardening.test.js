@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { Server } from '@hocuspocus/server'
 import { WebSocket } from 'ws'
 
-// F-P4.5-02 — regression for the WebSocket frame-size hardening (master plan Addendum A.3)
+// Regression for the WebSocket frame-size hardening
 // after the @hocuspocus/* bump to v4. In v4 the transport moved from `ws` to `crossws`, and
 // the frame limits are now wired via the `websocketOptions` config KEY on the `Server`
 // constructor — the Server forwards them verbatim to `crossws({ serverOptions })`, i.e. to the

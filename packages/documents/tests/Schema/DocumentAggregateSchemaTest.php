@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
- * The document aggregate schema (D34): v_documents holds the working state 1:1 with
+ * The document aggregate schema: v_documents holds the working state 1:1 with
  * its node, v_document_revisions the immutable checkpoints. Counters are signed
  * BIGINT that never go negative; a document has one aggregate and unique checkpoint
  * numbers; the 0.2 table and node pointers are gone.

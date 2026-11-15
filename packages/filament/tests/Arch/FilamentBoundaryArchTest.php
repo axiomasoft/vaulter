@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * The panel is a client of the public drive entry point and handle (I9). Reaching a model, an
+ * The panel is a client of the public drive entry point and handle. Reaching a model, an
  * Action, a Repository, a query or the AccessResolver would let a resource decide access on its
  * own, so none of them may appear anywhere in the package, nor an Eloquent Builder to read with.
  */

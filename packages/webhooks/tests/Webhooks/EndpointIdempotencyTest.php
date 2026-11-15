@@ -24,7 +24,7 @@ use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * P6.6 (D25, D47, ID2, ID5, CC1): the endpoint writes are receipt operations. A retry under the same Idempotency-Key
+ * The endpoint writes are receipt operations. A retry under the same Idempotency-Key
  * returns what the first request answered, even once its If-Match went stale because that request committed, and changes
  * nothing; the signing secret of a registration or a rotation sits in the receipt only as ciphertext; a replay is
  * authorized again by the `manage` ability. A redelivery is a receipt operation too: a keyed retry sends nothing again.

@@ -20,7 +20,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * The change journal under real concurrency (P5-I14, P5-I15): seqs are allocated under
+ * The change journal under real concurrency: seqs are allocated under
  * the drive's head lock until commit, so a reader paging by cursor while writers commit
  * never steps over an entry that commits later; a prune running beside a reader either
  * leaves its entries readable or expires its cursor, never a silent gap.

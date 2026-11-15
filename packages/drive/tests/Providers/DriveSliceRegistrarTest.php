@@ -8,7 +8,7 @@ use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 use Vaulter\Drive\Providers\DriveSliceRegistrar;
 use Vaulter\Drive\Vaulter;
 
-// The drive slices located in core (D39) are wired by DriveSliceRegistrar, which DriveModule declares.
+// The drive slices located in core are wired by DriveSliceRegistrar, which DriveModule declares.
 
 it('registers the manager and file presentation seams', function (): void {
     (new DriveSliceRegistrar)->register($this->app);

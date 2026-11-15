@@ -19,7 +19,7 @@ use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The resolver hardening matrix (§2.7 / M2c): a valid token resolves within its
+ * The resolver hardening matrix: a valid token resolves within its
  * bits; a wrong/expired/revoked/over-budget token is denied; password and
  * require-login gates hold; a trashed target fails item-safety opaquely. The share
  * grants EXACTLY its bits — no identity inheritance.
@@ -181,7 +181,7 @@ it('fails item-safety for a purged target (NotFound)', function (): void {
     expect(shareResolver()->resolve('deleted-token')->resolution)->toBe(ShareResolution::NotFound);
 });
 
-// ─────────────────────────── issuer re-check (P1.2 / F-P1.3-02, D14) ───────────
+// ─────────────────────────── issuer re-check ───────────
 
 /**
  * A real, persisted TestUser row — issuer re-check inverts granted_by (a bare id)

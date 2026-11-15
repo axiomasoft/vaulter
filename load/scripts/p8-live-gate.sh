@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# P8.7 — one LOAD_RUN_ID, live Prometheus scrape, 50-family matrix, perf-assert, on/off overhead.
+# One LOAD_RUN_ID, live Prometheus scrape, 50-family matrix, perf-assert, on/off overhead.
 # Usage:
 #   TIER=S0 ./load/scripts/p8-live-gate.sh gate --profile smoke-perf
-#   TIER=S  ./load/scripts/p8-live-gate.sh overhead --baseline plans/archive/VLT-LOAD/findings/P2.8-baseline-S.md
-#   python3 load/gates/p8_live_gate.py verify --artifacts plans/archive/VLT-LOAD/artifacts/P8.7
+#   TIER=S  ./load/scripts/p8-live-gate.sh overhead --baseline <baseline.md>
+#   python3 load/gates/p8_live_gate.py verify --artifacts <artifacts-dir>
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

@@ -8,7 +8,7 @@ use Illuminate\Queue\Events\JobFailed;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
- * Records `vaulter_failed_jobs_total` from Laravel's `JobFailed` event (P8.5 / §5.3).
+ * Records `vaulter_failed_jobs_total` from Laravel's `JobFailed` event.
  */
 final class RecordFailedJob
 {

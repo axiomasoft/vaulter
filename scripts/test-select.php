@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 /*
- * scripts/test-select.php — which tests does a change need? (PLAN3 P1.4)
+ * scripts/test-select.php — which tests does a change need?
  *
  *   php scripts/test-select.php [--base=<ref>] [--quick] [--db=pgsql|mysql] [--json]
  *   php scripts/test-select.php --paths=a,b,c [--quick] [--db=pgsql|mysql] [--json]

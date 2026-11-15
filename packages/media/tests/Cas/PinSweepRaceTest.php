@@ -17,9 +17,9 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /*
- * D23, P1: a pin and the collector of the same blob are ordered by lock(scope, sha256) and the row lock, so in every
+ * A pin and the collector of the same blob are ordered by lock(scope, sha256) and the row lock, so in every
  * interleaving a blob that ends up pinned has its bytes. Real processes on PostgreSQL (ForkRace); serial + database,
- * engine pgsql — written and classified in PLAN3, run in PLAN4 (D41). The slow side pauses INSIDE its transaction,
+ * engine pgsql. The slow side pauses INSIDE its transaction,
  * with its locks held; the other side starts while it waits.
  */
 

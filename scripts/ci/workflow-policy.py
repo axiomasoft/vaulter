@@ -44,7 +44,7 @@ from pathlib import Path
 
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
-# PLAN3 P1.6: the single CI.
+# The single CI.
 PHP_PACKAGES = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament']
 TESTBENCH_TO_LARAVEL = {'10': '12', '11': '13'}  # the Testbench major that supports each Laravel major
 LARAVEL_TO_TESTBENCH = {'12': '^10.0', '13': '^11.0'}
@@ -55,7 +55,7 @@ REMOVED_WORKFLOWS = [
 GATE_JOB = 'ci-gate'
 GATE_CHECK_NAME = 'CI gate'
 LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboration', 'hub', 'repo', 'openapi', 'contract_bc']
-# PLAN3 P4.19 (I14): packages whose split archive must stand alone. azguard is the external gate (D20), filament has its
+# Packages whose split archive must stand alone. azguard is the external gate, filament has its
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
 CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
 # The repository variables that provision the trusted BC host; the plan step of ci.yml reads them.
@@ -138,7 +138,7 @@ def check_workflow(name: str, doc: dict) -> list[str]:
     events = triggers(doc)
     jobs = doc.get('jobs') or {}
 
-    # D4: load only by hand.
+    # Load only by hand.
     if name == 'load.yml' and set(events) != {'workflow_dispatch'}:
         errors.append(f'{name}: triggers must be exactly workflow_dispatch, got {sorted(events)}')
 
@@ -453,7 +453,7 @@ def check_split(doc: dict) -> list[str]:
     return errors
 
 
-# D18 (PLAN4 P4.1): every publisher routes the tag and checks the qualification evidence in a job that holds no
+# Every publisher routes the tag and checks the qualification evidence in a job that holds no
 # publishing credential; the credentialed job needs that job.
 PUBLISHERS = {
     'release-npm.yml': ('release', ('NPM_TOKEN',)),
@@ -486,7 +486,7 @@ def check_route_before_credentials(name: str, doc: dict, publisher: str, route: 
     return errors
 
 
-# --- P7.3/U3: ONE accepted artifact per release flow ---------------------------------------------------------------
+# --- ONE accepted artifact per release flow ---------------------------------------------------------------------
 NPM_CREDENTIALS = ('NPM_TOKEN', 'NODE_AUTH_TOKEN')
 
 
@@ -904,7 +904,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
         if changes.get('status') in ('docs_only', 'no_changes'):
             skip_reason = 'docs-only'
         elif suites <= {'load'}:
-            skip_reason = 'stand-only'  # the load stand is never a PR lane (D4)
+            skip_reason = 'stand-only'  # the load stand is never a PR lane
     else:
         raise ValueError(f'unknown mode {mode!r}')
 
@@ -923,7 +923,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
                   'username': 'vaulter' if engine == 'pgsql' else 'root'}
                  for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine] and support[pkg]['database']]
     serial = [package(pkg) for pkg in affected if support[pkg]['serial']]
-    # I14: a change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
+    # A change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
     harness = 'repo' in suites
     consumer = [package(pkg) for pkg in CONSUMER_PACKAGES if pkg in support and (pkg in affected or harness)]
 

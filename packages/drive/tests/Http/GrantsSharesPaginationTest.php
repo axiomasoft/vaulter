@@ -14,7 +14,7 @@ use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * D21: grants and shares lists are bounded, cursor-paginated pages (default 50, max 200) in the PageResponse envelope;
+ * Grants and shares lists are bounded, cursor-paginated pages (default 50, max 200) in the PageResponse envelope;
  * the grants page keeps its top-level access `etag`. Cursors are sealed (encrypted, scope-bound) and the public share
  * children cursor holds the raw Laravel parameters only inside the encrypted payload.
  */

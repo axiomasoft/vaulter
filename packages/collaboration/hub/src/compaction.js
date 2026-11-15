@@ -3,7 +3,7 @@ import { TiptapTransformer } from '@hocuspocus/transformer'
 import { replayLog } from './persistence.js'
 import { extensionsFor, FIELD, lostAttributes } from './schema.js'
 
-// The hub's compaction (D26, revision 3 p.1): PHP neither merges nor projects Yjs, so the hub
+// The hub's compaction: PHP neither merges nor projects Yjs, so the hub
 // turns a generation's log into its next checkpoint. A compaction lease entry (src/backend.js
 // leaseCompaction) carries the checkpoint C and the committed tail (C, H] of one generation, read
 // by the backend under the same locks as the lease. compactLease() rebuilds the document on a new

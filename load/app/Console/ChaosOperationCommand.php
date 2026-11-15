@@ -13,7 +13,7 @@ use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Webhooks\OutboxRecorder;
 
 /**
- * Small real-product probes for P7 operations that have no public HTTP surface.
+ * Small real-product probes for operations that have no public HTTP surface.
  *
  * Upload, multipart, abort, outbox and sweeper cells use their public HTTP/Artisan
  * entry points directly. This command covers only CAS local staging, an explicit

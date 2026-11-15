@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P4.1 / P4.3 — isolated memory lane: dry-run | run | verify | matrix
+# Isolated memory lane: dry-run | run | verify | matrix
 # Usage:
 #   TIER=S0 ./load/scripts/p4-memory.sh dry-run
 #   TIER=S0 ./load/scripts/p4-memory.sh run --case lane_selftest

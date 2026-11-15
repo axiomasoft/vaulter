@@ -30,7 +30,7 @@ import { createWorker } from './worker.js'
 
 // Vaulter collaboration hub — the external, env-configured Hocuspocus process.
 //
-// Flow (collaboration protocol 2, D26):
+// Flow (collaboration protocol 2):
 //   1. The client asks Laravel for a session (POST …/documents/{node}/collaboration/session) and
 //      gets a room JWT and the room name "<prefix>.<driveId>.<nodeId>.<epoch>". The epoch is the
 //      document's generation: a restore moves it on, so a room never outlives one.

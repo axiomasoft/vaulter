@@ -3,7 +3,7 @@ import { config as defaultConfig } from './config.js'
 import { requestLimit } from './limits.js'
 import { parseRetryAfter } from './retry.js'
 
-// The hub's client of the Laravel backend, protocol 2 (D26):
+// The hub's client of the Laravel backend, protocol 2:
 //   - authenticate → POST {base}/collaboration/hub/authenticate  (onAuthenticate)
 //   - load         → POST {base}/collaboration/hub/load          (checkpoint + committed tail)
 //   - append       → POST {base}/collaboration/hub/append        (one update; the ledger repeats it)

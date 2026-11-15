@@ -19,7 +19,7 @@ use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
- * The AzGuard host-role driver (§6 / H.2 / ADR-0007). It talks ONLY to the Vaulter-
+ * The AzGuard host-role driver (ADR-0007). It talks ONLY to the Vaulter-
  * owned AzGuardGuard seam, so these tests bind a FakeAzGuardGuard instead of the real
  * AzGuard engine (that end-to-end lives in tests/RealAzGuard); this slice proves the
  * driver logic against the seam.

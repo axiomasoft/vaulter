@@ -15,8 +15,8 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Media\Models\Cas\Blob;
 
 /**
- * Mass-assignment hardening (P1.4 / B13): every vaulter-core model used to carry
- * `$guarded = []` (F-P1.8-02, C6 fail — 16/16 models unguarded). This pins that a
+ * Mass-assignment hardening: every vaulter-core model used to carry
+ * `$guarded = []` (all 16 models unguarded). This pins that a
  * service/security column can no longer be set through fill() on any of them, so a
  * future `Model::create($request->validated())`/`->fill($input)` cannot leak a
  * caller-chosen value into tenant_id/token_hash/etc. The webhook models are pinned by the
@@ -24,8 +24,7 @@ use Vaulter\Media\Models\Cas\Blob;
  *
  * Red-before: on the code prior to this item every model declared
  * `protected $guarded = [];`, so `fill()` accepted EVERY key below without
- * discarding or throwing — proven by `git stash` + rerun during development (see
- * phases/P1.md P1.4 Completion Notes).
+ * discarding or throwing — proven by `git stash` + rerun during development.
  *
  * Two Eloquent behaviours are exercised, per model:
  *  - a CLOSED $fillable list (Node/Storage/File/FileRevision/NodeShare)
@@ -72,7 +71,7 @@ it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with Mas
 ]);
 
 /**
- * F-P1.5-04: `Blob` is the CAS content address — sha256/storage_key mass-assignment
+ * `Blob` is the CAS content address — sha256/storage_key mass-assignment
  * would let a caller point a committed blob's identity at arbitrary bytes. Blob is
  * fully guarded, so `fill()` throws outright; a fill()-only `create()` (which
  * internally calls fill() then save()) never reaches the INSERT at all.

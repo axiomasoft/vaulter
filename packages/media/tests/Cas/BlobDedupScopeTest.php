@@ -8,13 +8,13 @@ use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 
 /**
- * Blob dedup-uniqueness is scoped (D18 / H.3): the same sha256 is unique only
+ * Blob dedup-uniqueness is scoped: the same sha256 is unique only
  * within (tenant_id, storage_id), so identical bytes in two scopes are two rows
  * and storage_key is scope-qualified so they never share one physical object.
  */
 function makeBlob(array $overrides = []): Blob
 {
-    // Blob is fully guarded (P1.4/F-P1.5-04) — forceFill bypasses it for this
+    // Blob is fully guarded — forceFill bypasses it for this
     // trusted test fixture builder, exactly like the production writer
     // (BlobStoreRepository) does.
     $blob = new Blob;

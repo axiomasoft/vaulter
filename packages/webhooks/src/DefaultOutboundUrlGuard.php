@@ -13,7 +13,7 @@ use Vaulter\Webhooks\Security\CidrRange;
 use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 
 /**
- * The default SSRF barrier for outbound webhooks (N2 /).
+ * The default SSRF barrier for outbound webhooks.
  *
  * pin() is the real barrier on the delivery path: it parses the URL, enforces the
  * scheme allow-list, resolves EVERY A/AAAA record and rejects the host if ANY address

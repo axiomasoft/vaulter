@@ -7,7 +7,7 @@ namespace Vaulter\Load\Console;
 use RuntimeException;
 
 /**
- * Bounded streaming helpers for P4.2 path fixtures (no whole-file reads in PHP).
+ * Bounded streaming helpers for path fixtures (no whole-file reads in PHP).
  */
 final class MemoryFixtureSupport
 {

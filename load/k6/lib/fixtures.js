@@ -1,5 +1,5 @@
-// VLT-LOAD P2.4 — D23 fixtures: no disk file, no k6/experimental/fs (that would still
-// mean a multi-GiB file's RSS in the generator, harness.md §3). A single ArrayBuffer per
+// fixtures: no disk file, no k6/experimental/fs (that would still
+// mean a multi-GiB file's RSS in the generator). A single ArrayBuffer per
 // chunk size is generated ONCE in the init context and reused, byte-for-byte, by every
 // VU and every iteration — never regenerated per request.
 import { TUS_CHUNK_BYTES, S3_PART_BYTES } from './config.js';
@@ -18,7 +18,7 @@ export function s3Part() {
 /**
  * A 16-byte per-session salt written into a COPY of the first chunk/part of a session
  * — its sha256 must be unique or CAS dedup (BlobStore::commit) finds the existing blob
- * and the scenario measures dedup, not a write (harness.md §3). Only the FIRST
+ * and the scenario measures dedup, not a write. Only the FIRST
  * chunk/part of a session pays this copy; every later one reuses the shared buffer
  * directly.
  */

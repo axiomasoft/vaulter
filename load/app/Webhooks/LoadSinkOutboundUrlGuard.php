@@ -9,7 +9,7 @@ use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
 use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 
 /**
- * Load-stand outbound guard (P6.2). Delivery may dial only the controlled sink.
+ * Load-stand outbound guard. Delivery may dial only the controlled sink.
  */
 final readonly class LoadSinkOutboundUrlGuard implements OutboundUrlGuard
 {

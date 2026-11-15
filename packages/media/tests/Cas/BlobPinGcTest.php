@@ -17,7 +17,7 @@ use Vaulter\Media\Tests\Fixtures\Cas\FailingDeleteContentStore;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The collector and the reconciler read the pins and nothing else (D23, P3/P6): a pin of any owner — even of a module
+ * The collector and the reconciler read the pins and nothing else: a pin of any owner — even of a module
  * that is disabled or not installed — keeps its blob, and ref_count is only their cache.
  */
 
@@ -149,7 +149,7 @@ it('refuses a pin to the tombstone a rolled-back sweep left without bytes, and t
 it('re-reads the pins under the lock in the sweep of a pending row', function (): void {
     $pending = CasTestHelpers::seedBlobRow('pending pinned', BlobStatus::Pending);
     $pending->forceFill(['first_seen_at' => now()->subDays(2)])->save();
-    // Seeded: through the protocol a pin of a pending row is refused (D23).
+    // Seeded: through the protocol a pin of a pending row is refused.
     CasTestHelpers::seedPin($pending, 'owner');
 
     expect(app(BlobGarbageCollector::class)->sweepPending(graceHours: 1))->toBe(['swept' => 0, 'skipped' => 1])

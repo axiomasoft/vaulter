@@ -13,14 +13,14 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * VLT-REMED P5.2 / R-01 (Blocker) — ВТОРОЙ, более тяжёлый удар барьера P0.1: он бил не
+ * ВТОРОЙ, более тяжёлый удар строгой проверки контента: он бил не
  * только по записи, но и по ЧТЕНИЮ. `DocumentRevision::tipTapContent()` гидрировал
- * снапшот из БД тем же строгим `fromArray()`, и ЛЮБАЯ версия, сохранённая ДО P0.1 и
+ * снапшот из БД тем же строгим `fromArray()`, и ЛЮБАЯ версия, сохранённая до неё и
  * содержащая image/table/underline/textStyle/highlight, БРОСАЛА исключение при открытии,
  * превью и экспорте — вопреки собственному докблоку метода («decays to an empty doc rather
  * than throwing on read»). Один старый документ ронял весь UI.
  *
- * Контракт владельца (D27/D29): чтение ДЕГРАДИРУЕТ (strip неизвестного), запись остаётся
+ * Контракт владельца: чтение ДЕГРАДИРУЕТ (strip неизвестного), запись остаётся
  * строгой. Данные в БД не мигрируются — decay работает на чтении.
  */
 function legacyVersion(array $content): DocumentRevision
@@ -36,7 +36,7 @@ function legacyVersion(array $content): DocumentRevision
 
     $headId = Document::query()->where('node_id', $node->getKey())->value('current_revision_id');
 
-    // Перезаписываем снапшот «как он лежал до P0.1» прямо в БД (ревизии неизменяемы
+    // Перезаписываем снапшот «как он лежал в старом формате» прямо в БД (ревизии неизменяемы
     // через модель) — миграции данных нет, версия остаётся такой, какой её записал старый код.
     app(VaulterDatabase::class)->write(fn () => DocumentRevision::query()->whereKey($headId)->update(['content' => json_encode($content)]));
 
@@ -104,8 +104,8 @@ it('легаси-версия с javascript:-href читается и обезв
     $renderer = app(TipTapRenderer::class);
     $content = $version->tipTapContent();
 
-    // Опасное ЗНАЧЕНИЕ доезжает до рендерера (D29) — и оба выхода его гасят: HTML —
-    // санитайзером (эшелон 2, D4), Markdown — allow-list схем.
+    // Опасное ЗНАЧЕНИЕ доезжает до рендерера — и оба выхода его гасят: HTML —
+    // санитайзером (эшелон 2), Markdown — allow-list схем.
     expect($renderer->toHtml($content))->not->toContain('javascript:')
         ->and($renderer->toMarkdown($content))->not->toContain('javascript:');
 });

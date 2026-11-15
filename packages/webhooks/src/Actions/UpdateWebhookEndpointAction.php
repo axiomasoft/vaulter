@@ -56,7 +56,7 @@ final readonly class UpdateWebhookEndpointAction
             if ($this->tenancy->enforced() && $tenant !== $this->tenancy->current()) {
                 throw WebhookEndpointNotFoundException::forId(Identity::stringify($current->getKey()));
             }
-            // CC1: the version the caller read is compared on the locked row.
+            // The version the caller read is compared on the locked row.
             $this->versions->assertExpected($current, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
             $endpoint->setRawAttributes($current->getAttributes(), sync: true);
             $wasActive = $endpoint->is_active;

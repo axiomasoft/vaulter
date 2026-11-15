@@ -5,7 +5,7 @@ import { TiptapTransformer } from '@hocuspocus/transformer'
 import { compactLease, CompactionError, REFUSAL } from '../src/compaction.js'
 import { extensionsFor, FIELD } from '../src/schema.js'
 
-// The compaction of one lease entry (D26 revision 3 p.1): a new Y.Doc gets the checkpoint C, then
+// The compaction of one lease entry: a new Y.Doc gets the checkpoint C, then
 // the tail (C, H] in seq order; the state it publishes equals applying every update to the
 // checkpoint, its JSON projection passes the TipTap schema whole, and it covers exactly (C, H]. A
 // lease it cannot turn into a faithful checkpoint is refused, so nothing is published.

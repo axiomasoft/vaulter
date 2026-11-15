@@ -15,8 +15,8 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// D39: the drive module declares its own slices and those still located in core. Switched off, none of
-// them is registered — not the core-located routes, bindings or commands either (I6).
+// The drive module declares its own slices and those still located in core. Switched off, none of
+// them is registered — not the core-located routes, bindings or commands either.
 
 it('registers the drive commands only while the drive is active', function (): void {
     $active = FreshApplication::boot()->make(ConsoleKernel::class)->all();

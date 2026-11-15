@@ -24,7 +24,7 @@ use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Idempotency\ReplayedProblemException;
 
 /**
- * P6.3 (D25, D47(5), ID2, ID5): the share-link writes are receipt operations. A link created or rotated under an
+ * The share-link writes are receipt operations. A link created or rotated under an
  * Idempotency-Key is replayed with the same token — to the same actor only, after its current authorization — and the
  * receipt holds that token only as the application's ciphertext. Another actor under the same key runs a new
  * operation of its own (its scope digest differs); an actor who lost Share gets the refusal of a new request.

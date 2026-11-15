@@ -20,7 +20,7 @@ use Vaulter\Drive\Tests\Fixtures\Access\SpatieUser;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
- * The spatie/laravel-permission host-role driver (§6 / H.2 / D22): a role-granted
+ * The spatie/laravel-permission host-role driver: a role-granted
  * v_node_grants row resolves; the team-switch isolates two teams (no cross-team
  * leak); the cache is forgotten on mutation; a super-role/permission overrides. The
  * entire v8 team-switch dance lives INSIDE the driver — these tests prove it from

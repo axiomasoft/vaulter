@@ -7,15 +7,14 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Schema\DriveSchema;
 
 /**
- * F-P2.3-02 — `config('vaulter.database.connection')` parameterises WHERE Vaulter writes
+ * `config('vaulter.database.connection')` parameterises WHERE Vaulter writes
  * its schema and data, so a host can embed the package's tables on a dedicated
  * database/connection (sharding, data placement, isolating a heavy CAS/activity
  * workload) without forking the package.
  *
  * Red-before: on the pre-fix code this test fails — the schema builder always
  * writes through the default `Schema`/`DB` facades and every model's
- * `getConnectionName()` stays null regardless of `vaulter.database.connection`
- * (repro: `plans/AUDIT-VLT/artifacts/repro/P2.3/C6NoConnectionParamTest.php`).
+ * `getConnectionName()` stays null regardless of `vaulter.database.connection`.
  */
 it('creates a panel\'s tables on the connection named by vaulter.database.connection, not the default one [F-P2.3-02]', function (): void {
     config()->set('database.connections.vaulter_other', [

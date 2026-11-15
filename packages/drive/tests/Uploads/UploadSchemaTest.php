@@ -14,7 +14,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 
 /**
- * The v_upload_sessions / v_upload_parts schema (§2.8 / D16 / M3a): every column
+ * The v_upload_sessions / v_upload_parts schema: every column
  * exists, upload_id is UNIQUE, the part composite PK replaces on re-upload, and the
  * (status, expires_at) sweeper index is present.
  */
@@ -49,7 +49,7 @@ it('rejects a duplicate upload_id (UNIQUE)', function (): void {
         'status' => UploadStatus::Initiated,
     ];
 
-    // forceFill (P1.4/F-P1.8-02): drive_id/protocol/status are excluded from
+    // forceFill: drive_id/protocol/status are excluded from
     // UploadSession's closed $fillable list — bypassed here exactly like
     // UploadSessionManager::initiate() does.
     $create = static function () use ($model, $base): void {

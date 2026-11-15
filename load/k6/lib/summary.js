@@ -1,7 +1,7 @@
-// VLT-LOAD P2.5 — handleSummary(data) wrapper: writes the k6 summary object enriched
-// with the `meta` header the baseline format requires (slo-gates.md §4.1: commit,
+// handleSummary(data) wrapper: writes the k6 summary object enriched
+// with the `meta` header the baseline format requires (commit,
 // profile, tier, env_fingerprint, dataset_id, runs). `handleSummary` is used INSTEAD OF
-// `--summary-export` on purpose (RAG-8, findings/P1.4-rag-k6-threshold-syntax.md) — it is
+// `--summary-export` on purpose — it is
 // the only mechanism that lets custom fields ride along in the same JSON perf-assert.py
 // later reads.
 import { TIER } from './config.js';

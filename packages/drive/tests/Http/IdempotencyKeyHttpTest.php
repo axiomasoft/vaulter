@@ -19,7 +19,7 @@ use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Idempotency\IdempotencyStore;
 
 /**
- * Idempotency-Key over v1 (D25, ADR-0029): folders.store and nodes.update read the header — one Structured Field
+ * Idempotency-Key over v1 (ADR-0029): folders.store and nodes.update read the header — one Structured Field
  * String or one plain token — and a retry with the same key and request returns the stored response with
  * Idempotent-Replayed: true, even when its If-Match went stale because the first request committed. Routes of
  * operations without idempotency ignore the header.

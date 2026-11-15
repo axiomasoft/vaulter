@@ -28,7 +28,7 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
 
 /*
- * ADR-0028 / PLAN4-D19 (P5.8): the stages of OperationRunner::write() as a contract, on probe operations the test
+ * ADR-0028: the stages of OperationRunner::write() as a contract, on probe operations the test
  * declares. An undeclared mutation is refused before any claim or transaction; a key on a write without an
  * IdempotentWrite is refused before its attempt; a composed write has the one receipt of its root; a failing
  * after-commit callback surfaces as itself and never repeats the committed attempt, whose receipt answers the retry;

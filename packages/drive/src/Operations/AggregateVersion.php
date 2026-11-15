@@ -13,7 +13,7 @@ use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Support\Int64Counter;
 
 /**
- * The own version of an aggregate that is not the node's content (CC1/CC2): `v_nodes.access_version` for the
+ * The own version of an aggregate that is not the node's content: `v_nodes.access_version` for the
  * grants and inheritance of a node, `v_node_shares.version`, `v_drives.version`. The caller holds the aggregate's
  * row lock inside the operation's transaction; the expected version from If-Match is compared there, and the write
  * raises it with one `UPDATE … SET <column> = <column> + 1 WHERE id = ? AND <column> = ?`. Any mismatch — before or

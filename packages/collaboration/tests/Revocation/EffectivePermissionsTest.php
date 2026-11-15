@@ -18,7 +18,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\OutboxStore;
 
 /**
- * Effective permissions in a live session (D26, D46, I17 #15): what revokes a right is not always a grant on the
+ * Effective permissions in a live session: what revokes a right is not always a grant on the
  * document — a grant on an ancestor, a share, a host role change. Each counts in the permission version of its drive (or
  * the global one) in its own transaction; a session issued before it is stale, the hub's recheck and renewal answer by
  * the rights now, and an append is refused at once even when no control message ever reaches the hub.

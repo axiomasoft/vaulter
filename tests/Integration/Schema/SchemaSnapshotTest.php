@@ -68,9 +68,9 @@ it('creates the same table set as the pre-P1.10 original in every preset', funct
     foreach (SchemaPresets::all() as $preset => $definition) {
         $original = schemaSnapshotFixture('original', $driver, $preset);
         $expected = schemaSnapshotFixture('expected', $driver, $preset);
-        // The schema is unchanged by P1.10: the new chain and the 0.x chain create the same tables; only the idempotency receipts
-        // (D25, P3.12), the outbox consumers and deliveries (D29, P3.14), the blob pins (D23, P4.7) and the collaboration log
-        // (D26, P5.4) are new.
+        // The migration chain creates the same tables as the 0.x chain; only the idempotency receipts, the outbox
+        // consumers and deliveries, the blob pins and the collaboration log
+        // are new.
         $created = array_values(array_filter(
             array_keys($expected['tables']),
             static fn (string $table): bool => !str_ends_with($table, 'idempotency_keys') && !str_ends_with($table, 'outbox_consumers') && !str_ends_with($table, 'outbox_deliveries') && !str_ends_with($table, 'blob_references')

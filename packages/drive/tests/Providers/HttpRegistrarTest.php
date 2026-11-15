@@ -41,7 +41,7 @@ it('declares the v1 routes and commands, registered whatever the feature flags s
     (new DriveModule)->register($module);
     $driveRoutes = realpath(__DIR__.'/../../routes/drive.php');
 
-    // The grants, shares, activity and change-feed routes live in the same file since P4.11: the module declares no other.
+    // The grants, shares, activity and change-feed routes live in the same file: the module declares no other.
     expect(array_map(realpath(...), $module->routeFiles()))->toBe([$driveRoutes])
         ->and($module->commandClasses())->toContain(PurgeTrashCommand::class, PurgeDrivesCommand::class, RecountDrivesCommand::class, PruneRevisionsCommand::class, SweepUploadsCommand::class);
 

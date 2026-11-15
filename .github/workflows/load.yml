@@ -1,23 +1,23 @@
 name: Load Gate
 
-# VLT-LOAD P2.6 harness, manual only (D4 / PLAN3 P1.2): load is started by hand through
+# harness, manual only: load is started by hand through
 # workflow_dispatch — no PR, push or schedule trigger. Class A (error-rate, checks,
 # streaming throughput, unbounded-scan counters) is BLOCKING; class B (latency) is
-# advisory everywhere outside `lab` (D15/D20). Profile S0 is the ONLY profile that fits
-# ubuntu-latest's 4 vCPU / ~14 GiB disk (D17/D21/Q3; tiers S/M/L run on the lab-box only,
+# advisory everywhere outside `lab`. Profile S0 is the ONLY profile that fits
+# ubuntu-latest's 4 vCPU / ~14 GiB disk (tiers S/M/L run on the lab-box only,
 # `slo-gates.md` §7). Jobs, selected by `inputs.run`:
 #
 #   smoke-perf     — S0 stand, one k6 run.
-#   regression     — S0 stand, median-of-3 runs (slo-gates.md §4.3) so class-B's
+#   regression     — S0 stand, median-of-3 runs so class-B's
 #                    baseline-vs-current comparison is not one noisy sample.
 #   baseline-guard — runs with every manual run (cheap, no stand): `load/baselines/*` may
 #                    differ from the default branch only when `rebaseline` is ticked, the
 #                    manual counterpart of the old `perf-rebaseline` PR label
-#                    (slo-gates.md §4.4 — a silent baseline move would make "regression"
+#                    (a silent baseline move would make "regression"
 #                    mean nothing).
 on:
   workflow_dispatch:
-    # P2.7 — a dispatch must be able to pick ONE lane: measuring runner CV means five
+    # A dispatch must be able to pick ONE lane: measuring runner CV means five
     # smoke-perf runs, not five smoke-perf + five 60-minute regressions.
     inputs:
       run:
@@ -38,9 +38,9 @@ jobs:
     if: inputs.run != 'regression'
     name: smoke-perf (S0, class A blocking)
     runs-on: ubuntu-latest
-    # 25, not 15 (P2.6's estimate): on a real runner the job also pays for `composer
+    # 25, not 15: on a real runner the job also pays for `composer
     # install` and a cold `docker build` — neither is visible on a laptop with a warm
-    # cache. The real end-to-end duration is recorded in findings/P2.7-cv-runner.md.
+    # cache.
     timeout-minutes: 25
     env:
       TIER: S0
@@ -70,7 +70,7 @@ jobs:
         # `up.sh` runs `compose up -d`, which waits for the DEPENDENCIES to be healthy but
         # not for `app` itself: its entrypoint still has to run `migrate:fresh` before nginx
         # binds. On a laptop the human's next keystroke hid that gap; a runner curls the
-        # port ~0s later and gets a connection reset (P2.7, run 1).
+        # port ~0s later and gets a connection reset.
         run: |
           for _ in $(seq 1 60); do
             if curl -fsS -o /dev/null http://127.0.0.1:8080/load/health; then
@@ -94,7 +94,7 @@ jobs:
           docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec -T app sh -c \
             'TIER=S0 vendor/bin/testbench load:seed --fresh'
 
-      # P2.7 — an empty database answers 404 to every id-bound route, and k6 records that
+      # An empty database answers 404 to every id-bound route, and k6 records that
       # as `http_req_failed` — i.e. a wiped seed is indistinguishable from an SLO failure
       # unless something asserts otherwise. It is not hypothetical: `docker compose run`
       # recreated `app` (whose entrypoint runs `migrate:fresh`) right before the measured
@@ -177,7 +177,7 @@ jobs:
       TIER: S0
       LOAD_APP_PORT: 8080
     steps:
-      # No `ref: main` pin (P2.6): a scheduled run already checks out the default branch,
+      # No `ref: main` pin: a scheduled run already checks out the default branch,
       # while a dispatch on any other ref got `main` — which carries no `load/` at all, so
       # the job could only ever fail. The triggering ref is the right checkout for both.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -202,7 +202,7 @@ jobs:
         # `up.sh` runs `compose up -d`, which waits for the DEPENDENCIES to be healthy but
         # not for `app` itself: its entrypoint still has to run `migrate:fresh` before nginx
         # binds. On a laptop the human's next keystroke hid that gap; a runner curls the
-        # port ~0s later and gets a connection reset (P2.7, run 1).
+        # port ~0s later and gets a connection reset.
         run: |
           for _ in $(seq 1 60); do
             if curl -fsS -o /dev/null http://127.0.0.1:8080/load/health; then
@@ -226,7 +226,7 @@ jobs:
           docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec -T app sh -c \
             'TIER=S0 vendor/bin/testbench load:seed --fresh'
 
-      # P2.7 — the loop used to die on the FIRST k6 exit 99, which skipped the median merge
+      # The loop used to die on the FIRST k6 exit 99, which skipped the median merge
       # entirely: the one step that exists to make class B's baseline stable was unreachable
       # exactly when a run was red — i.e. always, today (class A is red on S0 by calibration).
       # k6's exit code is captured, all three runs happen, the merge and perf-assert run on
@@ -281,7 +281,7 @@ jobs:
           merged['meta'] = dict(runs[-1]['meta'])
           merged['meta']['runs'] = 3
 
-          # P2.7 — k6 wrote summary.json as uid 12345 (0644); the runner user cannot reopen
+          # K6 wrote summary.json as uid 12345 (0644); the runner user cannot reopen
           # it for writing, only replace it (the directory is world-writable). Without the
           # unlink this step died with EACCES and the job silently carried the LAST run's
           # summary forward as if it were the median.

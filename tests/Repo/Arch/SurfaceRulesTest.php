@@ -10,7 +10,7 @@ use Vaulter\Inventory\SourceIndex;
 use Vaulter\Inventory\Surface;
 
 /*
- * I13 (D27, block mode after P6.3): a type without a surface attribute is unclassified, and a supported (Api or Spi) signature
+ * I13 (block mode after P6.3): a type without a surface attribute is unclassified, and a supported (Api or Spi) signature
  * must not name a type marked Internal or an Eloquent model of the domain. Today's findings are listed in
  * tests/Repo/Arch/Fixtures/allowlists/i13.json and must match exactly; the `rules:` tests run the scan on synthetic sources.
  * Seed or refresh: scripts/php84 php scripts/inventory/inventory.php scan-i13 --report --proposals=<path>

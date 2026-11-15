@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * The release bases of the BC check (D14/D18, knowledge examples-p6-p8#bc-bases): per release line the highest strict-SemVer
+ * The release bases of the BC check: per release line the highest strict-SemVer
  * STABLE tag of the line's major that peels to a commit which is an ancestor of the candidate and is NOT the candidate under any
  * tag alias (annotated, lightweight, prerelease). A tag on a tree/blob is no base. Build-metadata ties and two tags of one
  * version are rejected, never ordered by ref order. The trusted ledger of known releases detects a deleted or moved tag and a

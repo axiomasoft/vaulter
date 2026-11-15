@@ -4,7 +4,7 @@ declare(strict_types=1);
 use Vaulter\Media\Configuration\MediaConfig;
 
 /**
- * app(\Vaulter\Media\Configuration\MediaConfig::class)->orphanGraceHours() resolution (master plan P4 #11 / H.3): how old a
+ * app(\Vaulter\Media\Configuration\MediaConfig::class)->orphanGraceHours() resolution: how old a
  * bytes-without-a-row object must be before the disk-walk treats it as a deletable
  * orphan. It resolves vaulter-media.gc.orphan_grace_hours, accepts a CLI --orphan-grace
  * override, falls back to the GC grace when its own key is unset, and is FLOORED at

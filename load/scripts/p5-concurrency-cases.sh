@@ -1,5 +1,5 @@
 #!/bin/sh
-# P5.2 — fixture/case matrix helpers. Does not seed the 1m dirty profile.
+# Fixture/case matrix helpers. Does not seed the 1m dirty profile.
 # Usage:
 #   ./load/scripts/p5-concurrency-cases.sh list
 #   ./load/scripts/p5-concurrency-cases.sh static-validate

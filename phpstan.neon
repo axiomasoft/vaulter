@@ -17,7 +17,7 @@ parameters:
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
 
         # The traits of the testing kit are used by test files (Pest `uses()`) and by the test cases of other packages,
-        # never by code under packages/core/src: PHPStan cannot see a user and would call them unused (D14).
+        # never by code under packages/core/src: PHPStan cannot see a user and would call them unused.
         -
             identifier: trait.unused
             paths:
@@ -30,7 +30,7 @@ parameters:
             identifier: larastan.noEnvCallsOutsideOfConfig
             path: packages/core/src/Testing/*
 
-        # Kernel traits whose users live in other packages since the drive model move (P4.10): the models of vaulter-drive
+        # Kernel traits whose users live in other packages since the drive model move: the models of vaulter-drive
         # apply them, nothing in the core's own source does.
         -
             identifier: trait.unused
@@ -39,7 +39,7 @@ parameters:
                 - packages/core/src/Support/Concerns/HasIcon.php
                 - packages/core/src/Support/Concerns/HasLabel.php
                 - packages/core/src/Support/Concerns/HasStableMorphAlias.php
-                # Applied by the models of the drive and of the webhooks package (P4.13), by no model of the kernel.
+                # Applied by the models of the drive and of the webhooks package, by no model of the kernel.
                 - packages/core/src/Models/Concerns/HasVaulterKeys.php
 
         # The commit path stages the upload stream INTO the CAS inside the transaction

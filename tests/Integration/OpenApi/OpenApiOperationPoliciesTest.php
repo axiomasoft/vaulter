@@ -9,7 +9,7 @@ use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
 
 /**
- * P6.7: the REST operations of openapi/vaulter-v1.yaml agree with the operation catalogue (D47) of every offered module.
+ * The REST operations of openapi/vaulter-v1.yaml agree with the operation catalogue of every offered module.
  * A `receipt` route declares the Idempotency-Key parameter and the Idempotent-Replayed header; an `if_match` route
  * declares a required If-Match and the 412 and 428 answers; no other route declares either. Routes are matched by
  * operationId, which is the route name without the version prefix (OpenApiRouteCoverageTest).

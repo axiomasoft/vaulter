@@ -30,7 +30,7 @@ beforeEach(fn () => DriveTestHelpers::insideOperation());
 /**
  * The S3-multipart path exercised against the FAKED 'local' disk (a real S3 is not
  * required — the handler proxies parts through the StorageDriver, so the same flow
- * holds; a host swaps the handler for a presigned-PUT one in production). The H.3
+ * holds; a host swaps the handler for a presigned-PUT one in production). The
  * invariant — assemble → server-recompute sha256 → BlobStore.commit — is verified
  * identically to the tus path.
  */

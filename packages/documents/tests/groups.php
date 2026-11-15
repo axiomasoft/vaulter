@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /*
- * Test groups of the documents suite (PLAN3 P1.5), paths relative to this directory; see packages/core/tests/groups.php for the
- * format and plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md for the reason of each entry.
+ * Test groups of the documents suite, paths relative to this directory; see packages/core/tests/groups.php for the
+ * format.
  */
 return [
     'database' => [
@@ -19,7 +19,7 @@ return [
         'Document/PurgeTrashCascadeTest.php',
         'Document/DocumentSchemaWritableTest.php',
         'Document/DocumentCopyLifecycleTest.php',
-        // The marker CHECK and the T → N → D locks of the collaborative-state contract (P5.3).
+        // The marker CHECK and the T → N → D locks of the collaborative-state contract.
         'State/CollaborationBindingTransitionTest.php',
         'State/CollaborativeStateTest.php',
         'Types/UnknownDocumentTypeFallbackTest.php',

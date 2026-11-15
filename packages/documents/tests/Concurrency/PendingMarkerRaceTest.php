@@ -12,7 +12,7 @@ use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * C5 on PostgreSQL (P5.3): the hub has read head H of generation G and publishes a checkpoint through H while an
+ * On PostgreSQL: the hub has read head H of generation G and publishes a checkpoint through H while an
  * append commits H + 1 and marks it. Whichever commits first, the marker ends at (G, H + 1): a publication clears only
  * what it covers, so the appended edit is never reported as in the working state. Both contenders commit — the marker
  * is not a validator, the publication's CAS is on the state version.

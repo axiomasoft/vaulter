@@ -6,7 +6,7 @@ use Vaulter\Inventory\Repo;
 use Vaulter\Inventory\Surface;
 
 /*
- * The supported surface of core (D27, I13), read from the #[Api], #[Spi] and #[Internal] attributes of packages/core/src. The
+ * The supported surface of core, read from the #[Api], #[Spi] and #[Internal] attributes of packages/core/src. The
  * hand-listed public-API golden of 0.x is gone: this manifest is generated, and the repository-wide proof (every package, the I13
  * scan) lives in tests/Repo/Arch. Refresh: scripts/php84 php scripts/inventory/inventory.php surface --write
  */

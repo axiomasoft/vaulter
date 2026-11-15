@@ -57,7 +57,7 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
         )];
     }
 
-    /** I1: a drive has exactly one node without a parent. */
+    /** A drive has exactly one node without a parent. */
     private function drivesWithoutSingleRoot(int $limit): int
     {
         $db = $this->database->connection();
@@ -81,7 +81,7 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
         return $broken;
     }
 
-    /** I5: a node of $kind has a row in the aggregate table. */
+    /** A node of $kind has a row in the aggregate table. */
     private function orphans(string $nodes, string $aggregate, string $foreign, string $kind, int $limit): int
     {
         if (!$this->installed($aggregate)) {
@@ -94,7 +94,7 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
             ->orderBy('n.id')->limit($limit)->pluck('n.id')->all());
     }
 
-    /** I5, the other direction: an aggregate row belongs to a node of its kind. */
+    /** The other direction: an aggregate row belongs to a node of its kind. */
     private function misplaced(string $aggregate, string $kind, int $limit): int
     {
         if (!$this->installed($aggregate)) {
@@ -107,7 +107,7 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
             ->orderBy('a.id')->limit($limit)->pluck('a.id')->all());
     }
 
-    /** I6: the head revision of an aggregate is one of its own revisions. */
+    /** The head revision of an aggregate is one of its own revisions. */
     private function foreignHead(string $aggregate, string $revisions, string $foreign, int $limit): int
     {
         if (!$this->installed($aggregate) || !$this->installed($revisions)) {

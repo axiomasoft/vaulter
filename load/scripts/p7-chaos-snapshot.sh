@@ -1,5 +1,5 @@
 #!/bin/sh
-# P7.1 collectors. Record object key/checksum/size, DB entity/status/checksum,
+# collectors. Record object key/checksum/size, DB entity/status/checksum,
 # temp free bytes + write length, /up+/ready, and a Prometheus pointer.
 # Never record object body or credentials. A missed probe stays missing.
 set -eu

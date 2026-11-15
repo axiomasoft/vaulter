@@ -14,7 +14,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Эндпоинт connect-рукопожатия M4b (мастер-план §7): POST documents/{node}/collaboration/session.
+ * Эндпоинт connect-рукопожатия: POST documents/{node}/collaboration/session.
  * Авторизация идёт через AccessResolver — без View/Comment 403; commenter получает
  * read-only сессию, writer — writable. Токен НИКОГДА не выдаёт больше, чем способность
  * актора: read_only кодируется из права на узле, а не из запроса.

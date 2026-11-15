@@ -1,7 +1,7 @@
 import { RETRY_DEFAULTS, withRetry } from './retry.js'
 import { EPOCH_MISMATCH, PROTOCOL_MISMATCH } from './backend.js'
 
-// The hub's own pending ledger (D26): every update the hub must append — a client's envelope or a
+// The hub's own pending ledger: every update the hub must append — a client's envelope or a
 // server/direct change — waits here, per document and in arrival order, until the backend
 // committed it (200 append). Nothing else removes a record except an answer that retrying cannot
 // change. The ledger does not depend on Hocuspocus' onStoreDocument, debounce or destroy:

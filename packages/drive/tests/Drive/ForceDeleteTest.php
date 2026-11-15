@@ -27,7 +27,7 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
 
     $drive->trash()->purge($node);
 
-    // The edge is detached — the blob now has zero live edges (GC-eligible via M1b),
+    // The edge is detached — the blob now has zero live edges (GC-eligible),
     // but its bytes are NOT deleted here.
     expect(FileRevisionBlob::query()->count())->toBe(0)
         ->and(Blob::query()->count())->toBe(1);
@@ -75,6 +75,6 @@ it('forceDelete не трогает байты на диске (GC отдель�
 
     $drive->trash()->purge($node);
 
-    // The physical object survives — only the reference dropped (M1b GC reclaims it).
+    // The physical object survives — only the reference dropped (GC reclaims it).
     Storage::disk('local')->assertExists($blob->storage_key);
 });

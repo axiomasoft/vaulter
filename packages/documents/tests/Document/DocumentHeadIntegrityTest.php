@@ -20,7 +20,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
- * I6 for documents: the head of a document is always one of its own checkpoints.
+ * For documents: the head of a document is always one of its own checkpoints.
  * Every writer path keeps it so (SQLite has nothing else); on PostgreSQL and MySQL the
  * composite head FK (current_revision_id, id) → v_document_revisions(id, document_id)
  * with ON DELETE RESTRICT also refuses a foreign head and the deletion of a head.

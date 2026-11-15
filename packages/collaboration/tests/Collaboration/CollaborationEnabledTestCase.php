@@ -8,7 +8,7 @@ use Illuminate\Foundation\Application;
 use Vaulter\Collaboration\Tests\TestCase;
 
 /**
- * Boots the package with the opt-in collaboration module ACTIVE (`vaulter.modules.collaboration`, D22): the session and
+ * Boots the package with the opt-in collaboration module ACTIVE (`vaulter.modules.collaboration`): the session and
  * hub routes are mounted, the driver capability is provided. Like every other switch of the module graph it is flipped
  * in `defineEnvironment()` — before the application and its routes boot — never in a test's `beforeEach()`.
  */

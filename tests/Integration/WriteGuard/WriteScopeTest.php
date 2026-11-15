@@ -10,7 +10,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 /**
- * PLAN2.P4.13 (D44): a Vaulter model cannot be written outside an operation. The base
+ * A Vaulter model cannot be written outside an operation. The base
  * test case switches the guard off; this file turns it on.
  */
 beforeEach(function (): void {

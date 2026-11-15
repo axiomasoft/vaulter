@@ -1,4 +1,4 @@
--- P3.1 preflight: extensions, pg_stat_statements GUCs, optional track_io_timing evidence.
+-- Preflight: extensions, pg_stat_statements GUCs, optional track_io_timing evidence.
 \set ON_ERROR_STOP on
 
 SELECT extname, extversion

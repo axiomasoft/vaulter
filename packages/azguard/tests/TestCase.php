@@ -28,7 +28,7 @@ abstract class TestCase extends Orchestra
     {
         return [
             VaulterServiceProvider::class,
-            // AzGuardModule requires the drive module (D22, D39): the access it extends — permission drivers,
+            // AzGuardModule requires the drive module: the access it extends — permission drivers,
             // the operation guard, the AccessResolver wiring — is declared by DriveModule, which requires media.
             VaulterMediaServiceProvider::class,
             VaulterDriveServiceProvider::class,

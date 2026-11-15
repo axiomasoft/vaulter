@@ -10,7 +10,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Cross-scope deletion safety (H.3 / H.6): under per-tenant dedup the SAME bytes
+ * Cross-scope deletion safety: under per-tenant dedup the SAME bytes
  * in two tenants are two rows at two scope-qualified keys. Sweeping tenant 1's
  * blob must never delete tenant 2's object — the scope segment in storage_key is
  * what guarantees it.

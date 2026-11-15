@@ -26,7 +26,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The drive's revision links (D23, P4/P5): every edge in v_file_revision_blobs carries a media pin
+ * The drive's revision links: every edge in v_file_revision_blobs carries a media pin
  * "drive.revision_blob" keyed "{revision}:{role}:{ordinal}", written and removed in the same transaction as the edge,
  * and every path that deletes revisions removes their pins first — a pin left behind would keep the blob forever.
  */

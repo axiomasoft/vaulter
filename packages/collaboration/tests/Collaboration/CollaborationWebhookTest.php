@@ -257,7 +257,7 @@ it('authenticates an editor read-only on content that cannot be saved back', fun
 
     $response = Hub::call('authenticate', ['room' => Hub::room($node)], Hub::token($node));
     if ($unavailable !== null) {
-        // Unsupported stored bindings cannot be opened even in read mode (P3.3).
+        // Unsupported stored bindings cannot be opened even in read mode.
         $response->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable')
             ->assertJsonPath('meta.context.reason', $unavailable);
 

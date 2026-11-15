@@ -1,4 +1,4 @@
-// The one retry policy of hub → backend writes (protocol 2, D26): full jitter, a bounded number of
+// The one retry policy of hub → backend writes (protocol 2): full jitter, a bounded number of
 // attempts and one deadline for the whole series, network time included. Only an answer that may
 // change on its own is repeated — no answer at all (network error, attempt timeout), a 5xx and a
 // 429 (after its Retry-After when that still fits the deadline). Authentication, validation and

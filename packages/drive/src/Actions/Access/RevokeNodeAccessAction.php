@@ -20,8 +20,8 @@ use Vaulter\Events\EventRecorder;
 
 /**
  * @internal Authorization belongs to AccessOperations; membership is also enforced here. The node row is locked
- * first (then the grant row), the expected access_version is compared under that lock and the revoke raises it
- * (CC1); the node sequence does not move (CC2).
+ * first (then the grant row), the expected access_version is compared under that lock and the revoke raises it;
+ * the node sequence does not move.
  */
 #[Internal]
 final readonly class RevokeNodeAccessAction

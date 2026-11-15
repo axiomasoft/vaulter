@@ -164,7 +164,7 @@ final readonly class CollaborationConfig
     }
 
     /**
-     * How long after it closed a generation's rows may go (C11): the lifetime of the last token issued for it, the
+     * How long after it closed a generation's rows may go: the lifetime of the last token issued for it, the
      * hub's retry horizon, then the retention window. Until then a late retry still finds its receipt.
      */
     public function retiredGenerationGraceSeconds(): int

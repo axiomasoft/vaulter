@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P3.3 — actual EXPLAIN, index inventory/review, HypoPG candidates on published P3.2 corpus.
+# Actual EXPLAIN, index inventory/review, HypoPG candidates on the published query corpus.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

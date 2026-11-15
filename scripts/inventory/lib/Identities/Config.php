@@ -339,7 +339,7 @@ final class Config
      * Publish tags: `publishes([...], 'tag')` calls, spatie/laravel-package-tools chains
      * (`->name('x')->hasConfigFile()…` publishes `x-config`, `x-migrations`, `x-translations`, `x-views`), and the
      * declarations of module manifests the kernel publishes: `config('root', …)` as `root-config`. The migrations of a
-     * module are never published (D40): `schema(…)` is no tag.
+     * module are never published: `schema(…)` is no tag.
      *
      * @return array<string, array{file: string, symbol: string, via: string}>
      */

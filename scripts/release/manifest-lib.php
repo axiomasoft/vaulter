@@ -165,7 +165,7 @@ function entryDestination(string $kind, array $entry): string
 }
 
 /**
- * Fail-closed D18 qualification: a trusted evidence document must bind THIS source SHA, a green CI gate of the SAME SHA,
+ * Fail-closed release qualification: a trusted evidence document must bind THIS source SHA, a green CI gate of the SAME SHA,
  * the routed line/channel and an exact artifact identity for every routed entry; a private channel additionally needs a
  * probed private destination. Missing evidence is "not qualified", never a fallback to the SHA alone.
  *

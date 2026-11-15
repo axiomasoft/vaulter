@@ -455,7 +455,7 @@ it('refuses an unknown argument and an unreadable map instead of guessing', func
 it('plans a media change for media and its Composer consumers only', function (): void {
     [$code, $plan] = s_select(['--paths=packages/media/src/Cas/BlobStore.php']);
 
-    // azguard consumes media since P3.4: its module requires drive, whose manifest requires media.
+    // azguard consumes media: its module requires drive, whose manifest requires media.
     expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'webhooks', 'documents', 'collaboration', 'azguard', 'filament', 'integration'])
         ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p webhooks', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p collaboration', 'scripts/t sqlite -p azguard', 'scripts/t sqlite -p filament', 'scripts/t sqlite -p integration']);
 });

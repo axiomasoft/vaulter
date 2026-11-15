@@ -8,7 +8,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 
 /**
- * Host-facing metrics seam (P8 /). Package code depends only on this
+ * Host-facing metrics seam. Package code depends only on this
  * contract; the host or load SUT binds a real adapter. With no backend installed the
  * container resolves {@see NullMetricsRecorder}.
  */

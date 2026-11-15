@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Hold seeded Yjs rooms open while the P8 matrix scrapes Hocuspocus /stats.
+ * Hold seeded Yjs rooms open while the matrix scrapes Hocuspocus /stats.
  *
  * Manual mode:
  *   node load/scripts/p8-collab-join.mjs --token <jwt> --room <room> --duration 60s

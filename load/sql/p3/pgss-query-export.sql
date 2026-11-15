@@ -1,4 +1,4 @@
--- P3.3 — export normalized query text for workload fingerprints (admin).
+-- Export normalized query text for workload fingerprints (admin).
 \set ON_ERROR_STOP on
 
 SELECT COALESCE(json_agg(row_to_json(q) ORDER BY q.total_exec_time DESC), '[]'::json)

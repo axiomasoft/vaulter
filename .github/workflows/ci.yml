@@ -1,25 +1,25 @@
 name: CI
 
-# The one pull-request workflow (PLAN3 P1.6, test-strategy#ci-target). It always runs — no path filter —
+# The one pull-request workflow (test-strategy#ci-target). It always runs — no path filter —
 # and `changes` decides what is needed from `scripts/t --changed --dry-run --json` against the exact base
 # commit (pull_request.base.sha / push.before). Without a usable base every lane runs. `CI gate` is the only
 # check a branch rule or a release has to require: it needs every other job and is red on a failure, a
 # cancellation, a skipped lane that was expected or an empty required matrix; a docs-only skip is explicit
-# (changes.skip_reason). Load stays manual (load.yml, D4); coverage, the extended
+# (changes.skip_reason). Load stays manual (load.yml); coverage, the extended
 # layer and the stand run in weekly-full.yml.
 #
-# job map from the pre-P1.6 workflows (nothing that ran on a PR was dropped):
-#   tests.yml test (L12/L13, SQLite, composer test:types) .. fast (+ type coverage per cell)
+# job map from the earlier workflows (nothing that ran on a PR was dropped):
+#   tests.yml test (Laravel 12/13, SQLite, composer test:types) .. fast (+ type coverage per cell)
 #   tests.yml test-pgsql (per TestCase schema steps) ....... db (pgsql, schema partitions) + serial (pgsql)
 #   {drive,media,documents}.yml SQLite lane ................ fast, quality (own Pint + PHPStan)
 #   {drive,media,documents}.yml *-pgsql lane ............... db (pgsql) + serial (pgsql)
 #   azguard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
-#   frontend.yml vue and hocuspocus ......................... vue, hub (+ vue-collaboration, P5.14)
+#   frontend.yml vue and hocuspocus ......................... vue, hub (+ vue-collaboration)
 #   openapi.yml oasdiff breaking ........................... contract-bc (blocking where the BC host is provisioned)
 #   new: mysql lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
-#        clean-consumer isolation of the split packages (consumer-isolation, I14)
+#        clean-consumer isolation of the split packages (consumer-isolation)
 on:
   push:
     branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
@@ -189,7 +189,7 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
-      # Advisory: the Rector backlog is not part of any change, so a finding must not turn a PR red (F-P4.4-01).
+      # Advisory: the Rector backlog is not part of any change, so a finding must not turn a PR red.
       - name: Rector (dry-run, advisory)
         if: matrix.rector
         continue-on-error: true
@@ -452,11 +452,11 @@ jobs:
           export PHP84_BIN
           scripts/t pgsql -p "$PACKAGE" --group=serial -j1 --no-skips
 
-  # I14 (PLAN3 P4.19): each consumer package is built in an empty directory with path repositories ONLY on the siblings
+  # Each consumer package is built in an empty directory with path repositories ONLY on the siblings
   # it declares (scripts/release/consumer-check.sh), then its fast sqlite set runs there. The repository vendor/ and
   # packages/core/tests are not on the path, so an undeclared dependency or a `../core/tests` reach fails the job.
   # Blocking: ci-gate needs it. The lane follows `changes`: a consumer package that changed (or its dependants), and
-  # every consumer package when the manifest, scripts/ or the workflows changed. Zip-archive qualification is PLAN4.
+  # every consumer package when the manifest, scripts/ or the workflows changed. Zip-archive qualification is not part of this workflow.
   consumer-isolation:
     name: Consumer isolation / ${{ matrix.package }}
     needs: changes

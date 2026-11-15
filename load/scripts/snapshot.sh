@@ -1,5 +1,5 @@
 #!/bin/sh
-# VLT-LOAD P2.3 — snapshot pg-data + minio-data so a repeat prog run starts from the
+# Snapshot pg-data + minio-data so a repeat prog run starts from the
 # SAME seeded state without re-paying seed cost (Deliverables — "снапшот/
 # восстановление... повторный прогон не переплачивает seed'ом").
 # Usage: TIER=S0 ./load/scripts/snapshot.sh

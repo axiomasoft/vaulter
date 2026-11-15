@@ -31,15 +31,15 @@ it('throws when the content exceeds the size limit', function (): void {
     TipTapContent::fromArray($large)->ensureWithin(1);
 })->throws(InvalidDocumentContentException::class);
 
-// ─── F-P1.11-02 — closed node/mark/attribute allow-list (store time) ────────
+// ─── closed node/mark/attribute allow-list (store time) ────────
 
 it('rejects an unknown node type', function (): void {
     TipTapContent::fromArray(['type' => 'doc', 'content' => [['type' => 'script']]]);
 })->throws(InvalidDocumentContentException::class);
 
 it('rejects an unknown mark type', function (): void {
-    // NB: 'underline' USED to be the example here — it is canonical since VLT-REMED P5.2
-    // (D27: StarterKit 3.x ships Underline). A genuinely unknown mark still fails closed.
+    // NB: 'underline' USED to be the example here — it is canonical since
+    // (StarterKit 3.x ships Underline). A genuinely unknown mark still fails closed.
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -84,12 +84,12 @@ it('accepts the full allowed node/mark set', function (): void {
     expect($content)->toBeInstanceOf(TipTapContent::class);
 });
 
-// ─── R-01 (Blocker) — allow-list ⇄ пресет редактора: контракт, не список ──
+// ─── allow-list ⇄ пресет редактора: контракт, не список ──
 
 /*
  * Норма — не литеральный перечень узлов, а КЛАСС: каждый TipTap-тип документа отдаёт
  * редактору пресет (viewer vaulter/tiptap, props.preset), и схема типа обязана принимать
- * характерный узел/марку КАЖДОГО extension этого пресета. До фикса P0.1 allow-list отвергал
+ * характерный узел/марку КАЖДОГО extension этого пресета. До фикса allow-list отвергал
  * image, table и underline — узлы, которые пакет САМ отдаёт тулбару, — и документ было
  * НЕВОЗМОЖНО СОХРАНИТЬ. Добавят extension в пресет, забыв про схему, — тест покраснеет здесь.
  */
@@ -149,7 +149,7 @@ it('сообщает о потере при чтении: lossless только 
  * сериализует РЕАЛЬНЫЙ редактор на тех версиях, что пакет и отгружает (@tiptap/extension-link
  * ^3, @tiptap/starter-kit ^3): у Link это href/target/rel/class, у OrderedList — start/type.
  * До фикса allow-list синхронизировали с ИМЕНАМИ extension'ов, а не с их атрибутами, и на
- * `class` он спотыкался: ЛЮБОЙ документ со ссылкой было невозможно сохранить — R-01 ровно на
+ * `class` он спотыкался: ЛЮБОЙ документ со ссылкой было невозможно сохранить — ровно на
  * один атрибут в сторону.
  *
  * Ограничение (честно): node_modules этой среде недоступен, поэтому пробы сняты с
@@ -179,7 +179,7 @@ it('store-time allow-list принимает АТРИБУТЫ, которые ex
     ]],
 ]);
 
-// ─── D28 — аддитивный конфиг-шов allow-list ────────────────────────────────
+// ─── аддитивный конфиг-шов allow-list ────────────────────────────────
 
 it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты хоста в allow-list, R-01', function (): void {
     $doc = ['type' => 'doc', 'content' => [
@@ -199,13 +199,13 @@ it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты 
 
 it('конфиг-шов АДДИТИВЕН: канон не вычёркивается конфигом, R-01', function (): void {
     // Хост «переопределил» список своим — канон обязан выжить, иначе он молча сломает
-    // сохранение любого документа (D28).
+    // сохранение любого документа.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['mention']);
 
     expect(TipTapContent::allowedNodeTypes())->toContain('doc', 'text', 'paragraph', 'image', 'table', 'mention');
 });
 
-// ─── R-11 — конфиг-шов не отменяет санитизацию URL ──────────────────────────
+// ─── конфиг-шов не отменяет санитизацию URL ──────────────────────────
 //
 // Расширение allow-list — вкус хоста; проверка схемы URL — инвариант безопасности.
 // Раньше карта URL-несущих атрибутов была хардкодом (link.href + image.src), поэтому
@@ -272,7 +272,7 @@ it('конфиг-шов: withSanitizedUrls() вычищает URL-атрибут
 
 it('конфиг-шов НЕ расширяет схемы URL-несущих атрибутов, R-01', function (): void {
     // Инвариант безопасности, а не вкус хоста: даже объявив href «своим» атрибутом,
-    // хост не может протащить javascript: (D28).
+    // хост не может протащить javascript:.
     config()->set('vaulter-documents.tiptap.extra_attributes', ['link' => ['href']]);
 
     expect(fn () => TipTapContent::fromArray([
@@ -284,7 +284,7 @@ it('конфиг-шов НЕ расширяет схемы URL-несущих а
     ]))->toThrow(InvalidDocumentContentException::class);
 });
 
-// ─── F-P1.11-01 — URL scheme allow-list (link.href + image.src) ─────────────
+// ─── URL scheme allow-list (link.href + image.src) ─────────────
 
 it('rejects a disallowed link href scheme', function (string $href): void {
     TipTapContent::fromArray([
@@ -328,7 +328,7 @@ it('accepts http, https and mailto link href schemes', function (string $href): 
     'mailto' => ['mailto:a@x.test'],
 ]);
 
-// ─── D29 — decayFrom(): чтение деградирует, а не бросает ────────────────────
+// ─── decayFrom(): чтение деградирует, а не бросает ────────────────────
 
 it('decayFrom() вырезает неизвестные узлы/марки/атрибуты и НЕ бросает, R-01', function (): void {
     $content = TipTapContent::decayFrom([
@@ -375,9 +375,9 @@ it('decayFrom() на мусорном корне отдаёт пустой doc, 
     'content is a scalar' => [['type' => 'doc', 'content' => 'oops']],
 ]);
 
-// ─── P5.2 — круг чтение→сохранение и fail-closed по ЗНАЧЕНИЮ ────────────────
+// ─── круг чтение→сохранение и fail-closed по ЗНАЧЕНИЮ ────────────────
 //
-// Два инварианта, которые R-12/R-11 оставили открытыми:
+// Два инварианта, которые прежние проверки оставили открытыми:
 //
 //  1. То, что пакет САМ отдал редактору (DocumentRevisionResource::readableContent() =
 //     decayFrom() + withSanitizedUrls()), обязано сохраняться обратно. Скраб, который

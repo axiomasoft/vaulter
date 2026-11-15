@@ -25,7 +25,7 @@ use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * The event pipeline (C05, D29): a change, its activity row and its outbox row commit or
+ * The event pipeline: a change, its activity row and its outbox row commit or
  * roll back together, and host listeners see the event once, after the commit. No
  * wrapping test transaction, so a commit here is a real one.
  */

@@ -20,7 +20,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * sweepPending must run its critical section through the SERIALIZABLE + retry-on-40001
- * wrapper on PostgreSQL, symmetric with sweep() (F-P1.5-02). Without the wrapper a
+ * wrapper on PostgreSQL, symmetric with sweep(). Without the wrapper a
  * transient serialization failure (SQLSTATE 40001) propagates as a QueryException and
  * aborts the whole GC pass instead of being retried. Real PG only — the retry path is
  * PG-specific (the FOR-UPDATE/single-writer path serialises elsewhere).

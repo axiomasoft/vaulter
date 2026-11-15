@@ -25,7 +25,7 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * P4.2 — bounded on-disk fixtures + API handles for the memory path matrix.
+ * Bounded on-disk fixtures + API handles for the memory path matrix.
  */
 final class PrepareMemoryFixturesCommand extends Command
 {

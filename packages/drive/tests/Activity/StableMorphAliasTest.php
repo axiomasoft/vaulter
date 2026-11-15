@@ -18,7 +18,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\VaulterServiceProvider;
 
 /**
- * D34: the types of the Vaulter models stored in a polymorphic column are constant aliases, whatever the class name
+ * The types of the Vaulter models stored in a polymorphic column are constant aliases, whatever the class name
  * is and whatever morph policy the host runs.
  */
 beforeEach(function (): void {

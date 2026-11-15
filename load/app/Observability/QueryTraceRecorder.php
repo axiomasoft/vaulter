@@ -20,7 +20,7 @@ use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 
 /**
- * Load-host-only query trace (P3.1). Opt-in via LOAD_DB_TRACE; never stores bindings or rendered SQL.
+ * Load-host-only query trace. Opt-in via LOAD_DB_TRACE; never stores bindings or rendered SQL.
  */
 final class QueryTraceRecorder
 {

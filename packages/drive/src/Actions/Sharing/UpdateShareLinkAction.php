@@ -31,7 +31,7 @@ use Vaulter\Events\EventRecorder;
  * Change a live share link without touching its token: expiry, use
  * budget, password and audience. The link row is locked after the node, so a
  * concurrent revoke or rotate and this update serialize; the expected version is
- * compared under that lock and a change raises it (CC1), so of two writers that
+ * compared under that lock and a change raises it, so of two writers that
  * read the same version one gets stale_write. The new expiry obeys the same bounds
  * as at creation.
  */

@@ -20,7 +20,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
- * PLAN2.P4.8: every method of the Documents API against every built-in role, plus a
+ * Every method of the Documents API against every built-in role, plus a
  * trashed node, a node of another drive and a node of another tenant. Expected results
  * follow the role capabilities (RoleRegistry): View reads, Edit writes, Download
  * exports, Comment comments; a node the actor cannot see is node_not_found, never

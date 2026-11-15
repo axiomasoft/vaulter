@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-// VLT-LOAD P2.3 — S0 volume profile (CI-профиль, НЕ тир развёртывания).
+// S0 volume profile (CI-профиль, НЕ тир развёртывания).
 //
-// Source: reference-env.md §4.1 (numbers already fixed by P2.2 in load/env/S0.env —
+// Source: reference-env.md §4.1 (numbers already fixed in load/env/S0.env —
 // SEED_NODES/SEED_ACTIVITY/SEED_EXPIRED_SESSIONS/SEED_ORPHAN_BLOBS/MAX_FIXTURE_BYTES
 // are REUSED here verbatim, not re-derived) + reference-env.md §2.1 order-of-magnitude
 // for everything §4.1 doesn't name explicitly. §4.1 gives no independent formula for
-// those extra knobs, so each is either a straight ~1/50 of the S-tier row (§2.1) or,
+// those extra knobs, so each is either a straight ~1/50 of the S-tier row or,
 // where 1/50 would round to something too small to exercise the mechanism it targets
 // (grant-anchor fan-out, endpoint-subscription filtering), a documented minimum-useful
 // floor instead — never a shrink of the four numbers §4.1 already committed to.
@@ -23,8 +23,7 @@ return [
         'typical_width' => 8,        // S=20, reduced for the smaller node budget.
         'backbone_depth' => 64,      // FIXED across every tier incl. CI — this is
         // NodeReadRepository::DEFAULT_MAX_DEPTH, a
-        // structural boundary, not a volume knob
-        // (reference-env.md §2.1).
+        // structural boundary, not a volume knob.
         'wide_node_children' => 300, // S=5000 (~1/17) — enough to exercise the
         // partial-UNIQUE(parent_id, lower(name)) scan and
         // children pagination without blowing the CI budget.
@@ -38,12 +37,12 @@ return [
         // is the "orphan-строк профиля" the Validation count checks against.
         'orphan' => 2_000, // load/env/S0.env SEED_ORPHAN_BLOBS
         // Byte-backed ("hot") blobs — real bytes land in MinIO via BlobStore::commit(),
-        // the rest of the live blob population is metadata-only (reference-env.md §2.2).
+        // the rest of the live blob population is metadata-only.
         'hot_set' => 400,
         'hot_set_avg_bytes' => 65_536, // 64 KiB avg => ~25 MiB hot-set total on disk,
         // nowhere near MAX_FIXTURE_BYTES (this is the
         // per-object hot set, not the single big
-        // multipart fixture — harness.md §3).
+        // multipart fixture).
     ],
 
     'file_versions' => [

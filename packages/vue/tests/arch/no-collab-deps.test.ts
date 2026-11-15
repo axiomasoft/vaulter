@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-// D15: `@vaulter/vue` does not pull the realtime stack into a host's bundle. It talks to a
+// `@vaulter/vue` does not pull the realtime stack into a host's bundle. It talks to a
 // collaboration adapter (src/collaboration-adapter.ts, types only); the Yjs / Hocuspocus code lives
 // in `@vaulter/vue-collaboration`. Type-only imports count as well.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')

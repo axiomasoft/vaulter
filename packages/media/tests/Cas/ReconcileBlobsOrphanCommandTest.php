@@ -11,7 +11,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
 
 /**
- * The vaulter:blobs:reconcile --orphans console wiring (master plan P4 #11 / H.3):
+ * The vaulter:blobs:reconcile --orphans console wiring:
  * the command surfaces the orphan disk-walk and maps its result to an exit code so
  * cron/CI sees the hazard. The contract pinned here:
  *

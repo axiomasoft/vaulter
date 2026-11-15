@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 
 /*
- * P4.6 / F-P2.1-04 (Nit, D19 green guard — docblock-alignment fix, no behaviour
+ * (green guard — docblock-alignment fix, no behaviour
  * delta): `docs/reference/php-api.md` named the FQCN
  * `Vaulter\Contracts\Uploads\UploadProtocolHandler` (core-shaped namespace), but
  * the actual interface lives at `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler`

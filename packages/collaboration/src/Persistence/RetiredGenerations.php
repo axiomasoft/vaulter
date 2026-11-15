@@ -13,11 +13,11 @@ use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
 
 /**
- * The end of a closed generation's log (C11). A generation is closed when the document moved past it (a restore or a
+ * The end of a closed generation's log. A generation is closed when the document moved past it (a restore or a
  * REST replace, {@see GenerationCloser}); its updates, receipts and head are deleted only once retired_at is older
  * than the grace the caller passes — the last token of the generation and the hub's retry horizon have run out, then
  * the retention window. Until then a late retry still finds its receipt; before and after the prune it is refused the
- * same way (collaboration_epoch_mismatch, C4).
+ * same way (collaboration_epoch_mismatch).
  *
  * Every change is made per generation under the document lock (CollaborativeState::lock()) and the head row FOR
  * UPDATE, and checks again there that the generation is not the document's current one: an active generation is

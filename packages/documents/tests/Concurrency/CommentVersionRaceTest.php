@@ -18,10 +18,10 @@ use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
- * CC1 on real backends (knowledge p6-design#invariants, «мешающие пары»): a resolution and a deletion — or two
+ * On real backends («мешающие пары»): a resolution and a deletion — or two
  * resolutions — of one comment that both read the same version race; the comment row lock serialises them and the
  * second one is refused: stale_write when the row is still there with a newer version, comment_not_found when the
- * deletion landed first. Exactly one lands. PostgreSQL/MySQL only (ForkRace); classified serial + database, run in PLAN4.
+ * deletion landed first. Exactly one lands. PostgreSQL/MySQL only (ForkRace); classified serial + database.
  */
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this, app(VaulterDatabase::class)->connection()->getName());

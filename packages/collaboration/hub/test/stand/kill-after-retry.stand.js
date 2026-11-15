@@ -4,13 +4,13 @@ import crypto from 'node:crypto'
 import { closeAll, connect, eventually, scene as newScene, session, stateOn, text } from '../support/live.js'
 import { receiptIds, restartHubsFromTheLog, standEnv, stop } from '../support/stand.js'
 
-// I17 scenario 2 (collaboration#tests): the backend is down, the hub's retry series runs out of its
+// Scenario 2 (collaboration#tests): the backend is down, the hub's retry series runs out of its
 // deadline, then every hub is killed with SIGKILL. Every edit the hub told the client was saved
 // (an `ack`, which the hub gives only after the backend committed the append) must be there when the
 // hubs come back — the state is rebuilt from the update log alone (Redis is emptied).
 //
 // REAL processes only (docker stand: PostgreSQL, Redis, `testbench serve`, two hubs): written in
-// PLAN3, run in PLAN4 (D41) by scripts/collab-stand.sh. What was never acknowledged may be lost —
+// Run by scripts/collab-stand.sh, outside CI. What was never acknowledged may be lost —
 // that is the contract of buffered mode — so the test asserts nothing about it, but it does prove the
 // outage was real: the unsaved edits were refused (a nack with retry:true) and got no receipt.
 

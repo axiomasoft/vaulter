@@ -16,7 +16,7 @@ use Vaulter\Drive\Tests\Schema\ForceCreates;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * F-P4.2-05 (VLT-REMED P4.3, batch B16): `search()`, `trashed()` and
+ * `search()`, `trashed()` and
  * `GrantReadRepository::forNode()` sort by a single non-unique column with no
  * tie-breaker — `cursorPaginate()`'s keyset then compares ONLY that column
  * across the page boundary, so two rows sharing its value collide: whichever

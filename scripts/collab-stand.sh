@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# The I17 stand scenarios 2, 3 and 10 (collaboration#tests) against REAL processes in docker:
+# The stand scenarios 2, 3 and 10 (collaboration#tests) against REAL processes in docker:
 # PostgreSQL, Redis, the Laravel host behind `testbench serve` and TWO hubs
 # (packages/collaboration/hub/stand/docker-compose.yml), then packages/collaboration/hub/test/stand/*.stand.js:
 #   2  kill-after-retry — backend down past the retry deadline, SIGKILL of every hub: each acknowledged update is restored
 #   3  two-hubs         — unrelated updates saved on two hubs at once: the rebuilt state holds both
 #   10 sigterm-drain    — SIGTERM during typing: readiness falls at once, no receipt after the drain boundary
 #
-# Never part of a PLAN3 run (D41): it is run in PLAN4, or by hand, through `scripts/t stand`.
+# Never part of CI: it is run by hand through `scripts/t stand`.
 #
 # Usage: bash scripts/collab-stand.sh
 #   env: VAULTER_E2E_PORT=8787 (host), VAULTER_E2E_HUB_PORT=18234 (hub A; its management listener on +1),

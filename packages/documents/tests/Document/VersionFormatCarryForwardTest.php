@@ -17,7 +17,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
- * VLT-CANON P0.4 (L3) stamped the 0.2 per-version `format` explicitly so appended rows
+ * The write path once stamped the 0.2 per-version `format` explicitly so appended rows
  * never fell back to a DB default. The type now lives once on the document aggregate
  * (v_documents.type) and checkpoints carry none, so a checkpoint can never disagree with
  * its document. These tests pin the outcome: every checkpoint — autosave, named, or one

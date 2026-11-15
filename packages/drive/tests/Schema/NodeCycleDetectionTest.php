@@ -9,7 +9,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Tests\Schema\ForceCreates;
 
 /**
- * F-P4.2-02 — `Node` did not override `enableCycleDetection()` (trait default
+ * `Node` did not override `enableCycleDetection()` (trait default
  * `false`): the only guard against a `parent_id` cycle was
  * `MoveNodeAction::assertNoCycle()`, exercised ONLY on the move-through-Action
  * write path. A cycle that reaches the data any other way (raw SQL, a seeder,

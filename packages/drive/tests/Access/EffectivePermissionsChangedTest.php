@@ -24,7 +24,7 @@ use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * drive.access.effective_permissions_changed (D26): every change of who may do what records it in the transaction of
+ * drive.access.effective_permissions_changed: every change of who may do what records it in the transaction of
  * the change — grants, inheritance, shares, moves, the trash, the drive lifecycle — and the host records it for changes
  * the drive cannot see through AccessInvalidation. It reaches outbox consumers only.
  */

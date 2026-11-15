@@ -8,7 +8,7 @@ use Illuminate\Console\Events\CommandFinished;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
- * Records `vaulter_command_peak_memory_bytes` after background artisan commands finish (P8.5 / §5.3).
+ * Records `vaulter_command_peak_memory_bytes` after background artisan commands finish.
  */
 final class RecordCommandPeakMemory
 {

@@ -19,13 +19,13 @@ use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Identity;
 
 /**
- * Shared builders for the CAS slice tests (M1b): pins of an opaque test owner (D23 —
+ * Shared builders for the CAS slice tests: pins of an opaque test owner (
  * media knows no drive), blob rows and orphan objects, plus a helper to turn a string
  * into a stream the ContentStore can stage.
  */
 final class CasTestHelpers
 {
-    /** The owner type of the pins these tests write: media knows no owner (D23). */
+    /** The owner type of the pins these tests write: media knows no owner. */
     public const string OWNER = 'test.owner';
 
     /** A fresh pin reference key, unique within the test process. */
@@ -102,7 +102,7 @@ final class CasTestHelpers
      *
      * Mirrors how the producer (BlobStore::commit) would lay the object down, minus
      * the row — exactly the "promoted bytes then rolled the row back / leaked bytes"
-     * hazard the orphan walk hunts (H.3). The disk must already be a Storage::fake.
+     * hazard the orphan walk hunts. The disk must already be a Storage::fake.
      */
     public static function seedOrphan(string $bytes, string $scope = 't-default', int $ageHours = 48, string $disk = 'local'): string
     {
@@ -151,7 +151,7 @@ final class CasTestHelpers
 
         StorageFacade::disk($bytesDisk ?? $disk)->put($storageKey, $bytes);
 
-        // forceFill (P1.4/F-P1.5-04): Blob is fully guarded — bypassed here
+        // forceFill: Blob is fully guarded — bypassed here
         // exactly like BlobStoreRepository::insertCommitted() does.
         $blob = new Blob;
         $blob->forceFill([

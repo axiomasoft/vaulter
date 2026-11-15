@@ -28,7 +28,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * P4-I18 (PLAN2.D48): used_bytes is the logical sum of every retained revision of the
+ * used_bytes is the logical sum of every retained revision of the
  * drive, trash included, without a dedup discount — on every path that adds or
  * removes a revision, and always equal to QuotaCalculator's recount.
  */

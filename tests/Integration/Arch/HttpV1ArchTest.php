@@ -25,7 +25,7 @@ arch('v1 controllers are final single-action classes')
 
 it('gives v1 controllers no public method besides the constructor and __invoke', function (): void {
     $offenders = [];
-    // Activity and Changes moved to vaulter-drive with the drive domain (P4.10); the webhook controllers are checked by the webhooks package.
+    // Activity and Changes moved to vaulter-drive with the drive domain; the webhook controllers are checked by the webhooks package.
     $roots = [
         [__DIR__.'/../../../packages/drive/src/Http/Controllers', 'Vaulter\\Drive\\Http\\Controllers\\', ['Activity', 'Changes']],
     ];

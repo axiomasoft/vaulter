@@ -1,4 +1,4 @@
-// VLT-LOAD P2.4 — setup-only discovery. The P2.3 manifest carries only a few anchor
+// Setup-only discovery. The seed manifest carries only a few anchor
 // ids (many-grant anchors, the backbone leaf, the wide node) — not a full id-list per
 // kind (Known Deviations vs the item's original Scope). Scenarios needing a POOL of
 // existing nodes look them up the same way a real client would: one/two listing calls,
@@ -13,9 +13,9 @@ const SETUP_TAGS = { scenario: 'setup' };
 
 /**
  * A pool of file node ids that actually stream real bytes. The wide-node folder (its
- * children are the FIRST ones the seed's hot/byte-backed blob budget is spent on,
- * P2.3 Completion Notes) mixes byte-backed ("hot") and metadata-only blobs
- * (reference-env.md §2.2) once the hot budget runs out — each candidate is probed with
+ * children are the FIRST ones the seed's hot/byte-backed blob budget is spent on)
+ * mixes byte-backed ("hot") and metadata-only blobs
+ * once the hot budget runs out — each candidate is probed with
  * a real (discarded-body) download once so download.js never samples a 404.
  */
 export function discoverDownloadableFiles(limit) {
@@ -47,7 +47,7 @@ export function discoverDownloadableFiles(limit) {
 }
 
 /**
- * The `documents` folder P2.3's SeedLoadDatasetCommand::seedDocumentVersions() creates
+ * The `documents` folder SeedLoadDatasetCommand::seedDocumentVersions() creates
  * directly under root (fixed name, not in the manifest).
  */
 export function discoverDocumentsFolderId() {
@@ -61,7 +61,7 @@ export function discoverDocumentsFolderId() {
 }
 
 /**
- * The seeded document-kind node ids (P2.3 §node_document_versions) — the shared pool
+ * The seeded document-kind node ids (seeded by SeedLoadDatasetCommand) — the shared pool
  * docs-collab.js co-edits, exactly the contention the scenario means to exercise.
  */
 export function discoverDocumentNodeIds(limit) {

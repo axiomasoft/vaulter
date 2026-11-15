@@ -20,8 +20,8 @@ use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
- * The read security matrix of the drive's GET/HEAD routes (P5.2, knowledge p5-security#read-matrix): every read route of the
- * package × the rows R1–R3 and R10–R12 of the audit (G §11).
+ * The read security matrix of the drive's GET/HEAD routes: every read route of the
+ * package × the rows R1–R3 and R10–R12 of the audit.
  *
  *   R1  401 without authentication            R10 lists and children hide what the caller may not see
  *   R2  404 a resource of another tenant      R11 a download is refused once the grant is revoked

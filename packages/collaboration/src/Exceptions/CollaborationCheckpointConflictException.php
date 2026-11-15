@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A checkpoint publication lost its compare-and-set (C6): its compaction lease is not the current one (another hub's,
+ * A checkpoint publication lost its compare-and-set: its compaction lease is not the current one (another hub's,
  * expired, or already spent), or the log moved since the lease read it (another checkpoint covers it, the document's
  * state version changed, or the covered range is not in the log). Nothing was published and no update was deleted;
  * the hub drops its merge and takes a new lease. `$reason` names the check that failed.

@@ -7,9 +7,9 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
- * Один владелец, две панели — два РАЗНЫХ storage (§2.1). Панель регистрируется в
- * PanelTestCase::defineEnvironment(), то есть ДО boot'а: с P4.4 ProfileRegistry резолвится
- * в packageBooted() (fail-loud на битой панели, F-P3.2-01), поэтому рантаймовый
+ * Один владелец, две панели — два РАЗНЫХ storage. Панель регистрируется в
+ * PanelTestCase::defineEnvironment(), то есть ДО boot'а: ProfileRegistry резолвится
+ * в packageBooted() (fail-loud на битой панели), поэтому рантаймовый
  * config()->set('vaulter-drive.profiles.providers') после boot'а уже не подхватывается. Раньше тест держался
  * именно на нём — и упал, как только реестр стал строиться на boot'е.
  */

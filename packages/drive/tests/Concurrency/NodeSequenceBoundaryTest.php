@@ -78,7 +78,7 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
     $stored = DriveTestHelpers::model($node);
     expect($stored->name)->toBe($contentWon ? 'race.txt' : 'winner.txt')
         ->and($stored->size_bytes)->toBe($expectedSize)
-        // Every retained revision counts (PLAN2.D48).
+        // Every retained revision counts.
         ->and($drive->model()->refresh()->used_bytes)->toBe($contentWon ? strlen('old') + strlen('new longer bytes') : strlen('old'))
         ->and(DriveTestHelpers::model($node)->file()->firstOrFail()->revision_count)->toBe($contentWon ? 2 : 1);
     $db = app(VaulterDatabase::class)->connection();
@@ -151,7 +151,7 @@ it('SEC-REV-RECEIPT returns its own committed revision when a later writer chang
 it('SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two revisions from nonseekable sources', function (): void {
     $owner = DriveTestHelpers::host();
     $handle = Vaulter::drive($owner)->asSystem('AddRevision race fixture');
-    $handle->model()->forceFill(['quota_bytes' => 6])->save(); // both revisions are retained and counted (PLAN2.D48)
+    $handle->model()->forceFill(['quota_bytes' => 6])->save(); // both revisions are retained and counted
     $barrier = sys_get_temp_dir().'/vaulter_addrevision_'.bin2hex(random_bytes(8));
     mkdir($barrier);
     try {

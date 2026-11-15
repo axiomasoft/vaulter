@@ -1,4 +1,4 @@
-# Testbench-стенд для e2e realtime-коллаборации (P1.1 мастер-плана).
+# Testbench-стенд для e2e realtime-коллаборации.
 # Поднимает живой Laravel-хост поверх packages/core через `vendor/bin/testbench serve`.
 # НЕ участвует в обычных тестах (Pest гоняет SQLite :memory:); это отдельный стенд.
 providers:

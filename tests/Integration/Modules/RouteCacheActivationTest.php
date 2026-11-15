@@ -12,7 +12,7 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// Revision 3 (D22): a route cache is never rebuilt from the manifests (ServiceProvider::loadRoutesFrom skips a
+// Revision 3: a route cache is never rebuilt from the manifests (ServiceProvider::loadRoutesFrom skips a
 // cached application). A module route outlives its module in a stale cache, so every module route group carries
 // vaulter.module:<id> (404 for an inactive module) and the fingerprint the doctor compares.
 // Writes bootstrap/cache/routes-v7.php of the Testbench skeleton: partition skeleton_writer.

@@ -1,5 +1,5 @@
 #!/bin/sh
-# P6.1 Redis depth sampler. Pending is LLEN of the list key. Delayed and
+# Redis depth sampler. Pending is LLEN of the list key. Delayed and
 # reserved are ZCARD. RedisQueue::size() is the sum of those planes and is
 # never a pending sample. A missed probe stays missing; it is not stored as 0.
 set -eu

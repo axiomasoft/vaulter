@@ -1,5 +1,5 @@
 #!/bin/sh
-# P4.3 — migrate (via entrypoint) then FPM + matrix capture for one attempt.
+# Migrate (via entrypoint) then FPM + matrix capture for one attempt.
 set -eu
 
 RUN_DIR="${1:?}"

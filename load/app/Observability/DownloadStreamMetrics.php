@@ -11,7 +11,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 
 /**
- * Host collector for `vaulter_download_stream_active` via php-fpm status (P8.4 / §5.2).
+ * Host collector for `vaulter_download_stream_active` via php-fpm status.
  */
 final class DownloadStreamMetrics
 {

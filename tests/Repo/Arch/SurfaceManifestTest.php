@@ -7,7 +7,7 @@ use Vaulter\Inventory\SourceIndex;
 use Vaulter\Inventory\Surface;
 
 /*
- * The surface manifest of D27 (I13, P3.17): the Api and Spi types of each package with their public and protected members that
+ * The surface manifest: the Api and Spi types of each package with their public and protected members that
  * are not Internal, read from the attributes of the code. The committed packages/<p>/tests/Arch/__snapshots__/surface.txt must be
  * what the code says; the `manifest:` tests run the reader on synthetic sources, so they prove the red as well as the green.
  * Refresh: scripts/php84 php scripts/inventory/inventory.php surface --write

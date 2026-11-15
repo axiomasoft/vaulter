@@ -11,7 +11,7 @@ use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
 
-/** The prune of closed collaboration generations on the host scheduler (C11). */
+/** The prune of closed collaboration generations on the host scheduler. */
 #[Internal]
 final class CollaborationSchedule implements ModuleSchedule
 {

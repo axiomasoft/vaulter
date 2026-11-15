@@ -22,21 +22,21 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// I5 (knowledge/p3-surface#problems, D39): every identity of the sealed registry has exactly one owning module, and it
+// Every identity of the sealed registry has exactly one owning module, and it
 // is the owner the identity inventory (tests/Repo/Arch/Fixtures/identities) names. A slice still located in core is
 // declared by the manifest of its owner. What is declared by another module until a later phase moves it is listed
 // below exactly, with that phase — an expectation, not a skip: a new mismatch or a resolved one fails the test.
 
 /**
  * Identities declared by another module than their owner until the named phase moves them (none left: the collaboration
- * identities moved with the package in P5.1).
+ * identities moved with the package).
  *
  * @var array<string, array{declared_by: string, phase: string, ids: list<string>}>
  */
 const I5_DECLARED_ELSEWHERE = [];
 
 /**
- * Config roots holding keys of other owners until the config split of the named phase (D36, P3.6).
+ * Config roots holding keys of other owners until the config split of the named phase.
  *
  * @var array<string, array{declared_by: string, phase: string, owners: list<string>}>
  */

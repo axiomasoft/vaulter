@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P4.2 — memory path matrix helpers (fixtures manifest + contract checks).
+# Memory path matrix helpers (fixtures manifest + contract checks).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

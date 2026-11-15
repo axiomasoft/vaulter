@@ -20,14 +20,14 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Support\LoadTier;
 
 /**
- * The publication of a checkpoint the hub merged under a compaction lease (C6, C7), as one compare-and-set under the
+ * The publication of a checkpoint the hub merged under a compaction lease, as one compare-and-set under the
  * document lock (CollaborativeState::lock()) and the head row FOR UPDATE: the generation is the document's current
  * one and open, the lease token is the one that holds it, the checkpoint the merge started from is still the last one
  * (CS == C, CV == the document's state version) and the covered range is in the log (C ≤ H ≤ HS). The documents
  * contract then publishes the state and clears the marker only when H covers it.
  *
  * In the same transaction the payloads of the generation through H are deleted, the head moves to (H, the new state
- * version) and the lease is spent. Receipts stay until the prune of the retired generation (C11). A publication that
+ * version) and the lease is spent. Receipts stay until the prune of the retired generation. A publication that
  * loses changes and deletes nothing.
  */
 #[Internal]
@@ -44,7 +44,7 @@ final readonly class Checkpoint
     /**
      * @throws NodeNotFoundException                    the document is gone
      * @throws NotADocumentException                    the node is not a document
-     * @throws CollaborationEpochMismatchException      the generation is not the document's current one, or it was retired (C4)
+     * @throws CollaborationEpochMismatchException      the generation is not the document's current one, or it was retired
      * @throws CollaborationCheckpointConflictException the lease does not hold the generation, or the log moved since it was read
      * @throws DocumentTypeUnavailableException         the document's type is not installed
      * @throws DocumentContentDegradedException         the working state reads only partly under its type
@@ -99,7 +99,7 @@ final readonly class Checkpoint
                 throw new CollaborationCheckpointConflictException(CollaborationCheckpointConflictException::VERSION);
             }
 
-            // C7: only the payloads this checkpoint covers go, and only of its generation; every receipt stays.
+            // Only the payloads this checkpoint covers go, and only of its generation; every receipt stays.
             $this->log->rows('collaboration_updates', $locked->documentId, $locked->generation)
                 ->where('seq', '<=', $request->coveredThrough)
                 ->delete();

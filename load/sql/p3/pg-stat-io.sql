@@ -1,4 +1,4 @@
--- P3.2 — cluster I/O context snapshot (not query-attributed).
+-- Cluster I/O context snapshot (not query-attributed).
 \set ON_ERROR_STOP on
 
 SELECT COALESCE(json_agg(row_to_json(snap) ORDER BY snap.backend_type, snap.object, snap.context), '[]'::json)

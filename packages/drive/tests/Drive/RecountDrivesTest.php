@@ -15,7 +15,7 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * vaulter:drives:recount (PLAN2.D48): used_bytes is replaced by the sum of every
+ * vaulter:drives:recount: used_bytes is replaced by the sum of every
  * retained revision, trash included, drive by drive; --dry-run only reports.
  */
 beforeEach(function (): void {

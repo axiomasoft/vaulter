@@ -17,7 +17,7 @@ use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
- * A revoked writer's append (D26, I17 #8): the append re-checks the subject's rights every time, so whatever revoked
+ * A revoked writer's append: the append re-checks the subject's rights every time, so whatever revoked
  * them — the grant on an ancestor, a move, a cut of inheritance, an archive, a host change the drive never saw — the
  * next append is refused, with or without a control message. A token older than its drive's permission version is
  * only a hint: the append still answers by the rights now and tells the hub the token is stale.

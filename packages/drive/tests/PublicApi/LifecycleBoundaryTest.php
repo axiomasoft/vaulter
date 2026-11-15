@@ -85,7 +85,7 @@ function lifecycleBoundaryEdges(FileRevision $revision): array
         'ordinal' => $blob->pivot->ordinal,
         'offset_bytes' => $blob->pivot->offset_bytes,
         'length_bytes' => $blob->pivot->length_bytes,
-        // Every edge carries its own media pin (D23).
+        // Every edge carries its own media pin.
         'pinned' => in_array(RevisionBlobLinks::referenceKey($revision->id, $blob->pivot->role, $blob->pivot->ordinal), RevisionBlobPins::keys($blob), true),
     ])->sortBy(fn (array $edge): string => $edge['role'].':'.$edge['ordinal'])->values()->all();
 }
@@ -166,14 +166,14 @@ it('copies and restores immutable payload identity edge attributes and metadata 
         ->and($restored->manifest_blob_id)->toBe($original->manifest_blob_id)
         ->and($restored->declared_mime_type)->toBe('text/plain')
         ->and($restored->keep_forever)->toBeTrue()
-        // Copy-forward restore remembers its source (D34); a copy does not.
+        // Copy-forward restore remembers its source; a copy does not.
         ->and($restored->restored_from_revision_id)->toBe($original->id)
         ->and($copied->restored_from_revision_id)->toBeNull()
         ->and(lifecycleBoundaryEdges($restored))->toBe($edges)
         ->and($original->fresh()->getAttributes())->toBe($originalBeforeRestore)
         ->and(DriveTestHelpers::model($node)->sequence)->toBe(2)
         ->and(DriveTestHelpers::model($copy)->sequence)->toBe(0)
-        // Every retained revision counts (PLAN2.D48): 6 + 6 (copy) + 21 + 6 (restored copy).
+        // Every retained revision counts: 6 + 6 (copy) + 21 + 6 (restored copy).
         ->and($this->system->model()->refresh()->used_bytes)->toBe(39);
 });
 
@@ -339,7 +339,7 @@ it('repeats public destination authorization when the original parent changes af
     AccessTestHelpers::grant($root, $allowFallback ? RoleRegistry::WRITER : RoleRegistry::READER, scope: GrantScope::Item, subjectId: 85);
     $this->system->nodes()->trash($source);
     $db = app(VaulterDatabase::class)->connection();
-    // The restore runs in the operation's root transaction (OperationRunner, P3.10): one level above the test's.
+    // The restore runs in the operation's root transaction (OperationRunner): one level above the test's.
     $operationLevel = $db->transactionLevel() + 1;
     $baseLevel = $db->transactionLevel();
     $parentReads = 0;

@@ -9,7 +9,7 @@ use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Tests\Schema\ForceCreates;
 
 /**
- * F-P1.8-03 — `NodeReadRepository::search()` built `LIKE` from an untrusted
+ * `NodeReadRepository::search()` built `LIKE` from an untrusted
  * term without escaping `%`/`_`/`\`: a term of `%` matched every node
  * (wildcard, not a literal search) and `_` matched any single character.
  * Fixed by escaping the term's LIKE metacharacters before wrapping it in the

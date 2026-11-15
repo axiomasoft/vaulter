@@ -9,7 +9,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * The dedup scope (D18 / H.3, PLAN2.D49) decides what shares one physical object:
+ * The dedup scope decides what shares one physical object:
  * tenant (tenant_id + sha256; a drive without a tenant keeps to itself), storage
  * (storage_id + sha256) or off (nothing). Nothing is shared across tenants.
  * The scope-qualified storage_key keeps two scopes from ever colliding on one

@@ -27,7 +27,7 @@ parameters:
 
         # NullPermissionDriver implements the PermissionDriver contract, whose override()
         # is ?Effect (a real driver returns null when it has no opinion). The OPEN
-        # null-driver always returns Effect::Allow by design (H.2 / D6″), so the
+        # null-driver always returns Effect::Allow by design (D6″), so the
         # concrete body never hits the null branch — but the declared type must stay
         # nullable to satisfy the interface. The over-strict return.unusedType is
         # scoped to this env-gated test-support class only.

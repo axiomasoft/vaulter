@@ -9,7 +9,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
 
 /**
- * Records `vaulter_throttled_total` for throttled package routes (P8.4 / §5.2).
+ * Records `vaulter_throttled_total` for throttled package routes.
  */
 final class RecordThrottledResponse
 {

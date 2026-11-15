@@ -7,7 +7,7 @@ arch('strict types')
     ->expect('Vaulter\Drive')
     ->toUseStrictTypes();
 
-// T11 — drive and documents are independent siblings over core: nothing under
+// Drive and documents are independent siblings over core: nothing under
 // Vaulter\Drive may reach into the documents engine. The Drive node read shape that
 // embedded the document handler descriptor moved to core (Http\Resources\Drive\
 // NodeResource) precisely so this stays true.
@@ -15,7 +15,7 @@ arch('drive never depends on documents')
     ->expect('Vaulter\Drive')
     ->not->toUse('Vaulter\Documents');
 
-// E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);
+// Declarative form kept for discoverability/grep (`toUse('App')`);
 // see the file-scan test below (and core's ArchTest.php) for why this namespace-graph
 // form cannot itself observe a real "uses" edge in this dev/test environment.
 arch('the package never depends on the host application (E5.1)')
@@ -23,7 +23,7 @@ arch('the package never depends on the host application (E5.1)')
     ->not->toUse('App');
 
 /**
- * E5.1 / F-P4.3-01 — vaulter-drive is an embeddable Laravel package: it must never
+ * Vaulter-drive is an embeddable Laravel package: it must never
  * reach into the HOST application's namespace. File scan (not
  * `expect(...)->not->toUse('App')`) because `App\*` is never an autoloadable class in
  * the package's own dev/test environment (red-before proven on core's ArchTest.php).
@@ -79,25 +79,25 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 });
 
 /**
- * ADR-0017 / VLT-REMED P4.9 + P4.10 — Canon A, Law 1 (layer-first placement).
+ * ADR-0017, Canon A, Law 1 (layer-first placement).
  *
  * `drive` was DIVERGENT: the `Uploads/` module carried its own nested layer tree
  * (`Uploads/Actions`, `Uploads/Models`, `Uploads/Repositories`, `Uploads/Http`,
  * `Uploads/Enums`, `Uploads/Data`, `Uploads/Contracts`) — a layer nested UNDER a
- * domain, the inverse of the core canon. P4.10 DISCHARGED it: those layer
+ * domain, the inverse of the core canon. The refactor discharged it: those layer
  * subtrees were dissolved into the package-root layers with an `Uploads` domain
  * sub-namespace (`Actions/Uploads`, `Models/Uploads`, `Repositories/Uploads`,
  * `Enums/Uploads`, `Data/Uploads`, `Contracts/Uploads`, `Http/<sub>/Uploads`); the
  * flat upload service classes stayed as the `Uploads/` domain-service folder
  * (mirrors `core/src/Sharing`). This test now asserts the CANON and passes GREEN;
- * the `->todo()` was removed by P4.10.
+ * the `->todo()` is gone.
  *
- * Red-before proven (P4.9): before the move, this body failed with offenders
+ * Red-before proven: before the move, this body failed with offenders
  * `Uploads/Actions`, `Uploads/Contracts`, `Uploads/Data`, `Uploads/Enums`,
  * `Uploads/Http`, `Uploads/Http/Controllers`, `Uploads/Http/Requests`,
  * `Uploads/Http/Resources`, `Uploads/Models`, `Uploads/Repositories`.
  *
- * VLT-CANON P2.3 further split the `Uploads/` domain-service folder by role:
+ * further split the `Uploads/` domain-service folder by role:
  * `*Handler`/`*Manager` orchestrators (`TusUploadHandler`, `S3MultipartHandler`,
  * `UploadSessionManager`) stayed; the pure helpers (`MagicByteSniffer`,
  * `StagedUpload`) moved to `Support/Uploads` — still outside the
@@ -154,7 +154,7 @@ arch('domain exceptions implement the HTTP problem contract')
     ->ignoring([
         // The host-role driver is missing or unknown: a configuration failure that stops boot, no endpoint answers with it.
         'Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException',
-        // A broken profile stops boot before any endpoint can respond (P2.5 configuration failure).
+        // A broken profile stops boot before any endpoint can respond (a configuration failure).
         'Vaulter\Drive\Exceptions\Profiles\InvalidProfileException',
     ]);
 

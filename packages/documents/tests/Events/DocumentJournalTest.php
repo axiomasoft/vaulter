@@ -13,7 +13,7 @@ use Vaulter\Events\EventTypeContract;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
- * Document events in the drive change journal (PLAN2.D59, D35): every content save is
+ * Document events in the drive change journal: every content save is
  * an upsert, compacted to one entry per document, whether or not it took a checkpoint;
  * content events carry no node sequence, a restore is the newest state.
  */

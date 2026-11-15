@@ -32,10 +32,10 @@ it('exposes the Vaulter facade', function (): void {
 });
 
 /*
- * F-P3.2-01 — ProfileRegistry::class was a LAZY singleton (packageRegistered() only
+ * ProfileRegistry::class was a LAZY singleton (packageRegistered() only
  * binds the closure); nothing forced it during packageBooted(), so a broken panel
  * (ADR-0009's "validated on boot" claim) surfaced only on the first real request
- * that touched a panel. Red-before-fix (D7): before this item,
+ * that touched a panel. Red-before-fix: before this item,
  * `$this->app->resolved(ProfileRegistry::class)` was FALSE right after boot — this
  * test asserts it is TRUE, without the test itself ever calling
  * app(ProfileRegistry::class) (Container::resolved() reports whether the container

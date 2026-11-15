@@ -22,7 +22,7 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// I6 with caches (D22, revision 3): `route:cache` and `config:cache` freeze what they saw. A cache built before an
+// With caches: `route:cache` and `config:cache` freeze what they saw. A cache built before an
 // activation change must never serve a module the application no longer runs, and must never hide a module it now
 // runs. The module is the third-party AcmeModule, so the cached route is a package route, not a core one.
 // The route cache is written to bootstrap/cache of the Testbench skeleton: partition skeleton_writer (-j1, a TESTBENCH_APP_BASE_PATH of its own).
@@ -139,7 +139,7 @@ it('keeps the activation of a config cache: the same graph and fingerprint, unti
         ->and($cleared->make(Kernel::class)->fingerprint())->not->toBe($fingerprint);
 });
 
-// The same cache rules on the application sets of the install matrix (P4.18, I6): a set whose top module mounts routes,
+// The same cache rules on the application sets of the install matrix: a set whose top module mounts routes,
 // route:cache built while the module was active, then the module switched off.
 
 /** @param array<string, mixed> $config */

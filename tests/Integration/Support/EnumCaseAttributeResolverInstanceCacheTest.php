@@ -7,10 +7,10 @@ use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Support\EnumCaseAttributeResolver;
 
 /*
- * P4.6 / F-P2.1-05 (Minor, D19 red-before): `EnumCaseAttributeResolver` used to
+ * `EnumCaseAttributeResolver` used to
  * carry a `private static array $cache` — a process-wide reflection-attribute
- * cache living entirely outside `Vaulter`/the facade, a literal E3.3
- * violation ("no global state besides facades"). This test proves the cache is
+ * cache living entirely outside `Vaulter`/the facade, which breaks
+ * the "no global state besides facades" rule. This test proves the cache is
  * now owned by the INSTANCE, not the class: a fresh instance never inherits
  * another instance's cached entries. On the pre-fix `static $cache`, reading the
  * static property through a second, otherwise-untouched instance returns the
@@ -32,7 +32,7 @@ it('does not share its reflection-attribute cache across instances, F-P2.1-05', 
 });
 
 /*
- * P4.6 review (Major): the binding must be `scoped()`, not `singleton()` — only
+ * Review (Major): the binding must be `scoped()`, not `singleton()` — only
  * `scoped()` resets the container's cached instance between requests/jobs on
  * Octane/queue workers (see DriveReadRepository's binding in the same
  * ServiceProvider, which relies on exactly this). `singleton()` would persist

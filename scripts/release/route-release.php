@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 /*
- * Routes a release tag and refuses before ANY publisher credential is read (D18, fail closed).
+ * Routes a release tag and refuses before ANY publisher credential is read (fail closed).
  *
  *   route-release.php --tag=TAG --sha=SHA (--evidence=FILE | --evidence-dir=DIR) [--visibility=FILE] [--root=DIR] [--github-output=FILE]
  *

@@ -12,7 +12,7 @@ use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationPolicy;
 
 /**
- * I11 / I12 coverage of the drive's operation policies (D47, knowledge p6-design#catalog), for every route of the
+ * Coverage of the drive's operation policies, for every route of the
  * package: (a) every operation name in src is in the catalog, (b) every mutating v1 route of the package is in exactly
  * one policy, (c) every route of a receipt policy reads the Idempotency-Key and no other route does, (d) every route of
  * an if_match policy is in the 428 table of IfMatchRequiredTest.

@@ -6,7 +6,7 @@ namespace Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule;
 
 /**
  * What the AcmeModule did, seen from outside the container: every runtime class of the module reports its
- * construction here, so a test proves "never resolved" instead of "no route listed" (I6).
+ * construction here, so a test proves "never resolved" instead of "no route listed".
  */
 final class AcmeProbe
 {

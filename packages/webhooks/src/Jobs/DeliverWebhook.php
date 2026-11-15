@@ -191,7 +191,7 @@ final class DeliverWebhook implements ShouldQueue
      * id, identical on every retry) and rejects a replay by timestamp. While a rotation
      * overlap lasts the header carries two signatures, the current secret's first.
      *
-     * SSRF-hardened (N2 /): the guard resolves + range-checks the
+     * SSRF-hardened: the guard resolves + range-checks the
      * URL on the delivery path and hands back the vetted IP, which is PINNED onto the
      * connection (CURLOPT_RESOLVE) so DNS cannot rebind to an internal address between
      * the check and the dial. The transport is locked to HTTP(S) and the response body
@@ -271,7 +271,7 @@ final class DeliverWebhook implements ShouldQueue
     }
 
     /**
-     * The Guzzle transport options that harden a delivery (N2): pin the vetted
+     * The Guzzle transport options that harden a delivery: pin the vetted
      * IP onto the connection, lock the protocol to HTTP(S), forbid the transport itself
      * from following a redirect (the second barrier under `withoutRedirecting()`:
      * a cURL handle that never follows Location cannot leave the pinned host even if the
@@ -388,7 +388,7 @@ final class DeliverWebhook implements ShouldQueue
         }
 
         $endpoint->forceFill(['is_active' => false, 'disabled_at' => now(), 'disabled_reason' => 'failing'])->save();
-        // A system switch-off changes the endpoint as a manual one does (CC1): its version rises under the row lock
+        // A system switch-off changes the endpoint as a manual one does: its version rises under the row lock
         // held here, so an If-Match read while it was active is stale and cannot quietly switch it back on.
         (new AggregateVersion($this->database))->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
 

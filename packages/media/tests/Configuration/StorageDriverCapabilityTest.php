@@ -8,7 +8,7 @@ use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Modules\Cardinality;
 
-// The media module owns two config-selected capabilities (knowledge/p3-modules#slots): the storage engine the
+// The media module owns two config-selected capabilities (module slots): the storage engine the
 // host picks in `vaulter-media.storage_driver` and the optional content scanner of `vaulter-drive.scan.scanner`.
 
 it('defines the storage driver as a required single capability resolved from config, Flysystem by default', function (): void {

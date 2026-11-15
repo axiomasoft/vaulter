@@ -84,7 +84,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhooksModule;
 
 /**
- * I8, proven on an independent extension: the third-party AcmeModule contributes to every slot kind through the
+ * Proven on an independent extension: the third-party AcmeModule contributes to every slot kind through the
  * public module surface only, and the kernel treats its contributions exactly like the built-in ones — a veto
  * refuses, a restriction cannot widen, an observer changes no result, a middleware calls `next` once and returns
  * its result, nothing a contribution does skips the transaction, the receipt or the outbox. Committed migrations, so
@@ -162,13 +162,13 @@ it('makes the module contract tests fail on a manifest that is not declarations 
 ]);
 
 it('uses only the module surface, the slot contracts and what their signatures name', function (): void {
-    // Until the surface is attributed (P3.17) the allowed surface is listed here: the types a manifest and a slot owner
+    // Until the surface is attributed the allowed surface is listed here: the types a manifest and a slot owner
     // use, and every type that appears in the signature of a slot the module contributes to.
     $allowed = [
         Kernel::class, Activation::class, Cardinality::class, ModuleBindings::class,
         ModuleBuilder::class, ModuleId::class, OffersModules::class, SlotKind::class,
         VaulterModule::class,
-        // The operation catalogue a module declares its operations into (D47).
+        // The operation catalogue a module declares its operations into.
         OperationPolicySource::class, OperationPolicy::class, ConcurrencyPolicy::class, IdempotencyPolicy::class,
         // Documented in the contract of the slot: the denial a DownloadGuard throws, the findings a DoctorCheck returns.
         ContentUnavailableException::class,

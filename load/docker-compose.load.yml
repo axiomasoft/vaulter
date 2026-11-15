@@ -1,10 +1,10 @@
-# VLT-LOAD P2.2 — load-test stand. Bring up: `TIER=S0 ./load/scripts/up.sh` (README.md).
+# Load-test stand. Bring up: `TIER=S0 ./load/scripts/up.sh` (README.md).
 #
-# Resource converts are `cpuset`/`mem_limit`/`memswap_limit` ONLY (reference-env.md E-1/E-5):
+# Resource converts are `cpuset`/`mem_limit`/`memswap_limit` ONLY (E-1/E-5):
 # NEVER `cpus:`/`cpu_quota` (CFS-quota parks the process mid-period => sawtooth latency,
 # unreproducible percentiles) and NEVER `deploy.resources.limits` (Swarm-only — a silently
-# inert limit is a convert that doesn't exist). Empty CPUSET_* (S0/M — reference-env.md §4.1,
-# D25) resolves to no `cpuset:` key at all (verified: `docker compose config` with an empty
+# inert limit is a convert that doesn't exist). Empty CPUSET_* (S0/M)
+# resolves to no `cpuset:` key at all (verified: `docker compose config` with an empty
 # env var drops the field, does not emit `cpuset: ""`).
 name: vaulter-load
 
@@ -335,9 +335,8 @@ services:
       timeout: 3s
       retries: 30
 
-  # Generator. Not started by `up.sh` (no k6 scripts exist yet — those are P2.4); defined
-  # here so the resource convert and depends_on chain (postgres -> app -> k6,
-  # Implementation Rules P2.2) are already correct for P2.4-P2.8 to run
+  # Generator. Not started by `up.sh`; defined here so the resource convert and the
+  # depends_on chain (postgres -> app -> k6) are already correct for the scenarios to run
   # `docker compose -f load/docker-compose.load.yml run --rm k6 <script>` against.
   k6:
     logging: *bounded-logs
@@ -349,7 +348,7 @@ services:
       K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
     volumes:
       - ./k6:/scripts:ro
-      # P2.5 — `handleSummary` (load/k6/lib/summary.js) needs somewhere writable to put
+      # `handleSummary` (load/k6/lib/summary.js) needs somewhere writable to put
       # summary.json; /scripts is deliberately :ro (scenario code is not a run artifact).
       - ./results:/results
     depends_on:

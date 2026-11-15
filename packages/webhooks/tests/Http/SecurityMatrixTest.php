@@ -18,7 +18,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * The security matrix of the webhooks' mutating routes (P6.11, knowledge p6-design#security-matrix): every route of the
+ * The security matrix of the webhooks' mutating routes: every route of the
  * package × the rows R1–R9 of the audit.
  *
  *   R1 401 without authentication              R6 a system actor without a reason is refused

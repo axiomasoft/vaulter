@@ -4,14 +4,14 @@ import crypto from 'node:crypto'
 import { closeAll, connect, eventually, pause, scene as newScene, session, stateOn, text } from '../support/live.js'
 import { receiptIds, restartHubsFromTheLog, standEnv } from '../support/stand.js'
 
-// I17 scenario 3 (collaboration#tests): two hubs, unrelated edits saved at the same time. A client sits
+// Scenario 3 (collaboration#tests): two hubs, unrelated edits saved at the same time. A client sits
 // on each hub, in the same room (Redis carries the live sync between the hubs); each types its own
 // paragraphs concurrently. The hub that holds a connection appends what that connection sent — a change
 // that arrived through Redis is never appended twice — so the log holds both sets. Then every hub is
 // killed, Redis is emptied, and the room that either hub rebuilds from the log must contain both.
 //
 // REAL processes only (docker stand: PostgreSQL, Redis, `testbench serve`, two hubs): written in
-// PLAN3, run in PLAN4 (D41) by scripts/collab-stand.sh. The race on the database side (two appends
+// Run by scripts/collab-stand.sh, outside CI. The race on the database side (two appends
 // of one generation) is tests/Concurrency/AppendRaceTest.php, a serial pgsql test.
 
 const stand = standEnv()

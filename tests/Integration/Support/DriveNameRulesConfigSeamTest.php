@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Validator;
 use Vaulter\Drive\Support\DriveNameRules;
 
 /*
- * P4.5 / F-P3.1-01/02 — DriveNameRules' length bound and separator pattern moved
+ * DriveNameRules' length bound and separator pattern moved
  * from a hardcoded constant to `config('vaulter.drive.name_rules')`; the reject
  * message moved from an inline literal to the `vaulter::validation` lang
  * namespace. These guards pin BOTH the new extensibility AND that the default
- * (unconfigured) behaviour is byte-identical to the pre-P4.5 hardcode.
+ * (unconfigured) behaviour is byte-identical to the earlier hardcode.
  */
 
 it('rejects the current default max length (255) unchanged, characterisation guard', function (): void {

@@ -1,4 +1,4 @@
-# VLT-LOAD P4.1 — memory lane overlay (use WITH docker-compose.load.yml).
+# Memory lane overlay (use WITH docker-compose.load.yml).
 # Fresh `app` per case is enforced by p4-memory.sh (compose run --rm), not by this file alone.
 name: vaulter-load
 

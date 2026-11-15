@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { fullJitterDelay, isRetryable, parseRetryAfter, RETRY_DEFAULTS, retryPolicy, withRetry } from '../src/retry.js'
 import { virtualTime } from './support/mock-backend.js'
 
-// The hub → backend retry policy (D26, protocol section): full jitter base 100 ms / cap 2 s, at most
+// The hub → backend retry policy (protocol section): full jitter base 100 ms / cap 2 s, at most
 // 5 attempts, one 10 s deadline for the series (network time included), 2 s per attempt; 429 waits
 // its Retry-After when that fits the deadline; only network/5xx/429 are repeated. Time is virtual:
 // no test waits for real.

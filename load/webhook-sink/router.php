@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Controlled webhook sink for the load stand (P6.2).
+ * Controlled webhook sink for the load stand.
  *
  * Profiles: 2xx, 500, delay (slow-under-timeout), hang (over-timeout).
  * The ledger stores event_id, profile, status, start, end and ordinal.

@@ -30,14 +30,14 @@ use Vaulter\VaulterServiceProvider;
 
 uses(TestCase::class, DatabaseMigrations::class);
 
-// D36 (P4.17): vaulter:module:uninstall executes. --force rolls back the migrations of the module's own schema paths
-// only, newest first; --purge (with --force) deletes its rows and releases its own media pins (D23) in one transaction
+// vaulter:module:uninstall executes. --force rolls back the migrations of the module's own schema paths
+// only, newest first; --purge (with --force) deletes its rows and releases its own media pins in one transaction
 // first. Refused, with nothing changed: an installed module that requires it, a foreign key of another owner's table,
 // pins of another owner on its data (the media), references it cannot read, and — without --purge — rows or pins of
 // its own. What the dry run read is read again inside the purge transaction and before each rollback (rows or pins that
 // appeared stop it, exit 1); on a transactional-DDL driver the purge and the rollbacks are one transaction (a failure
 // changes nothing, exit 1), elsewhere a failure after the purge is exit 3 (applied partially). A module's removal guard
-// (GuardsRemoval, D26 — the collaboration edits not in a checkpoint) refuses it while it names a blocker: in the dry run,
+// (GuardsRemoval — the collaboration edits not in a checkpoint) refuses it while it names a blocker: in the dry run,
 // in the purge transaction and before each rollback (the fixture GuardedModule). The suite application is
 // core+media+drive+webhooks; the sets without webhooks or with documents are fresh applications that start from an empty
 // database: their own in-memory one on SQLite, the wiped suite database on a server engine (restored after the test).

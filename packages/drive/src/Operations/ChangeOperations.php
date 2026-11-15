@@ -38,7 +38,7 @@ use Vaulter\Support\Identity;
 
 /**
  * The change journal of a drive as one reader sees it. A syncing
- * client first takes startCursor() (C0), only then lists the drive, and from then on
+ * client first takes startCursor(), only then lists the drive, and from then on
  * applies list() pages from C0 instead of listing again: changes made while
  * it listed are caught up by the feed.
  *
@@ -69,7 +69,7 @@ final readonly class ChangeOperations
     ) {}
 
     /**
-     * A cursor at the end of the journal (C0): list() from it returns what changes next.
+     * A cursor at the end of the journal: list() from it returns what changes next.
      * The head is created and committed first, then the drive is authorized afresh and
      * the head read FOR SHARE in a short transaction of its own, so a cursor never points
      * behind a head that a rollback could still take away.

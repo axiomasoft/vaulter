@@ -8,7 +8,7 @@ use Vaulter\Http\Problems\Retryable;
 
 require_once __DIR__.'/ProblemCatalogHelpers.php';
 
-// D25 (architecture#errors, ревизия 3): a refusal of authentication, visibility, validation, precondition, rate,
+// Architecture#errors: a refusal of authentication, visibility, validation, precondition, rate,
 // dependency or the kernel is rolled back with the idempotency claim and never cached; a misclassified code would
 // replay a 403/404 for 24 hours.
 

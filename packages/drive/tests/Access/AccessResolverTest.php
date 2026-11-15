@@ -15,7 +15,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\RoleStubDriver;
 
 /**
- * The 1.0 effective-access algorithm (PLAN2.D45). Every clause gets one focused
+ * The 1.0 effective-access algorithm. Every clause gets one focused
  * row: direct grant, inherited subtree grant, inheritance boundary, union of roles
  * across grants and the host role lane, read-time expiry, the drive boundary and
  * the host override in both directions. The Database driver runs standalone (no
@@ -267,7 +267,7 @@ it('gives each role exactly its abilities', function (
 ]);
 
 it('applies a subtree grant below a boundary to everything under it', function (): void {
-    // Formerly F-P1.1-01: a nearer allow pierces a deny sitting ON the wall.
+    // A nearer allow pierces a deny sitting ON the wall.
     $storage = AccessTestHelpers::storage();
     $top = AccessTestHelpers::folder($storage, null, 'top');
     $wall = AccessTestHelpers::folder($storage, $top, 'wall', inheritGrants: false);
@@ -292,7 +292,7 @@ it('AccessResolver docblocks no longer claim an un-overridable wall, F-P1.1-01',
 });
 
 it('explain() lists every applying role with its origin and the boundary that stopped the walk', function (): void {
-    // Formerly F-P1.1-02: the deciding ACE chain for a deny-vetoed ability.
+    // The deciding ACE chain for a deny-vetoed ability.
     $storage = AccessTestHelpers::storage();
     $top = AccessTestHelpers::folder($storage, null, 'top');
     $parent = AccessTestHelpers::folder($storage, $top, 'parent', inheritGrants: false);

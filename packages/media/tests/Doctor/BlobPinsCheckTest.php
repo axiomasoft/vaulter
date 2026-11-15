@@ -13,7 +13,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The media doctor prints the pins per owner type (D23, P8) and warns about the owners whose module is not active:
+ * The media doctor prints the pins per owner type and warns about the owners whose module is not active:
  * their pins stay and keep their blobs, and only the owner's own purge or rollback may release them.
  */
 

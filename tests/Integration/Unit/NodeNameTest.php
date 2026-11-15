@@ -6,7 +6,7 @@ use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Integration\Tests\TestCase;
 
-// The base rules every name policy builds on; nothing is trimmed (PLAN2.D39).
+// The base rules every name policy builds on; nothing is trimmed.
 uses(TestCase::class);
 
 it('normalizes a valid name', function (string $given, string $expected): void {

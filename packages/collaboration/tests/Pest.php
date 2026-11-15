@@ -17,7 +17,7 @@ uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collabora
 // of wrapping it in one, which would hide the difference.
 uses(CollaborationEnabledTestCase::class, DatabaseMigrations::class)->in('Restore');
 
-// A managed drain waits for the hub outside any transaction and an uninstall rolls the migrations back (P5.6): these
+// A managed drain waits for the hub outside any transaction and an uninstall rolls the migrations back: these
 // migrate per test as well. The raw disable leaves the module off (its default) and drains nothing either.
 uses(CollaborationEnabledTestCase::class, DatabaseMigrations::class)->in('Disable/ManagedDrainTest.php', 'Disable/UninstallGuardTest.php');
 uses(TestCase::class, DatabaseMigrations::class)->in('Disable/RawDisableTest.php');

@@ -9,7 +9,7 @@ use RuntimeException;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 
 /**
- * P4.2 — isolated CAS stage probe (CLI process, not FPM).
+ * Isolated CAS stage probe (CLI process, not FPM).
  */
 final class ProbeCasStageMemoryCommand extends Command
 {

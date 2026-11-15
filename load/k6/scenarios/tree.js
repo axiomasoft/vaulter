@@ -1,10 +1,10 @@
-// VLT-LOAD P2.4 — tree/navigation mix (OP-12 children, OP-13 shared, OP-14 search,
+// Tree/navigation mix (OP-12 children, OP-13 shared, OP-14 search,
 // OP-15 trash listing, OP-16/19/20/21/22/23/24 a self-contained create→rename→move→
 // copy→trash→restore→forceDelete lifecycle). Reads run as the MANY-GRANT actor
-// (operations-catalog.md L-06 — NodeReadRepository::candidateNodeIds() N-CTE
+// (L-06 — NodeReadRepository::candidateNodeIds() N-CTE
 // fan-out — the actor whose grant-anchor count actually exercises it) as well as the
 // plain reader; writes run as the seed owner (the only actor with Create/Edit/Move/
-// Share on the tree, P2.3 seedGrants — Reader-level grants cannot mutate).
+// Share on the tree, seedGrants — Reader-level grants cannot mutate).
 import { check } from 'k6';
 import { TIER, VUS_INTERACTIVE, DURATION, thinkTime } from '../lib/config.js';
 import {
@@ -34,7 +34,7 @@ export function setup() {
 function readMix() {
   // many-grant actor exercises L-06's N-CTE fan-out; the plain reader is the baseline
   // to compare it against — both listings/search share the same request shape. The
-  // many-grant actor's Reader grants (P2.3 seedGrants) sit on its OWN anchor subtrees,
+  // many-grant actor's Reader grants (seedGrants) sit on its OWN anchor subtrees,
   // NOT on root — listing root as that actor is a legitimate 403 (no grant there), not
   // the fan-out this scenario means to exercise.
   const asManyGrant = Math.random() < 0.5;
@@ -106,7 +106,7 @@ function writeLifecycle() {
 }
 
 export function run() {
-  // Reads dominate the mix (operations-catalog.md: OP-12/OP-18 "Высокая"); the write
+  // Reads dominate the mix (OP-12/OP-18 "Высокая"); the write
   // lifecycle is the low-frequency mutation tail.
   if (Math.random() < 0.7) {
     readMix();

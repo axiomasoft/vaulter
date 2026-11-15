@@ -15,7 +15,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Tests\Schema\ForceCreates;
 
 /**
- * The v_node_shares schema (§2.7 / M2c): every column exists, the token_hash is
+ * The v_node_shares schema: every column exists, the token_hash is
  * UNIQUE, and a row stores the hash — never the raw token.
  */
 it('creates the v_node_shares table with every §2.7 column', function (): void {

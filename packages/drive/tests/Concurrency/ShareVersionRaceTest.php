@@ -24,10 +24,10 @@ use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
- * CC1 on real backends (knowledge p6-design#invariants, «мешающие пары»): two writers that read the same version of an
+ * On real backends («мешающие пары»): two writers that read the same version of an
  * aggregate race; the row lock serialises them and the second one's `UPDATE … WHERE version = ?` (or its comparison
  * under the lock) refuses it with stale_write. Exactly one lands, the version rises by one. PostgreSQL/MySQL only
- * (ForkRace); classified serial + database, run in PLAN4.
+ * (ForkRace); classified serial + database.
  */
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);

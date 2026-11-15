@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Modules\RemovalGuard;
 
 /**
- * The collaboration module refuses its removal while a document carries a pending marker (C10): those saved edits
+ * The collaboration module refuses its removal while a document carries a pending marker: those saved edits
  * live only in the log `vaulter:module:uninstall collaboration --purge` would delete. `vaulter:collaboration:drain`
  * checkpoints them first. It reads the documents' markers through their state contract, never a table of its own, so it
  * answers for an inactive module too (the module is switched off before its removal) and between its rollbacks.

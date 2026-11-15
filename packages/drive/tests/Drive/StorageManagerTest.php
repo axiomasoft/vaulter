@@ -15,7 +15,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
  * Vaulter::drive($entity) get-or-creates the storage idempotently and provisions a
- * root folder node (§2.1). The polymorphic owner triple is the idempotency key.
+ * root folder node. The polymorphic owner triple is the idempotency key.
  */
 it('создаёт storage и корневую папку при первом обращении', function (): void {
     $host = DriveTestHelpers::host();
@@ -47,7 +47,7 @@ it('идемпотентен: второе обращение возвращае
 });
 
 // Разведение storage по панелям переехало в StoragePanelSeparationTest: панель обязана быть
-// в конфиге ДО boot'а (ProfileRegistry резолвится в packageBooted с P4.4) — см. PanelTestCase.
+// в конфиге ДО boot'а (ProfileRegistry резолвится в packageBooted) — см. PanelTestCase.
 
 it('применяет дефолтный диск из конфига к новому storage', function (): void {
     config()->set('vaulter-media.disk', 'spaces');

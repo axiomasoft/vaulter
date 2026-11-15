@@ -6,16 +6,16 @@ use Illuminate\Support\Facades\Schema;
 use Vaulter\Drive\Configuration\DriveConfig;
 
 /**
- * F-P4.1-01 / F-P4.1-02 (VLT-REMED P4.3, batch B16) — schema green guard, no
- * behaviour delta (D19): the hot-path index shape the drive schema emits (and
+ * Schema green guard, no
+ * behaviour delta: the hot-path index shape the drive schema emits (and
  * the 2026_07_11_000001 upgrade migration repairs on a pre-fix database) must
  * carry the (trashed_at) scan index PurgeTrashCommand's predicate needs, and
  * must NOT carry the three indexes whose column set duplicates/prefixes another
- * index already on the same table (findings/P4.1-query-indexes.md §0/C7).
+ * index already on the same table.
  *
- * Red-before (F-P4.1-01): before this item, `v_nodes` carried no index with
+ * Red-before: before this item, `v_nodes` carried no index with
  * `columns === ['trashed_at']` — the first assertion below failed. Red-before
- * (F-P4.1-02): before this item, `v_nodes` carried `['drive_id','parent_id']`
+ * Before this fix, `v_nodes` carried `['drive_id','parent_id']`
  * as its OWN index (inline, alongside the composite), `v_blobs` carried
  * `['status']` as its own index (inline, alongside `_gc_idx`), and `v_activity`
  * carried TWO indexes with `columns === ['created_at']` (the inline one and

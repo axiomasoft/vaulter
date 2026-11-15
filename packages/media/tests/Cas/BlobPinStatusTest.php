@@ -19,7 +19,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The pin protocol (D23, P2): a committed blob is pinned; a tombstoned one only while its object exists
+ * The pin protocol: a committed blob is pinned; a tombstoned one only while its object exists
  * and is then committed again; a pending, deleting or deleted one never. A refusal is blob_unavailable and a caller that holds
  * the bytes recovers by committing them again.
  */

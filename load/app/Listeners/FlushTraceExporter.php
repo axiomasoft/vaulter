@@ -13,7 +13,7 @@ use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Load\Observability\OpenTelemetryTraceRecorder;
 
 /**
- * Bounded forceFlush on every request, job and command terminal hook (P8.11 / §20.5).
+ * Bounded forceFlush on every request, job and command terminal hook.
  * Flush failure stays inside the recorder and does not change the business result.
  */
 final class FlushTraceExporter

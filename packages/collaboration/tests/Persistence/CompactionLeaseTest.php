@@ -14,7 +14,7 @@ use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Drive\Models\Node;
 
 /*
- * Scenario 19 (C12): the backend leases a document generation to the hub's compaction worker only while it is the
+ * Scenario 19: the backend leases a document generation to the hub's compaction worker only while it is the
  * document's current one, open, and carries uncheckpointed edits that reached a trigger (500 updates, 1 MiB, 10 min by
  * default) or a drain request — drain requests first. A lease another hub holds is not handed out again before it
  * expires; a lease gives no right to append. The worker's calls carry the body signature, not a room token.

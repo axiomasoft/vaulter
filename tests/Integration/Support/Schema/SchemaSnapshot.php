@@ -8,7 +8,7 @@ use Illuminate\Database\Connection;
 use RuntimeException;
 
 /**
- * The raw catalog oracle of the installed schema (PLAN3.P1.10): what the engine itself reports for every
+ * The raw catalog oracle of the installed schema: what the engine itself reports for every
  * table, column, index and constraint, as plain text. Schema::getColumns()/getIndexes() are deliberately not
  * used — they drop partial predicates, expressions, collations, generated expressions and constraint options.
  *

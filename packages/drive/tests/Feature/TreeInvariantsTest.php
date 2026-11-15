@@ -28,7 +28,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * The tree invariants (D13): every parent is a live folder of the same drive, the
+ * The tree invariants: every parent is a live folder of the same drive, the
  * root is never an operand, only the root has no parent, and deletion goes through
  * the trash. Exercised through the PHP API and the REST surface.
  */

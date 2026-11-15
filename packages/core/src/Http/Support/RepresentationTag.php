@@ -38,7 +38,7 @@ final class RepresentationTag
     }
 
     /**
-     * The tag of an aggregate that carries its own version (CC2): a share link, the access of a node (its
+     * The tag of an aggregate that carries its own version: a share link, the access of a node (its
      * grants and inheritance), a drive. Nothing caller-specific changes what a write of it may assume, so the tag is
      * the kind, the id and the version; the kind keeps the tags of different aggregates with one id apart.
      */

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Testing\Support\TestGroups;
 
 /*
- * The test groups of PLAN3 P1.5 (database, serial, extended, stand, engine:*): every suite declares them in <tests>/groups.php,
+ * The test groups (database, serial, extended, stand, engine:*): every suite declares them in <tests>/groups.php,
  * TestGroups turns them into Pest groups, tests/zones.json repeats the database list for `scripts/t --changed --db`, and
  * scripts/t selects by them. Everything here is read-only: files, `pest --list-tests` and `scripts/t --dry-run`.
  */
@@ -150,7 +150,7 @@ it('puts the load suite in stand and nothing else, with no scale test moved with
         expect(g_declared($suite)['stand'] ?? [])->toBe([], "$suite must not hold stand tests: external services belong to the load/stand suite");
     }
 
-    // `extended` stays empty until a scale test has a cheap same-defect equivalent on the PR lane (classification.md, Extended).
+    // `extended` stays empty until a scale test has a cheap same-defect equivalent on the PR lane.
     foreach (array_keys(g_suites()) as $suite) {
         expect(g_declared($suite)['extended'] ?? [])->toBe([], "$suite: a test enters extended only together with its documented cheap equivalent");
     }

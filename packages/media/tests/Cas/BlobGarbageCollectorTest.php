@@ -11,7 +11,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Two-phase, race-safe GC (H.3): mark unreferenced committed blobs as tombstoned
+ * Two-phase, race-safe GC: mark unreferenced committed blobs as tombstoned
  * (grace deadline), then sweep tombstoned blobs past grace to a physical delete.
  * A referenced blob is never touched; a concurrent re-commit resurrects a
  * tombstone before the sweep can delete it.
@@ -108,7 +108,7 @@ it('воскрешение: коммит на tombstoned-блоб разтомб
     ])->save();
 
     // A concurrent upload of the SAME bytes arrives. It must un-tombstone, not
-    // create a second row (this is what makes online GC safe — H.3).
+    // create a second row (this is what makes online GC safe).
     $resurrected = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('phoenix'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     expect($resurrected->getKey())->toBe($blob->getKey())

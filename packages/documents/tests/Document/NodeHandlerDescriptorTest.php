@@ -16,9 +16,9 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * The presentation embedded in the node payload (§4.5 / §5 / M4a): the client routes a
+ * The presentation embedded in the node payload: the client routes a
  * node to the right editor/preview/download surface from it — with no mime logic on
- * the client. A document is presented by its document type (PLAN2.P4.3), a file by
+ * the client. A document is presented by its document type, a file by
  * its file handler.
  */
 it('presents a document node by its document type, not by a file handler', function (): void {

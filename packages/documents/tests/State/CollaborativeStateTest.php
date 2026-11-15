@@ -20,7 +20,7 @@ use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /*
- * The state contract of the realtime transport (D26, D27): lock() in the T → N → D order, the pending-state marker
+ * The state contract of the realtime transport: lock() in the T → N → D order, the pending-state marker
  * (generation, through_seq) set by markPending() and cleared only by a covering publishCheckpoint(), the CAS of a
  * publication, and the CHECK that keeps the marker whole. SQLite runs transactions one at a time, so the race of an
  * append against a publication is played here by a deterministic interleaving; PendingMarkerRaceTest races it on

@@ -11,9 +11,9 @@ use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /*
- * VLT-CANON P0.5 (L4/L5): capabilities are an OPEN axis set — a handler that declares
+ * Capabilities are an OPEN axis set — a handler that declares
  * only the flags it knows still resolves and serialises with the full, stable key set.
- * The content's SHAPE is not a capability (PLAN2.P4.3 removed `richText`): a document's
+ * The content's SHAPE is not a capability (`richText` is gone): a document's
  * type decides it, so the client-facing array carries no `rich_text` key.
  */
 it('serialises the stable capability keys and no content-shape flag', function (): void {

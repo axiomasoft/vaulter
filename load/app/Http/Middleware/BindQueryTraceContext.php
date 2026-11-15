@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Load\Observability\QueryTraceRecorder;
 
 /**
- * Binds HTTP operation context for {@see QueryTraceRecorder} (P3.1).
+ * Binds HTTP operation context for {@see QueryTraceRecorder}.
  */
 final readonly class BindQueryTraceContext
 {

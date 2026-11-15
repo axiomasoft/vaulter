@@ -13,7 +13,7 @@ use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Documents\State\PendingStateDrainer;
 
 /**
- * The documents' PendingStateDrainer on the hub (C8, C9): PHP does not merge Yjs, so a drain asks the hub's compaction
+ * The documents' PendingStateDrainer on the hub: PHP does not merge Yjs, so a drain asks the hub's compaction
  * worker for a checkpoint and waits for it. A short transaction of its own sets drain_requested_at, which makes the
  * generation the first the next compaction lease hands out; then, outside any transaction, the {@see DrainWaiter} polls
  * the document's marker until it is gone or `vaulter-collaboration.drain.restore_deadline` passed.

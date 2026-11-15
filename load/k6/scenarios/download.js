@@ -1,4 +1,4 @@
-// VLT-LOAD P2.4 — download (OP-08 current version, OP-09 a specific version, OP-10
+// Download (OP-08 current version, OP-09 a specific version, OP-10
 // public share-link). Bodies are ALWAYS discarded (RAG-10 / Implementation Rules):
 // throughput comes from the known file size and `res.timings`, never from an
 // accumulated response body.
@@ -22,7 +22,7 @@ export const options = {
 
 /**
  * Discovery — ONCE per run (not per iteration): a pool of confirmed byte-backed file
- * node ids (harness.md §3 / P2.3 §2.2 hot vs metadata-only blobs), plus one bootstrap
+ * node ids (hot vs metadata-only blobs), plus one bootstrap
  * share token for OP-10 (see lib/discovery.js — the manifest carries no token).
  */
 export function setup() {

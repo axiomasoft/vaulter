@@ -16,11 +16,11 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * The transactional outbox stages INSIDE the mutation transaction (§2.11 / C05), not
+ * The transactional outbox stages INSIDE the mutation transaction, not
  * on the after-commit boundary — so there is no crash window between the mutation's
  * commit and the outbox write, a rolled-back mutation drops the staged row too, and a
  * failed outbox write rolls the mutation back instead of committing it without its
- * event. The outbox is written whatever modules are active (D29).
+ * event. The outbox is written whatever modules are active.
  */
 beforeEach(function (): void {
     $storage = AccessTestHelpers::storage();
@@ -61,7 +61,7 @@ it('rolls the staged outbox row back when the mutation transaction rolls back', 
 });
 
 it('lets a staging failure leave the transaction so nothing of the occurrence commits', function (): void {
-    // Before C05 a savepoint swallowed this failure and the mutation committed without
+    // A savepoint used to swallow this failure and the mutation committed without
     // its outbox row. Now the failure propagates and rolls everything back.
     WebhookTestHelpers::failOutboxInsert();
 

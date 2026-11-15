@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Media\Configuration\MediaConfig;
 
-/** Public typed configuration API introduced by P2.5; UPDATE_SNAPSHOT is local-only. */
+/** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
 test('vaulter-media configuration API matches the frozen golden (P2.5)', function (): void {
     $reflection = new ReflectionClass(MediaConfig::class);
     $methods = [];

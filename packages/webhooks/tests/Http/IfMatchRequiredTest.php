@@ -10,7 +10,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * Every route that changes an existing endpoint — update, deactivation, secret rotation, deletion (D47, I12) — refuses to
+ * Every route that changes an existing endpoint — update, deactivation, secret rotation, deletion — refuses to
  * run blind: without If-Match, or with `*` (which matches anything), it answers 428 and changes nothing; a stale tag is a
  * 412 stale_write; a caller who may not manage endpoints is answered 403 before any precondition.
  */

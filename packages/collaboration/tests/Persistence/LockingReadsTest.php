@@ -16,7 +16,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Node;
 
 /*
- * C1–C3 on MySQL (REPEATABLE READ): the transaction of an append or a load begins with a plain read (the node, in
+ * On MySQL (REPEATABLE READ) the transaction of an append or a load begins with a plain read (the node, in
  * CollaborativeState::lock()), which fixes its snapshot. Every read of the log and the document after the locks must be a
  * locking read, or it answers from that older snapshot: a load would report a head without its tail, and a retry of an
  * update id committed meanwhile would miss its receipt. On MySQL the statements are read as the server receives them;

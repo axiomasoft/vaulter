@@ -22,13 +22,13 @@ use Vaulter\Http\Support\Preconditions;
 use Vaulter\Http\Support\RepresentationTag;
 
 /**
- * The entity tags of the drive aggregates with a version of their own (CC2) and what a conditional write of one
+ * The entity tags of the drive aggregates with a version of their own and what a conditional write of one
  * expects: the access of a node (`grants.index`, its grants and inheritance), a share link, a drive.
  *
  * As for nodes ({@see NodeResponses::expectedSequence()}), the If-Match header is compared only after the resource was
  * found as this caller (404) and the caller was seen to hold the ability the write needs (403); then it is required
  * (428 without it or with `*`) and must equal the current tag (412 stale_write). The version it names is what the
- * operation compares again under the aggregate's row lock (CC1), so this check only answers earlier.
+ * operation compares again under the aggregate's row lock, so this check only answers earlier.
  *
  * On the route of a receipt operation a retry under its Idempotency-Key repeats the If-Match of the first request,
  * stale once that one committed (and a revoked grant's node may be gone from the caller's view since): with a key the

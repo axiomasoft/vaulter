@@ -30,7 +30,7 @@ foreach (json_decode((string) file_get_contents(__DIR__.'/zones.json'), true, fl
     }
 }
 
-// Test groups (P1.5): `database` (+ `database:<zone>`), `serial`, `extended`, `stand` and the engine-only `engine:*`, declared in
+// Test groups: `database` (+ `database:<zone>`), `serial`, `extended`, `stand` and the engine-only `engine:*`, declared in
 // <tests>/groups.php of the core suite and of the load suite. The core zone of a `database` path is the leaf zone whose tests[]
 // contains it; the other packages bind their own groups from their own Pest.php (a split package has no tests/zones.json).
 TestGroups::bind($core, static function (string $path) use ($leafZones): string {
@@ -46,7 +46,7 @@ TestGroups::bind($core, static function (string $path) use ($leafZones): string 
 });
 TestGroups::bind(dirname(__DIR__).'/load/tests', 'load');
 
-// Drive + Uploads suites moved to the vaulter-drive package (P2 #5 / ADR-0015, D1);
+// Drive + Uploads suites moved to the vaulter-drive package (ADR-0015);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
 uses(OpenApiTestCase::class)->in(dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiDocumentTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiExamplesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiProblemsTableTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiRouteCoverageTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidationEnabledTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidatorSelfTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/RouteListSnapshotTest.php');
@@ -54,9 +54,8 @@ uses(OpenApiTestCase::class)->in(dirname(__DIR__).'/tests/Integration/OpenApi/Op
 uses(TestCase::class)->in(dirname(__DIR__).'/packages/core/tests/Http/PreconditionsTest.php', dirname(__DIR__).'/packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php', dirname(__DIR__).'/packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php');
 uses(Vaulter\Integration\Tests\TestCase::class)->in(dirname(__DIR__).'/tests/Integration/Http/CrossTenantV1Test.php', dirname(__DIR__).'/tests/Integration/Http/HttpKernelV1Test.php', dirname(__DIR__).'/tests/Integration/Http/LegacyRoutesRemovedTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ErrorsReferenceTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/HostRouteUntouchedTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemCatalogLangTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemMetaRedactionTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemRendererTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemSpecRulesTest.php', dirname(__DIR__).'/tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php');
 
-// Database-free (P1.5): these files run on the booted application without a schema. A file joins this list only after it
-// stays green under WithoutDatabaseSchema (a test that reaches the database fails there) — see
-// plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
+// Database-free: these files run on the booted application without a schema. A file joins this list only after it
+// stays green under WithoutDatabaseSchema (a test that reaches the database fails there).
 uses(WithoutDatabaseSchema::class)->in(dirname(__DIR__).'/packages/core/tests/Arch/CommandNamingTest.php', dirname(__DIR__).'/packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php', dirname(__DIR__).'/packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php');
 uses(WithoutDatabaseSchema::class)->in(dirname(__DIR__).'/tests/Integration/Http/Problems/ErrorsReferenceTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/HostRouteUntouchedTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemCatalogLangTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemMetaRedactionTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemRendererTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemSpecRulesTest.php', dirname(__DIR__).'/tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php', dirname(__DIR__).'/tests/Integration/Unit/NodeNameTest.php');
 
@@ -73,10 +72,10 @@ uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirn
 uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Schema/BlobDedupIndexTest.php', dirname(__DIR__).'/tests/Integration/Schema/CanonicalSchemaTest.php', dirname(__DIR__).'/tests/Integration/Schema/HotPathIndexesTest.php', dirname(__DIR__).'/tests/Integration/Schema/KeyColumnTypesTest.php', dirname(__DIR__).'/tests/Integration/Schema/SchemaSnapshotTest.php');
 
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit
-// tests) moved to the vaulter-documents package (P2 #5 / ADR-0015, D2); they run under
+// tests) moved to the vaulter-documents package (ADR-0015); they run under
 // that package's own Pest suite.
 
-// The ForkRace harness (P0.2): forked children race on their OWN PostgreSQL
+// The ForkRace harness: forked children race on their OWN PostgreSQL
 // connections, so fixtures must be committed — DatabaseMigrations, not
 // RefreshDatabase (its wrapping transaction is invisible to another connection).
 uses(TestCase::class, DatabaseMigrations::class)->in(dirname(__DIR__).'/packages/core/tests/Concurrency/ForkRaceTest.php');

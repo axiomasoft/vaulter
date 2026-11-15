@@ -24,7 +24,7 @@ use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * RevisionRetentionPolicy (PLAN2.D48, P4-I19): the pruning never deletes the head or a
+ * RevisionRetentionPolicy: the pruning never deletes the head or a
  * pinned revision, respects the minimum non-current age, keeps the newest
  * maxNoncurrentRevisions unpinned non-current revisions, deletes those older than
  * maxNoncurrentAgeDays, and releases their bytes from the quota.

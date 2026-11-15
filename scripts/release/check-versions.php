@@ -148,7 +148,7 @@ foreach (RELEASE_KINDS as $kind) {
     }
 }
 
-// D17: the declared wire/state tuples equal what the runtime code announces, accepts and produces.
+// The declared wire/state tuples equal what the runtime code announces, accepts and produces.
 $declared = $manifest['compatibility']['collaboration'] ?? null;
 $runtime = runtimeWireState($root);
 if (!is_array($declared)) {

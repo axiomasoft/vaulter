@@ -30,7 +30,7 @@ function documentEventsCount(string $model): array
 {
     $column = $model === Activity::class ? 'verb' : 'type';
 
-    // The outbox holds every occurrence (D29); the ones that leave the process are the external ones.
+    // The outbox holds every occurrence; the ones that leave the process are the external ones.
     $query = $model::query()->toBase()->where(static fn ($q) => $q->where($column, 'like', 'document.%')->orWhere($column, 'like', 'comment.%'));
     if ($model === OutboxEvent::class) {
         $query->where('external', true);

@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-// D15: `src/api` stays framework-free so it can later be split out as `@vaulter/client`
+// `src/api` stays framework-free so it can later be split out as `@vaulter/client`
 // without a rewrite. It may import only itself and framework-neutral npm packages: no Vue,
 // no editor/realtime stack, no other `src/` folder. Type-only imports count as well.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')

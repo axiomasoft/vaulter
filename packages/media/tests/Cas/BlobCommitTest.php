@@ -13,7 +13,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Support\Identity;
 
 /**
- * The content-addressed commit flow (H.3): stage → hash the staged file →
+ * The content-addressed commit flow: stage → hash the staged file →
  * find-or-create by the per-scope dedup key → promote bytes only on a newly
  * created row. Server-recompute beats any client claim; dedup yields ONE row and
  * ONE physical object for identical bytes.
@@ -65,7 +65,7 @@ it('дедуп: одинаковые байты дважды → ОДНА стр
 
     expect(Storage::disk('local')->allFiles())->toHaveCount(1);
 
-    // ref_count is NOT bumped synchronously (H.3) — it stays 0 until reconciliation.
+    // ref_count is NOT bumped synchronously — it stays 0 until reconciliation.
     expect($first->fresh()->ref_count)->toBe(0);
 
     // Reconciliation rebuilds ref_count to the edge total (2).

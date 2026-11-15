@@ -10,7 +10,7 @@ use JsonException;
 use RuntimeException;
 
 /**
- * P6.2 disposable queue fixtures and post-run delivery/job/sink integrity.
+ * Disposable queue fixtures and post-run delivery/job/sink integrity.
  */
 final class PrepareQueueFixturesCommand extends Command
 {

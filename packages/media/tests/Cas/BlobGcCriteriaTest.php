@@ -15,11 +15,11 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The GC criteria of D23 (p6-design#gc-scrub), the deterministic half of I18: a blob is deleted only without a pin,
+ * The GC criteria, the deterministic half of the GC race tests: a blob is deleted only without a pin,
  * as a tombstone past its deadline or as a pending row past the orphan grace; a digest recorded with another size
  * refuses the ingest; a pin of a pending row is refused, never lost; the same bytes in two scopes are two blobs; and
  * pins of a disabled or absent module keep their bytes. The concurrent half is
- * packages/drive/tests/Concurrency/GcNewRevisionRaceTest.php and PinSweepRaceTest.php (pgsql, PLAN4).
+ * packages/drive/tests/Concurrency/GcNewRevisionRaceTest.php and PinSweepRaceTest.php (pgsql).
  */
 
 beforeEach(function (): void {

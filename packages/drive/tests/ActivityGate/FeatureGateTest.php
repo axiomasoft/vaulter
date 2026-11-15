@@ -8,7 +8,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The 'activity' feature gate (§2.9). Booted with the feature OFF
+ * The 'activity' feature gate. Booted with the feature OFF
  * (ActivityDisabledTestCase), the EventRecorder skips the activity sink, so the
  * feed stays empty while the Drive operations still succeed.
  */

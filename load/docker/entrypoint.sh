@@ -1,5 +1,5 @@
 #!/bin/sh
-# VLT-LOAD P2.2 — SUT entrypoint: render the FPM pool for this tier, migrate against
+# SUT entrypoint: render the FPM pool for this tier, migrate against
 # Postgres DIRECTLY (bypassing PgBouncer — transaction-mode pooling and DDL/prepared-
 # statement reuse don't mix, a well-known PgBouncer caveat; request-serving below still
 # goes through DB_HOST=pgbouncer as set by docker-compose.load.yml), then run nginx+fpm.

@@ -6,14 +6,14 @@ use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
 
 /**
- * The change cursor, format 2 (PLAN4.D20): an opaque position bound to tenant, drive,
+ * The change cursor, format 2: an opaque position bound to tenant, drive,
  * typed principal and key generation, signed with the cursor.v2 subkey. Any change to
  * its bytes, a token signed with another subkey, a format 1 token or a payload of another
  * shape is invalid_cursor.
  */
 const CHANGE_CURSOR_APP_KEY = 'base64:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=';
 
-/** HMAC-SHA256(K, lp("vaulter.changes.cursor.v2")) for the key above, from knowledge/examples-p4-p5#sync-key-bytes. */
+/** HMAC-SHA256(K, lp("vaulter.changes.cursor.v2")) for the key above, computed independently. */
 const CHANGE_CURSOR_SUBKEY_HEX = '9cbfcd8ce2ecccf20c57c0abd050f4ad44196ea77690f666c119fbf3ab70640b';
 
 function changeCursorV2Sign(array $payload, ?string $subkey = null): string

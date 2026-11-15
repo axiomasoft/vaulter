@@ -10,9 +10,9 @@ use Vaulter\Inventory\Surface;
 require_once dirname(__DIR__).'/lib/Surface.php';
 
 /**
- * packages/<p>/tests/Arch/__snapshots__/surface.txt: the supported surface of each package (D27), read from the
+ * packages/<p>/tests/Arch/__snapshots__/surface.txt: the supported surface of each package, read from the
  * #[Api], #[Spi] and #[Internal] attributes of packages/<p>/src, and beside it surface.json, the versioned structural view
- * of the same reading for the BC check (P6.2). `--check` is red on any difference of either, so a change of the surface is
+ * of the same reading for the BC check. `--check` is red on any difference of either, so a change of the surface is
  * a visible change of a committed file.
  */
 return new class implements Generator

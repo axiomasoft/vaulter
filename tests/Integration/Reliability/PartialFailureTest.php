@@ -30,7 +30,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * Single-process partial-failure fixtures (PLAN4 P5.7, audit §21.3): the event is committed, the delivery stage fails
+ * Single-process partial-failure fixtures: the event is committed, the delivery stage fails
  * once, and the next relay pass really runs and converges. Process-kill, PostgreSQL and Redis races are not proven here;
  * docs/reference/concurrency.md classifies them as serial+database/stand.
  */

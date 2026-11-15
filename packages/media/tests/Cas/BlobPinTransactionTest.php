@@ -10,7 +10,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * A pin belongs to the transaction that writes its owner row (D23): outside a VaulterDatabase transaction every
+ * A pin belongs to the transaction that writes its owner row: outside a VaulterDatabase transaction every
  * mutation is a LogicException and writes nothing. Committed migrations (no wrapping test transaction), so the
  * connection really is at level 0.
  */

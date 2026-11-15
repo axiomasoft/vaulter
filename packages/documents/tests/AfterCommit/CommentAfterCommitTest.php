@@ -20,7 +20,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
- * PLAN2.F15: comment events leave an Action as part of its unit of work — their
+ * Comment events leave an Action as part of its unit of work — their
  * activity and outbox rows commit with it — and are delivered after the OUTERMOST
  * commit. Runs without the fixture's wrapping
  * transaction (DatabaseMigrations), so "committed" is a real commit.

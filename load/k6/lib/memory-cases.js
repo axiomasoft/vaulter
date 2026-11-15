@@ -1,4 +1,4 @@
-// P4.2 — 15-cell memory path matrix (5 paths × 3 sizes).
+// 15-cell memory path matrix (5 paths × 3 sizes).
 export const MEMORY_PATHS = [
   { path_id: 'tus_final_patch', op: 'OP-02', ceiling_mib: 64, protocol: 'tus' },
   { path_id: 's3_putpart', op: 'OP-06', ceiling_mib: 160, protocol: 's3' },
@@ -46,7 +46,7 @@ export function memoryMatrixCells() {
   return cells;
 }
 
-/** P4.3 execution order: all paths at 5MiB, then 500MiB, then 5GiB. */
+/** Execution order: all paths at 5MiB, then 500MiB, then 5GiB. */
 export function memoryMatrixExecutionOrder() {
   const byId = Object.fromEntries(memoryMatrixCells().map((cell) => [cell.cell_id, cell]));
   const order = [];

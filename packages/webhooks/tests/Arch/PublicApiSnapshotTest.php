@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 
-/** Public typed configuration API introduced by P4.13; UPDATE_SNAPSHOT is local-only. */
+/** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
 test('vaulter-webhooks configuration API matches the frozen golden (P4.13)', function (): void {
     $reflection = new ReflectionClass(WebhooksConfig::class);
     $methods = [];

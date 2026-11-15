@@ -11,9 +11,9 @@ use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Two clients holding the same access tag of a node (CC1, run one after the other on SQLite; the forked race on a
+ * Two clients holding the same access tag of a node (run one after the other on SQLite; the forked race on a
  * server engine is Concurrency/ShareVersionRaceTest): whichever writes first lands, the second gets 412 stale_write
- * and changes nothing. The access tag is its own token (CC2): grants and inheritance never move the node's sequence,
+ * and changes nothing. The access tag is its own token: grants and inheritance never move the node's sequence,
  * nor does a share link.
  */
 uses(RefreshDatabase::class);

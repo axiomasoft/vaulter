@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P3.1 — profiling lane: prepare|capture|explain|hypopg|verify
+# Profiling lane: prepare|capture|explain|hypopg|verify
 # Usage:
 #   TIER=S0 ./load/scripts/p3-profile.sh prepare --dry-run
 #   TIER=S0 ./load/scripts/p3-profile.sh verify --run-dir load/results/p3/<run_id>

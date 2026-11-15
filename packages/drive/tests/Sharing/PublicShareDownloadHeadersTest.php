@@ -13,7 +13,7 @@ use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The public share-download response headers (P1.1 / F-P1.3-04, F-P1.11-03):
+ * The public share-download response headers:
  * the SAME shared helper the identity DownloadController uses is also wired into
  * PublicShareController::stream(), so the declared mime_type never dictates the
  * response's Content-Type without going through the whitelist, and
@@ -24,7 +24,7 @@ beforeEach(function (): void {
     config()->set('vaulter-drive.features.share_links', true);
     // Force the streaming branch on the PUBLIC path too — a faked local disk
     // otherwise mints a signed temporaryUrl and 302-redirects, which would make
-    // this test non-deterministic (that redirect branch is P1.2's scope).
+    // this test non-deterministic (that redirect branch is tested elsewhere).
     app()->instance(StorageDriver::class, new NullTemporaryUrlStorageDriver(app(StorageDriver::class)));
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });

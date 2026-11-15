@@ -12,7 +12,7 @@ use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Tests\Http\DriveV1;
 
 /**
- * Lost updates (V36), sequentially on SQLite: two clients that read the same tag cannot
+ * Lost updates, sequentially on SQLite: two clients that read the same tag cannot
  * both write; the second gets 412 node_sequence_mismatch and its change is not applied.
  * The parallel race on a real server database is a phase-run check.
  */

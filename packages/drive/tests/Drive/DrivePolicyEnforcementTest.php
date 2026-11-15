@@ -29,7 +29,7 @@ use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
-/** P4-I25 and P4-I17: the drive policy and name policy hold on every write path. */
+/** The drive policy and name policy hold on every write path. */
 function policyDrive(?callable $configure = null): DriveHandle
 {
     $registry = new ProfileRegistry;

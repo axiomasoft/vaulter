@@ -1,4 +1,4 @@
-// VLT-LOAD P2.4 — contract smoke: every scenario runs ONCE against the live stand
+// Contract smoke: every scenario runs ONCE against the live stand
 // (--vus 1 --iterations 1, see load/scripts/run.sh) before any real load is generated.
 // Code Guidance's "Анти-самообман №1": a green run against a broken harness is the
 // worst outcome, so this does not just assert HTTP status — it returns the created ids
@@ -15,14 +15,14 @@ import { setup as docsCollabSetup, run as docsCollabRun } from './scenarios/docs
 import { setup as downloadSetup, run as downloadRun } from './scenarios/download.js';
 import { interactive as mixedInteractive, upload as mixedUpload, download as mixedDownload, setup as mixedSetup } from './scenarios/mixed.js';
 
-// VLT-LOAD P2.5 — `handleSummary` attaches `meta` (baseline format, slo-gates.md §4.1)
+// `handleSummary` attaches `meta` (baseline format)
 // so `summary.json` from a smoke run is already perf-assert.py-shaped. Deliberately NOT
 // wired to `load/gates/thresholds.js`: those are class-A gates calibrated for a
-// sustained `constant-vus` run (harness.md §4) — a single shared-iteration has no
+// sustained `constant-vus` run — a single shared-iteration has no
 // meaningful `med`/`min` distribution, and applying them here made the FUNCTIONAL
 // contract smoke fail on real, healthy runs (found live while validating this item —
 // see Known Deviations). The `smoke-perf` profile that DOES gate on these thresholds is
-// P2.6's job, against a `constant-vus` run, not this 1-iteration contract smoke.
+// Job, against a `constant-vus` run, not this 1-iteration contract smoke.
 const LOAD_PROFILE = __ENV.LOAD_PROFILE || 'smoke-perf';
 
 export const options = {

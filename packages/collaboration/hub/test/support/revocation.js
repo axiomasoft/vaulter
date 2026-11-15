@@ -13,7 +13,7 @@ export function token(claims) {
   return `${part({ alg: 'HS256', typ: 'JWT' })}.${part(claims)}.signature`
 }
 
-/** The claims P5.10's RoomTokens puts in a room token. */
+/** The claims RoomTokens puts in a room token. */
 export function roomClaims({ sub = 'u1', document = '42', drive = '1', jti = `jti-${sub}`, scope = 'write', exp }) {
   return { sub, sub_type: 'staff', protocol: 'yjs', state_format: 'yjs-update-v1', schema_version: 1, room: `vaulter.documents.${drive}.${document}.0`, document_id: document, drive_id: drive, tenant: null, generation: 0, scope, permissions_version: { drive: 1, global: 0 }, jti, exp, iat: exp - 300 }
 }

@@ -32,7 +32,7 @@ use Vaulter\Webhooks\WebhookFanoutConsumer;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * The webhooks.fanout outbox consumer (D29), moved from the 0.x OutboxRelay: an external event becomes one
+ * The webhooks.fanout outbox consumer, moved from the 0.x OutboxRelay: an external event becomes one
  * WebhookDelivery per eligible endpoint, chunk by chunk, each chunk fenced by the outbox delivery lease and
  * resumed from its continuation; the delivery row is done only after the last chunk. Chunks of 2 over 5
  * endpoints give three fan-out transactions.

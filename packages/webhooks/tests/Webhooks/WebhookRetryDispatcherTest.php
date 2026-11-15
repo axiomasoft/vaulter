@@ -9,7 +9,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
- * Re-dispatch has a SINGLE owner (§2.11 / F-P1.7-05): every vaulter:webhooks:retry run
+ * Re-dispatch has a SINGLE owner: every vaulter:webhooks:retry run
  * claims a due delivery through WebhookRetryDispatcher, which locks + re-arms
  * next_retry_at before dispatch. Two runs back-to-back therefore fan a delivery out
  * exactly once; the outbox relay (vaulter:relay) never re-dispatches webhook deliveries.

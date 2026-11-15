@@ -14,7 +14,7 @@ use Vaulter\Drive\Repositories\FileStoreRepository;
 use Vaulter\Drive\Tests\Schema\ForceCreates;
 
 /*
- * I6 for files: v_files.current_revision_id names a revision of that very file. On
+ * For files: v_files.current_revision_id names a revision of that very file. On
  * PostgreSQL and MySQL the composite head FK (current_revision_id, id) →
  * v_file_revisions(id, file_id) ON DELETE RESTRICT refuses a foreign head and the
  * deletion of a head, while purging the node still cascades through both tables.

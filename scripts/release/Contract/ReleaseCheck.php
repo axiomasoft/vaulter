@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * One BC check run (D14/D18): the trusted policy picks the base of every release line from the candidate repository's own git
+ * One BC check run: the trusted policy picks the base of every release line from the candidate repository's own git
  * data, the manifests of BOTH the base and the candidate are validated and their surfaces compared by the adapters, and the exact
  * approved exceptions are applied. Exit 0 only when every line is compared (or has an external approved_initial_release) and
  * nothing blocks; 1 for BREAK/REVIEW or a line without a predecessor (initial_bootstrap/no_predecessor is never a BC pass);

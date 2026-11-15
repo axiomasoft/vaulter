@@ -15,7 +15,7 @@ use Vaulter\Media\Tests\Fixtures\Cas\PhantomListingContentStore;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * The DESTRUCTIVE orphan prune (master plan P4 #11 / H.3): physically deleting true
+ * The DESTRUCTIVE orphan prune: physically deleting true
  * orphans under the per-(scope,sha256) lock. It is only safe on a driver whose lock
  * serialises a write-less critical section — PostgreSQL's advisory xact lock or
  * MySQL's FOR UPDATE — so on SQLite the prune is REFUSED (covered in
@@ -24,7 +24,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
  *
  * The project CI is sqlite (the base TestCase forces an in-memory sqlite connection),
  * so EVERY test here SKIPS unless the live connection is pgsql — they are ready for
- * the future pgsql job (master plan P4 #11 TODO). Run them with the suite pointed at
+ * a future pgsql job. Run them with the suite pointed at
  * a Postgres connection to exercise the real delete path.
  */
 beforeEach(function (): void {
@@ -70,7 +70,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'commit won', scope: 't-1', ageHours: 48);
 
     // The "commit won" outcome: a committed row now owns this exact storage_key.
-    // forceFill (P1.4/F-P1.5-04): Blob is fully guarded — bypassed here exactly
+    // forceFill: Blob is fully guarded — bypassed here exactly
     // like BlobStoreRepository::insertCommitted() does.
     $winningBlob = new Blob;
     $winningBlob->forceFill([

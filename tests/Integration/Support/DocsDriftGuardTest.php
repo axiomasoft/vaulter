@@ -4,7 +4,7 @@ declare(strict_types=1);
 use Symfony\Component\Finder\Finder;
 
 /*
- * P4.8 / B19 — Docs-drift (D19 green guard — mechanical doc↔code alignment
+ * Docs-drift (green guard — mechanical doc↔code alignment
  * fixes, no behaviour delta): each guard below reads the actual doc file / the
  * actual code surface directly (grep-equivalent), never asserts by memory of
  * what "should" be documented. Red-before is confirmed via `git stash` of the

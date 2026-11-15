@@ -12,7 +12,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Support\NodeName;
 
 /**
- * P4-I17: live siblings have distinct name_key (NFC + full case folding), compared
+ * Live siblings have distinct name_key (NFC + full case folding), compared
  * byte for byte on every supported database, independent of the host collation.
  */
 function nameKeyDrive(): Drive

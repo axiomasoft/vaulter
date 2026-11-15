@@ -8,7 +8,7 @@ use Vaulter\Inventory\InventoryError;
 use Vaulter\Inventory\Repo;
 
 /**
- * I3 — foreign keys point along the dependency direction. Builds `fk-map.json` from the schema identities (the same
+ * Foreign keys point along the dependency direction. Builds `fk-map.json` from the schema identities (the same
  * foreign keys on pgsql and mysql; sqlite does not enforce the head FKs) and judges each: `ok` when the owner of the
  * referenced table is the owner of the referencing one or one of its target requirements, else `reverse`.
  *

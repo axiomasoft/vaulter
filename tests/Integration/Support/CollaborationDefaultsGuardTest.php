@@ -11,14 +11,14 @@ use Vaulter\Kernel;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 /*
- * VLT-REMED P3.1 (W3/B11) — doc/ADR-alignment guard tests (D19: green
+ * Doc/ADR-alignment guard tests (green
  * characterization, red-before is structurally impossible here — no behaviour
  * changed, only a stale fallback/doc were corrected to match the already-correct
  * code).
  */
 
 it('the collaboration configuration accessor falls back to hocuspocus when the config key is entirely absent, F-P3.6-01', function (): void {
-    // P3.3 replaced the transport selector with the documents-owned protocol slot.
+    // Replaced the transport selector with the documents-owned protocol slot.
     $app = FreshApplication::boot(['vaulter.modules.collaboration' => true], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
     $app['config']->offsetUnset('vaulter-collaboration.driver');
     $extensions = $app->make(Kernel::class)->extensions();

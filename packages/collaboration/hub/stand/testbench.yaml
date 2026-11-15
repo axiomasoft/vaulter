@@ -1,4 +1,4 @@
-# The Laravel host of the I17 stand (docker-compose.yml, service `backend`), bind-mounted to /app/testbench.yaml.
+# The Laravel host of the stand (docker-compose.yml, service `backend`), bind-mounted to /app/testbench.yaml.
 # `testbench serve` hands its child a curated environment, so the whole host configuration travels here.
 # The secrets are throwaway values of the stand; the hubs hold the same webhook secret.
 providers:

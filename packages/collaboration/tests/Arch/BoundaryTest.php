@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Symfony\Component\Finder\Finder;
 
 /*
- * The bypass p5-design#invariants forbids (D26, D27): collaboration changes the state documents own only through the
+ * The bypass this test forbids: collaboration changes the state documents own only through the
  * documents state contract (CollaborativeState). Its sources name no v_documents table, write no document row, and
  * neither the documents' state writer nor their store repository — without exception since the protocol 1 store
- * (vaulter.v1.collaboration.hub.store) is gone (P5.7).
+ * (vaulter.v1.collaboration.hub.store) is gone.
  */
 
 /** @return array<string, string> path relative to src/ => contents */

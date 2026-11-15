@@ -15,7 +15,7 @@ use Illuminate\Queue\Events\JobQueueing;
 use Throwable;
 
 /**
- * Append-only queue lifecycle ledger for the load stand (P6.1).
+ * Append-only queue lifecycle ledger for the load stand.
  *
  * Records uuid, class, attempt and outcome. Never unserializes the job command
  * and never writes payloads, signatures or DSNs. A ledger failure is swallowed

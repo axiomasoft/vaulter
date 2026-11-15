@@ -1,5 +1,5 @@
 #!/bin/sh
-# P5.1 — one PostgreSQL evidence snapshot. Missing logfile stays JSON null.
+# One PostgreSQL evidence snapshot. Missing logfile stays JSON null.
 # Usage:
 #   ./load/scripts/p5-postgres-snapshot.sh syntax
 #   DB_HOST=postgres DB_PORT=5432 DB_DATABASE=vaulter_load \

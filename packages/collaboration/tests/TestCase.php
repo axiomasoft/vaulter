@@ -19,7 +19,7 @@ use Vaulter\VaulterServiceProvider;
 
 /**
  * Boots the kernel, the CAS engine, the drive, the documents and the collaboration package. The collaboration module
- * is opt-in (D22) and stays off here, as it does in a host that did not switch it on; the tests that exercise the
+ * is opt-in and stays off here, as it does in a host that did not switch it on; the tests that exercise the
  * module use {@see Collaboration\CollaborationEnabledTestCase}.
  */
 abstract class TestCase extends OrchestraTestCase

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// VLT-LOAD P2.3 — S volume profile (authoritative characterisation tier, D25).
+// S volume profile (authoritative characterisation tier).
 // Source: reference-env.md §2.1/§2.2 (v_nodes/v_blobs/v_upload_sessions/v_outbox/
 // v_webhook_endpoints/v_webhook_deliveries/v_node_grants/v_node_shares/
 // v_node_comments/v_node_document_versions/v_activity — S column) + §4.1 numbers this
@@ -21,7 +21,7 @@ return [
     'blobs' => [
         'orphan' => 8_000, // split mark/sweep — see S0.php comment, same rule.
         'hot_set' => 20_000,
-        'hot_set_avg_bytes' => 1_048_576, // ≈1 MiB avg => ≈20 GiB hot-set (§2.2).
+        'hot_set_avg_bytes' => 1_048_576, // ≈1 MiB avg => ≈20 GiB hot-set.
     ],
 
     'file_versions' => [

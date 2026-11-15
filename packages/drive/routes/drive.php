@@ -81,7 +81,7 @@ Route::prefix($routes->versionedPrefix())
     ->middleware($routes->authenticatedMiddleware())
     ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'upload' => $id])
     ->group(static function (): void {
-        // The drive's lifecycle, its access and its share links are receipt operations too (D25, D47): keyed, and — except a
+        // The drive's lifecycle, its access and its share links are receipt operations too: keyed, and — except a
         // grant or a share link created — conditional on the aggregate's own version (If-Match, 428/412 stale_write).
         Route::get('drives/{drive}', ShowDriveController::class)->name('drives.show');
         Route::post('drives/{drive}/archive', ArchiveDriveController::class)->name('drives.archive')->middleware(ReadIdempotencyKey::ALIAS);
@@ -93,7 +93,7 @@ Route::prefix($routes->versionedPrefix())
         Route::get('drives/{drive}/starred', ListStarredController::class)->name('nodes.starred');
         Route::get('drives/{drive}/trash', ListTrashController::class)->name('trash.index');
         Route::delete('drives/{drive}/trash', EmptyTrashController::class)->name('trash.empty')->middleware(ReadIdempotencyKey::ALIAS);
-        // Idempotent by Idempotency-Key (D25): the operations declare a receipt codec and a replay authorizer. The routes of
+        // Idempotent by Idempotency-Key: the operations declare a receipt codec and a replay authorizer. The routes of
         // operations whose repeat is naturally harmless (star, unstar, revision retention, upload complete and abort) read no key.
         Route::post('drives/{drive}/folders', CreateFolderController::class)->name('folders.store')->middleware(ReadIdempotencyKey::ALIAS);
         Route::post('drives/{drive}/files', UploadFileController::class)->name('files.store');

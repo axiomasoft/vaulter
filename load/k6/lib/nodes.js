@@ -1,4 +1,4 @@
-// VLT-LOAD P2.4 — thin node-tree HTTP helpers shared by tree.js/mixed.js/smoke.js.
+// Thin node-tree HTTP helpers shared by tree.js/mixed.js/smoke.js.
 // Every call returns the raw k6 http.Response so callers stay in charge of check()/tags.
 import http from 'k6/http';
 import { API } from './config.js';

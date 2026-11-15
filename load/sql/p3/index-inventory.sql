@@ -1,4 +1,4 @@
--- P3.3 — index inventory for eight hot table families (load stand uses v_* table names).
+-- Index inventory for eight hot table families (load stand uses v_* table names).
 \set ON_ERROR_STOP on
 
 SELECT COALESCE(json_agg(row_to_json(inv) ORDER BY inv.family, inv.index_name), '[]'::json)

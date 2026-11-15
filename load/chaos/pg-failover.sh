@@ -1,5 +1,5 @@
 #!/bin/sh
-# P7.2 PostgreSQL 16 physical-replication failover.
+# PostgreSQL 16 physical-replication failover.
 # Fence the old primary BEFORE writable routing. No automatic failback.
 # Usage:
 #   ./load/chaos/pg-failover.sh status|rehearse|promote|fence|repoint|revert|self-test

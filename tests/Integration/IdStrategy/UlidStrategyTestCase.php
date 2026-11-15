@@ -8,7 +8,7 @@ use Illuminate\Foundation\Application;
 use Vaulter\Integration\Tests\TestCase;
 
 /**
- * Boots Vaulter with the ulid id strategy (the D9 default).
+ * Boots Vaulter with the ulid id strategy (the default).
  */
 class UlidStrategyTestCase extends TestCase
 {

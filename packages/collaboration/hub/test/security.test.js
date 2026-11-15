@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { buildConfig, isOriginAllowed, validateConfig } from '../src/config.js'
 
-// CSWSH Origin allowlist + fail-fast config validation (master plan Addendum A.3).
+// CSWSH Origin allowlist + fail-fast config validation.
 
 const prod = (extra = {}) => buildConfig({ NODE_ENV: 'production', VAULTER_BACKEND_URL: 'http://app', ...extra })
 const dev = (extra = {}) => buildConfig({ NODE_ENV: 'development', ...extra })
@@ -75,7 +75,7 @@ test('a non-canonical NODE_ENV is treated as production (fail-closed, not silent
 })
 
 // Numeric env validation: a typo must fail fast at boot rather than silently boot a
-// misconfigured hub (master plan Addendum A.2 fail-fast; review finding #6).
+// misconfigured hub (fail fast).
 
 test('validateConfig: a malformed integer (trailing garbage / non-numeric) is rejected', () => {
   for (const bad of ['12a34', '4.5', 'abc', '0x10', '15 30']) {

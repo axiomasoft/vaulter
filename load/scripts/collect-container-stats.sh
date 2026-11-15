@@ -1,7 +1,7 @@
 #!/bin/sh
-# VLT-LOAD P2.5 — cgroup `memory.peak` per stand container, written to a JSON file
+# Cgroup `memory.peak` per stand container, written to a JSON file
 # perf-assert.py can read with `--container-peak`. This is a GROUNDED but coarse
-# stand-in for `vaulter_request_peak_memory_bytes` (P8, not shipped yet): it catches
+# stand-in for `vaulter_request_peak_memory_bytes` (not shipped yet): it catches
 # "the whole container blew past its limit", not "which request did it" — the
 # distinction is printed by perf-assert.py, never hidden (Code Guidance
 # "Анти-самообман", Scope Included item's own limitation note).

@@ -13,7 +13,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
  * vaulter:webhooks:prune: the retention sweep of the webhook deliveries reclaims TERMINAL rows past
- * its window. The outbox has its own retention, vaulter:outbox:prune (D29). The contract pinned here:
+ * its window. The outbox has its own retention, vaulter:outbox:prune. The contract pinned here:
  *
  *  - IN-FLIGHT IS SACRED. A 'pending'/'failed' delivery is still owned by the due-retry sweep and is
  *    NEVER pruned — not even at retention 0, not even with an artificially ancient timestamp. The guard

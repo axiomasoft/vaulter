@@ -411,7 +411,7 @@ class SingleCiTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             policy.plan_outputs(self.support, 'changed')
 
-    # -- webhooks and the I14 consumer lane (PLAN3 P4.19) ---------------------------------------------------------------
+    # -- webhooks and the consumer lane ---------------------------------------------------------------
 
     def test_integration_is_a_root_suite_of_every_test_lane(self):
         support = policy.derive_support(ROOT)
@@ -526,7 +526,7 @@ class SingleCiTest(unittest.TestCase):
                       has_consumer='true', has_openapi='true', consumer_matrix=self.matrix(0))
         self.assertIn('consumer: required lane has an empty matrix', policy.gate_errors(empty))
 
-    # -- collaboration: PHP package, hub image, @vaulter/vue-collaboration (PLAN3 P5.14) -------------------------------
+    # -- collaboration: PHP package, hub image, @vaulter/vue-collaboration -------------------------------
 
     def test_collaboration_is_a_php_package_of_every_lane(self):
         support = self.support
@@ -1180,7 +1180,7 @@ class ScaWorkflowTest(unittest.TestCase):
                 if 'scripts/ci/audit-gate.py' in str(step.get('run','')): step.update(bypass)
             self.assertTrue(policy.check_sca(broken))
 
-    # --- P7.3/U3: one accepted artifact per release flow (npm tgz, OCI digest, PHP prepared record) -----------------
+    # --- One accepted artifact per release flow --------- (npm tgz, OCI digest, PHP prepared record) -----------------
     def artifact_doc(self, name):
         return policy.load_workflow(ROOT / '.github/workflows' / name)
 

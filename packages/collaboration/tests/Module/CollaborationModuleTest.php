@@ -32,7 +32,7 @@ use Vaulter\Modules\VaulterModule;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 /**
- * The collaboration module (D22): opt-in, so a host that installed the package and did not switch it on has no routes,
+ * The collaboration module: opt-in, so a host that installed the package and did not switch it on has no routes,
  * no driver and no operations of it; a host that did has the session and hub routes behind the module middleware,
  * the transport capability of the documents module and the problem codes, and nothing of it without its dependency.
  */
@@ -67,7 +67,7 @@ it('declares an opt-in manifest that needs the documents module', function (): v
         ->and(array_values(array_map(static fn ($c): string => $c->key ?? '', array_filter($builder->contributions(), static fn ($c): bool => in_array($c->slot, [CollaborationProtocolDriver::class, PendingStateDrainer::class], true)))))->toBe(['yjs', 'yjs'])
         ->and($builder->commandClasses())->toBe([PruneGenerationsCommand::class, DrainCommand::class])
         ->and($builder->schedules())->toBe([CollaborationSchedule::class])
-        // Read statically by vaulter:module:uninstall, also while the module is off (C10).
+        // Read statically by vaulter:module:uninstall, also while the module is off.
         ->and($module)->toBeInstanceOf(GuardsRemoval::class)
         ->and(CollaborationModule::removalGuard())->toBe(PendingRemovalGuard::class);
 });

@@ -8,7 +8,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 
 /**
- * The webhooks tasks on the host scheduler (moved from the kernel suite with the module, P4.13): the keys live in
+ * The webhooks tasks on the host scheduler (moved from the kernel suite with the module): the keys live in
  * `vaulter-webhooks.schedule`, the global switch `vaulter.schedule.enabled` stays the kernel's.
  *
  * @param  array<string, mixed> $config

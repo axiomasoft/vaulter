@@ -20,7 +20,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * PLAN2.F05/F06: comment writers take T (shared) → N → the comment row, so a trash or
+ * Comment writers take T (shared) → N → the comment row, so a trash or
  * an archive that wins the race leaves no comment, resolve or delete behind, and one
  * that loses is applied in full. Real PostgreSQL backends, one per contender.
  */

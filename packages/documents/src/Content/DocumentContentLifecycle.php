@@ -94,7 +94,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         if (!$document instanceof Document) {
             return;
         }
-        // Saved collaboration edits not in the working state yet go only through a drain, never with the purge (C9).
+        // Saved collaboration edits not in the working state yet go only through a drain, never with the purge.
         // PendingPurgeDrain drained before this transaction; nothing waits here, a marker still set refuses the purge.
         $this->pending->assertSettled($document);
 

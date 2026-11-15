@@ -11,7 +11,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 
 /**
- * The node-set bounding (§2.7 / M2c hardening): a subtree share reaches the shared
+ * The node-set bounding: a subtree share reaches the shared
  * node and its descendants but NEVER its siblings, ancestors or a node in another
  * storage. An item share reaches exactly one node.
  */

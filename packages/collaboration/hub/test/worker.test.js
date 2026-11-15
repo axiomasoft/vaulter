@@ -10,7 +10,7 @@ import { extensionsFor, FIELD } from '../src/schema.js'
 import { problem, startMockBackend, virtualTime } from './support/mock-backend.js'
 import { eventually, testConf } from './support/rooms.js'
 
-// The compaction worker against a mock backend on a loopback port (I17 #19): a lease of a document
+// The compaction worker against a mock backend on a loopback port: a lease of a document
 // no room has open is merged and published once, covering exactly (C, H]; a 409 is dropped, never
 // repeated; a lease is never published after it ran out; a projection that loses an attribute is
 // not published; drain requests (the backend's first entries) go first; drain() settles only on

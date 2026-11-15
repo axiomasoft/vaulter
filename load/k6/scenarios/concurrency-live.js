@@ -1,4 +1,4 @@
-// P5.3 live product cell. One VU per actor, one iteration, no sleep barrier.
+// Live product cell. One VU per actor, one iteration, no sleep barrier.
 // Status counters are the NOWAIT/conflict evidence. 5xx is never a pass.
 import http from 'k6/http';
 import exec from 'k6/execution';

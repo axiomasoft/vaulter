@@ -19,7 +19,7 @@ use Vaulter\Http\Support\RepresentationTag;
 use Vaulter\Kernel;
 
 /*
- * Scenario 18 (C8): a restore or a REST replace of a document with saved but uncheckpointed edits first drains them
+ * Scenario 18: a restore or a REST replace of a document with saved but uncheckpointed edits first drains them
  * through the hub: outside any transaction the backend asks for a compaction (drain_requested_at), the hub's worker
  * leases the generation, merges and publishes the checkpoint, and the restore then takes its locks again, finds the
  * marker gone, keeps the drained state as a revision and closes the generation (G+1, retired_at). Every saved receipt

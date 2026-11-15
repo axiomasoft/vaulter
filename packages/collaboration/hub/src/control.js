@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 
-// The hub's control channel (revocation, D26): the backend's control consumer publishes
+// The hub's control channel (revocation): the backend's control consumer publishes
 // `{v: 1, drive_id|null, scope, permissions_version, at}` after a change of effective permissions
 // commits, and the hub rechecks the connections of that drive (src/revocation.js). Two transports,
 // as the backend's `vaulter-collaboration.control.transport` chooses:

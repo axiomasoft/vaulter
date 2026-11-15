@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Support\LoadTier;
 
 /**
- * Binds compose `TIER` into request context for package observability seams (P8.3).
+ * Binds compose `TIER` into request context for package observability seams.
  */
 final class AssignLoadTier
 {

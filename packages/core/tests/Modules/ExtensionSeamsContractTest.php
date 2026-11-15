@@ -20,7 +20,7 @@ use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
 
-// The stable extension seams of the kernel (P3.8): a module outside the kernel implements the schema and removal
+// The stable extension seams of the kernel: a module outside the kernel implements the schema and removal
 // hooks and calls the scheduling and tier seams. The fixtures below are the whole module; nothing above the kernel
 // is loaded.
 

@@ -16,7 +16,7 @@ use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The bearer share-link HTTP surface (§2.7 / M2c). The OWNER endpoints run under
+ * The bearer share-link HTTP surface. The OWNER endpoints run under
  * the identity ACL (Ability::Share gates minting); the PUBLIC endpoints run behind
  * ResolveShareToken with NO identity ACL — a share grants exactly its bits. These
  * are SEPARATE channels and the tests prove they never bleed into each other.
@@ -31,7 +31,7 @@ beforeEach(function (): void {
 });
 
 /**
- * The opaque node id SharedNodeResource projects (P1.2 / F-P1.3-05) — the SAME
+ * The opaque node id SharedNodeResource projects — the SAME
  * deterministic hash_hmac the resource itself computes, so a test can assert the
  * exact response value without reaching into the resource's internals.
  */
@@ -204,7 +204,7 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
         maxUses: 1,
     );
 
-    // The faked local disk DOES provide a temporary url — F-P1.3-01 removed the
+    // The faked local disk DOES provide a temporary url — the package removed the
     // presign-redirect branch, so the response is always a streamed 200, never a
     // 302, regardless of what the disk can mint.
     $response = $this->get('api/vaulter/v1/shares/dl-token/download');

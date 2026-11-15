@@ -6,7 +6,7 @@ use Vaulter\Drive\Facades\Vaulter as VaulterFacade;
 use Vaulter\Drive\Vaulter;
 
 /*
- * P4.6 / F-P2.1-01 (Minor, D19 green guard — docblock-alignment fix, no behaviour
+ * (docblock-alignment guard, no behaviour
  * delta): the facade's `@method` docblock listed only 7 of the entry point's 12
  * public methods (`registerHandler`, `handlers`, `registerExporter`, `exporter`,
  * `exporterFormats` were invisible to IDE autocomplete/static analysis, even

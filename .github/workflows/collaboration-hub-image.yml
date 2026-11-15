@@ -22,7 +22,7 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/vaulter-collaboration-hub
 
 jobs:
-  # Routing + D18 qualification before the GHCR login: the tag must select the image line, the evidence of this SHA must
+  # Routing + release qualification before the GHCR login: the tag must select the image line, the evidence of this SHA must
   # carry the OCI digest, and the GHCR package must be probed private. No registry credential is used here.
   route:
     if: github.event_name != 'workflow_dispatch'
@@ -123,7 +123,7 @@ jobs:
         run: |
           docker buildx imagetools create --tag "${REGISTRY}/${IMAGE_NAME}:${VERSION}" "${REGISTRY}/${IMAGE_NAME}@${DIGEST}"
 
-      # Attestations need Enterprise Cloud on a private repo (D11): off by default. A false flag means the provenance is
+      # Attestations need Enterprise Cloud on a private repo: off by default. A false flag means the provenance is
       # UNAVAILABLE, not that the image was signed.
       - name: Attest build provenance
         if: vars.VAULTER_ATTESTATIONS == 'true'

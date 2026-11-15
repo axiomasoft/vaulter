@@ -7,7 +7,7 @@ use Vaulter\Drive\Facades\Vaulter as VaulterFacade;
 use Vaulter\Drive\Vaulter;
 use Vaulter\Tenancy\TenancyBypass;
 
-// D10: the typed entry point and its facade belong to drive; the Laravel alias `Vaulter` is declared by drive's composer.
+// The typed entry point and its facade belong to drive; the Laravel alias `Vaulter` is declared by drive's composer.
 
 it('binds the entry point as a singleton under the vaulter name', function (): void {
     expect(app('vaulter'))->toBeInstanceOf(Vaulter::class)

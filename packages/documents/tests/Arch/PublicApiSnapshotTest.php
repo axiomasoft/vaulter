@@ -30,8 +30,8 @@ use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 
 /**
- * VLT-REL P2.2 — executable freeze of vaulter-documents's public composer surface for the `0.1.0`
- * tag. Counterpart to the P2.1 SSOT (`plans/archive/VLT-REL/root/contracts/public-api-surface.md`):
+ * Executable freeze of vaulter-documents's public composer surface for the `0.1.0`
+ * tag. Counterpart to the public API reference:
  * reflects every `Vaulter\\Documents\\Contracts\**` contract into a canonical manifest and compares it to a
  * committed golden, reddening the build on any unplanned signature change (removed/renamed
  * method, narrowed type, a new contract). Same canonicalisation and AMEND procedure as
@@ -292,7 +292,7 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         $blocks[] = $withProperties($eventClass);
     }
 
-    // PLAN2.P4.8: the Documents API — facade, manager, operations, their snapshots
+    // The Documents API — facade, manager, operations, their snapshots
     // (read-only properties; constructors are @internal) and public inputs.
     $blocks[] = vaulterSnapshotFacade(Documents::class);
     foreach ([
@@ -315,11 +315,11 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         $blocks[] = $withProperties($class);
     }
 
-    // PLAN2.P4.3: the document type registry, the built-in types and the content
+    // The document type registry, the built-in types and the content
     // building blocks a host's own type is made of; the presenter and the contract test.
     foreach ([
         DocumentTypeRegistry::class,
-        // PLAN2.P4.4: the exporter registry a host extends through Documents::exporters().
+        // The exporter registry a host extends through Documents::exporters().
         DocumentExporterRegistry::class,
         RichTextDocumentType::class,
         MarkdownDocumentType::class,

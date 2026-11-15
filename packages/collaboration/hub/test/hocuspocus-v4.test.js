@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { Server } from '@hocuspocus/server'
 
-// P5.2 — pins the Hocuspocus 4.3.0 runtime behaviour the collaboration hub relies on. The
-// pending ledger (P5.7) and the shutdown coordinator (P5.9) are designed AROUND these facts, so
+// Pins the Hocuspocus 4.3.0 runtime behaviour the collaboration hub relies on. The
+// pending ledger and the shutdown coordinator are designed AROUND these facts, so
 // they are asserted by executing the library, not by trusting its documentation:
 //
 //   1. a failed onStoreDocument leaves the document in memory and is NOT retried;

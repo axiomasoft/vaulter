@@ -15,7 +15,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
- * The Gate host-role driver (§6 / H.2): a super ability grants the override; the
+ * The Gate host-role driver: a super ability grants the override; the
  * level→ability map gates a role decision; the create ability gates canCreate. The
  * Gate is asked node-blind (panel/workspace context, never a Node), exercised here
  * by selecting the 'gate' driver and defining the matching Laravel gates.

@@ -11,8 +11,8 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * The tus PATCH `Upload-Offset` did not match the server's authoritative offset,
- * AND the mismatch is not a matching-range idempotent retransmit (N3 /
- * ). tus 1.0.0 requires exactly 409 Conflict here — never the bare
+ * AND the mismatch is not a matching-range idempotent retransmit.
+ * tus 1.0.0 requires exactly 409 Conflict here — never the bare
  * 302 redirect / 422 a plain Laravel ValidationException renders to — carrying
  * the CURRENT server offset so a real tus client re-reads it and resynchronises.
  *

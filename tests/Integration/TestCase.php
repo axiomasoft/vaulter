@@ -27,7 +27,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         parent::setUp();
 
-        // No test hits real DNS or a socket (§2.11 / F-P1.7-01): the outbound SSRF
+        // No test hits real DNS or a socket: the outbound SSRF
         // guard resolves through a fake resolver that maps hosts to a public address
         // by default, so a delivery/registration to a test host (hooks.test) passes
         // the range check. An SSRF test overrides the map via
@@ -44,12 +44,12 @@ abstract class TestCase extends OrchestraTestCase
         return [
             VaulterServiceProvider::class,
             // The CAS engine (ContentStore/StorageDriver/BlobStore) lives in the
-            // vaulter-media package (P2 #5); the core Drive upload/download/copy
+            // vaulter-media package; the core Drive upload/download/copy
             // suites resolve those bindings through its provider.
             VaulterMediaServiceProvider::class,
             // Drive behaviour (StorageManager, DriveHandle factory, resumable
             // uploads, PurgeTrash/SweepUploads, drive routes, Drive-event
-            // Activity/outbox subscribers) lives in vaulter-drive (P2 #5, D1). The
+            // Activity/outbox subscribers) lives in vaulter-drive. The
             // cross-cutting core suites (Activity/Webhooks feeds fed by Drive events,
             // the full-stack Feature specs) resolve it through this provider.
             VaulterDriveServiceProvider::class,

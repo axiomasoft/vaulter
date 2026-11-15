@@ -5,7 +5,7 @@
 # and configure it entirely through environment variables. For LOCAL development against
 # this repo, uncomment `build: .` to build the image from source instead.
 #
-# F-P1.8-05: the tag is REQUIRED (no floating `:latest` default) — set
+# The tag is REQUIRED (no floating `:latest` default) — set
 # VAULTER_COLLAB_IMAGE_TAG to a released vaulter-collaboration-hub version (semver, e.g. `1.2.3`;
 # in production prefer the immutable `@sha256:…` digest published alongside each release —
 # see .github/workflows/collaboration-hub-image.yml) before bringing this stack up.

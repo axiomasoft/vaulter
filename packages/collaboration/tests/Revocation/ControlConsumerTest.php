@@ -32,7 +32,7 @@ use Vaulter\Kernel;
 use Vaulter\Testing\FakeMetricsRecorder;
 
 /**
- * The control consumer collaboration.control (D29, ephemeral): after a change of effective permissions commits, the
+ * The control consumer collaboration.control (ephemeral): after a change of effective permissions commits, the
  * relay hands it to the configured transport as {v: 1, drive_id, scope, permissions_version, at}. A failure is logged
  * and counted, never retried; a message older than the token lifetime is dropped; `none` sends nothing.
  */

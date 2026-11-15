@@ -12,7 +12,7 @@ arch('all package code declares strict types')
     ->toUseStrictTypes();
 
 /**
- * E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`).
+ * Declarative form kept for discoverability/grep (`toUse('App')`).
  * `App\*` never exists as an autoloadable class in the package's own dev/test
  * environment, so this namespace-graph check can never observe a real "uses" edge
  * (PestArch has nothing to resolve `App\*` against) — proven by the file-scan test
@@ -24,7 +24,7 @@ arch('the package never depends on the host application (E5.1)')
     ->not->toUse('App');
 
 /**
- * E5.1 / F-P4.3-01 — vaulter-core is an embeddable Laravel package: it must never
+ * Vaulter-core is an embeddable Laravel package: it must never
  * reach into the HOST application's namespace. A stray `App\*` import (e.g.
  * copy-pasted from the consuming app while building a feature) breaks installability
  * in a clean host that does not carry that class.
@@ -76,7 +76,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 });
 
 /**
- * E3.1 / F-P4.3-02 — the package's public surface is deliberately thin: contracts,
+ * The package's public surface is deliberately thin: contracts,
  * facades, DTO/VO and events. `Repositories/`/`Support/` are internal implementation
  * detail — the kernel-sharing design (ADR-0005) lets sibling Vaulter packages
  * (Drive/Media/Documents/Filament) consume them as the shared kernel, so the
@@ -91,7 +91,7 @@ arch('internal namespaces are not consumed outside the Vaulter package tree (E3.
     ->toOnlyBeUsedIn('Vaulter');
 
 /**
- * H.2 — the AccessResolver is Vaulter-OWNED and NOT swappable: it is a concrete
+ * The AccessResolver is Vaulter-OWNED and NOT swappable: it is a concrete
  * final class, never an interface/contract. Only the PermissionDriver lane is
  * pluggable. (If someone made AccessResolver a contract, this fails.)
  */
@@ -100,7 +100,7 @@ arch('the AccessResolver is a concrete, non-swappable class')
     ->not->toBeInterface();
 
 /**
- * H.2 — the PermissionDriver contract is node-blind and identity-model-agnostic: it
+ * The PermissionDriver contract is node-blind and identity-model-agnostic: it
  * must NEVER reference the Node model (it deals only in Subject/AccessScope/Decision).
  * A leak of Node into the contract breaks the swappable-driver boundary.
  */
@@ -109,7 +109,7 @@ arch('the PermissionDriver contract never references the Node model')
     ->not->toUse(Node::class);
 
 /**
- * H.2 — the host-role drivers are final (a SemVer-frozen public surface) and live
+ * The host-role drivers are final (a SemVer-frozen public surface) and live
  * under Drivers\Permission.
  */
 arch('host-role drivers are final')
@@ -117,7 +117,7 @@ arch('host-role drivers are final')
     ->toBeClasses();
 
 /**
- * The ACL value objects are immutable (H.2 VOs: Subject/AccessScope/Decision/GrantSet).
+ * The ACL value objects are immutable (Subject/AccessScope/Decision/GrantSet).
  */
 arch('access value objects are readonly')
     ->expect('Vaulter\Access\ValueObjects')
@@ -128,21 +128,20 @@ arch('no debug helpers leak into the package')
     ->not->toBeUsed();
 
 /**
- * H.5 — the format-extensibility registry is a concrete, final source of truth (one
+ * The format-extensibility registry is a concrete, final source of truth (one
  * bounded registry per concern, no god-object). The FileHandler contract is an
  * interface; the built-in handlers are final; the registry is final. The ENGINE
- * (registry/resolver/baseline handlers) is core-owned since VLT-CANON P0.4 (D10,
- * superseding H.5/T5); the documents-only additions (TipTap/Univer drivers under
+ * (registry/resolver/baseline handlers) is core-owned; the documents-only additions (TipTap/Univer drivers under
  * `Vaulter\Documents\Engines\Handlers`, `ExportDocumentAction` under
  * `Vaulter\Documents\Actions\Export`) moved out of the tautological `Documents\Documents`
- * folder in P2.3 — both remain covered by this finality gate.
+ * folder — both remain covered by this finality gate.
  */
 arch('the document handler registry and its handlers are final')
     ->expect(['Vaulter\Documents\Engines\Handlers', 'Vaulter\Documents\Actions\Export\ExportDocumentAction'])
     ->toBeFinal();
 
 /**
- * `AbstractFileHandler` (P0.5) is the one deliberate exception: an optional DX base
+ * `AbstractFileHandler` is the one deliberate exception: an optional DX base
  * a THIRD-PARTY handler extends, so it must stay abstract, not final. Every other
  * class under `Vaulter\Engines` — the registry, the resolver, the baseline
  * handlers — is sealed core-internal.
@@ -169,7 +168,7 @@ arch('data transfer objects are readonly')
     ->toBeReadonly();
 
 // Enums, interfaces and traits cannot be readonly; the catalogue, the sink writer and the delivery control keep
-// per-call state, the outbox model is Eloquent and the lease exception extends RuntimeException (D29, D38).
+// per-call state, the outbox model is Eloquent and the lease exception extends RuntimeException.
 arch('events are readonly')
     ->expect('Vaulter\Events')
     ->classes()
@@ -198,7 +197,7 @@ arch('repositories never depend on the HTTP request')
 /**
  * Layering: HTTP controllers must never touch an Eloquent model STATICALLY
  * (Model::query/create/where/all/find/…) — persistence goes through repositories
- * and Actions (M1c-http note). Controllers may still type-hint a model for
+ * and Actions. Controllers may still type-hint a model for
  * route-model binding; this bans the static query/persistence entry points only.
  *
  * The model set is the concrete v_* models; the scan strips comments/docblocks so
@@ -284,8 +283,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
     // root => list of bare class names allowed to remain at the flat root.
     $rootsWithAllowed = [
         'Enums' => [],
-        // The event pipeline's base class, its single recorder and the catalogue reference renderer are cross-domain (PLAN2.D22).
-        // The event catalogue mechanics and the EventSink slot are cross-domain kernel types too (D38).
+        // The event pipeline's base class, its single recorder and the catalogue reference renderer are cross-domain.
+        // The event catalogue mechanics and the EventSink slot are cross-domain kernel types too.
         'Events' => ['DomainEvent', 'EventRecorder', 'EventsReference', 'EventCatalog', 'EventSink', 'EventSources', 'EventTypeCast', 'EventTypeContract', 'SinkResult', 'SinkWriter'],
         'Models' => [], // Concerns/ is a subdir, not a depth-0 file.
         'Exceptions' => ['VaulterException'],
@@ -293,13 +292,13 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Contracts' => ['IdStrategy'],
         // ADR-0017 amendment (ADR-0020): entry-point layers stay flat, so the allow-list is explicit.
         'Operations' => ['AccessOperations', 'ActivityOperations', 'ChangeOperations', 'NodeLocator', 'NodeSequence', 'DriveContext', 'OperationContext', 'ShareOperations', 'Operation', 'OperationSpec', 'OperationRunner', 'OperationMiddleware', 'OperationClaim', 'NoOperationClaim', 'ModuleReadiness', 'AfterCommitFailure', 'ConcurrencyPolicy', 'IdempotencyPolicy', 'OperationPolicy', 'OperationPolicySource', 'OperationCatalog', 'OperationSources', 'OperationsReference'],
-        // Revived in Phase D2 (P2 #5), kind-neutral naming in VLT-CANON P0.1: the
+        // Revived with kind-neutral naming in the
         // handler extensibility-seam VOs (FileDescriptor/ContentCapabilities/ViewerDescriptor/
         // NodePresentation) are kernel-shared — core's own Contracts\Handlers\*
         // interfaces type against them — so they live at Vaulter\ValueObjects\Handlers\*,
         // not in the extracted documents package. TipTapContent/LinkSchemeValidator/
-        // OpaqueContent moved to Vaulter\Documents\ValueObjects\* (VLT-CANON
-        // P0.3) — core no longer knows TipTap's shape.
+        // OpaqueContent moved to Vaulter\Documents\ValueObjects\* —
+        // core no longer knows TipTap's shape.
         'ValueObjects' => [],
     ];
 
@@ -332,19 +331,19 @@ test('split technical roots keep classes in domain subfolders', function (): voi
 });
 
 /**
- * ADR-0017 / VLT-REMED P4.9 — Canon A, Law 1 (layer-first placement).
+ * ADR-0017 — Canon A, Law 1 (layer-first placement).
  *
  * A recognized technical-layer directory (Actions/Models/Repositories/Enums/
  * Events/Data/Contracts/Http) must live as the FIRST namespace segment under the
  * package root — NEVER nested inside a domain module folder. `core` is the canon
  * reference and passes GREEN. The formerly-divergent `drive` layout (`Uploads/Actions`,
- * `Uploads/Models`, …) was the same rule; P4.10 discharged it (the layer subtrees
+ * `Uploads/Models`, …) was the same rule; a refactor discharged it (the layer subtrees
  * were dissolved into `Actions/Uploads`, `Models/Uploads`, …) and removed the
  * `->todo()` in drive's ArchTest.
  *
  * (Law 2 — "layers group by a domain sub-namespace, not flat" — is enforced by
  * the `split technical roots keep classes in domain subfolders` test above; the
- * formerly-flat `documents` layout was that rule, discharged by P4.10 with the
+ * formerly-flat `documents` layout was that rule, discharged by a refactor with the
  * `->todo()` removed in documents.)
  *
  * `Http` sub-layers (Controllers/Requests/Resources/Middleware/Support) are
@@ -356,7 +355,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // Public error and test contracts live with their respective families; the event
     // value objects are the ValueObjects domain "Events", the "Events" domain of the neutral event values.
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
-    // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
+    // Events/Outbox/Models holds the outbox model of the kernel outbox (Vaulter\Events\Outbox\Models\OutboxEvent).
     expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../../packages/core/src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../../packages/core/src/Testing/Contracts'))->toBe(['.', '..', 'ModuleContractTests.php'])
@@ -444,7 +443,7 @@ test('split classes resolve under their canonical domain namespace', function ()
 });
 
 /**
- * H.4 arch-ban: recursive descendant aggregation in request paths is fatal on
+ * arch-ban: recursive descendant aggregation in request paths is fatal on
  * MariaDB (no correlated CTEs) and degrades on Postgres. No non-test src file may
  * call whereHas('descendants') or withCount('descendants'); subtree work goes
  * through NodeReadRepository (withMaxDepth) or direct EXISTS / denorm counters.
@@ -466,7 +465,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', function
             continue;
         }
 
-        // Strip comments + docblocks so the ban only fires on real code (the H.4
+        // Strip comments + docblocks so the ban only fires on real code (the
         // rule is about query calls, not prose explaining the rule).
         $code = '';
 
@@ -487,13 +486,13 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', function
 });
 
 /**
- * P2 #5 / ADR-0015 — package dependency direction. The physical package split keeps
+ * ADR-0015 — package dependency direction. The physical package split keeps
  * ONE direction: satellites depend on core, core depends on NOTHING in the Vaulter
  * ecosystem. This guards that the extracted vaulter-media package (its CAS engine
  * under Vaulter\Media) is NEVER referenced back from core (or any other Vaulter code
  * except media itself) — a leak would recreate the cycle the extraction avoided.
  *
- * The drive (D1) and documents (D2) extractions landed as file-scan guards below
+ * The drive and documents extractions landed as file-scan guards below
  * instead of this `->ignoring(...)` shape — see `coreReferencesTo()` for why.
  */
 arch('core (and all Vaulter code) never depends on the extracted vaulter-media package')
@@ -512,8 +511,8 @@ arch('core (and all Vaulter code) never depends on the extracted vaulter-media p
  * precise invariant (zero references from CORE SOURCE) and self-updates as new core
  * files are added. `Vaulter\<root>\` matches the package root only; the kernel
  * DATA-domain namespaces (Vaulter\Models\Drive, Vaulter\Repositories\Drive, …) do not
- * start with that prefix and are correctly ignored. Shared by the drive (D1) and
- * documents (D2) dependency-direction guards below.
+ * start with that prefix and are correctly ignored. Shared by the drive and
+ * documents dependency-direction guards below.
  *
  * @return list<string>
  */
@@ -557,8 +556,8 @@ function coreReferencesTo(string $root): array
 }
 
 /**
- * P4 ownership move (D10, D40): the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
- * vaulter-drive and the HTTP/config/kernel slice moved with P4.11. No core file names a `Vaulter\Drive\` type any more (P4.16, I1 blocks).
+ * Ownership move: the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
+ * vaulter-drive and the HTTP/config/kernel slice moved there. No core file names a `Vaulter\Drive\` type any more (the boundary scan blocks it).
  */
 test('core source references the vaulter-drive package nowhere (P2 #5 / D1, I1 blocks from P4.16)', function (): void {
     $src = (string) realpath(__DIR__.'/../../../packages/core/src');
@@ -569,12 +568,12 @@ test('core source references the vaulter-drive package nowhere (P2 #5 / D1, I1 b
 });
 
 /**
- * P2 #5 / ADR-0015, Phase D2 — vaulter-documents is now PHYSICALLY extracted (its code
+ * ADR-0015 — vaulter-documents is now PHYSICALLY extracted (its code
  * lives in packages/documents, namespace Vaulter\Documents\*). The transitional seams
  * are cut: the 7 Contracts\Handlers extensibility VOs + UnknownExportFormatException/
- * UnsupportedDocumentContentException moved to core (kernel-shared, T6/D2 finding);
+ * UnsupportedDocumentContentException moved to core (kernel-shared);
  * TipTapContent/LinkSchemeValidator/OpaqueContent/TiptapExtensions/
- * InvalidDocumentContentException moved BACK to documents (VLT-CANON P0.3 — TipTap
+ * InvalidDocumentContentException moved BACK to documents (TipTap
  * isolation, core never knew their shape beyond the DocumentContent contract); the
  * FileHandlerRegistry/NodePresenter contracts + `Vaulter::handlers()->register()` resolve
  * the documents package's bindings without naming its classes; HostUserResolver
@@ -596,12 +595,12 @@ test('core source never references the vaulter-azguard package (P2.1)', function
 });
 
 /**
- * VLT-CANON P0.3/P3.2 — TipTap is fully isolated behind the opaque
+ * TipTap is fully isolated behind the opaque
  * {@see DocumentContent} seam; core must never name a
  * concrete TipTap CLASS (`TipTapContent`, `TiptapExtensions`, `InvalidDocumentContentException`,
  * …) in real code. Matches the CamelCase class-name spelling only — the lower-case
  * package-owned configuration keys are a deliberate, documented
- * pass-through for a host's own TipTap extensions (VLT-REMED D27/D28) and are NOT a
+ * pass-through for a host's own TipTap extensions and are NOT a
  * class coupling, so they never trip this pattern. Prose mentions of "TipTap" in
  * comments/docblocks (e.g. DocumentContent/DocumentExporter explaining the seam) are
  * legitimate and stripped the same way `coreReferencesTo()` strips them.
@@ -642,7 +641,7 @@ test('core source never references a concrete TipTap class (VLT-CANON P0.3)', fu
 });
 
 /**
- * PLAN2.P4.3 (OPUS 04 §1 p.2) — core names no document editor at all: not in code, not
+ * Core names no document editor at all: not in code, not
  * in comments. Editors belong to the document types of vaulter-documents; core only
  * presents a kind through a tagged KindPresenter. The one allow-listed place is the
  * config normalizer, whose string literals carry the documented legacy config keys
@@ -679,11 +678,11 @@ test('core source never names a document editor (TipTap, Univer)', function (): 
 });
 
 /**
- * VLT-CANON P0.1/D7/P3.2 — the engine-extensibility contract is kind-neutral
+ * the engine-extensibility contract is kind-neutral
  * (`FileHandler`, not `DocumentHandler`): it describes ANY file, editable or not, so
  * it must never depend on the extracted vaulter-documents package (TipTap/Univer are
  * one KIND of handler among many — preview/download are not "engines"). This is the
- * final-canon guard for D7: a regression that re-couples the contract seam to a
+ * final-canon guard: a regression that re-couples the contract seam to a
  * specific document engine trips here, not just the broader core⊥documents guard
  * above (which only scans `src/`, not the namespace-graph form PestArch offers for a
  * single sub-namespace).
@@ -703,14 +702,14 @@ arch('domain exceptions implement the HTTP problem contract')
     ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
     ->ignoring([
         'Vaulter\Exceptions\VaulterException',
-        // P2.5 configuration failures stop boot before any endpoint can respond.
-        // Production invariants also stop bootstrap or workers before serving HTTP (P5.1).
+        // Configuration failures stop boot before any endpoint can respond.
+        // Production invariants also stop bootstrap or workers before serving HTTP.
         InsecureProductionConfiguration::class,
         'Vaulter\Exceptions\Configuration\InvalidConfigurationException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
-        // A mutating operation without a policy (D47) is a developer error: no problem code, a 500 internal_error.
+        // A mutating operation without a policy is a developer error: no problem code, a 500 internal_error.
         'Vaulter\Exceptions\Operations\UnknownOperationException',
     ]);
 

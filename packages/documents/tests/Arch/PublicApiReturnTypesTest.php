@@ -13,7 +13,7 @@ use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 
 /**
- * PLAN2.P4.8 (D44, P4-I23): the documents operations never return or take an Eloquent
+ * The documents operations never return or take an Eloquent
  * model, builder, collection or paginator (methods marked @internal are exempt).
  */
 it('keeps Eloquent out of the documents operations', function (string $class): void {

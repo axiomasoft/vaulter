@@ -21,10 +21,10 @@ use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Filament\Tests\Fixtures\MutableTenantResolver;
 
 /*
- * F-P1.10-01 (Major) — the Storage/NodeGrant/NodeShare/Activity tables list only what the
+ * The Storage/NodeGrant/NodeShare/Activity tables list only what the
  * acting admin's drive handles list: the drive entry point decides which drives are
  * openable, the handle's operations decide which grants, links and activity entries are
- * shown. Each pair below is red-before-fix (D7): a zero-grant actor must see no row of any owner.
+ * shown. Each pair below is red-before-fix: a zero-grant actor must see no row of any owner.
  */
 
 /**

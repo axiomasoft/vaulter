@@ -99,7 +99,7 @@ it('новая версия добавляет к used_bytes свой полны
 
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('aaaaaaaaaa'), 'doc.txt')); // 10 bytes
 
-    // Every retained revision counts (PLAN2.D48): 4 + 10.
+    // Every retained revision counts: 4 + 10.
     expect($drive->model()->refresh()->used_bytes)->toBe(14);
 });
 

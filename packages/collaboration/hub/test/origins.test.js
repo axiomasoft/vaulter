@@ -6,7 +6,7 @@ import { createPersistence, originKind } from '../src/persistence.js'
 import { problem, receipt, startMockBackend, virtualTime } from './support/mock-backend.js'
 import { clientUpdate, envelope, eventually, fakeConnection, quietLog, ROOM, testConf, textAfter, writerContext } from './support/rooms.js'
 
-// Where an update comes from decides who appends it (I17 scenario 11): a server/direct change is
+// Where an update comes from decides who appends it (collaboration scenario 11): a server/direct change is
 // appended exactly once, under an update_id of the hub; a change that arrived through the Redis
 // extension is never appended by the hub that received it; a client's envelope is appended once
 // under its own id; a plain sync update is not appended at all. In-process Hocuspocus 4.3, a mock

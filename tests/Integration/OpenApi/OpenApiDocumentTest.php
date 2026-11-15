@@ -9,7 +9,7 @@ use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 
 require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
 
-// The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
+// The contract describes the webhooks routes and problems too: the opt-in module is on.
 uses(EnablesWebhooksModule::class);
 
 /**
@@ -18,7 +18,7 @@ uses(EnablesWebhooksModule::class);
  * they apply to — a new operation cannot forget them.
  */
 
-/** The operations that change a node, a document or an aggregate with a version of its own (D47) and so require If-Match. */
+/** The operations that change a node, a document or an aggregate with a version of its own and so require If-Match. */
 const IF_MATCH_OPERATIONS = [
     'access.inheritance.restore',
     'access.inheritance.restrict',

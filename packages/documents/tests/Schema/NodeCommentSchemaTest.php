@@ -10,7 +10,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The v_node_comments schema (ADR-0014 шаг 1): the table, its columns, the node_id
+ * The v_node_comments schema (ADR-0014): the table, its columns, the node_id
  * cascade and the parent_id self-FK threading cascade. Additive parity with the
  * legacy v_document_comments — no soft-delete (a delete is permanent).
  */

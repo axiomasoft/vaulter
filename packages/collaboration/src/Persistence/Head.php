@@ -34,7 +34,7 @@ final readonly class Head
         return $this->leaseToken !== null && $this->leaseExpiresAt !== null && $this->leaseExpiresAt->greaterThan($now);
     }
 
-    /** Whether `$token` is the lease that holds the generation at `$now` (C12). */
+    /** Whether `$token` is the lease that holds the generation at `$now`. */
     public function heldBy(string $token, Carbon $now): bool
     {
         return $this->leased($now) && hash_equals((string) $this->leaseToken, $token);

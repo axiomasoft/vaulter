@@ -63,10 +63,10 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 
 /**
- * Load-stand host provider (P2.2). Boots ONLY under the VLT-LOAD nginx+php-fpm SUT
+ * Load-stand host provider. Boots ONLY under the load nginx+php-fpm SUT
  * (see testbench.load.yaml) — the shipped package never loads it. Mirrors
- * tests/Integration/E2E/E2eServiceProvider.php (P2.1 Required Reads #4), adapted for
- * the harness: full k6-exercised feature surface (operations-catalog.md), MinIO S3 disk,
+ * tests/Integration/E2E/E2eServiceProvider.php, adapted for
+ * the harness: full k6-exercised feature surface, MinIO S3 disk,
  * and a `/load/storage` convenience seam that stands in for the "create storage" step —
  * vaulter has no public HTTP endpoint for that (a storage is provisioned per host entity
  * via `Vaulter::for($host)`, not POSTed), same as e2e's own `/e2e/setup`.
@@ -156,7 +156,7 @@ final class LoadServiceProvider extends ServiceProvider
                 'client' => env('REDIS_CLIENT', 'phpredis'),
                 'options' => [
                     'cluster' => env('REDIS_CLUSTER', 'redis'),
-                    // P8.7 registry keys are an external contract and must not receive
+                    // Registry keys are an external contract and must not receive
                     // Laravel's application-name prefix.
                     'prefix' => env('REDIS_PREFIX', ''),
                 ],
@@ -303,7 +303,7 @@ final class LoadServiceProvider extends ServiceProvider
             ]);
         }
 
-        // Process liveness (P8.6 / D36): Laravel-native DiagnosingHealth, no DB/S3/queue probes.
+        // Process liveness: Laravel-native DiagnosingHealth, no DB/S3/queue probes.
         Route::get('/up', static function () {
             try {
                 Event::dispatch(new DiagnosingHealth);
@@ -336,7 +336,7 @@ final class LoadServiceProvider extends ServiceProvider
 
         // Vaulter has no `POST storages` HTTP endpoint — a storage is provisioned per
         // host entity via `Vaulter::for($host)`, not created through the public API
-        // (operations-catalog.md carries no OP-nn for it). This is the load-stand's own
+        // (carries no OP-nn for it). This is the load-stand's own
         // seam for that step, same role as e2e's `/e2e/setup`: idempotent per actor id
         // (DriveTestHelpers::host($id) with a FIXED id — repeat calls resolve the SAME
         // storage/root, they do not create duplicates), grants the actor Owner on the
@@ -351,7 +351,7 @@ final class LoadServiceProvider extends ServiceProvider
 
             // `Vaulter::for($host)->model()` is find-or-create (idempotent per host
             // id — confirmed by repeat-calling this route against the SAME actor id
-            // during P2.2 validation), but AccessTestHelpers::grant() is a plain
+            // during validation), but AccessTestHelpers::grant() is a plain
             // INSERT — a repeat call for the same (node, subject) trips the partial-
             // UNIQUE grant constraint. Guard explicitly so the smoke curl sequence in
             // README.md is safe to re-run.

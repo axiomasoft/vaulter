@@ -19,7 +19,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Support\Identity;
 
 /**
- * Compaction leases (C12): PHP does not merge Yjs, so the hub's compaction worker asks for the document generations
+ * Compaction leases: PHP does not merge Yjs, so the hub's compaction worker asks for the document generations
  * due for a checkpoint, merges each checkpoint with its tail and publishes the result through {@see Checkpoint}. A
  * lease is the one right to publish a generation's next checkpoint until it expires; it gives no right to append.
  *
@@ -206,7 +206,7 @@ final readonly class CompactionLeases
             if ($locked === null) {
                 return null;
             }
-            // A generation a restore closed while the module was off is never compacted: the prune retires it (C4).
+            // A generation a restore closed while the module was off is never compacted: the prune retires it.
             if ($locked->binding?->protocol !== 'yjs' || $locked->generation !== $candidate->generation) {
                 return null;
             }

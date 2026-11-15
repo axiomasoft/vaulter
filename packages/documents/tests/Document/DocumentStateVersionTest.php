@@ -26,10 +26,10 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
 
 /*
- * The content validator of a document (D35): state_version moves by exactly one per
+ * The content validator of a document: state_version moves by exactly one per
  * effective write of the working state, an identical write is a no-op, and a stale
  * expectation is refused (412 document_state_mismatch) before anything is written.
- * These scenarios replace the document cases of the P3.3 node-sequence regression.
+ * These scenarios replace the document cases of the node-sequence regression.
  */
 function stateVersionDocument(): Node
 {

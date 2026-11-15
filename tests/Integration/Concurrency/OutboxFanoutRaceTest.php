@@ -20,7 +20,7 @@ use Vaulter\Webhooks\WebhookFanoutConsumer;
 uses(EnablesWebhooksModule::class);
 
 /**
- * Two relay processes on PostgreSQL (D29): SKIP LOCKED splits the due outbox deliveries between them,
+ * Two relay processes on PostgreSQL: SKIP LOCKED splits the due outbox deliveries between them,
  * every (event, endpoint) pair is materialized exactly once, and a relay killed in the middle of a
  * fan-out chunk loses nothing — its transaction rolls back and the delivery is resumed from its
  * continuation once its lease lapses.

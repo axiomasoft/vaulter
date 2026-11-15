@@ -14,7 +14,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookFanoutConsumer;
 
 /**
- * O3 on PostgreSQL (D29): a relay worker whose delivery lease expired is taken over by another; the late
+ * O3 on PostgreSQL: a relay worker whose delivery lease expired is taken over by another; the late
  * completion of the first one, fenced by its stale lease generation, writes nothing and the successor's result
  * stands.
  *

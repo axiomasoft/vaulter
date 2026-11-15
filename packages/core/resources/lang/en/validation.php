@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Vaulter package validation messages (vaulter:: namespace, P4.5 / F-P3.1-02).
+ * Vaulter package validation messages (vaulter:: namespace).
  *
  * Kept separate from Laravel's own `validation.php` (a host app that ALSO
  * publishes/customises its root `lang/en/validation.php` never clobbers this
@@ -19,7 +19,7 @@ declare(strict_types=1);
 return [
 
     // {@see \Vaulter\Drive\Support\DriveNameRules::messages()} — the shared node-name
-    // validation message for create/rename/upload/copy Drive requests (§2.2).
+    // validation message for create/rename/upload/copy Drive requests.
     'name_no_separators' => 'The name must not contain path separators (/ or \\).',
 
 ];

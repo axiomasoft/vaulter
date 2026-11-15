@@ -1,6 +1,6 @@
 #!/bin/sh
-# P5.1 — tier-S concurrency lane: dry-run | run | verify | check-stand
-# Product fixtures and the live matrix belong to P5.2/P5.3.
+# Tier-S concurrency lane: dry-run | run | verify | check-stand
+# Product fixtures and the live matrix live in p5-concurrency-cases.sh.
 # Usage:
 #   TIER=S ./load/scripts/p5-concurrency.sh dry-run
 #   TIER=S ./load/scripts/p5-concurrency.sh check-stand

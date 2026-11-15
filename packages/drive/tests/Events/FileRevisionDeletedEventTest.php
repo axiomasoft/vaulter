@@ -15,7 +15,7 @@ use Vaulter\Testing\Support\CanonicalJson;
 
 /**
  * Deleting a non-current revision is audited and staged for webhooks like every other
- * lifecycle event (PLAN2.D48).
+ * lifecycle event.
  */
 uses(TestCase::class, RefreshDatabase::class);
 

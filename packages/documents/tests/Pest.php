@@ -53,7 +53,7 @@ uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 // Generated scaffolds run their contract suites on the same booted types and exporters.
 uses(ExportTestCase::class, RefreshDatabase::class)->in('Console');
 
-// The collaborative-state contract and the drain-or-409 guards (D26, D27) check "inside a transaction" themselves:
+// The collaborative-state contract and the drain-or-409 guards check "inside a transaction" themselves:
 // these files migrate per test instead of wrapping each in a transaction.
 uses(StateTestCase::class, DatabaseMigrations::class)->in('State');
 // The v1 HTTP surface: documents, revisions, comments and export.
@@ -67,10 +67,9 @@ uses(TestCase::class)->in('Configuration');
 // The HTTP shape checks read the booted route table.
 uses(TestCase::class)->in('Arch');
 
-// Database-free (P1.5): these files run on the booted application without a schema; each one stayed green under
-// WithoutDatabaseSchema (a test that reaches the database fails there) — see
-// plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
+// Database-free: these files run on the booted application without a schema; each one stayed green under
+// WithoutDatabaseSchema (a test that reaches the database fails there).
 uses(WithoutDatabaseSchema::class)->in('Arch', 'Configuration', 'Providers');
 
-// Test groups (P1.5): database, serial, extended, stand and the engine-only engine:* — see groups.php.
+// Test groups: database, serial, extended, stand and the engine-only engine:* — see groups.php.
 TestGroups::bind(__DIR__, 'documents');

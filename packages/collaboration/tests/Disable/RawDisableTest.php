@@ -26,7 +26,7 @@ use Vaulter\Kernel;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /*
- * Scenario 12, raw disable (C9, D26 rev.3 p.4): the module is switched off with `vaulter.modules.collaboration=false`
+ * Scenario 12, raw disable: the module is switched off with `vaulter.modules.collaboration=false`
  * (here: its default) while documents still carry a pending marker — no drain ran. Nothing is compacted: the documents
  * module answers 409 document_state_pending for exactly those documents (content, replace, restore, export), the others
  * work, and the log stays as it was. Not one query reaches a `v_collaboration_*` table and not one service of the

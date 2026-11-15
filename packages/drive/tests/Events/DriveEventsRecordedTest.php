@@ -23,7 +23,7 @@ use Vaulter\Testing\Support\CanonicalJson;
 /**
  * Every drive event is recorded by the EventRecorder: one activity row and, for webhook
  * types, one outbox row with the same event id. Commands are distinct occurrences even
- * when they repeat a state (V06).
+ * when they repeat a state.
  */
 uses(TestCase::class, RefreshDatabase::class);
 

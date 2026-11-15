@@ -14,7 +14,7 @@ use Vaulter\Media\Tests\Fixtures\Cas\NullMtimeContentStore;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Orphan-object disk-walk (master plan P4 #11 / H.3): the inverse of reconcile() —
+ * Orphan-object disk-walk: the inverse of reconcile() —
  * BlobReconciler::sweepOrphans() walks the DISK for bytes that match the committed
  * CAS key layout "<scope>/ab/cd/<sha256>" but have NO blob row (a commit that
  * promoted bytes then rolled its row back, or leaked bytes), and — only on a driver

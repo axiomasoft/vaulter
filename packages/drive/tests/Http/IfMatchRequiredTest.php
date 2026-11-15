@@ -16,7 +16,7 @@ use Vaulter\Drive\Testing\Http\V1;
 
 /**
  * Every route that changes an existing node — or an aggregate with a version of its own: the access of a node, a share
- * link, a drive (D47) — refuses to run blind: without If-Match, or with `*` (which matches anything), it answers 428
+ * link, a drive — refuses to run blind: without If-Match, or with `*` (which matches anything), it answers 428
  * and changes nothing.
  */
 uses(RefreshDatabase::class);
@@ -54,7 +54,7 @@ function imRequest(string $route, DriveHandle $drive): array
         'files.revisions.store' => ['POST', 'files/'.$file->id.'/revisions', ['file' => UploadedFile::fake()->createWithContent('target.txt', 'second')], $file->id],
         'files.revisions.restore' => ['POST', 'files/'.$file->id.'/revisions/'.$revision.'/restore', [], $file->id],
         'uploads.store' => ['POST', 'drives/'.$drive->model()->getKey().'/uploads', ['protocol' => 'tus', 'node_id' => $file->id, 'total_size_bytes' => 3], $file->id],
-        // The aggregates with a version of their own (D47): the node's access, a share link, the drive.
+        // The aggregates with a version of their own: the node's access, a share link, the drive.
         'grants.destroy' => ['DELETE', 'nodes/'.$file->id.'/grants/'.$grant, [], $file->id],
         'access.inheritance.restrict' => ['POST', 'nodes/'.$folder->id.'/inheritance/restrict', [], $folder->id],
         'access.inheritance.restore' => ['POST', 'nodes/'.$folder->id.'/inheritance/restore', [], $folder->id],

@@ -13,7 +13,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 /**
- * PLAN2.D37 error contract: stable codes and statuses, an actionable message, and the
+ * Error contract: stable codes and statuses, an actionable message, and the
  * trash root in the response of a member restore.
  */
 dataset('deletion exceptions', [

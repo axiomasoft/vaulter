@@ -11,7 +11,7 @@ import { parseArguments } from '../src/cli.js'
 import { extensionsFor, FIELD } from '../src/schema.js'
 import { startMockBackend } from './support/mock-backend.js'
 
-// The one-shot `compact --pending` (I17 #19), run as a child process against a mock backend: no
+// The one-shot `compact --pending`, run as a child process against a mock backend: no
 // WebSocket server, compaction passes until the lease answer is empty (exit 0) or the deadline
 // passes (exit 1, the document ids still pending on stderr). The image runs it through the same
 // entrypoint as `serve`.

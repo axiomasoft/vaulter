@@ -40,7 +40,7 @@ it('lists the checks by key and agrees with its own summary and exit code', func
 
     expect($keys)->toBe($sorted)
         ->and($keys)->toContain('core.database.connection', 'core.schema.tables', 'core.modules.cache')
-        // The opt-in webhooks module is off by default: it contributes no check (D22).
+        // The opt-in webhooks module is off by default: it contributes no check.
         ->and($keys)->not->toContain('core.webhooks.deliveries')
         ->and((array) $document->summary)->toBe($counts)
         ->and($document->exit_code)->toBe($counts['error'] > 0 ? 1 : 0);

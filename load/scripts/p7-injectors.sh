@@ -1,5 +1,5 @@
 #!/bin/sh
-# P7.2 — injectors, compose overlay, S0 contract, promotion rehearsal.
+# Injectors, compose overlay, S0 contract, promotion rehearsal.
 # Usage:
 #   ./load/scripts/p7-injectors.sh static-validate
 #   ./load/scripts/p7-injectors.sh compose-config

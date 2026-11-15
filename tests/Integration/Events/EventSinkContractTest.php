@@ -26,7 +26,7 @@ use Vaulter\Modules\SlotContribution;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * The EventSink slot (D38): the recorder runs the contributions in the order (priority, id), the first sink
+ * The EventSink slot: the recorder runs the contributions in the order (priority, id), the first sink
  * that keeps the event tells a new occurrence from a replay, a partial store and a failing sink roll the
  * operation back, and a sink writes only inside the operation's transaction. Committed migrations, so a
  * rollback here is a real one.

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * The schema-ddl adapter (knowledge p6-surface#identities-schema): the DDL snapshots of
+ * The schema-ddl adapter: the DDL snapshots of
  * packages/core/tests/Fixtures/Schema/expected/<engine>/<preset>.json compared on the keys preset + table + column, named
  * index and named constraint; a foreign key by what it binds (from → table.to), not by the position the engine numbers it.
  * Column order, map order and `create_sql` (the engine's print of the same structure) are no contract.

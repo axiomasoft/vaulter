@@ -12,11 +12,11 @@ use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationPolicy;
 
 /**
- * I11 / I12 coverage of the collaboration's operation policies (D47, knowledge p6-design#coverage), for every route of the
+ * Coverage of the collaboration's operation policies, for every route of the
  * package: (a) no operation name in src is missing from the catalog (the package runs none of its own: the session issues
  * a token without a write, the hub is a protocol with its own deduplication), (b) every mutating v1 route of the package
  * is in exactly one policy, (c) no route of the package reads the Idempotency-Key — none of its policies is a receipt —
- * and (d) the policies say what the routes are: the session natural, the hub a protocol fenced by the generation (D26).
+ * and (d) the policies say what the routes are: the session natural, the hub a protocol fenced by the generation.
  */
 
 /** @return array<string, OperationPolicy> */

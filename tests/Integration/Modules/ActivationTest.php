@@ -29,7 +29,7 @@ use Vaulter\Webhooks\WebhooksModule;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// D22: the core module is Auto, the logical webhooks module (D39) is opt-in. An inactive module mounts no
+// The core module is Auto, the logical webhooks module is opt-in. An inactive module mounts no
 // route, registers no command, contributes no doctor check; its schema is still installed.
 
 /** @return list<Route> the routes of the module `$id` */

@@ -8,12 +8,12 @@ use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 
 /*
- * F-P1.10-02 (Minor) — PanelActor must resolve the acting admin through the
+ * PanelActor must resolve the acting admin through the
  * ACTIVE PANEL's own auth guard, not the application's global default guard.
  * Before the fix PanelActor called `Auth::user()` (the default guard) directly;
  * on a panel configured with a non-default guard, the AccessResolver would then
  * evaluate a DIFFERENT identity than the one actually signed into the panel.
- * Red-before (D7): with the pre-fix `Auth::user()` call, PanelActor::id() below
+ * Red-before: with the pre-fix `Auth::user()` call, PanelActor::id() below
  * would resolve the DEFAULT-guard user (or null), never the panel-guard user.
  */
 it('resolves the acting admin through the panel guard, not the global default guard, F-P1.10-02', function (): void {

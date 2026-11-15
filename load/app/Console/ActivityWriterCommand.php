@@ -12,11 +12,11 @@ use Vaulter\Support\Config;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * VLT-LOAD P2.3 — the sustained background writer Deliverables call for: without a
+ * The sustained background writer Deliverables call for: without a
  * live write tail during a k6 run, P3's read-path profiling would measure v_activity
  * under a static GIN index, not the write-hot path it actually ships as
- * (reference-env.md §2.1 "sustained write-RPS во время прогона"). Run this
- * ALONGSIDE a k6 scenario, not as part of `load:seed` (Scope Excluded, P2.3) — it
+ * ("sustained write-RPS во время прогона"). Run this
+ * ALONGSIDE a k6 scenario, not as part of `load:seed` (Scope Excluded) — it
  * has no natural stopping point of its own.
  *
  * Paced in one-second ticks: sleeps out the remainder of each second after its

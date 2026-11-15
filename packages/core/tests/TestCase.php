@@ -32,7 +32,7 @@ abstract class TestCase extends OrchestraTestCase
         $this->pinSuiteConnection($app);
 
         // The package's `vaulter-public`/`vaulter-uploads` named rate limiters
-        // (P1.3 / F-P1.8-01) are backed by the Laravel cache. Testbench's own
+        // are backed by the Laravel cache. Testbench's own
         // default cache store is 'database', which needs a `cache` table this
         // suite's migrations never create — pin the in-memory 'array' store so a
         // throttled route never 500s on a missing table.
@@ -43,7 +43,7 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('vaulter.routes.middleware.authenticated', []);
 
         // Pin the auto-increment strategy for the base suite. The published
-        // config now defaults to ulid (D9); the legacy default-panel document
+        // config now defaults to ulid; the legacy default-panel document
         // tests assert bigint keys, so the foundation suite keeps bigint and the
         // UlidTestCase exercises the ulid path explicitly.
         $app['config']->set('vaulter.ids.strategy', 'bigint');

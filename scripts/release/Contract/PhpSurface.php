@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * The PHP adapter (D14, knowledge p6-surface#php): compares the `surface.json` of two revisions member by member, keyed by
+ * The PHP adapter: compares the `surface.json` of two revisions member by member, keyed by
  * (FQCN, member kind, member name) — never as a set of signature lines, which loses the owner of two identical methods.
  * The members of a root are resolved through its whole graph: parent, traits with their alias/insteadof/visibility
  * adaptations and interfaces, Internal ancestors included; an Internal ancestor is no root, but what a root inherits from

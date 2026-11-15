@@ -12,7 +12,7 @@ use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 
 /**
- * The draining flag of a managed disable (C10). `vaulter:collaboration:drain` sets it, and from then on every append is
+ * The draining flag of a managed disable. `vaulter:collaboration:drain` sets it, and from then on every append is
  * refused with 503 collaboration_draining before it takes a lock, while the hub checkpoints what the log holds; it stays
  * until `vaulter:collaboration:drain --release` removes it, also across a switch-off and on again of the module.
  *

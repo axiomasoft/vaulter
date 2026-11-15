@@ -16,7 +16,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * D23 pair "purge of a drive file ↔ a concurrent ingest of the same bytes into the same scope" on PostgreSQL: the
+ * Pair "purge of a drive file ↔ a concurrent ingest of the same bytes into the same scope" on PostgreSQL: the
  * purge holds the drive tree lock and unpins in its transaction, the ingest commits and pins under the blob lock. In
  * either order the surviving file's revision is pinned and its blob keeps its bytes through a full GC pass.
  */

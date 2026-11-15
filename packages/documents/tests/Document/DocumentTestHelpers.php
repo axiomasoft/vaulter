@@ -18,7 +18,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * Builders for the M4a Documents tests: a Drive handle and a quick TipTap document.
+ * Builders for the Documents tests: a Drive handle and a quick TipTap document.
  */
 final class DocumentTestHelpers
 {

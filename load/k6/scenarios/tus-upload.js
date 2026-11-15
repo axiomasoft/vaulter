@@ -1,5 +1,5 @@
-// VLT-LOAD P2.4 — tus resumable upload (OP-01 create, OP-02 PATCH-chunk, OP-03
-// HEAD-resume, OP-05 abort). Stock k6 only (D22) — no xk6-fasthttp, PATCH is a first-
+// Tus resumable upload (OP-01 create, OP-02 PATCH-chunk, OP-03
+// HEAD-resume, OP-05 abort). Stock k6 only — no xk6-fasthttp, PATCH is a first-
 // class k6 http verb.
 import http from 'k6/http';
 import { check } from 'k6';

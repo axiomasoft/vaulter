@@ -22,7 +22,7 @@ use Throwable;
 /**
  * The supported surface of D27, read from the attributes of the code: every type marked `#[Api]` or `#[Spi]` with
  * the public and protected members that are not `#[Internal]` (names of parameters count — named arguments are API),
- * and the I13 findings the same reading yields. The manifest is a function of the sources alone: sorted, no paths,
+ * and the findings the same reading yields. The manifest is a function of the sources alone: sorted, no paths,
  * no line numbers.
  *
  * @phpstan-type Member array{group: int, name: string, line: string, types: list<string>, kind: string}
@@ -33,7 +33,7 @@ final class Surface
 {
     public const SNAPSHOT = 'packages/%s/tests/Arch/__snapshots__/surface.txt';
 
-    /** The machine view of the same reading (P6.2): versioned, keyed by FQCN and member key, read by the BC check. */
+    /** The machine view of the same reading: versioned, keyed by FQCN and member key, read by the BC check. */
     public const STRUCTURE = 'packages/%s/tests/Arch/__snapshots__/surface.json';
 
     public const FORMAT = 'vaulter.surface';
@@ -277,7 +277,7 @@ final class Surface
     }
 
     /**
-     * The I13 classifier (P6.3/U1): the gated signature findings of violations() with the source facts that classify each, and
+     * The I13 classifier: the gated signature findings of violations() with the source facts that classify each, and
      * the findings of the parts of a supported surface the gated reading does not see — the `@method` lines of a facade, the
      * generic types of the docblocks (`@return`, `@param`, `@var`, `@extends`/`@implements`/`@use`), the members a supported
      * type inherits from an Internal ancestor, and a supported type built on the native ORM factory. A name the classifier

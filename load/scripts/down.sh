@@ -1,5 +1,5 @@
 #!/bin/sh
-# VLT-LOAD — tear the stand down. Usage: TIER=S0 ./load/scripts/down.sh
+# Tear the stand down. Usage: TIER=S0 ./load/scripts/down.sh
 # Adds -v (drops volumes: pg-data/minio-data/prom-data) unless KEEP_VOLUMES=1.
 set -eu
 

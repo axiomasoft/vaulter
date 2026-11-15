@@ -22,18 +22,18 @@ SECTIONS = {
 # already blocking) with a perf-assert-only RSS ceiling that is KNOWN to be red today
 # (L-01 — S3MultipartHandler::complete() holds the whole file in RAM). The RSS half must
 # not silently pass, and must not count as a plain "fail" either (that would make the
-# gate un-mergeable for a finding this plan explicitly defers to a dev-slice, D11) — a
+# gate un-mergeable for a finding that is deliberately deferred) — a
 # third verdict, `known-red`, is what §6.4 asks for ("вердикт known-red, а не || true").
 KNOWN_RED_IDS = {'SLO-46', 'SLO-47', 'SLO-48'}
 EXPECTED_ROW_COUNT = 96
 EXPECTED_CLASS_A_ROWS = 42
 
-# §7: profile `lab` blocks BOTH classes (D20's second escape hatch). A row's own Гейт
+# §7: profile `lab` blocks BOTH classes. A row's own Гейт
 # column reflects behaviour on `ubuntu-latest` (smoke-perf/regression) — a plain
 # "advisory" class-B row (tier S/M, i.e. one a lab run would actually produce) flips to
 # blocking in `lab`. Rows already qualified "(лаб.)" are tier L — never actually run
-# (D25: "L — экстраполяция"), so they stay advisory even under profile=lab; rows
-# qualified "(§6.3)" are a deliberate permanent carve-out (maintenance ops) and never flip.
+# ("L — экстраполяция"), so they stay advisory even under profile=lab; rows
+# qualified "" are a deliberate permanent carve-out (maintenance ops) and never flip.
 def _lab_flip_eligible(row):
     return row['class'] == 'B' and row['gate_raw'].strip() == 'advisory'
 

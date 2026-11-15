@@ -16,7 +16,7 @@ use Vaulter\Collaboration\Persistence\CompactionLease;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 
 /**
- * Protocol 2 compaction lease (C12): the hub's compaction worker asks for up to `max` (1..100) document generations
+ * Protocol 2 compaction lease: the hub's compaction worker asks for up to `max` (1..100) document generations
  * due for a checkpoint. Body `{hub_id, max, report?}`. The answer is a list, drain requests first, of `{document,
  * generation, lease_token, lease_expires_at, checkpoint_seq, head_seq, checkpoint_version, type, schema_version,
  * checkpoint (base64, null before the first one), content (the JSON to seed from when there is no checkpoint, else

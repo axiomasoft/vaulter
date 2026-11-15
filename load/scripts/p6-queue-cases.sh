@@ -1,5 +1,5 @@
 #!/bin/sh
-# P6.2 — semantic matrix, local sink contract, post-run integrity.
+# Semantic matrix, local sink contract, post-run integrity.
 # Usage:
 #   ./load/scripts/p6-queue-cases.sh static-validate
 #   ./load/scripts/p6-queue-cases.sh s0

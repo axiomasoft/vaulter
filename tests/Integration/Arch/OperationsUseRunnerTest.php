@@ -27,7 +27,7 @@ const OPERATIONS_READS = [
     FileOperations::class => ['revisions', 'read'],
     TrashOperations::class => ['list'],
     // patch() and putPart() write request bytes under the session lock; bytes are never read inside a
-    // repeated attempt, so these protocol adapters stay outside the runner (P3.10).
+    // repeated attempt, so these protocol adapters stay outside the runner.
     UploadOperations::class => ['status', 'patch', 'putPart'],
     AccessOperations::class => ['grants', 'explain', 'paginate'],
     ShareOperations::class => ['list', 'paginate'],

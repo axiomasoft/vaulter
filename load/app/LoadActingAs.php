@@ -11,11 +11,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Test authentication for the VLT-LOAD stand (NOT for production).
+ * Test authentication for the load stand (NOT for production).
  *
- * Mirrors tests/Integration/E2E/E2eActingAs.php (P2.1 Required Reads #4): a real host
+ * Mirrors tests/Integration/E2E/E2eActingAs.php: a real host
  * plugs its own auth layer, this stand takes the actor id from `X-Load-Actor` — k6
- * (harness.md §4 executor split, operations-catalog.md many-grant actor) walks in as N
+ * (executor split, operations-catalog.md many-grant actor) walks in as N
  * distinct users by varying this header per VU/session, no session/CSRF/login needed.
  */
 final class LoadActingAs

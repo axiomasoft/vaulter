@@ -10,7 +10,7 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
  * With strict tenancy, a drive or node of another tenant is unknown on every core v1
- * route: the same 404 body as an id that never existed (D38), whatever grants the
+ * route: the same 404 body as an id that never existed, whatever grants the
  * caller holds over there.
  */
 uses(RefreshDatabase::class);

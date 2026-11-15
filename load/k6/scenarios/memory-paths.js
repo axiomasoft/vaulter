@@ -1,4 +1,4 @@
-// P4.2 — single-shot public-path cases for the memory matrix (bounded k6 buffers).
+// Single-shot public-path cases for the memory matrix (bounded k6 buffers).
 import http from 'k6/http';
 import { check } from 'k6';
 import { API, TUS_CHUNK_BYTES, S3_PART_BYTES } from '../lib/config.js';

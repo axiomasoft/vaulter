@@ -15,7 +15,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 
 /**
- * Shared builders for the resumable-upload slice tests (M3a): a real Storage with a
+ * Shared builders for the resumable-upload slice tests: a real Storage with a
  * root folder, plus a quick session factory and a chunk-stream helper.
  */
 final class UploadTestHelpers
@@ -42,7 +42,7 @@ final class UploadTestHelpers
         static $owner = 0;
         $owner++;
 
-        // forceFill (P1.4/F-P1.8-02): owner_id/disk/used_bytes are excluded from
+        // forceFill: owner_id/disk/used_bytes are excluded from
         // Storage's $fillable, and Node has its own closed list — this trusted
         // fixture builder bypasses both exactly like DriveStoreRepository/
         // NodeStoreRepository do.
@@ -84,7 +84,7 @@ final class UploadTestHelpers
         int|string|null $nodeId = null,
         int|string|null $createdBy = null,
     ): UploadSession {
-        // forceFill (P1.4/F-P1.8-02): drive_id/status/received_bytes/… are
+        // forceFill: drive_id/status/received_bytes/… are
         // excluded from UploadSession's $fillable — bypassed here exactly like
         // UploadSessionManager::initiate() does.
         $session = new UploadSession;

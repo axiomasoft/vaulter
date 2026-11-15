@@ -384,7 +384,7 @@ it('selects the phase P5 moves of the owner collaboration and renames the namesp
 
     [$code, $report, , $err] = mt_run($root, ['--owner=collaboration', '--apply', '--tests=packages/drive/tests/Rooms:packages/collaboration/tests/Rooms']);
 
-    // Only the phase P5 type is selected: the P4 one is not a move of this owner.
+    // Only the phase P5 type is selected: the one is not a move of this owner.
     expect($code)->toBe(0, $err)
         ->and(array_column($report['moved'], 'old'))->toBe(['Acme\\Drive\\Rooms\\Room'])
         ->and(file_exists($root.'/packages/collaboration/src/Rooms/Room.php'))->toBeTrue()

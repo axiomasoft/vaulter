@@ -13,7 +13,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * RV-03 — ревью P5.2: per-chunk hard cap на ПУТИ ДОСТАВКИ вреда (F-P1.4-04 / U3.3).
+ * Per-chunk hard cap на ПУТИ ДОСТАВКИ вреда.
  *
  * Докблок StagedUpload::assertChunkWithinLimit() обещает отказ «BEFORE any bytes are staged»,
  * но барьер стоял ПОЗАДИ места вреда: контроллер сначала делал

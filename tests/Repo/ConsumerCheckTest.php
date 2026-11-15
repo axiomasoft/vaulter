@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * scripts/release/consumer-check.sh, the I14 clean-consumer harness (PLAN3 P4.19). Two kinds of check, both offline and
+ * scripts/release/consumer-check.sh, the clean-consumer harness. Two kinds of check, both offline and
  * without a Laravel application, a database or the network:
  *
  *  - the static refusal (before anything is installed): a package that names a class of a sibling it does not declare,
@@ -12,7 +12,7 @@ declare(strict_types=1);
  *  - the build: with a stand-in `composer` and `pest` the staged work directory is inspected - path repositories on the
  *    declared siblings only, `self.version` pinned, no vendor/ of the repository anywhere.
  *
- * The real `composer install` and the package tests run in CI (job consumer-isolation) and in PLAN4, never here (D41).
+ * The real `composer install` and the package tests run in CI (job consumer-isolation), never here.
  */
 
 function c_root(): string

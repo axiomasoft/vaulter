@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Schema snapshots of the packaged migrations on a disposable engine (PLAN3.P1.10).
+# Schema snapshots of the packaged migrations on a disposable engine.
 #
 #   scripts/schema-snapshot.sh --driver=<sqlite|pgsql|mysql> (--all-presets | --preset=<id>)
 #                              [--compare=<dir>] [--write=<dir>] [--write-original] [--rollback] [--mode=builder]
 #
 #   --compare=DIR     compare every preset with DIR/<driver>/<preset>.json (exit 1 on any difference)
 #   --write=DIR       write DIR/<driver>/<preset>.json (the current expected mirror, updated deliberately)
-#   --write-original  write packages/core/tests/Fixtures/Schema/original/ — immutable pre-P1.10 truth. Refuses (exit 2)
+#   --write-original  write packages/core/tests/Fixtures/Schema/original/ — immutable earlier truth. Refuses (exit 2)
 #                     unless the product tree equals c64bba25 and is clean; records that in original/metadata.json.
 #   --rollback        also roll the chain back and require an empty schema
 #   --mode=builder    build from SchemaBuilder::createAll() instead of the migration chain (default: the chain)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# P4.1 — in-container capture for one lane_selftest request (bind-mounted from repo).
+# In-container capture for one lane_selftest request (bind-mounted from repo).
 set -eu
 
 RUN_DIR="${1:?run dir}"

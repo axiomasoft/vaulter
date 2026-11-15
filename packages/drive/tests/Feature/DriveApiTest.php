@@ -17,7 +17,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The Drive REST surface (M1c-http): a full CRUD cycle through the API plus the
+ * The Drive REST surface: a full CRUD cycle through the API plus the
  * cross-cutting guarantees — upload dedup, 422 on a sibling clash, download
  * headers/bytes, swapped-model route binding, and cursor pagination. The slice
  * runs open (authorization is M2), so a bare authenticated actor suffices.
@@ -100,7 +100,7 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
 
     // forceDelete only purges from the trash: a live node is refused, a trashed one
     // is physically deleted and frees the bytes; the physical blob is
-    // reclaimed later by GC (§2.10).
+    // reclaimed later by GC.
     $this->deleteJson('api/vaulter/v1/nodes/'.$copy, [], DriveV1::ifMatch($copy))
         ->assertStatus(409)
         ->assertJsonPath('code', 'node_not_trashed');
@@ -190,7 +190,7 @@ it('streams the current version with the right bytes and headers (no temp-url di
 
 it('streams the bytes through PHP even on a disk that provides a temporary url, never redirecting (P1.2 / F-P1.3-01)', function (): void {
     // The faked local disk DOES provide temporary URLs; the presign-redirect
-    // branch was removed (D15 — a presigned URL is a bearer token that bypasses
+    // branch was removed (a presigned URL is a bearer token that bypasses
     // per-request re-authorization and cannot be revoked instantly), so the
     // response is always a streamed 200, never a 302.
     $storage = driveStorage();
@@ -227,7 +227,7 @@ it('streams a specific historical version', function (): void {
 
 it('serves a text/html declared mime as octet-stream with nosniff, never the raw declared type (F-P1.3-04, F-P1.11-03)', function (): void {
     // Force the streaming branch — the header hardening sits on the PHP-stream
-    // path (the presign-redirect branch is P1.2's scope, not this item's).
+    // path (the presign-redirect branch is tested elsewhere).
     app()->instance(StorageDriver::class, new StreamingOnlyStorageDriver(app(StorageDriver::class)));
 
     $storage = driveStorage();

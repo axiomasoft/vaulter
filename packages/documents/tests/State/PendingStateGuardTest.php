@@ -26,7 +26,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Kernel;
 
 /*
- * Drain-or-409 (C8, C9): a document with committed collaboration edits its working state does not hold yet is not
+ * Drain-or-409: a document with committed collaboration edits its working state does not hold yet is not
  * read, exported, replaced, restored or purged as it stands. The PendingStateDrainer is asked to bring the log in —
  * outside any transaction — and the path then checks the marker again under its own locks; a marker that stays, or
  * no drainer at all, answers 409 document_state_pending and leaves the generation, the content and the history alone.
@@ -267,8 +267,8 @@ it('drains the purge target even behind more trashed pending documents than one 
         ->and($drained)->toContain($target);
 });
 
-// Retention (vaulter:trash:purge) and the drive purge step purge each root as the root operation drive.trash.purge
-// (D48), so the same drain runs before their transaction: a marker the drain settles is purged at once, one that stays
+// Retention (vaulter:trash:purge) and the drive purge step purge each root as the root operation drive.trash.purge,
+// so the same drain runs before their transaction: a marker the drain settles is purged at once, one that stays
 // refuses only that root and the run goes on.
 it('drains a pending document before a retention purge, then purges it', function (): void {
     guardMark($this->id, 3);

@@ -119,8 +119,8 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
     private function patchChunk(UploadSession $session, mixed $chunk, int $offset): array
     {
         // The whole read-modify-write of received_bytes runs inside ONE transaction
-        // that takes a row lock on the session as its FIRST statement (
-        // N3). Without it two concurrent PATCH read the same server offset, both pass
+        // that takes a row lock on the session as its FIRST statement.
+        // Without it two concurrent PATCH read the same server offset, both pass
         // the offset check and both append — silently corrupting the assembled file.
         // The lock is held until advanceReceived() so the window is indivisible; the
         // acquire is NOWAIT so a concurrent PATCH is rejected as a conflict, never
@@ -140,7 +140,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
             $serverOffset = $this->offset($locked);
 
             if ($offset !== $serverOffset) {
-                // tus C6 (N3): offset < server is ONLY an idempotent retransmit when the
+                // tus: offset < server is ONLY an idempotent retransmit when the
                 // resent bytes match what is already staged in that range — the client
                 // repeated a chunk it already sent (a retry after a lost response), not
                 // a genuine desync. Anything else (a byte mismatch, or offset > server —

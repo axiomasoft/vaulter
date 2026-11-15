@@ -64,9 +64,9 @@ function operationMatrixState(): array
 /*
  * Per operation: the narrowest role that may perform it on the source, and the
  * broadest role that may not (null when View alone suffices). The roles nest, so the
- * "missing" role is the strongest negative case the role model allows (PLAN2.D45):
+ * "missing" role is the strongest negative case the role model allows:
  * read needs download (previewer lacks it), copy needs view+download+copy on every
- * copied node (D30), purge needs delete (organizer lacks it).
+ * copied node, purge needs delete (organizer lacks it).
  */
 dataset('operation permission matrix', static function (): array {
     $cases = [];
@@ -366,7 +366,7 @@ it('read blocks legacy infection and uncommitted content after Download authoriz
 
 it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extra node, charging the revision in full', function (string $stored, string $incoming): void {
     $node = $this->system->files()->upload(UploadSource::fromString('old', $stored));
-    // Both revisions are retained, so both count (PLAN2.D48).
+    // Both revisions are retained, so both count.
     app(VaulterDatabase::class)->write(fn () => $this->system->model()->forceFill(['quota_bytes' => 6])->save());
     $result = $this->system->files()->upload(UploadSource::fromString('new', $incoming), new UploadOptions(onConflict: OnNameConflict::AddRevision));
     expect($result->id)->toBe($node->id)

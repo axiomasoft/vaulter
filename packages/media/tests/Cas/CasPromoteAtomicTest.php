@@ -86,7 +86,7 @@ final class InterruptedCasPromotionStream
 }
 
 /**
- * Atomic CAS promotion (H.3 / F-P1.5-01): the driver must stage bytes under a
+ * Atomic CAS promotion: the driver must stage bytes under a
  * TEMPORARY key and only atomically move them onto the canonical key, so a crash
  * mid-write can never leave a truncated object under the canonical key (which would
  * be trusted as a committed blob — silent CAS corruption). The pre-fix driver wrote

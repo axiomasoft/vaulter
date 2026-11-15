@@ -13,7 +13,7 @@ use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 use Vaulter\Support\LoadTier;
 
 /**
- * Records `vaulter_request_peak_memory_bytes` after the response is sent (P8.4 / §5.2).
+ * Records `vaulter_request_peak_memory_bytes` after the response is sent.
  */
 final readonly class RecordRequestPeakMemory
 {

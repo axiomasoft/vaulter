@@ -8,7 +8,7 @@ use Illuminate\Foundation\Application;
 use Vaulter\Documents\Tests\TestCase;
 
 /**
- * Boots the package with the 'comments' feature ENABLED (ADR-0014 шаг 1) so the
+ * Boots the package with the 'comments' feature ENABLED (ADR-0014) so the
  * node-comment routes are registered at boot and the AccessResolver runs the real
  * grant-based algorithm. Kept in its own top-level folder so the base binding never
  * also claims it (Pest forbids two test cases for one path).

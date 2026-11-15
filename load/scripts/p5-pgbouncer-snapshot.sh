@@ -1,5 +1,5 @@
 #!/bin/sh
-# P5.1 — PgBouncer SHOW POOLS / SHOW STATS / SHOW CONFIG.
+# PgBouncer SHOW POOLS / SHOW STATS / SHOW CONFIG.
 # A failed admin query exits non-zero. Fields are copied from named columns
 # and never replaced with zero when the column is absent.
 # Usage:

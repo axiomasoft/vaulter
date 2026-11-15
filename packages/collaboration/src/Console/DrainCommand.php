@@ -17,7 +17,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\State\PendingMarker;
 
 /**
- * The managed disable of the collaboration module (C10): set the draining flag ({@see DrainState}) — from then on
+ * The managed disable of the collaboration module: set the draining flag ({@see DrainState}) — from then on
  * every append is refused with 503 collaboration_draining — and ask the hub's compaction worker to checkpoint every
  * document that carries a pending marker (drain_requested_at), then wait outside any transaction until no document
  * carries one or `--deadline` seconds passed. The outcome is what CollaborativeState::pendingDocuments() reads at the

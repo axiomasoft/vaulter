@@ -35,7 +35,7 @@ it('keeps the lang files of a package in step with its code list', function (str
         expect($keys)->toBe($codes);
     }
 })->with([
-    // The drive slice codes located in core keep their lines in the core lang files until P4.16 (D39).
+    // The drive slice codes located in core keep their lines in the core lang files.
     'core' => ['core', [CoreProblemCodes::class, DriveSliceProblemCodes::class]],
     'drive' => ['drive', [DriveProblemCodes::class]],
     'documents' => ['documents', [DocumentsProblemCodes::class]],

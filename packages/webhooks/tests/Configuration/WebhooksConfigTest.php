@@ -10,7 +10,7 @@ use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
- * The `vaulter-webhooks.*` configuration (moved from the kernel ConfigValidator suite with the module, P4.13):
+ * The `vaulter-webhooks.*` configuration (moved from the kernel ConfigValidator suite with the module):
  * the defaults the package ships, the values it refuses at boot and the removed keys it names a replacement for.
  */
 function webhooksRepository(): Repository

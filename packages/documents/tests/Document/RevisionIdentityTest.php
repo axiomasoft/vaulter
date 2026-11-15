@@ -14,7 +14,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /*
- * V32: with ids.strategy = bigint a file revision and a document revision can carry the
+ * With ids.strategy = bigint a file revision and a document revision can carry the
  * same id. In 0.2 the node's polymorphic current_version_id resolved a document head
  * id 7 to the FILE revision 7. Heads now live on their own aggregate, so each kind
  * reads its own revision and the node carries no shared pointer.

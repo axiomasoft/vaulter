@@ -1,4 +1,4 @@
-# VLT-LOAD P2.2 — receives k6's `--out experimental-prometheus-rw` (D24, in-core since
+# Receives k6's `--out experimental-prometheus-rw` (in-core since
 # k6 v0.42 — no xk6-output-prometheus-remote extension needed). Remote-write is enabled
 # via the `--web.enable-remote-write-receiver` CLI flag (docker-compose.load.yml command),
 # not a config-file option — this file only adds the self-scrape every prometheus.yml needs.

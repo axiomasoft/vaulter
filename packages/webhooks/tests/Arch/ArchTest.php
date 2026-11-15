@@ -8,7 +8,7 @@ use Symfony\Component\Finder\Finder;
 /**
  * The architecture of the webhooks package: the guards that stood on its code while it lived in the kernel
  * (single-action v1 controllers, writes through the operation runner, problem exceptions), plus the ownership
- * rule of P4.13 — the kernel never names this package.
+ * rule — the kernel never names this package.
  */
 const WEBHOOK_V1_CONTROLLERS = 'Vaulter\Webhooks\Http\Controllers\Webhooks';
 

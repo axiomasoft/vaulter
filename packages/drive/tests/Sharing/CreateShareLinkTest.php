@@ -20,7 +20,7 @@ use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
- * The mint/revoke Actions (§2.7 / M2c): the raw token is returned ONCE and only its
+ * The mint/revoke Actions: the raw token is returned ONCE and only its
  * hash + prefix are persisted; the password is hashed; the lifecycle events fire.
  */
 beforeEach(function (): void {

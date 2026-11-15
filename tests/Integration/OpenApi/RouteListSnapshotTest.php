@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 
-// The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
+// The contract describes the webhooks routes and problems too: the opt-in module is on.
 uses(EnablesWebhooksModule::class);
 
 /**

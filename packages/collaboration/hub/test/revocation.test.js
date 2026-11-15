@@ -8,7 +8,7 @@ import { problem, receipt, startMockBackend } from './support/mock-backend.js'
 import { clientUpdate, envelope, quietLog, testConf } from './support/rooms.js'
 import { eventually, roomClaims, ROOM, token } from './support/revocation.js'
 
-// Revocation in the hub (I17 scenario 8): a writer and a reader in one room of an in-process
+// Revocation in the hub (collaboration scenario 8): a writer and a reader in one room of an in-process
 // Hocuspocus 4.3, a mock backend on a loopback port, no docker. A control message for the room's
 // drive has the backend recheck both connections: the writer is answered `read` — its y-protocols
 // update, its sync step 2 and its envelope are refused (a write through sync step 2 never bypasses

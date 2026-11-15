@@ -10,7 +10,7 @@ use Vaulter\Events\EventCatalog;
 use Vaulter\Events\EventTypeContract;
 
 /**
- * The event catalogue (D38): the modules contribute their enums, every case declares its EventSpec, and the
+ * The event catalogue: the modules contribute their enums, every case declares its EventSpec, and the
  * values stay the stored identities. Catalogues built by hand, without an application.
  */
 it('gives every catalogued type a complete EventSpec', function (): void {

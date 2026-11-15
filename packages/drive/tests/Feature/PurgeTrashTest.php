@@ -20,10 +20,10 @@ use Vaulter\Operations\OperationRunner;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * vaulter:trash:purge (D17 / §2.10 / F-P1.12-02): nodes trashed past the retention
+ * vaulter:trash:purge: nodes trashed past the retention
  * window are PHYSICALLY purged — the stage-2 force-delete detaches version↔blob
  * edges (the bytes become GC-eligible), then the subtree's own rows are hard-deleted
- * (not just soft-deleted, F-P1.12-02) so FK cascade removes dependent rows too. A
+ * (not just soft-deleted) so FK cascade removes dependent rows too. A
  * node still inside retention is left untouched.
  */
 beforeEach(function (): void {
@@ -40,7 +40,7 @@ it('physically purges a node trashed past the retention window, F-P1.12-02', fun
 
     $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
-    // The node is now PHYSICALLY gone (F-P1.12-02: purge means purge; nodes have no
+    // The node is now PHYSICALLY gone (purge means purge; nodes have no
     // soft-delete tombstone a forensic query could still see).
     expect(Node::query()->whereKey($node->getKey())->exists())->toBeFalse();
 });

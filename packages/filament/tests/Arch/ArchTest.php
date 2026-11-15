@@ -22,7 +22,7 @@ arch('filament never depends on documents or media')
     ->expect('Vaulter\\Filament')
     ->not->toUse(['Vaulter\\Documents', 'Vaulter\\Media']);
 
-// E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);
+// Declarative form kept for discoverability/grep (`toUse('App')`);
 // see the file-scan test below (and core's ArchTest.php) for why this namespace-graph
 // form cannot itself observe a real "uses" edge in this dev/test environment.
 arch('the package never depends on the host application (E5.1)')
@@ -30,7 +30,7 @@ arch('the package never depends on the host application (E5.1)')
     ->not->toUse('App');
 
 /**
- * E5.1 / F-P4.3-01 — vaulter-filament is an embeddable Laravel package: it must never
+ * Vaulter-filament is an embeddable Laravel package: it must never
  * reach into the HOST application's namespace. File scan (not
  * `expect(...)->not->toUse('App')`) because `App\*` is never an autoloadable class in
  * the package's own dev/test environment (red-before proven on core's ArchTest.php).
@@ -71,7 +71,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 });
 
 /**
- * E3.1 / F-P4.3-02 — filament HAS its own package sub-namespace, so the public-API
+ * Filament HAS its own package sub-namespace, so the public-API
  * boundary is enforceable at full strength here: `Support/` is internal
  * implementation detail and must never be referenced from outside `Vaulter\Filament`
  * itself (verified: no other package currently references `Vaulter\Filament\Support`).
@@ -81,7 +81,7 @@ arch('internal namespaces are not used outside the package (E3.1)')
     ->toOnlyBeUsedIn('Vaulter\Filament');
 
 /**
- * VLT-REL P2.2 — empty-surface guard for the 0.1.0 freeze. This package ships NO public
+ * Empty-surface guard for the 0.1.0 freeze. This package ships NO public
  * contract interface (`src/Contracts/**`), so the frozen surface records that emptiness:
  * an accidentally-added public contract (which would need its own snapshot freeze + a D#
  * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
@@ -110,7 +110,7 @@ arch('DB facade is routed through VaulterDatabase (AD25)')
     ->expect('Vaulter\Filament')
     ->not->toUse('Illuminate\Support\Facades\DB');
 
-// D35: production code cannot import fixtures or other Testing namespace classes.
+// Production code cannot import fixtures or other Testing namespace classes.
 test('production src never imports a Testing namespace', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];

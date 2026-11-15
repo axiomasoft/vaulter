@@ -17,11 +17,11 @@ use Vaulter\Release\Contract\SourceReader;
 use Vaulter\Release\Contract\TrustPolicy;
 
 /*
- * The structural adapters of the BC check (D14, PLAN4 P6.2/U1; knowledge p6-surface#acceptance cases 1–7): the PHP surface
+ * The structural adapters of the BC check: the PHP surface
  * from surface.json, the identities and the schema DDL, each compared by stable key, and the snapshot manifest with its exit-2
  * inputs. The `php:` cases build surface.json with the same reader as the generator (Surface::fromSources); the `identities:`
  * and `schema:` cases mutate the committed generated fixtures. A green adapter proves the signature guard only — no runtime,
- * consumer or upgrade qualification. Release bases, exceptions and the CLI are U3; npm is U2.
+ * consumer or upgrade qualification. Release bases, exceptions, the CLI and npm are covered by their own tests.
  */
 
 require_once dirname(__DIR__, 3).'/scripts/inventory/bootstrap.php';
@@ -573,7 +573,7 @@ it('npm: a file that is no API Extractor report, an empty report or an unreadabl
         ->and(Change::exitOf(static fn (): array => NpmSurface::compare('npm:vue', NpmSurface::load($f['report'], "x\n", 'd'), NpmSurface::load($f['report'], $f['components'], 'e'))))->toBe(2);
 });
 
-// --- Release bases, trust and exceptions (D14/D18, PLAN4 P6.2/U3; bc-bases, release-identity; cases 9-10) -----------------------
+// --- Release bases, trust and exceptions (bc-bases, release-identity, cases 9-10) -----------------------
 // Temporary git repositories only: no network, no fetch, no tag or checkout of the real repository.
 
 function bc_git(string $dir, array $args): string
@@ -947,7 +947,7 @@ it('qualification: a signature guard never grants runtime, serial, archive consu
         ->and(file_get_contents(bc_root().'/scripts/release/Contract/trusted-host.py'))->toContain("'actual_runtime_qualification': False");
 });
 
-// --- review R1 correction (D116): manifest status and adapter kind ---------------------------------------------------------
+// --- review R1 correction: manifest status and adapter kind ---------------------------------------------------------
 
 /** A manifest of one surface with the given status and adapter, on a php and an npm release line. */
 function bc_review_manifest(string $status, string $adapter = 'php-surface', int $version = 1): array

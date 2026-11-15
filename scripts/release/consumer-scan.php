@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 /*
- * Which `Vaulter\...` classes does the PHP code under these directories name? (PLAN3 P4.19, helper of consumer-check.sh)
+ * Which `Vaulter\...` classes does the PHP code under these directories name? (helper of consumer-check.sh)
  *
  *   php consumer-scan.php [--strings] <dir>...      prints "<file>:<line>:<Vaulter\Name\...>" per reference, sorted
  *

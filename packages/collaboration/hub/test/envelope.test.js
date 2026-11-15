@@ -8,7 +8,7 @@ import { EPOCH_CHANGED, TOKEN_EXPIRED } from '../src/rooms.js'
 import { problem, receipt } from './support/mock-backend.js'
 import { clientUpdate, envelope, eventually, loadedRoom, ROOM, sha256, writerContext } from './support/rooms.js'
 
-// Client ↔ hub protocol 2 (I17 scenarios 1, 14): every local Yjs update comes with an envelope
+// Client ↔ hub protocol 2 (collaboration scenarios 1 and 14): every local Yjs update comes with an envelope
 // {t:"u", v:2, g, id, h, b}; the hub appends it under the client's update_id and answers
 // {t:"ack", id, seq, g} only after the backend committed it — the id exactly as the client sent
 // it, the same id on every retry — or {t:"nack", id, code, retry}. Plain sync messages are never

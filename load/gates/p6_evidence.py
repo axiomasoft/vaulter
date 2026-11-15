@@ -117,7 +117,7 @@ def exposition_totals(body):
             continue
         sample, value = line.rsplit(None, 1)
         name = sample.split('{', 1)[0]
-        # P6 requires the retry command's seam; other command gauges cannot cover it.
+        # Requires the retry command's seam; other command gauges cannot cover it.
         if name == 'vaulter_command_peak_memory_bytes' and not re.search(
                 r'(?:\{|,)command="vaulter:webhooks:retry"(?:,|\})', sample):
             continue

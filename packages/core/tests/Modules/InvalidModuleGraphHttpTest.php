@@ -13,7 +13,7 @@ use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// Revision 3 (D22): with an invalid module graph no module mounts a route; one catch-all under the Vaulter
+// Revision 3: with an invalid module graph no module mounts a route; one catch-all under the Vaulter
 // prefix answers 503 module_graph_invalid. Routes outside the prefix are the host's.
 
 it('answers every route under the Vaulter prefix 503 module_graph_invalid', function (string $method, string $uri): void {

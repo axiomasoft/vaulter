@@ -9,7 +9,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
- * Records `vaulter_broadcast_queue_wait_seconds` from enqueue to job start (P8.3).
+ * Records `vaulter_broadcast_queue_wait_seconds` from enqueue to job start.
  */
 final class RecordBroadcastQueueWait
 {

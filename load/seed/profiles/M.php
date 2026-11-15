@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-// VLT-LOAD P2.3 — M volume profile ("основной тир характеризации", §3), но на ЭТОМ
-// lab-box'е гоняется БЕЗ cpuset (D25/open-questions.md Q4 — латентность недостоверна,
+// M volume profile ("основной тир характеризации"), но на ЭТОМ
+// lab-box'е гоняется БЕЗ cpuset (латентность недостоверна,
 // класс A only). Source: reference-env.md §2.1/§2.2, M column.
 return [
     'tier' => 'M',
@@ -19,7 +19,7 @@ return [
     'blobs' => [
         'orphan' => 150_000, // split mark/sweep — see S0.php comment, same rule.
         'hot_set' => 100_000,
-        'hot_set_avg_bytes' => 838_860, // ≈800 KiB avg => ≈80 GiB hot-set (§2.2).
+        'hot_set_avg_bytes' => 838_860, // ≈800 KiB avg => ≈80 GiB hot-set.
     ],
 
     'file_versions' => [

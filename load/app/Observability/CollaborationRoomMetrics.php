@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
- * Absolute active collaboration room count from the Hocuspocus hub `/stats` (P8.3).
+ * Absolute active collaboration room count from the Hocuspocus hub `/stats`.
  */
 final class CollaborationRoomMetrics
 {

@@ -11,7 +11,7 @@ return RectorConfig::configure()
         __DIR__.'/packages/core/src',
         __DIR__.'/packages/core/database',
         __DIR__.'/packages/core/tests',
-        // F-P4.4-01: root vendor already autoloads these three satellites (root
+        // Root vendor already autoloads these three satellites (root
         // composer.json `require`s them as path-repos for the core test fixtures),
         // so their src is reachable here without a separate install. vaulter-filament
         // (and vaulter-azguard, excluded from this batch's five-package

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * The trusted policy and the exact exceptions of the BC check (D18, knowledge examples-p6-p8#release-identity). The policy and
+ * The trusted policy and the exact exceptions of the BC check. The policy and
  * the exceptions come from a trusted revision T, never from the candidate source S: a policy revision equal to S, or
  * exceptions that differ from the trusted ones, are self-authorizing and rejected. An exception suppresses a change only when
  * ALL its fields match, it has not expired, its decision is in the trusted ledger AND an external approval names the exact S,

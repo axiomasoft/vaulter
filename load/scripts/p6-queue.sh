@@ -1,6 +1,6 @@
 #!/bin/sh
-# P6.1 — tier-S queue lane: dry-run | run | verify | check-stand
-# The controlled sink, product fixtures and authoritative run belong to P6.2/P6.3.
+# Tier-S queue lane: dry-run | run | verify | check-stand
+# The controlled sink, product fixtures and the authoritative run are separate steps.
 # Usage:
 #   TIER=S ./load/scripts/p6-queue.sh dry-run
 #   TIER=S ./load/scripts/p6-queue.sh check-stand

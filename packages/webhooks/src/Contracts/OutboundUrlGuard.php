@@ -17,7 +17,7 @@ use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
  *
  * Host-swappable: point configuration key vaulter-webhooks.delivery.url_guard at another
  * implementation (e.g. a host with its own egress policy). The default enforces the
- * five N2 controls (scheme allow-list, A+AAAA resolution + range rejection, DNS
+ * five controls (scheme allow-list, A+AAAA resolution + range rejection, DNS
  * pinning, redirects off, protocol/size limits at the call site).
  */
 #[Spi(SpiKind::Implement)]

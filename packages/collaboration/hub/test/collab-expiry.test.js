@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { decodeTokenExpiry, armExpiryTimer } from '../src/index.js'
 
-// F-P1.6-03: onStoreDocument alone only re-validates the token on a WRITE — a
+// onStoreDocument alone only re-validates the token on a WRITE — a
 // long-lived READ-ONLY viewer would otherwise never be disconnected once its token
 // expires. onAuthenticate arms armExpiryTimer(connection, decodeTokenExpiry(token)) so
 // the socket is force-closed once `exp` passes, without waiting on a future store call.
