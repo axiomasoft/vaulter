@@ -332,7 +332,12 @@ Deprecated items live at least one minor cycle, warn once per process (`E_USER_D
 | A | Protected external exact approval bundle for S, policy, exceptions and tool closure | Identical surface hashes do not transfer approval to another S |
 
 `contract-bc` participates in CI lane selection, `needs` and the final `CI gate` verdict.
-A required failed, cancelled, missing or skipped job blocks the gate. The standalone
+A required failed, cancelled, missing or skipped job blocks the gate. The lane is required
+only on a repository whose owner provisioned the trusted host: when neither
+`BC_HOST_BOOTSTRAP` nor `BC_HOST_PYTHON` is set as a repository variable, the plan reports
+`contract_bc_provisioned=false`, the job is not run, and `CI gate` accepts that skip with a
+notice. Such a run makes no BC claim. Once either variable is set the lane runs and
+blocks, and an incomplete setup fails it. The standalone
 OpenAPI workflow calls the same externally provisioned host bootstrap. Both public
 `openapi/vaulter-v1.yaml` (core / php-public) and private hub spec (collaboration /
 php-collaboration) use their resolved release-line bases. Local referenced files and
@@ -348,7 +353,7 @@ supply `BC_HOST_PYTHON`, `BC_HOST_BOOTSTRAP`, `BC_TOOL_ROOT`, `BC_TOOL_REV`,
 `BC_SHA256SUMS`, `BC_RUNTIME_APPROVAL`, and `BC_RUNTIME_APPROVAL_SHA256` through the
 protected control plane. Never obtain approval from candidate files. No such external
 provisioning or branch-protection enforcement is claimed by these repository fixtures.
-Missing provisioning blocks, rather than qualifying a release.
+Partial provisioning blocks, rather than qualifying a release.
 
 The bootstrap is invoked with isolated Python (`-I`) outside the candidate cwd. Its
 external SHA256SUMS must enumerate exactly every regular file in T, including ignored

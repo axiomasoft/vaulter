@@ -17,7 +17,7 @@ name: CI
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
 #   frontend.yml vue and hocuspocus ......................... vue, hub (+ vue-collaboration, P5.14)
-#   openapi.yml oasdiff breaking ........................... contract-bc (blocking, D14/D18)
+#   openapi.yml oasdiff breaking ........................... contract-bc (blocking where the BC host is provisioned)
 #   new: mysql lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation, I14)
 on:
@@ -58,6 +58,7 @@ jobs:
       has_repo: ${{ steps.plan.outputs.has_repo }}
       has_openapi: ${{ steps.plan.outputs.has_openapi }}
       has_contract_bc: ${{ steps.plan.outputs.has_contract_bc }}
+      contract_bc_provisioned: ${{ steps.plan.outputs.contract_bc_provisioned }}
       contract_bc_required_lines: ${{ steps.plan.outputs.contract_bc_required_lines }}
       contract_bc_selected_lines: ${{ steps.plan.outputs.contract_bc_selected_lines }}
       quality_matrix: ${{ steps.plan.outputs.quality_matrix }}
@@ -84,6 +85,9 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
+          # contract-bc is planned only when the trusted BC host is provisioned (any BC_HOST_* variable set).
+          BC_HOST_BOOTSTRAP: ${{ vars.BC_HOST_BOOTSTRAP }}
+          BC_HOST_PYTHON: ${{ vars.BC_HOST_PYTHON }}
         run: |
           set -euo pipefail
           PHP84_BIN="$(command -v php)"
@@ -757,6 +761,9 @@ jobs:
           sys.exit(1 if errors else 0)
           PY
 
+  # Runs only where the owner provisioned the trusted BC host (repository variables BC_HOST_*); the plan reports
+  # contract_bc_provisioned=false otherwise, and ci-gate accepts the skip for that reason alone. Once any BC_HOST_*
+  # variable is set the job runs and blocks, and an incomplete setup fails it.
   contract-bc:
     name: Contract BC (trusted policy)
     needs: changes
