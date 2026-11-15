@@ -252,8 +252,6 @@ answers the drive with `status: "deleting"`; from then on it is `404` for everyo
   and `handler: null`, and its head in `document`.
 - `abilities` are yours, evaluated for the whole page at once; `etag` is the tag of
   exactly this representation (see [Validators](#validators-and-preconditions)).
-- Gone compared with 0.x: `storage_id`, `file_id`, `current_version_id`, `handler`
-  (→ `presentation`), `is_pinned`/`pinned`/`position` (→ `viewer.starred`), `owned_by`.
 
 ### Listing and reading
 
@@ -275,8 +273,7 @@ Your starred nodes of the drive that you can still see, newest star first. A cur
 
 #### `GET v1/shared` — `shared.index`
 
-Nodes other people granted you, across drives — a cursor page like any other list (the
-0.x offset pagination with `total` is gone). Needs the `grants` feature, otherwise
+Nodes other people granted you, across drives — a cursor page like any other list. Needs the `grants` feature, otherwise
 `403 profile_restriction`.
 
 #### `GET v1/nodes/{node}?include=breadcrumb,children` — `nodes.show`

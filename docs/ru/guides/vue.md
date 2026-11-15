@@ -381,4 +381,3 @@ app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumen
 - [Файлы и папки](/ru/concepts/nodes-and-revisions) — маршруты Drive за этими composable-функциями.
 - [Авторизация](/ru/concepts/access-model) — права, на которых гейтятся компоненты.
 - [Совместное редактирование в реальном времени](/ru/guides/collaboration) — Yjs-транспорт, который открывает `@vaulter/vue-collaboration`.
-- [Руководство по обновлению](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) — что изменилось по сравнению с пакетом до v1.

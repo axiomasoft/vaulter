@@ -103,8 +103,6 @@ each engine gives you and the handful of Postgres specifics the schema depends o
 Install 1.0 on an empty database. Each offered module installs its tables even when
 disabled at runtime: one create migration per table, with a rollback that drops it.
 `vaulter.database.table_prefix` applies to every table; per-table overrides are unsupported.
-There is no migration bridge from 0.x, preflight or data backfill. See
-[the upgrade guide](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
 
 ### Aggregate head integrity
 

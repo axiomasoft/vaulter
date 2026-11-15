@@ -62,8 +62,8 @@ package whose concept it configures (see the table above and
 ### Host keys (`ids.host_keys`) {#host-keys-ids-host-keys}
 
 `ids.host_keys = string` emits `varchar(64)` independently of Vaulter's entity IDs.
-Narrow it to bigint/uuid/ulid only when all host-owned keys fit that type. Changing schema
-settings after migration requires a schema upgrade; see UPGRADE.md.
+Narrow it to bigint/uuid/ulid only when all host-owned keys fit that type. Choose the schema
+settings before the first migration: no migration changes them later.
 
 Set `tenancy.enabled` to opt into your host's tenancy setup. The column name is always
 `tenant_id`; supply tenant-aware model subclasses to apply your host's scope.
@@ -293,9 +293,7 @@ Model configuration keys in the published config files remain valid. The ORM get
 
 ## Keys that do not exist
 
-Vaulter 1.0 reads only the keys of the published `config/vaulter*.php` files. Keys of earlier
-development releases are not translated, deprecated or warned about; an unknown key is ignored. There is no
-migration bridge (see [UPGRADE.md](https://github.com/axioma-studio/vaulter/blob/main/UPGRADE.md)).
+Vaulter reads only the keys of the published `config/vaulter*.php` files; an unknown key is ignored.
 Package defaults still fill every missing nested key of a partially published file, and a host-supplied
 map or list (`ids.strategies`, `handlers`, `vaulter-documents.types`, the access drivers) replaces the default
 one instead of being merged with it.

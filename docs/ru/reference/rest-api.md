@@ -245,8 +245,6 @@ drive, отклоняет операция — `403 profile_restriction` на т
   `handler: null`, а свою голову — в `document`.
 - `abilities` — ваши, вычисленные для всей страницы разом; `etag` — тег ровно этого
   представления (см. [Валидаторы](#валидаторы-и-предусловия)).
-- Убраны относительно 0.x: `storage_id`, `file_id`, `current_version_id`, `handler`
-  (→ `presentation`), `is_pinned`/`pinned`/`position` (→ `viewer.starred`), `owned_by`.
 
 ### Списки и чтение
 
@@ -269,7 +267,7 @@ drive, отклоняет операция — `403 profile_restriction` на т
 #### `GET v1/shared` — `shared.index`
 
 Узлы, к которым вам дали доступ другие, по всем drive — курсорная страница, как любой
-список (offset-пагинации 0.x с `total` больше нет). Нужна функция `grants`, иначе
+список. Нужна функция `grants`, иначе
 `403 profile_restriction`.
 
 #### `GET v1/nodes/{node}?include=breadcrumb,children` — `nodes.show`
