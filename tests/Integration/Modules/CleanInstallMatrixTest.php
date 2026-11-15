@@ -129,6 +129,54 @@ function cleanPin(string $owner): void
     });
 }
 
+/**
+ * The foreign keys MySQL enforces through an index with a nullable or functional part after the key's own columns, as
+ * `table.constraint via index`. InnoDB uses the first index that starts with the key's columns (unique ones sort first),
+ * and MySQL 9.7's SQL-layer checks skip a row whose entry in that index holds a NULL, so such a key lets rows through that
+ * name a missing parent.
+ *
+ * @return list<string>
+ */
+function cleanUnenforcedForeignKeys(): array
+{
+    $schema = DB::connection()->getDatabaseName();
+    $nullable = [];
+    foreach (DB::select("SELECT table_name AS t, column_name AS c FROM information_schema.columns WHERE table_schema = ? AND is_nullable = 'YES'", [$schema]) as $column) {
+        $nullable[$column->t.'.'.$column->c] = true;
+    }
+    $indexes = DB::select(
+        'SELECT SUBSTRING_INDEX(t.name, \'/\', -1) AS t, i.name AS i, GROUP_CONCAT(f.name ORDER BY f.pos) AS cols'
+        .' FROM information_schema.innodb_indexes i JOIN information_schema.innodb_tables t ON t.table_id = i.table_id'
+        .' JOIN information_schema.innodb_fields f ON f.index_id = i.index_id WHERE t.name LIKE ? GROUP BY t.name, i.index_id, i.name ORDER BY i.index_id',
+        [$schema.'/%'],
+    );
+    $keys = DB::select(
+        'SELECT table_name AS t, constraint_name AS c, GROUP_CONCAT(column_name ORDER BY ordinal_position) AS cols FROM information_schema.key_column_usage'
+        .' WHERE table_schema = ? AND referenced_table_name IS NOT NULL GROUP BY table_name, constraint_name',
+        [$schema],
+    );
+    $unenforced = [];
+    foreach ($keys as $key) {
+        $columns = explode(',', (string) $key->cols);
+        foreach ($indexes as $index) {
+            $parts = explode(',', (string) $index->cols);
+            if ($index->t !== $key->t || array_slice($parts, 0, count($columns)) !== $columns) {
+                continue;
+            }
+            foreach (array_slice($parts, count($columns)) as $part) {
+                if (isset($nullable[$key->t.'.'.$part]) || str_starts_with($part, '!hidden!')) {
+                    $unenforced[] = "{$key->t}.{$key->c} via {$index->i}";
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    sort($unenforced);
+
+    return $unenforced;
+}
+
 /** The snapshot file of the engine the suite runs on for `$preset`. @return array{tables: array<string, array<string, mixed>>} */
 function cleanExpectedSnapshot(string $preset): array
 {
@@ -174,6 +222,9 @@ it('installs a set from nothing, rolls it back to an empty database without a pi
                 if ($set->id === 'full') {
                     // The whole installation is the schema of the raw catalog oracle of this engine.
                     expect(SchemaSnapshot::differences(cleanExpectedSnapshot($preset), SchemaSnapshot::capture(DB::connection())))->toBe([], "$preset: the schema differs from its snapshot");
+                    if (SuiteDatabaseConnection::engine() === 'mysql') {
+                        expect(cleanUnenforcedForeignKeys())->toBe([], "$preset: foreign keys MySQL does not enforce");
+                    }
                 }
                 if ($hasMedia) {
                     cleanPin(cleanOwner($set));

@@ -700,6 +700,7 @@ Vaulter\Schema\SchemaHelpers spi:call since 1.0 final class
   public function counterColumn(Illuminate\Database\Schema\Blueprint $table, string $column): void
   public function dbConnection(): Illuminate\Database\Connection
   public function dropHeadForeignKey(string $aggregate): void
+  public function foreignKeyIndex(Illuminate\Database\Schema\Blueprint $table, string $column): void
   public function hasForeignKey(string $table, string $name): bool
   public function ids(): Vaulter\Contracts\IdStrategy
   public function ipColumn(Illuminate\Database\Schema\Blueprint $table): void
