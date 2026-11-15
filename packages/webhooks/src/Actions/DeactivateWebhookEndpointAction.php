@@ -38,7 +38,9 @@ final readonly class DeactivateWebhookEndpointAction
     {
         return $this->database->transaction(function () use ($endpoint, $expectedVersion): WebhookEndpoint {
             // Same lock order as a delivery settlement and a redelivery: endpoint first.
-            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail();
+            // A deletion that committed first leaves no row: the endpoint is gone, not an internal error.
+            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first()
+                ?? throw WebhookEndpointNotFoundException::forId(Identity::stringify($endpoint->getKey()));
             if ($this->tenancy->enforced() && TenancyBoundary::normalize($current->tenant_id) !== $this->tenancy->current()) {
                 throw WebhookEndpointNotFoundException::forId(Identity::stringify($current->getKey()));
             }

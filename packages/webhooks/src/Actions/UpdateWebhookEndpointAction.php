@@ -49,7 +49,9 @@ final readonly class UpdateWebhookEndpointAction
         return $this->database->transaction(function () use ($endpoint, $data, $expectedVersion): WebhookEndpoint {
             // Decide from the row as it is now, not from the copy the caller loaded earlier: a
             // stale "inactive" copy would skip killing the deliveries created since.
-            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail();
+            // A deletion that committed first leaves no row: the endpoint is gone, not an internal error.
+            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first()
+                ?? throw WebhookEndpointNotFoundException::forId(Identity::stringify($endpoint->getKey()));
             $tenant = TenancyBoundary::normalize($current->tenant_id);
             if ($this->tenancy->enforced() && $tenant !== $this->tenancy->current()) {
                 throw WebhookEndpointNotFoundException::forId(Identity::stringify($current->getKey()));

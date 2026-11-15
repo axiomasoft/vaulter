@@ -44,7 +44,9 @@ final readonly class RotateWebhookSecretAction
 
         return $this->database->transaction(function () use ($endpoint, $overlap, $secret, $expectedVersion): RotatedWebhookSecret {
             // Rotate from the stored row: two rotations racing must not both keep the same "previous".
-            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail();
+            // A deletion that committed first leaves no row: the endpoint is gone, not an internal error.
+            $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first()
+                ?? throw WebhookEndpointNotFoundException::forId(Identity::stringify($endpoint->getKey()));
             if ($this->tenancy->enforced() && TenancyBoundary::normalize($current->tenant_id) !== $this->tenancy->current()) {
                 throw WebhookEndpointNotFoundException::forId(Identity::stringify($current->getKey()));
             }
