@@ -125,7 +125,7 @@ are not a public API — change Vaulter data only through its PHP API.
 |---|---|---|
 | **PostgreSQL 18** | **Recommended.** CI qualifies this version, across every id strategy. | Production. Everything below works natively. |
 | **SQLite** | Fully supported. The default test lane runs on in-memory SQLite. | Local development, tests, small single-file installs. |
-| **MySQL 9.7 LTS** | Supported. CI qualifies this version. Live siblings are unique by a stored `name_key_hash` (sha2 of the binary `name_key`, NULL when trashed); a functional unique index enforces the single drive root; cascading foreign keys are preserved. | Production where Postgres-only locking and index features are not required. |
+| **MySQL 9.7 LTS** | Supported. CI qualifies this version. Live siblings are unique by a stored `name_key_hash` (sha2 of the binary `name_key`, NULL when trashed); a functional unique index enforces the single drive root; cascading foreign keys are preserved. Start the server with `innodb_native_foreign_keys=ON`: the default SQL-layer foreign-key checks of 9.7 let some violations through on `v_nodes`, which references itself. | Production where Postgres-only locking and index features are not required. |
 | **MariaDB** | Host-key DDL is tested. A complete fresh installation is not guaranteed: the `mariadb` driver still guards live siblings and the single drive root with STORED generated columns over `parent_id`, the pattern that conflicts with cascading foreign keys on MySQL. The complete suite is not part of the required database matrix. | Evaluate against your target MariaDB version before production use. |
 
 ::: tip PHP extension
