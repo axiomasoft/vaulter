@@ -281,3 +281,29 @@ it('keeps every committed allowlist entry reasoned, categorised and no later tha
         ->and(Allowlist::load($repo, ScanGenerator::allowlistPath('I2'))->entries())->toBe([])
         ->and(array_filter(Allowlist::load($repo, ScanGenerator::allowlistPath('I4'))->entries(), static fn (array $entry): bool => ($entry['removed_in'] ?? null) === 'P5'))->toBe([]);
 });
+
+it('lets no package but media name the pins table: the owners go through the BlobPins contract', function (): void {
+    $repo = dirname(__DIR__, 3);
+    $users = [];
+    foreach ([...(glob($repo.'/packages/*/src', GLOB_ONLYDIR) ?: []), ...(glob($repo.'/packages/*/database', GLOB_ONLYDIR) ?: [])] as $dir) {
+        if (str_starts_with($dir, $repo.'/packages/media/')) {
+            continue;
+        }
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+            $code = '';
+            foreach (token_get_all((string) file_get_contents($file->getPathname())) as $token) {
+                if (!is_array($token) || !in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                    $code .= is_array($token) ? $token[1] : $token;
+                }
+            }
+            if (str_contains($code, 'blob_references')) {
+                $users[] = substr($file->getPathname(), strlen($repo) + 1);
+            }
+        }
+    }
+
+    expect($users)->toBe([]);
+});
