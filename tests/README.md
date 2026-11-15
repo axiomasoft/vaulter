@@ -50,7 +50,7 @@ All commands accept `--dry-run [--json]`: it prints the plan (suites, partitions
 | `scripts/t sqlite -p <pkg> <path>` | One path (one suite per path list). |
 | `scripts/t <pgsql\|mysql> -p <pkg> --group=database` | The engine-dependent tests on a server. Servers need paths, `--group` or `--full`; there is no default server sweep. |
 | `scripts/t all`, `--engines=sqlite,pgsql` | Several engines. |
-| `scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql\|mysql]` | The zones touched by `base...HEAD` plus staged, unstaged and untracked files, and their consumers; `--quick` keeps only the touched zones. An unknown path or a harness change is refused with exit 2 and the full affected plan is printed; prose-only (`README.md`, `CONTRIBUTING.md`, `docs/`, `plans/`) is a plan of zero runs and is not a pass; `AGENTS.md` and `CLAUDE.md` are not prose, so editing them is refused the same way. |
+| `scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql\|mysql]` | The zones touched by `base...HEAD` plus staged, unstaged and untracked files, and their consumers; `--quick` keeps only the touched zones. An unknown path or a harness change is refused with exit 2 and the full affected plan is printed; prose-only (`README.md`, `CONTRIBUTING.md`, `docs/`, `plans/`) is a plan of zero runs and is not a pass. |
 | `scripts/t <engine> -p <pkg> --full` | Parallel pass without `nofull,serial`, then one `serial` pass. |
 | `scripts/t <engine> -p <pkg> --group=serial -j1 --no-skips` | The serial pass only. |
 | `scripts/t stand` | Stand-group tests plus the real-process scripts (`scripts/collab-e2e.sh`, `scripts/collab-stand.sh`). Never part of fast/full/all; k6 and benchmarks are not started by any command here. |
@@ -133,10 +133,7 @@ scripts/php84 php scripts/inventory/move-types.php --owner=<drive|media|webhooks
 
 ## Which run when
 
-This table is the single source for humans and agents (`AGENTS.md`, `CLAUDE.md` and `CONTRIBUTING.md` link here).
-**For planned work**, the item's `validation` declares the exact commands, working directories and expected outcomes. Local checks belong to their item; shared integration checks belong to an explicitly named item at the end of a batch and run once. The table below helps choose that set; it does not automatically add a pre-commit or database run to every item. If the actual change needs more coverage, amend `validation` with the reason before accepting it. Reuse evidence only while the command and all relevant inputs remain unchanged; record deferred checks separately from successful runs.
-**For active PLAN4** (`2026.10.18-№1-VAULTER-STABLE`), D2 permits only the light checks listed in the specific item's/unit's `validation` or an explicitly assigned batch checkpoint; shared checks run once at that checkpoint. This overlay takes precedence over the ordinary table below and other plans: no automatic package, `--changed` or database run before each commit. Each command is limited to 300 seconds and each item/unit to 10 minutes (P8.5: 20 minutes). Heavy database/full/serial/stand/coverage runs, archive installs and image builds belong to the separate owner runbook P8.2; PLAN4 does not authorize load runs. Do not restore the removed mutation testing tools (M16).
-**Historical PLAN3 policy:** D41 restricted execution to SQLite, static analysis and structural checks, at most 10 minutes per item; D50 defined item-specific checks and batch checkpoints for P7. These historical rules do not override active PLAN4 validation or prove that deferred qualification has run.
+This table is the single source for contributors (`CONTRIBUTING.md` links here).
 Pick the **smallest** row that covers the change; a bigger row is never a substitute for reading what failed.
 
 | When | Command | Covers | Does not cover | Time¹ |

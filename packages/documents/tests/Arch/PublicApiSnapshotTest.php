@@ -36,7 +36,7 @@ use Vaulter\Documents\ValueObjects\DocumentExport;
  * committed golden, reddening the build on any unplanned signature change (removed/renamed
  * method, narrowed type, a new contract). Same canonicalisation and AMEND procedure as
  * vaulter-core's PublicApiSnapshotTest (D5 — signatures only; config/resources/bindings
- * are frozen by the doc + `.claude/rules/public-api.md`, not reflection). `UPDATE_SNAPSHOT`
+ * are frozen by the doc + `docs/adr/0026-public-api-snapshots.md`, not reflection). `UPDATE_SNAPSHOT`
  * is env-gated and NEVER set by CI; regenerating outside AMEND (no D#) is `[POSSIBLE-DEFECT]`.
  */
 if (!function_exists('vaulterSnapshotType')) {
