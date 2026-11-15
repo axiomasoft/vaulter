@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Tests\Support;
 
-use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
-use Vaulter\Testing\Support\OpenApi\OpenApiContract;
-use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
-
-require_once dirname(__DIR__, 4).'/tests/Repo/Arch/Support/ReleaseOpenApi.php';
-
 use Closure;
 use Illuminate\Http\Request;
 use LogicException;
@@ -18,11 +12,13 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Vaulter\Attributes\Internal;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
 
 /**
- * Test-only global middleware: every response of a `vaulter.v1.*` route is checked against
- * the controller owner’s public or private spec after the response is built, and the test fails with the list of
- * violations. Routes a test registers itself as `vaulter.v1.__probe` or `vaulter.v1.__probe.*` are fixtures of the
+ * Test-only global middleware: every response of a `vaulter.v1.*` route is checked after the response is built
+ * against the spec of its owner, and the test fails with the list of violations. A controller of this package answers
+ * by the private hub contract (openapi/hub.yaml of the package), every other one by the public v1 contract. Routes a test registers itself as `vaulter.v1.__probe` or `vaulter.v1.__probe.*` are fixtures of the
  * HTTP kernel, not API surface, and stay outside the contract.
  */
 #[Internal]
@@ -31,6 +27,13 @@ final class ValidateReleaseOpenApiResponses
     public const string PREFIX = 'vaulter.v1.';
 
     private const string PROBE = 'vaulter.v1.__probe';
+
+    private static ?OpenApiContract $hub = null;
+
+    public static function hubContract(): OpenApiContract
+    {
+        return self::$hub ??= OpenApiContract::fromFile(dirname(__DIR__, 2).'/openapi/hub.yaml');
+    }
 
     public static function isProbe(string $name): bool
     {
@@ -57,7 +60,8 @@ final class ValidateReleaseOpenApiResponses
         }
 
         $streamed = $response instanceof StreamedResponse || $response instanceof BinaryFileResponse;
-        $violations = (new OpenApiResponseValidator(ReleaseOpenApi::routeChannel($request->route()) === 'private' ? ReleaseOpenApi::privateContract() : OpenApiContract::shared()))->validate(
+        $private = str_starts_with($request->route()?->getActionName() ?? '', 'Vaulter\\Collaboration\\');
+        $violations = (new OpenApiResponseValidator($private ? self::hubContract() : OpenApiContract::shared()))->validate(
             substr($name, strlen(self::PREFIX)),
             $response->getStatusCode(),
             $headers,

@@ -12,7 +12,12 @@ use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
 
-require_once dirname(__DIR__, 4).'/tests/Repo/Arch/Support/ReleaseOpenApi.php';
+// The ownership rules come from the release manifest of the monorepo: those cases run where it exists, the HTTP case
+// runs everywhere (a split collaboration package has no manifest and no sibling specs to compare with).
+$releaseOpenApi = dirname(__DIR__, 4).'/tests/Repo/Arch/Support/ReleaseOpenApi.php';
+if (is_file($releaseOpenApi)) {
+    require_once $releaseOpenApi;
+}
 
 it('covers every private owned route with closed references and synchronized shared primitives', function (): void {
     $private = ReleaseOpenApi::privateContract();
@@ -20,7 +25,7 @@ it('covers every private owned route with closed references and synchronized sha
     ReleaseOpenApi::assertSharedPrimitives(OpenApiContract::shared(), $private);
     expect(OpenApiContract::shared()->operation('documents.collaboration.session'))->not->toBeNull()
         ->and($private->operation('documents.collaboration.session'))->toBeNull();
-});
+})->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
 it('declares exactly the private owner problem codes and current retry receipt and status policies', function (): void {
     $problem = ReleaseOpenApi::privateContract()->document->components->schemas->Problem;
@@ -41,7 +46,7 @@ it('declares exactly the private owner problem codes and current retry receipt a
     foreach (get_object_vars(OpenApiContract::shared()->document->components->schemas->Problem->{'x-vaulter-problems'}) as $row) {
         expect(ReleaseOpenApi::moduleChannel($row->module))->toBe('public');
     }
-});
+})->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
 it('covers private catalog policies without receipt or If Match bypasses', function (): void {
     $contract = ReleaseOpenApi::privateContract();
@@ -74,7 +79,7 @@ it('covers private catalog policies without receipt or If Match bypasses', funct
             expect(isset($response->headers->{'Idempotent-Replayed'}))->toBeFalse();
         }
     }
-});
+})->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
 it('rejects a missing endpoint an orphan ref and missing problem metadata in isolated fixtures', function (): void {
     $source = Yaml::parseFile(ReleaseOpenApi::root().'/packages/collaboration/openapi/hub.yaml');
@@ -92,7 +97,7 @@ it('rejects a missing endpoint an orphan ref and missing problem metadata in iso
     foreach ($cases as $fixture) {
         expect(fn () => ReleaseOpenApi::assertContract(OpenApiContract::fromYaml(Yaml::dump($fixture, 30)), $routes))->toThrow(LogicException::class);
     }
-});
+})->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
 it('detects a private response mutation in a temp contract report while actual public generation is byte identical', function (): void {
     $root = ReleaseOpenApi::root();
@@ -125,7 +130,7 @@ it('detects a private response mutation in a temp contract report while actual p
         }
         rmdir($dir);
     }
-});
+})->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
 it('validates an actual unsigned hub refusal against its private owner contract', function (): void {
     $this->postJson('/'.app(RoutesConfig::class)->versionedPrefix().'/collaboration/hub/authenticate', [], ['X-Vaulter-Collab-Protocol' => '2'])

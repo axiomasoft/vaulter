@@ -270,7 +270,8 @@ else
 fi
 
 for item in "${harness_files[@]}"; do
-    [[ ! -e "$root/$item" ]] || cp -R "$root/$item" "$work/$item"
+    # merged into the package's own directory of that name (collaboration ships openapi/hub.yaml)
+    [[ ! -d "$root/$item" ]] || { mkdir -p "$work/$item" && cp -R "$root/$item/." "$work/$item/"; }
 done
 
 repositories='[]'
