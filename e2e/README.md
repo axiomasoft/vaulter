@@ -13,7 +13,7 @@ collaboration **live**, with two clients editing through the real transport:
                                                 Postgres / SQLite  (v_node_document_versions)
 ```
 
-What it asserts (the P1.1 checklist from `docs/plan/00-master-plan.md`):
+What it asserts:
 
 1. the room **JWT is really verified** by the hub → Laravel `collab/authenticate` webhook;
 2. a **writer's edits propagate** to a second client in realtime (Yjs over the hub);
