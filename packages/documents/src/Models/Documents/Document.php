@@ -19,7 +19,6 @@ use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\State\CollaborationStateBinding;
-use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Node;
@@ -149,12 +148,6 @@ class Document extends Model
     public function hasPendingState(): bool
     {
         return $this->pending_generation !== null;
-    }
-
-    /** The 0.2 `format` label of this document's type, kept for the current JSON keys. */
-    public function legacyFormat(): string
-    {
-        return DocumentTypeKey::toFormat($this->type);
     }
 
     /**

@@ -19,9 +19,7 @@ use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
- * A comment on a NODE (docs/adr/0014-legacy-docvault-strangler.md шаг 1) — the additive parity twin of the legacy
- * document_id-attached {@see DocumentComment}, which stays untouched. Optionally
- * anchored to a text range and threaded under a parent comment.
+ * A comment on a NODE, optionally anchored to a text range and threaded under a parent comment.
  *
  * The author is a morph to a REGISTERED alias (user|…) — the Data layer writes
  * $user->getMorphClass() (honours the host's enforceMorphMap), never a raw FQCN.

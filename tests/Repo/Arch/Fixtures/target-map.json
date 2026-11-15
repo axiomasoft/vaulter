@@ -4768,20 +4768,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/documents/src/State/LegacyCollaborationBinding.php",
-            "fqcn": "Vaulter\\Documents\\State\\LegacyCollaborationBinding",
-            "kind": "final-class",
-            "note": null,
-            "owner": "documents",
-            "package": "documents",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Documents\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Documents\\State\\LegacyCollaborationBinding"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/documents/src/State/LockedDocumentState.php",
             "fqcn": "Vaulter\\Documents\\State\\LockedDocumentState",
             "kind": "final-class",
@@ -4862,20 +4848,6 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Support\\DocumentHeads"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/documents/src/Support/DocumentTypeKey.php",
-            "fqcn": "Vaulter\\Documents\\Support\\DocumentTypeKey",
-            "kind": "final-class",
-            "note": null,
-            "owner": "documents",
-            "package": "documents",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Documents\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Documents\\Support\\DocumentTypeKey"
         },
         {
             "action": "keep",

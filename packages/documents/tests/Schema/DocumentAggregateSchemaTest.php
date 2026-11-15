@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Documents\State\LegacyCollaborationBinding;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
@@ -89,20 +88,5 @@ it('requires every pending binding component and integer schema with nonblank id
     }
     foreach ([['pending_protocol' => " \t\n"], ['pending_state_format' => "\r\t"], ['pending_schema_version' => 1.5], ['pending_schema_version' => 0], ['pending_generation' => 0.5], ['pending_through_seq' => 1.5]] as $invalid) {
         expect(fn () => DB::transaction(fn () => DB::table('v_documents')->where('id', $id)->update($invalid)))->toThrow(QueryException::class);
-    }
-});
-
-it('reports only unambiguous historical Yjs provenance without mutating facts', function (): void {
-    $fact = ['source' => 'checkpoint', 'type' => 'vaulter/rich-text', 'protocol' => 'yjs', 'state_format' => 'yjs-update-v1', 'schema_version' => 1, 'generation' => 7];
-    $evaluate = static fn ($type, $schema, $bytes, $pending, $facts) => LegacyCollaborationBinding::evaluate($type, $schema, 7, $bytes, $pending, $facts);
-    foreach ([['bytes', false, [$fact]], [null, true, [array_replace($fact, ['source' => 'journal'])]], [null, false, [array_replace($fact, ['source' => 'seed'])]]] as [$bytes, $pending, $facts]) {
-        $copy = $facts;
-        $result = $evaluate('vaulter/rich-text', 1, $bytes, $pending, $facts);
-        expect($result['accepted'])->toBeTrue()->and($result['binding']->schemaVersion)->toBe(1)->and($facts)->toBe($copy);
-    }
-    foreach ([['unknown/type', 1, 'bytes', false, [$fact]], ['vaulter/rich-text', null, 'bytes', false, [$fact]], ['vaulter/rich-text', 1, null, true, []], ['vaulter/rich-text', 1, null, false, [$fact]], ['vaulter/rich-text', 1, 'bytes', true, [$fact]], ['vaulter/rich-text', 1, 'bytes', false, [$fact, array_replace($fact, ['protocol' => 'acme-ot'])]], ['vaulter/rich-text', 1, 'bytes', false, [array_replace($fact, ['schema_version' => 2])]]] as [$type, $schema, $bytes, $pending, $facts]) {
-        $copy = $facts;
-        $result = $evaluate($type, $schema, $bytes, $pending, $facts);
-        expect($result['accepted'])->toBeFalse()->and($result['binding'])->toBeNull()->and($result['reason'])->toBeString()->and($facts)->toBe($copy);
     }
 });
