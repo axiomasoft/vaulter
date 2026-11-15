@@ -60,5 +60,4 @@ abstract class TestCase extends OrchestraTestCase
         load_migration_paths($this->app, $paths);
         $this->loadMigrationsFrom($paths);
     }
-
 }

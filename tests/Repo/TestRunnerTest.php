@@ -574,7 +574,6 @@ it('keeps the repo suite baseline: an empty immutable original with provenance, 
     expect($ledger['additions']['repo']['count'])->toBeGreaterThan(0)->and($ledger['entries'])->toBeArray();
 });
 
-
 it('preserves integration discovery and schema partitions in the runner', function (): void {
     $inventory = json_decode((string) file_get_contents(t_real_root().'/tests/suites.json'), true, flags: JSON_THROW_ON_ERROR);
     $suite = $inventory['suites']['integration'];
@@ -596,6 +595,7 @@ it('fingerprints schema semantics independently of testcase namespace and file p
             sort($canonical[$key]);
         }
         ksort($canonical);
+
         return substr(hash('sha256', json_encode($canonical, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)), 0, 12);
     };
     $descriptor = ['providers' => ['B', 'A'], 'migrations' => ['database/b', 'database/a'], 'id_strategy' => 'bigint', 'table_prefix' => 'v_', 'lifecycle' => 'refresh', 'database' => true, 'engines' => ['mysql', 'sqlite'], 'skeleton_writer' => false];
@@ -610,7 +610,6 @@ it('fingerprints schema semantics independently of testcase namespace and file p
         expect($fingerprint($changed))->not->toBe($hash, $key);
     }
 });
-
 
 it('keeps transferred post-original source cases out of destination additions', function (): void {
     $fx = t_baseline_fixture(['alpha' => ['P\A::one'], 'beta' => []], ['alpha' => ['P\A::one'], 'beta' => ['P\B::moved', 'P\B::fresh']]);

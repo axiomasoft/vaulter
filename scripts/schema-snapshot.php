@@ -26,12 +26,12 @@ use Orchestra\Testbench\Foundation\Application as Testbench;
 use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Integration\Tests\Support\Schema\SchemaPresets;
+use Vaulter\Integration\Tests\Support\Schema\SchemaSnapshot;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Integration\Tests\Support\Schema\SchemaPresets;
-use Vaulter\Integration\Tests\Support\Schema\SchemaSnapshot;
 use Vaulter\VaulterServiceProvider;
 use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 

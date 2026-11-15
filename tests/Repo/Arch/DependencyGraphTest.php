@@ -33,6 +33,7 @@ function dg_errors(array $manifests, array $allowlist): array
             $lower = $closure($name);
         } catch (RuntimeException $e) {
             $errors[] = $e->getMessage();
+
             continue;
         }
         if ($name === 'axioma-studio/vaulter') {
