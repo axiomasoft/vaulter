@@ -22,7 +22,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * PLAN2.F05/F06 on real backends: a document writer racing a trash or an archive of
+ * On real backends: a document writer racing a trash or an archive of
  * the same node/drive either lands entirely before it or is refused after it, with
  * state, history and events matching the outcome. Two forked processes on two
  * PostgreSQL connections, released together by the barrier.

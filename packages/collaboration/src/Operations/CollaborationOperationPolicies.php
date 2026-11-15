@@ -11,7 +11,7 @@ use Vaulter\Operations\OperationPolicy;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
- * The policies of the collaboration routes (knowledge p6-design#coverage). Neither runs an operation of
+ * The policies of the collaboration routes. Neither runs an operation of
  * its own: a session is a short-lived token issued without a write, and the hub protocol deduplicates by update id
  * and receipt and is fenced by the generation. The policies name their routes.
  */

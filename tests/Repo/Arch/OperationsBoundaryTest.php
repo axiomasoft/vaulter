@@ -95,7 +95,7 @@ PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\D
 });
 
 /**
- * I9 (architecture#invariants): every entry reaches the data through an authorized Operations call, so no HTTP
+ * Architecture#invariants: every entry reaches the data through an authorized Operations call, so no HTTP
  * controller, resource or panel class of any package imports an Action or a Repository. The files below do it by
  * design or still do; the list can only shrink, and a file that is clean again must be removed from it.
  */
@@ -110,7 +110,7 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
     ]);
     $exempt = [
         ...$webhookAdmin,
-        // Resolves the endpoint a If-Match precondition is checked against (P6.6).
+        // Resolves the endpoint a If-Match precondition is checked against.
         'webhooks/src/Http/Resources/Webhooks/EndpointPreconditions.php',
         'drive/src/Http/Support/ContentResponder.php',
         'drive/src/Http/Support/HttpResourceResolver.php',
@@ -146,7 +146,7 @@ it('covers the HTTP layer of every package that serves routes', function (): voi
 });
 
 /**
- * I9, the model half: a controller hands the request to an Operations call and answers with a resource built from the
+ * The model half: a controller hands the request to an Operations call and answers with a resource built from the
  * snapshot it returns, so it names no Eloquent model of drive, documents or webhooks. The controllers below read a
  * model on purpose (an upload session found by its id, a webhook delivery found for a redelivery); the list can only shrink.
  */

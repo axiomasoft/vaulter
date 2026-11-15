@@ -43,9 +43,9 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * The append-only activity feed (§2.9 / M2c-activity). Each Drive domain event must
+ * The append-only activity feed. Each Drive domain event must
  * produce EXACTLY ONE activity row with the right verb/actor/target/context —
- * recipients resolved at READ, never a per-affected-user fan-out (§1.5). Recording
+ * recipients resolved at READ, never a per-affected-user fan-out. Recording
  * is gated on the 'activity' feature and atomic: a failed write rolls the
  * originating action back.
  */
@@ -353,7 +353,7 @@ it('does not copy a rejected correlation header into the activity row', function
 
 // ─────────────────────── an event of the kernel that is no DriveEvent ───────────────────────
 
-/** A DomainEvent that is no DriveEvent: it carries no activity target and no journal entry (P4.16). */
+/** A DomainEvent that is no DriveEvent: it carries no activity target and no journal entry. */
 function plainDomainEvent(string $driveId): DomainEvent
 {
     return new readonly class(recordActivityActor(), 'corr-plain', $driveId) extends DomainEvent

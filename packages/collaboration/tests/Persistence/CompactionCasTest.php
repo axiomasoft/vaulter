@@ -16,7 +16,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Http\Support\RepresentationTag;
 
 /*
- * Scenarios 4, 5 and 20 (C5–C7): a checkpoint is published as one compare-and-set on the lease token, the checkpoint
+ * Scenarios 4, 5 and 20: a checkpoint is published as one compare-and-set on the lease token, the checkpoint
  * sequence and version it started from and the head. On SQLite the race is an interleaving of calls (read H → append →
  * publish); the PostgreSQL race is tests/Concurrency/CompactionRaceTest.php.
  *
@@ -163,7 +163,7 @@ it('refuses a publication under an expired lease', function (): void {
 it('refuses a publication whose checkpoint version no longer is the document\'s state version', function (): void {
     Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
-    // A write of the working state outside the log (the protocol 1 store until P5.7) moved the state version.
+    // A write of the working state outside the log (the protocol 1 store) moved the state version.
     Hub::aggregate($this->node)->forceFill(['state_version' => Hub::aggregate($this->node)->state_version + 1])->save();
 
     expect(fn () => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)

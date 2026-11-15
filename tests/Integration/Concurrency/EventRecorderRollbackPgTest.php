@@ -19,7 +19,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 uses(EnablesWebhooksModule::class);
 
 /**
- * V07 on PostgreSQL, where a failed statement aborts the whole transaction: a failed
+ * On PostgreSQL, where a failed statement aborts the whole transaction: a failed
  * outbox write rolls the rename back and leaves the connection usable, and a process
  * killed right after the commit has already stored the activity and outbox rows.
  *

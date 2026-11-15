@@ -1,4 +1,4 @@
--- P3.2 — mandatory view fingerprints (admin); separate from top-20 ranking.
+-- Mandatory view fingerprints (admin); separate from top-20 ranking.
 \set ON_ERROR_STOP on
 
 SELECT COALESCE(json_agg(row_to_json(h) ORDER BY h.view_name), '[]'::json)

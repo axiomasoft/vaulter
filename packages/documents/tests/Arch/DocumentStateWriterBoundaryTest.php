@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\Finder\Finder;
 
 /*
- * D34/D35 bypass guard: the working state and the checkpoints of a document are
+ * Bypass guard: the working state and the checkpoints of a document are
  * written only by Content/DocumentStateWriter (CreateDocumentAction only inserts the
  * empty aggregate it then hands to the writer), and no document writer touches the
  * node sequence — content has its own validators.

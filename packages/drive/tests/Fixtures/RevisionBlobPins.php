@@ -11,7 +11,7 @@ use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Models\FileRevisionBlob;
 use Vaulter\Media\Models\Cas\Blob;
 
-/** Reads of the drive's revision links of a blob: its edges and their media pins (D23). */
+/** Reads of the drive's revision links of a blob: its edges and their media pins. */
 final class RevisionBlobPins
 {
     /** The revision edges that reference $blob. */

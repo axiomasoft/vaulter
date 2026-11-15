@@ -18,7 +18,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookFanoutConsumer;
 
 /**
- * The write half of the outbox (D29, I10): every event lands in v_outbox in the transaction of its operation,
+ * The write half of the outbox: every event lands in v_outbox in the transaction of its operation,
  * whatever modules are active; a pending delivery row is written for each consumer of the sealed registry that
  * subscribes to the type; a rollback leaves neither; a replayed occurrence writes nothing.
  */

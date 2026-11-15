@@ -39,7 +39,7 @@ final readonly class MoveOptions
         return new self(expectedSequence: $this->expectedSequence, onConflict: $onConflict, expectedDestinationSequence: $this->expectedDestinationSequence);
     }
 
-    /** The sequence the destination folder must still have (CC3): a move into a folder that changed since the caller read it is refused. */
+    /** The sequence the destination folder must still have: a move into a folder that changed since the caller read it is refused. */
     public function expectedDestinationSequence(?int $expectedDestinationSequence): self
     {
         return new self(expectedSequence: $this->expectedSequence, onConflict: $this->onConflict, expectedDestinationSequence: $expectedDestinationSequence);

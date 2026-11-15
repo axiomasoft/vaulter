@@ -1,8 +1,8 @@
-// VLT-LOAD P2.4 — the seed manifest (P2.3 `dataset_id`), staged as `dataset.json`
+// The seed manifest (`dataset_id`), staged as `dataset.json`
 // next to the scenarios by `load/scripts/run.sh` (the k6 container only mounts
-// `load/k6/` read-only — `load/seed/out/` is not itself reachable, harness.md §3/§5).
+// `load/k6/` read-only — `load/seed/out/` is not itself reachable).
 // Read once in the init context; the small id-list is wrapped in SharedArray per
-// Implementation Rules (P2.4) — SharedArray is for manifest id-lists ONLY, nothing else
+// Implementation Rules — SharedArray is for manifest id-lists ONLY, nothing else
 // here is large enough to need it.
 import { SharedArray } from 'k6/data';
 
@@ -17,9 +17,8 @@ export const ACTOR_OWNER = manifest.actors.seed_owner;
 export const ACTOR_NORMAL = manifest.actors.normal;
 export const ACTOR_MANY_GRANT = manifest.actors.many_grant;
 
-// Both are id's, not counts, despite the manifest's own key names (P2.3 schema — see
-// Known Deviations, not fixed here: P2.3 is closed, `load:seed`'s manifest shape is its
-// SSOT).
+// Both are ids, not counts, despite the manifest's own key names: `load:seed`'s manifest
+// shape is the source of truth, so the names stay.
 export const BACKBONE_LEAF_NODE_ID = manifest.counts.backbone_leaf_node_id;
 export const WIDE_NODE_ID = manifest.counts.wide_node_id;
 

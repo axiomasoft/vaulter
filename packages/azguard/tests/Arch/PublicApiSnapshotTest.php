@@ -5,13 +5,13 @@ use Vaulter\Attributes\Internal;
 use Vaulter\AzGuard\AzGuardPermissionDriver;
 
 /**
- * VLT-REL P2.2 — executable freeze of vaulter-azguard's public composer surface for the `0.1.0`
- * tag. Counterpart to the P2.1 SSOT (`plans/archive/VLT-REL/root/contracts/public-api-surface.md`):
+ * Executable freeze of vaulter-azguard's public composer surface for the `0.1.0`
+ * tag. Counterpart to the public API reference:
  * reflects every `Vaulter\\AzGuard\\Contracts\**` contract into a canonical manifest and compares it to a
  * committed golden, reddening the build on any unplanned signature change (removed/renamed
  * method, narrowed type, a new contract). Same canonicalisation and AMEND procedure as
  * vaulter-core's PublicApiSnapshotTest (D5 — signatures only; config/resources/bindings
- * are frozen by the doc + `.claude/rules/public-api.md`, not reflection). `UPDATE_SNAPSHOT`
+ * are frozen by the doc + `docs/adr/0026-public-api-snapshots.md`, not reflection). `UPDATE_SNAPSHOT`
  * is env-gated and NEVER set by CI; regenerating outside AMEND (no D#) is `[POSSIBLE-DEFECT]`.
  */
 if (!function_exists('vaulterSnapshotType')) {

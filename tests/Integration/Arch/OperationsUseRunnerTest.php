@@ -15,7 +15,7 @@ use Vaulter\Drive\Operations\TrashOperations;
 use Vaulter\Drive\Operations\UploadOperations;
 
 /**
- * R1 of the operation pipeline (ADR-0028): every public mutating method of an `*Operations` class runs
+ * R1 of the operation pipeline: every public mutating method of an `*Operations` class runs
  * its body through OperationRunner::write() — directly, through the class's private write() helper, or
  * through a private method that does. Reads are listed here and never use the runner.
  */
@@ -27,7 +27,7 @@ const OPERATIONS_READS = [
     FileOperations::class => ['revisions', 'read'],
     TrashOperations::class => ['list'],
     // patch() and putPart() write request bytes under the session lock; bytes are never read inside a
-    // repeated attempt, so these protocol adapters stay outside the runner (P3.10).
+    // repeated attempt, so these protocol adapters stay outside the runner.
     UploadOperations::class => ['status', 'patch', 'putPart'],
     AccessOperations::class => ['grants', 'explain', 'paginate'],
     ShareOperations::class => ['list', 'paginate'],

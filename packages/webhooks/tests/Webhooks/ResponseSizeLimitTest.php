@@ -6,7 +6,7 @@ use Vaulter\Webhooks\Exceptions\WebhookResponseTooLargeException;
 use Vaulter\Webhooks\ResponseSizeLimit;
 
 /**
- * The webhook response body is capped (§2.11 / F-P1.7-06): a delivery needs only the
+ * The webhook response body is capped: a delivery needs only the
  * status code, so a receiver announcing an oversized body is refused from the Guzzle
  * on_headers hook — before the body is buffered — closing the OOM/DoS vector. This
  * unit-tests the exact predicate the hook calls.
@@ -33,8 +33,8 @@ it('enforces the smallest positive ceiling, F-P1.7-06', function (): void {
         ->toThrow(WebhookResponseTooLargeException::class);
 });
 
-// P5.3: the cap holds WHILE streaming — absent, false or chunked Content-Length. The sink
-// is a deterministic fixture of the local predicate, not a real cURL/TLS abort (owner P8.2).
+// The cap holds WHILE streaming — absent, false or chunked Content-Length. The sink
+// is a deterministic fixture of the local predicate, not a real cURL/TLS abort.
 it('aborts a chunked or falsely-declared body mid-stream past the limit', function (): void {
     $sink = ResponseSizeLimit::boundedSink(10);
     $sink->write('12345');

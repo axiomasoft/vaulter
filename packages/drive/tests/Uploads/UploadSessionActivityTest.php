@@ -16,9 +16,9 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * F-P1.4-13: initiate/abort/expire had NO activity trace at all before this fix —
+ * Initiate/abort/expire had NO activity trace at all before this fix —
  * only the terminal commit (FileUploaded/NodeVersionCommitted) landed a row. These
- * pin the three new lifecycle events (§2.9, one row per event, no fan-out).
+ * pin the three new lifecycle events (one row per event, no fan-out).
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
@@ -84,14 +84,14 @@ it('sweep-expire пишет activity-строку upload.expired без акто
 });
 
 /**
- * P4.10 morph-invariant (ADR-0017 namespace move). The pre-mortem R-refactor risk is a
+ * Morph-invariant (ADR-0017 namespace move). The refactor risk is a
  * forgotten morph alias: a moved model whose OLD FQCN is frozen in a polymorphic
  * `*_type` column would silently break in production while a fresh-DB test stays green.
  * This guards the invariant that makes the move safe WITHOUT any DB migration: the moved
  * upload models are never persisted as a morph-type string. The upload lifecycle records
  * activity without an activity target, so no `v_activity` row ever holds
  * `UploadSession`'s FQCN — the move cannot orphan a row. The Vaulter models persisted as
- * `target_type` are `Node` and `Drive`, stored under constant aliases (D34), so a move of
+ * `target_type` are `Node` and `Drive`, stored under constant aliases, so a move of
  * either class cannot orphan a historical row. A future regression that made an
  * upload a morph target (or moved `Node`) trips this.
  */

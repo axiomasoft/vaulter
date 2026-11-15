@@ -1,4 +1,4 @@
-# P8.7 host fallback when Docker Hub IPv6 cannot pull minio/mc or pgbouncer.
+# Host fallback when Docker Hub IPv6 cannot pull minio/mc or pgbouncer.
 # minio/minio already ships `mc`; postgres:16-alpine is local. App talks to
 # postgres:5432 directly so the dummy pgbouncer never sits on the query path.
 services:

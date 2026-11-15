@@ -14,7 +14,7 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\DriveContext;
 
 /**
- * The drive status as a writer sees it once it holds the tree lock (F05/F06).
+ * The drive status as a writer sees it once it holds the tree lock.
  * OperationGuard answers before the lock; archive and delete flip the status under the
  * exclusive tree lock, so a read taken after the writer's own T lock cannot miss a
  * flip that committed in between. An archived drive refuses every non-system writer; a

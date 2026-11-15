@@ -1,8 +1,8 @@
-// VLT-LOAD P2.4 — the realistic mix (harness.md §4): three independent executor
+// The realistic mix: three independent executor
 // groups (interactive / upload / download) running CONCURRENTLY, VU counts straight
 // from the group split (never a scenario-local guess), each drawing from the
-// per-group operation mix (operations-catalog.md "Доля в миксе"). The activity feed
-// (OP-25/26, Scope Excluded from every other scenario) lives here, under the P2.3
+// per-group operation mix ("Доля в миксе"). The activity feed
+// (OP-25/26, Scope Excluded from every other scenario) lives here, under the
 // background writer (`load:activity-write`) — without it running alongside, the feed
 // reads measure a fiction (Scope Included).
 import http from 'k6/http';

@@ -18,12 +18,12 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 
 /**
- * The cursor lifecycle (PLAN4.P5.9/U3, D20) on a fake clock: the deadline is the
+ * The cursor lifecycle on a fake clock: the deadline is the
  * smallest of issued_at plus the CURRENT cap and the earliest live grant expiry of the
  * reader's own subject-set in this drive, latched so it never grows; it is checked
  * before and after the page is projected. A host access invalidation raises the epoch
  * in the transaction of its event. Deterministic SQLite timelines only: real engine
- * isolation, lock order and races are the owner's qualification (P8.2).
+ * isolation, lock order and races are the owner's qualification.
  */
 uses(TestCase::class, DatabaseMigrations::class);
 

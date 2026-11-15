@@ -10,5 +10,5 @@ use Vaulter\Inventory\Scans\ScanGenerator;
 require_once dirname(__DIR__).'/lib/Scans/ScanGenerator.php';
 require_once dirname(__DIR__).'/lib/Scans/ImplicitActivation.php';
 
-/** I4 against tests/Repo/Arch/Fixtures/allowlists/i4.json. */
+/** Against tests/Repo/Arch/Fixtures/allowlists/i4.json. */
 return new ScanGenerator(ImplicitActivation::INVARIANT, static fn (Repo $repo): array => ImplicitActivation::found(ScanContext::forRepo($repo)));

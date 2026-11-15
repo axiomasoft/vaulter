@@ -18,7 +18,7 @@ use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * Updating and rotating a share link are events of their own (PLAN2.D47): both reach
+ * Updating and rotating a share link are events of their own: both reach
  * the activity feed and the outbox, and neither leaks the token or the new password.
  */
 beforeEach(function (): void {

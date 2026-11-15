@@ -15,7 +15,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * The read security matrix of the webhooks' GET/HEAD routes (P5.2, knowledge p5-security#read-matrix): every read route ×
+ * The read security matrix of the webhooks' GET/HEAD routes: every read route ×
  * the rows R1–R3 and R10 of the audit. The admin surface is global: its one gate is the `manage` ability (R4 of the
  * mutation matrix), which answers 403 before any lookup, so a per-resource View (R3) does not exist; R11 and R12 are
  * downloads and collaboration sessions, which this package has none of.

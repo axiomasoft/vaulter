@@ -1,4 +1,4 @@
-// P5.2 product scenarios. Contract mode exercises one lightweight cell per
+// Product scenarios. Contract mode exercises one lightweight cell per
 // surface and does not seed the 1m dirty profile. Live mode waits on an
 // explicit barrier URL; it does not use sleep() as synchronization.
 import http from 'k6/http';

@@ -9,7 +9,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 
 /*
- * The private add-on boundary (P3.8): the production and shipped Testing code of the private consumer package may only
+ * The private add-on boundary: the production and shipped Testing code of the private consumer package may only
  * name lower-package types (and, for static calls, constants, constructors and Internal constructors) that the surface
  * manifests publish, and every string service id it hands to the container is declared in a finite map. The scanner is
  * an AST walk over resolved names: aliases, fully qualified names and members are all seen. It proves the static edges,

@@ -33,7 +33,7 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
 
 /*
- * D25 / PLAN4-D19 (P5.8): the identity of a keyed write in the kernel, on a probe operation the test declares. The scope
+ * The identity of a keyed write in the kernel, on a probe operation the test declares. The scope
  * tuple types the actor without a delimiter collision and separates tenant, scope, operation and key; the request
  * hash is canonical and keeps a missing field, an explicit null and the string "null" apart; a write without a key
  * claims nothing; a reused key with another request is 422 without the stored result; a replay is authorized now,

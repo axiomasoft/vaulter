@@ -33,7 +33,7 @@ abstract class TestCase extends OrchestraTestCase
             VaulterServiceProvider::class,
             // The document-node tests build their Storage fixtures through
             // Vaulter::drive() (a Drive handle) — documents requires only core in
-            // production (T6), but its OWN test suite needs drive installed to
+            // production, but its OWN test suite needs drive installed to
             // create those fixtures. Document content itself is never CAS-committed,
             // but DriveContext eagerly constructs ALL Drive Actions (incl.
             // UploadFileAction) on build, which needs the Contracts\Cas\BlobStore
@@ -43,7 +43,7 @@ abstract class TestCase extends OrchestraTestCase
             // This package binds the Documents behaviour: the document type
             // registry and the document presenter, the document routes and the
             // Documents-event Activity/outbox subscribers. The file handler
-            // registry and the NodePresenter seam are core-owned (P0.4/D10) —
+            // registry and the NodePresenter seam are core-owned —
             // VaulterServiceProvider (core) binds them, not this provider.
             VaulterDocumentsServiceProvider::class,
         ];

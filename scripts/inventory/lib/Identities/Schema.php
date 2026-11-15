@@ -36,7 +36,7 @@ final class Schema
     /** Axes whose variation is expected; a record that follows another axis is drift. */
     private const ALLOWED_AXES = ['ids', 'host_keys', 'tenancy'];
 
-    /** A module's create-migrations live in its own package (D40), webhooks' in core until the webhooks package exists. */
+    /** A module's create-migrations live in its own package, webhooks' in core until the webhooks package exists. */
     private const MIGRATIONS = 'packages/core/database/migrations';
 
     private const MIGRATION_DIRS = 'packages/*/database/migrations';
@@ -657,7 +657,7 @@ final class Schema
     }
 
     /**
-     * Records where the pre-P1.10 snapshot has another table or column set than the current one: findings.
+     * Records where the earlier snapshot has another table or column set than the current one: findings.
      *
      * @param array<string, array<string, mixed>> $diff     table => engine => differences (filled)
      * @param array<string, array<string, mixed>> $expected

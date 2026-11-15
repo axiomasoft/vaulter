@@ -7,9 +7,9 @@ declare(strict_types=1);
  *     [--rule-file=<name>] [--fqcn-prefix=<Vaulter\X\>]… [--exclude-fqcn=<FQCN>]… [--tests=<old-dir>:<new-dir>]…
  *     [--decision=D40] [--root=<dir>] [--no-git] [--json] (--dry-run | --apply)
  *
- * Moves the types of tests/Repo/Arch/Fixtures/target-map.json (phase=P4, action=move; phase=P5 for the owner collaboration) to the package that owns them:
+ * Moves the types of tests/Repo/Arch/Fixtures/target-map.json (phase=P4, action=move, phase=P5 for the owner collaboration) to the package that owns them:
  * file, namespace, imports, fully qualified names, strings, docs, test directories, suites, zones and the baseline
- * ledger (p4-design#move-tool). Exit: 0 done, 1 a failure while reading or applying (nothing was written before the
+ * ledger. Exit: 0 done, 1 a failure while reading or applying (nothing was written before the
  * checks), 2 usage, conflict, empty selection or a replace/split type.
  */
 

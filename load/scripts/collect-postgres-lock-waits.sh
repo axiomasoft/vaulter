@@ -1,5 +1,5 @@
 #!/bin/sh
-# VLT-LOAD P8.5 — sample PostgreSQL lock wait durations for `vaulter_pg_lock_wait_seconds`.
+# Sample PostgreSQL lock wait durations for `vaulter_pg_lock_wait_seconds`.
 # Writes Prometheus text exposition lines to stdout (harness sink / §7).
 #
 # Usage:

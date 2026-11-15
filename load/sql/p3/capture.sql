@@ -1,4 +1,4 @@
--- P3.1 — bounded pg_stat_statements sample (admin capture; not authoritative top-20 — P3.2 ranks).
+-- Bounded pg_stat_statements sample (admin capture, not the authoritative top-20 ranking).
 \set ON_ERROR_STOP on
 
 SELECT

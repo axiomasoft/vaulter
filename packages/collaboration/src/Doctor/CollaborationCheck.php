@@ -18,7 +18,7 @@ use Vaulter\Doctor\DoctorFinding;
  * secrets themselves never leave the config. (An inactive module registers no check: it is simply not collaborating.)
  *
  * The draining flag of a managed disable must live in a cache store every PHP process shares: an `array` or `null`
- * store is an error (C10). While the flag is set, appends are refused: a warning says so.
+ * store is an error. While the flag is set, appends are refused: a warning says so.
  */
 #[Internal]
 final readonly class CollaborationCheck implements DoctorCheck

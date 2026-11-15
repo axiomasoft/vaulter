@@ -40,14 +40,13 @@ it('the exporter registry still accepts a ready instance', function (): void {
 });
 
 /*
- * F-P3.3-02 / F-P3.5-01 — the DriveHandleFactory seam (vaulter-drive) fails loud
+ * The DriveHandleFactory seam (vaulter-drive) fails loud
  * with an install hint (a MissingPackageException naming the composer package),
  * instead of the generic Illuminate BindingResolutionException ("Target [...] is
  * not instantiable.") that carried no mention of "vaulter" or which package to
  * install.
  *
- * The FileHandlerRegistry seam is DIFFERENT since VLT-CANON P0.4 (D10, superseding
- * H.5/T5): the engine is core-owned, not a vaulter-documents seam, so it no longer
+ * The FileHandlerRegistry seam is DIFFERENT: the engine is core-owned, not a vaulter-documents seam, so it no longer
  * "fails loud when absent" — see the tests below, which pin the OPPOSITE: it
  * always resolves.
  */
@@ -59,9 +58,9 @@ it('drive() fails loud with an install hint when no active module provides the d
 });
 
 /*
- * P0.4/D10 — the format-extensibility registry (FileHandlerRegistry + its
- * PreviewHandler/DownloadOnlyHandler baseline) is core-owned, superseding H.5's
- * "concrete engine ships in vaulter-documents" allocation: a drive-only host with
+ * The format-extensibility registry (FileHandlerRegistry + its
+ * PreviewHandler/DownloadOnlyHandler baseline) is core-owned, not shipped in
+ * vaulter-documents: a drive-only host with
  * NO vaulter-documents installed still resolves a real preview/download handler,
  * never a MissingPackageException. The CORE test suite (this file) does NOT load
  * VaulterDocumentsServiceProvider (tests/Pest.php / TestCase::getPackageProviders),
@@ -93,7 +92,7 @@ it('registerHandler() registers a custom handler with NO package installed, P0.4
 
 /**
  * A minimal FileHandler fixture — proves the runtime-registration seam works
- * standalone, with no vaulter-documents package installed at all (P0.4/D10).
+ * standalone, with no vaulter-documents package installed at all.
  */
 final class SeamTestCadHandler implements FileHandler
 {

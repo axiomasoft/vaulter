@@ -39,7 +39,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
- * The share link lifecycle of PLAN2.D47 (P4-I22): create → open → rotate/update/revoke,
+ * The share link lifecycle: create → open → rotate/update/revoke,
  * with the redemption counted once per link session, the audience and the role rules
  * and the drive policy's TTL applied on every visit.
  */

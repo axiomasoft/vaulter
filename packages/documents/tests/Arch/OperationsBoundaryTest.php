@@ -10,7 +10,7 @@ use PhpParser\ParserFactory;
 use Symfony\Component\Finder\Finder;
 
 /**
- * PLAN2.P4.8 (ADR 0020 §3, audit F13): the documents HTTP layer and the facade reach
+ * ADR 0020 §3: the documents HTTP layer and the facade reach
  * documents only through DocumentOperations/CommentOperations. They never import an
  * Action or a Repository — of any Vaulter package — by use statement, alias, fully
  * qualified call or class-name string.

@@ -16,8 +16,8 @@ use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
  * right editor/preview/download surface without re-running mime logic client-side.
  *
  * Both the contract and the concrete resolver (`Vaulter\Drive\Handlers\NodePresenter`,
- * backed by the core-owned `Vaulter\Drive\Handlers\FileHandlerRegistry`) are core-owned
- * since(superseding /T5 — a drive-only host with no
+ * backed by the core-owned `Vaulter\Drive\Handlers\FileHandlerRegistry`) are core-owned:
+ * a drive-only host with no
  * vaulter-documents installed still resolves a real preview/download descriptor
  * through this seam, never null). {@see NodeResource::handler()} resolves it
  * unconditionally for every leaf node. A folder node is never passed here — only

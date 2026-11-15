@@ -241,7 +241,7 @@ final readonly class StagedUpload
 
     /**
      * Whether $chunk's bytes are IDENTICAL to what already sits on the staged temp
-     * at [$offset, $offset+len($chunk)) (N3 C6): the ONLY case tus
+     * at [$offset, $offset+len($chunk)): the ONLY case tus
      * permits treating an `offset < server` PATCH as an idempotent retransmit rather
      * than a 409 Conflict. A chunk longer than what is already staged, or whose
      * bytes disagree anywhere in the overlap, is NOT a match — the caller rejects it.

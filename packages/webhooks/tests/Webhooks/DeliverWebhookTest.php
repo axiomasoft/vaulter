@@ -24,7 +24,7 @@ use Vaulter\Webhooks\WebhookSecret;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * The reliable webhook delivery half (§2.11 / D14 / M3b), ported from chatom:
+ * The reliable webhook delivery half, ported from chatom:
  * DeliverWebhook POSTs the signed payload over HTTP and persists the delivery's retry
  * bookkeeping. The signature follows Standard Webhooks: HMAC-SHA256 over
  * "{webhook-id}.{webhook-timestamp}.{body}", keyed by the decoded whsec_ secret.

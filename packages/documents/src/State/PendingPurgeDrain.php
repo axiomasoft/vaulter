@@ -12,7 +12,7 @@ use Vaulter\Operations\OperationMiddleware;
 use Vaulter\ValueObjects\Operations\ScopeRef;
 
 /**
- * Drain-or-409 for a purge (C9). Drive's trash purge removes a document inside the transaction its own operation
+ * Drain-or-409 for a purge. Drive's trash purge removes a document inside the transaction its own operation
  * opens, where nothing may wait on the transport. This middleware runs before that transaction: for a root
  * `drive.trash.purge` it drains the trashed documents of the drive that carry a marker, and
  * DocumentContentLifecycle::purge() checks the marker again under the purge's locks — still set, the purge answers

@@ -13,7 +13,7 @@ use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
- * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability
+ * The format-extensibility registry: mime → extension → capability
  * → priority → null-object, the runtime-registration proof and the claimedMime spoof
  * guard. THIS is the headline — a new format is one class + register, no migration.
  */

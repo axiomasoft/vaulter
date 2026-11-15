@@ -16,13 +16,13 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
 
 /**
- * What a conditional write of an endpoint (update, deactivate, rotate-secret, delete) expects (CC2): the version
+ * What a conditional write of an endpoint (update, deactivate, rotate-secret, delete) expects: the version
  * in the endpoint's tag.
  *
  * As for the other versioned aggregates, the If-Match header is compared only after the caller was seen to hold the
  * `manage` ability (403) and the endpoint was found (404); then it is required (428 without it or with `*`) and must
  * equal the current tag (412 stale_write). The version it names is what the operation compares again under the
- * endpoint's row lock (CC1), so this check only answers earlier.
+ * endpoint's row lock, so this check only answers earlier.
  *
  * On a route of a receipt operation a retry under its Idempotency-Key repeats the If-Match of the first request,
  * stale once that one committed (a deleted endpoint is gone altogether): with a key the write gets a version no row

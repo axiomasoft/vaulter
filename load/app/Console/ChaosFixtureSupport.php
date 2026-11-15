@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
- * Deterministic P7.2 upload/CAS/outbox fixtures. Cleanup is run-prefix scoped.
+ * Deterministic upload/CAS/outbox fixtures. Cleanup is run-prefix scoped.
  * Current multipart sessions store Flysystem part keys, not AWS UploadId.
  */
 final class ChaosFixtureSupport

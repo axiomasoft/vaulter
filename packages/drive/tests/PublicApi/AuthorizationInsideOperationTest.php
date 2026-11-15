@@ -16,7 +16,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
-// R3 of the operation pipeline (P3.10, ADR-0028): a write authorizes exactly once, inside the
+// R3 of the operation pipeline: a write authorizes exactly once, inside the
 // attempt, so the decision sees the transaction of the mutation.
 
 /** Transaction levels at which the permission driver was asked for an override (once per decision). */

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# I14 clean-consumer harness (PLAN3 P4.19, knowledge/p4-design#matrices): one Vaulter package, built the way its
+# Clean-consumer harness: one Vaulter package, built the way its
 # split repository is consumed, in an EMPTY directory and with nothing but the packages it declares, then its fast
 # sqlite set runs there. A package that imports a type of a sibling it does not require, or whose tests reach
 # `../core/tests`, fails here instead of passing on the monorepo's shared vendor/.
@@ -17,7 +17,7 @@
 # repositories on .deps/* ONLY (options.versions pins them to 1.0.0, `self.version` becomes 1.0.0), so the repository
 # vendor/ is never on any path. `core` keeps its Pest harness at the repository root (phpunit.xml, tests/Pest.php), so
 # for it the root files are staged next to packages/core. Real runs need the network (Packagist); the zip archives of a
-# release are qualified by PLAN4, not here.
+# release are qualified elsewhere, not here.
 set -euo pipefail
 
 self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

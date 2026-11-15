@@ -17,7 +17,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * F-P1.12-03: before this action existed, keep_forever had a setter (storeVersion)
+ * Before this action existed, keep_forever had a setter (storeVersion)
  * but no way to unset it — a pinned version was excluded from prune FOREVER, not
  * just until released.
  */

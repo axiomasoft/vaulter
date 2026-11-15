@@ -23,7 +23,7 @@ use Vaulter\Drive\Tests\TestCase;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * A syncing client end to end (PLAN2.D50, D59): it lists the drive once, takes the
+ * A syncing client end to end: it lists the drive once, takes the
  * start cursor, then only applies journal pages — upserts, removes that take a folder's
  * subtree along, and subtree re-reads by listing. After a mixed series of mutations
  * its replica equals what a fresh listing shows the same reader.
@@ -133,7 +133,7 @@ it('keeps a replica built from the journal equal to a fresh listing', function (
 
     $this->drive->nodes()->rename($alpha, 'alpha-2');
     $this->drive->nodes()->move($file, $this->private);
-    // Renamed out of sight: the move entry must survive this weaker one (PLAN2.D61).
+    // Renamed out of sight: the move entry must survive this weaker one.
     $this->drive->nodes()->rename($file, 'spec-moved.txt');
     $copy = $this->drive->nodes()->copy($alpha, $projects, new CopyOptions(name: 'alpha-copy'));
     $this->drive->nodes()->move($alpha, $this->root);

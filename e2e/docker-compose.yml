@@ -33,7 +33,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # F-P4.5-03: `testbench serve` only starts listening AFTER `migrate:fresh`
+    # `testbench serve` only starts listening AFTER `migrate:fresh`
     # completes (see Dockerfile.laravel's CMD) — a plain TCP-connect probe is
     # therefore already a faithful "migrations done + accepting requests" signal, no
     # HTTP client needed inside this bare php:8.4-cli image.
@@ -59,7 +59,7 @@ services:
     depends_on:
       laravel:
         condition: service_healthy
-    # F-P4.5-03: symmetric with the reference deployment's own healthcheck
+    # Symmetric with the reference deployment's own healthcheck
     # (packages/collaboration/hub/docker-compose.yml) — /livez of the management listener on
     # VAULTER_COLLAB_MANAGEMENT_PORT (loopback inside the container).
     healthcheck:
@@ -84,7 +84,7 @@ services:
         condition: service_healthy
       hub:
         condition: service_healthy
-    # F-P4.5-03: node:26-alpine ships wget (busybox) — no extra install needed.
+    # node:26-alpine ships wget (busybox) — no extra install needed.
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5273 >/dev/null 2>&1 || exit 1"]
       interval: 3s

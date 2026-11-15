@@ -15,7 +15,7 @@ use Vaulter\Drive\Operations\NodeOperations;
 use Vaulter\Drive\Operations\TrashOperations;
 
 /**
- * PLAN2.P4.13 (D44): the drive implementations of the public operations never return
+ * The drive implementations of the public operations never return
  * or take an Eloquent model, builder, collection or paginator (methods marked @internal
  * are exempt).
  */

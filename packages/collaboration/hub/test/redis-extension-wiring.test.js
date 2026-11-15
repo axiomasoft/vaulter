@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 
-// F-P4.1-R2 (P4.1 review, Major) — the @hocuspocus/* v2->v4 bump moved @hocuspocus/extension-redis to
+// The @hocuspocus/* v2->v4 bump moved @hocuspocus/extension-redis to
 // ^4.3, which depends on `ioredis: ~5.6.1` and drives it through `createClient`. The direct `ioredis`
 // dependency was left at ^4.31, so src/index.js built `new IORedis(config.redisUrl)` (an ioredis@4
 // client) and handed it to a v5-era extension via createClient — an unversioned major mismatch on the

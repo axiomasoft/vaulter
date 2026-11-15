@@ -11,17 +11,15 @@ use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
- * F-P4.2-01 (VLT-REMED P4.3, batch B16): the ancestor-side traversal
+ * The ancestor-side traversal
  * (AccessResolver::ancestorChain(), the walk EVERY authorization check runs;
  * NodeReadRepository::ancestors()/breadcrumb()) must be bounded by withMaxDepth,
- * symmetrically with descendants()/subtree() (ADR-0005).
+ * symmetrically with descendants()/subtree().
  *
  * Red-before: before this item, the recursive CTE staudenmeir compiles for
  * `ancestors()`/`ancestorsAndSelf()` carried NO `depth <` predicate — the walk
- * ran unbounded on every authorization call. The repro this item's finding cites
- * (`plans/AUDIT-VLT/artifacts/repro/P4.2/NPlusOneReproTest.php`, test C1) proved
- * this by asserting the ABSENCE of `depth <` in the captured SQL; this test
- * asserts its PRESENCE, which is exactly the delta the fix introduces.
+ * ran unbounded on every authorization call. A repro proved this by asserting the
+ * ABSENCE of `depth <` in the captured SQL; this test asserts its PRESENCE, which is exactly the delta the fix introduces.
  */
 beforeEach(function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'database');

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P4.3 — host-side matrix runner (live path evidence; contract only with P4_MATRIX_CONTRACT=1).
+# Host-side matrix runner (live path evidence; contract only with P4_MATRIX_CONTRACT=1).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

@@ -1,8 +1,8 @@
-// VLT-LOAD P2.5 — options.thresholds builder, transcribed from slo-gates.md §2
+// options.thresholds builder, transcribed from slo-gates.md §2
 // (sequential) and §3.2 (streaming class A). Runs INSIDE the k6 sandbox — `run.sh`
 // stages this file into `load/k6/lib/thresholds.js` before invoking k6, because the k6
 // service only mounts `load/k6/` (docker-compose.load.yml `k6.volumes`), same reason
-// `run.sh` already stages the seed manifest (P2.4 Known Deviations). Source of truth
+// `run.sh` already stages the seed manifest. Source of truth
 // stays here, not the staged copy.
 //
 // What is deliberately NOT in this file (Implementation Rules — no invented numbers):
@@ -15,22 +15,21 @@
 //    arbitrary cross-metric arithmetic. G-6 was perf-assert-only in the source table
 //    already (`vaulter_failed_jobs_total`, a server metric).
 //  - RSS ceilings (the "A" row's memory half for SLO-40…54): k6 cannot see server memory
-//    at all (RAG-8b) — perf-assert.py only (Prometheus once P8 lands, `container-peak.json`
+//    at all (RAG-8b) — perf-assert.py only (Prometheus once metrics ship, `container-peak.json`
 //    as a coarse stand-in today).
-//  - Class B remains advisory outside `lab` (D20). In `lab`, the OP tag selects an
+//  - Class B remains advisory outside `lab`. In `lab`, the OP tag selects an
 //    individual request inside a mixed scenario; the file-level scenario tag alone
-//    combines unrelated operations (F-P2.8-3).
+//    combines unrelated operations.
 //  - §3.3 (background, SLO-55…81): no k6 metric at all (no clientside input) — perf-
 //    assert.py only.
 //
 // Tag-vocabulary note: slo-gates.md names streaming operations by a conceptual slug
 // (`tus_patch`, `s3_putpart`, `s3_complete`, `single_shot`, `download`) that is NOT a
-// literal k6 tag value anywhere in `load/k6/scenarios/*.js` (P2.4) — those tag requests
+// literal k6 tag value anywhere in `load/k6/scenarios/*.js` — those tag requests
 // with `scenario` = the FILE-level scenario name (`tus-upload`, `s3-multipart`,
 // `single-shot`, `download`) and `op` = the OP-nn from operations-catalog.md. Plan
-// disagrees with code exactly the way P2.4's own Known Deviations already handled once
-// ("сценарий подстраивается под КОД, расхождение фиксируется") — SCENARIO_TAG_MAP below
-// is that same adaptation, not a new decision.
+// disagrees with code, and the scenario follows the code ("сценарий подстраивается под КОД,
+// расхождение фиксируется") — SCENARIO_TAG_MAP below records that adaptation.
 const SCENARIO_TAG_MAP = {
   tus_patch: { scenario: 'tus-upload', op: 'OP-02' },
   s3_putpart: { scenario: 's3-multipart', op: 'OP-06' },
@@ -52,9 +51,9 @@ const SEQUENTIAL = {
 // §3.2 — one entry per SLO-40..54 "A" row, tier-keyed. `S0` has no dedicated row in
 // slo-gates.md (it is a CI profile, not a deployment tier) — it reuses tier S's numbers:
 // per-stream throughput is a single-connection-speed expectation, not something that
-// scales down with the ~1/50 object-count cut S0 makes (`reference-env.md` §4.1). Same
-// derivation rule P2.2 used for S0's PG params (phases/P2.md P2.2 Known Deviations) —
-// documented here, not invented silently.
+// scales down with the ~1/50 object-count cut S0 makes. Same
+// derivation rule as S0's PostgreSQL params (load/env/S0.env) — documented here, not
+// invented silently.
 const STREAM_A = {
   tus_patch: {
     S0: { med: 25, min: 15, dataSentRate: 52428800 },
@@ -68,7 +67,7 @@ const STREAM_A = {
     M: { med: 30, min: 18 },
     L: { med: 35, min: 21 },
   },
-  // SLO-46..48 (L-01, known-red — slo-gates.md §6.4): the throughput floor below stays
+  // SLO-46..48 (L-01, known-red): the throughput floor below stays
   // part of the spec (Implementation Rules — not weakened because RSS is red today). The
   // RSS half of this row is perf-assert-only and is where L-01's `known-red` verdict is
   // actually surfaced (see perf-assert.py KNOWN_RED).
@@ -181,7 +180,7 @@ function labBThresholds(tier) {
 /**
  * k6 `options.thresholds` for one (profile, tier) pair.
  *
- * Class B (latency) only enters `options.thresholds` in the `lab` profile (D20) — this
+ * Class B (latency) only enters `options.thresholds` in the `lab` profile — this
  * function intentionally returns latency thresholds ONLY there; every other profile gets
  * class A alone, and class B stays advisory (reported by perf-assert.py from the same
  * summary.json, not gated by k6 itself).

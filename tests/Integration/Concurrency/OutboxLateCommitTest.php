@@ -13,7 +13,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookFanoutConsumer;
 
 /**
- * O2 on PostgreSQL (D29): a long transaction takes a smaller outbox seq and commits after a shorter one with a
+ * O2 on PostgreSQL: a long transaction takes a smaller outbox seq and commits after a shorter one with a
  * bigger seq. Reconciliation only trusts events older than the settle window, so it does not move past the
  * smaller seq while it may still commit, and both events get their delivery row once they settled. One
  * reconciler per consumer (O6): two relays racing for the consumer lease get one generation between them.

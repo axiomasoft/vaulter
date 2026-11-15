@@ -10,7 +10,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookSecret;
 
 /**
- * The webhook signing_secret is encrypted at rest (§2.11 / F-P1.7-02): a DB
+ * The webhook signing_secret is encrypted at rest: a DB
  * dump/replica leak must not hand an attacker the HMAC keys. Laravel's `encrypted`
  * cast is transparent (WebhookSigner sees plaintext), and the one-shot encryptor
  * migrates legacy plaintext rows idempotently.

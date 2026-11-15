@@ -26,7 +26,7 @@ use Vaulter\Support\Identity;
  * Add a comment to a node. The author is the operation's actor — a
  * system operation has nobody to attribute the comment to and is refused.
  *
- * Lock order T (shared) → N (the node) → the comment row (F06): under both
+ * Lock order T (shared) → N (the node) → the comment row: under both
  * locks the drive must still be writable and the node still live, so a trash or an
  * archive that committed first leaves no comment behind. The event is raised inside
  * the unit of work and delivered after the OUTERMOST commit, so a rollback broadcasts

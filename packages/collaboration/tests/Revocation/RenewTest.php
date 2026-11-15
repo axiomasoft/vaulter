@@ -16,7 +16,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
- * POST /v1/collaboration/hub/renew (D26, I17 #9): the hub renews a connection's token before it expires. The rights
+ * POST /v1/collaboration/hub/renew: the hub renews a connection's token before it expires. The rights
  * are checked now, so a renewal never extends authority the subject lost: without View it is refused, without Edit it
  * is read-only, and the new token expires token_ttl from now while the old one keeps its exp.
  */

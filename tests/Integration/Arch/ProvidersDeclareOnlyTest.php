@@ -9,7 +9,7 @@ use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 
 /*
- * P3.4 (ADR-0027, D39): a package service provider only offers its module manifest; everything else — config,
+ * A package service provider only offers its module manifest; everything else — config,
  * bindings, routes, commands, tags, schedules — is declared by the manifest and registered by the core module
  * kernel. Statically checked on every packages/<pkg>/src/*ServiceProvider.php: the bodies of register(), boot(),
  * packageRegistered() and packageBooted() hold only the calls named here, and configurePackage() only names the

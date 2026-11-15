@@ -6,7 +6,7 @@ use Rector\CodeQuality\Rector\Identical\FlipTypeControlToUseExclusiveTypeRector;
 use Rector\CodingStyle\Rector\Use_\SeparateMultiUseImportsRector;
 use Rector\Config\RectorConfig;
 
-// F-P4.4-01: vaulter-filament is not a root composer dependency, so it cannot share
+// Vaulter-filament is not a root composer dependency, so it cannot share
 // the root rector.php run (Rector needs the package's OWN autoloader for type-aware
 // rules) — package-local config, mirroring the package-local phpstan.neon/pint.json
 // pattern already used for the other four satellites.

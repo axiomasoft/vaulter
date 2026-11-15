@@ -34,7 +34,7 @@ use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Idempotency\ReplayedProblemException;
 
 /**
- * P6.5 (D25, D47, ID2, CC1): the writes of documents and comments are receipt operations. A retry under the same
+ * The writes of documents and comments are receipt operations. A retry under the same
  * Idempotency-Key and request returns what the first request answered and changes nothing; a comment has a version of its
  * own, a resolution raises it, and a resolve or a delete on a version that is gone is refused (412 stale_write).
  */

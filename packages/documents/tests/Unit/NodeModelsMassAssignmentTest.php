@@ -7,8 +7,8 @@ use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
 /**
- * Mass-assignment hardening (P1.4 / B13): NodeComment/DocumentRevision used to
- * carry `$guarded = []` (F-P1.8-02). author_id/node_id are morph/FK identity columns
+ * Mass-assignment hardening: NodeComment/DocumentRevision used to
+ * carry `$guarded = []`. author_id/node_id are morph/FK identity columns
  * and status/version_no are lifecycle bookkeeping — none of them may be set through
  * a future `fill($request->all())`.
  *

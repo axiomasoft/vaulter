@@ -12,7 +12,7 @@ use Vaulter\Operations\OperationPolicy;
 use Vaulter\Webhooks\WebhooksOperationPolicies;
 
 /*
- * PLAN4-D19 (P5.8): the mutation contract as one in-memory join, with no second catalogue committed. Rows come from the
+ * The mutation contract as one in-memory join, with no second catalogue committed. Rows come from the
  * OperationPolicySource tables of the packages (the OperationCatalog contributions), the mutating v1 routes of the
  * identities inventory (tests/Repo/Arch/Fixtures/identities/http.json) and the operation names the package sources
  * construct. Every name is declared by its own package; every mutating route belongs to exactly one policy of the

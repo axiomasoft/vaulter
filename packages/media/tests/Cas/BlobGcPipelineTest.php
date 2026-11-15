@@ -11,7 +11,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Сквозной GC-конвейер БЕЗ ручного стампинга delete_after_at (H.3). Раньше mark-фаза
+ * Сквозной GC-конвейер БЕЗ ручного стампинга delete_after_at. Раньше mark-фаза
  * сканировала по `delete_after_at < now`, который ни один путь коммита/детача не
  * взводит на committed-блобе, — значит реально осиротевший блоб не попадал в скан
  * и байты текли навсегда. Эти тесты гоняют настоящую цепочку

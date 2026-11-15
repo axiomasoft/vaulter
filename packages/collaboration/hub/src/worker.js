@@ -4,7 +4,7 @@ import { CompactionError, compactLease, REFUSAL } from './compaction.js'
 import { config as defaultConfig } from './config.js'
 import { retryPolicy, withRetry } from './retry.js'
 
-// The hub's compaction worker (D26, revision 3 p.1): PHP does not merge Yjs, so without it a
+// The hub's compaction worker: PHP does not merge Yjs, so without it a
 // document with an uncheckpointed tail and no open room would keep its pending marker, and REST
 // would answer 409 document_state_pending forever. One pass:
 //   1. asks the backend for compaction leases (POST compaction/lease {hub_id, max}): the generations

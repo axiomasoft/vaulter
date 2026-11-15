@@ -22,12 +22,12 @@ final class Allowlist
     /** The only entries that may stay forever: the named destinations I4 itself demands. */
     public const PERMANENT_CATEGORIES = ['config-validation', 'host-lifecycle', 'explicit-adapter'];
 
-    /** I13: a borrowed host input named in D27 (a host model given to a drive entry) stays for ever. */
+    /** A borrowed host input named in D27 (a host model given to a drive entry) stays for ever. */
     public const I13_PERMANENT_CATEGORIES = ['host-input'];
 
     public const MODES = ['report', 'block'];
 
-    /** I4 places each allowed probe in one of these categories. */
+    /** Places each allowed probe in one of these categories. */
     public const I4_CATEGORIES = ['activation', 'jwt-optional', 'explicit-adapter', 'config-validation', 'host-lifecycle'];
 
     /** The phase from which an invariant blocks (architecture#invariants); an entry must be gone by then. */
@@ -37,7 +37,7 @@ final class Allowlist
     public const LATE_CATEGORIES = ['jwt-optional'];
 
     /**
-     * D32: the owners of a package that P5 extracts. An I2 entry naming one of them as `target_owner` may outlive the
+     * The owners of a package that extracts. An I2 entry naming one of them as `target_owner` may outlive the
      * blocking phase (removed_in P5): documents refers to collaboration types until the package exists.
      */
     public const LATE_TARGET_OWNERS = ['collaboration'];
@@ -68,7 +68,7 @@ final class Allowlist
     }
 
     /**
-     * May the entry outlive the blocking phase: a late category, or (I2, D32) a reference to a package P5 extracts.
+     * May the entry outlive the blocking phase: a late category, or a reference to a package P5 extracts.
      *
      * @param array<string, mixed> $entry
      */

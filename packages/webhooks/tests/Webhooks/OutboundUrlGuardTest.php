@@ -20,7 +20,7 @@ use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * The outbound SSRF guard (§2.11 / D5 / N2 / F-P1.7-01): the endpoint URL is a
+ * The outbound SSRF guard: the endpoint URL is a
  * user-controlled primitive, so the relay resolves it (A + AAAA), refuses any address
  * in a private/loopback/link-local/reserved range on the DELIVERY path, and pins the
  * vetted IP onto the connection. No real DNS or socket is touched — the resolver is
@@ -130,7 +130,7 @@ it('does not follow a redirect onto a private address, F-P1.7-01', function (): 
 });
 
 /*
- * VLT-REMED P5.2 / R-05 (D30). Барьер держался ИСКЛЮЧИТЕЛЬНО на дефолте `false` конфиг-ключа
+ * Барьер держался ИСКЛЮЧИТЕЛЬНО на дефолте `false` конфиг-ключа
  * `webhooks.follow_redirects`: включив его, хост снимал SSRF-защиту целиком — `CURLOPT_RESOLVE`
  * пинит только ИСХОДНЫЙ host:port, а redirect-хоп резолвится заново, без guard'а и без пина.
  * Приёмник отвечает `302 Location: http://169.254.169.254/…` — и запрос уходит на metadata.
@@ -172,7 +172,7 @@ it('delivers to a public host, pinning the vetted IP onto the connection, F-P1.7
     Http::assertSentCount(1);
 });
 
-// ─────────────── reserved / multicast / unspecified ranges (review P0.2) ───────────────
+// ─────────────── reserved / multicast / unspecified ranges ───────────────────────────
 
 it('refuses the IPv6 unspecified address :: which routes to loopback on Linux, F-P1.7-01', function (): void {
     // 0.0.0.0/8 blocked IPv4 "this-network" but its IPv6 twin `::` was a hole: [::]
@@ -237,7 +237,7 @@ it('rejects registering an endpoint whose host resolves into a private range, F-
     ])->assertStatus(422)->assertJsonValidationErrors('url');
 });
 
-// ─────────────── P5.3: embedded IPv4, test ranges, proxy, response budget ───────────────
+// ─────────────── embedded IPv4, test ranges, proxy, response budget ───────────────
 
 it('blocks IPv4-embedding IPv6, TEST-NET and benchmark addresses by default', function (string $ip): void {
     fakeResolver()->set('embedded.test', [$ip]);

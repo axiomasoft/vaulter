@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P3.2 — tier-S controlled workload capture (included from p3-profile.sh capture).
+# Tier-S controlled workload capture (included from p3-profile.sh capture).
 set -euo pipefail
 
 : "${SCRIPT_DIR:?}"

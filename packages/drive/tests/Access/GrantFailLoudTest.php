@@ -16,7 +16,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\SubclassedRoleDriver;
 
 /**
- * F-P1.2-01 — a grant addressed to a role/team subject under a host-role driver that
+ * A grant addressed to a role/team subject under a host-role driver that
  * does NOT enumerate role subjects (gate/azguard/database/null) is silently inert. The
  * GrantNodeAccessAction now makes that loud: a warning always, and a thrown
  * UnenumerableGrantSubjectException outside production. The spatie lane — which DOES
@@ -29,7 +29,7 @@ function grantAction(): GrantNodeAccessAction
     return app(GrantNodeAccessAction::class);
 }
 
-// ── F-P1.2-01 (red-before: today the grant persists silently, no warning/throw).
+// ── A grant that the driver cannot enforce fails loudly instead of persisting silently.
 it('warns and throws when a role grant is written under the gate driver, F-P1.2-01', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'gate');
 
@@ -48,7 +48,7 @@ it('warns and throws when a role grant is written under the gate driver, F-P1.2-
     $spy->shouldHaveReceived('warning')->once();
 });
 
-// ── F-P1.2-01: a team subject under gate trips the same guard.
+// ── a team subject under gate trips the same guard.
 it('throws for a team subject under the gate driver, F-P1.2-01', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'gate');
 
@@ -63,7 +63,7 @@ it('throws for a team subject under the gate driver, F-P1.2-01', function (): vo
     ))))->toThrow(UnenumerableGrantSubjectException::class);
 });
 
-// ── F-P1.2-01 control: a USER subject under gate is fine (no role enumeration needed).
+// ── Control: a USER subject under gate is fine (no role enumeration needed).
 it('does not throw for a plain user subject under the gate driver, F-P1.2-01', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'gate');
 
@@ -80,7 +80,7 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
     expect($grant)->toBeInstanceOf(NodeGrant::class);
 });
 
-// ── F-P1.2-01 (review): a host driver that follows the DOCUMENTED extension path —
+// ── A host driver that follows the DOCUMENTED extension path —
 // subclass DatabasePermissionDriver and OVERRIDE subjectsFor() to append a role
 // Subject — makes its role grants genuinely take effect, so the guard must NOT trip
 // even though it carries no EnumeratesRoleSubjects marker. Capability is detected via
@@ -103,7 +103,7 @@ it('does not throw for a role grant under an unmarked subclass that overrides su
     expect($grant)->toBeInstanceOf(NodeGrant::class);
 });
 
-// ── F-P1.2-01 control: the spatie lane enumerates role subjects, so a role grant is
+// ── Control: the spatie lane enumerates role subjects, so a role grant is
 // accepted without a warning/throw.
 it('does not throw when a role grant is written under the spatie driver, F-P1.2-01', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'spatie');

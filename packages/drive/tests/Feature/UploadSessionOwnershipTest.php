@@ -9,7 +9,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * F-P1.4-12: `authorizeSession` checks the ability on the target folder/node but,
+ * `authorizeSession` checks the ability on the target folder/node but,
  * before this fix, never checked WHO created the session — any actor with Create in
  * the same folder (or Edit on the same node), having merely learned the (unguessable)
  * upload_id, could HEAD/PATCH/DELETE someone else's in-flight session. The slice runs

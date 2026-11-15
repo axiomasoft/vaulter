@@ -21,11 +21,11 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * Провайдер e2e-стенда realtime-коллаборации (P1.1 мастер-плана).
+ * Провайдер e2e-стенда realtime-коллаборации.
  *
  * Поднимается ТОЛЬКО под `testbench serve` (см. testbench.yaml) — боевой пакет его не
  * грузит. Делает три вещи:
- *   1. Включает фичи document_versions И collaboration (P3.1 — realtime теперь отдельный
+ *   1. Включает фичи document_versions И collaboration (realtime теперь отдельный
  *      опт-ин поверх document_versions) и database-драйвер прав, фиксирует bigint-id —
  *      чтобы маршруты collaboration/session + хаб collaboration/hub/* были смонтированы,
  *      а гранты реально резолвились (register() — раньше boot, где гейтятся маршруты).
@@ -40,7 +40,7 @@ final class E2eServiceProvider extends ServiceProvider
     {
         // Должно встать ДО boot VaulterServiceProvider, где маршруты гейтятся по фиче.
         config([
-            // The collaboration module is opt-in (D22) — the e2e stand exercises the collaboration session +
+            // The collaboration module is opt-in — the e2e stand exercises the collaboration session +
             // the hub endpoints, so it must switch it on (default off).
             'vaulter.modules.collaboration' => true,
             'vaulter-drive.access.permission_driver' => 'database',

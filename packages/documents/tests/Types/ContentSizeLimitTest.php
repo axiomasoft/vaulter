@@ -9,7 +9,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 
 /**
- * PLAN2.P4.3: every document type is size-limited by the decoder, not only TipTap —
+ * Every document type is size-limited by the decoder, not only TipTap —
  * by its codec's maxSizeBytes(), else by vaulter-documents.content.max_size_kb. A
  * spreadsheet used to be unlimited. Content of exactly the limit is accepted.
  */

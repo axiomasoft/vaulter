@@ -22,7 +22,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * The M4a document-node lifecycle (§2.5) on the document aggregate: create a
+ * The document-node lifecycle on the document aggregate: create a
  * kind=document node with its working state and checkpoint #1, autosave on the
  * checkpoint interval, named checkpoints, copy-forward restore, prune.
  * Authorization runs OPEN (the base suite's null driver), so these exercise the
@@ -225,7 +225,7 @@ function oversizedContent(): TipTapContent
     return DocumentTestHelpers::content(str_repeat('x', 4096));
 }
 
-// ─── F-P1.11-05 — max_document_size_kb enforced at save time ───────────────
+// ─── max_document_size_kb enforced at save time ───────────────
 
 it('CreateDocumentAction rejects content over max_document_size_kb, F-P1.11-05', function (): void {
     config()->set('vaulter-documents.content.max_size_kb', 1);

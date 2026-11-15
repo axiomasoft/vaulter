@@ -20,7 +20,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  *
  *   - a rooted drive opens ONLY when the actor holds a View-implying grant on the root;
  *     a missing grant or an administrative block answers 404 drive_not_found, exactly
- *     like an unknown drive (D38), and a guest 401 actor_required;
+ *     like an unknown drive, and a guest 401 actor_required;
  *   - an un-ROOTED drive (root_node_id null) has no node to gate on and is a
  *     corrupt/transient state (provisioning is transactional) — it 404s for every
  *     authenticated caller, so the meta never leaks to a grantless actor;

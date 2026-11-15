@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# A PostgreSQL test server that outlives a run (local work only; PLAN3 P1.11).
+# A PostgreSQL test server that outlives a run (local work only).
 #
 #   scripts/pg-local.sh up       start it in /dev/shm (idempotent), write var/pg-local.env
 #   scripts/pg-local.sh down     stop it and drop its data

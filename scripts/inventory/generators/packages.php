@@ -9,7 +9,7 @@ use Vaulter\Inventory\Json;
 use Vaulter\Inventory\Repo;
 
 /**
- * tests/Repo/Arch/Fixtures/packages.json: the fixture is hand-written for `target_require` (D6) and `dir`/`exists`;
+ * tests/Repo/Arch/Fixtures/packages.json: the fixture is hand-written for `target_require` and `dir`/`exists`;
  * `composer`, `psr4` and `current_require` are verified against packages/<p>/composer.json, and --write rewrites only those.
  *
  * @phpstan-import-type Outcome from Generator

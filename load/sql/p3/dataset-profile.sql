@@ -1,4 +1,4 @@
--- P3.2 — dataset volume + statistics freshness (admin, direct-to-postgres).
+-- Dataset volume + statistics freshness (admin, direct-to-postgres).
 \set ON_ERROR_STOP on
 
 SELECT json_build_object(

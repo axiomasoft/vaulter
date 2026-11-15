@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// npm declaration surface (D14, PLAN4 P6.2/U2; knowledge examples-p6-p8#bc-npm).
+// npm declaration surface.
 // Order: public declaration-only emit -> public API report -> private emit resolved against the PUBLIC declaration output
 // (no ../vue/src alias) -> private report -> consumer type fixtures -> built-in negative probes. Everything is emitted to a
-// temp dir: no dist, no Vite, no JS bundle. Types only: runtime ESM/CJS, tgz, peer ranges and Vue behavior are P8.2.
+// temp dir: no dist, no Vite, no JS bundle. Types only: runtime ESM/CJS, tgz, peer ranges and Vue behavior are checked elsewhere.
 // Usage: node npm-surface.mjs <package-dir-name> [--update]   (--update only rewrites etc/*.api.md; the check never writes)
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'

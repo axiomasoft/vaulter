@@ -76,7 +76,7 @@ final readonly class DocumentStateWriter
             || ($change->cause === StateWriteCause::Update && $locked->collab_protocol !== null);
 
         // Closing a generation over collaborative state no checkpoint holds yet would leave its saved edits in no
-        // revision (C8): the state is captured first, then replaced.
+        // revision: the state is captured first, then replaced.
         if ($epochChanged && $locked->hasUncheckpointedChanges()) {
             $this->capture(
                 document: $locked,

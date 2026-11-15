@@ -17,7 +17,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Commit atomicity (H.3): if the transaction rolls back, no blob row is left
+ * Commit atomicity: if the transaction rolls back, no blob row is left
  * behind. The staged temp file is always discarded. (The physical object is only
  * promoted for a newly created row, so a roll back before promotion leaves the
  * disk clean too.)

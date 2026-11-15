@@ -4,14 +4,14 @@ import crypto from 'node:crypto'
 import { closeAll, connect, eventually, pause, scene as newScene, session, stateOn, text } from '../support/live.js'
 import { exitCode, probe, receiptIds, signal, standEnv, up } from '../support/stand.js'
 
-// I17 scenario 10 (collaboration#tests): SIGTERM while a client is typing. The hub drains: /readyz
+// Scenario 10 (collaboration#tests): SIGTERM while a client is typing. The hub drains: /readyz
 // answers 503 at once, /livez keeps answering 200 while the process lives (health stays observable),
 // writes stop, the pending ledger flushes and the process exits 0. After the drain boundary — the
 // first 503 — no write is accepted: an envelope sent from then on gets no ack and no receipt, and
 // everything that was acknowledged has its receipt and is in the room a second hub rebuilds.
 //
 // REAL processes only (docker stand: PostgreSQL, Redis, `testbench serve`, two hubs): written in
-// PLAN3, run in PLAN4 (D41) by scripts/collab-stand.sh. The in-process counterpart with a mock backend
+// Run by scripts/collab-stand.sh, outside CI. The in-process counterpart with a mock backend
 // is test/shutdown.test.js.
 
 const stand = standEnv()

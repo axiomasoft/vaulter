@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\File;
 
 /**
- * PLAN2.P4.3: vaulter:make:document-type scaffolds a host-owned type and leaves
+ * vaulter:make:document-type scaffolds a host-owned type and leaves
  * registration (config) to the host.
  */
 beforeEach(function (): void {

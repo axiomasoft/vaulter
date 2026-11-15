@@ -34,7 +34,7 @@ foreach (array_slice($argv, 1) as $arg) {
     }
 }
 
-/** Complete local builder/helper/schema closure; actual trust admission remains external (D18). */
+/** Complete local builder/helper/schema closure; actual trust admission remains external. */
 function artifactToolDigest(): string
 {
     $required = ['build-artifacts.php', 'manifest-lib.php', 'sbom.py', 'schema/bom-1.5.schema.json', 'schema/spdx.schema.json', 'schema/jsf-0.82.schema.json', 'schema/provenance.json'];
@@ -229,7 +229,7 @@ if (isset($options['verify-prepared'])) {
 }
 
 // Publisher gate. A pending record, a missing approval, or an approval for different bytes/tool/policy refuses; nothing
-// here can mint an approval: A is external evidence (D18), authenticated by a protected external SHA-256 of its bytes
+// here can mint an approval: A is external evidence, authenticated by a protected external SHA-256 of its bytes
 // and only then compared with the prepared record.
 if (isset($options['require-approved'])) {
     $dir = rtrim($options['require-approved'], '/');

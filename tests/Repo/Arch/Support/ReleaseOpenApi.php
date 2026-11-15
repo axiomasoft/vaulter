@@ -70,7 +70,7 @@ final class ReleaseOpenApi
         return OpenApiContract::fromFile(self::root().'/packages/collaboration/openapi/hub.yaml');
     }
 
-    /** A structural contract report, not the future P6 compatibility classifier. */
+    /** A structural contract report, not a compatibility classifier. */
     public static function report(OpenApiContract $contract): string
     {
         return hash('sha256', json_encode($contract->document, JSON_THROW_ON_ERROR));

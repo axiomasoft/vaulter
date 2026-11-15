@@ -126,7 +126,7 @@ it('отвергает PATCH с offset, не совпадающим с серв�
 
     // The server is at offset 5; a PATCH claiming offset 0 again with DIFFERENT
     // bytes than what is already staged there is a genuine conflict — not an
-    // idempotent retransmit (F-P1.4-02, N3 C6).
+    // idempotent retransmit.
     expect(fn () => $handler->patch($session->refresh(), UploadTestHelpers::streamFor('xxxxx'), 0))
         ->toThrow(OffsetMismatchException::class);
 });

@@ -19,7 +19,7 @@ uses(TestCase::class)->in('Observability');
 // Test groups: database, serial, extended, stand and the engine-only engine:* — see groups.php.
 TestGroups::bind(__DIR__, 'webhooks');
 
-/** The ETag of an endpoint as the API shows it: kind, id and the stored version (D47, CC2). */
+/** The ETag of an endpoint as the API shows it: kind, id and the stored version. */
 function webhookTag(int|string $id, ?int $version = null): string
 {
     $version ??= (int) WebhookEndpoint::query()->whereKey($id)->value('version');

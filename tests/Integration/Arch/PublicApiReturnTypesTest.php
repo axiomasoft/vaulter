@@ -46,7 +46,7 @@ use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 
 /**
- * PLAN2.P4.13 (D44): no public Operations/handle method returns or takes an Eloquent
+ * No public Operations/handle method returns or takes an Eloquent
  * model, builder, collection or paginator. A method marked @internal (the handle's
  * `model()` and the HTTP list paginators) is outside the contract and exempt.
  */
@@ -70,7 +70,7 @@ function leakedTypes(?ReflectionType $type, bool $input = false): array
     $members = $type instanceof ReflectionNamedType ? [$type] : ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType ? $type->getTypes() : []);
     $leaked = [];
     foreach ($members as $member) {
-        // D27 borrowed host input: a parameter may take the host's own model as the abstract Eloquent Model, never a
+        // Borrowed host input: a parameter may take the host's own model as the abstract Eloquent Model, never a
         // Vaulter model; a return never hands out any model.
         if ($member instanceof ReflectionNamedType && !$member->isBuiltin() && forbiddenPublicType($member->getName())
             && !($input && $member->getName() === Model::class)) {
@@ -103,7 +103,7 @@ function leaks(string $class, bool $input = false): array
 }
 
 /**
- * Every supported type of the packages, read from their attributes (D27): the Api and Spi classes, interfaces and
+ * Every supported type of the packages, read from their attributes: the Api and Spi classes, interfaces and
  * traits under src/, with the public properties a host reads besides the methods it calls.
  *
  * @return list<class-string>
@@ -160,7 +160,7 @@ it('keeps Eloquent out of every supported type: the Operations, the SPI, the sna
         array_push($leaks, ...leaks($type, input: true), ...propertyLeaks($type));
     }
 
-    // The discovery reads the attributes, not a hand list: the contracts P6.3 made model-free are all in it.
+    // The discovery reads the attributes, not a hand list: the model-free contracts are all in it.
     expect($types)->toContain(
         UploadOperations::class, UploadProtocolHandler::class, UploadSessionSnapshot::class, InitiateUploadInput::class,
         DownloadGuard::class, NodeContentLifecycle::class, NodePresenterContract::class, KindPresenter::class, NodeSnapshotContributor::class,

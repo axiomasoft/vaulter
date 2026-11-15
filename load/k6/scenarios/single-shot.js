@@ -1,5 +1,5 @@
-// VLT-LOAD P2.4 — single-shot small-file upload (OP-17), not the multi-GB path: whole
-// body in one multipart/form-data POST, contract-capped at 32 MiB (D19).
+// Single-shot small-file upload (OP-17), not the multi-GB path: whole
+// body in one multipart/form-data POST, contract-capped at 32 MiB.
 import http from 'k6/http';
 import { check } from 'k6';
 import { API, TIER, VUS_UPLOAD, DURATION, SINGLE_SHOT_FILE_SIZE_BYTES, thinkTime } from '../lib/config.js';

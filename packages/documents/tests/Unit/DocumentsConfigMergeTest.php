@@ -25,7 +25,7 @@ final class ConfigMergeHostNodeComment extends NodeComment {}
 
 /**
  * The module owns its config root, registers its document types from it and presents
- * document nodes through a kind presenter; it adds no file handler (PLAN2.P4.3).
+ * document nodes through a kind presenter; it adds no file handler.
  */
 it('loads document defaults under their owner and contributes a kind presenter, not file handlers (P2.5)', function (): void {
     expect(config('vaulter-documents.models.node_comment'))->toBe(NodeComment::class)

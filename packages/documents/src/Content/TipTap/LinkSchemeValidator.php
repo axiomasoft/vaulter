@@ -7,8 +7,7 @@ namespace Vaulter\Documents\Content\TipTap;
 use Vaulter\Attributes\Api;
 
 /**
- * Strict allow-list guard for `href` URL schemes in TipTap content (
- * plans/ /findings/P0-remediation-norms.md N1). Shared by the store-time
+ * Strict allow-list guard for `href` URL schemes in TipTap content. Shared by the store-time
  * validator ({@see TipTapContent}) and the render-time Markdown path (the HTML path
  * gets its second echelon from `symfony/html-sanitizer` instead).
  *

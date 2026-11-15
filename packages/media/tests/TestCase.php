@@ -55,7 +55,7 @@ abstract class TestCase extends OrchestraTestCase
         // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
         SuiteDatabaseConnection::skipOnForeignEngine($this);
 
-        // The migrations of every offered module: the blob tests pin blobs for an opaque owner (D23) and need no drive table.
+        // The migrations of every offered module: the blob tests pin blobs for an opaque owner and need no drive table.
         $paths = SuiteDatabaseConnection::migrationPaths($this->app);
         load_migration_paths($this->app, $paths);
         $this->loadMigrationsFrom($paths);

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Inventory\Scans;
 
 /**
- * I2 — a package refers only to its own types and to those of the packages in its `require`.
+ * A package refers only to its own types and to those of the packages in its `require`.
  *
  * `current`: the package of the file against its current Composer require. `target`: the owner of the code (type-map)
  * against the target graph; a type of a package that is only a transitive requirement is a `needs-explicit-require`

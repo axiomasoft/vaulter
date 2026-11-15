@@ -18,7 +18,7 @@ use Vaulter\Modules\VaulterModule;
 use Vaulter\Operations\OperationMiddleware;
 
 /**
- * A third-party module written against the public module surface only (I8): it owns a config root, a table,
+ * A third-party module written against the public module surface only: it owns a config root, a table,
  * a route, a command, a listener and container wiring, defines a slot of its own (a Restriction one, which the
  * kernel has no built-in for) and contributes to the core and drive slots. Opt-in, like every module that
  * opens a new surface.

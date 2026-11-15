@@ -11,7 +11,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Reconciliation (H.3): ref_count is a cache, rebuilt from the edge counts (the
+ * Reconciliation: ref_count is a cache, rebuilt from the edge counts (the
  * liveness truth). It also flags dangling rows — a committed blob whose canonical
  * object is missing on disk.
  */
@@ -30,7 +30,7 @@ it('пересчитывает ref_count из числа рёбер', function (
     CasTestHelpers::pin($blob, $v1);
     CasTestHelpers::pin($blob, $v2);
 
-    // Commit never bumps ref_count (H.3); the cache is stale at 0.
+    // Commit never bumps ref_count; the cache is stale at 0.
     expect($blob->fresh()->ref_count)->toBe(0);
 
     $report = app(BlobReconciler::class)->reconcile();

@@ -3,7 +3,7 @@ name: Release (npm)
 # Prepares (version-pr) and publishes the npm packages (@vaulter/vue, @vaulter/vue-collaboration, later @vaulter/client).
 # The Version Packages PR is opened without any registry credential. Publishing is a separate job that runs only after
 # `route` has selected the channel/line from the manifest and found the qualification evidence of this exact SHA
-# (D18): no evidence, no publish, no SHA-only fallback. The registry token is read by the publish job alone. The source repository is currently private, so npm provenance
+# No evidence, no publish, no SHA-only fallback. The registry token is read by the publish job alone. The source repository is currently private, so npm provenance
 # cannot be generated. The PHP packages are released separately by monorepo-split.yml.
 on:
   push:
@@ -149,7 +149,7 @@ jobs:
       # (never computed from the candidate, no default) before A is parsed; each candidate tgz must then be exactly the
       # tgz A accepted for that package/version/source (sha256, integrity, consumer evidence). Only verified files are
       # listed for publishing. No npm token is present in this step. Registry dist.integrity is compared after the
-      # authorized publish; before it the identity is pending (P8.2).
+      # authorized publish; before it the identity is pending.
       - name: Verify the candidate tgz against the authenticated approval
         env:
           VAULTER_ARTIFACT_APPROVAL_SHA256: ${{ vars.VAULTER_ARTIFACT_APPROVAL_SHA256 }}

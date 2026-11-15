@@ -118,7 +118,7 @@ it('prunes by the profile revision limit while preserving head, pinned revisions
 
     $this->artisan('vaulter:revisions:prune')->assertSuccessful();
 
-    // Revision 2 ('two', 3 bytes) goes and its bytes leave the quota (PLAN2.D48).
+    // Revision 2 ('two', 3 bytes) goes and its bytes leave the quota.
     expect($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 3, 4])
         ->and($file->refresh()->revision_count)->toBe(4)->and($handle->model()->refresh()->used_bytes)->toBe($used - 3);
     $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('five'), 'a.txt'));

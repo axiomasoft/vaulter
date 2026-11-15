@@ -18,7 +18,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Node;
 
 /*
- * Scenario 6 (C2, C4, C7, C11): receipts outlive the compaction of their payloads and live as long as their generation:
+ * Scenario 6: receipts outlive the compaction of their payloads and live as long as their generation:
  * a retry of a compacted update still gets its seq. A restore closes the generation (retired_at); a late retry of it is
  * refused with collaboration_epoch_mismatch, and the same before and after the prune, which deletes the closed
  * generation's rows only once token_ttl + the retry horizon + retention.retired_generation_days have passed. The

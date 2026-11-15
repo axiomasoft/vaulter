@@ -9,7 +9,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * The CAS console commands wire the collector / reconciler to artisan (H.3): the
+ * The CAS console commands wire the collector / reconciler to artisan: the
  * GC tombstones-then-sweeps and reconcile rebuilds ref_count and reports.
  */
 beforeEach(function (): void {
@@ -35,7 +35,7 @@ it('vaulter:blobs:gc --pending подметает упавший staging', funct
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
-    // A crashed staging: pending, older than the orphan grace (24h by default, P6.8), no edge.
+    // A crashed staging: pending, older than the orphan grace (24h by default), no edge.
     $blob->forceFill(['status' => BlobStatus::Pending, 'first_seen_at' => now()->subDays(2)])->save();
 
     $this->artisan('vaulter:blobs:gc', ['--pending' => true])

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * The identities adapter (knowledge p6-surface#identities-schema): the generated identities/{protocol,http,config,cli,schema}.json
+ * The identities adapter: the generated identities/{protocol,http,config,cli,schema}.json
  * compared item by item on the stable key id + owner, field by field on the contract fields each kind declares. Item order,
  * `source` refs, the `changes` ledger and `base` are no contract; an unknown root or item field, an unknown version or kind,
  * a duplicate id, an owner outside the inventory is an error (exit 2), never ignored.

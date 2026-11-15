@@ -19,7 +19,7 @@ use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 /**
  * Boots the kernel, the CAS engine, the drive and the webhooks package with the opt-in webhooks module
- * switched on (D22): the webhook suites exercise the module, the default of a host (off) is the kernel's
+ * switched on: the webhook suites exercise the module, the default of a host (off) is the kernel's
  * business and is pinned by the core activation tests.
  */
 abstract class TestCase extends OrchestraTestCase

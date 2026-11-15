@@ -17,7 +17,7 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
 // The kernel labels the metrics of every versioned route but names none of them: the active modules contribute their
-// routes to the RouteLabelSource slot (P4.16), and a module that is switched off contributes nothing.
+// routes to the RouteLabelSource slot, and a module that is switched off contributes nothing.
 
 it('defines the RouteLabelSource slot in the kernel as a contributor slot', function (): void {
     $definitions = FreshApplication::boot()->make(Kernel::class)->compiled()->slots;

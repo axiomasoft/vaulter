@@ -39,7 +39,7 @@ use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
 
 /**
- * I8, the operation pipeline (ADR-0028): the stages of OperationRunner::write() and the contract of
+ * The operation pipeline: the stages of OperationRunner::write() and the contract of
  * an OperationMiddleware. Committed migrations, not a wrapping test transaction: the root transaction
  * and its retry are only honest at transaction level 0.
  */

@@ -28,7 +28,7 @@ use Vaulter\Drive\Tests\TestCase;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * Reading the change journal (PLAN2.D50, D59; P5-I15, I17, I18): the reader sees an
+ * Reading the change journal: the reader sees an
  * upsert with a snapshot only for a node it may see now; a node that left its view by a
  * move or an access change is a remove with that reason; anything else it cannot see is
  * skipped. A pruned or reset journal expires the cursor (410), a forged or foreign
@@ -53,7 +53,7 @@ function changeFeedSummary(ChangePage $page): array
     return array_map(static fn (NodeChange $change): array => [$change->nodeId, $change->operation->value], $page->changes);
 }
 
-/** The sync key user $user is given for $nodeId of $drive: the U1 primitive over the drive's own tenant. */
+/** The sync key user $user is given for $nodeId of $drive: the primitive over the drive's own tenant. */
 function changeKeyOf(object $drive, int|string $nodeId, int $user = 1): string
 {
     $actor = AccessTestHelpers::user($user);
@@ -133,7 +133,7 @@ it('(d) keeps the remove of a trashed node when it is restored into a hidden fol
 });
 
 it('(e) skips a node created where the reader cannot see, while the system actor sees it', function (): void {
-    // A cursor is bound to its principal (PLAN4.D20): the system actor takes its own C0.
+    // A cursor is bound to its principal: the system actor takes its own C0.
     $systemCursor = $this->drive->changes()->startCursor();
     $secret = $this->drive->folders()->create('secret', $this->hidden);
 

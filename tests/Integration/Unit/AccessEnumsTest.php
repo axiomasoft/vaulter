@@ -9,7 +9,7 @@ use Vaulter\Drive\Enums\Access\Permission;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 
 /**
- * The bit layout, the ability → bit map and the v1 role table (PLAN2.D45, D53). These
+ * The bit layout, the ability → bit map and the v1 role table. These
  * pin the exact sets so a future edit cannot silently widen or narrow a role: a
  * changed set must be a new role version.
  */

@@ -1,4 +1,4 @@
-// VLT-LOAD P2.4 — tier/base-url/VU raccounting, straight from harness.md §4 (a literal
+// Tier/base-url/VU raccounting, straight from harness.md §4 (a literal
 // copy of the per-group VU table, which is itself a literal copy of slo.md §0.1 —
 // disagreeing here would be a finding, not a fix, see harness.md §4).
 import { sleep } from 'k6';
@@ -35,8 +35,8 @@ export const VUS_DOWNLOAD = vusFor('download');
 export const DURATION = __ENV.DURATION || '30s';
 const THINK_TIME_MS = parseInt(__ENV.THINK_TIME_MS || '200', 10);
 
-// D23 — the shared fixture sizes: tus chunk / S3 part. Never a disk file, never
-// k6/experimental/fs (harness.md §3).
+// The shared fixture sizes: tus chunk / S3 part. Never a disk file, never
+// k6/experimental/fs.
 export const TUS_CHUNK_BYTES = 8 * 1024 * 1024;
 export const S3_PART_BYTES = 64 * 1024 * 1024;
 

@@ -12,7 +12,7 @@ use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Kernel;
 
 /**
- * Host-side absolute gauges for load SUT state snapshots (P8.3).
+ * Host-side absolute gauges for load SUT state snapshots.
  */
 final class LoadStateMetrics
 {
@@ -65,7 +65,7 @@ final class LoadStateMetrics
 
     public function observeOutboxBacklog(): void
     {
-        // The pending work of the outbox is the delivery rows of its consumers (D29), and they exist only while the
+        // The pending work of the outbox is the delivery rows of its consumers, and they exist only while the
         // webhooks module is active.
         if (!$this->kernel->isActive('webhooks')) {
             $this->metrics->gauge(name: 'vaulter_outbox_backlog', value: 0);

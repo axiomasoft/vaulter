@@ -15,7 +15,7 @@ use Vaulter\Drive\Enums\NodeKind;
  * user, or null for the system.
  *
  * `sequence` versions the node itself; `accessVersion` versions its access (its
- * grants and inheritance, CC2) — pass it back as the expected access version of
+ * grants and inheritance; they never move the sequence) — pass it back as the expected access version of
  * a revoke or an inheritance change.
  *
  * `syncKey` is the opaque handle of this node for the reader it was mapped for:

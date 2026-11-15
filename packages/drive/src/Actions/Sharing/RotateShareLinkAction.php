@@ -26,7 +26,7 @@ use Vaulter\Events\EventRecorder;
  * resolving the moment this commits, the generation moves on so link sessions
  * opened with the old token are void, and everything else about the link — role,
  * audience, expiry, budget, password — stays. The expected version is compared
- * under the link's row lock and the rotation raises it (CC1). The new raw token is
+ * under the link's row lock and the rotation raises it. The new raw token is
  * returned once.
  */
 #[Internal]

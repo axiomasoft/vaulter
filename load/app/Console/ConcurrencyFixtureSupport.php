@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
- * Disposable P5.2 fixtures: small CAS payloads, 1k-node trees, dirty-count
+ * Disposable fixtures: small CAS payloads, 1k-node trees, dirty-count
  * profiles, and post-run integrity checks. The 1m profile is a cardinality
  * manifest, not a tier-L seed.
  */

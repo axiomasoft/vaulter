@@ -79,7 +79,7 @@ final readonly class UpdateDocumentContentAction
                 throw NodeNotFoundException::forId('unpersisted');
             }
             [$node, $document] = $this->writeLock->acquire($context, $node, $nodeId);
-            // Saved collaboration edits the working state does not hold yet would be overwritten (C8).
+            // Saved collaboration edits the working state does not hold yet would be overwritten.
             $this->pending->assertSettled($document);
             // A restore may have committed between the caller's check and this lock.
             $type = $this->decoder->editableType($document);

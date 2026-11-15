@@ -12,12 +12,11 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The tus 1.0.0 protocol-correctness surface (§2.8 / P3.4 / B7): status codes and
- * discovery the P0.3 offset-lock did NOT own — offset-mismatch → 409 (not the bare
+ * The tus 1.0.0 protocol-correctness surface: status codes and
+ * discovery the offset-lock did NOT own — offset-mismatch → 409 (not the bare
  * 302/422 a plain ValidationException renders to), Content-Type → 415, missing/wrong
  * Tus-Resumable → 412, OPTIONS discovery, and metadata whitelist + length caps. All
- * five behaviours are red-before this item (`plans/AUDIT-VLT/findings/P1.4-uploads.md`
- * F-P1.4-02/05/06/07/08).
+ * five behaviours failed before the fix.
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');

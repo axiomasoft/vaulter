@@ -1,4 +1,4 @@
--- P3.2 — isolated pg_stat_statements window with JSON evidence lines.
+-- Isolated pg_stat_statements window with JSON evidence lines.
 \set ON_ERROR_STOP on
 
 SELECT json_build_object(

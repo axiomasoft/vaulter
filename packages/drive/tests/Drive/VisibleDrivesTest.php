@@ -15,7 +15,7 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /*
  * Vaulter::drives() lists the drives whose root the actor may view and decides that before the page is cut
- * (D10, architecture#operation-chains «Чтение»); Vaulter::findDriveById() is the id lookup of a listed drive.
+ * (architecture#operation-chains «Чтение»); Vaulter::findDriveById() is the id lookup of a listed drive.
  */
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());

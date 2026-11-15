@@ -30,7 +30,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * PLAN2.F05/F06: a writer that holds the tree lock and the node lock re-checks that
+ * A writer that holds the tree lock and the node lock re-checks that
  * the node is live and the drive writable. A trash or an archive that committed
  * between the caller's check and the lock leaves no state, history or comment behind.
  */

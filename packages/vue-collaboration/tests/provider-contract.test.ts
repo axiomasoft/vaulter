@@ -4,7 +4,7 @@ import { Doc as YDoc } from 'yjs'
 import { openCollaborationTransport } from '../src/transport'
 import { hocuspocusSession } from './support/fakes'
 
-// F-P4.5-02 — the @hocuspocus/provider 2.x → 4.x bump. Every other collaboration
+// The @hocuspocus/provider 2.x → 4.x bump. Every other collaboration
 // test injects a mock `createHocuspocusProvider`, so none of them exercise the real
 // v4 API that `defaultHocuspocusProvider` depends on. These tests pin that contract
 // against the REAL package: the `isSynced` getter, the `synced`/`disconnect`/`stateless`

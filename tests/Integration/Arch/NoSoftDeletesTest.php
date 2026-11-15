@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * One deletion model (PLAN2.D27/D37): the domain trash is trashed_at on nodes, purge
+ * One deletion model: the domain trash is trashed_at on nodes, purge
  * is a real DELETE, grants are deleted and shares are revoked. No package source
  * reaches for Eloquent SoftDeletes, its scopes or its force-delete API.
  */

@@ -18,7 +18,7 @@ use Vaulter\Support\Identity;
 /**
  * The update log tables for the paths beside the append (UpdateLog): the compaction lease, the checkpoint publication,
  * the drain request, the closing and the prune of a generation. Each of them takes CollaborativeState::lock()
- * (T → N → D) first and the head row (L4) after it, never the other way round.
+ * (T → N → D) first and the head row after it, never the other way round.
  */
 #[Internal]
 final readonly class LogTables
@@ -51,7 +51,7 @@ final readonly class LogTables
     }
 
     /**
-     * L4: the head row of a generation FOR UPDATE, null when the generation has no log. The caller holds the document
+     * The head row of a generation FOR UPDATE, null when the generation has no log. The caller holds the document
      * lock of CollaborativeState::lock() in the same transaction.
      */
     public function lockHead(string $documentId, int $generation): ?Head

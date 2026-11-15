@@ -53,7 +53,7 @@ final readonly class ResolveCommentAction
             }
             $this->tree->assertLive($current);
             $row = $this->comments->lock($data->comment) ?? throw CommentNotFoundException::forNode($nodeId, $data->comment->getKey());
-            // CC1: the version the caller read is compared on the locked row, so a delete or a resolution that landed
+            // The version the caller read is compared on the locked row, so a delete or a resolution that landed
             // in between is a 412, never a silent second write.
             $this->versions->assertExpected($row, 'version', $data->expectedVersion, NodeComment::AGGREGATE);
 

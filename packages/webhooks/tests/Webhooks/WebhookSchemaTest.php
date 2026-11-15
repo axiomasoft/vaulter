@@ -11,7 +11,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * The reliability-layer schema: the neutral outbox of core (D29) — v_outbox, v_outbox_consumers,
+ * The reliability-layer schema: the neutral outbox of core — v_outbox, v_outbox_consumers,
  * v_outbox_deliveries — and the webhook tables v_webhook_endpoints, v_webhook_deliveries:
  * every column exists and the idempotency and FK constraints hold.
  */

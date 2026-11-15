@@ -1,7 +1,7 @@
-// VLT-LOAD P2.4 — 409 (NOWAIT advisory-lock) and 429 (`throttle:vaulter-public`) are
-// PROTOCOL, not error (slo.md §0.4): declaring them expected keeps them out of
+// 409 (NOWAIT advisory-lock) and 429 (`throttle:vaulter-public`) are
+// PROTOCOL, not error: declaring them expected keeps them out of
 // `http_req_failed`, which would otherwise conflate legitimate parallel-client
-// contention with a broken request. They still count toward G-4/G-5 (slo-gates.md §2)
+// contention with a broken request. They still count toward G-4/G-5
 // via the counters below — being "expected" does not make them free.
 import http from 'k6/http';
 import { uploadConflictTotal, throttledTotal } from './metrics.js';

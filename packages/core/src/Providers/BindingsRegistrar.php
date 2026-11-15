@@ -95,9 +95,9 @@ final class BindingsRegistrar implements ModuleBindings
         $app->scoped(WriteScope::class);
         $app->singleton(IdStrategyResolver::class);
 
-        // Container-owned, scoped (review): the enum-attribute
-        // reflection cache used to be a process-wide `static $cache`, a literal
-        // E3.3 violation (global state outside the facade). Binding it here means
+        // Container-owned, scoped: the enum-attribute
+        // reflection cache used to be a process-wide `static $cache`, i.e.
+        // global state outside the facade. Binding it here means
         // the cache's lifecycle follows the container instance instead of the
         // class — and scoped() (not singleton(), see DriveReadRepository right
         // below) is what actually resets it between requests/jobs on Octane/queue

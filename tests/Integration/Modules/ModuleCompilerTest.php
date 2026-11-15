@@ -31,8 +31,8 @@ use Vaulter\Tests\Modules\Fixtures\SecondStep;
 use Vaulter\Tests\Modules\Fixtures\Step;
 use Vaulter\Tests\Modules\Fixtures\ThirdStep;
 
-// I7: the module registry compiles deterministically; duplicates, missing capabilities, cycles and
-// unknown slots fail the whole graph at compilation (ADR-0027, knowledge/p3-modules#module-system).
+// The module registry compiles deterministically; duplicates, missing capabilities, cycles and
+// unknown slots fail the whole graph at compilation (knowledge/p3-modules#module-system).
 
 /** @param list<VaulterModule> $modules */
 function compileModules(array $modules, array $overrides = []): CompiledModules|InvalidModuleGraph

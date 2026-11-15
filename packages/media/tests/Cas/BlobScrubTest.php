@@ -21,7 +21,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Testing\FakeMetricsRecorder;
 
 /*
- * The integrity scrub of the CAS (D49): the sample is the never-checked blobs first, then the least recently checked;
+ * The integrity scrub of the CAS: the sample is the never-checked blobs first, then the least recently checked;
  * the first used-up budget ends the run; a missing object, a wrong size and a wrong digest mark the blob; nothing is
  * ever deleted; a dry run writes nothing; the exit code and the metrics tell the result.
  */

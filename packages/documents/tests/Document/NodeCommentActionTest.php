@@ -21,7 +21,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The node-comment Actions (ADR-0014 шаг 1): add (threaded + anchored + morph-alias
+ * The node-comment Actions (ADR-0014): add (threaded + anchored + morph-alias
  * author taken from the operation's actor), resolve (tombstone + actor) and delete
  * (permanent), each dispatching its broadcast event on the node's collaboration channel.
  */

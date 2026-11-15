@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 
 /**
- * A compaction lease on one document generation (C12) and what the hub merges under it, read in the transaction that
+ * A compaction lease on one document generation and what the hub merges under it, read in the transaction that
  * granted it: the checkpoint and the tail (C, H] of `$log`, and the checkpoint version CV the publication must expect.
  * The hub publishes with covered_from = `$log->checkpointSeq`, covered_through ≤ `$log->headSeq` and this token before
  * `$expiresAt`.

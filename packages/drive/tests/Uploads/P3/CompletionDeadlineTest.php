@@ -22,7 +22,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 
-// D19: one finite monotonic completion budget per request, checked between staged chunks,
+// One finite monotonic completion budget per request, checked between staged chunks,
 // never reset by a DB retry. Fake clocks only — no real delay, network or storage server.
 beforeEach(fn () => Storage::set('local', Storage::fake('uploads-deadline-'.getmypid())));
 

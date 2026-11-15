@@ -16,7 +16,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
- * V33: a document copy is a new aggregate holding the source's working state as its
+ * A document copy is a new aggregate holding the source's working state as its
  * only revision. History, the collaboration epoch and the validators stay with the source.
  */
 beforeEach(function (): void {

@@ -16,7 +16,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 
 /**
- * PLAN2.P4.3: one registry of document types keyed vendor/name — sources, key rules,
+ * One registry of document types keyed vendor/name — sources, key rules,
  * duplicates, replacement, deterministic order and the freeze after boot.
  */
 function freshTypes(): DocumentTypeRegistry

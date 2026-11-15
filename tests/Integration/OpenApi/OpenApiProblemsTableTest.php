@@ -13,7 +13,7 @@ require_once dirname(__DIR__, 2).'/Repo/Arch/Support/ReleaseOpenApi.php';
 require_once dirname(__DIR__).'/Http/Problems/ProblemCatalogHelpers.php';
 
 /**
- * P6.7: the Problem schema of openapi/vaulter-v1.yaml carries the machine table of the codes
+ * The Problem schema of openapi/vaulter-v1.yaml carries the machine table of the codes
  * (`x-vaulter-problems`: status, retryable, receipt, module) and the sorted list of codes as the examples of `code`. The
  * source of truth is the catalogue of the full installation; the document is regenerated, never edited by hand:
  * `UPDATE_OPENAPI_PROBLEMS=1 scripts/t sqlite -p integration tests/Integration/OpenApi/OpenApiProblemsTableTest.php`

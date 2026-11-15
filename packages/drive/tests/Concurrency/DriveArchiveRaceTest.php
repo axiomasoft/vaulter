@@ -21,7 +21,7 @@ use Vaulter\Testing\Concurrency\RaceOutcome;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * PLAN2.D37 on real backends: an archive racing a user's mutation of the same drive
+ * On real backends: an archive racing a user's mutation of the same drive
  * serialises on the tree lock. The mutation lands entirely before the archive or is
  * refused with drive_archived after it; nothing is written into an archived drive.
  */

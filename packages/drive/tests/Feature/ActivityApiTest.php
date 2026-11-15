@@ -13,7 +13,7 @@ use Vaulter\Events\EventTypeContract;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The activity feed HTTP surface (§2.9 / M2c-activity, REST v1). The feed is queried
+ * The activity feed HTTP surface (REST v1). The feed is queried
  * by drive/node scope — this IS "recipients resolved at READ" (no notification rows,
  * no per-user fan-out). Both endpoints require Ability::View on the scope and return
  * a scoped, newest-first, cursor-paginated feed of {id, type, node_id, actor,

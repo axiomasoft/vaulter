@@ -8,11 +8,11 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
- * Mass-assignment hardening (P1.4 / B13): UploadSession/UploadPart used to carry
- * `$guarded = []` (F-P1.8-02). received_bytes is the AUTHORITATIVE server-side tus
- * offset (F-P1.4-01) — mass-assigning it via a future `fill($request->all())` would
+ * Mass-assignment hardening: UploadSession/UploadPart used to carry
+ * `$guarded = []`. received_bytes is the AUTHORITATIVE server-side tus
+ * offset — mass-assigning it via a future `fill($request->all())` would
  * let a caller forge the resume point and re-open the offset-desync class of bug
- * P0.3 already closed.
+ * Already closed.
  *
  * Red-before: prior to this item both models declared `protected $guarded = [];`,
  * so `fill()` accepted every key below.

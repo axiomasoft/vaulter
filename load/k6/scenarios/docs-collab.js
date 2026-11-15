@@ -1,10 +1,10 @@
-// VLT-LOAD P2.4 — docs collaboration (OP-28 read content, OP-29 autosave, OP-30 list
+// Docs collaboration (OP-28 read content, OP-29 autosave, OP-30 list
 // versions, OP-31 named-version snapshot, OP-32 restore, OP-33 export, OP-34
 // collab-session issuance, OP-38 comment + broadcast). Operates on the SEEDED
-// document-kind nodes (P2.3 `documents` folder) — a shared pool, deliberately: co-edit
+// document-kind nodes (the seeded `documents` folder) — a shared pool, deliberately: co-edit
 // contention is exactly what this scenario means to exercise, not something to avoid.
 // The activity feed (OP-25/26) is Scope Excluded here — it lives in mixed.js, run
-// alongside the P2.3 background writer (`load:activity-write`) or it measures fiction.
+// alongside the background writer (`load:activity-write`) or it measures fiction.
 import http from 'k6/http';
 import { check } from 'k6';
 import { API, TIER, VUS_INTERACTIVE, DURATION, thinkTime } from '../lib/config.js';
@@ -67,7 +67,7 @@ export function run(data) {
   trackProtocolStatus(commentRes, TAGS);
   check(commentRes, { 'docs comment 201': (r) => r.status === 201 });
 
-  // OP-30/31/32/33 — low-frequency tail (operations-catalog.md "Низкая").
+  // OP-30/31/32/33 — low-frequency tail ("Низкая").
   if (Math.random() < 0.05) {
     lowFrequencyTail(nodeId, headers);
   }

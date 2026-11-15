@@ -14,7 +14,7 @@ use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// D47: `vaulter:operations` prints the operation catalogue of every offered module, as Markdown or as one JSON document.
+// `vaulter:operations` prints the operation catalogue of every offered module, as Markdown or as one JSON document.
 
 /** @return array<string, array<string, mixed>> the rows of `vaulter:operations --json`, by operation */
 function operationsJson(): array

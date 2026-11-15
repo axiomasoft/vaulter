@@ -31,7 +31,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * PLAN2.P4.8: DocumentOperations returns snapshots, keeps the content validator
+ * DocumentOperations returns snapshots, keeps the content validator
  * (state version) apart from the node sequence, and resolves revisions only inside
  * the addressed document.
  */

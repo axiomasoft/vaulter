@@ -44,7 +44,7 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
 
 /**
- * I11 (D25, ADR-0029, knowledge/p3-operations#idempotency): a keyed write claims its key inside the root
+ * A keyed write claims its key inside the root
  * transaction, stores its receipt with the mutation, replays it only after the owner's current authorization,
  * caches a deterministic refusal through a savepoint and never an auth, visibility, validation or precondition
  * refusal. Committed migrations, not a wrapping transaction: the root transaction and the savepoint are only
@@ -259,7 +259,7 @@ it('scopes a system actor and a drive without tenant by tagged values, not nulls
     $system = Vaulter::drive($drive)->asSystem('import')->withIdempotencyKey('sys-1');
 
     $first = $system->folders()->create('Imported');
-    // Another reason shares the receipt scope, but gets its own reader synchronization key (PLAN4.D20).
+    // Another reason shares the receipt scope, but gets its own reader synchronization key.
     $replay = Vaulter::drive($drive)->asSystem('repair')->withIdempotencyKey('sys-1')->folders()->create('Imported');
     expect($replay->withSyncKey(null))->toEqual($first->withSyncKey(null))
         ->and($first->syncKey)->toHaveLength(43)

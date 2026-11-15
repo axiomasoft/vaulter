@@ -15,7 +15,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * Scenarios 4 and 5 on PostgreSQL (C5–C7): the publication of a checkpoint races an append and a second publication of
+ * Scenarios 4 and 5 on PostgreSQL: the publication of a checkpoint races an append and a second publication of
  * the same (C, H) on separate backends. The document lock and the head row serialize them: an append that commits
  * around the publication keeps its payload and the marker past H whichever goes first; of two publications of the same
  * lease exactly one commits, the other answers collaboration_checkpoint_conflict, and the log holds HS − H updates.

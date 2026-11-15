@@ -11,7 +11,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The resumable-upload REST surface (§2.8 / D16 / M3a-http): the tus CORE flow and
+ * The resumable-upload REST surface: the tus CORE flow and
  * the S3-multipart flow through the API, plus the feature gate and the tus-disabled
  * gate. The slice runs open (the base suite's null role driver), so a bare
  * authenticated actor suffices — the authorization SEAM (AccessResolver) is wired in

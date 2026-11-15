@@ -10,7 +10,7 @@ use Vaulter\Tests\Modules\Fixtures\FixtureModulesProvider;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-// D36: the plan of the command (a dry run); its execution with --force/--purge is ModuleUninstallTest.
+// The plan of the command (a dry run); its execution with --force/--purge is ModuleUninstallTest.
 
 it('plans the removal of a module that ships its migrations in its own package', function (): void {
     $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks'])

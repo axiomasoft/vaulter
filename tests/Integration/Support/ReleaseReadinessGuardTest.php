@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * P4.7 / B21 — Release-readiness (D19 green guard — doc/config/manifest-alignment
+ * Release-readiness (green guard — doc/config/manifest-alignment
  * fixes, no behaviour delta): all four findings closed here are pinned by reading
  * the actual file each fix touched, not by memory of what "should" be there.
  */
@@ -46,7 +46,7 @@ it('moves yjs and @tiptap/pm to peerDependencies in @vaulter/vue package.json, F
     );
 
     foreach (['yjs', '@tiptap/pm'] as $dualInstanceRiskPackage) {
-        // ADR-0031 moved Yjs ownership to vue-collaboration; ProseMirror stays in vue.
+        // Moved Yjs ownership to vue-collaboration; ProseMirror stays in vue.
         $owner = $dualInstanceRiskPackage === 'yjs' ? 'vue-collaboration' : 'vue';
         $json = json_decode(file_get_contents(dirname(__DIR__, 3).'/packages/'.$owner.'/package.json'), associative: true, flags: JSON_THROW_ON_ERROR);
         expect($json['peerDependencies'])->toHaveKey($dualInstanceRiskPackage)
@@ -56,7 +56,7 @@ it('moves yjs and @tiptap/pm to peerDependencies in @vaulter/vue package.json, F
     // vue was already a peer; it must stay one.
     expect($json['peerDependencies'])->toHaveKey('vue');
 
-    // PLAN4.P4.1 adopted the versioned release channels and the vue source manifest at 1.0.0.
+    // Adopted the versioned release channels and the vue source manifest at 1.0.0.
     expect($json['version'])->toBe('1.0.0');
 });
 

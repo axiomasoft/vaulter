@@ -39,7 +39,7 @@ use Vaulter\Support\Identity;
  * already exists the conflict resolves towards less access (see keepsDirect()).
  *
  * The node row is locked, the expected access_version compared under the lock and a
- * change raises it (CC1); the node sequence does not move (CC2). Restoring or
+ * change raises it; the node sequence does not move. Restoring or
  * restricting what already is changes nothing and keeps the version.
  *
  * Authorization (Manage on the node) belongs to AccessOperations.

@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 /*
- * Test groups of the webhooks suite (PLAN3 P4.13), paths relative to this directory; see packages/core/tests/groups.php for the
- * format. These entries moved here together with the tests from the core groups.php (P1.5 classification), the reason of each:
- * plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
+ * Test groups of the webhooks suite, paths relative to this directory; see packages/core/tests/groups.php for the
+ * format. These entries moved here together with the tests from the core groups.php.
  */
 return [
     'database' => [

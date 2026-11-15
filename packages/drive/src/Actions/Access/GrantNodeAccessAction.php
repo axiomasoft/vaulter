@@ -31,7 +31,7 @@ use Vaulter\Events\EventRecorder;
  * Give a subject a role on a node. Idempotent on the grant-unique key:
  * re-granting the same subject the same scope replaces the role and expiry. The
  * write runs in a transaction under the node's row lock, raises the node's
- * access_version (never its sequence: CC2) and emits NodeGrantCreated. A grant is
+ * access_version (never its sequence) and emits NodeGrantCreated. A grant is
  * an append ((4)): it expects no version.
  *
  * Authorization (the actor may Manage the node) is enforced by the caller

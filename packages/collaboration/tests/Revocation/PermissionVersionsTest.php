@@ -19,7 +19,7 @@ use Vaulter\Events\SinkWriter;
 use Vaulter\Kernel;
 
 /**
- * v_collaboration_permission_versions (D46): the collaboration.permissions sink counts every
+ * v_collaboration_permission_versions: the collaboration.permissions sink counts every
  * drive.access.effective_permissions_changed in the version of its drive, or in the global version, in the transaction
  * of the change. Versions only move forward and only with a committed change.
  */

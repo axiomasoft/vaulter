@@ -8,7 +8,7 @@ use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Webhooks\WebhooksProblemCodes;
 
 /**
- * The problem codes of the webhooks module (moved from the kernel catalogue test with the module, P4.13): the
+ * The problem codes of the webhooks module (moved from the kernel catalogue test with the module): the
  * lang files of the package stay in step with the code list, the codes appear in the catalogue under the module
  * only while it is active, and every code has an English and a Russian title and detail.
  */

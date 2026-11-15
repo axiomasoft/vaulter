@@ -20,7 +20,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * Healing (D49): an ingest of the same sha256 into the same scope rewrites the object and lifts the integrity mark,
+ * Healing: an ingest of the same sha256 into the same scope rewrites the object and lifts the integrity mark,
  * under the lock of (scope, sha256), as a re-commit lifts a tombstone. Other scopes and other bytes are untouched.
  * The rewrite lands on a sibling key before the canonical object is replaced, so a failed swap keeps the previous bytes.
  */

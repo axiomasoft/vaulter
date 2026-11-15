@@ -1,4 +1,4 @@
-// P5.2 product case matrix. Planes, surfaces, shapes, and N match
+// Product case matrix. Planes, surfaces, shapes, and N match
 // load/gates/p5_concurrency.py. Direct SQL stays unlabeled as an OP or SLO.
 // Same-resource 409s are protocol results and are not scored against the ≤5% budget.
 

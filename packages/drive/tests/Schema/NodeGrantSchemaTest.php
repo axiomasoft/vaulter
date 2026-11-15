@@ -11,7 +11,7 @@ use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
- * The v_node_grants schema (master plan §2.6): the table, its columns, and the
+ * The v_node_grants schema: the table, its columns, and the
  * grant-unique guard (one grant per subject/scope per node).
  */
 it('creates the v_node_grants table with every column', function (): void {

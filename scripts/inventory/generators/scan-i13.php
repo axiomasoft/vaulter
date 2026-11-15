@@ -10,7 +10,7 @@ use Vaulter\Inventory\Surface;
 require_once dirname(__DIR__).'/lib/Scans/ScanGenerator.php';
 require_once dirname(__DIR__).'/lib/Surface.php';
 
-/** I13 blocks signature and extended surface leaks against the exact source-backed allowlist. */
+/** Blocks signature and extended surface leaks against the exact source-backed allowlist. */
 return new ScanGenerator(Surface::INVARIANT, static function (Repo $repo): array {
     $classified = Surface::classify(Surface::read($repo), SourceIndex::forRepo($repo));
 

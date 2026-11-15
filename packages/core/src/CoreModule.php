@@ -58,7 +58,7 @@ use Vaulter\Security\TenancyInvariant;
 
 /**
  * The kernel's own module (docs/adr/0027-kernel-boundaries-and-modules.md): the `vaulter` config root, the schema of every create-migration
- * still shipped by core until P4 splits them, the kernel commands and doctor checks, the
+ * still shipped by core, the kernel commands and doctor checks, the
  * DoctorCheck slot every module contributes its checks to, the OperationMiddleware slot of the
  * operation pipeline with its telemetry middleware (docs/adr/0028-extension-slots-and-operation-pipeline.md), the EventSink slot of the event
  * recorder and the outbox: its OutboxConsumer slot, relay, replay and retention commands, schedule

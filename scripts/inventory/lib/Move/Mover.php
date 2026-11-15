@@ -12,7 +12,7 @@ use SplFileInfo;
 use Vaulter\Inventory\Repo;
 
 /**
- * Moves the selected types of the target-map between packages (p4-design#move-tool). Everything is computed in memory
+ * Moves the selected types of the target-map between packages. Everything is computed in memory
  * first (selection, conflicts, new file contents, suites, zones, ledger); only then are the files written, so a
  * conflict or an unparsable file leaves the tree untouched. Running it again changes nothing.
  *

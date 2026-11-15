@@ -11,7 +11,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
  * Every route that changes an existing document or comment — the document's content, a restore, the resolution and the
- * deletion of a comment (D47, I12) — refuses to run blind: without If-Match, or with `*` (which matches anything), it
+ * deletion of a comment — refuses to run blind: without If-Match, or with `*` (which matches anything), it
  * answers 428 and changes nothing; a caller who may not write is answered 404/403 before any precondition.
  */
 beforeEach(function (): void {

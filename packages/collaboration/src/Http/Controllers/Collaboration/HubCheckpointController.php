@@ -17,7 +17,7 @@ use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Support\Identity;
 
 /**
- * Protocol 2 checkpoint publication (C6, C7): the hub publishes what it merged under a compaction lease. Body
+ * Protocol 2 checkpoint publication: the hub publishes what it merged under a compaction lease. Body
  * `{document, generation, lease_token, covered_from, covered_through, expected_checkpoint_version, state (base64 Yjs),
  * content (its JSON projection)}`; the answer `{checkpoint_version, marker_cleared}`. A lease that does not hold the
  * generation or a log that moved since the lease read it answers 409 collaboration_checkpoint_conflict, a closed

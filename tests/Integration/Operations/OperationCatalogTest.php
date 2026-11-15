@@ -29,8 +29,8 @@ use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// D47, I12: the operation catalogue — the policy of every mutating operation, declared by the active modules with
-// ModuleBuilder::operations(); a name has one owner (I5).
+// The operation catalogue — the policy of every mutating operation, declared by the active modules with
+// ModuleBuilder::operations(); a name has one owner.
 
 /** @param list<VaulterModule> $modules */
 function operationCatalogOf(array $modules, array $overrides = []): OperationCatalog

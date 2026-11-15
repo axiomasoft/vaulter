@@ -24,7 +24,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * Writing the drive change journal (PLAN2.D50, D59, D61): one entry per journalled
+ * Writing the drive change journal: one entry per journalled
  * event, numbered 1..n per drive under the head row, compacted to the latest state of a
  * node without ever dropping a remove or an entry a weaker one would hide.
  */

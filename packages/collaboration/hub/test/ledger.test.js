@@ -8,7 +8,7 @@ import { problem, receipt, startMockBackend, virtualTime } from './support/mock-
 
 // The hub's pending ledger against a mock backend on a loopback port (no docker, no Laravel):
 // a record leaves only on 200 append, a failed append is repeated by the next flush cycle even
-// without a new change (I17 scenario 16), a repeat is byte-identical (same update_id, sha256,
+// without a new change (collaboration scenario 16), a repeat is byte-identical (same update_id, sha256,
 // payload — scenarios 1, 14), and only network/5xx/429 are retried.
 
 const ROOM = 'vaulter.documents.1.42.0'

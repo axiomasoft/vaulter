@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# P8.7 — open a metrics run, exercise host collectors, verify 50/50 families on /metrics.
+# Open a metrics run, exercise host collectors, verify 50/50 families on /metrics.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

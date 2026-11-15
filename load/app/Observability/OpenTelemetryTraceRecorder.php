@@ -26,7 +26,7 @@ use Throwable;
 use Vaulter\Contracts\Observability\TraceRecorder;
 
 /**
- * Load-host OpenTelemetry adapter (VLT-LOAD P8.11 / §20).
+ * Load-host OpenTelemetry adapter.
  *
  * This class is the only place the load proof imports the SDK. Package code keeps
  * using {@see TraceRecorder}; a missing SDK or a failed adapter resolves Null.

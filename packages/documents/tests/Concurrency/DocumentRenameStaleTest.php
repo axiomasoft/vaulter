@@ -9,7 +9,7 @@ use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /*
- * V36 for a document: two clients rename the same document with the same expected
+ * For a document: two clients rename the same document with the same expected
  * sequence — the first commits and moves the sequence, the second is refused with 412
  * node_sequence_mismatch and changes nothing.
  */

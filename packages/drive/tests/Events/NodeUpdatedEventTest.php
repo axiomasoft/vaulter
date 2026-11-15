@@ -11,7 +11,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Support\CanonicalJson;
 
 /**
- * Changing a node's properties is a node.updated event (PLAN2.D41); the values are
+ * Changing a node's properties is a node.updated event; the values are
  * host data, so only the fact of the change is published.
  */
 uses(TestCase::class, RefreshDatabase::class);

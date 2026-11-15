@@ -76,7 +76,7 @@ final readonly class MoveNodeAction
             $into = $this->tree->locked($locked, $intoId);
 
             $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);
-            // CC3: the destination's own precondition, checked under the same tree lock.
+            // The destination's own precondition, checked under the same tree lock.
             $this->sequence->assertExpected(locked: $into, expected: $data->expectedDestinationSequence);
             if ($current->trashed_at !== null) {
                 throw InvalidDestinationException::trashed($current);

@@ -151,7 +151,7 @@ it('rejects non-production drivers selected by a profile at boot and resolution'
     $manager = new PermissionDriverManager(app(AccessConfig::class), app(), true);
     expect(fn () => $manager->forProfile('positive'))->toThrow(MissingPermissionDriverException::class);
     app()->detectEnvironment(static fn (): string => 'production');
-    // PLAN4.P5.1 evaluates production invariants before serving traffic; structural validation is separate.
+    // Evaluates production invariants before serving traffic; structural validation is separate.
     expect(app(ProductionInvariants::class)->evaluate()['violations'])->toHaveKey('drive.permission-driver')
         ->and(fn () => app(ProductionInvariants::class)->assertSecure())
         ->toThrow(InsecureProductionConfiguration::class, 'drive.permission-driver');

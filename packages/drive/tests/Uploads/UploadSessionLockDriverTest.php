@@ -10,7 +10,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 /*
  * Критическая секция upload-сессии обещает ОДНО на всех движках: «не смог взять лок» — это
  * ОТВЕТ, а не ожидание. PATCH превращает его в немедленный 409, sweeper — в «пропусти, сессия
- * живая» (R-02; тот же контракт записан в UPGRADE.md и в комментарии SweepUploadsCommand).
+ * живая» (тот же контракт записан в UPGRADE.md и в комментарии SweepUploadsCommand).
  *
  * На pgsql это держал pg_try_advisory_xact_lock, а на MySQL стоял ПРОСТОЙ блокирующий
  * lockForUpdate() — и контракт там молча ломался: sweeper не получал UploadConflictException,

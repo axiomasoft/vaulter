@@ -16,9 +16,9 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 
 /**
- * The PermissionDriver contract test (master plan §12 / H.2): ANY driver that only
+ * The PermissionDriver contract test: ANY driver that only
  * contributes the actor to the subject-set and adds no roles/override MUST yield
- * the SAME AccessResolver decision on a shared ACL fixture. This is the stub M2b's
+ * the SAME AccessResolver decision on a shared ACL fixture. This is the stub the
  * Gate/Spatie/bridge drivers reuse — pointing the resolver at each driver over one
  * fixture and asserting identical results.
  *
@@ -70,7 +70,7 @@ function sharedFixtureTruth(): array
 }
 
 /**
- * H.2 hardening: the SAME contract harness against EACH real M2b driver in
+ * Hardening: the SAME contract harness against EACH real driver in
  * pass-through mode (no super ability/permission granted, no role-mapped abilities
  * granted, no spatie roles). Every driver must contribute only the actor to the
  * subject-set and add no role decision — so the AccessResolver decision is byte-for-

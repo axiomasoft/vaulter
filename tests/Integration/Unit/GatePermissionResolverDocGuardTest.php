@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
 
 /*
- * F-P1.2-02 (Nit, D19 green guard — docblock-alignment fix, no behaviour delta):
+ * (Green guard — docblock-alignment fix, no behaviour delta):
  * gateAllows() never had a try/catch; its docblock falsely claimed it "swallows a
  * missing-ability exception". Gate::allows() already returns false (never throws)
  * for an undefined ability, so fail-closed behaviour was never at risk — only the

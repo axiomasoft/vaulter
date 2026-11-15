@@ -14,7 +14,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * Item-safety (P2.2 / F-P1.12-01): a node sitting in the drive trash (`trashed_at`)
+ * Item-safety: a node sitting in the drive trash (`trashed_at`)
  * must be unreadable through the identity download surface too, symmetric with the
  * already-correct share channel (`ShareResolver::safeTargetNode`) — even when the
  * actor's ACL grant on it is still live.

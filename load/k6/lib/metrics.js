@@ -1,5 +1,5 @@
-// VLT-LOAD P2.4 — custom metric names, byte-for-byte from slo-gates.md §1 / harness.md
-// §5.1. A typo here means a gate silently never fires (P2.5) — copy exactly, never
+// Custom metric names, byte-for-byte from slo-gates.md §1 / harness.md
+// §5.1. A typo here means a gate silently never fires — copy exactly, never
 // rename for readability.
 import { Trend, Counter } from 'k6/metrics';
 

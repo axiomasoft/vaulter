@@ -15,7 +15,7 @@ use Vaulter\Kernel;
 use Vaulter\Support\Identity;
 
 /**
- * Drain-or-409 for the paths that read or replace the working state (C8, C9): REST content read and replace, restore,
+ * Drain-or-409 for the paths that read or replace the working state: REST content read and replace, restore,
  * export and purge. The path checks the marker on the row it reads — under its locks when it writes — with
  * assertSettled(); settled() runs the whole path, and on a pending refusal asks the PendingStateDrainer to bring the
  * log in, outside any transaction, then runs the path once more, so the second check is made under fresh locks.

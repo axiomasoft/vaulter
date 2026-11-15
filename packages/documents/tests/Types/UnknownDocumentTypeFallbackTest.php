@@ -20,7 +20,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * PLAN2.P4.3 / V10: a third-party document type is installed, a document of it is
+ * A third-party document type is installed, a document of it is
  * created, the extension is removed and installed again. Without the type the
  * document stays in the tree, reads as opaque JSON and can be copied, trashed and
  * purged; editing and exporting answer document_type_unavailable. Back with the

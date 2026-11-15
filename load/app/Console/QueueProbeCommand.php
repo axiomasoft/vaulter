@@ -22,7 +22,7 @@ use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
- * Live P6.3 probe: seed, relay, retry and exact cleanup on the disposable stand.
+ * Live probe: seed, relay, retry and exact cleanup on the disposable stand.
  */
 final class QueueProbeCommand extends Command
 {

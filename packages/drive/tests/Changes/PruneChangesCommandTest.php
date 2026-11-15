@@ -11,7 +11,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 
 /**
- * Retention of the change journal (PLAN2.D50): vaulter:changes:prune deletes entries
+ * Retention of the change journal: vaulter:changes:prune deletes entries
  * older than the window and raises pruned_through with them, batch by batch;
  * vaulter:changes:reset starts a new epoch.
  */

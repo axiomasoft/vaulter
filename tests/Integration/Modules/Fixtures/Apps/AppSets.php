@@ -13,7 +13,7 @@ use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 /**
  * The application sets of the install matrix: core; +media; +drive; +documents; +collaboration; +webhooks; +azguard; +filament —
- * each downward-closed by the package graph (D6): collaboration needs the documents, webhooks, azguard and filament need the drive, the
+ * each downward-closed by the package graph: collaboration needs the documents, webhooks, azguard and filament need the drive, the
  * drive needs the media.
  *
  * The azguard and filament packages are not a dev dependency of the core (the azguard bridge pulls the external AzGuard

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Inventory\Scans;
 
 /**
- * I1 — the core is clean: nothing in it refers to the types, tables, config keys or routes of another package.
+ * The core is clean: nothing in it refers to the types, tables, config keys or routes of another package.
  *
  * `current` reads packages/core/src as it is (config keys by their `vaulter-<package>.` root or defining file, routes
  * by defining file; tables are not counted: the core creates every table today). `target` reads the files the

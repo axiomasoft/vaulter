@@ -31,7 +31,7 @@ function sampleDocument(): TipTapContent
  * Все цели ссылок/картинок из markdown-вывода: и `](...)`, и угловая форма `](<...>)`.
  * Свойство, а не подстрока: тест доказывает, что КАЖДАЯ реально выведенная цель имеет
  * разрешённую схему — ассерт «в выводе нет javascript:alert(1)» подгоняется под конкретный
- * вектор и пропускает соседний (R-04).
+ * вектор и пропускает соседний.
  *
  * @return list<string>
  */
@@ -107,7 +107,7 @@ it('рендерит новые узлы контракта D27 (image, table) �
         ->toContain('| c |');
 });
 
-// ─── F-P1.11-01 — stored XSS via javascript: href (store time) ──────────────
+// ─── stored XSS via javascript: href (store time) ──────────────
 
 it('rejects a javascript: link href at store time, F-P1.11-01', function (): void {
     TipTapContent::fromArray([
@@ -160,12 +160,12 @@ it('rejects an unknown attribute at store time, F-P1.11-02', function (): void {
     ]);
 })->throws(InvalidDocumentContentException::class);
 
-// ─── R-07 — второй эшелон D4 (render-time HTML-санитайзер) ──────────────────
+// ─── второй эшелон (render-time HTML-санитайзер) ──────────────────
 
 /*
- * До P5.2 эшелон 2 был НЕДОСТИЖИМ: единственный вход в TipTapContent — строгий fromArray(),
+ * Раньше эшелон 2 был НЕДОСТИЖИМ: единственный вход в TipTapContent — строгий fromArray(),
  * который отвергал опасный контент раньше, чем санитайзер успевал его увидеть, — а «тесты
- * эшелона 2» на деле пиннили store-time. С decay-on-read (D29) легаси-снапшот с
+ * эшелона 2» на деле пиннили store-time. С decay-on-read легаси-снапшот с
  * javascript:-href РЕАЛЬНО доходит до рендерера, и его обезвреживает symfony/html-sanitizer.
  */
 function legacyHostileSnapshot(): array
@@ -214,7 +214,7 @@ it('эшелон 2 ДОСТИЖИМ: с pass-through-санитайзером т
     expect($html)->toContain('javascript:alert(1)');
 });
 
-// ─── R-04 / R-10 / F-P1.11-04 — markdown-путь ──────────────────────────────
+// ─── markdown-путь ──────────────────────────────
 
 it('markdown-экспорт: схема КАЖДОЙ выведенной цели ссылки разрешена, R-04', function (string $label, string $href): void {
     // Легаси-снапшот (decay, не fromArray): store-time href мог быть легальным, а вредонос
@@ -241,9 +241,9 @@ it('markdown-экспорт: схема КАЖДОЙ выведенной цел
     expect(array_values(array_diff($schemes, ['http', 'https', 'mailto'])))
         ->toBe([], "опасная схема в целях markdown-ссылок; вывод: [{$markdown}]");
 })->with([
-    // Вектор A из реестра P5.1: инъекция через label.
+    // Вектор A: инъекция через label.
     'label закрывает ссылку' => ['click](javascript:alert(1))', 'https://ok.example'],
-    // Вектор B из реестра P5.1: ')' внутри разрешённой https-схемы.
+    // Вектор B: ')' внутри разрешённой https-схемы.
     'href со скобкой' => ['safe', 'https://a.example/) [pwn](javascript:alert(1)'],
     'javascript' => ['x', 'javascript:alert(1)'],
     'data' => ['x', 'data:text/html,<script>alert(1)</script>'],
@@ -279,7 +279,7 @@ it('escapes raw text in markdown export, F-P1.11-04', function (): void {
 
     expect($markdown)
         ->not->toContain('<script>alert(1)</script>')
-        // Markdown-экранирование, а не HTML: `\<script\>`, НЕ `&lt;script&gt;` (R-10).
+        // Markdown-экранирование, а не HTML: `\<script\>`, НЕ `&lt;script&gt;`.
         ->toContain('\<script\>')
         ->not->toContain('&lt;');
 });
@@ -305,14 +305,14 @@ it('markdown-экспорт НЕ печатает HTML-сущности: & в UR
         ->and($markdown)->not->toContain('&amp;');
 });
 
-// ─── P5.2 — code-span и таблица: два пути в обход escapeMarkdown ─────────────
+// ─── code-span и таблица: два пути в обход escapeMarkdown ─────────────
 
 /*
  * Ветка `code` — единственная, которая НЕ проходит через escapeMarkdown (внутри code-span
  * бэкслеши литеральны), и потому выпускала текст СЫРЫМ. Спан инертен ровно до тех пор, пока
  * он смыкается, а пустая строка закрывает не спан, а весь АБЗАЦ: всё, что после неё, падает
  * в .md как markup верхнего уровня. Store-time такой payload принимает — это легитимный
- * ТЕКСТ, а не инъекция на уровне TipTap-JSON. Ровно класс F-P1.11-04 / R-04, который
+ * ТЕКСТ, а не инъекция на уровне TipTap-JSON. Ровно тот класс, который
  * соседняя ветка text экранированием `<`/`>` и закрывает.
  */
 it('markdown-экспорт: code-марка не выпускает сырой HTML через разрыв абзаца, R-04', function (): void {
@@ -383,11 +383,11 @@ it('markdown-экспорт: `|` в ячейке не добавляет кол�
 });
 
 /*
- * RV-01 — ревью P5.2 (тот же класс F-P1.11-01/-04, соседний путь) — markdown-ветка codeBlock печатала
+ * ревью (тот же класс, соседний путь) — markdown-ветка codeBlock печатала
  * `'```'.attrs.language."\n".plainText($children)."\n```"`, СЫРЫМИ обе половины. Тело
  * кодоблока, содержащее собственный fence, закрывает его раньше времени, и всё, что дальше,
  * падает в .md как markup верхнего уровня — ЖИВОЙ сырой HTML. Store-time такой контент
- * принимает: это легитимный ТЕКСТ. Ровно то, что P5.2 закрыл для inline-марки code
+ * принимает: это легитимный ТЕКСТ. Ровно то, что уже закрыто для inline-марки code
  * (markdownCodeSpan), но узел-брат codeBlock остался сырым.
  *
  * Свойство, а не подстрока: открывающий и закрывающий fence одинаковы и длиннее любой
@@ -416,7 +416,7 @@ it('markdown-экспорт: тело codeBlock не закрывает свой
 });
 
 /*
- * RV-01, вторая половина: attrs.language — в CANONICAL_ATTRIBUTES, store-time его ЗНАЧЕНИЕ не
+ * вторая половина: attrs.language — в CANONICAL_ATTRIBUTES, store-time его ЗНАЧЕНИЕ не
  * валидирует. Info-string печаталась сырой, поэтому `"php\n```\n<img src=x onerror=alert(1)>"`
  * закрывал fence переводом строки и выпускал живой <img onerror> в .md.
  */

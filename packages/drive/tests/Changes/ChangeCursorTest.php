@@ -6,7 +6,7 @@ use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
 
 /**
- * The change cursor, format 2 (PLAN4.D20): an opaque position bound to tenant, drive,
+ * The change cursor, format 2: an opaque position bound to tenant, drive,
  * typed principal and key generation, signed with the cursor.v2 subkey. Any change to
  * its bytes, a token signed with another subkey, a format 1 token or a payload of another
  * shape is invalid_cursor.

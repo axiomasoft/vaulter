@@ -21,11 +21,11 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /*
- * I18 "GC ∥ a new revision" (D23, p6-design#gc-scrub) on PostgreSQL: a new revision of an existing file whose bytes a
+ * "GC ∥ a new revision" on PostgreSQL: a new revision of an existing file whose bytes a
  * collector is tombstoning or sweeping ends up pinned and with its bytes, in every order: (a) a sweep paused between
  * the unlink and its end, committing or rolling back; (b) a mark and the pin of the revision in either order; (c) a
  * collector running with the drive switched off while another module's retained pin holds the blob. Real processes
- * (ForkRace); serial + database, engine pgsql — written and classified in PLAN3, run in PLAN4 (D41). The slow side
+ * (ForkRace); serial + database, engine pgsql. The slow side
  * pauses INSIDE its transaction with its locks held; the other side starts while it waits. The deterministic half is
  * packages/media/tests/Cas/BlobGcCriteriaTest.php.
  */

@@ -12,7 +12,7 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// Revision 3 (D22): an invalid module graph never breaks artisan. Framework commands, vaulter:modules and
+// Revision 3: an invalid module graph never breaks artisan. Framework commands, vaulter:modules and
 // vaulter:doctor work and print the reasons; every other vaulter command is not defined.
 
 function invalidGraphApplication(): Application

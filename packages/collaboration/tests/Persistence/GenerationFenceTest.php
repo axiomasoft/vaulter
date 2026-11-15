@@ -25,10 +25,10 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /*
- * Scenario 7 (C4): only the document's current generation takes appends. A restore between the hub's load and its
+ * Scenario 7: only the document's current generation takes appends. A restore between the hub's load and its
  * append moves the generation on, and the append of the old one is refused with collaboration_epoch_mismatch and
  * writes nothing; a retired generation refuses every append. A restore never closes a generation over saved edits it
- * has not checkpointed (document_state_pending, C8).
+ * has not checkpointed (document_state_pending).
  */
 
 function fenceAppend(Node $node, int $generation, string $payload = 'update', bool $seed = false): mixed

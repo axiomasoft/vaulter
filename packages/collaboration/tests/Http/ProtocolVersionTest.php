@@ -8,7 +8,7 @@ use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Drive\Models\Node;
 
 /*
- * Every hub route speaks collaboration protocol 2 only (D26, P5.7): a call without X-Vaulter-Collab-Protocol, or naming
+ * Every hub route speaks collaboration protocol 2 only: a call without X-Vaulter-Collab-Protocol, or naming
  * another version, is refused with 409 collaboration_protocol_mismatch (never retried by the hub) before anything is
  * read or written, and every answer repeats the header. There is no protocol 1 path left: no full-state store, no
  * protocol 1 load.

@@ -26,7 +26,7 @@ use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
- * The outbox relay (D29, I10): registration, reconciliation up to the settle window, fenced delivery with full
+ * The outbox relay: registration, reconciliation up to the settle window, fenced delivery with full
  * jitter, attempt budget and DLQ, hold and detach with an explicit gap, retention that loses nothing undelivered,
  * and replay. The consumers are fixtures contributed to a resealed module graph.
  */

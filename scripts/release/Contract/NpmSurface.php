@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * The npm adapter (D14, knowledge examples-p6-p8#bc-npm): compares the declaration reports of two revisions — the API
+ * The npm adapter: compares the declaration reports of two revisions — the API
  * Extractor `etc/index.api.md` per exported entrypoint and the `etc/components.surface.txt` snapshot of every exported .vue
  * component's own `$props` and `$emit` (slot components are rolled up by API Extractor, so their props and events are not in
  * the .api.md). A removed export, prop or event is a BREAK; a prop turned required, a new required prop, a changed type or
  * event signature or a changed export declaration is REVIEW (variance is not classified); a new export, optional prop or
- * event is ADD. A green adapter proves the declaration signature guard only — no runtime, packed-bytes or Vue behavior (P8.2).
+ * event is ADD. A green adapter proves the declaration signature guard only — no runtime, packed-bytes or Vue behavior.
  *
  * @phpstan-import-type ChangeRow from Change
  */

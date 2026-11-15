@@ -275,7 +275,7 @@ it('keeps every committed allowlist entry reasoned, categorised and no later tha
         }
     }
 
-    // I1 and I2 are empty (the D32 residual documents -> collaboration went with the extraction of the package in P5.1); what stays is the I4 and I13 ones.
+    // And I2 are empty (the residual documents -> collaboration went with the extraction of the package in P5.1); what stays is the and I13 ones.
     expect($count)->toBeGreaterThan(0)
         ->and(Allowlist::load($repo, ScanGenerator::allowlistPath('I1'))->entries())->toBe([])
         ->and(Allowlist::load($repo, ScanGenerator::allowlistPath('I2'))->entries())->toBe([])

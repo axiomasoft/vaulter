@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 /*
- * The machine map of the I17 scenarios (collaboration#tests 1-20): packages/collaboration/tests/i17-scenarios.json says,
+ * The machine map of the scenarios (collaboration#tests 1-20): packages/collaboration/tests/i17-scenarios.json says,
  * for each scenario, which lanes carry it and which files hold it. Paths are relative to packages/collaboration; a file of
  * another package is named from the monorepo root (packages/<name>/...) and is checked only where that root exists (not in
- * the clean-consumer copy of this package, I14, which has no sibling tests). The test reads that map and the file system
+ * the clean-consumer copy of this package, which has no sibling tests). The test reads that map and the file system
  * only. It cannot run the scenarios; it keeps the map from drifting away from the files: none may be missing, every lane
- * must have a file of its kind, and the three scenarios that need real processes (2, 3, 10; docker stand, PLAN4) have their
+ * must have a file of its kind, and the three scenarios that need real processes (2, 3, 10, docker stand) have their
  * file under hub/test/stand.
  */
 

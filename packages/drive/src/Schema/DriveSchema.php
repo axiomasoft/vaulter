@@ -148,7 +148,7 @@ final class DriveSchema implements ModuleSchema
         $table->bigInteger('used_bytes')->default(0);
         $this->scanInteger($table, 'scan_admission_sequence')->default(0);
         $table->string('status', 16)->default('active')->index();
-        // The drive's own version (CC2): archive, unarchive and delete raise it with UPDATE … WHERE version = ?.
+        // The drive's own version: archive, unarchive and delete raise it with UPDATE … WHERE version = ?.
         $this->helpers->counterColumn(table: $table, column: 'version');
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamps();
@@ -188,7 +188,7 @@ final class DriveSchema implements ModuleSchema
         $table->string('extension', 32)->nullable();
         $table->bigInteger('size_bytes')->default(0);
         $table->boolean('inherit_grants')->default(true);
-        // The version of the node's access (CC2): a grant created or revoked on the node and a restricted or
+        // The version of the node's access: a grant created or revoked on the node and a restricted or
         // restored inheritance raise it; the node sequence does not move for them.
         $this->helpers->counterColumn(table: $table, column: 'access_version');
         $ids->reference(table: $table, column: 'shortcut_target_id', nullable: true);
@@ -394,7 +394,7 @@ final class DriveSchema implements ModuleSchema
         $table->smallInteger('role_version')->default(1);
         $table->string('audience', 16)->default('anyone');
         $table->unsignedInteger('token_generation')->default(1);
-        // The link's own version (CC2): update, rotate and revoke raise it with UPDATE … WHERE version = ?.
+        // The link's own version: update, rotate and revoke raise it with UPDATE … WHERE version = ?.
         $this->helpers->counterColumn(table: $table, column: 'version');
         $table->string('scope', 8)->default('item');
 

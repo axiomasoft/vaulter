@@ -171,7 +171,7 @@ it('contributes the disk and dedup-scope checks as the drive and keeps them with
         ->and($drive)->toHaveKeys(['media.disk.probe', 'media.dedup.scope'])
         ->and($drive['media.disk.probe'])->toBe(DiskProbeCheck::class)
         ->and($drive['media.dedup.scope'])->toBe(DedupScopeCheck::class)
-        // Media's own doctor check is the pins check (D23); the disk checks stay with the drive.
+        // Media's own doctor check is the pins check; the disk checks stay with the drive.
         ->and(file_get_contents((string) $media->getFileName()))->not->toContain('DiskProbeCheck')->not->toContain('DedupScopeCheck')
         ->and($keys)->toContain('media.blobs.pins');
 });

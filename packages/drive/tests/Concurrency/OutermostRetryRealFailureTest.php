@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Testing\Concurrency\ForkRace;
 
-// F01 on a real server: VaulterDatabase::retryingOutermost() reacts to the SQLSTATE PostgreSQL
+// On a real server: VaulterDatabase::retryingOutermost() reacts to the SQLSTATE PostgreSQL
 // actually raises (40P01 deadlock, 40001 serialization failure), not to a message we invented.
 // Committed rows (DatabaseMigrations, see tests/Pest.php): the peer session must see the fixtures.
 

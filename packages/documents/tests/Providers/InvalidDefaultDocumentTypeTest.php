@@ -12,7 +12,7 @@ use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
- * PLAN2.P4.3 (OPUS 07 §7): vaulter-documents.default_type must name a registered type.
+ * vaulter-documents.default_type must name a registered type.
  * The check runs once every provider has booted, so a type a host registers in its own
  * boot() counts whichever side of the documents provider it is listed on. Each case
  * boots a fresh application; the booted registry of the running test is not touched.

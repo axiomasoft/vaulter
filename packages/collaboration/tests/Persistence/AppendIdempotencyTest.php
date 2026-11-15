@@ -14,7 +14,7 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Drive\Models\Node;
 
 /*
- * Scenario 1 (C1, C2): an update id is committed once. The first append gets seq 1, its receipt and the pending marker;
+ * Scenario 1: an update id is committed once. The first append gets seq 1, its receipt and the pending marker;
  * a retry after a lost answer gets the same seq from the receipt and writes nothing (no second row, no event, no move
  * of the marker); the same id with another payload, or a hash that is not the payload's, is refused untouched.
  */

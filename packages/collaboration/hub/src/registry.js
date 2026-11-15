@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { decodeTokenClaims } from './tokens.js'
 
-// The hub's registry of live connections (revocation, D26): one entry per connection that got in,
+// The hub's registry of live connections (revocation): one entry per connection that got in,
 // keyed by the connection and indexed by document_id, subject, jti and drive_id, so a control
 // message for a drive reaches exactly the connections of that drive (a global one every
 // connection), and a recheck answer finds its connection by the hub's own id.

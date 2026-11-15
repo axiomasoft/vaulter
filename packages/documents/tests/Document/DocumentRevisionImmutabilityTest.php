@@ -14,7 +14,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
- * D34: a checkpoint is immutable — after INSERT only keep_forever changes, so a
+ * A checkpoint is immutable — after INSERT only keep_forever changes, so a
  * revision id always names the same bytes. The model refuses any other update, the
  * store repository has no general update, and setRetention is the one mutator.
  */

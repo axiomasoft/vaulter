@@ -21,7 +21,7 @@ use Vaulter\Webhooks\WebhookFanoutConsumer;
 
 /**
  * Prune deletes only finished work: an outbox event only once no delivery of it is open and the
- * consumers that hold retention reconciled past it (vaulter:outbox:prune, D29), a webhook delivery
+ * consumers that hold retention reconciled past it (vaulter:outbox:prune), a webhook delivery
  * only once delivered or dead (vaulter:webhooks:prune). An event with an open delivery — including
  * one whose fan-out stopped half way — and a pending/failed delivery survive any age.
  */

@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { ACCESS, createRegistry, roomParts, sessionOf } from '../src/registry.js'
 
-// The registry of live connections (revocation, D26): each connection indexed by drive_id,
+// The registry of live connections (revocation): each connection indexed by drive_id,
 // document_id, subject and jti, so a control message of one drive reaches only that drive's
 // connections — never another drive's — and a global one reaches all of them.
 

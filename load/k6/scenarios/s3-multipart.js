@@ -1,5 +1,5 @@
-// VLT-LOAD P2.4 — S3-style multipart (OP-06 putPart, OP-07 complete/abort). The
-// session is created through the SAME route as tus (operations-catalog.md §2 — the
+// S3-style multipart (OP-06 putPart, OP-07 complete/abort). The
+// session is created through the SAME route as tus (the
 // controller hardcodes protocol=tus on every session regardless; S3MultipartController
 // does not consult it either, it drives S3MultipartHandler directly — a known
 // discrepancy already on record in operations-catalog.md, not re-litigated here).

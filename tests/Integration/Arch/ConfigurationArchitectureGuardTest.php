@@ -146,7 +146,7 @@ test('AST inventory covers every package scope and applies only the owning sourc
 });
 
 test('core never reads another package\'s configuration keys directly', function (): void {
-    // ADR-0019: the package that owns a key answers questions about it through a contract
+    // The package that owns a key answers questions about it through a contract
     // (ScanWorkSettings, CommentsFeature). ConfigNormalizer alone names the replacement-map keys of every package.
     $parser = (new ParserFactory)->createForNewestSupportedVersion();
     $offenders = [];
@@ -155,7 +155,7 @@ test('core never reads another package\'s configuration keys directly', function
             continue;
         }
         foreach ((new NodeFinder)->findInstanceOf($parser->parse($file->getContents()) ?? [], String_::class) as $literal) {
-            // P3-security-contracts C01: the canonical `vaulter.scan.*` keys accept the
+            // The canonical `vaulter.scan.*` keys accept the
             // published `vaulter-drive.uploads.scan.*` names as a compatibility alias.
             $alias = $file->getRelativePathname() === 'Configuration/ScanConfig.php' && $literal->value === 'vaulter-drive.uploads.scan.';
             if (!$alias && preg_match('/^vaulter-(?:drive|documents|media|azguard|filament)\./', $literal->value) === 1) {

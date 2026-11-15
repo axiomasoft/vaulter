@@ -15,10 +15,10 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The non-rich-text document-content path (§7 level 2): the spreadsheet document type
+ * The non-rich-text document-content path: the spreadsheet document type
  * decodes its content with the opaque JSON codec, so a workbook is stored VERBATIM —
  * the TipTap {"type":"doc"} constraint applies to rich-text documents only. The 0.x
- * create field `type` selects the spreadsheet type (PLAN2.P4.3).
+ * create field `type` selects the spreadsheet type.
  */
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));

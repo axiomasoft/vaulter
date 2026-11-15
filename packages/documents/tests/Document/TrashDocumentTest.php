@@ -11,7 +11,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Item-safety (P2.2 / F-P1.12-01): a document node sitting in the drive trash
+ * Item-safety: a document node sitting in the drive trash
  * (`trashed_at`) must be unreadable/unexportable through the identity document
  * surface, even when the actor's ACL grant on it is still live — symmetric with the
  * DownloadController fix on the file surface.

@@ -25,9 +25,9 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Support\Identity;
 
 /**
- * The update log of a document generation (C1–C4). An append reads the draining flag first ({@see DrainState},
- * C10: refused while a managed disable drains the log), then takes the documents' lock order through
- * CollaborativeState::lock() (T → N → D), then the head row of the generation FOR UPDATE (L4, created on the first
+ * The update log of a document generation. An append reads the draining flag first ({@see DrainState},
+ * Refused while a managed disable drains the log), then takes the documents' lock order through
+ * CollaborativeState::lock() (T → N → D), then the head row of the generation FOR UPDATE (created on the first
  * append under the same locks); it fences the generation, answers a known update id from its receipt, and otherwise
  * writes the update, its receipt, the new head and the documents' pending marker in one transaction, which reads the
  * flag once more before it commits. The caller builds the ack from the result, after the commit.
@@ -229,7 +229,7 @@ final readonly class UpdateLog
     /**
      * The hub's seed is the first record of a generation without checkpoint, built from the JSON of state version
      * `$expected`: another hub seeded first (a record or a checkpoint exists) or the JSON moved on since the hub loaded
-     * it (a REST write while there is no Yjs state does not move the generation) — both refuse it, under L3 + L4.
+     * it (a REST write while there is no Yjs state does not move the generation) — both refuse it, under the document lock and the head row lock.
      *
      * @param array{head_seq: int, checkpoint_seq: int} $head
      *
@@ -247,7 +247,7 @@ final readonly class UpdateLog
         }
     }
 
-    /** C4 under L3: only the document's current generation takes writes, and a retired one never again. */
+    /** Under the document lock: only the document's current generation takes writes, and a retired one never again. */
     private function fence(LockedDocumentState $locked, int $generation): void
     {
         if ($generation !== $locked->generation) {
@@ -256,7 +256,7 @@ final readonly class UpdateLog
     }
 
     /**
-     * L4: the head row of the locked document's generation FOR UPDATE. The first append of a generation creates it under
+     * The head row of the locked document's generation FOR UPDATE. The first append of a generation creates it under
      * the document lock (which keeps a second creator out); a read without one sees an empty log.
      *
      * @return array{head_seq: int, checkpoint_seq: int}
@@ -283,7 +283,7 @@ final readonly class UpdateLog
                 throw new LogicException('[Vaulter] The collaboration head was not created.');
             }
         }
-        // A closed generation refuses every write, before and after its rows are pruned (C4).
+        // A closed generation refuses every write, before and after its rows are pruned.
         if ($row->retired_at !== null) {
             throw new CollaborationEpochMismatchException(expected: $locked->generation, actual: $locked->generation);
         }

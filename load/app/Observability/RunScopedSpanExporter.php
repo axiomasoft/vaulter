@@ -12,7 +12,7 @@ use OpenTelemetry\SDK\Trace\SpanExporterInterface;
 use RuntimeException;
 
 /**
- * Run-scoped JSONL exporter for the P8.11 host proof.
+ * Run-scoped JSONL exporter for the host proof.
  *
  * Each line carries trace/span ids, kind, status and the closed attribute allowlist.
  * Exception events, resource attributes and product identifiers are not written.

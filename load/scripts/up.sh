@@ -1,5 +1,5 @@
 #!/bin/sh
-# VLT-LOAD — bring the stand up for a tier. Usage: TIER=S0 ./load/scripts/up.sh
+# Bring the stand up for a tier. Usage: TIER=S0 ./load/scripts/up.sh
 # Override the host port if 8080 is taken: LOAD_APP_PORT=8180 TIER=S0 ./load/scripts/up.sh
 set -eu
 

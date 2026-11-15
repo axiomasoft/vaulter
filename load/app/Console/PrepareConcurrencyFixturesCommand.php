@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
- * P5.2 disposable concurrency fixtures and post-run integrity checks.
+ * Disposable concurrency fixtures and post-run integrity checks.
  *
  * Generation is idempotent by fixture_id. Cleanup deletes that id or one
  * run-prefix snapshot and nothing outside the fixture root.

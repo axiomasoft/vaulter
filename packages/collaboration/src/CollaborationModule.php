@@ -49,7 +49,7 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
         return CollaborationSchema::class;
     }
 
-    /** The documents with uncheckpointed edits refuse `vaulter:module:uninstall collaboration` (C10). */
+    /** The documents with uncheckpointed edits refuse `vaulter:module:uninstall collaboration`. */
     public static function removalGuard(): string
     {
         return PendingRemovalGuard::class;
@@ -100,7 +100,7 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
             ->slot(OutboxConsumer::class, ControlConsumer::class, ControlConsumer::ID)
             // The transport is the capability the documents module defines (OptionalSingle): without this module none is selected.
             ->slot(CollaborationProtocolDriver::class, HocuspocusCollaborationDriver::class, 'collaboration.protocol.yjs', key: 'yjs')
-            // A pending document is drained through the hub's compaction worker before documents reads or replaces it (C8, C9).
+            // A pending document is drained through the hub's compaction worker before documents reads or replaces it.
             ->slot(PendingStateDrainer::class, HubDrainer::class, 'collaboration.pending.yjs', key: 'yjs');
     }
 }

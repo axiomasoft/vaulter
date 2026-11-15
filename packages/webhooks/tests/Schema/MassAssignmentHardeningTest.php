@@ -9,7 +9,7 @@ use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
- * Mass-assignment hardening of the webhook models (P1.4 / B13, moved from the drive suite with the models, P4.13):
+ * Mass-assignment hardening of the webhook models (moved from the drive suite with the models):
  * a service/security column can not be set through fill(), so a future `Model::create($request->validated())`
  * cannot leak a caller-chosen value into signing_secret or the delivery bookkeeping.
  *
@@ -46,7 +46,7 @@ it('rejects ANY fill() attribute on the fully-$guarded WebhookDelivery with Mass
 ]);
 
 /**
- * F-P1.7-04: `WebhookEndpoint::fill()` must never let a caller set the HMAC
+ * `WebhookEndpoint::fill()` must never let a caller set the HMAC
  * signing_secret — the whole delivery-trust channel depends on it staying
  * server-generated (RegisterWebhookEndpointAction::execute()). WebhookEndpoint
  * carries a closed $fillable list (url/events/is_active), so the key is silently

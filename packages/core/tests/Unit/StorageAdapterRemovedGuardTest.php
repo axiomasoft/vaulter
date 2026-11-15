@@ -4,7 +4,7 @@ declare(strict_types=1);
 use Vaulter\Configuration\VaulterConfig;
 
 /*
- * F-P3.1-03 (D19 green guard, structurally no red-before — a dead-seam removal,
+ * (Green guard, structurally no red-before — a dead-seam removal,
  * not a behaviour change): `StorageAdapter`/`DefaultStorageAdapter`/
  * `storage_adapter` were a fully-declared seam (contract + default impl +
  * config-bound FQCN resolver) that NOTHING in the package ever called — real CAS

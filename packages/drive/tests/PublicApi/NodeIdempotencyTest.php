@@ -37,7 +37,7 @@ use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * P6.2 (D25, D47, ID1–ID4): every receipt operation of nodes, trash, files and uploads answers a repeat under its
+ * Every receipt operation of nodes, trash, files and uploads answers a repeat under its
  * Idempotency-Key with the stored result and a single effect and event; another request under the key is refused; a
  * replay is authorized again where the node is now (move, copy, trash) or in the recorded scope (purge, revision
  * delete). The natural operations (star, retention, abort) have no key: a repeat leaves one effect.

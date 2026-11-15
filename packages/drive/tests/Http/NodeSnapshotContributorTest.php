@@ -17,7 +17,7 @@ use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\SlotContribution;
 
 /**
- * D101: the NodeSnapshotContributor SPI stays supported and model-free. A contributor gets the facts of the page as
+ * The NodeSnapshotContributor SPI stays supported and model-free. A contributor gets the facts of the page as
  * snapshots (no row, no viewer state, no reader key, no fragment yet) and its fragment joins the snapshot the reader gets,
  * through the Operations and over HTTP alike.
  */

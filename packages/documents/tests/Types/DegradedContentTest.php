@@ -19,7 +19,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * PLAN2.P4.3: the lenient read must not become a lossy save. Content that reads only
+ * The lenient read must not become a lossy save. Content that reads only
  * partly under its type — nodes of an editor extension the host switched off, or a
  * schema newer than the installed type — is shown read-only and update() refuses it
  * with document_content_degraded, so the dropped parts survive until the host fixes

@@ -10,7 +10,7 @@ use JsonException;
 use RuntimeException;
 
 /**
- * P7.2 disposable upload/CAS/outbox fixtures with exact run-prefix cleanup.
+ * Disposable upload/CAS/outbox fixtures with exact run-prefix cleanup.
  */
 final class PrepareChaosFixturesCommand extends Command
 {

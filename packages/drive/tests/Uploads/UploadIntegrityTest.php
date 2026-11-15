@@ -24,10 +24,10 @@ use Vaulter\Media\Models\Cas\Blob;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * Integrity gates on the resumable-upload commit path (W0/B5): the assembled object
+ * Integrity gates on the resumable-upload commit path: the assembled object
  * must match the declared size and type, and a single PATCH chunk must be bounded
  * and streamed. These are the deterministic siblings of the concurrent-PATCH race
- * (F-P1.4-01, PG-only) — see tests/Concurrency/TusConcurrentPatchTest.php.
+ * (PG-only) — see tests/Concurrency/TusConcurrentPatchTest.php.
  */
 beforeEach(function (): void {
     Storage::fake('local');

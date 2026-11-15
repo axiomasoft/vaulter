@@ -9,8 +9,8 @@ use PhpParser\ParserFactory;
 use Symfony\Component\Finder\Finder;
 
 /*
- * Service-locator ratchet (audit F07). Services take their collaborators through the constructor;
- * `app(...)` calls hide dependencies and doubled during P3. The baseline pins today's count per file:
+ * Service-locator ratchet. Services take their collaborators through the constructor;
+ * `app(...)` calls hide dependencies. The baseline pins today's count per file:
  * a file may never grow (and a new file starts at zero), and every conversion must lower the
  * baseline, so the number only goes down. Providers and facades are exempt by nature.
  * Filament's static Resource::getNavigationGroup() has no argument or constructor injection hook:

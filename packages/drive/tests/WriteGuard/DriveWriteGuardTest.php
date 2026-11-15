@@ -15,7 +15,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 /**
- * PLAN2.P4.13 (D44): the drive operations run entirely inside a Vaulter write scope,
+ * The drive operations run entirely inside a Vaulter write scope,
  * and the drive's models refuse a write that does not.
  */
 beforeEach(function (): void {

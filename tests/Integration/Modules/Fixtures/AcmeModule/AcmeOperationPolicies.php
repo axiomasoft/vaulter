@@ -9,7 +9,7 @@ use Vaulter\Operations\IdempotencyPolicy;
 use Vaulter\Operations\OperationPolicy;
 use Vaulter\Operations\OperationPolicySource;
 
-/** The policy of the module's own operation (D47): an extension declares its operations like a built-in module. */
+/** The policy of the module's own operation: an extension declares its operations like a built-in module. */
 final class AcmeOperationPolicies implements OperationPolicySource
 {
     public const string RECORD = 'acme.pings.record';

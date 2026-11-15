@@ -24,7 +24,7 @@ use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * PLAN2.P4.8: CommentOperations. Read needs View, write needs Comment; resolve needs
+ * CommentOperations. Read needs View, write needs Comment; resolve needs
  * Comment and authorship or Edit; delete needs authorship or Manage. A comment id is
  * resolved only inside the addressed node.
  */

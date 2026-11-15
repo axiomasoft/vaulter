@@ -43,7 +43,7 @@ use Vaulter\Http\Support\Preconditions;
 #[Internal]
 final readonly class NodeResponses
 {
-    /** The optional precondition on the destination folder of a move (CC3). */
+    /** The optional precondition on the destination folder of a move. */
     public const string DESTINATION_IF_MATCH = 'X-Vaulter-Destination-If-Match';
 
     public function __construct(
@@ -157,7 +157,7 @@ final readonly class NodeResponses
     }
 
     /**
-     * The sequence of the destination folder of a move the caller pinned with `X-Vaulter-Destination-If-Match` (CC3),
+     * The sequence of the destination folder of a move the caller pinned with `X-Vaulter-Destination-If-Match`,
      * or null when the header is absent. The tag must equal the caller's current representation of the folder (the
      * drive root when `$destinationId` is null), else 412 node_sequence_mismatch; the move checks the sequence again
      * under its tree lock. A keyed retry repeats the destination tag of the first request, stale once that one

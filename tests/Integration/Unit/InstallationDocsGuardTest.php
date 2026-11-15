@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Doc-alignment guard (D40, P4.5): the migrations of every package run from `vendor/` and are never published, so the
+ * Doc-alignment guard: the migrations of every package run from `vendor/` and are never published, so the
  * installation guide must not tell the reader to publish them — a published copy gets a NEW timestamp prefix and
  * Laravel, which tracks executed migrations by filename, would run it a second time (`table already exists`).
  */

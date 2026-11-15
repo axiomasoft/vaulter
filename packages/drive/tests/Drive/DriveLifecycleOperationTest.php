@@ -16,9 +16,9 @@ use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
 
 /**
- * D47(6), I9: archive, unarchive and delete of a drive run as the operations drive.drives.* — through the runner, so
+ * Archive, unarchive and delete of a drive run as the operations drive.drives.* — through the runner, so
  * they take an idempotency key (a write outside the runner would refuse it) and keep one receipt — and compare the
- * expected version under the drive's row lock (CC1); each change raises the version by one.
+ * expected version under the drive's row lock; each change raises the version by one.
  */
 beforeEach(function (): void {
     $this->system = V1::drive(userId: 1);

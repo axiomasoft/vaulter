@@ -21,7 +21,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /*
- * Scenario 12, managed disable (C10): vaulter:collaboration:drain sets the draining flag — from then on every append is
+ * Scenario 12, managed disable: vaulter:collaboration:drain sets the draining flag — from then on every append is
  * refused with 503 collaboration_draining — asks the hub to checkpoint every document with a pending marker, and waits
  * outside any transaction until none carries one or the deadline passed. It decides on what pendingDocuments() reads,
  * never on the hub's answers, and never earlier than drain.max_append_tx (5 s) after it set the flag: an append that

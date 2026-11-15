@@ -1,11 +1,11 @@
-# I17 stand for the collaboration hub (scenarios 2, 3 and 10, collaboration#tests): REAL processes only —
+# Stand for the collaboration hub (scenarios 2, 3 and 10, collaboration#tests): REAL processes only —
 # PostgreSQL, Redis, the Laravel host behind `testbench serve`, and TWO hubs of the image built from this
 # repository. The scenarios (packages/collaboration/hub/test/stand/*.stand.js) crash, stop and signal these
 # containers; no backend is mocked.
 #
 # Started by scripts/collab-stand.sh (which also runs the scenarios and tears the stand down with its volumes):
 #   bash scripts/collab-stand.sh
-# Not part of any run in PLAN3 (D41); it is written to be run in PLAN4 or by hand.
+# Not part of CI; scripts/collab-stand.sh or a person runs it by hand.
 #
 # Ports (host loopback only), same variables as scripts/collab-e2e.sh:
 #   VAULTER_E2E_PORT            the Laravel host            (default 8787)

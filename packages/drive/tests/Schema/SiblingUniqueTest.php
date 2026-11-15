@@ -9,12 +9,12 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 
 /**
- * The sibling-unique guard (§2.2) must reject a duplicate LIVE sibling name but
+ * The sibling-unique guard must reject a duplicate LIVE sibling name but
  * allow a duplicate name once the rival is trashed or purged.
  */
 function makeStorage(): Drive
 {
-    // forceFill (P1.4/F-P1.8-02): owner_type/owner_id are excluded from
+    // forceFill: owner_type/owner_id are excluded from
     // Storage's $fillable — this trusted fixture builder bypasses the guard
     // the same way DriveStoreRepository does.
     $storage = new Drive;

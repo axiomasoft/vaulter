@@ -1,12 +1,11 @@
 #!/bin/sh
-# VLT-LOAD P2.3 — restore pg-data + minio-data from a snapshot.sh archive pair.
+# Restore pg-data + minio-data from a snapshot.sh archive pair.
 # Usage: TIER=S0 ./load/scripts/restore.sh
 #
 # The stand must already be up (up.sh) — this stops postgres/minio, WIPES their
 # volumes, untars the archive, restarts. Does not reseed: `dataset_id` after
 # restore is whatever the snapshot carried (verify against its manifest —
-# load/seed/out/<dataset_id>.json — if you need to confirm which dataset this is,
-# P2.3 Validation).
+# load/seed/out/<dataset_id>.json — if you need to confirm which dataset this is).
 set -eu
 
 cd "$(dirname "$0")/.."

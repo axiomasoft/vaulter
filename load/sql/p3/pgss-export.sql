@@ -1,4 +1,4 @@
--- P3.2 — ranked pg_stat_statements export (admin); excludes profiler/admin noise.
+-- Ranked pg_stat_statements export (admin); excludes profiler/admin noise.
 \set ON_ERROR_STOP on
 
 SELECT COALESCE(json_agg(row_to_json(ranked) ORDER BY ranked.total_exec_time DESC), '[]'::json)

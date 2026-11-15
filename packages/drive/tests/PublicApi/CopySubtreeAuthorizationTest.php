@@ -33,7 +33,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
-// D30 (variant A): COPY needs View and Copy on EVERY active descendant, not only on the root.
+// COPY needs View and Copy on EVERY active descendant, not only on the root.
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -131,7 +131,7 @@ it('SEC-D30-copy-subtree refuses a descendant outside the authorised key set at 
 
 /**
  * A host role lane that grants View, Copy and Create everywhere but never Download:
- * no built-in role has that shape, so only a driver can pin the D30 Download requirement.
+ * no built-in role has that shape, so only a driver can pin the Download requirement.
  */
 final class CopyWithoutDownloadDriver implements PermissionDriver
 {

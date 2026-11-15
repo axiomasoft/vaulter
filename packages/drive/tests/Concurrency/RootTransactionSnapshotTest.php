@@ -9,7 +9,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
-// P3.10: the operation's root transaction opens before the attempt reads anything, so on MySQL
+// The operation's root transaction opens before the attempt reads anything, so on MySQL
 // (REPEATABLE READ) a read made before the tree lock must not freeze the sibling check taken after it.
 // A peer session commits the conflicting name in between; the create has to see it.
 // Committed rows (DatabaseMigrations, see tests/Pest.php): the peer session must see the fixtures.

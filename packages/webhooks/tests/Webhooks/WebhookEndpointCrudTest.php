@@ -15,7 +15,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookSecret;
 
 /**
- * The webhook-endpoint management HTTP surface (§2.11 / D14 / M3b): register / list /
+ * The webhook-endpoint management HTTP surface: register / list /
  * update / deactivate / delete. The signing_secret is shown EXACTLY ONCE at
  * registration and never re-serialized. Every action is gated by the manage ability;
  * with no host ability defined, an authenticated user is allowed (the base suite).

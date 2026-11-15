@@ -14,7 +14,7 @@ describe('public exports', () => {
       'clearEngineComponents', 'registeredEngineComponentIds', 'useStorage', 'useNodeGrants', 'useNodeShares',
       'useDocumentNode', 'useNodeCollaboration', 'useSpreadsheet', 'createNodeCollaborationSession',
       'VaulterDriveBreadcrumb', 'VaulterNodeGrantsPanel', 'VaulterNodeSharePanel',
-      // The realtime stack moved to @vaulter/vue-collaboration (D15).
+      // The realtime stack moved to @vaulter/vue-collaboration.
       'useCollaboration', 'createCollaborationSession', 'fetchCollaborationSession', 'openCollaborationTransport',
       'sessionEnd', 'CollaborationCancelledError', 'EPOCH_CHANGED_CODE', 'TOKEN_EXPIRED_CODE',
     ]) {

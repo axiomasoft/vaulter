@@ -16,7 +16,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The doctor check media.blobs.integrity (D49): a warning while a blob is marked by the integrity scrub, ok otherwise;
+ * The doctor check media.blobs.integrity: a warning while a blob is marked by the integrity scrub, ok otherwise;
  * it only reads.
  */
 

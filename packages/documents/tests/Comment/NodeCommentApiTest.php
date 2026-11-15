@@ -13,7 +13,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The NODE-attached comment HTTP surface (ADR-0014 шаг 1), the additive twin of the
+ * The NODE-attached comment HTTP surface (ADR-0014), the additive twin of the
  * legacy document_id-bound CommentController. Authorization runs through the real
  * database grant resolver: read ≥ View, create = the Comment ability, and
  * resolve/delete = the AUTHOR of the comment OR Manage on the node. These tests pin

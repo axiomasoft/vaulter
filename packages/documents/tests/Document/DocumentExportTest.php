@@ -12,7 +12,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * The node-attached export path (§7 / M4a): a document node routes through the
+ * The node-attached export path: a document node routes through the
  * handler → exporter (the existing Html/Markdown exporters) by format.
  */
 beforeEach(function (): void {

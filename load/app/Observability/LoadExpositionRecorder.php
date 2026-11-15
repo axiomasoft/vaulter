@@ -10,7 +10,7 @@ use Throwable;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
- * Load-host adapter: validates the frozen P8 vocabulary and writes to one open run.
+ * Load-host adapter: validates the frozen metric vocabulary and writes to one open run.
  */
 final class LoadExpositionRecorder implements MetricsRecorder
 {

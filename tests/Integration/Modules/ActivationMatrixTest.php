@@ -34,7 +34,7 @@ use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
-// I6, the activation matrix (D22, architecture#module-system): an absent, installed-inactive, active,
+// The activation matrix (architecture#module-system): an absent, installed-inactive, active,
 // misconfigured, dependency-inactive and re-enabled module, each on a fresh application. The price of a module
 // that is not active is proven with spies — queries run, objects the container built, routes, listeners and
 // commands registered — not with a route list alone. The subject is the third-party AcmeModule (opt-in) and, for
@@ -121,7 +121,7 @@ function matrixDoctor(Application $app, string $check): array
     return ['exit' => $exit, 'findings' => array_merge(...array_map(static fn (array $c): array => array_column($c['findings'], 'code'), $report['checks']))];
 }
 
-/** The zero price of a module that is not active (I6), as the spies see it. */
+/** The zero price of a module that is not active, as the spies see it. */
 function matrixAssertZeroCost(Application $app, string $module = 'acme'): void
 {
     $kernel = $app->make(Kernel::class);
@@ -325,7 +325,7 @@ it('keeps the data of a module while it is off and serves it again when the modu
     }
 });
 
-// The install matrix (P4.18): the same price rules on the downward-closed application sets of the package graph (D6) — core;
+// The install matrix: the same price rules on the downward-closed application sets of the package graph — core;
 // +media; +drive; +documents; +webhooks; +azguard; +filament. Each set is a fresh application with exactly its providers
 // (Fixtures/Apps). route:cache and config:cache before an activation change: ActivationCacheTest.
 

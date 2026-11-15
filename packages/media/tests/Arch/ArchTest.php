@@ -8,7 +8,7 @@ arch('strict types')
     ->toUseStrictTypes();
 
 // The CAS layer stays ACL-agnostic: nothing under Vaulter\Media may reach into the
-// core access-control machinery. This is the structural guard behind decision D3
+// core access-control machinery. This is the structural guard behind that decision
 // (per-file ACL lives in core; media is a pure content-addressed blob layer).
 arch('media never touches the access layer')
     ->expect('Vaulter\Media')
@@ -17,7 +17,7 @@ arch('media never touches the access layer')
         'Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver',
     ]);
 
-// E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);
+// Declarative form kept for discoverability/grep (`toUse('App')`);
 // see the file-scan test below (and core's ArchTest.php) for why this namespace-graph
 // form cannot itself observe a real "uses" edge in this dev/test environment.
 arch('the package never depends on the host application (E5.1)')
@@ -25,7 +25,7 @@ arch('the package never depends on the host application (E5.1)')
     ->not->toUse('App');
 
 /**
- * E5.1 / F-P4.3-01 — vaulter-media is an embeddable Laravel package: it must never
+ * Vaulter-media is an embeddable Laravel package: it must never
  * reach into the HOST application's namespace. File scan (not
  * `expect(...)->not->toUse('App')`) because `App\*` is never an autoloadable class in
  * the package's own dev/test environment (red-before proven on core's ArchTest.php).
@@ -66,7 +66,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 });
 
 /**
- * VLT-REL P2.2 — empty-surface guard for the 0.1.0 freeze. This package ships NO public
+ * Empty-surface guard for the 0.1.0 freeze. This package ships NO public
  * contract interface (`src/Contracts/**`), so the frozen surface records that emptiness:
  * an accidentally-added public contract (which would need its own snapshot freeze + a D#
  * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
@@ -101,7 +101,7 @@ arch('DB facade is routed through VaulterDatabase (AD25)')
     ->expect('Vaulter\Media')
     ->not->toUse('Illuminate\Support\Facades\DB');
 
-// D35: production code cannot import fixtures or other Testing namespace classes.
+// Production code cannot import fixtures or other Testing namespace classes.
 test('production src never imports a Testing namespace', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];

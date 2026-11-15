@@ -11,7 +11,7 @@ use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Persistence\RetiredGenerations;
 
 /**
- * Delete the update log, receipts and head of the closed collaboration generations past their grace (C11): retired
+ * Delete the update log, receipts and head of the closed collaboration generations past their grace: retired
  * longer ago than `hub.token_ttl` + the hub's retry horizon (10 s) + `retention.retired_generation_days`. Until then a
  * late retry of such a generation still finds its receipt; it is refused either way (collaboration_epoch_mismatch). The
  * document's current generation is never touched.

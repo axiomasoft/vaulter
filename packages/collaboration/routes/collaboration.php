@@ -35,7 +35,7 @@ Route::prefix($routes->versionedPrefix())
     ->group(static function (): void {
         Route::post('collaboration/hub/authenticate', HubAuthenticateController::class)->name('collaboration.hub.authenticate');
         Route::post('collaboration/hub/load', HubLoadController::class)->name('collaboration.hub.load');
-        // Revocation (D26): a connection's token renewed by the rights now.
+        // Revocation: a connection's token renewed by the rights now.
         Route::post('collaboration/hub/renew', HubRenewController::class)->name('collaboration.hub.renew');
     });
 
@@ -60,7 +60,7 @@ Route::prefix($routes->versionedPrefix())
         Route::post('collaboration/hub/checkpoint', HubCheckpointController::class)
             ->middleware([LimitHubAppend::class.':'.LimitHubAppend::CHECKPOINT, VerifyHubSignature::class])
             ->name('collaboration.hub.checkpoint');
-        // Revocation (D26): after a control message, what each named connection may do now; every token is verified.
+        // Revocation: after a control message, what each named connection may do now; every token is verified.
         Route::post('collaboration/hub/recheck', HubRecheckController::class)
             ->middleware([LimitHubAppend::class, VerifyHubSignature::class])
             ->name('collaboration.hub.recheck');

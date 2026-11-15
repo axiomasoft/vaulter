@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-// VLT-LOAD P2.3 — L volume profile. SPEC ONLY, no lab-box to run it on (D25,
-// reference-env.md §3: "24 ядра, NVMe ≥ 500 ГиБ — или экстраполяция"). SeedLoadDatasetCommand
-// refuses `--tier=L` outright (Scope Excluded, P2.3) — this file exists so the numbers
+// L volume profile. SPEC ONLY, no lab-box to run it on
+// ("24 ядра, NVMe ≥ 500 ГиБ — или экстраполяция"). SeedLoadDatasetCommand
+// refuses `--tier=L` outright (Scope Excluded) — this file exists so the numbers
 // are versioned and ready the day hardware shows up, not invented then. Source:
 // reference-env.md §2.1/§2.2, L column.
 return [
@@ -22,7 +22,7 @@ return [
     'blobs' => [
         'orphan' => 1_500_000,
         'hot_set' => 300_000,
-        'hot_set_avg_bytes' => 894_784, // ≈250 GiB / 300 000 objects (§2.2).
+        'hot_set_avg_bytes' => 894_784, // ≈250 GiB / 300 000 objects.
     ],
 
     'file_versions' => [

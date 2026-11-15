@@ -9,7 +9,7 @@ use RuntimeException;
 use Vaulter\Support\Config;
 
 /**
- * Deterministic P6.2 queue fixtures. Counts are declared; cardinality rows are
+ * Deterministic queue fixtures. Counts are declared; cardinality rows are
  * not seeded here. Cleanup stays inside this fixture root.
  */
 final class QueueFixtureSupport

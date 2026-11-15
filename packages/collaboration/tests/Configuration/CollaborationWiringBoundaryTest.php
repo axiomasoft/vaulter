@@ -13,7 +13,7 @@ use Vaulter\Collaboration\Providers\CollaborationRegistrar;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Support\LoadTier;
 
-// The wiring the addon owns after the P3.8 boundary: the validator tag identity, the ScheduleConfig resolved from the
+// The wiring the addon owns after the boundary: the validator tag identity, the ScheduleConfig resolved from the
 // container, the lease expiry bytes formatted locally and the tier label read through the stable seam.
 
 it('tags the config validator under the documented stable service tag', function (): void {

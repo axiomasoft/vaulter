@@ -62,7 +62,7 @@ it('sweep НЕ трогает уже завершённые/aborted сессии
 });
 
 it('sweepable scope выбирает initiated|uploading|assembled в границах expires_at (F-P1.4-10)', function (): void {
-    // Contract updated by F-P1.4-10: Assembled is now a sweep candidate too (a
+    // Assembled is a sweep candidate too (a
     // session stuck Assembled past its TTL — commit interrupted after every byte
     // landed — used to leak its staged temp / S3 parts forever).
     $storage = UploadTestHelpers::storage();
@@ -77,7 +77,7 @@ it('sweepable scope выбирает initiated|uploading|assembled в грани
         'status' => UploadStatus::Uploading,
         'expires_at' => $threshold->copy()->subHours(2),
     ])->save());
-    // assembled + stale → NOW in the sweepable set (F-P1.4-10).
+    // assembled + stale → NOW in the sweepable set.
     app(VaulterDatabase::class)->write(fn () => UploadTestHelpers::session($storage)->forceFill([
         'status' => UploadStatus::Assembled,
         'expires_at' => $threshold->copy()->subHour(),

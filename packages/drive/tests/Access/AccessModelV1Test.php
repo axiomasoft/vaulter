@@ -20,7 +20,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * The 1.0 access model end to end (PLAN2.D45, D53; P4-I20): positive roles unioned
+ * The 1.0 access model end to end: positive roles unioned
  * up to an inheritance boundary, restrictInheritance/restoreInheritance as Manage
  * operations, copy_current never broader or longer-lived than what was inherited,
  * and a previewer that sees but cannot download.

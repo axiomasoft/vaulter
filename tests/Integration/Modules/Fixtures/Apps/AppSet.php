@@ -10,7 +10,7 @@ use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 /**
- * One application of the install matrix (I6, I15): the Vaulter providers of a downward-closed set of packages (D6). A set is
+ * One application of the install matrix: the Vaulter providers of a downward-closed set of packages. A set is
  * the package `$top` and everything it needs; the module it adds over its `$parent` set is the one the matrix switches off
  * and compares with that parent.
  */

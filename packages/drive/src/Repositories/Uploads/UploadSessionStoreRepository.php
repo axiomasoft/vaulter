@@ -46,7 +46,7 @@ final class UploadSessionStoreRepository
 
     /**
      * Take the per-session lock as the FIRST statement of the tus PATCH transaction
-     * and return the fresh, locked row (N3 /). The lock is held for
+     * and return the fresh, locked row. The lock is held for
      * the whole "read offset → append → advance received_bytes" window so two
      * concurrent PATCH can never both read the same offset and clobber each other's
      * bytes. Its received_bytes/status are the authoritative values the handler must
@@ -56,7 +56,7 @@ final class UploadSessionStoreRepository
      * The lock is NON-BLOCKING on every engine that has one, because "I could not take
      * the lock" is a first-class ANSWER here, not a delay to sit out: a PATCH turns it
      * into an immediate 409 instead of piling up blocked requests behind a retry storm
-     * (§N3), and the sweeper turns it into "skip, this session is alive".
+     * and the sweeper turns it into "skip, this session is alive".
      *
      *  - pgsql : pg_try_advisory_xact_lock keyed by upload_id (the same advisory-lock
      *            seam BlobStore uses, in its try_ form). Releases at COMMIT/ROLLBACK.

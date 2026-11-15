@@ -12,7 +12,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * PLAN2.F08: a recount racing an upload or a revision delete never overwrites the
+ * A recount racing an upload or a revision delete never overwrites the
  * quota with a sum read before the concurrent change committed. After both finish,
  * used_bytes equals the sum of the retained revisions exactly.
  */

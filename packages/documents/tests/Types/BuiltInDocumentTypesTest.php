@@ -16,7 +16,7 @@ use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\Types\SpreadsheetDocumentType;
 
 /**
- * PLAN2.P4.3: the built-in types (and a third-party one) keep the document type
+ * The built-in types (and a third-party one) keep the document type
  * contract; markdown accepts only what Markdown can represent.
  */
 uses(DocumentTypeContractTests::class);

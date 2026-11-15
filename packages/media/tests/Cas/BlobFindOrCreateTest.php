@@ -11,7 +11,7 @@ use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * find-or-create regressions (H.3): the row id is always real (the ON CONFLICT
+ * find-or-create regressions: the row id is always real (the ON CONFLICT
  * RETURNING null-id gotcha is avoided), the INSERT-race loser re-SELECTs and
  * reuses, and a tombstoned match is resurrected — all inside one locked
  * transaction.

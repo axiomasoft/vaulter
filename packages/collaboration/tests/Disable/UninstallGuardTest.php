@@ -12,7 +12,7 @@ use Vaulter\Collaboration\Tests\Support\FakeHub;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 
 /*
- * Scenario 12, uninstall (C10, RemovalGuard): `vaulter:module:uninstall collaboration` is refused, the dry run included,
+ * Scenario 12, uninstall (RemovalGuard): `vaulter:module:uninstall collaboration` is refused, the dry run included,
  * while a document carries a pending marker — those saved edits live only in the log --purge would delete. The guard
  * reads the documents' markers again inside the transaction of the purge, so an edit saved after the plan stops it too.
  * Once vaulter:collaboration:drain checkpointed every pending document, the removal goes through; the documents keep

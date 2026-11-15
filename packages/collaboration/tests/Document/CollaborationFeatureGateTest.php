@@ -15,8 +15,8 @@ use Vaulter\Kernel;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /*
- * Realtime collaboration is an opt-in module (D22): `vaulter.modules.collaboration` is false by default, and the
- * module's hub routes are not mounted then (404). The session operation and its route belong to documents since P3.3:
+ * Realtime collaboration is an opt-in module: `vaulter.modules.collaboration` is false by default, and the
+ * module's hub routes are not mounted then (404). The session operation and its route belong to documents:
  * without a protocol driver an authorized reader is refused with 409 collaboration_unavailable, after authorization, and
  * a document the reader cannot see stays 404. This suite's base TestCase leaves the module off, so every test here runs
  * against the true default of a host that installed the package and did not switch it on.

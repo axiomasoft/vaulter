@@ -17,7 +17,7 @@ use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
- * The read security matrix of the documents' GET/HEAD routes (P5.2, knowledge p5-security#read-matrix): every read route ×
+ * The read security matrix of the documents' GET/HEAD routes: every read route ×
  * the rows R1–R3 and R10–R11 of the audit; R12 is the collaboration session, a POST that is registered explicitly beyond
  * the GET/HEAD catalog. A row without a meaning is `n/a` with its reason; the coverage test holds the route set to
  * `Route::getRoutes()` (GET/HEAD) and to the OpenAPI operations.

@@ -1,4 +1,4 @@
-# VLT-LOAD P7.2 — chaos overlay (use WITH docker-compose.load.yml).
+# Chaos overlay (use WITH docker-compose.load.yml).
 # Traffic for tested cells goes through declared proxies; a direct minio/postgres
 # bypass fails preflight. Promotion uses a separate two-node PG lab, not a kill
 # of the product-realistic postgres service.
@@ -62,7 +62,7 @@ services:
       DB_PORT: ${P7_APP_DB_PORT:-16432}
       DB_DATABASE: ${P7_APP_DB_DATABASE:-vaulter_load}
       P7_APP_HA_ROUTED: ${P7_APP_HA_ROUTED:-0}
-      # P7 schema bootstrap is an explicit exec against vaulter_chaos only.
+      # Schema bootstrap is an explicit exec against vaulter_chaos only.
       LOAD_SKIP_MIGRATIONS: "1"
       TMPDIR: /var/tmp/vaulter-chaos
       CHAOS_TMPFS_ROOT: /var/tmp/vaulter-chaos

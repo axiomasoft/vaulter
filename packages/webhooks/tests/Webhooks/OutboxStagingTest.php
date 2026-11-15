@@ -26,7 +26,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * The SYNCHRONOUS half of the transactional outbox (§2.11 / D14 / M3b): each recorded
+ * The SYNCHRONOUS half of the transactional outbox: each recorded
  * domain event stages EXACTLY ONE v_outbox row, idempotent by event_id, whose payload is
  * the thin webhook envelope (ids, enums, counters — no names, secrets or blob bytes).
  */

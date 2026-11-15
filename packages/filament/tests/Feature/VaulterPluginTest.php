@@ -75,9 +75,9 @@ it('keeps resources enabled for an omitted or malformed host toggle', function (
 ]);
 
 /*
- * VLT-REMED P3.1 (F-P1.10-03, D13) — ActivityResource is now ALSO gated on the
+ * ActivityResource is now ALSO gated on the
  * core 'activity' feature flag, on top of its own default-on config toggle.
- * Red-before-fix (D7): before this item, resourceEnabled() consulted ONLY
+ * Red-before-fix: before this item, resourceEnabled() consulted ONLY
  * config('vaulter-filament.resources.activity') (default true) — a host that
  * disabled the CORE 'activity' feature (config('vaulter-drive.features.activity',
  * false)) but never touched the Filament toggle still got ActivityResource

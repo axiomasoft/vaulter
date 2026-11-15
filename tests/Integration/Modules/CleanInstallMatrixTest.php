@@ -27,14 +27,13 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 uses(TestCase::class, DatabaseMigrations::class);
 
-// I15, the clean-install matrix (P4.18): every downward-closed application set of the package graph (D6; Fixtures/Apps) on an
+// The clean-install matrix: every downward-closed application set of the package graph (Fixtures/Apps) on an
 // empty database — `migrate` creates exactly the tables its modules own, `migrate:rollback` leaves the database empty and no
 // reference of the set's owners behind (the pins of the media), `migrate` installs it again. Each set runs on a spread of the
 // schema presets of snapshot-configs.json (ids, host keys, table prefix, tenancy; every value of every axis at least once).
 //
 // The engine is the one the suite runs on (DB_CONNECTION; group `database`): the file is the same on sqlite, pgsql and mysql,
-// and the schema of the whole installation is compared with the raw catalog snapshot of THAT engine. PLAN3 runs it on sqlite
-// only (D41); the server engines are the deferred run of knowledge/deferred-runs. A set's application has its own database on
+// and the schema of the whole installation is compared with the raw catalog snapshot of THAT engine. A set's application has its own database on
 // sqlite; on a server engine it wipes the suite database first (the name ends in _test) and leaves it empty.
 
 afterEach(function (): void {
@@ -169,7 +168,7 @@ it('installs a set from nothing, rolls it back to an empty database without a pi
 
                 cleanArtisan($app, 'migrate');
                 expect(cleanTables())->toBe($expected, "{$set->id} $preset: the tables of the set");
-                // +collaboration (P5.4, P5.10): its update log, receipts, heads and permission versions come with the set, and go before the documents.
+                // +collaboration: its update log, receipts, heads and permission versions come with the set, and go before the documents.
                 $collaboration = array_map(static fn (string $entity): string => $app->make(SchemaHelpers::class)->table($entity), ['collaboration_heads', 'collaboration_permission_versions', 'collaboration_receipts', 'collaboration_updates']);
                 expect(array_values(array_intersect($expected, $collaboration)))->toBe(in_array('collaboration', $set->modules, true) ? $collaboration : [], "{$set->id} $preset: the collaboration tables");
                 if ($set->id === 'full') {

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * BC check CLI (D14/D18). Run from a trusted read-only tool checkout T; the candidate repository is DATA only:
+ * BC check CLI. Run from a trusted read-only tool checkout T; the candidate repository is DATA only:
  *   php bc-check.php --root=<candidate repo> --candidate=<S sha> --policy=<trusted policy.json> --policy-rev=<T sha>
  *                    --exceptions=<trusted bc-exceptions.json> [--today=YYYY-MM-DD]
  * Exit 0 compatible (or approved_initial_release), 1 BREAK/REVIEW or no predecessor, 2 untrusted input. No network, no fetch.

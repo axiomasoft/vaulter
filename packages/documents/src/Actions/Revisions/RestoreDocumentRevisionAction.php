@@ -65,7 +65,7 @@ final readonly class RestoreDocumentRevisionAction
                 throw NodeNotFoundException::forId('unpersisted');
             }
             [$node, $document] = $this->writeLock->acquire($context, $node, $nodeId);
-            // Closing the generation over saved edits not in the working state would lose them (C8): G stays.
+            // Closing the generation over saved edits not in the working state would lose them: G stays.
             $this->pending->assertSettled($document);
             $source = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->revisions->forNode($node, $versionId) : null;
             if (!$source instanceof DocumentRevision) {

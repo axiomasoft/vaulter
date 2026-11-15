@@ -26,14 +26,14 @@ use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
- * VLT-LOAD P2.3 — seed the stand to its tier's volume envelope (reference-env.md §2),
+ * Seed the stand to its tier's volume envelope,
  * "dirty" state included (D-LOAD-3): expired upload sessions, orphan blobs, an
  * outbox/webhook-retry backlog, a many-grant actor. Idempotent by `dataset_id` (a
  * hash of tier + profile + this file's SEED_VERSION) unless `--fresh`.
  *
  * Everything mutating rows at tier scale goes through chunked query-builder batch
  * inserts / set-based SQL (`insertBatchReturningIds()`, the two `reconcileFile*()`
- * statements) — never one Eloquent model per row (Implementation Rules P2.3): a
+ * statements) — never one Eloquent model per row: a
  * million-row v_activity insert through the ORM does not finish in this decade.
  * `BlobStore::commit()` (real CAS engine, one call per HOT-SET object only — see
  * `seedBlobsAndVersions()`) and `vaulter:blobs:reconcile` (existing package command)
@@ -54,7 +54,7 @@ final class SeedLoadDatasetCommand extends Command
 
     private const int INSERT_CHUNK = 2_000;
 
-    private const int SEED_OWNER_ACTOR_ID = 1; // matches README's `X-Load-Actor: 1` smoke curl (P2.2).
+    private const int SEED_OWNER_ACTOR_ID = 1; // matches README's `X-Load-Actor: 1` smoke curl.
 
     private const int MANY_GRANT_ACTOR_ID = 900_001;
 
@@ -119,7 +119,7 @@ final class SeedLoadDatasetCommand extends Command
 
         // Rebuilds ref_count from the edges we just created (BlobReconciler::reconcile()
         // — a plain rebuild never fails; dangling rows are reported, not fatal). Cold
-        // committed/orphan-gc blobs are EXPECTED to surface as dangling (§2.2 — their
+        // committed/orphan-gc blobs are EXPECTED to surface as dangling (their
         // bytes are synthetic-only), not a defect this run introduced.
         $this->call('vaulter:blobs:reconcile');
 
@@ -215,7 +215,7 @@ final class SeedLoadDatasetCommand extends Command
     /**
      * `base_path()` resolves to Testbench's OWN internal skeleton
      * (`vendor/orchestra/testbench-core/laravel`), not this repo — verified live
-     * against the P2.2 SUT (`vendor/bin/testbench tinker --execute='echo
+     * against the SUT (`vendor/bin/testbench tinker --execute='echo
      * base_path();'`). `load/seed/` is a repo-relative path this file's own location
      * anchors reliably: Console -> app -> load.
      */
@@ -443,7 +443,7 @@ final class SeedLoadDatasetCommand extends Command
      * the real CAS engine — one call per hot object, never per cold one); the rest
      * are metadata-only rows with a valid-shaped, deterministic sha256/storage_key
      * (Implementation Rules: hot-set hashes MUST be real, everything else may be
-     * synthetic — reference-env.md §2.2). Orphan blobs (no edge) are split between
+     * synthetic). Orphan blobs (no edge) are split between
      * the mark-phase scope (committed, ref_count reconciled to 0) and the
      * sweep-phase scope (tombstoned, delete_after_at in the past) — see L-03 /
      * BlobGarbageCollector::mark()/sweep(), both walk `candidates()` unbounded.
@@ -601,7 +601,7 @@ final class SeedLoadDatasetCommand extends Command
     }
 
     /**
-     * A metadata-only blob row (§2.2 — no real bytes on disk). storage_key matches
+     * A metadata-only blob row (no real bytes on disk). storage_key matches
      * the real Sha256ContentStore::keyFor() shape so it round-trips a CAS-shape scan
      * even though no object exists at that key.
      *
@@ -917,9 +917,9 @@ final class SeedLoadDatasetCommand extends Command
     /**
      * Small, fixed row count (tens–hundreds, never a volume knob) — real Eloquent
      * `forceFill()->save()` on purpose (WebhookEndpoint::$fillable deliberately
-     * excludes `signing_secret`, F-P1.7-04 — the real writer,
+     * excludes `signing_secret` — the real writer,
      * WebhookEndpointStoreRepository, uses forceFill() exclusively too), so
-     * `signing_secret` goes through the model's `encrypted` cast (F-P1.7-02)
+     * `signing_secret` goes through the model's `encrypted` cast
      * instead of landing as unusable plaintext under a cast the model expects to
      * decrypt (WebhookEndpoint::casts()).
      *

@@ -9,7 +9,7 @@ use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\SlotContribution;
 
 it('labels collaboration drivers', function (): void {
-    // The adopted protocol keys replace the retired transport enum (P3.3).
+    // The adopted protocol keys replace the retired transport enum.
     $module = new CollaborationModule;
     $builder = new ModuleBuilder($module->id());
     $module->register($builder);

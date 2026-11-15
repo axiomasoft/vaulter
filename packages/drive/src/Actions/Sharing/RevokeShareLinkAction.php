@@ -21,7 +21,7 @@ use Vaulter\Events\EventRecorder;
 
 /**
  * @internal Revocation commits before subsequent share resolution can succeed. The expected version is compared
- * under the link's row lock and a revocation raises it (CC1); revoking a revoked link changes nothing.
+ * under the link's row lock and a revocation raises it; revoking a revoked link changes nothing.
  */
 #[Internal]
 final readonly class RevokeShareLinkAction

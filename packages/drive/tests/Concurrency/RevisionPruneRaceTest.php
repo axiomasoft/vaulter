@@ -19,7 +19,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
- * P4-I19 / P4-I18 on PostgreSQL: the pruning chooses its revisions without locks, so a
+ * On PostgreSQL: the pruning chooses its revisions without locks, so a
  * pin or a new revision committed between the choice and the delete must be honoured
  * by the delete's own F/R locks; concurrent deletes of one revision release its bytes
  * once.

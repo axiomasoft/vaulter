@@ -33,7 +33,7 @@ final class Identities
 
     public const BASE = '35718fd2';
 
-    /** The hand-written ledger of identity changes since BASE (P3.2): one record per changed identity. */
+    /** The hand-written ledger of identity changes since BASE: one record per changed identity. */
     public const LEDGER = self::DIR.'/changes.json';
 
     public const CHANGES = ['added', 'removed', 'renamed', 'redefined'];

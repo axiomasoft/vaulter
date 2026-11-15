@@ -22,7 +22,7 @@ use Vaulter\Filament\Tests\Fixtures\SpyDriveHandle;
 uses(RefreshDatabase::class);
 
 /*
- * V27 — moving a node needs Move on the source AND Create on the destination. A user
+ * Moving a node needs Move on the source AND Create on the destination. A user
  * with Move on folder A (writer) and only read on folder B must not be offered B, and a
  * forged request for B is refused by the operation behind the handle, not by the panel.
  */

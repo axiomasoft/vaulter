@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * The collaboration module is draining (C10): `vaulter:collaboration:drain` set the draining flag, so the log takes no
+ * The collaboration module is draining: `vaulter:collaboration:drain` set the draining flag, so the log takes no
  * new update while the hub checkpoints the pending documents before the module is switched off. Nothing was written;
  * the hub keeps the update in its retry queue, and it is accepted again once `--release` removed the flag.
  */

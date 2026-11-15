@@ -138,7 +138,7 @@ final readonly class NodeSnapshotMapper
     }
 
     /**
-     * The reader-scoped sync key of each node (the U1 primitive, the one the change feed names
+     * The reader-scoped sync key of each node (the primitive, the one the change feed names
      * a remove by); none for a viewer without a sync identity. At most one query for missing drive scopes.
      *
      * @param  list<Node>            $nodes

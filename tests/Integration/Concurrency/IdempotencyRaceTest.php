@@ -19,7 +19,7 @@ use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
- * K2 and K5 of D25 under real concurrency (PostgreSQL, forked processes on their own connections): two requests with
+ * Idempotency under real concurrency (PostgreSQL, forked processes on their own connections): two requests with
  * one key make one effect — the second waits on the uncommitted claim and replays the receipt — and a claim held
  * longer than the bounded wait answers the second request 409 operation_in_progress with Retry-After, without
  * continuing an aborted transaction.

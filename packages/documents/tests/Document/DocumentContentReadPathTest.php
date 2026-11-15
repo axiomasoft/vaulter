@@ -11,10 +11,10 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * VLT-REMED P5.2 / R-12 — ГЛАВНЫЙ путь чтения контента (GET documents/{node}/content → DocumentContentResource), тот самый, который монтирует в редактор SPA-компонент
+ * ГЛАВНЫЙ путь чтения контента (GET documents/{node}/content → DocumentContentResource), тот самый, который монтирует в редактор SPA-компонент
  * VaulterDocumentNode.vue.
  *
- * Оба эшелона защиты от stored XSS (D4) мимо него: первый (store-time TipTapContent)
+ * Оба эшелона защиты от stored XSS мимо него: первый (store-time TipTapContent)
  * не видит строк, записанных ДО его появления, второй (symfony/html-sanitizer) стоит
  * только на TipTapRenderer::toHtml() — то есть на экспорте/превью. Ресурс же отдавал
  * СЫРОЙ `$version->content`, поэтому легаси-строка с `link.href="javascript:…"`
@@ -96,7 +96,7 @@ it('отдаёт легаси-контент с javascript:-ссылкой об�
 });
 
 it('круг чтение→сохранение: что ресурс отдал редактору, то он принимает обратно, P5.2', function (array $legacy): void {
-    // Скраб URL (R-12) выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты, — и редактор получал
+    // Скраб URL выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты, — и редактор получал
     // из GET узел вроде {"type":"link","attrs":{"target":"_blank"}}. PUT ровно этого же
     // payload'а падал 500 (store-time требует href): любой легаси-документ с относительной
     // ссылкой становился НЕСОХРАНЯЕМЫМ навсегда. Тест гоняет ровно этот круг по живым роутам.

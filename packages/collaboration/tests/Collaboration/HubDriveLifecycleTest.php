@@ -24,7 +24,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 
 /*
  * An archive or a deletion of the drive committed after the hub opened a room still refuses the room's next append: the
- * log reads the drive's status under the drive lock its append takes, so no record lands after either (F05/F06).
+ * log reads the drive's status under the drive lock its append takes, so no record lands after either.
  */
 it('refuses an append when the drive changes after the room was opened', function (DriveStatus $status, string $exception): void {
     Hub::configure();

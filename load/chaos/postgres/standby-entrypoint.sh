@@ -1,5 +1,5 @@
 #!/bin/sh
-# Physical standby for the P7.2 promotion lab. Fail closed until primary is ready.
+# Physical standby for the promotion lab. Fail closed until primary is ready.
 set -eu
 
 DATA=${PGDATA:-/var/lib/postgresql/data}

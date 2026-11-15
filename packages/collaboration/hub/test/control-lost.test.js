@@ -5,7 +5,7 @@ import { createRevocation, RENEW_BEFORE_MS } from '../src/revocation.js'
 import { problem, startMockBackend } from './support/mock-backend.js'
 import { contextFor, fakeConnection, manualTime, quietLog, roomClaims, ROOM, token } from './support/revocation.js'
 
-// A lost control message (I17 scenarios 9 and 15): the backend changed a subject's rights, but no
+// A lost control message (collaboration scenarios 9 and 15): the backend changed a subject's rights, but no
 // control message reaches the hub. The exposure is bounded anyway: RENEW_BEFORE_MS (60 s) before a
 // token expires the hub renews it through the backend, which checks the rights now — a refusal
 // closes the connection, and a renewal never extends authority the backend did not grant again;

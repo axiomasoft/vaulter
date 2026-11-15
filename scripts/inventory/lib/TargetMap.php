@@ -22,7 +22,7 @@ final class TargetMap
 
     public const RULES_DIR = 'tests/Repo/Arch/Fixtures/target-map/rules';
 
-    /** The commit the P2 inventory is taken at (p2-design#base). */
+    /** The commit the inventory is taken at. */
     public const BASE = '35718fd2';
 
     public const OWNERS = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azguard', 'filament'];
@@ -206,7 +206,7 @@ final class TargetMap
     }
 
     /**
-     * The types named by the current PublicApiSnapshot files (the pre-P3 public baseline).
+     * The types named by the current PublicApiSnapshot files (the earlier public baseline).
      *
      * @return array<string, true>
      */
@@ -492,7 +492,7 @@ final class TargetMap
     }
 
     /**
-     * The surface a type declares for itself (D27): its one `#[Api]`, `#[Spi(SpiKind::…)]` or `#[Internal]`; `undecided`
+     * The surface a type declares for itself: its one `#[Api]`, `#[Spi(SpiKind::…)]` or `#[Internal]`; `undecided`
      * while it carries none (I13 reports that, the rules no longer decide it).
      *
      * @param Declaration $declaration

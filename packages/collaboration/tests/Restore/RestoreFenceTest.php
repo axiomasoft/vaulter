@@ -13,7 +13,7 @@ use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /*
- * Scenario 13 (C4): a restore closes the generation it leaves — retired_at on its head, in the restore's transaction —
+ * Scenario 13: a restore closes the generation it leaves — retired_at on its head, in the restore's transaction —
  * and nothing of that generation is accepted afterwards: an append, a lease, and the publication of a checkpoint the
  * hub merged under a lease the restore outlived all answer collaboration_epoch_mismatch or find nothing, and change
  * neither the restored state nor the closed log. A REST replace that moves the generation closes it the same way.

@@ -81,7 +81,7 @@ function r07bActStorage(): Drive
 // UploadFileAction
 // ---------------------------------------------------------------------------
 
-// L78: a new version is a new retained revision (PLAN2.D48) — it is charged with its
+// L78: a new version is a new retained revision — it is charged with its
 // full size, even when it is smaller than the head, so at capacity it is refused and
 // with room for its full size it passes.
 it('UploadFile L78: a smaller version is charged in full and refused at capacity', function (): void {
@@ -114,7 +114,7 @@ it('UploadFile L80/L81: sibling-name conflict is rejected for a new-file upload'
 });
 
 // L106: the prior head stays retained, so a version 1 byte smaller still adds its
-// full size (PLAN2.D48).
+// full size.
 it('UploadFile L106: used_bytes grows by the full size of a version 1 byte smaller', function (): void {
     $drive = DriveTestHelpers::drive();
 
@@ -158,7 +158,7 @@ it('UploadFile L234-236: committed version has status=committed, correct created
 });
 
 // L249: a drive over its quota keeps reading and deleting, but any growth — a
-// same-size version included — is refused (PLAN2.D48).
+// same-size version included — is refused.
 it('UploadFile L249: a same-size version is refused while the drive is over its quota', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('hello'), 'f.bin')); // 5 bytes; used=5
@@ -212,7 +212,7 @@ it('UploadFile L319: a file with no extension stores a null extension, not an em
 });
 
 // L129 RemoveArrayItem: the new file node records the actor as created_by; nodes have
-// no implicit owner (PLAN2.D46/D53), so no owner_id is written.
+// no implicit owner, so no owner_id is written.
 it('UploadFile L129-130: created_by is set to actorId on new-file commit and no node owner exists', function (): void {
     $drive = DriveTestHelpers::drive();
 
@@ -289,7 +289,7 @@ it('CopyNode L70: copying a 1-byte file increments used_bytes by exactly 1', fun
 });
 
 // inherit_grants is NOT NULL in the schema, so a live node always carries a boolean.
-// The copy keeps the source's value; properties copy with it (PLAN2.D41).
+// The copy keeps the source's value; properties copy with it.
 it('CopyNode: inherit_grants and properties propagate from source to copy', function (): void {
     $drive = DriveTestHelpers::drive();
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.bin'));

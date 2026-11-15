@@ -8,7 +8,7 @@ use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 
 /**
- * The v_activity schema (§2.9 / M2c-activity): every column exists and the table is
+ * The v_activity schema: every column exists and the table is
  * APPEND-ONLY — created_at but NO updated_at and NO deleted_at. There is no update
  * or delete path for an audit row.
  */

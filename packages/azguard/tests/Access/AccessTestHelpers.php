@@ -12,7 +12,7 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 
 /**
- * Builders for the M2a ACL tests: a storage with a known tree, a subject user, and
+ * Builders for the ACL tests: a storage with a known tree, a subject user, and
  * a one-liner grant writer. Keeps the table-driven tests focused on the algorithm,
  * not on row plumbing.
  */

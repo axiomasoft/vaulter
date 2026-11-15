@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Release\Contract;
 
 /**
- * One classified change of a contract (D14): `{surface, subject, rule, classification, before_hash, after_hash, explanation}`.
+ * One classified change of a contract: `{surface, subject, rule, classification, before_hash, after_hash, explanation}`.
  * ADD only for a provably allowed simple case; REVIEW blocks like BREAK, it only does not claim the break is proven.
  *
  * @phpstan-type ChangeRow array{surface: string, subject: string, rule: string, classification: string, before_hash: string|null, after_hash: string|null, explanation: string}

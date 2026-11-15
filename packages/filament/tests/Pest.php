@@ -10,7 +10,7 @@ uses(TestCase::class)->in('Feature');
 
 uses(TestCase::class)->in('Configuration');
 
-// Test groups (P1.5): database, serial, extended, stand and the engine-only engine:* — see groups.php. The helper is part of the core Testing kit.
+// Test groups: database, serial, extended, stand and the engine-only engine:* — see groups.php. The helper is part of the core Testing kit.
 
 TestGroups::bind(__DIR__, 'filament');
 

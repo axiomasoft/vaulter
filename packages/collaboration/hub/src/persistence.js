@@ -11,7 +11,7 @@ import { extensionsFor, FIELD, lostAttributes } from './schema.js'
 
 export { isWriteMessage }
 
-// The hub's persistence, protocol 2 (D26). The room is never stored as a whole: every Yjs update
+// The hub's persistence, protocol 2. The room is never stored as a whole: every Yjs update
 // that must reach the backend is appended once, as one log record, by the pending ledger
 // (src/ledger.js), and only the committed receipt is acknowledged.
 //

@@ -1,6 +1,6 @@
 #!/bin/sh
-# P7.1 — tier-S chaos lane: dry-run | run | revert | verify
-# Injectors, isolated topology and the authoritative run belong to P7.2/P7.3.
+# Tier-S chaos lane: dry-run | run | revert | verify
+# Injectors, isolated topology and the authoritative run are separate steps.
 # Usage:
 #   TIER=S ./load/scripts/p7-chaos.sh dry-run
 #   TIER=S ./load/scripts/p7-chaos.sh verify --run-dir load/gates/fixtures/p7/complete

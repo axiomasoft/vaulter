@@ -11,7 +11,7 @@ use Vaulter\Media\Contracts\Cas\StagedObject;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Deletes the object, then fails — the sweep that dies between the unlink and its commit (D23). With $pause the
+ * Deletes the object, then fails — the sweep that dies between the unlink and its commit. With $pause the
  * failure is replaced by a wait after the unlink: a sweep holding its lock with the bytes already gone.
  */
 final class FailingDeleteContentStore implements ContentStore

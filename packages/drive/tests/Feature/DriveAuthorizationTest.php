@@ -15,7 +15,7 @@ use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * The Drive REST surface UNDER the ACL (M2a / H.2): hidden nodes return 404,
+ * The Drive REST surface UNDER the ACL: hidden nodes return 404,
  * an authorised one passes, the per-node grant API grants/revokes, and the node
  * "abilities" object mirrors the resolver. Runs on the standalone database driver so
  * a grant is the only thing that opens a door.
@@ -124,7 +124,7 @@ it('rejects a grant with an unregistered subject_type (422)', function (): void 
     AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     // A made-up / typo'd subject_type that maps to no host model must be rejected
-    // before it can ever land in v_node_grants (§2.6 / H.2 — alias-only subjects).
+    // before it can ever land in v_node_grants (alias-only subjects).
     $this->postJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants', [
         'subject' => ['type' => 'totally-not-a-model', 'id' => 2],
         'role' => 'reader',
@@ -176,8 +176,8 @@ it('denies a download without a grant and allows it with one', function (): void
     $this->actingAs((new TestUser)->forceFill(['id' => 99]));
     $this->get('api/vaulter/v1/files/'.$nodeId.'/download')->assertStatus(404);
 
-    // The uploader (Writer ⇒ READ bit) can — streamed through PHP (P1.2 /
-    // F-P1.3-01 removed the presign-redirect branch: even a disk that can mint a
+    // The uploader (Writer ⇒ READ bit) can — streamed through PHP (
+    // Removed the presign-redirect branch: even a disk that can mint a
     // signed URL now always streams a 200, never a 302).
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $this->get('api/vaulter/v1/files/'.$nodeId.'/download')->assertOk();

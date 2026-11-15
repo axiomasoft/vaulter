@@ -12,7 +12,7 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Drive\Models\Node;
 
 /*
- * vaulter:collaboration:prune (C11): deletes the updates, receipts and head of the generations closed longer ago than
+ * vaulter:collaboration:prune: deletes the updates, receipts and head of the generations closed longer ago than
  * token_ttl + the retry horizon + retention.retired_generation_days, never the document's current generation. It first
  * retires the open heads of generations a document already left (closed while the module was off), whose grace starts
  * then. --dry-run counts and deletes nothing. The scheduler runs it daily.

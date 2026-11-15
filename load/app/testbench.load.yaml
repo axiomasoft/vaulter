@@ -1,10 +1,10 @@
-# VLT-LOAD P2.2 — testbench config for the nginx+php-fpm SUT. Bind-mounted to
+# Testbench config for the nginx+php-fpm SUT. Bind-mounted to
 # /app/testbench.yaml (docker-compose.load.yml); found via TESTBENCH_WORKING_PATH=/app
 # (load/docker/php-fpm.conf `env[TESTBENCH_WORKING_PATH]`) — see that file's comment for
 # why a plain php-fpm request needs this (unlike `testbench serve`, which curates it
-# itself). Mirrors e2e/docker/testbench.pgsql.yaml (P2.1 Required Reads #4), swapping the
+# itself). Mirrors e2e/docker/testbench.pgsql.yaml, swapping the
 # e2e host provider for LoadServiceProvider and adding vaulter-documents (docs-collab
-# scenario, P2.4).
+# scenario).
 providers:
   - Vaulter\VaulterServiceProvider
   - Vaulter\Media\VaulterMediaServiceProvider
@@ -17,7 +17,7 @@ providers:
 env:
   - APP_KEY="base64:lRknxO3IznrZODHVPvLNKylvYP19ch+EXZ8dM+i3OlY="
   - APP_URL="http://localhost:8080"
-  # P2.4 — OP-34 (collab-session issuance, docs-collab.js) needs a Hocuspocus signing
+  # OP-34 (collab-session issuance, docs-collab.js) needs a Hocuspocus signing
   # secret or CollaborationSessionService::issue() throws CollaborationConfigException
   # (config(vaulter.collaboration.drivers.hocuspocus.secret)) before a single k6
   # request runs. A fixed dev-only value — this stand never talks to a real hub.
