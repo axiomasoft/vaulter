@@ -154,15 +154,16 @@ app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 
 ## Проверка установки
 
-Быстрая проверка из `tinker`:
+Быстрая проверка из `tinker`. Вошедшего пользователя там нет, поэтому вызов явно называет системного
+актора (любой вызов Vaulter идёт от пользователя или от системы):
 
 <!-- snippet: host -->
 
 ```php
 use Vaulter\Drive\Facades\Vaulter;
 
-$drive = Vaulter::drive($user);   // любая Eloquent-модель
-$drive->root();                 // автоматически созданная корневая папка
+$drive = Vaulter::drive($user);         // любая Eloquent-модель
+$drive->asSystem('install check')->root(); // автоматически созданная корневая папка
 ```
 
 Если вернулся `Vaulter\Drive\Data\Snapshots\NodeSnapshot` — бэкенд подключён правильно.

@@ -156,15 +156,16 @@ Commercial add-on operations are documented in its private guide.
 
 ## Verify the install
 
-A quick sanity check from `tinker`:
+A quick sanity check from `tinker`. There is no signed-in user there, so the call names the system actor
+explicitly (every Vaulter call runs as a user or as the system):
 
 <!-- snippet: host -->
 
 ```php
 use Vaulter\Drive\Facades\Vaulter;
 
-$drive = Vaulter::drive($user);   // any Eloquent model
-$drive->root();                 // the auto-provisioned root folder
+$drive = Vaulter::drive($user);         // any Eloquent model
+$drive->asSystem('install check')->root(); // the auto-provisioned root folder
 ```
 
 If that returns a `Vaulter\Drive\Data\Snapshots\NodeSnapshot`, the backend is wired correctly.
