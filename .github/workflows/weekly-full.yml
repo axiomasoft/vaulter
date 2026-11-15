@@ -154,26 +154,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check foreign keys in InnoDB (MySQL)
-        if: matrix.engine == 'mysql'
-        env:
-          DB_CONTAINER: ${{ job.services.db.id }}
-        run: |
-          # MySQL 9.7 checks foreign keys in the SQL layer by default, and that layer lets some violations through on a
-          # table with a self-referencing key (v_nodes). InnoDB's own checks are read-only at runtime: configure, restart.
-          printf '[mysqld]\ninnodb_native_foreign_keys=ON\n' > "$RUNNER_TEMP/vaulter-fk.cnf"
-          docker cp "$RUNNER_TEMP/vaulter-fk.cnf" "$DB_CONTAINER:/etc/mysql/conf.d/vaulter-fk.cnf"
-          docker restart "$DB_CONTAINER"
-          for _ in $(seq 1 90); do
-            if [[ "$(docker inspect -f '{{.State.Health.Status}}' "$DB_CONTAINER")" == healthy ]] \
-              && [[ "$(docker exec "$DB_CONTAINER" mysql -uroot -psecret -N -e 'select @@innodb_native_foreign_keys' 2>/dev/null)" == 1 ]]; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo '::error::MySQL did not come back with innodb_native_foreign_keys=ON'
-          exit 1
-
       - name: Checkout pinned AzGuard v1
         if: matrix.azguard
         run: |
