@@ -283,6 +283,9 @@ final readonly class BlobReconciler
                 : $skipped++;
         }
 
+        // The listing order is the storage backend's; a sorted list keeps the report stable across disks and runs.
+        sort($orphans, SORT_STRING);
+
         return [
             'scanned' => $scanned,
             'orphans' => $orphans,
