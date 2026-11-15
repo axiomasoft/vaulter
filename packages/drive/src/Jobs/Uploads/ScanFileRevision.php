@@ -126,7 +126,7 @@ final class ScanFileRevision implements ShouldQueue
 
                     return;
                 } else {
-                    $result = $scanner->scan(new ScanInput($stream, $attempt->revisionId, $attempt->blobId,
+                    $result = $scanner->scan(new ScanInput($verified->stream, $attempt->revisionId, $attempt->blobId,
                         $attempt->driveId, $attempt->tenantId, $identity->scopeKey, $verified->sha256,
                         $verified->size, $revision->mime_type, $attempt->spec->scannerVersion,
                         $attempt->spec->policyVersion, $attempt->deadline));

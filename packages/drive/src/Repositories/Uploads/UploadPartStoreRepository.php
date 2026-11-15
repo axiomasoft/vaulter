@@ -101,16 +101,12 @@ final class UploadPartStoreRepository
         return is_numeric($size) ? (int) $size : 0;
     }
 
+    /** @return Collection<int, UploadPart> */
     public function forSession(UploadSession $session): Collection
     {
-        $model = $this->driveConfig->model('upload_part');
-
-        /** @var Collection<int, UploadPart> $parts */
-        $parts = $model::query()
+        return $this->driveConfig->model('upload_part')::query()
             ->where('upload_session_id', $session->getKey())
             ->orderBy('part_no')
             ->get();
-
-        return $parts;
     }
 }
