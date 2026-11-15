@@ -78,7 +78,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 /**
  * The package's public surface is deliberately thin: contracts,
  * facades, DTO/VO and events. `Repositories/`/`Support/` are internal implementation
- * detail — the kernel-sharing design lets sibling Vaulter packages
+ * detail — the kernel-sharing design (ADR-0005) lets sibling Vaulter packages
  * (Drive/Media/Documents/Filament) consume them as the shared kernel, so the
  * enforceable boundary here is NOT "same package only" (core has no sub-namespace of
  * its own to scope against) but "never consumed from OUTSIDE the Vaulter namespace
@@ -290,7 +290,7 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
-        // amendment: entry-point layers stay flat, so the allow-list is explicit.
+        // ADR-0017 amendment (ADR-0020): entry-point layers stay flat, so the allow-list is explicit.
         'Operations' => ['AccessOperations', 'ActivityOperations', 'ChangeOperations', 'NodeLocator', 'NodeSequence', 'DriveContext', 'OperationContext', 'ShareOperations', 'Operation', 'OperationSpec', 'OperationRunner', 'OperationMiddleware', 'OperationClaim', 'NoOperationClaim', 'ModuleReadiness', 'AfterCommitFailure', 'ConcurrencyPolicy', 'IdempotencyPolicy', 'OperationPolicy', 'OperationPolicySource', 'OperationCatalog', 'OperationSources', 'OperationsReference'],
         // Revived with kind-neutral naming in the
         // handler extensibility-seam VOs (FileDescriptor/ContentCapabilities/ViewerDescriptor/
@@ -331,7 +331,7 @@ test('split technical roots keep classes in domain subfolders', function (): voi
 });
 
 /**
- * Canon A, Law 1 (layer-first placement).
+ * ADR-0017 — Canon A, Law 1 (layer-first placement).
  *
  * A recognized technical-layer directory (Actions/Models/Repositories/Enums/
  * Events/Data/Contracts/Http) must live as the FIRST namespace segment under the

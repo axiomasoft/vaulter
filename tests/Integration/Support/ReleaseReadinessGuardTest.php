@@ -46,7 +46,7 @@ it('moves yjs and @tiptap/pm to peerDependencies in @vaulter/vue package.json, F
     );
 
     foreach (['yjs', '@tiptap/pm'] as $dualInstanceRiskPackage) {
-        // Moved Yjs ownership to vue-collaboration; ProseMirror stays in vue.
+        // ADR-0031 moved Yjs ownership to vue-collaboration; ProseMirror stays in vue.
         $owner = $dualInstanceRiskPackage === 'yjs' ? 'vue-collaboration' : 'vue';
         $json = json_decode(file_get_contents(dirname(__DIR__, 3).'/packages/'.$owner.'/package.json'), associative: true, flags: JSON_THROW_ON_ERROR);
         expect($json['peerDependencies'])->toHaveKey($dualInstanceRiskPackage)

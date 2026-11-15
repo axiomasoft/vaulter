@@ -21,7 +21,7 @@ use Vaulter\Modules\MissingExtensionException;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * Драйверный слой: issueSession кодирует режим (rw/ro) из
+ * Драйверный слой (ADR-0001): issueSession кодирует режим (rw/ro) из
  * writable, Hocuspocus подписывает JWT с правильными claim'ами/exp, а комната всегда
  * привязана к одному узлу и поколению. Это «сердце» выдачи токена — проверяем форму
  * дескриптора для Hocuspocus отдельно от HTTP.

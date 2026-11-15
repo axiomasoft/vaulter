@@ -18,8 +18,8 @@ use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * The reader sync identity: the nine-field length-prefixed sync key
- * message, its subkeys and the cursor principal binding, checked against the golden
- * vectors of knowledge/examples-p4-p5#sync-key-bytes. The expected literals were computed
+ * message, its subkeys and the cursor principal binding, checked against golden
+ * vectors. The expected literals were computed
  * independently with Python stdlib hmac/hashlib/struct/base64 and are copied here by
  * hand, never produced by the helper under test. The app key is a public synthetic
  * fixture, used as the exact bytes of the config string ("base64:" is not decoded).

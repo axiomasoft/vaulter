@@ -46,7 +46,7 @@ TestGroups::bind($core, static function (string $path) use ($leafZones): string 
 });
 TestGroups::bind(dirname(__DIR__).'/load/tests', 'load');
 
-// Drive + Uploads suites moved to the vaulter-drive package;
+// Drive + Uploads suites moved to the vaulter-drive package (ADR-0015);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
 uses(OpenApiTestCase::class)->in(dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiDocumentTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiExamplesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiProblemsTableTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiRouteCoverageTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidationEnabledTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidatorSelfTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/RouteListSnapshotTest.php');
@@ -72,7 +72,7 @@ uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirn
 uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Schema/BlobDedupIndexTest.php', dirname(__DIR__).'/tests/Integration/Schema/CanonicalSchemaTest.php', dirname(__DIR__).'/tests/Integration/Schema/HotPathIndexesTest.php', dirname(__DIR__).'/tests/Integration/Schema/KeyColumnTypesTest.php', dirname(__DIR__).'/tests/Integration/Schema/SchemaSnapshotTest.php');
 
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit
-// tests) moved to the vaulter-documents package; they run under
+// tests) moved to the vaulter-documents package (ADR-0015); they run under
 // that package's own Pest suite.
 
 // The ForkRace harness: forked children race on their OWN PostgreSQL

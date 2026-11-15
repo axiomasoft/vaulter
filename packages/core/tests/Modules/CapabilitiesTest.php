@@ -16,7 +16,7 @@ use Vaulter\Tests\Modules\Fixtures\Greeter;
 use Vaulter\Tests\Modules\Fixtures\LoudGreeter;
 use Vaulter\Tests\Modules\Fixtures\PlainGreeter;
 
-// Capabilities read the sealed registry only: defined, provided by an active module, or a
+// Capabilities read the sealed registry only (ADR-0027): defined, provided by an active module, or a
 // host config key naming the class.
 
 /** @param array<string, mixed> $config */

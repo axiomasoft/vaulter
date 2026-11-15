@@ -44,7 +44,7 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
 
 /**
- * A keyed write claims its key inside the root
+ * ADR-0029: a keyed write claims its key inside the root
  * transaction, stores its receipt with the mutation, replays it only after the owner's current authorization,
  * caches a deterministic refusal through a savepoint and never an auth, visibility, validation or precondition
  * refusal. Committed migrations, not a wrapping transaction: the root transaction and the savepoint are only

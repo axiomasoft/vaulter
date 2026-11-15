@@ -146,7 +146,7 @@ test('AST inventory covers every package scope and applies only the owning sourc
 });
 
 test('core never reads another package\'s configuration keys directly', function (): void {
-    // The package that owns a key answers questions about it through a contract
+    // ADR-0019: the package that owns a key answers questions about it through a contract
     // (ScanWorkSettings, CommentsFeature). ConfigNormalizer alone names the replacement-map keys of every package.
     $parser = (new ParserFactory)->createForNewestSupportedVersion();
     $offenders = [];

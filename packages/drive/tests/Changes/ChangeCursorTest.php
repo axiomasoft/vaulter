@@ -13,7 +13,7 @@ use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
  */
 const CHANGE_CURSOR_APP_KEY = 'base64:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=';
 
-/** HMAC-SHA256(K, lp("vaulter.changes.cursor.v2")) for the key above, from knowledge/examples-p4-p5#sync-key-bytes. */
+/** HMAC-SHA256(K, lp("vaulter.changes.cursor.v2")) for the key above, computed independently. */
 const CHANGE_CURSOR_SUBKEY_HEX = '9cbfcd8ce2ecccf20c57c0abd050f4ad44196ea77690f666c119fbf3ab70640b';
 
 function changeCursorV2Sign(array $payload, ?string $subkey = null): string

@@ -37,7 +37,7 @@ it('search() cursor pagination does not skip a same-name row across the page bou
     $folderB = AccessTestHelpers::folder($storage, $root, 'folder-b');
 
     // Same name, different parents — sibling-uniqueness in this package is
-    // scoped per-parent, so this is a legitimate, common shape:
+    // scoped per-parent (ADR-0005), so this is a legitimate, common shape:
     // two files named identically in two different folders.
     $file1 = ForceCreates::make(Node::class, [
         'drive_id' => $storage->id, 'parent_id' => $folderA->id,

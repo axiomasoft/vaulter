@@ -109,7 +109,7 @@ it('does not physically purge a node restored between candidate materialisation 
     // `trashedBefore()->get()` — i.e. strictly BEFORE the per-node purge
     // transaction opens. Simulates the owning user calling `restore` in the
     // TOCTOU window between candidate materialisation and the transaction that
-    // physically (and irreversibly) deletes the subtree.
+    // physically (and irreversibly, ADR-0016) deletes the subtree.
     Node::retrieved(function (Node $model) use ($drive, $targetId, &$restoredOnce): void {
         if ($restoredOnce || (string) $model->getKey() !== (string) $targetId) {
             return;

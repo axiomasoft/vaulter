@@ -14,7 +14,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
  * The ancestor-side traversal
  * (AccessResolver::ancestorChain(), the walk EVERY authorization check runs;
  * NodeReadRepository::ancestors()/breadcrumb()) must be bounded by withMaxDepth,
- * symmetrically with descendants()/subtree().
+ * symmetrically with descendants()/subtree() (ADR-0005).
  *
  * Red-before: before this item, the recursive CTE staudenmeir compiles for
  * `ancestors()`/`ancestorsAndSelf()` carried NO `depth <` predicate — the walk

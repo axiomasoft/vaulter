@@ -85,7 +85,7 @@ final class DriveSliceRegistrar implements ModuleBindings
         });
 
         // The host-user resolver seam stays in axioma-studio/vaulter-documents
-        // — collaboration is documents-only machinery.
+        // (ADR-0015) — collaboration is documents-only machinery.
         //
         // The format-extensibility registry: a drive-only host (no
         // vaulter-documents installed) still needs a preview/download handler

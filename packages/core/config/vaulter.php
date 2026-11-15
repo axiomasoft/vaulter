@@ -25,7 +25,7 @@ return [
         ],
     ],
     'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false), 'resolver' => null],
-    // id => nonempty reason: production invariants a host knowingly accepts; never a structural error.
+    // id => nonempty reason: production invariants a host knowingly accepts (ADR-0036); never a structural error.
     'security' => ['accepted_risks' => []],
     // Module activation overrides: module id => true|false. Auto modules (media, drive, documents…)
     // are active unless switched off; opt-in modules (webhooks) only when switched on.
