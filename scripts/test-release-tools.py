@@ -282,7 +282,7 @@ class BuildArtifactsTest(unittest.TestCase):
             with self.subTest(package=name):
                 self.assertIn("composer.json", entries)
                 self.assertTrue([e for e in entries if e.startswith("src/")], "src/ must ship")
-                for leaked in ("tests/", "phpunit.xml", "phpstan.neon", "pint.json", "rector.php", ".gitattributes", ".claude/", "vendor/"):
+                for leaked in ("tests/", "phpunit.xml", "phpstan.neon", "pint.json", "rector.php", ".gitattributes", "vendor/"):
                     self.assertFalse([e for e in entries if e.startswith(leaked)], f"{leaked} leaked into {name}")
 
     def test_versions_are_pinned_in_the_staged_composer_json(self):

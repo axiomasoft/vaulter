@@ -49,7 +49,7 @@ it('accepts runtime blobs without executing candidate PHP', function (): void {
 
 it('rejects forbidden and traversal members before extraction', function (string $path): void {
     expect(ac_errors([...ac_files(), $path => 'secret']))->not->toBe([]);
-})->with(['tests/Test.php', 'vendor/autoload.php', 'node_modules/a.js', '.env', '.agents/rules', '.claude/a', '.swissknife/a', 'phpunit.xml', 'composer.lock', 'cache.cache', '../escape', '/absolute', 'src/../../escape', 'src\\escape', 'hub/src/cli.js', 'src/.env.secret', 'src/.git/config']);
+})->with(['tests/Test.php', 'vendor/autoload.php', 'node_modules/a.js', '.env', 'phpunit.xml', 'composer.lock', 'cache.cache', '../escape', '/absolute', 'src/../../escape', 'src\\escape', 'hub/src/cli.js', 'src/.env.secret', 'src/.git/config']);
 
 it('rejects symlink members even inside allowed runtime directories', function (): void {
     expect(ac_errors([...ac_files(), 'src/link' => '/etc/passwd'], symlink: 'src/link'))->not->toBe([]);

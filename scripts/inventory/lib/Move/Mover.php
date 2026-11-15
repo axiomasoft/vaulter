@@ -28,7 +28,7 @@ final class Mover
     /** Directories never read or rewritten (generated fixtures, immutable baselines, plans, vendor code). */
     private const SKIP_PATHS = [
         'plans', 'tests/baseline', 'tests/Repo/Arch/Fixtures', 'tests/Repo/Fixtures', 'packages/core/tests/Fixtures/Schema/original',
-        '.swissknifeman', '.claude', '.agents', '.idea', 'docs/.vitepress/cache',
+        '.idea', 'docs/.vitepress/cache',
     ];
 
     private const SKIP_NAMES = ['vendor', 'node_modules', '.git', 'dist'];

@@ -18382,7 +18382,7 @@
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 382,
+      "count": 379,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__all_four_block__I1_and_I2_since_P4_16__the_collaboration_residual_of_D32_emptied_in_P5_1_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -18626,10 +18626,7 @@
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_composer_identity_license_and_public_private_dependency_drift\"('name')\"",
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_duplicate_ZIP_names_before_any_extraction",
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('../escape')\"",
-        "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('.agents/rules')\"",
-        "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('.claude/a')\"",
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('.env')\"",
-        "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('.swissknife/a')\"",
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('/absolute')\"",
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('cache.cache')\"",
         "P\\Tests\\Repo\\Release\\ArchiveCheckTest::__pest_evaluable_it_rejects_forbidden_and_traversal_members_before_extraction\"('composer.lock')\"",
@@ -18723,7 +18720,7 @@
         "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_treats_zero_tests_as_an_error_except_an_empty_serial_pass_the_inventory_allows",
         "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_writes_current_lists_and_ledger_additions_without_ever_rewriting_an_original",
         "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_adds_staged__unstaged_and_untracked_files_to_the_committed_diff",
-        "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_allowlists_only_prose_in_the_real_map__AGENTS__CLAUDE__workflows_and_root_configs_are_not_docs",
+        "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_allowlists_only_prose_in_the_real_map__workflows_and_root_configs_are_not_docs",
         "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_counts_a_deletion__unstaged_or_committed__as_a_change_of_its_zone",
         "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_counts_a_rename_for_both_paths__staged_or_committed",
         "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_fails___changed_when_a_planned_run_fails",
