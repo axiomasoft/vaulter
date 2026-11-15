@@ -1,7 +1,12 @@
-# Raw terminal captures contain CR/ANSI sequences; preserve their original bytes.
-plans/remaining-evidence/R07-checks/**/time.txt -text -diff
-# Preserve recorded PostgreSQL dumps without text or whitespace normalization.
-plans/VLT-LOAD/artifacts/**/postgres/pre-dirty.sql -text -diff
-# stdout/stderr are immutable command output, including terminal formatting.
-plans/VLT-LOAD/artifacts/**/*.stdout -text -diff
-plans/VLT-LOAD/artifacts/**/*.stderr -text -diff
+# AI agent and tool configuration never ships in an archive.
+/.claude export-ignore
+/.cursor export-ignore
+/.codex export-ignore
+/.agents export-ignore
+/.grok export-ignore
+/.swissknife* export-ignore
+/.skm* export-ignore
+/.mcp.json* export-ignore
+/CLAUDE.md export-ignore
+/AGENTS.md export-ignore
+*.last export-ignore
