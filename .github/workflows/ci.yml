@@ -664,6 +664,11 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      # TestGroupsTest lists the drive suite's groups with the drive phpunit.xml, whose bootstrap is the drive vendor.
+      - name: Install drive dependencies
+        working-directory: packages/drive
+        run: composer update --prefer-dist --no-interaction --no-progress
+
       - name: Workflow policy
         run: |
           python3 -m pip install 'pyyaml==6.0.2'
@@ -811,32 +816,32 @@ jobs:
           node-version: '26'
       - name: Resolve one Composer lock and capture provenance
         run: |
-          mkdir -p var/plan4/P7.2
+          mkdir -p var/advisories
           # Root lock is ignored: resolve once without scripts/plugins or installing archives.
           composer update --no-install --no-scripts --no-plugins --no-interaction
-          sha256sum composer.lock package-lock.json > var/plan4/P7.2/input-locks.sha256
-          composer --version > var/plan4/P7.2/composer.version
-          npm --version > var/plan4/P7.2/npm.version
-          echo 'Composer locked including dev; npm runtime omit=dev high threshold; optional package matrices and build-dev pending P8.2' > var/plan4/P7.2/profile.txt
+          sha256sum composer.lock package-lock.json > var/advisories/input-locks.sha256
+          composer --version > var/advisories/composer.version
+          npm --version > var/advisories/npm.version
+          echo 'Composer locked including dev; npm runtime omit=dev high threshold; optional package matrices and build-dev not scanned' > var/advisories/profile.txt
       - name: Capture both raw advisory reports and statuses
         run: |
           set +e
-          composer audit --locked --format=json > var/plan4/P7.2/composer.json 2> var/plan4/P7.2/composer.stderr
+          composer audit --locked --format=json > var/advisories/composer.json 2> var/advisories/composer.stderr
           vaulter_composer_exit=$?
-          printf '%s\n' "$vaulter_composer_exit" > var/plan4/P7.2/composer.exit
-          npm audit --omit=dev --audit-level=high --json > var/plan4/P7.2/npm.json 2> var/plan4/P7.2/npm.stderr
+          printf '%s\n' "$vaulter_composer_exit" > var/advisories/composer.exit
+          npm audit --omit=dev --audit-level=high --json > var/advisories/npm.json 2> var/advisories/npm.stderr
           vaulter_npm_exit=$?
-          printf '%s\n' "$vaulter_npm_exit" > var/plan4/P7.2/npm.exit
+          printf '%s\n' "$vaulter_npm_exit" > var/advisories/npm.exit
           # Acquisition statuses are data for the blocking gate, not a clean verdict.
       - name: Reject incomplete reports and unapproved high or critical findings
         run: |
-          python3 scripts/ci/audit-gate.py --composer-report=var/plan4/P7.2/composer.json --composer-exit="$(cat var/plan4/P7.2/composer.exit)" --npm-report=var/plan4/P7.2/npm.json --npm-exit="$(cat var/plan4/P7.2/npm.exit)" --suppressions=release/audit-suppressions.json --format=json
+          python3 scripts/ci/audit-gate.py --composer-report=var/advisories/composer.json --composer-exit="$(cat var/advisories/composer.exit)" --npm-report=var/advisories/npm.json --npm-exit="$(cat var/advisories/npm.exit)" --suppressions=release/audit-suppressions.json --format=json
       - name: Preserve advisory acquisition bundle
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dependency-advisory-reports
-          path: var/plan4/P7.2
+          path: var/advisories
 
   ci-gate:
     name: CI gate
