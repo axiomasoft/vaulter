@@ -90,18 +90,18 @@ jobs:
           TESTBENCH: ${{ matrix.testbench }}
         run: |
           set -euo pipefail
-          laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
-          testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
-          echo "laravel/framework $laravel, orchestra/testbench $testbench"
-          laravel="${laravel#v}"
-          testbench="${testbench#v}"
+          installed_laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
+          installed_testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
+          echo "laravel/framework $installed_laravel, orchestra/testbench $installed_testbench"
+          installed_laravel="${installed_laravel#v}"
+          installed_testbench="${installed_testbench#v}"
           expected_testbench="${TESTBENCH#^}"
-          if [[ "${laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
-            echo "::error::expected Laravel ${LARAVEL}, installed ${laravel}"
+          if [[ "${installed_laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
+            echo "::error::expected Laravel ${LARAVEL}, installed ${installed_laravel}"
             exit 1
           fi
-          if [[ "${testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
-            echo "::error::expected Testbench ${TESTBENCH}, installed ${testbench}"
+          if [[ "${installed_testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
+            echo "::error::expected Testbench ${TESTBENCH}, installed ${installed_testbench}"
             exit 1
           fi
 
