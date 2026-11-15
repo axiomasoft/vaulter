@@ -20,6 +20,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 use Override;
@@ -192,13 +193,13 @@ final class NodeResource extends Resource
         $trashed = PanelRecords::filterValue($filters, 'trashed_at');
 
         $rows = $rows
-            ->when($kind !== null, fn ($rows) => $rows->filter(fn (array $row): bool => $row['kind']->value === $kind))
-            ->when($drive !== null, fn ($rows) => $rows->filter(fn (array $row): bool => $row['drive_id'] === $drive))
+            ->when($kind !== null, fn (Collection $rows): Collection => $rows->filter(fn (array $row): bool => $row['kind']->value === $kind))
+            ->when($drive !== null, fn (Collection $rows): Collection => $rows->filter(fn (array $row): bool => $row['drive_id'] === $drive))
             ->filter(fn (array $row): bool => match ($trashed) {
                 '1' => $row['trashed_at'] !== null,
                 default => $row['trashed_at'] === null,
             })
-            ->when(is_string($search) && $search !== '', fn ($rows) => $rows->filter(fn (array $row): bool => str_contains(mb_strtolower($row['name']), mb_strtolower((string) $search))));
+            ->when(is_string($search) && $search !== '', fn (Collection $rows): Collection => $rows->filter(fn (array $row): bool => str_contains(mb_strtolower($row['name']), mb_strtolower((string) $search))));
 
         return PanelRecords::paginate(array_values($rows->all()), $sortColumn, $sortDirection, $page, $recordsPerPage, 'created_at');
     }
