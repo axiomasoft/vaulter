@@ -18,6 +18,23 @@ function aggregateRow(string $table, array $values): int|string
     return DB::table($table)->insertGetId($values);
 }
 
+/**
+ * An integer column never holds a fraction: the CHECK refuses one where a column could store it, and MySQL rounds it
+ * into the INT column, so what it stores is still an integer.
+ */
+function aggregateKeepsInteger(string $table, int|string $id, string $column, float $fraction): void
+{
+    if (DB::connection()->getDriverName() !== 'mysql') {
+        expect(fn () => DB::transaction(fn () => DB::table($table)->where('id', $id)->update([$column => $fraction])))->toThrow(QueryException::class);
+
+        return;
+    }
+    $before = DB::table($table)->where('id', $id)->value($column);
+    DB::table($table)->where('id', $id)->update([$column => $fraction]);
+    expect(DB::table($table)->where('id', $id)->value($column))->toBe((int) round($fraction));
+    DB::table($table)->where('id', $id)->update([$column => $before]);
+}
+
 it('creates the document aggregate tables with every column and no 0.2 leftovers', function (): void {
     expect(Schema::hasColumns('v_documents', [
         'id', 'tenant_id', 'node_id', 'type', 'schema_version', 'current_revision_id', 'revision_count',
@@ -70,9 +87,10 @@ it('requires complete nonblank integer stored bindings on heads and revisions wh
     foreach (['v_documents' => $document, 'v_document_revisions' => $revision] as $table => $id) {
         DB::table($table)->where('id', $id)->update(['collab_protocol' => 'yjs', 'collab_state_format' => 'yjs-update-v1']);
         expect(DB::table($table)->where('id', $id)->value('collab_state'))->toBeNull();
-        foreach ([['collab_protocol' => null], ['collab_state_format' => null], ['collab_protocol' => ''], ['collab_state_format' => " \t\n"], ['collab_protocol' => "\t\r"], ['schema_version' => 0], ['schema_version' => 1.5]] as $invalid) {
+        foreach ([['collab_protocol' => null], ['collab_state_format' => null], ['collab_protocol' => ''], ['collab_state_format' => " \t\n"], ['collab_protocol' => "\t\r"], ['schema_version' => 0]] as $invalid) {
             expect(fn () => DB::transaction(fn () => DB::table($table)->where('id', $id)->update($invalid)))->toThrow(QueryException::class);
         }
+        aggregateKeepsInteger($table, $id, 'schema_version', 1.5);
         DB::table($table)->where('id', $id)->update(['collab_protocol' => null, 'collab_state_format' => null]);
         expect(fn () => DB::transaction(fn () => DB::table($table)->where('id', $id)->update(['collab_state' => 'unbound bytes'])))->toThrow(QueryException::class);
     }
@@ -86,7 +104,10 @@ it('requires every pending binding component and integer schema with nonblank id
     foreach (array_keys($binding) as $column) {
         expect(fn () => DB::transaction(fn () => DB::table('v_documents')->where('id', $id)->update([$column => null])))->toThrow(QueryException::class);
     }
-    foreach ([['pending_protocol' => " \t\n"], ['pending_state_format' => "\r\t"], ['pending_schema_version' => 1.5], ['pending_schema_version' => 0], ['pending_generation' => 0.5], ['pending_through_seq' => 1.5]] as $invalid) {
+    foreach ([['pending_protocol' => " \t\n"], ['pending_state_format' => "\r\t"], ['pending_schema_version' => 0]] as $invalid) {
         expect(fn () => DB::transaction(fn () => DB::table('v_documents')->where('id', $id)->update($invalid)))->toThrow(QueryException::class);
+    }
+    foreach (['pending_schema_version' => 1.5, 'pending_generation' => 0.5, 'pending_through_seq' => 1.5] as $column => $fraction) {
+        aggregateKeepsInteger('v_documents', $id, $column, $fraction);
     }
 });
