@@ -19,7 +19,7 @@ final class FailingStream
     public $context;
 
     /** @return resource */
-    public static function open()
+    public static function open(): mixed
     {
         if (!in_array(self::SCHEME, stream_get_wrappers(), true)) {
             stream_wrapper_register(self::SCHEME, self::class);

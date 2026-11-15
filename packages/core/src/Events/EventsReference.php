@@ -14,9 +14,9 @@ use Vaulter\Attributes\Internal;
 #[Internal]
 final readonly class EventsReference
 {
-    public const START = '<!-- events:start -->';
+    public const string START = '<!-- events:start -->';
 
-    public const END = '<!-- events:end -->';
+    public const string END = '<!-- events:end -->';
 
     public function __construct(private EventCatalog $catalog) {}
 

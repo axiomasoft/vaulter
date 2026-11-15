@@ -15,9 +15,9 @@ use Vaulter\Attributes\Internal;
 #[Internal]
 final readonly class ErrorsReference
 {
-    public const START = '<!-- vaulter:errors:start -->';
+    public const string START = '<!-- vaulter:errors:start -->';
 
-    public const END = '<!-- vaulter:errors:end -->';
+    public const string END = '<!-- vaulter:errors:end -->';
 
     public function __construct(private ProblemCatalog $catalog) {}
 

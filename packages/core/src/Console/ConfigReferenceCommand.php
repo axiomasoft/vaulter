@@ -25,9 +25,9 @@ final class ConfigReferenceCommand extends Command
     /** @var list<int> per token: the line its last character sits on */
     private static array $endLines = [];
 
-    public const START = '<!-- vaulter:config-reference:start -->';
+    public const string START = '<!-- vaulter:config-reference:start -->';
 
-    public const END = '<!-- vaulter:config-reference:end -->';
+    public const string END = '<!-- vaulter:config-reference:end -->';
 
     protected $signature = 'vaulter:config:reference
         {--check : Exit 1 when a page differs from the generated table, without writing}
