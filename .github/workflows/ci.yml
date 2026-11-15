@@ -16,7 +16,7 @@ name: CI
 #   azguard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
-#   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub (+ vue-collaboration, P5.14)
+#   frontend.yml vue and hocuspocus ......................... vue, hub (+ vue-collaboration, P5.14)
 #   openapi.yml oasdiff breaking ........................... contract-bc (blocking, D14/D18)
 #   new: mysql lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation, I14)
@@ -508,8 +508,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Node 20 is end-of-life (2026-04-30). A PR checks the oldest supported LTS; weekly-full.yml adds Node 24.
-        node: ['22']
+        # Only the current Node line is supported (engines.node >=26).
+        node: ['26']
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -552,8 +552,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # engines.node >=22 (@hocuspocus/provider@4).
-        node: ['22']
+        # Only the current Node line is supported (engines.node >=26).
+        node: ['26']
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -590,8 +590,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # @hocuspocus/server@4 declares engines.node >=22; `npm ci` fails Node 20 under engine-strict.
-        node: ['22']
+        # Only the current Node line is supported (engines.node >=26).
+        node: ['26']
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -801,7 +801,7 @@ jobs:
           coverage: none
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: '26'
       - name: Resolve one Composer lock and capture provenance
         run: |
           mkdir -p var/plan4/P7.2

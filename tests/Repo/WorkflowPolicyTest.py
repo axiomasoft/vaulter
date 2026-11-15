@@ -550,7 +550,7 @@ class SingleCiTest(unittest.TestCase):
             doc = policy.load_workflow(ROOT / '.github' / 'workflows' / name)
             self.assertIn('vue-collaboration', doc['jobs'], name)
             self.assertIn('@vaulter/vue-collaboration', doc['jobs']['vue-collaboration']['name'], name)
-            self.assertEqual('@vaulter/collaboration-hub (Node 22)' if name == 'weekly-full.yml' else '@vaulter/collaboration-hub (Node ${{ matrix.node }})',
+            self.assertEqual('@vaulter/collaboration-hub (Node 26)' if name == 'weekly-full.yml' else '@vaulter/collaboration-hub (Node ${{ matrix.node }})',
                              doc['jobs']['hub']['name'], name)
         ci = policy.load_workflow(ROOT / '.github' / 'workflows' / 'ci.yml')
         self.assertIn('vue-collaboration', ci['jobs']['ci-gate']['needs'])

@@ -69,7 +69,7 @@ services:
       retries: 20
 
   vite:
-    image: node:20-alpine
+    image: node:26-alpine
     working_dir: /app/e2e
     environment:
       # Vite proxies /api + /e2e to the Laravel service inside the compose network.
@@ -84,7 +84,7 @@ services:
         condition: service_healthy
       hub:
         condition: service_healthy
-    # F-P4.5-03: node:20-alpine ships wget (busybox) — no extra install needed.
+    # F-P4.5-03: node:26-alpine ships wget (busybox) — no extra install needed.
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5273 >/dev/null 2>&1 || exit 1"]
       interval: 3s

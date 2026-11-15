@@ -230,10 +230,10 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 26
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: '26'
 
       - name: Install dependencies
         run: |
@@ -254,7 +254,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['22', '24']  # the maintained LTS lines; Node 20 is end-of-life (2026-04-30)
+        node: ['26']  # only the current Node line is supported (engines.node >=26)
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -288,7 +288,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['22', '24']  # engines.node >=22 (@hocuspocus/provider@4)
+        node: ['26']  # only the current Node line is supported (engines.node >=26)
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -316,7 +316,7 @@ jobs:
         run: npm run build --workspace @vaulter/vue-collaboration
 
   hub:
-    name: "@vaulter/collaboration-hub (Node 22)"
+    name: "@vaulter/collaboration-hub (Node 26)"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -325,10 +325,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 26
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: '26'
 
       - name: Install dependencies
         working-directory: ./packages/collaboration/hub

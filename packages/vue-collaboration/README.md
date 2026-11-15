@@ -14,7 +14,7 @@ are in [ADR-0031](../../docs/adr/0031-collaboration-package-and-durability.md).
 npm install @vaulter/vue-collaboration yjs
 ```
 
-Peers: `vue@^3.4`, `yjs@^13.6`, `@vaulter/vue`. `@hocuspocus/provider` is a dependency. Node `>=22`.
+Peers: `vue@^3.4`, `yjs@^13.6`, `@vaulter/vue`. `@hocuspocus/provider` is a dependency. Node `>=26`.
 
 ```ts
 import { createApp } from 'vue'

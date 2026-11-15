@@ -7,7 +7,7 @@
     "api": "1"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "type": "module",
   "keywords": [

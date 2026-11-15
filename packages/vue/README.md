@@ -8,7 +8,7 @@ editor engine itself (TipTap, Univer, …) is yours.
 npm install @vaulter/vue
 ```
 
-Peers: `vue@^3.4` and `@tiptap/pm@^3`. Node `>=22`. See [Frontend overview](../../docs/guides/vue.md) for the plugin and
+Peers: `vue@^3.4` and `@tiptap/pm@^3`. Node `>=26`. See [Frontend overview](../../docs/guides/vue.md) for the plugin and
 the `createVaulterClient` setup, the composables and the components.
 
 ## Collaboration adapters
