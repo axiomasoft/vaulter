@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Integration\Tests\ObservabilityDocuments\P83DocumentsTestCase;
+use Vaulter\Integration\Tests\Support\OpenApi\OpenApiTestCase;
+use Vaulter\Integration\Tests\TablePrefixTestCase;
+use Vaulter\Integration\Tests\UlidTestCase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Testing\Support\TestGroups;
@@ -45,7 +49,7 @@ TestGroups::bind(dirname(__DIR__).'/load/tests', 'load');
 // Drive + Uploads suites moved to the vaulter-drive package (P2 #5 / ADR-0015, D1);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
-uses(Vaulter\Integration\Tests\Support\OpenApi\OpenApiTestCase::class)->in(dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiDocumentTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiExamplesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiProblemsTableTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiRouteCoverageTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidationEnabledTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidatorSelfTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/RouteListSnapshotTest.php');
+uses(OpenApiTestCase::class)->in(dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiDocumentTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiExamplesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiProblemsTableTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiRouteCoverageTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidationEnabledTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidatorSelfTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/RouteListSnapshotTest.php');
 
 uses(TestCase::class)->in(dirname(__DIR__).'/packages/core/tests/Http/PreconditionsTest.php', dirname(__DIR__).'/packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php', dirname(__DIR__).'/packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php');
 uses(Vaulter\Integration\Tests\TestCase::class)->in(dirname(__DIR__).'/tests/Integration/Http/CrossTenantV1Test.php', dirname(__DIR__).'/tests/Integration/Http/HttpKernelV1Test.php', dirname(__DIR__).'/tests/Integration/Http/LegacyRoutesRemovedTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ErrorsReferenceTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/HostRouteUntouchedTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemCatalogLangTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemMetaRedactionTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemRendererTest.php', dirname(__DIR__).'/tests/Integration/Http/Problems/ProblemSpecRulesTest.php', dirname(__DIR__).'/tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php');
@@ -59,7 +63,7 @@ uses(WithoutDatabaseSchema::class)->in(dirname(__DIR__).'/tests/Integration/Http
 uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Observability/P83/P83UploadSessionActiveMetricsTest.php');
 uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Observability/P83/P83ActivityFeedMetricsTest.php', dirname(__DIR__).'/tests/Integration/Observability/P83/P83Section51MetricsTest.php', dirname(__DIR__).'/tests/Integration/Observability/P84/P84Section52HostMetricsTest.php', dirname(__DIR__).'/tests/Integration/Observability/P85/P85Section53CoreMetricsTest.php');
 
-uses(Vaulter\Integration\Tests\ObservabilityDocuments\P83DocumentsTestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/ObservabilityDocuments/P83DocumentsMetricsTest.php');
+uses(P83DocumentsTestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/ObservabilityDocuments/P83DocumentsMetricsTest.php');
 
 uses(TestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/packages/core/tests/Configuration/ScheduleFrequencyTest.php', dirname(__DIR__).'/packages/core/tests/Configuration/VaulterConfigTest.php', dirname(__DIR__).'/packages/core/tests/Console/CommandsReferenceCommandTest.php', dirname(__DIR__).'/packages/core/tests/Doctor/DoctorJsonSchemaTest.php', dirname(__DIR__).'/packages/core/tests/Doctor/DoctorRunnerTest.php', dirname(__DIR__).'/packages/core/tests/Feature/NodeCommentFeatureOffTest.php', dirname(__DIR__).'/packages/core/tests/Providers/BindingsRegistrarTest.php', dirname(__DIR__).'/packages/core/tests/Providers/EventsRegistrarTest.php', dirname(__DIR__).'/packages/core/tests/Support/TenantFootgunGuardTest.php');
 uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Console/InstallCommandTest.php');
@@ -78,9 +82,9 @@ uses(Vaulter\Integration\Tests\TestCase::class, RefreshDatabase::class)->in(dirn
 uses(TestCase::class, DatabaseMigrations::class)->in(dirname(__DIR__).'/packages/core/tests/Concurrency/ForkRaceTest.php');
 uses(Vaulter\Integration\Tests\TestCase::class, DatabaseMigrations::class)->in(dirname(__DIR__).'/tests/Integration/Concurrency/EventRecorderRollbackPgTest.php', dirname(__DIR__).'/tests/Integration/Concurrency/IdempotencyRaceTest.php', dirname(__DIR__).'/tests/Integration/Concurrency/OutboxFanoutRaceTest.php', dirname(__DIR__).'/tests/Integration/Concurrency/OutboxLateCommitTest.php', dirname(__DIR__).'/tests/Integration/Concurrency/OutboxLeaseTakeoverTest.php');
 
-uses(Vaulter\Integration\Tests\UlidTestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Ulid/UlidModeTest.php');
+uses(UlidTestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/Ulid/UlidModeTest.php');
 
-uses(Vaulter\Integration\Tests\TablePrefixTestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/TablePrefix/TablePrefixTest.php');
+uses(TablePrefixTestCase::class, RefreshDatabase::class)->in(dirname(__DIR__).'/tests/Integration/TablePrefix/TablePrefixTest.php');
 
 // The strategy unit + resolver tests boot the package under the bigint strategy;
 // the VaulterSchema shape tests run once per strategy from their own subfolders.
