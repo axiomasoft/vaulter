@@ -31516,6 +31516,24 @@
                     ],
                     "method": "BTREE",
                     "unique": false
+                }
+            },
+            "id": "index:v_node_comments.v_node_comments_node_id_fk_idx",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000301_create_v_node_comments_table.php",
+                "symbol": "v_node_comments"
+            },
+            "table": "v_node_comments"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "node_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
                 },
                 "pgsql": {
                     "definition": "(node_id)",
@@ -31924,6 +31942,24 @@
                     ],
                     "method": "BTREE",
                     "unique": false
+                }
+            },
+            "id": "index:v_node_shares.v_node_shares_node_id_fk_idx",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+                "symbol": "v_node_shares"
+            },
+            "table": "v_node_shares"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "node_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
                 },
                 "pgsql": {
                     "definition": "(node_id)",
@@ -32302,6 +32338,24 @@
                     ],
                     "method": "BTREE",
                     "unique": false
+                }
+            },
+            "id": "index:v_nodes.v_nodes_drive_id_fk_idx",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+                "symbol": "v_nodes"
+            },
+            "table": "v_nodes"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "drive_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
                 },
                 "pgsql": {
                     "definition": "(drive_id)",
@@ -32562,8 +32616,8 @@
             "engines": {
                 "mysql": {
                     "columns": [
-                        "drive_id",
-                        "((case when (`parent_id` is null) then 1 else NULL end))"
+                        "((case when (`parent_id` is null) then 1 else NULL end))",
+                        "drive_id"
                     ],
                     "method": "BTREE",
                     "unique": true
@@ -32625,8 +32679,8 @@
             "engines": {
                 "mysql": {
                     "columns": [
-                        "parent_id",
-                        "name_key_hash"
+                        "name_key_hash",
+                        "parent_id"
                     ],
                     "method": "BTREE",
                     "unique": true

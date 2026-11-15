@@ -13972,6 +13972,41 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:foreignkeyindex": {
+                    "kind": "method",
+                    "name": "foreignKeyIndex",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "table",
+                            "type": "Illuminate\\Database\\Schema\\Blueprint",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "column",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:hasforeignkey": {
                     "kind": "method",
                     "name": "hasForeignKey",

@@ -172,6 +172,19 @@ final class SchemaHelpers
         }
     }
 
+    /**
+     * A single-column index for a foreign key whose column also leads a composite index with a nullable part, on
+     * MySQL. InnoDB enforces a key through the first index that starts with its columns, and MySQL 9.7's SQL-layer
+     * checks skip a row whose entry in that index holds a NULL: through (node_id, revoked_at) an active share could
+     * name a node that does not exist. Declare it before the composite indexes; other engines check the key itself.
+     */
+    public function foreignKeyIndex(Blueprint $table, string $column): void
+    {
+        if ($this->dbConnection()->getDriverName() === 'mysql') {
+            $table->index($column, $table->getTable().'_'.$column.'_fk_idx');
+        }
+    }
+
     public function hasForeignKey(string $table, string $name): bool
     {
         foreach ($this->schemaConnection()->getForeignKeys($table) as $key) {

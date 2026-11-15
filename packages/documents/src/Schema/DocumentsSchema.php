@@ -118,6 +118,7 @@ final class DocumentsSchema implements ModuleSchema
         // The per-node comment feed (oldest-first listing): node_id is the scope,
         // created_at the cursor. Index names are derived from the table so a per-panel
         // prefixed table never collides.
+        $this->helpers->foreignKeyIndex(table: $table, column: 'node_id');
         $table->index(['node_id', 'created_at'], $name.'_node_created_idx');
 
         // Threading lookup: a parent's replies.
