@@ -118,6 +118,8 @@ it('evaluates a hub reference like the handle form and reports the drive as acti
     if ($archived) {
         $this->drive->archive();
     }
+    // Both forms stamp notAfter from the clock; a second boundary between them must not make them differ.
+    $this->freezeTime();
     $policy = app(CollaborationAccessPolicy::class);
 
     $decision = $policy->evaluateReference($this->context->actor, $this->node->driveId, $this->node->id, null, 'ref-1');
