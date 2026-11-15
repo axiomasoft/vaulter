@@ -519,7 +519,8 @@ final class ModuleUninstallCommand extends Command
         try {
             $schema = $connection->getSchemaBuilder();
             $incoming = [];
-            foreach ($schema->getTables() as $info) {
+            // The connection's own schema: without one, MySQL lists the tables of every database on the server.
+            foreach ($schema->getTables($schema->getCurrentSchemaName()) as $info) {
                 $table = (string) $info['name'];
                 if (in_array($table, $tables, true)) {
                     continue;
