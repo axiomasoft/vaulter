@@ -11,7 +11,7 @@ use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotentWrite;
 
 /**
- * Stage 4 of the operation pipeline: the idempotency claim (D25). `admit()` runs before the root
+ * Stage 4 of the operation pipeline: the idempotency claim. `admit()` runs before the root
  * transaction and refuses what the claim cannot serve; `around()` runs inside the root transaction
  * and either runs the attempt (recording its receipt) or answers from a committed receipt. A refusal
  * whose receipt was recorded comes back as a {@see CachedRefusal}, thrown by the runner after commit.

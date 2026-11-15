@@ -10,7 +10,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Operations\OperationsReference;
 
 /**
- * Prints the operation catalogue (D47) of every offered module: the concurrency and idempotency policy of each
+ * Prints the operation catalogue of every offered module: the concurrency and idempotency policy of each
  * mutating operation and the routes that run it. A Markdown table, or one JSON document with --json.
  */
 #[Internal]

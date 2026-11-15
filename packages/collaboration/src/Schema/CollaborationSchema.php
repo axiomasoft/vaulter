@@ -13,8 +13,8 @@ use Vaulter\Schema\SchemaHelpers;
 use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /**
- * The side tables the collaboration module owns (D26): the update log of a document generation, its committed receipts
- * and its head, and the permission versions of the drives (D46). The log tables reference the documents aggregate only;
+ * The side tables the collaboration module owns: the update log of a document generation, its committed receipts
+ * and its head, and the permission versions of the drives. The log tables reference the documents aggregate only;
  * the working state, the generation (`collab_epoch`) and the pending marker stay in v_documents and change through the
  * documents state contract. The permission versions reference nothing: a drive's key is a string, and the drive adds no
  * column for collaboration.
@@ -145,7 +145,7 @@ final class CollaborationSchema implements ModuleSchema
     }
 
     /**
-     * v_collaboration_permission_versions — one counter per scope of effective permissions (D46): `drive:<id>` for a
+     * v_collaboration_permission_versions — one counter per scope of effective permissions: `drive:<id>` for a
      * drive, `global` for every drive. The `collaboration.permissions` event sink increments it in the transaction of
      * drive.access.effective_permissions_changed; a session token carries the drive's and the global version it was
      * issued under, so a token older than either is known to predate a change of rights.

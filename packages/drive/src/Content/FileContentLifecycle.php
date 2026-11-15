@@ -166,7 +166,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         if (!$file instanceof File) {
             return;
         }
-        // Every revision's edges and pins go before the node's cascade deletes the rows (D23).
+        // Every revision's edges and pins go before the node's cascade deletes the rows.
         $this->links->detachAll($file->versions()->orderBy('id')->pluck('id')->all());
         $this->files->releaseHead($file);
     }

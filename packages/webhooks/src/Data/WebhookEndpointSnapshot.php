@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
- * An endpoint as a write answered it (D25, D47): everything its response shows except the signing secret, with the
+ * An endpoint as a write answered it: everything its response shows except the signing secret, with the
  * version of the moment. It is what a receipt stores and what the response is built from, so a replay answers the
  * same body as the first request. Built from a model that was just written, which is why the version is read from the
  * attribute the write set.

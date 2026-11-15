@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Modules\ModuleReferences;
 
 /**
- * The pins as references between modules, for `vaulter:module:uninstall` (D36, D23): a module keeps the pins of its
+ * The pins as references between modules, for `vaulter:module:uninstall`: a module keeps the pins of its
  * own owner types `<module>.*`; the pins of any other owner type on the media's blobs refuse the removal of the media,
  * whether their owner is installed or not (they are released only by the purge of their owner). Before the media's
  * schema is installed there are no pins.

@@ -82,7 +82,7 @@ final class ModuleApplier
     /**
      * Routes (each group behind `vaulter.module:<id>`, carrying the fingerprint), translations and the
      * publishable config of the active modules, then the boot of their container wiring. Migrations are not
-     * published: the kernel runs them from the package of the module that owns them (D40).
+     * published: the kernel runs them from the package of the module that owns them.
      *
      * @param Closure(array<string, string>, string): void $publishes registers publishable paths under a tag
      */

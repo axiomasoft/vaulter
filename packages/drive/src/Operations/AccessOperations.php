@@ -60,7 +60,7 @@ final readonly class AccessOperations implements Contract
     public function grant(NodeSnapshot|string|int $node, GrantInput $grant): GrantSnapshot
     {
         $nodeId = self::idOf($node);
-        // An append (D47(4)): no expected version; the receipt keeps the grant as created (D25).
+        // An append ((4)): no expected version; the receipt keeps the grant as created.
         $idempotency = new IdempotentWrite(
             codec: new AccessReceiptCodec,
             authorizer: AccessReplayAuthorizer::forGrants($this->context, $this->locator, $this->guard, $nodeId),

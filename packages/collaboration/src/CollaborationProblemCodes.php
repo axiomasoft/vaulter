@@ -38,7 +38,7 @@ final class CollaborationProblemCodes implements ProblemCodeSource
             // A managed disable drains the log (C10): the hub keeps the update and repeats it after the flag is released.
             'collaboration_draining' => new ProblemSpec(503, CollaborationDrainingException::class, Retryable::WithBackoff),
             'collaboration_epoch_mismatch' => new ProblemSpec(409, CollaborationEpochMismatchException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
-            // Protocol 2 (D26): a deployment mismatch and a refused update are answered the same however often they are sent.
+            // Protocol 2: a deployment mismatch and a refused update are answered the same however often they are sent.
             'collaboration_protocol_mismatch' => new ProblemSpec(409, CollaborationProtocolMismatchException::class),
             'collaboration_seed_conflict' => new ProblemSpec(409, CollaborationSeedConflictException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             // The host's configuration decides, not the request: waiting does not help and a receipt would outlive a config change.

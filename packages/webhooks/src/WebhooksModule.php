@@ -22,7 +22,7 @@ use Vaulter\Webhooks\Security\BlockedRangesInvariant;
 use Vaulter\Webhooks\Security\SchemesInvariant;
 
 /**
- * The webhooks module (D22): the manifest of the vaulter-webhooks package, offered by its provider. Opt-in,
+ * The webhooks module: the manifest of the vaulter-webhooks package, offered by its provider. Opt-in,
  * because it opens outbound network traffic; it needs no secret configuration, so activating it without
  * any is not an error. It relays drive events, so it requires the drive module. Its REST routes, commands,
  * schedule, doctor check, problem codes, tables and `vaulter-webhooks.*` configuration go with it.
@@ -70,7 +70,7 @@ final class WebhooksModule implements OwnsSchema, VaulterModule
             )
             ->schedule(WebhooksSchedule::class)
             ->bindings(WebhooksBindings::class)
-            // Its outbox consumer turns external events into deliveries (D29).
+            // Its outbox consumer turns external events into deliveries.
             ->slot(OutboxConsumer::class, WebhookFanoutConsumer::class, WebhookFanoutConsumer::ID)
             ->slot(DoctorCheck::class, WebhooksDeliveriesCheck::class, 'core.webhooks.deliveries', key: 'core.webhooks.deliveries')
             ->slot(ProductionInvariant::class, SchemesInvariant::class, 'webhooks.schemes', key: 'webhooks.schemes')

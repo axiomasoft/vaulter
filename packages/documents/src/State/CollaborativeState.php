@@ -13,7 +13,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 
 /**
- * The one way a realtime transport changes the state documents own (D26, D27): the generation (`collab_epoch`), the
+ * The one way a realtime transport changes the state documents own: the generation (`collab_epoch`), the
  * state version, the binary checkpoint with its JSON projection, and the pending-state marker. The transport keeps
  * its log in tables of its own and never writes `v_documents`.
  *

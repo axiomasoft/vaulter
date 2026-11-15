@@ -22,7 +22,7 @@ use Vaulter\Http\Support\Preconditions;
 use Vaulter\Http\Support\RepresentationTag;
 
 /**
- * The entity tags of the drive aggregates with a version of their own (D47, CC2) and what a conditional write of one
+ * The entity tags of the drive aggregates with a version of their own (CC2) and what a conditional write of one
  * expects: the access of a node (`grants.index`, its grants and inheritance), a share link, a drive.
  *
  * As for nodes ({@see NodeResponses::expectedSequence()}), the If-Match header is compared only after the resource was

@@ -8,7 +8,7 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 
 /**
- * The pending-state marker of a document (D26): edits of collaboration generation `$generation` up to the log sequence
+ * The pending-state marker of a document: edits of collaboration generation `$generation` up to the log sequence
  * `$throughSeq` are committed but not in the working state yet. While a document carries it, its JSON projection and
  * binary checkpoint are stale, so documents neither serves nor replaces them (409 `document_state_pending`).
  * Ids are strings, the way every public id is compared.

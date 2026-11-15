@@ -19,7 +19,7 @@ use Vaulter\Operations\Operation;
 use Vaulter\Operations\OperationClaim;
 
 /**
- * Stage 4 of the operation pipeline (D25, ADR-0029), inside the root transaction of a keyed write:
+ * Stage 4 of the operation pipeline (docs/adr/0029-idempotency.md), inside the root transaction of a keyed write:
  *
  * - claim the scope digest first (an uncommitted row; a concurrent request waits on it, at most two seconds);
  * - a committed receipt with another request hash or another stored tuple → `idempotency_key_reused`;

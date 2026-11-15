@@ -7,7 +7,7 @@ namespace Vaulter\Attributes;
 use Attribute;
 
 /**
- * Not part of the supported surface (D27): a type that no host should name, or a member of an `#[Api]` type that the
+ * Not part of the supported surface: a type that no host should name, or a member of an `#[Api]` type that the
  * host must not call (a technical constructor, a hook for the package's own code). It may change in any release.
  */
 #[Api]

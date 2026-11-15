@@ -10,7 +10,7 @@ use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * The reader-bound sync identity of the change feed (PLAN4.D20): the typed principal a
+ * The reader-bound sync identity of the change feed: the typed principal a
  * cursor is bound to and the opaque sync_key of a node as one reader sees it.
  *
  * Every field is length-prefixed, lp(b) = uint32_be(strlen(b)) || b, never joined by a

@@ -9,7 +9,7 @@ use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 
 /**
- * Binds the Pest groups of one suite from its `groups.php` (PLAN3 P1.5). Every suite keeps ONE declarative file next to its
+ * Binds the Pest groups of one suite from its `groups.php`. Every suite keeps ONE declarative file next to its
  * tests: `return ['database' => [paths], 'serial' => [paths], 'extended' => [...], 'stand' => [...], 'engine:server' => [...]]`,
  * paths relative to that tests directory (a test file or a directory). This class turns each declared group into the Pest groups
  * the runner and the CI lanes select by:

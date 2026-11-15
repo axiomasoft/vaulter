@@ -12,7 +12,7 @@ use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\SessionChecks;
 
 /**
- * Protocol 2 renewal (D26): the hub asks, before a connection's token expires, for a new one. Body `{room}` with the
+ * Protocol 2 renewal: the hub asks, before a connection's token expires, for a new one. Body `{room}` with the
  * current token as the bearer. The rights are checked now: the answer `{token, room, generation, scope (read|write),
  * mode (ro|rw), exp, jti, permissions_version: {drive, global}}` carries a new exp of `hub.token_ttl` from now and a
  * scope no wider than the old token's or the subject's rights now (a writer who lost Edit is renewed read-only); a

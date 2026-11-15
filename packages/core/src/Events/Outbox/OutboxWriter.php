@@ -20,7 +20,7 @@ use Vaulter\Events\SinkWriter;
 use Vaulter\Kernel;
 
 /**
- * The synchronous half of the outbox (D29): {@see EventRecorder} calls it last, inside the transaction of the
+ * The synchronous half of the outbox: {@see EventRecorder} calls it last, inside the transaction of the
  * operation, for every event — whatever modules are active. It writes the v_outbox row (unique by event_id: a
  * replayed occurrence writes nothing) and a pending delivery row for each outbox consumer of the sealed
  * registry that subscribes to the type. Consumer rows (v_outbox_consumers) are not read here: a consumer the

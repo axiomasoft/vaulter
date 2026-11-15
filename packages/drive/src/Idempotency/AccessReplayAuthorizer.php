@@ -21,7 +21,7 @@ use Vaulter\Idempotency\ResourceRef;
 
 /**
  * The current authorization of a replayed write on the access of a node — its grants, its inheritance, its share
- * links (D25, ID2) — with the same guard as the write itself, on the node the receipt names (a revocation: the node
+ * links (ID2) — with the same guard as the write itself, on the node the receipt names (a revocation: the node
  * recorded in its receipt, since the grant is gone). A node that is trashed, gone or invisible now, a revoked Manage
  * or Share, an archived drive: the replay is refused exactly as a new request would be, and the stored result —
  * a share token included — is not returned.

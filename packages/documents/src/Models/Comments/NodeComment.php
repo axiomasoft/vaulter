@@ -47,7 +47,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 #[Internal]
 class NodeComment extends Model
 {
-    /** The aggregate of the operation catalogue the refusal of a stale comment write names (D47). */
+    /** The aggregate of the operation catalogue the refusal of a stale comment write names. */
     public const string AGGREGATE = 'documents.comment';
 
     use GuardsWrites;

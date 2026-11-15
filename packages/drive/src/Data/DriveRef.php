@@ -11,7 +11,7 @@ use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
 use Vaulter\Support\Identity;
 
 /**
- * A drive by its id, as a host names one on the way in (D27): from a snapshot, a handle or the bare id. Vaulter loads
+ * A drive by its id, as a host names one on the way in: from a snapshot, a handle or the bare id. Vaulter loads
  * the drive itself; the reference carries nothing else.
  */
 #[Api]

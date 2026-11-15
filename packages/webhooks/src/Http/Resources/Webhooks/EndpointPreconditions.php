@@ -16,7 +16,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
 
 /**
- * What a conditional write of an endpoint (update, deactivate, rotate-secret, delete) expects (D47, CC2): the version
+ * What a conditional write of an endpoint (update, deactivate, rotate-secret, delete) expects (CC2): the version
  * in the endpoint's tag.
  *
  * As for the other versioned aggregates, the If-Match header is compared only after the caller was seen to hold the

@@ -14,7 +14,7 @@ use Vaulter\Idempotency\ReceiptCodec;
 use Vaulter\Idempotency\ResourceRef;
 
 /**
- * The receipt of a grant write (D25): `grant` — the {@see GrantSnapshot} of drive.access.grant, field by field, so a
+ * The receipt of a grant write: `grant` — the {@see GrantSnapshot} of drive.access.grant, field by field, so a
  * replay returns what the first request returned; `revoke` — the {@see RevokeReceipt} of drive.access.revoke, ids and
  * the node the right was proven on only. Both are about the node, which a replay authorizes again. Version 1.
  */

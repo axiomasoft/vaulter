@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Webhooks\Contracts\HostResolver;
 
 /**
- * A deterministic {@see HostResolver} for the SSRF-guard tests (§2.11 / F-P1.7-01):
+ * A deterministic {@see HostResolver} for the SSRF-guard tests:
  * no real DNS, no sockets. An IP-literal host resolves to itself (mirroring the real
  * resolver), a mapped host resolves to the configured list, and every other host
  * resolves to a public address by default — so an ordinary delivery to a test host

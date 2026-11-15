@@ -32,7 +32,7 @@ use Vaulter\Tenancy\Tenancy;
 /**
  * One resumable step of purging a drive that is being deleted: open uploads
  * are aborted, up to BATCH children of the root go one by one — each as its own
- * root operation `drive.trash.purge` (D48) through PurgeNodeAction as the system actor 'drive-purge', the same
+ * root operation `drive.trash.purge` through PurgeNodeAction as the system actor 'drive-purge', the same
  * lifecycle, CAS and quota path as an ordinary purge — and when the root has no
  * children left one last transaction removes the root, the drive's change journal and
  * the drive row. Activity and outbox rows stay as history. Safe to repeat after any crash.
@@ -73,7 +73,7 @@ final readonly class PurgeDriveStepAction
                 return $this->finish($context, null);
             }
             $children = $nodeClass::query()->where('drive_id', $drive->getKey())->where('parent_id', $root->getKey())->orderBy('id')->limit(self::BATCH)->get();
-            // One root operation per child (D48): the documents drain runs before its transaction. A child that stays
+            // One root operation per child: the documents drain runs before its transaction. A child that stays
             // refused (document_state_pending after the drain) rolls back only itself; the others still go, and the
             // first refusal is raised once the batch is done, so the step is repeated.
             $refusal = null;
@@ -125,7 +125,7 @@ final readonly class PurgeDriveStepAction
                 return false;
             }
             // The revisions left on the drive (none after the node purges, unless a node was out of the root's
-            // subtree) lose their edges and pins before the cascade of the drive row would drop them (D23).
+            // subtree) lose their edges and pins before the cascade of the drive row would drop them.
             $files = $this->config->model('file')::query()->select('id')
                 ->whereIn('node_id', $nodeClass::query()->select('id')->where('drive_id', $drive->getKey()));
             $this->links->detachAll($this->config->model('file_revision')::query()->whereIn('file_id', $files)->orderBy('id')->pluck('id')->all());

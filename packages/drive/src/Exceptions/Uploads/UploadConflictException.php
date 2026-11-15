@@ -57,7 +57,7 @@ final class UploadConflictException extends VaulterException implements ProblemE
     }
 
     /**
-     * The completion request spent its finite budget (D19) before the commit was
+     * The completion request spent its finite budget before the commit was
      * published. Nothing was published; the session stays Assembled with its
      * staged bytes, so the same completion may be repeated.
      */
@@ -70,7 +70,7 @@ final class UploadConflictException extends VaulterException implements ProblemE
         );
     }
 
-    /** The staged storage stream cannot take a transport timeout, so its blocking reads are unbounded (D19). */
+    /** The staged storage stream cannot take a transport timeout, so its blocking reads are unbounded. */
     public static function forUnboundedStorage(string $uploadId, string $stream): self
     {
         return new self(

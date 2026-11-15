@@ -13,7 +13,7 @@ use Vaulter\Drive\Enums\Access\Ability;
  * A hub call's room as it stands now: the live document behind the token, the
  * caller's current highest ability on it (null: not even View), whether its drive is
  * active (an archived drive is read-only), whether the room may write at this moment, and
- * whether the token predates a change of rights of its drive (D46: the rights above were
+ * whether the token predates a change of rights of its drive (the rights above were
  * checked anyway; the hub renews such a session at once).
  */
 #[Internal]

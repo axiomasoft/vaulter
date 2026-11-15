@@ -9,8 +9,8 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 
 /**
- * How the owner of an idempotent operation stores its result in a receipt and restores it on a replay (D25,
- * ADR-0029). Versioned: a stored body is decoded with the version it was written with, and an unknown version
+ * How the owner of an idempotent operation stores its result in a receipt and restores it on a replay (
+ * docs/adr/0029-idempotency.md). Versioned: a stored body is decoded with the version it was written with, and an unknown version
  * throws instead of guessing. A receipt of a destructive operation keeps only ids and status, never content.
  */
 #[Spi(SpiKind::Implement)]

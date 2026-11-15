@@ -11,7 +11,7 @@ use Vaulter\Events\Concerns\DescribesEvent;
 use Vaulter\Events\EventTypeContract;
 
 /**
- * The event types of the drive module (D38), contributed to the event catalogue by the drive manifest.
+ * The event types of the drive module, contributed to the event catalogue by the drive manifest.
  * Dotted, namespaced values (folder.created,
  * file.uploaded, …) are the stored identities: the activity verb, the journal type and the outbox type.
  */

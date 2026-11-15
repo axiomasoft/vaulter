@@ -16,7 +16,7 @@ use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Support\Preconditions;
 
 /**
- * What a conditional write of a comment (resolve, delete) expects (D47, CC2): the version in the comment's tag.
+ * What a conditional write of a comment (resolve, delete) expects (CC2): the version in the comment's tag.
  *
  * As for the other versioned aggregates, the If-Match header is compared only after the comment was found as this
  * caller (404) and the caller was seen to hold the ability the write needs (403); then it is required (428 without it

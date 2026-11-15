@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Activity\Activity;
 
 /**
- * Builders for the M2c-activity feed tests (§2.9): inspect the append-only rows the
+ * Builders for the feed tests: inspect the append-only rows the
  * ActivityRecorder writes. The recorder is event-driven, so most tests act through
  * the Drive surface and then assert the ONE row that fell out (anti-NC-fan-out).
  */

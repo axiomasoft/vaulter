@@ -12,7 +12,7 @@ use Vaulter\Events\Outbox\ConsumerState;
 use Vaulter\Events\Outbox\OutboxStore;
 
 /**
- * An outbox consumer detached after its hold left a gap of events it never received (D29): an error until the
+ * An outbox consumer detached after its hold left a gap of events it never received: an error until the
  * range is replayed or the loss acknowledged with vaulter:relay:replay. A paused consumer, which still holds
  * retention, is a warning.
  */

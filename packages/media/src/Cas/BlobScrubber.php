@@ -20,11 +20,11 @@ use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Support\Identity;
 
 /**
- * The integrity scrub of the CAS (D49): reads the object of a sample of committed, not chunked blobs through the
+ * The integrity scrub of the CAS: reads the object of a sample of committed, not chunked blobs through the
  * StorageDriver as a stream and compares its size and sha256 with the row. A missing object, a wrong size or a wrong
  * digest sets integrity_failed_at (the blob is no longer handed out); a clean check only moves integrity_checked_at.
  *
- * It never deletes bytes, pins or rows and writes no table of the drive (D28): the mark is media's own state, and only
+ * It never deletes bytes, pins or rows and writes no table of the drive: the mark is media's own state, and only
  * an ingest of the same bytes lifts it (BlobStore). Reading every object of an object store is expensive, so a run is
  * bounded by a sample and a budget — the first of limit, max bytes and max seconds that is used up ends it — and takes
  * the blobs never checked first, then the least recently checked. A dry run reads the same bytes and writes nothing.

@@ -31,7 +31,7 @@ final readonly class FolderOperations implements Contract
     {
         $options ??= new CreateFolderOptions;
         $parentId = $parent instanceof NodeSnapshot ? $parent->id : ($parent === null ? null : (string) $parent);
-        // Idempotent by key (D25): the receipt is the snapshot; a replay needs Create where the folder is now.
+        // Idempotent by key: the receipt is the snapshot; a replay needs Create where the folder is now.
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
             authorizer: NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $parentId),

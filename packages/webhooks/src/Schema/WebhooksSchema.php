@@ -83,7 +83,7 @@ final class WebhooksSchema implements ModuleSchema
         $table->timestamp('disabled_at')->nullable();
         // 'failing' (auto-disabled) or 'manual'.
         $table->string('disabled_reason', 32)->nullable();
-        // The endpoint's own version (D47, CC2): update, deactivate, secret rotation and deletion are conditional on it
+        // The endpoint's own version (CC2): update, deactivate, secret rotation and deletion are conditional on it
         // (If-Match); each raises it with UPDATE … WHERE version = ?.
         $this->helpers->counterColumn(table: $table, column: 'version');
         $table->timestamps();

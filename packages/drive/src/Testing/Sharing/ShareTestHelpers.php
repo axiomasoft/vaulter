@@ -17,7 +17,7 @@ use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Support\ShareToken;
 
 /**
- * Builders for the M2c bearer-share tests (§2.7): write a share row directly with a
+ * Builders for the bearer-share tests: write a share row directly with a
  * known raw token (so a test can present it) while the DB stores only the hash +
  * prefix, exactly as the Action does. Keeps the resolver/HTTP tests focused on
  * behaviour, not row plumbing.

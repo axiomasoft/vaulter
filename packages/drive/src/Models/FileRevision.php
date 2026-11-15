@@ -27,7 +27,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 /**
  * An immutable file version: a monotonic number per file
  * pointing at a content-addressed blob (or a chunk manifest). The version ↔ blob
- * edges in v_file_revision_blobs carry the media pins (D23). Swappable via
+ * edges in v_file_revision_blobs carry the media pins. Swappable via
  * configuration key vaulter-drive.models.file_revision.
  *
  * @property int                  $scan_admission_sequence
@@ -112,7 +112,7 @@ class FileRevision extends Model
     }
 
     /**
-     * Every blob this version references through the edge table (each edge pinned, D23).
+     * Every blob this version references through the edge table (each edge pinned).
      *
      * @return BelongsToMany<Blob, $this, FileRevisionBlob>
      */

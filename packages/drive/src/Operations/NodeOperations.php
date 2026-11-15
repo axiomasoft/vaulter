@@ -75,7 +75,7 @@ final readonly class NodeOperations implements Contract
     public function rename(NodeSnapshot|string|int $node, string $name, ?int $expectedSequence = null): NodeSnapshot
     {
         $nodeId = self::idOf($node);
-        // Idempotent by key (D25): the receipt is the snapshot; a replay needs Edit on the node where it is now.
+        // Idempotent by key: the receipt is the snapshot; a replay needs Edit on the node where it is now.
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
             authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
@@ -89,7 +89,7 @@ final readonly class NodeOperations implements Contract
     {
         $options ??= new MoveOptions;
         $nodeId = self::idOf($node);
-        // Idempotent by key (D25): a replay needs Move on the node where it is now and Create in the folder it is in now
+        // Idempotent by key: a replay needs Move on the node where it is now and Create in the folder it is in now
         // (architecture#operation-chains), so a node moved on into a folder the actor cannot see is refused, not replayed.
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
@@ -109,7 +109,7 @@ final readonly class NodeOperations implements Contract
     {
         $options ??= new CopyOptions;
         $destinationId = $destination === null ? null : self::idOf($destination);
-        // Idempotent by key (D25): the receipt is the copy's snapshot; a replay needs Create in the folder the copy is in now.
+        // Idempotent by key: the receipt is the copy's snapshot; a replay needs Create in the folder the copy is in now.
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
             authorizer: NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $destinationId),

@@ -45,8 +45,8 @@ use Vaulter\Support\Identity;
  * A comment id is resolved only inside the addressed node, so another node's comment
  * is "not found" (comment_not_found). The drive profile must enable comments.
  *
- * Every write is idempotent by key (D25): the receipt is the comment, or for a deletion the ids and the basis the right
- * was proven on, never the body. A comment has a version of its own (D47, CC2), which a resolution raises: pass
+ * Every write is idempotent by key: the receipt is the comment, or for a deletion the ids and the basis the right
+ * was proven on, never the body. A comment has a version of its own (CC2), which a resolution raises: pass
  * CommentSnapshot::$version back as the expected version of resolve() and delete() to refuse a write on a comment that
  * changed or went since it was read (412 stale_write).
  */

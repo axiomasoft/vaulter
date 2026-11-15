@@ -30,8 +30,8 @@ use Vaulter\ValueObjects\Access\Actor;
  * DocumentOperations; instead every call re-reads what the token was issued for: the node still exists, is not in the
  * trash, belongs to the token's drive and tenant, the drive is active (archived: read-only), the room's epoch is the
  * document's current one, and the token subject's rights now. A revoked Edit therefore takes effect on the hub's next
- * call, whatever the permission versions say (D26); a token older than its drive's or the global permission version
- * (D46) is marked stale, so the hub renews it at once.
+ * call, whatever the permission versions say; a token older than its drive's or the global permission version
+ * is marked stale, so the hub renews it at once.
  */
 #[Internal]
 final readonly class CollaborationHub

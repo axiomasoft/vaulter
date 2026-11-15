@@ -16,7 +16,7 @@ use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Modules\ModuleState;
 
 /**
- * The compiled module graph of the application (ADR-0027): which modules are active, what they
+ * The compiled module graph of the application (docs/adr/0027-kernel-boundaries-and-modules.md): which modules are active, what they
  * provide and contribute. Sealed once by the core provider before any provider boots; an invalid
  * graph activates nothing and every read of capabilities or slots throws {@see ModuleGraphException}.
  */

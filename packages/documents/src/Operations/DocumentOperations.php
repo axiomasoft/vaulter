@@ -87,12 +87,12 @@ use Vaulter\Operations\OperationSpec;
  * document_type_unavailable until the type is registered again. Content that reads only partly under its type
  * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
  *
- * Every write but the autosave is idempotent by key (D25): the receipt is the created node, the document state or the
+ * Every write but the autosave is idempotent by key: the receipt is the created node, the document state or the
  * checkpoint the first request answered. The HTTP autosave (updateContent) is conditional instead: its repeat after the
  * commit carries a stale state version and answers 412 without a second revision.
  *
  * A document with saved collaboration edits its working state does not hold yet (the pending-state
- * marker, D26) is first drained through the collaboration transport; while the marker stays, its
+ * marker) is first drained through the collaboration transport; while the marker stays, its
  * working state is neither read, exported nor replaced or restored: 409 document_state_pending.
  */
 #[Api]

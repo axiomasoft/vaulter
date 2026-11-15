@@ -14,7 +14,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Outbox\Exceptions\LeaseLostException;
 
 /**
- * The tables of the outbox (D29) as the relay reads and writes them: v_outbox, the consumer rows and the
+ * The tables of the outbox as the relay reads and writes them: v_outbox, the consumer rows and the
  * delivery rows. Every state change a worker makes on a row it leased is fenced by the lease generation it
  * leased with; a write that matches no row means the lease was taken over and the result is discarded.
  *
@@ -278,7 +278,7 @@ final readonly class OutboxStore
     }
 
     /**
-     * Detaches every consumer paused since before `$pausedBefore` (D29): its open rows become dead, and a durable one
+     * Detaches every consumer paused since before `$pausedBefore`: its open rows become dead, and a durable one
      * records the range it missed as an explicit gap. Returns consumer id => events in the gap (0 for an ephemeral
      * consumer).
      *
@@ -335,7 +335,7 @@ final readonly class OutboxStore
     }
 
     /**
-     * Retention (D29): deletes an event older than `$eventsBefore` only when no delivery row of it is open and every
+     * Retention: deletes an event older than `$eventsBefore` only when no delivery row of it is open and every
      * durable consumer that is not detached reconciled past it (a paused one holds it until it is detached); then
      * the done rows of deleted events, and the dead rows older than `$deadBefore`.
      *

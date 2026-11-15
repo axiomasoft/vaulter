@@ -21,7 +21,7 @@ final readonly class UpdateNodeController
     public function __invoke(RenameNodeRequest $request, string $node): JsonResponse
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        // A retry under its Idempotency-Key repeats the If-Match of the first request (D25): the operation answers it from the receipt.
+        // A retry under its Idempotency-Key repeats the If-Match of the first request: the operation answers it from the receipt.
         $expected = $this->nodes->expectedSequenceForReplay($request, $drive, $node, Ability::Edit);
 
         return $this->nodes->respond($drive, $drive->nodes()->rename($node, $request->name(), $expected));

@@ -25,9 +25,9 @@ use Vaulter\Modules\RemovalGuard;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * Plans, and on `--force` performs, the removal of a module's schema (D36): its migrations and tables, the installed
- * modules that require it, the foreign keys other owners hold on its tables, the references (media pins, D23) kept on
- * its data or by it, and what its removal guard reports (the collaboration edits not in a checkpoint yet, D26). A dry
+ * Plans, and on `--force` performs, the removal of a module's schema: its migrations and tables, the installed
+ * modules that require it, the foreign keys other owners hold on its tables, the references (media pins) kept on
+ * its data or by it, and what its removal guard reports (the collaboration edits not in a checkpoint yet). A dry
  * run by default. `--force` rolls back the migrations of the module's own schema paths (newest first) — only while its
  * tables hold no row and it keeps no reference; `--purge` (with `--force`) first deletes its rows and releases its own
  * references. It never drops, deletes or releases anything of another owner, and disabling a module never calls it.
@@ -421,7 +421,7 @@ final class ModuleUninstallCommand extends Command
     /**
      * The module `$id` and the modules it requires, directly or not, with their manifest classes: the holders of the
      * references it may keep or that are kept on its data (a reference, like a foreign key, points along a Composer
-     * dependency, D6), and the guards of its removal.
+     * dependency), and the guards of its removal.
      *
      * @param  list<ModuleState>                          $modules
      * @return array<string, class-string<VaulterModule>> module id => manifest class

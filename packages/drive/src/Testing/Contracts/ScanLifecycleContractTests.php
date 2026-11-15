@@ -220,7 +220,7 @@ final class ScanLifecycleContractTests
     }
 
     /**
-     * (d) Webhooks are an unrelated, opt-in module (D22): scanning works whether the host activated it or not
+     * (d) Webhooks are an unrelated, opt-in module: scanning works whether the host activated it or not
      * (a default installation has it off).
      */
     private function assertWebhooksDoNotSwitchScanning(Model&Authorizable $actor): void

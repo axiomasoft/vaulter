@@ -11,7 +11,7 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 
 /**
- * The only way an {@see OutboxConsumer} changes a core table (D29): its resume cursor on the delivery row it
+ * The only way an {@see OutboxConsumer} changes a core table: its resume cursor on the delivery row it
  * holds, fenced by the lease generation the relay leased it with. A consumer that loses its lease (a takeover
  * after the lease expired) sees {@see saveContinuation()} return false and must stop: whatever it writes after
  * that is not accepted.

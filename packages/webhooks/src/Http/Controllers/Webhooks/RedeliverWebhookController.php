@@ -20,7 +20,7 @@ use Vaulter\Webhooks\WebhookEndpointWrites;
 
 /**
  * Queue a finished (delivered or dead) delivery again; 202, the send happens later. With an Idempotency-Key the write is
- * a receipt operation (D25): a retry under the same key answers with the delivery as it is now and queues nothing, so a
+ * a receipt operation: a retry under the same key answers with the delivery as it is now and queues nothing, so a
  * lost answer does not send the webhook a second time.
  */
 #[Internal]

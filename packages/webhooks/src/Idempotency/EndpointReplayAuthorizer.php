@@ -14,7 +14,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
 
 /**
- * The current authorization of a replayed endpoint write (D25, ID2), with the same gate as the write itself: the
+ * The current authorization of a replayed endpoint write (ID2), with the same gate as the write itself: the
  * `manage` ability on endpoints, checked now — a revoked ability refuses the replay as it would a new request, and
  * the stored result, a signing secret included, is not returned.
  *

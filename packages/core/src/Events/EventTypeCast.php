@@ -11,7 +11,7 @@ use Vaulter\Attributes\Internal;
 
 /**
  * A stored event type value read back as the {@see EventTypeContract} case of the module that declares it.
- * A module switched off still resolves its values, so the rows it recorded stay readable (D22).
+ * A module switched off still resolves its values, so the rows it recorded stay readable.
  *
  * @implements CastsAttributes<EventTypeContract, EventTypeContract|string>
  */

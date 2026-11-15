@@ -12,7 +12,7 @@ use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 
 /**
- * The pins per owner type (D23). The module of an owner type is its prefix (`drive.revision_blob` → drive). Pins of a
+ * The pins per owner type. The module of an owner type is its prefix (`drive.revision_blob` → drive). Pins of a
  * module that is not active stay and keep their blobs from the garbage collector — that is the contract, so it is a
  * warning that names the owner: only the owner's own purge or rollback releases them, never a generic command.
  */

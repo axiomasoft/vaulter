@@ -18,7 +18,7 @@ use Vaulter\Support\Identity;
 
 /**
  * Blob reconciliation: ref_count is a CACHE, not the truth, so it drifts and
- * must be rebuilt from the pins (v_blob_references, D23) — the real liveness
+ * must be rebuilt from the pins (v_blob_references) — the real liveness
  * source; the recount runs under the same per-(scope,sha256) lock as a pin, so it
  * never caches a count a concurrent pin is changing. Reconciliation
  * also surfaces the two integrity hazards a CAS must watch, the inverse images of

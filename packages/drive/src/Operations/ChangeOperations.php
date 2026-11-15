@@ -39,14 +39,14 @@ use Vaulter\Support\Identity;
 /**
  * The change journal of a drive as one reader sees it. A syncing
  * client first takes startCursor() (C0), only then lists the drive, and from then on
- * applies list() pages from C0 instead of listing again (PLAN4.D20): changes made while
+ * applies list() pages from C0 instead of listing again: changes made while
  * it listed are caught up by the feed.
  *
  * Entries are filtered by the reader's current access with the same exact resolver the
  * listing uses: an upsert of a node the reader may see carries its current snapshot; an
  * upsert of a node the reader cannot see is a remove when a move or an access change
  * explains why it disappeared, and is skipped otherwise. A remove carries no snapshot, no
- * node id and no reason, only the reader-scoped sync key of the node (PLAN4.D20).
+ * node id and no reason, only the reader-scoped sync key of the node.
  */
 #[Api]
 final readonly class ChangeOperations
@@ -230,7 +230,7 @@ final readonly class ChangeOperations
     }
 
     /**
-     * The cursor deadline (PLAN4.D20): the smallest of the latched one, issued_at plus
+     * The cursor deadline: the smallest of the latched one, issued_at plus
      * the current cap (never now plus it) and the earliest expiry of a live grant of
      * this reader's subject-set in the drive. A permanent grant or none adds no bound.
      */

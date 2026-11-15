@@ -85,7 +85,7 @@ final readonly class DeleteFileRevisionAction
                 $this->drives->adjustUsedBytes(storage: $context->drive, delta: -$locked->size_bytes);
             }
 
-            // The edges and their pins go before the row: the cascade would leave the pins behind (D23).
+            // The edges and their pins go before the row: the cascade would leave the pins behind.
             $this->links->detachAll([$locked->id]);
 
             $this->revisions->delete($locked);

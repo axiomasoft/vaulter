@@ -332,7 +332,7 @@ final readonly class IngestFileAction
     }
 
     /**
-     * Link the revision to its blob: edge + pin (D23). The pin is refused only when the bytes went with a sweep
+     * Link the revision to its blob: edge + pin. The pin is refused only when the bytes went with a sweep
      * between the commit and the pin; this upload still holds them, so it commits them again — the row is
      * resurrected and the object promoted under the same lock — and pins that.
      *

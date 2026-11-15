@@ -14,7 +14,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Support\Identity;
 
 /**
- * The drive's links between a file revision and its blobs (D23): the edge in v_file_revision_blobs and the media pin
+ * The drive's links between a file revision and its blobs: the edge in v_file_revision_blobs and the media pin
  * that keeps the blob alive, always written together inside the caller's transaction — the only writer of that edge
  * table. Lock order: the caller's drive locks (tree, node, file, revision) come first, then the pin takes the lock of
  * the blob.

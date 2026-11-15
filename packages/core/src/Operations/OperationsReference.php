@@ -7,7 +7,7 @@ namespace Vaulter\Operations;
 use Vaulter\Attributes\Internal;
 
 /**
- * Renders the operation catalogue (D47): one row per mutating operation with its module, aggregate, concurrency
+ * Renders the operation catalogue: one row per mutating operation with its module, aggregate, concurrency
  * and idempotency policy and REST routes — as a Markdown table for the reference docs, or as data for `--json`.
  */
 #[Internal]

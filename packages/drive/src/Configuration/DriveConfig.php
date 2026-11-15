@@ -170,7 +170,7 @@ final readonly class DriveConfig implements ScanWorkSettings
 
     /**
      * The class of a model the host may swap (`vaulter-drive.models.<key>`), checked against the shipped model. The
-     * blob model is the media package's (D6): its key lives in `vaulter-media.models.blob`.
+     * blob model is the media package's: its key lives in `vaulter-media.models.blob`.
      *
      * @throws InvalidConfigurationException when the key names no drive model or the class does not extend the shipped one
      *
@@ -318,7 +318,7 @@ final readonly class DriveConfig implements ScanWorkSettings
         return max($bytes, 0);
     }
 
-    /** The finite completion budget (D19): 1..300 s, default 60, across all DB retries of one request. */
+    /** The finite completion budget: 1..300 s, default 60, across all DB retries of one request. */
     public function completeTimeoutSeconds(): int
     {
         $value = $this->config->get(key: 'vaulter-drive.uploads.resumable.complete_timeout_seconds', default: 60);

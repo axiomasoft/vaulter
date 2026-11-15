@@ -13,7 +13,7 @@ use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
 
 /**
- * The drive's activity feed as an event sink (`drive.activity`, D38): one row per occurrence of a type whose
+ * The drive's activity feed as an event sink (`drive.activity`): one row per occurrence of a type whose
  * spec has `activity`, while `vaulter-drive.features.activity` is on.
  */
 #[Internal]

@@ -12,7 +12,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
  * The version ↔ blob edge: which blobs a revision is made of. The edge's media
- * pin (D23, written with it by RevisionBlobLinks) keeps the blob alive; the table
+ * pin (written with it by RevisionBlobLinks) keeps the blob alive; the table
  * is never soft-deleted and its composite primary key is (file_revision_id,
  * blob_id, role, ordinal). Swappable via configuration key
  * vaulter-drive.models.file_revision_blob.

@@ -11,7 +11,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Events\Outbox\OutboxRelay;
 
 /**
- * Outbox retention (D29): deletes events older than vaulter.outbox.retention_seconds that have no open delivery
+ * Outbox retention: deletes events older than vaulter.outbox.retention_seconds that have no open delivery
  * and that every durable consumer not detached has reconciled past (a paused consumer holds them until its hold
  * ends), the done deliveries of deleted events, and dead deliveries older than dead_retention_seconds. Scheduled
  * hourly.

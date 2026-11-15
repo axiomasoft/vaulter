@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * The effective permissions of a node, a subtree, a drive or of every drive changed (D26): a grant or a share came or
+ * The effective permissions of a node, a subtree, a drive or of every drive changed: a grant or a share came or
  * went, a node stopped inheriting, moved, went to the trash, came back or was purged, a drive was archived, unarchived
  * or deleted, or the host told the drive its roles, policy or tenants changed ({@see AccessInvalidation}). It is
  * recorded in the transaction of the change, so whoever keeps derived authority — a collaboration session token —

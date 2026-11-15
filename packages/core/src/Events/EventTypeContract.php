@@ -10,7 +10,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 
 /**
- * An event type a module contributes to the {@see EventCatalog} (D38): a backed string enum of the
+ * An event type a module contributes to the {@see EventCatalog}: a backed string enum of the
  * owning module, one case per type, each case carrying its {@see EventSpec}. The string value is the
  * identity stored in the activity feed, the change journal and the outbox, and the `type` of an
  * outbound envelope; two modules declaring the same value make the module graph invalid.

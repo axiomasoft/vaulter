@@ -11,7 +11,7 @@ use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
 
 /**
- * The pins of a blob (D23): the liveness truth the garbage collector reads. An owner — a module that keeps
+ * The pins of a blob: the liveness truth the garbage collector reads. An owner — a module that keeps
  * bytes alive, such as the drive's revision links — pins a blob under an opaque `owner_type` (`<module>.<what>`)
  * and a `reference_key` derived from its own row, in the SAME transaction that writes that row, and unpins it in
  * the transaction that deletes the row. Media never reads an owner's table; ref_count is only a cache of the pins.

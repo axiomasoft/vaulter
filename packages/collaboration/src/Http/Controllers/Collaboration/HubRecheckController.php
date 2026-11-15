@@ -12,7 +12,7 @@ use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\SessionChecks;
 
 /**
- * Protocol 2 batch recheck (D26): after a control message the hub asks what each connection of the drive (of every
+ * Protocol 2 batch recheck: after a control message the hub asks what each connection of the drive (of every
  * drive for a global change) may do now. Body `{connections: [{id, token}]}` (1..200; `id` is the hub's own key of the
  * connection, 1..191 bytes; `token` its current room token). The answer `{results: [{id, access: none|read|write,
  * reason, jti}]}` keeps the order: `none` closes the connection (reason token|gone|generation|unavailable|revoked),

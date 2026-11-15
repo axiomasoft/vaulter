@@ -56,7 +56,7 @@ final class KernelSchema implements ModuleSchema
     }
 
     /**
-     * v_outbox — the neutral transactional outbox (D29): ONE row per domain event, written in the transaction of
+     * v_outbox — the neutral transactional outbox: ONE row per domain event, written in the transaction of
      * the operation whatever modules are active, idempotent by event_id (UNIQUE). outbox_seq is the internal,
      * monotonic order every consumer reconciles by — a bigIncrements independent of the panel id strategy, like
      * event_id. scope_kind/scope_id name what the event is about (a drive, or the tenant) without a drive column;
@@ -85,7 +85,7 @@ final class KernelSchema implements ModuleSchema
     }
 
     /**
-     * v_outbox_consumers — one row per outbox consumer the relay ever registered (D29): its delivery class, its
+     * v_outbox_consumers — one row per outbox consumer the relay ever registered: its delivery class, its
      * state (active, paused while it is not in the sealed registry or switched off, detached once the hold ran
      * out), the seq it was activated at and the seq reconciliation reached, the fenced consumer lease of the
      * reconciler, and the explicit gaps a detach left (JSON list of {from_seq, to_seq, events, at,
@@ -107,7 +107,7 @@ final class KernelSchema implements ModuleSchema
     }
 
     /**
-     * v_outbox_deliveries — the delivery of one event to one consumer (D29), PK(event_id, consumer_id): pending
+     * v_outbox_deliveries — the delivery of one event to one consumer, PK(event_id, consumer_id): pending
      * until a relay worker leases it, then done or dead; every completion is fenced by lease_generation, so a
      * worker whose lease was taken over writes nothing. continuation is the consumer's own resume cursor (the
      * webhook fan-out keeps its last endpoint key there). No FK to v_outbox: retention deletes an event only
@@ -138,7 +138,7 @@ final class KernelSchema implements ModuleSchema
     }
 
     /**
-     * v_idempotency_keys — the claims and receipts of keyed writes (D25, ADR-0029; generic core owner). One row per
+     * v_idempotency_keys — the claims and receipts of keyed writes (docs/adr/0029-idempotency.md; generic core owner). One row per
      * scope digest: SHA-256 (lowercase hex) of the tagged tuple tenant/scope/actor/operation/key, which is NOT NULL
      * and the only UNIQUE key, so a null tenant or a system actor cannot weaken it; the tuple is kept to refuse a
      * digest collision. The key bytes are stored base64 (opaque, compared exactly). A row is inserted as

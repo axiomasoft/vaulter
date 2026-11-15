@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Operations\ScopeRef;
 
 /**
- * The rows of `v_idempotency_keys` (D25, ADR-0029). Every write runs inside the operation's root transaction:
+ * The rows of `v_idempotency_keys` (docs/adr/0029-idempotency.md). Every write runs inside the operation's root transaction:
  * the claim row is inserted uncommitted, so a concurrent request with the same scope digest waits on the unique
  * index (at most two seconds) instead of reading an "in progress" row; the row is completed by the same
  * transaction that commits the mutation, and a rollback removes it. Status `claiming` never commits.
@@ -38,7 +38,7 @@ final class IdempotencyStore
 
     public const string COMPLETED = 'completed';
 
-    /** The bounded wait on a concurrent claim (D25). */
+    /** The bounded wait on a concurrent claim. */
     public const int WAIT_SECONDS = 2;
 
     public function __construct(

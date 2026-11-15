@@ -12,7 +12,7 @@ use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * The Filament admin module (D22): its config and config reader. The panel plugin ({@see VaulterPlugin}) is
+ * The Filament admin module: its config and config reader. The panel plugin ({@see VaulterPlugin}) is
  * never registered by the manifest — the host adds it to its panel explicitly.
  */
 #[Internal]

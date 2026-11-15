@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 
 /**
  * A refusal whose receipt was written: the attempt rolled back to its savepoint, the receipt is part of the
- * root transaction, and the runner throws the refusal only after that transaction committed (D25).
+ * root transaction, and the runner throws the refusal only after that transaction committed.
  */
 #[Internal]
 final readonly class CachedRefusal

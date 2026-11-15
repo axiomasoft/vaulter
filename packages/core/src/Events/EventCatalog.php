@@ -10,13 +10,13 @@ use Vaulter\Attributes\Api;
 use Vaulter\Modules\ModuleId;
 
 /**
- * Every event type of the application (D38): the cases of the enums the modules declare with
+ * Every event type of the application: the cases of the enums the modules declare with
  * `ModuleBuilder::events()`. The kernel owns the mechanics, the modules own the values; the catalogue is
  * the single source of the events reference, of the types an outbox consumer may subscribe to and of the
  * types a stored value resolves to.
  *
  * {@see all()}, {@see get()} and {@see owner()} answer for the active modules. {@see resolve()} also reads
- * the types of an installed module that is switched off, so the rows it recorded before stay readable (D22:
+ * the types of an installed module that is switched off, so the rows it recorded before stay readable (
  * switching a module off keeps its data).
  */
 #[Api]

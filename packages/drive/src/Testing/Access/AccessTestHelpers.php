@@ -22,7 +22,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Builders for the M2a ACL tests: a storage with a known tree, a subject user, and
+ * Builders for the ACL tests: a storage with a known tree, a subject user, and
  * a one-liner grant writer. Keeps the table-driven tests focused on the algorithm,
  * not on row plumbing.
  */

@@ -12,7 +12,7 @@ use Vaulter\Attributes\Internal;
 /**
  * Every problem code the HTTP surface can answer with: the codes the active modules declare with
  * `ModuleBuilder::problems()` (architecture#errors). The single source of the reference docs, of the
- * `retryable` hint of a problem body, of the receipt policy of idempotent operations (D25) and of the
+ * `retryable` hint of a problem body, of the receipt policy of idempotent operations and of the
  * localized `title`/`detail`.
  */
 #[Internal]
@@ -68,7 +68,7 @@ final class ProblemCatalog
     }
 
     /**
-     * Whether an idempotent operation stores a failure with `$code` as its receipt (D25). An unknown code is
+     * Whether an idempotent operation stores a failure with `$code` as its receipt. An unknown code is
      * never cached: only a declared deterministic outcome is.
      */
     public function isCacheable(string $code): bool

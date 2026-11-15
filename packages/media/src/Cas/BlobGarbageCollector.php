@@ -22,7 +22,7 @@ use Vaulter\Support\Identity;
  * Two-phase, race-safe blob GC. It is ACL-blind — liveness ≠ the viewer's
  * rights, so a node a user cannot see still pins its blob; GC runs as the system
  * with no panel/workspace context. Liveness is the pins of a blob
- * (v_blob_references, D23) and nothing else: GC reads no owner table, so pins of
+ * (v_blob_references) and nothing else: GC reads no owner table, so pins of
  * a disabled or removed module keep their blobs.
  *
  *  PHASE 1 (mark): scan committed ∧ ref_count(cache)=0 (reconciliation rebuilds
@@ -175,7 +175,7 @@ final readonly class BlobGarbageCollector
 
     /**
      * Sweep PENDING blobs from a crashed staging: a pending row older than
-     * the ORPHAN grace window (vaulter-media.gc.orphan_grace_hours, D23: a
+     * the ORPHAN grace window (vaulter-media.gc.orphan_grace_hours: a
      * pending row is bytes whose commit never finished — the orphan hazard, not a
      * tombstone) whose commit never finished and that carries no pin. Its staged
      * object (if any) is deleted and the row is finalised as a deleted tombstone,

@@ -389,7 +389,7 @@ final class DeliverWebhook implements ShouldQueue
         }
 
         $endpoint->forceFill(['is_active' => false, 'disabled_at' => now(), 'disabled_reason' => 'failing'])->save();
-        // A system switch-off changes the endpoint as a manual one does (D47, CC1): its version rises under the row lock
+        // A system switch-off changes the endpoint as a manual one does (CC1): its version rises under the row lock
         // held here, so an If-Match read while it was active is stale and cannot quietly switch it back on.
         (new AggregateVersion($this->database))->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
 

@@ -18,7 +18,7 @@ use Vaulter\Testing\Fixtures\Panels\FakeProject;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Shared builders for the Drive slice tests (M1c): a host entity with an id (not
+ * Shared builders for the Drive slice tests: a host entity with an id (not
  * persisted — the storage only stores its morph) and a canonical Vaulter::drive handle.
  */
 #[Internal]

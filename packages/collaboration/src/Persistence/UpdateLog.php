@@ -25,7 +25,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Support\Identity;
 
 /**
- * The update log of a document generation (D26, C1–C4). An append reads the draining flag first ({@see DrainState},
+ * The update log of a document generation (C1–C4). An append reads the draining flag first ({@see DrainState},
  * C10: refused while a managed disable drains the log), then takes the documents' lock order through
  * CollaborativeState::lock() (T → N → D), then the head row of the generation FOR UPDATE (L4, created on the first
  * append under the same locks); it fences the generation, answers a known update id from its receipt, and otherwise

@@ -28,7 +28,7 @@ use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * Row builders for the reliability tests: write outbox events with their webhooks.fanout
- * delivery row (D29), register endpoints and seed webhook deliveries directly, so the
+ * delivery row, register endpoints and seed webhook deliveries directly, so the
  * tests focus on the relay / delivery algorithm, not on row plumbing.
  */
 #[Internal]
@@ -144,7 +144,7 @@ final class WebhookTestHelpers
      */
     public static function endpoint(array $attributes = []): WebhookEndpoint
     {
-        // forceFill (P1.4/F-P1.7-04): signing_secret/failure_count are excluded
+        // forceFill: signing_secret/failure_count are excluded
         // from WebhookEndpoint's $fillable — bypassed here exactly like
         // WebhookEndpointStoreRepository::create() does.
         $endpoint = new WebhookEndpoint;
@@ -165,7 +165,7 @@ final class WebhookTestHelpers
      */
     public static function delivery(WebhookEndpoint $endpoint, array $attributes = []): WebhookDelivery
     {
-        // forceFill (P1.4/F-P1.7-04): WebhookDelivery is fully guarded —
+        // forceFill: WebhookDelivery is fully guarded —
         // bypassed here exactly like WebhookFanoutConsumer::createDeliveries() does.
         $delivery = new WebhookDelivery;
         $delivery->forceFill(array_merge([

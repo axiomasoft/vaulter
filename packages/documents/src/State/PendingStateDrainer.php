@@ -8,7 +8,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 
 /**
- * Brings a document's working state up to its collaboration log (D26): the realtime transport compacts the log of the
+ * Brings a document's working state up to its collaboration log: the realtime transport compacts the log of the
  * marker's generation into a checkpoint published through {@see CollaborativeState}. The capability is optional
  * (DocumentsModule); without a provider a pending document answers 409 `document_state_pending`.
  *

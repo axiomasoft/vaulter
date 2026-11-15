@@ -7,7 +7,7 @@ namespace Vaulter\Attributes;
 use Attribute;
 
 /**
- * A supported type or member for the code that uses Vaulter (D27). Everything an `#[Api]` type shows publicly and
+ * A supported type or member for the code that uses Vaulter. Everything an `#[Api]` type shows publicly and
  * protectedly — except what is marked {@see Internal} — is frozen with the type; parameter names count, because
  * named arguments are API.
  */

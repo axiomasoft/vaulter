@@ -15,7 +15,7 @@ use Vaulter\Support\Identity;
 
 /**
  * Row work for the v_file_revision_blobs edge table: which blobs a revision is made
- * of. The edge does not keep a blob alive — its media pin does (D23) — so the only
+ * of. The edge does not keep a blob alive — its media pin does — so the only
  * caller is the drive's RevisionBlobLinks, which writes the edge and the pin in one
  * transaction. Opens no transactions (the caller wraps it). Idempotent upsert so a
  * re-attach of the same (version, blob, role, ordinal) is a no-op.

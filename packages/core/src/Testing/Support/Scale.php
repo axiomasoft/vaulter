@@ -8,7 +8,7 @@ use Vaulter\Attributes\Internal;
 
 /**
  * The size of a scale test: the real one when the run is a full/discovery run (`scripts/t` exports VAULTER_FULL_SEEDS=1),
- * a cheap equivalent that exercises the same code path otherwise (PLAN3 P1.11).
+ * a cheap equivalent that exercises the same code path otherwise.
  */
 #[Internal]
 final class Scale

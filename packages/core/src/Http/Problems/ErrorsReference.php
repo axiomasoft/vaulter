@@ -56,7 +56,7 @@ final readonly class ErrorsReference
     }
 
     /**
-     * The machine table of the codes for `openapi/vaulter-v1.yaml` (P6.7), as the YAML the Problem schema carries: the
+     * The machine table of the codes for `openapi/vaulter-v1.yaml`, as the YAML the Problem schema carries: the
      * `x-vaulter-problems` member (code to status, retryable, receipt and declaring module) and the sorted `examples` of
      * the `code` property. Printed by `vaulter:errors:reference --openapi`; the contract test compares the document to it.
      */

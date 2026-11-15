@@ -10,7 +10,7 @@ use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Events\Outbox\OutboxRelay;
 
 /**
- * The outbox relay (D29): registers the outbox consumers of the module graph, reconciles the delivery rows they
+ * The outbox relay: registers the outbox consumers of the module graph, reconciles the delivery rows they
  * missed, delivers the due ones and detaches consumers paused past their hold. Without --once it repeats passes
  * while work remains, for at most --max-seconds. Idempotent and fenced: overlapping runs never deliver one row
  * twice under the same lease; the schedule runs it every minute without overlapping.

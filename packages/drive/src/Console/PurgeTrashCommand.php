@@ -71,7 +71,7 @@ final class PurgeTrashCommand extends Command
                         ? max((int) $override, 0)
                         : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $this->driveConfig->trashRetentionDays());
                     $threshold = Carbon::now()->subDays($days);
-                    // Each root is one root operation `drive.trash.purge` (D48, I9): the documents drain runs before its
+                    // Each root is one root operation `drive.trash.purge` (I9): the documents drain runs before its
                     // transaction, and a root that stays refused (document_state_pending) rolls back only itself.
                     $purged = $runner->write(new OperationSpec('drive.trash.purge', new ModuleId('drive')), $context->operation, function () use ($node, $context, $threshold, $nodes, $store, $purge): int {
                         $this->database->lockAggregate('drives', $context->driveId());

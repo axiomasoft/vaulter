@@ -23,7 +23,7 @@ use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Identity;
 
 /**
- * The only writer of v_blob_references (D23). A pin is the liveness truth of a blob: the garbage collector and
+ * The only writer of v_blob_references. A pin is the liveness truth of a blob: the garbage collector and
  * the reconciler read these rows and nothing of an owner's tables.
  *
  * pin() runs the protocol shared with the sweep, inside the caller's transaction: take the per-(scope, sha256)

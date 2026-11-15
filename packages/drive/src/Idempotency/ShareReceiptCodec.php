@@ -16,9 +16,9 @@ use Vaulter\Idempotency\ReceiptCodec;
 use Vaulter\Idempotency\ResourceRef;
 
 /**
- * The receipt of a share-link write (D25): `link` — the {@see ShareLinkSnapshot} of drive.shares.update; `minted` —
+ * The receipt of a share-link write: `link` — the {@see ShareLinkSnapshot} of drive.shares.update; `minted` —
  * the {@see MintedShareLink} of drive.shares.create and drive.shares.rotate, whose raw token is stored only as the
- * application's ciphertext (`encryptString`, APP_KEY: ID5, D47(5)) and decrypted for a replay, which the runner gives
+ * application's ciphertext (`encryptString`, APP_KEY: ID5, (5)) and decrypted for a replay, which the runner gives
  * only to the same scope digest — the same actor — after its current authorization; `revoke` — the
  * {@see RevokeReceipt} of drive.shares.revoke. All are about the link's node. Version 1.
  */

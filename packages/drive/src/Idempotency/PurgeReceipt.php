@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Idempotency;
 use Vaulter\Attributes\Internal;
 
 /**
- * What a permanent removal keeps in its receipt (D25 «для delete квитанция содержит доказуемый исходный authorization
+ * What a permanent removal keeps in its receipt («для delete квитанция содержит доказуемый исходный authorization
  * scope», ID2): the id of what is gone and the scope the right to remove it was proven in, never its content. A replay
  * checks the recorded ability there, because the removed thing no longer exists to ask.
  *

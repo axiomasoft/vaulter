@@ -11,7 +11,7 @@ use Vaulter\Events\Concerns\DescribesEvent;
 use Vaulter\Events\EventTypeContract;
 
 /**
- * The event types of the documents module (D38), contributed to the event catalogue by the documents
+ * The event types of the documents module, contributed to the event catalogue by the documents
  * manifest. The values are the stored identities shared with the drive's activity feed and change journal.
  */
 #[Api]

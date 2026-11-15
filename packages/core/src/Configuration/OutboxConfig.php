@@ -10,7 +10,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
- * Typed accessors over config('vaulter.outbox.*'), the transactional outbox and its relay (D29). Every value is
+ * Typed accessors over config('vaulter.outbox.*'), the transactional outbox and its relay. Every value is
  * a positive integer; an invalid one is refused rather than clamped, since a silently clamped settle window
  * could let reconciliation skip a late commit.
  */

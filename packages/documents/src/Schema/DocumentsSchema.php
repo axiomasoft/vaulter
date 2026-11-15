@@ -109,7 +109,7 @@ final class DocumentsSchema implements ModuleSchema
         $table->timestamp('resolved_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'resolved_by', nullable: true, index: false);
 
-        // The comment's own version (D47, CC2): resolve and delete are conditional on it (If-Match); a resolution raises
+        // The comment's own version (CC2): resolve and delete are conditional on it (If-Match); a resolution raises
         // it with UPDATE … WHERE version = ?.
         $this->helpers->counterColumn(table: $table, column: 'version');
 
@@ -194,7 +194,7 @@ final class DocumentsSchema implements ModuleSchema
     }
 
     /**
-     * The pending-state marker (D26): (pending_generation, pending_through_seq) — the collaboration generation and the
+     * The pending-state marker: (pending_generation, pending_through_seq) — the collaboration generation and the
      * last committed log sequence the working state does not cover yet. Both NULL means the checkpoint covers every
      * saved edit; one without the other is refused by a CHECK. SQLite and PostgreSQL take the pair CHECK on the column,
      * MySQL refuses a column CHECK naming another column, so afterCreate() adds it there as a named constraint.

@@ -28,9 +28,9 @@ final readonly class CompiledModules
      * @param list<class-string<ModuleSchedule>>                       $schedules
      * @param array<string, class-string>                              $routeMiddleware alias => middleware
      * @param list<class-string<ModuleBindings>>                       $bindings
-     * @param array<string, list<class-string>>                        $events          active module id => event type enums (D38)
+     * @param array<string, list<class-string>>                        $events          active module id => event type enums
      * @param array<string, list<string>>                              $problems        active module id => source classes (each checked to be a ProblemCodeSource)
-     * @param array<string, list<string>>                              $operations      active module id => operation policy sources (each checked to be an OperationPolicySource, D47)
+     * @param array<string, list<string>>                              $operations      active module id => operation policy sources (each checked to be an OperationPolicySource)
      * @param list<string>                                             $schemaPaths     of every offered module, active or not
      */
     public function __construct(

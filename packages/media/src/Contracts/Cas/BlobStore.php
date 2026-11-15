@@ -16,7 +16,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
  * transaction, resurrecting a tombstoned match and promoting bytes only when the
  * row is newly created (a dedup hit skips the physical write). There is NO
  * synchronous ref_count++ — the liveness truth is the pins of the blob
- * ({@see BlobPins}, D23), and ref_count is a reconciled cache of them. An owner
+ * ({@see BlobPins}), and ref_count is a reconciled cache of them. An owner
  * pins the committed blob in the same transaction that records its reference.
  */
 #[Api]

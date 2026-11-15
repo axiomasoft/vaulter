@@ -8,7 +8,7 @@ use RuntimeException;
 use Vaulter\Attributes\Internal;
 
 /**
- * A relay worker or reconciler found its lease taken over (D29): the fenced write matched no row, so everything
+ * A relay worker or reconciler found its lease taken over: the fenced write matched no row, so everything
  * it did under that lease is rolled back or discarded. Internal to the relay; never reaches a host.
  */
 #[Internal]

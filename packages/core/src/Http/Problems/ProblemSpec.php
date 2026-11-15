@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Vaulter\Attributes\Api;
 
 /**
- * One problem code of a module (architecture#errors, D25): the HTTP status, the exception that carries it,
+ * One problem code of a module (architecture#errors): the HTTP status, the exception that carries it,
  * whether a client may retry and whether an idempotent operation caches it as its receipt. The default
  * receipt is `Never`: a code is cached only when its owner declares the outcome deterministic.
  */
@@ -27,7 +27,7 @@ final readonly class ProblemSpec
         if ($status < 400 || $status > 599) {
             throw new InvalidArgumentException(sprintf('[Vaulter] A problem code answers with a 4xx or 5xx status, not %d.', $status));
         }
-        // A server failure is never a deterministic outcome of the request (D25).
+        // A server failure is never a deterministic outcome of the request.
         if ($status >= 500 && $receipt === ReceiptPolicy::Cacheable) {
             throw new InvalidArgumentException(sprintf('[Vaulter] A %d problem cannot be cached as an idempotency receipt.', $status));
         }

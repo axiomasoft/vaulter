@@ -18,7 +18,7 @@ use Vaulter\Drive\Enums\NodeKind;
  * grants and inheritance, CC2) — pass it back as the expected access version of
  * a revoke or an inheritance change.
  *
- * `syncKey` is the opaque handle of this node for the reader it was mapped for (PLAN4.D20):
+ * `syncKey` is the opaque handle of this node for the reader it was mapped for:
  * the change feed names a removed node by it. It is null for a reader without a sync
  * identity (anonymous, share) and is never part of a persisted receipt.
  */

@@ -13,7 +13,7 @@ use Vaulter\Http\Problems\ProblemCatalog;
 /**
  * Regenerates the problem-code reference of the docs from the {@see ProblemCatalog}.
  * With --check nothing is written and the exit code says whether the docs are current
- * (for CI). With --openapi it prints the code table for the OpenAPI document instead (P6.7).
+ * (for CI). With --openapi it prints the code table for the OpenAPI document instead.
  */
 #[Internal]
 final class ErrorsReferenceCommand extends Command

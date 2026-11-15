@@ -22,7 +22,7 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
  * update_id (uuid), sha256 (hex of the payload), payload (base64), origin: client|server, seed_state_version?}`. The
  * answer `{generation, update_id, seq, sha256, persisted: true, permissions_stale}` is built after the commit; a retry
  * with the same update_id and payload gets the same seq. `permissions_stale` is true when the token predates a change
- * of its drive's rights (D46): the append was allowed by the rights now, and the hub renews the token. The base64 length is checked against `limits.update_bytes` before it is
+ * of its drive's rights: the append was allowed by the rights now, and the hub renews the token. The base64 length is checked against `limits.update_bytes` before it is
  * decoded — against `max_state_bytes` for a seed, which carries the document's whole initial state. `seed_state_version`
  * marks the hub's seed (409 collaboration_seed_conflict unless the generation has no checkpoint and no record yet and the
  * document's state version still equals it). The size gate ({@see LimitHubAppend}) takes a body of a whole state for a
