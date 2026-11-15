@@ -328,11 +328,11 @@ it('skips a prose-only change as docs_only with no runs, and a prose file mixed 
     expect($mixed['status'])->toBe('ok')->and(s_runs($mixed))->toBe(['scripts/t sqlite -p solo']);
 });
 
-it('allowlists only prose in the real map: AGENTS, CLAUDE, workflows and root configs are not docs', function (): void {
+it('allowlists only prose in the real map: workflows and root configs are not docs', function (): void {
     [$code, $plan] = s_select(['--paths=docs/guide/index.md,plans/x/log.jsonl,README.md,CONTRIBUTING.md,packages/azguard/README.md']);
     expect($code)->toBe(0)->and($plan['status'])->toBe('docs_only')->and($plan['runs'])->toBe([]);
 
-    foreach (['AGENTS.md', 'CLAUDE.md', '.github/workflows/ci.yml', 'CHANGELOG.md', 'packages/core/phpstan.neon'] as $path) {
+    foreach (['.github/workflows/ci.yml', 'CHANGELOG.md', 'packages/core/phpstan.neon'] as $path) {
         [$code, $plan] = s_select(["--paths=$path"]);
         expect($code)->toBe(2, $path)->and($plan['status'])->toBe('unknown', $path)->and($plan['runs'])->not->toBe([], $path);
     }

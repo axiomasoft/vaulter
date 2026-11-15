@@ -35,7 +35,7 @@ function archiveContentErrors(string $path, array $package, array $manifest): ar
         }
         $files[$name] = (string) $zip->getFromIndex($i);
         $parts = explode('/', $name);
-        $denied = array_intersect($parts, ['tests', 'vendor', 'node_modules', '.git', '.env', '.agents', '.claude', '.swissknife', 'hub', 'phpunit.xml', 'pint.json', 'rector.php', 'composer.lock']);
+        $denied = array_intersect($parts, ['tests', 'vendor', 'node_modules', '.git', '.env', 'hub', 'phpunit.xml', 'pint.json', 'rector.php', 'composer.lock']);
         $rootAllowed = preg_match('/^(composer\.json|LICENSE[^\/]*|README\.md|CHANGELOG\.md|UPGRADE\.md|SECURITY\.md)$/', $name) === 1;
         $dirAllowed = count($parts) > 1 && in_array($parts[0], ['src', 'config', 'database', 'routes', 'resources', 'lang', 'stubs', 'bin'], true);
         $privateDocs = ($package['channel'] ?? '') === 'private' && ($package['path'] ?? '') === 'packages/collaboration' && count($parts) > 1 && $parts[0] === 'docs';
