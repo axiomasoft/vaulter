@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Problems\ProblemCatalog;
@@ -99,17 +98,12 @@ it('rejects a missing endpoint an orphan ref and missing problem metadata in iso
     }
 })->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
-it('detects a private response mutation in a temp contract report while actual public generation is byte identical', function (): void {
+// The public types never read the hub contract: the Vue job's api:check regenerates them from openapi/vaulter-v1.yaml.
+it('detects a private response mutation in a temp contract report', function (): void {
     $root = ReleaseOpenApi::root();
     $dir = sys_get_temp_dir().'/vaulter-private-contract-'.bin2hex(random_bytes(8));
     mkdir($dir);
     try {
-        $generate = static function (string $output) use ($root): void {
-            $process = new Process([$root.'/node_modules/.bin/openapi-typescript', $root.'/openapi/vaulter-v1.yaml', '-o', $output], $root.'/packages/vue');
-            $process->setTimeout(30);
-            $process->mustRun();
-        };
-        $generate($dir.'/before.d.ts');
         $private = ReleaseOpenApi::privateContract();
         $fixture = Yaml::parseFile($root.'/packages/collaboration/openapi/hub.yaml');
         $change = json_decode(file_get_contents(__DIR__.'/../Fixtures/OpenApi/private-response-change.json'), true, flags: JSON_THROW_ON_ERROR);
@@ -121,9 +115,6 @@ it('detects a private response mutation in a temp contract report while actual p
         expect((new OpenApiResponseValidator($private))->validate('collaboration.hub.authenticate', 200, $headers, $body))->toBe([])
             ->and((new OpenApiResponseValidator($mutated))->validate('collaboration.hub.authenticate', 200, $headers, $body))->not->toBe([])
             ->and(ReleaseOpenApi::report($mutated))->not->toBe(ReleaseOpenApi::report($private));
-        $generate($dir.'/after.d.ts');
-        expect(file_get_contents($dir.'/after.d.ts'))->toBe(file_get_contents($dir.'/before.d.ts'))
-            ->and(file_get_contents($root.'/packages/vue/src/api/schema.d.ts'))->toBe(file_get_contents($dir.'/after.d.ts'));
     } finally {
         foreach (glob($dir.'/*') as $path) {
             unlink($path);
