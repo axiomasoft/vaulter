@@ -68,28 +68,40 @@
             "type": "path",
             "url": "../core",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "axioma-studio/vaulter-core": "1.0.x-dev"
+                }
             }
         },
         {
             "type": "path",
             "url": "../media",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "axioma-studio/vaulter-media": "1.0.x-dev"
+                }
             }
         },
         {
             "type": "path",
             "url": "../drive",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "axioma-studio/vaulter-drive": "1.0.x-dev"
+                }
             }
         },
         {
             "type": "path",
             "url": "../documents",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "axioma-studio/vaulter-documents": "1.0.x-dev"
+                }
             }
         }
     ],

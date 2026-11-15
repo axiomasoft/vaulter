@@ -52,7 +52,18 @@
             "type": "path",
             "url": "packages/*",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "axioma-studio/vaulter-azguard": "1.0.x-dev",
+                    "axioma-studio/vaulter-collaboration": "1.0.x-dev",
+                    "axioma-studio/vaulter-core": "1.0.x-dev",
+                    "axioma-studio/vaulter-documents": "1.0.x-dev",
+                    "axioma-studio/vaulter-drive": "1.0.x-dev",
+                    "axioma-studio/vaulter-filament": "1.0.x-dev",
+                    "axioma-studio/vaulter-media": "1.0.x-dev",
+                    "axioma-studio/vaulter": "1.0.x-dev",
+                    "axioma-studio/vaulter-webhooks": "1.0.x-dev"
+                }
             }
         }
     ],
