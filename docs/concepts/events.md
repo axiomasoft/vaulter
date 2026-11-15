@@ -1,6 +1,6 @@
 # Change journal
 
-The drive journal supports reader-specific incremental synchronization (PLAN4-D20).
+The drive journal supports reader-specific incremental synchronization.
 Webhooks wake a client; the journal supplies ordered changes. Bootstrap in this order:
 
 ## Starting
@@ -58,7 +58,7 @@ the current reader's key. Never persist a reader key in a shared receipt; repres
 
 ## Lists and feed
 
-PLAN4-D21 list continuations are encrypted and authenticated, bound to endpoint, tenant,
+List continuations are encrypted and authenticated, bound to endpoint, tenant,
 typed subject, query and version. They hide scanned sort keys, retain progress over hidden
 rows and may yield an empty page with a non-null continuation. Continue until it is null.
 HTTP grants/shares use bounded pages; public PHP array `list()`/`grants()` remain available.
@@ -70,7 +70,7 @@ Schedule `vaulter:changes:prune` daily; entries live `retention_days` (default 3
 `vaulter:changes:reset` starts a new epoch. See [Commands](/reference/commands) and
 [Configuration](/reference/config). PostgreSQL/MySQL isolation, concurrent invalidation,
 Redis/relay races, process kills and actual consumer qualification remain pending in the
-owner's P8.2 runbook; SQLite and structural evidence do not qualify those environments.
+owner's runbook; SQLite and structural evidence do not qualify those environments.
 
 For independently pinned or shared roots, a parent remove invalidates the known branch,
 then the client reauthorizes already known affected ids with existing find/list calls. Keep

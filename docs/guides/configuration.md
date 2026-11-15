@@ -178,7 +178,7 @@ belong to the drive; `observability.*` to core.
 
 Use an unversioned CAS bucket; blob deletion is managed by two-phase GC. Grace windows
 are floored at one hour. The dedup scope is `tenant`, `drive` or `off`.
-`global` was removed (PLAN2.D49): the provider refuses it at boot with
+`global` was removed: the provider refuses it at boot with
 `InvalidConfigurationException`.
 Deduplication uses the stored `scope_key`; changing the scope leaves existing blobs valid
 and affects new uploads. See [Storage & blobs](/concepts/storage-and-blobs).

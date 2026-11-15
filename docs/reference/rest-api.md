@@ -865,7 +865,7 @@ Node responses require `sync_key: string|null`; it is null for anonymous readers
 Store every returned cursor, even on an empty page. Continue while `has_more` is true.
 A foreign, malformed or format 1 cursor gives `400 invalid_cursor`; deadline, generation,
 epoch or prune expiry gives `410 cursor_expired`. Both require a new bootstrap and mapping.
-The signed feed cursor is distinct from encrypted list continuations (PLAN4-D21).
+The signed feed cursor is distinct from encrypted list continuations.
 
 ---
 

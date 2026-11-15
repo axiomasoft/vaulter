@@ -733,7 +733,7 @@ drive handle, declared in the `drive` slot under the operations' FQCN and resolv
 
 ## The supported surface
 
-What Vaulter promises to keep is marked in the code, not listed by hand (D27). Every type of `packages/*/src` carries
+What Vaulter promises to keep is marked in the code, not listed by hand. Every type of `packages/*/src` carries
 exactly one attribute from `Vaulter\Attributes`:
 
 | Attribute | Meaning |
@@ -747,10 +747,10 @@ The manifest of each package — the `#[Api]` and `#[Spi]` types with their supp
 `packages/<package>/tests/Arch/__snapshots__/surface.txt` by `scripts/php84 php scripts/inventory/inventory.php surface --write`;
 `--check` (and `SurfaceManifestTest`) fails when the code and the manifest differ, so a change of the surface is always a visible
 change of a committed file. A supported signature that names an `#[Internal]` type or a domain Eloquent model is reported by the
-I13 scan (`scan-i13`, report mode until the 1.0 freeze).
+boundary scan (`scan-i13`, report mode until the 1.0 freeze).
 
 
-### Reader synchronization identity (PLAN4-D20)
+### Reader synchronization identity
 
 `NodeSnapshot::$syncKey` is `?string`, projected for the current reader; retain it with
 the local node tree. `NodeChange` exposes `operation`, `syncKey`, `nodeId`, `subtree`,

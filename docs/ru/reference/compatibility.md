@@ -32,17 +32,17 @@ enum'а, ключ конфигурации или событие — **MINOR**.
 
 Так добавляется новый ключ конфигурации, например бюджет завершения загрузки
 `vaulter-drive.uploads.resumable.complete_timeout_seconds` (`VAULTER_UPLOAD_COMPLETE_TIMEOUT_SECONDS`,
-целое 1..300, по умолчанию 60, PLAN4-D19). Он ограничивает один запрос завершения вместе с повторами БД;
+целое 1..300, по умолчанию 60). Он ограничивает один запрос завершения вместе с повторами БД;
 при исчерпании завершение отклоняется с `upload_conflict` (409), ничего не публикуется, staged-байты
 остаются для повтора.
 
-Бюджет применим только на локальном staging-диске. Резюмируемое завершение (`tus`, `s3-multipart` — имена протоколов, а не возможности хранилища) на удалённом, S3 или непрозрачном кастомном диске **не поддерживается**: оно отклоняется с `upload_conflict` (409) до любого обращения к хранилищу. Заметка об обновлении: размещайте резюмируемые загрузки на локальном диске; одноразовая `direct`-загрузка и content-addressed store на S3 не затронуты. Сессия, закоммиченная до этого изменения, может выполнять отложенную очистку staged-диска без жёсткого дедлайна (известное ограничение, runbook владельца P8.2).
+Бюджет применим только на локальном staging-диске. Резюмируемое завершение (`tus`, `s3-multipart` — имена протоколов, а не возможности хранилища) на удалённом, S3 или непрозрачном кастомном диске **не поддерживается**: оно отклоняется с `upload_conflict` (409) до любого обращения к хранилищу. Заметка об обновлении: размещайте резюмируемые загрузки на локальном диске; одноразовая `direct`-загрузка и content-addressed store на S3 не затронуты. Сессия, закоммиченная до этого изменения, может выполнять отложенную очистку staged-диска без жёсткого дедлайна (известное ограничение).
 
-### I13: текущая PHP-поверхность
+### Текущая PHP-поверхность
 
-После P6.3 каталог PHP API/SPI строится по текущим исходникам: I13 работает в block-mode без временных исключений и без постоянных host-input entries. Readonly результаты включают `UploadSessionSnapshot`, страницы изменений и вложенные snapshot-факты; события передают snapshots и скалярные факты вместо доменных ORM-моделей.
+Каталог PHP API/SPI строится по текущим исходникам: сканирование границ `scan-i13` работает в block-mode без временных исключений и без постоянных host-input entries. Readonly результаты включают `UploadSessionSnapshot`, страницы изменений и вложенные snapshot-факты; события передают snapshots и скалярные факты вместо доменных ORM-моделей.
 
-`NodeSnapshotContributor` остаётся поддерживаемым implement-SPI: `contribute()` получает `list<NodeSnapshot>` без моделей, до добавления фрагментов, viewer state и reader key. Собственные агрегаты загружаются по id узлов. `HasDrives` остаётся доступным trait, но его ORM-связь `drives()` внутренняя; поддерживаемый список — `Vaulter::drives($actor)` с результатом `Page<DriveSnapshot>`. ORM-геттеры конфигурации и нативные factories внутренние; ключи конфигурации остаются действующими. Общая BC-квалификация и общий guard/corpus относятся к P6.2; обновлённый каталог не объявляет их пройденными.
+`NodeSnapshotContributor` остаётся поддерживаемым implement-SPI: `contribute()` получает `list<NodeSnapshot>` без моделей, до добавления фрагментов, viewer state и reader key. Собственные агрегаты загружаются по id узлов. `HasDrives` остаётся доступным trait, но его ORM-связь `drives()` внутренняя; поддерживаемый список — `Vaulter::drives($actor)` с результатом `Page<DriveSnapshot>`. ORM-геттеры конфигурации и нативные factories внутренние; ключи конфигурации остаются действующими.
 
 ## Пакеты и версии
 
@@ -241,19 +241,19 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 
 ## Каталог публичного контракта
 
-> PHP-источники обновлены при закрытии I13 в P6.3; каталог предварительный до P6.2 (BC-gate). Строка — не пройденная BC-проверка; «not_checked» означает, что машинного снимка нет и путь не выдуман.
+> Структурные адаптеры и CI подключены. Строка — не runtime-квалификация; «not_checked» означает, что машинного снимка нет и путь не выдуман.
 
 | Поверхность | Источник | Обещание 1.x | Обнаружение | Квалификация |
 |:--|:--|:--|:--|:--|
-| PHP API (`#[Api]`) | `packages/<p>/tests/Arch/__snapshots__/surface.{txt,json}` | не удалять и не сужать типы, методы, параметры (имена параметров — API: именованные аргументы), константы, кейсы enum | машинный дрейф | консервативный BREAK-REVIEW guard (P6.2) |
-| PHP SPI (`#[Spi]`) | те же снимки (`surface.json` создаёт P6.2; сейчас `surface.txt`) | не добавлять обязательные члены в implement-SPI; расширять новым интерфейсом или явным решением | машинный дрейф | квалификация владельца |
+| PHP API (`#[Api]`) | `packages/<p>/tests/Arch/__snapshots__/surface.{txt,json}` | не удалять и не сужать типы, методы, параметры (имена параметров — API: именованные аргументы), константы, кейсы enum | машинный дрейф | консервативный BREAK-REVIEW guard |
+| PHP SPI (`#[Spi]`) | те же снимки (`surface.json` и читаемый `surface.txt`) | не добавлять обязательные члены в implement-SPI; расширять новым интерфейсом или явным решением | машинный дрейф | квалификация владельца |
 | Internal | `#[Internal]` / Internal-namespace | без обещаний | скан атрибутов | н/п |
-| REST (публичный) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR запрещён; включает confidential-курсоры и ограниченные страницы grants/shares (пейджинг до `next_cursor=null`, пустая страница с продолжением) | машинный дрейф (P6.2) | consumer-runtime |
-| REST (приватный хаб) | `packages/collaboration/openapi/hub.yaml`; claim `protocol` | версия в claim; приватный, обещаний хостам в 1.x нет | машинный дрейф (P6.2) | квалификация владельца |
-| Problem codes | `vaulter:errors`, `x-vaulter-problems` | коды не удаляются, статус не меняется | вывод команды | вручную / not_checked до P6.3 |
+| REST (публичный) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR запрещён; включает confidential-курсоры и ограниченные страницы grants/shares (пейджинг до `next_cursor=null`, пустая страница с продолжением) | машинный дрейф | consumer-runtime |
+| REST (приватный хаб) | `packages/collaboration/openapi/hub.yaml`; claim `protocol` | версия в claim; приватный, обещаний хостам в 1.x нет | машинный дрейф | квалификация владельца |
+| Problem codes | `vaulter:errors`, `x-vaulter-problems` | коды не удаляются, статус не меняется | вывод команды | вручную / not_checked |
 | События | каталог событий; машинной схемы payload пока нет | поля не удаляются; новые — опциональные; envelope версионируется | not_checked (нет машинного снимка) | вручную; путь схемы не выдуман |
 | Конфиг / env / publish-теги | `tests/Repo/Arch/Fixtures/identities/*` | ключи не удаляются без alias-цикла | дрейф identities-config | квалификация владельца |
-| Container bindings / tags | документированные bindings/теги в `register()` провайдера плюс явная container-contract фикстура; универсального снимка bindings нет (`identities-bindings.json` не существует) | документированные id и теги остаются резолвимыми | вручную / not_checked | владелец: ядро (`packages/core`), линия 1.x; P6.3 |
+| Container bindings / tags | документированные bindings/теги в `register()` провайдера плюс явная container-contract фикстура; универсального снимка bindings нет (`identities-bindings.json` не существует) | документированные id и теги остаются резолвимыми | вручную / not_checked | владелец: ядро (`packages/core`), линия 1.x |
 | Команды | identities-cli | имена, опции, exit codes | имена/опции — дрейф; exit codes not_checked | вручную |
 | Схема БД | `packages/core/tests/Fixtures/Schema/expected/**` | только аддитивные миграции в 1.x; upgrade-фикстуры от 1.0 | дрейф фикстур | квалификация владельца |
 | Каталог операций | `vaulter:operations`, `tests/Repo/Arch/MutationContractCoverageTest.php` | имена операций стабильны; второго ручного каталога нет | машинный дрейф | consumer-runtime |
@@ -261,57 +261,58 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 | Ключи/layout хранилища и версии целостности | вручную / not_checked (машинного снимка нет) | layout и версия целостности не меняются в 1.x без миграции | not_checked | владелец: `packages/media` (CAS), линия 1.x |
 | Сериализованные задачи/receipt, retry/drain | вручную / not_checked | задачи и receipt из 1.x читаются последующими 1.x; семантика retry/drain неизменна. Прохождение проверки сигнатур не квалифицирует rolling workers: смешанные версии требуют политики drain старых workers или owner tuple-теста | not_checked | владелец: `packages/drive`/`core`, линия 1.x; BC-pass не заявляется |
 | Схема сохранённых документов, wire-версии протокола | вручную / not_checked | версии растут только совместимо | not_checked | владелец: `packages/documents`/`collaboration`, линия 1.x |
-| Env хаба/образа | исходники/конфиг `packages/collaboration/hub` и приватные docs; вручную / not_checked, Docker runtime отложен в P8.2 | имена не удаляются без alias | not_checked | владелец: `packages/collaboration`, линия 1.x |
-| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | `etc/index.api.md`, `etc/components.surface.txt` каждого пакета, публичные entrypoints и consumer type fixtures | удаление экспорта — BREAK; изменение деклараций, обязательных props или emits — REVIEW | `api:surface:check` сверяет декларации с кодом в обоих Vue jobs; trusted-координатор `npm-surface` сравнивает их с предшественником независимой release-line | только декларации; packed/runtime-квалификация — P8.2 |
-| Root-only ключи `composer.json` (D8) | корневой `composer.json` | split-пакеты не наследуют root-only ключи; не обещание пакета | not_checked | вручную |
+| Env хаба/образа | исходники/конфиг `packages/collaboration/hub` и приватные docs; вручную / not_checked, Docker runtime — квалификация владельца | имена не удаляются без alias | not_checked | владелец: `packages/collaboration`, линия 1.x |
+| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | `etc/index.api.md`, `etc/components.surface.txt` каждого пакета, публичные entrypoints и consumer type fixtures | удаление экспорта — BREAK; изменение деклараций, обязательных props или emits — REVIEW | `api:surface:check` сверяет декларации с кодом в обоих Vue jobs; trusted-координатор `npm-surface` сравнивает их с предшественником независимой release-line | только декларации; packed/runtime-квалификация — за владельцем |
+| Root-only ключи `composer.json` | корневой `composer.json` | split-пакеты не наследуют root-only ключи; не обещание пакета | not_checked | вручную |
 
-Именованные аргументы — часть API для типов `#[Api]`; нестабильные конструкторы — `#[Internal]` (D27, `tests/Repo/Arch/SurfaceRulesTest.php`). Атрибуты не гарантируют поведение.
+Именованные аргументы — часть API для типов `#[Api]`; нестабильные конструкторы — `#[Internal]` (`tests/Repo/Arch/SurfaceRulesTest.php`). Атрибуты не гарантируют поведение.
 
 ### Политика deprecation (1.x)
 
 Устаревшее живёт минимум один минорный цикл, предупреждает один раз за процесс (`E_USER_DEPRECATED` или лог, не в hot path), называет замену и версию удаления; конфиг-alias читает старое значение, doctor сообщает миграцию. Удаление — только в 2.0, кроме security-исключений с advisory. См. ADR-0037.
 
 
-### BC gate: source, freeze and trusted tool identities (D18)
+### BC gate: источник, freeze и доверенные идентичности инструментов
 
-| Identity | Authority and purpose | Boundary |
+| Идентичность | Полномочия и назначение | Граница |
 |:--|:--|:--|
-| S | Committed candidate source SHA; `--root` supplies bytes and static snapshots only | Candidate autoload, PHP, hooks, plugins and tests supply no approval authority |
-| F | Freeze metadata commit, sole parent S; only the release manifest differs | F is not a replacement release source or a rebuild |
-| T | Externally approved policy and complete tool revision, read-only after provisioning | Parser, checker, helpers, locks and ignored vendor/autoload inputs belong to T |
-| A | Protected external exact approval bundle for S, policy, exceptions and tool closure | Identical surface hashes do not transfer approval to another S |
+| S | Закоммиченный SHA исходников кандидата; `--root` даёт только байты и статические снимки | Autoload, PHP, hooks, plugins и тесты кандидата не дают полномочий на approval |
+| F | Freeze-коммит метаданных, единственный родитель — S; отличается только release manifest | F не заменяет источник релиза и не является пересборкой |
+| T | Внешне одобренные policy и полная ревизия инструментов, только чтение после provisioning | Parser, checker, helpers, locks и игнорируемые vendor/autoload входят в T |
+| A | Защищённый внешний точный approval bundle для S, policy, исключений и замыкания инструментов | Одинаковые хэши поверхности не переносят approval на другой S |
 
-`contract-bc` participates in CI lane selection, `needs` and the final `CI gate` verdict.
-A required failed, cancelled, missing or skipped job blocks the gate. The standalone
-OpenAPI workflow calls the same externally provisioned host bootstrap. Both public
-`openapi/vaulter-v1.yaml` (core / php-public) and private hub spec (collaboration /
-php-collaboration) use their resolved release-line bases. Local referenced files and
-JSON-pointer fragments must resolve on both sides, including shared schemas. Remote
-refs, missing inputs and an unavailable oasdiff are `not_checked` / exit 2 in CI.
-The transitional tested pin is `tufin/oasdiff:v1.33.0`, in the trusted wrapper's
-`Contract/openapi-check.py`; P7.1 has not yet supplied a pins manifest.
-Synthetic oasdiff records argv and exit propagation only; it proves no REST compatibility.
+`contract-bc` участвует в выборе CI-линий, `needs` и итоговом вердикте `CI gate`.
+Обязательный job, который упал, отменён, отсутствует или пропущен, блокирует gate.
+Отдельный OpenAPI workflow вызывает тот же внешне подготовленный host bootstrap.
+Публичный `openapi/vaulter-v1.yaml` (core / php-public) и приватная спецификация хаба
+(collaboration / php-collaboration) используют свои вычисленные базы release-line.
+Локальные файлы по ссылкам и JSON-pointer фрагменты должны разрешаться с обеих сторон,
+включая общие схемы. Удалённые ссылки, отсутствующие входы и недоступный oasdiff в CI
+дают `not_checked` / exit 2. Переходный проверенный pin — `tufin/oasdiff:v1.33.0` в
+`Contract/openapi-check.py` доверенной обёртки; pins manifest пока нет.
+Синтетический oasdiff записывает только argv и передачу exit-кода; совместимость REST он не доказывает.
 
-Owner host provisioning is required before this lane can pass: provision an externally
-managed absolute Python and approved external copy of `Contract/trusted-host.py`, then
-supply `BC_HOST_PYTHON`, `BC_HOST_BOOTSTRAP`, `BC_TOOL_ROOT`, `BC_TOOL_REV`,
-`BC_SHA256SUMS`, `BC_RUNTIME_APPROVAL`, and `BC_RUNTIME_APPROVAL_SHA256` through the
-protected control plane. Never obtain approval from candidate files. No such external
-provisioning or branch-protection enforcement is claimed by these repository fixtures.
-Missing provisioning blocks, rather than qualifying a release.
+Чтобы эта линия могла пройти, владелец готовит host: внешне управляемый Python по
+абсолютному пути и одобренную внешнюю копию `Contract/trusted-host.py`, затем передаёт
+`BC_HOST_PYTHON`, `BC_HOST_BOOTSTRAP`, `BC_TOOL_ROOT`, `BC_TOOL_REV`, `BC_SHA256SUMS`,
+`BC_RUNTIME_APPROVAL` и `BC_RUNTIME_APPROVAL_SHA256` через защищённый control plane.
+Approval никогда не берётся из файлов кандидата. Фикстуры репозитория не утверждают,
+что такой provisioning или защита веток настроены. Без provisioning релиз блокируется,
+а не квалифицируется.
 
-The bootstrap is invoked with isolated Python (`-I`) outside the candidate cwd. Its
-external SHA256SUMS must enumerate exactly every regular file in T, including ignored
-dependencies/autoload; only root `.git` metadata is excluded. Normalized relative paths,
-unique entries, no symlinks, no missing/extra/changed files, and HEAD=T are mandatory.
-The checksum inventory and runtime approval live outside T. The runtime JSON contains
-`php` (absolute binary), `sha256`, exact `configuration` (`version`, `ini`, `scanned`,
-`extensions`), `config_files` (absolute config paths and hashes), and exact `environment`
-(including absolute `BC_PYTHON` for the wrapper). PHP 8.4 and matching configuration,
-extensions, environment and bytes are required. PHP children use that approved binary
-(`PHP_BINARY` in PHP fixtures); the host never invokes `scripts/php84`, which writes a
-shim inside its checkout. Scratch files live outside T. Git metadata integrity, protected
-mounts, the external bootstrap and runtime approval remain owner prerequisites.
+Bootstrap запускается изолированным Python (`-I`) вне cwd кандидата. Его внешний
+SHA256SUMS перечисляет ровно все обычные файлы T, включая игнорируемые зависимости и
+autoload; исключены только метаданные корневого `.git`. Обязательны нормализованные
+относительные пути, уникальные записи, отсутствие symlinks, отсутствующих, лишних или
+изменённых файлов, и HEAD=T. Инвентарь хэшей и runtime approval лежат вне T. Runtime JSON
+содержит `php` (абсолютный путь к бинарнику), `sha256`, точную `configuration` (`version`,
+`ini`, `scanned`, `extensions`), `config_files` (абсолютные пути конфигов и хэши) и точное
+`environment` (включая абсолютный `BC_PYTHON` для обёртки). Требуются PHP 8.4 и совпадающие
+конфигурация, расширения, окружение и байты. Дочерние PHP-процессы используют этот
+одобренный бинарник (`PHP_BINARY` в PHP-фикстурах); host никогда не вызывает
+`scripts/php84`, который пишет shim в своём checkout. Временные файлы лежат вне T.
+Целостность git-метаданных, защищённые mounts, внешний bootstrap и runtime approval
+остаются предусловиями владельца.
 
 Trusted policy `Contract/bc-trust-policy.json` требует четыре независимые release-line
 и не содержит approvals:
@@ -343,11 +344,11 @@ OpenAPI types и не заменяет ни одну из проверок де�
 
 Отсутствующий известный release — tooling error. При отсутствии предшественника
 статус `initial_bootstrap` не является BC pass относительно самого себя; первый выпуск
-может допустить только внешнее точное D18 approval. Отчёт разделяет изменения,
+может допустить только внешнее точное approval (A). Отчёт разделяет изменения,
 ошибки, выбранные базы, SHA policy/source, `not_checked` и pending qualification.
 Структурные сигнатуры, identities/schema и npm declaration guards не квалифицируют
 runtime-семантику, serial workers, реальные tgz/ZIP consumers, Docker, установку и
-upgrade. Эти проверки остаются за владельцем в P8.2; в синтетических отчётах
+upgrade. Эти проверки остаются за владельцем; в синтетических отчётах
 actual runtime qualification всегда false.
 
-Синтетические проверки подтверждают оркестрацию и границу доверия. Реальная квалификация REST, Docker, архивов, runtime и upgrade отложена на P8.2; внешняя настройка владельца не считается выполненной.
+Синтетические проверки подтверждают оркестрацию и границу доверия. Реальная квалификация REST, Docker, архивов, runtime и upgrade остаётся за владельцем; внешняя настройка владельца не считается выполненной.

@@ -5,7 +5,7 @@
 - [Outage recovery](outage-recovery.md)
 - [Русский](ru/README.md)
 
-Capacity: Redis supports multiple hub instances. Actual two-hub/Redis recovery and scenarios 2/3/10 require the owner’s P8.2 runbook; source checks do not qualify deployment.
+Capacity: Redis supports multiple hub instances. Actual two-hub/Redis recovery and scenarios 2/3/10 require the owner’s runbook; source checks do not qualify deployment.
 
 ## Reference
 

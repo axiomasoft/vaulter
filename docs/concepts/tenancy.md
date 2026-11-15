@@ -219,7 +219,7 @@ ecosystem's host models:
 ```php
 // config/vaulter.php
 'ids' => [
-    'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid|uuid7|bigint (D9)
+    'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid|uuid7|bigint
     // …
 ],
 ```

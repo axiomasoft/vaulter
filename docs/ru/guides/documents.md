@@ -27,7 +27,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 
 ## Модель данных
 
-Документ состоит из двух частей (ADR-0022, поправка D34):
+Документ состоит из двух частей (ADR-0022 и её поправка о рабочем состоянии):
 
 - **Рабочее состояние** — одна строка `v_documents` на узел `kind=document` (`node_id`
   уникален, каскад при удалении узла). Это контент, который сейчас видит любой редактор; каждое
@@ -73,14 +73,14 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 
 Валидатор контента **не зависит от узла**: `v_nodes.sequence` растёт при переименовании,
 перемещении и корзине, `state_version` — при записи контента. Переименование документа не
-инвалидирует открытый редактор, а сохранение не инвалидирует переименование (PLAN2.D35).
+инвалидирует открытый редактор, а сохранение не инвалидирует переименование.
 Полная матрица писателей и форматы ETag — в [Конкурентности](../reference/concurrency.md).
 
 У каждого поколения неизменяемая сохранённая привязка `(protocol, state_format, schema_version, generation)`. Установка нового типа не переименовывает старые bytes. Load и compaction lease возвращают именно этот descriptor; несовместимый адаптер отказывает с `collaboration_unavailable`. Checkpoint сверяет полный leased descriptor и state version, а pending очищает только при полном совпадении binding и покрытии sequence.
 
 `CollaborativeState` — единственный binary write port. Объект `lock()` разрешает запись только в выдавших его connection и transaction attempt; созданные вручную, клонированные, завершённые, откатанные и оставшиеся от retry токены отвергаются. Хост авторизует операцию, вне locks дренирует старый журнал и готовит lossless conversion, затем получает свежий T → N → D lock для `transition()`. Переход сравнивает source binding/version и pending, атомарно записывает content/metadata, повышает state version и generation и создаёт checkpoint даже при одинаковом JSON. Переданные actor/correlation сохраняются в revision/events, но не дают прав.
 
-Обычный `Documents::update()` принимает только JSON. Поддерживаемый settled коллаборативный документ редактируется без активного драйвера: replace сохраняет protocol/format/schema и выполняет reseed с null bytes в новом поколении. Pending ACKed записи сначала должны пройти drain; отключение адаптера не разрешает их потерю. Restore переносит исходные type/schema/format/bytes неизменяемой revision в новое current generation; copy создаёт независимый aggregate без pending. Historical binding evaluator ничего не меняет и отказывает при неоднозначном provenance; server migrations/backfill и реальные гонки остаются квалификацией владельца P8.2.
+Обычный `Documents::update()` принимает только JSON. Поддерживаемый settled коллаборативный документ редактируется без активного драйвера: replace сохраняет protocol/format/schema и выполняет reseed с null bytes в новом поколении. Pending ACKed записи сначала должны пройти drain; отключение адаптера не разрешает их потерю. Restore переносит исходные type/schema/format/bytes неизменяемой revision в новое current generation; copy создаёт независимый aggregate без pending. Historical binding evaluator ничего не меняет и отказывает при неоднозначном provenance; server migrations/backfill и реальные гонки остаются квалификацией владельца.
 
 ## PHP API
 

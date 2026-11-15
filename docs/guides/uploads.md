@@ -27,7 +27,7 @@ full size of the new revision with a conditional UPDATE, so simultaneous writers
 `quota_bytes`. An unlimited quota is `null`; an exact-boundary reservation succeeds.
 The preliminary check is only a fast rejection; the conditional UPDATE decides.
 
-The quota is **logical** (PLAN2.D48): `used_bytes` is the sum of `size_bytes` of every
+The quota is **logical**: `used_bytes` is the sum of `size_bytes` of every
 retained revision of every file of the drive, trash included, with no discount for
 deduplicated bytes — two identical uploads use twice their size. A new revision allocates
 `revision_count + 1` from the locked file and adds its full size, because the previous head
@@ -192,7 +192,7 @@ The tus handler implements the three CORE operations directly (no heavy tus fram
 self-contained over Flysystem + the session table). Appending chunks works on any Flysystem disk, but **completion** is supported on a local staging disk only.
 
 ::: warning Completion is local-disk only
-`tus` and `s3-multipart` are **protocol** names, not storage capabilities. Completing a resumable session needs a bounded staged read (PLAN4-D19), which Flysystem gives only the local adapter: when the staging disk is remote (S3, object stores) or a custom adapter, `complete` is refused with `upload_conflict` (409) before any storage I/O, nothing is published and the session stays assembled. Single-shot `direct` upload and the content-addressed store on S3 are unaffected. Before upgrading, stage resumable uploads on a local disk and see the completion budget in [compatibility](/reference/compatibility).
+`tus` and `s3-multipart` are **protocol** names, not storage capabilities. Completing a resumable session needs a bounded staged read, which Flysystem gives only the local adapter: when the staging disk is remote (S3, object stores) or a custom adapter, `complete` is refused with `upload_conflict` (409) before any storage I/O, nothing is published and the session stays assembled. Single-shot `direct` upload and the content-addressed store on S3 are unaffected. Before upgrading, stage resumable uploads on a local disk and see the completion budget in [compatibility](/reference/compatibility).
 :::
 
 1. **Create** — `POST /drives/{drive}/uploads`. The manager mints the session +
