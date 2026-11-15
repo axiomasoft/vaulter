@@ -39,9 +39,11 @@ function fenceRaceAppend(Node $node, string $payload, ?int $seedStateVersion = n
 it('serializes an append of the old room against a restore: never a record of the old room under the new epoch', function (): void {
     $node = RaceFixtures::document();
     $first = DocumentTestHelpers::head($node);
+    $version = DocumentTestHelpers::document($node)->state_version;
 
+    // The room's first record of an empty generation is its seed; the log takes no client update before it.
     $results = RaceFixtures::race([
-        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'late-room-update')),
+        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'late-room-seed', $version)),
         static fn (): array => RaceFixtures::attempt(static fn () => app(RestoreDocumentRevisionAction::class)->execute(
             DocumentTestHelpers::context($node, actorId: 1), new RestoreDocumentRevisionInput(node: $node, revision: $first),
         )),
