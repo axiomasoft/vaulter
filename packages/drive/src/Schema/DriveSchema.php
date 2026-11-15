@@ -210,8 +210,9 @@ final class DriveSchema implements ModuleSchema
         HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
         $table->timestamps();
 
-        // Hot listing indexes (index plan). The purge-trash scan index
-        // (trashed_at, driver-aware partial) is emitted in afterCreate().
+        // Hot listing indexes. The purge-trash scan index (trashed_at, driver-aware partial) is emitted in
+        // afterCreate(); the drive key gets its own index first so MySQL enforces it (see foreignKeyIndex()).
+        $this->helpers->foreignKeyIndex(table: $table, column: 'drive_id');
         $table->index(['drive_id', 'parent_id']);
         $table->index(['drive_id', 'kind', 'trashed_at']);
         $table->index(['drive_id', 'trash_root_id']);
@@ -418,7 +419,8 @@ final class DriveSchema implements ModuleSchema
         // collide on a token (the loser of a mint race retries with a fresh token).
         $table->unique('token_hash', $name.'_token_hash_uniq');
 
-        // Owner-side "shares on this node" listing.
+        // Owner-side "shares on this node" listing; revoked_at is NULL on an active share.
+        $this->helpers->foreignKeyIndex(table: $table, column: 'node_id');
         $table->index(['node_id', 'revoked_at'], $name.'_node_revoked_idx');
 
         $table->foreign('node_id')
@@ -948,7 +950,9 @@ final class DriveSchema implements ModuleSchema
                 .'GENERATED ALWAYS AS (CASE WHEN `trashed_at` IS NULL THEN SHA2(`name_key`, 256) ELSE NULL END) STORED',
                 $table,
             ));
-            $this->helpers->dbConnection()->statement(sprintf('CREATE UNIQUE INDEX `%s` ON `%s` (`parent_id`, `name_key_hash`)', $name, $table));
+            // The hash leads: InnoDB would otherwise enforce the parent key through this unique index, and MySQL 9.7's
+            // SQL-layer checks skip a trashed node, whose hash is NULL (see SchemaHelpers::foreignKeyIndex()).
+            $this->helpers->dbConnection()->statement(sprintf('CREATE UNIQUE INDEX `%s` ON `%s` (`name_key_hash`, `parent_id`)', $name, $table));
 
             return;
         }
@@ -987,9 +991,11 @@ final class DriveSchema implements ModuleSchema
 
         if ($driver === 'mysql') {
             if (!$this->helpers->schemaConnection()->hasIndex($table, $name)) {
+                // The root marker leads: InnoDB would otherwise enforce the drive key through this unique index, and
+                // MySQL 9.7's SQL-layer checks skip every non-root node, whose marker is NULL.
                 $this->helpers->dbConnection()->statement(
                     sprintf('CREATE UNIQUE INDEX `%s` ON `%s` ', $name, $table).
-                    '(`drive_id`, ((CASE WHEN `parent_id` IS NULL THEN 1 ELSE NULL END)))',
+                    '(((CASE WHEN `parent_id` IS NULL THEN 1 ELSE NULL END)), `drive_id`)',
                 );
             }
 
