@@ -27,7 +27,7 @@ config key:
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => 'gate', // database (default) | gate | spatie | azguard | <your FQCN>
 ],

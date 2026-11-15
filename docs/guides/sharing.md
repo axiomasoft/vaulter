@@ -417,7 +417,7 @@ The hardening is in the code, not bolted on:
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'sharing' => [
     // The \Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
     // Only its sha256 hash is ever stored. Default: RandomShareTokenGenerator (43 chars).

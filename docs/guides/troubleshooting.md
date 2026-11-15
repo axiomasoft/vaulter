@@ -34,7 +34,7 @@ silently open a prod install ([ADR-0007](/adr/0007-pluggable-authorization)).
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],

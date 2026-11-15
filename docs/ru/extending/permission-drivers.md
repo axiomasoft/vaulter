@@ -156,7 +156,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php — used only when access.permission_driver = 'gate'
+// config/vaulter-drive.php — used only when access.permission_driver = 'gate'
 'access' => ['gate' => [
     'abilities' => [
         'previewer' => 'vaulter.preview',
@@ -216,7 +216,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php — used only when access.permission_driver = 'spatie'
+// config/vaulter-drive.php — used only when access.permission_driver = 'spatie'
 'access' => ['spatie' => [
     'permissions' => [
         'previewer' => 'vaulter.preview',

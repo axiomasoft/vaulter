@@ -157,7 +157,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'handlers' => [
     Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
     Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
@@ -304,7 +304,7 @@ enum не тронут.
 <!-- snippet: config -->
 
 ```php [config — cache-safe FQCN list]
-// config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
+// config/vaulter-drive.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
     Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
     App\Vaulter\Handlers\CsvHandler::class,        // [!code ++]

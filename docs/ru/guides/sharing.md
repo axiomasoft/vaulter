@@ -416,7 +416,7 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'sharing' => [
     // \Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator, выпускающий сырой токен.
     // Хранится только его sha256. По умолчанию: RandomShareTokenGenerator (43 символа).

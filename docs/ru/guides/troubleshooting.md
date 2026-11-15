@@ -34,7 +34,7 @@ or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 <!-- snippet: config -->
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
