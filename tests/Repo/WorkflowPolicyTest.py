@@ -401,7 +401,10 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('', out['skip_reason'])
         self.assertEqual('true', out['has_fast'])
         self.assertEqual('true', out['has_vue_collaboration'])
-        self.assertEqual(18, len(json.loads(out['db_matrix'])['include']))
+        db = json.loads(out['db_matrix'])['include']
+        # Every package with database tests on both engines; filament has none, so no db lane.
+        self.assertEqual(16, len(db))
+        self.assertNotIn('filament', {row['package'] for row in db})
         self.assertEqual(7, len(json.loads(out['serial_matrix'])['include']))
         self.assertEqual(6, len(json.loads(out['consumer_matrix'])['include']))
         with self.assertRaises(ValueError):

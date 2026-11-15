@@ -194,9 +194,12 @@ def derive_support(root: Path) -> dict:
         groups = root / 'tests' / 'Integration' / 'groups.php' if pkg == 'integration' else root / 'packages' / pkg / 'tests' / 'groups.php'
         text = re.sub(r'//[^\n]*|/\*.*?\*/', '', groups.read_text(encoding='utf-8') if groups.exists() else '', flags=re.S)
         serial = re.search(r"'serial'\s*=>\s*(?:\[|array\s*\()(.*?)(?:\]|\))\s*,", text, re.S)
+        database = re.search(r"'database'\s*=>\s*(?:\[|array\s*\()(.*?)(?:\]|\))\s*,", text, re.S)
         support[pkg] = {
             'dir': directory,
             'lines': lines,
+            # A package without database tests has no database partition for scripts/t to run, so no db lane.
+            'database': bool(database and database.group(1).strip()),
             'serial': bool(serial and serial.group(1).strip()),
             'types': 'pestphp/pest-plugin-type-coverage' in tooling,
             'rector': (root / directory / 'rector.php').exists(),
@@ -910,7 +913,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     quality_matrix = [{**package(pkg), 'rector': support[pkg]['rector']} for pkg in quality]
     db_matrix = [{**package(pkg), 'engine': engine, 'port': '5432' if engine == 'pgsql' else '3306',
                   'username': 'vaulter' if engine == 'pgsql' else 'root'}
-                 for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine]]
+                 for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine] and support[pkg]['database']]
     serial = [package(pkg) for pkg in affected if support[pkg]['serial']]
     # I14: a change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
     harness = 'repo' in suites
