@@ -41,6 +41,7 @@ __pycache__
 /.agents/skills/**/*.bak
 /.agents/plugins/**/*.bak
 /.swissknifeman/
+/.swissknife/
 
 # AI tooling — machine-specific (абсолютные пути / локальный кэш). Портируемая карта
 # MCP-структуры — .mcp.json.example (плейсхолдеры <ABS_PATH_TO_PROJECT>), он коммитится.
