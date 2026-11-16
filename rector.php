@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Rector\CodeQuality\Rector\Identical\FlipTypeControlToUseExclusiveTypeRector;
 use Rector\CodingStyle\Rector\Use_\SeparateMultiUseImportsRector;
 use Rector\Config\RectorConfig;
 
@@ -33,6 +32,4 @@ return RectorConfig::configure()
     ->withSkip([
         // Pint owns import ordering / formatting; avoid Rector fighting it.
         SeparateMultiUseImportsRector::class,
-        // Keep readable "=== null" guards instead of "! $x instanceof Foo".
-        FlipTypeControlToUseExclusiveTypeRector::class,
     ]);
