@@ -37,7 +37,7 @@
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
         "pestphp/pest-plugin-type-coverage": "^4.0",
-        "phpstan/phpstan": "^2.0"
+        "phpstan/phpstan": "^2.0 <2.3.6"
     },
     "autoload": {
         "psr-4": {
