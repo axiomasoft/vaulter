@@ -285,7 +285,7 @@ checkout в CI не имеет истории, поэтому таймстамп
 
 ```yaml
 # .github/workflows/docs.yml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v7
   with:
     fetch-depth: 0   # else lastUpdated is empty
 ```
