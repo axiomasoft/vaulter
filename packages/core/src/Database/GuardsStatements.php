@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Database;
 
 use Illuminate\Support\Collection;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 /**
@@ -27,7 +28,7 @@ trait GuardsStatements
     }
 
     /** A fresh statement builder must keep the scope of the model it came from. */
-    #[\Override]
+    #[Override]
     public function newQuery(): static
     {
         /** @var static $query */
@@ -54,7 +55,7 @@ trait GuardsStatements
     }
 
     /** @param array<mixed> $values */
-    #[\Override]
+    #[Override]
     public function insert(array $values): bool
     {
         $this->guard();
@@ -63,7 +64,7 @@ trait GuardsStatements
     }
 
     /** @param array<mixed> $values */
-    #[\Override]
+    #[Override]
     public function insertOrIgnore(array $values): int
     {
         $this->guard();
@@ -71,17 +72,24 @@ trait GuardsStatements
         return parent::insertOrIgnore($values);
     }
 
-    /** @param array<string, mixed> $values */
-    #[\Override]
-    public function insertGetId(array $values, $sequence = null): int|string
+    /**
+     * @param  array<string, mixed> $values
+     * @param  string|null          $sequence
+     * @return int
+     */
+    #[Override]
+    public function insertGetId(array $values, $sequence = null)
     {
         $this->guard();
 
         return parent::insertGetId($values, $sequence);
     }
 
-    /** @param list<string> $columns */
-    #[\Override]
+    /**
+     * @param list<string> $columns
+     * @param (\Closure(\Illuminate\Database\Query\Builder): mixed)|\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder<*>|string $query
+     */
+    #[Override]
     public function insertUsing(array $columns, $query): int
     {
         $this->guard();
@@ -89,8 +97,11 @@ trait GuardsStatements
         return parent::insertUsing($columns, $query);
     }
 
-    /** @param list<string> $columns */
-    #[\Override]
+    /**
+     * @param list<string> $columns
+     * @param (\Closure(\Illuminate\Database\Query\Builder): mixed)|\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder<*>|string $query
+     */
+    #[Override]
     public function insertOrIgnoreUsing(array $columns, $query): int
     {
         $this->guard();
@@ -99,7 +110,7 @@ trait GuardsStatements
     }
 
     /** @param array<string, mixed> $values */
-    #[\Override]
+    #[Override]
     public function update(array $values): int
     {
         $this->guard();
@@ -108,7 +119,7 @@ trait GuardsStatements
     }
 
     /** @param array<string, mixed> $values */
-    #[\Override]
+    #[Override]
     public function updateFrom(array $values): int
     {
         $this->guard();
@@ -121,7 +132,7 @@ trait GuardsStatements
      * @param non-empty-array<int, non-empty-string>|non-empty-string $uniqueBy
      * @param array<mixed>|null                                       $update
      */
-    #[\Override]
+    #[Override]
     public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
     {
         $this->guard();
@@ -130,7 +141,7 @@ trait GuardsStatements
     }
 
     /** @param array<string, mixed> $extra */
-    #[\Override]
+    #[Override]
     public function increment($column, $amount = 1, array $extra = []): int
     {
         $this->guard();
@@ -139,7 +150,7 @@ trait GuardsStatements
     }
 
     /** @param array<string, mixed> $extra */
-    #[\Override]
+    #[Override]
     public function decrement($column, $amount = 1, array $extra = []): int
     {
         $this->guard();
@@ -147,7 +158,7 @@ trait GuardsStatements
         return parent::decrement($column, $amount, $extra);
     }
 
-    #[\Override]
+    #[Override]
     public function delete($id = null): int
     {
         $this->guard();
@@ -155,7 +166,7 @@ trait GuardsStatements
         return parent::delete($id);
     }
 
-    #[\Override]
+    #[Override]
     public function truncate(): void
     {
         $this->guard();

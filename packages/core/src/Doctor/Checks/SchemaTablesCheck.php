@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Database\Migrations\MigrationRepositoryInterface;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Schema\ModuleSchemas;
 
 #[Internal]
@@ -19,7 +18,7 @@ final readonly class SchemaTablesCheck implements DoctorCheck
 {
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
         private Container $container,
         private ModuleSchemas $schemas,
     ) {}
@@ -50,14 +49,14 @@ final readonly class SchemaTablesCheck implements DoctorCheck
         $findings = [];
         $findings[] = $missing === []
             ? DoctorFinding::ok(code: 'core.schema.tables_present', message: 'Every Vaulter table exists.', evidence: ['tables' => count($entities)])
-            : DoctorFinding::error(code: 'core.schema.tables_missing', message: count($missing).' Vaulter table(s) are missing.', hint: 'run php artisan migrate', evidence: ['missing' => implode(', ', array_slice($missing, 0, 10)), 'count' => count($missing)]);
+            : DoctorFinding::error(code: 'core.schema.tables_missing', message: count($missing).' Vaulter table(s) are missing.', remediation: 'run php artisan migrate', evidence: ['missing' => implode(', ', array_slice($missing, 0, 10)), 'count' => count($missing)]);
 
         $pending = $this->pendingMigrations();
         $findings[] = $pending === null
-            ? DoctorFinding::error(code: 'core.schema.migrations_table_missing', message: 'The migrations table does not exist.', hint: 'run php artisan migrate')
+            ? DoctorFinding::error(code: 'core.schema.migrations_table_missing', message: 'The migrations table does not exist.', remediation: 'run php artisan migrate')
             : ($pending === []
                 ? DoctorFinding::ok(code: 'core.schema.migrations_applied', message: 'Every Vaulter migration is applied.')
-                : DoctorFinding::error(code: 'core.schema.migrations_pending', message: count($pending).' Vaulter migration(s) are pending.', hint: 'run php artisan migrate', evidence: ['first' => $pending[0], 'count' => count($pending)]));
+                : DoctorFinding::error(code: 'core.schema.migrations_pending', message: count($pending).' Vaulter migration(s) are pending.', remediation: 'run php artisan migrate', evidence: ['first' => $pending[0], 'count' => count($pending)]));
 
         return $findings;
     }
@@ -65,7 +64,6 @@ final readonly class SchemaTablesCheck implements DoctorCheck
     /** @return list<string>|null null when the migrations table is missing */
     private function pendingMigrations(): ?array
     {
-        /** @var MigrationRepositoryInterface $migrations */
         $migrations = $this->container->make('migration.repository');
         if (!$migrations->repositoryExists()) {
             return null;
@@ -75,7 +73,10 @@ final readonly class SchemaTablesCheck implements DoctorCheck
         $applied = array_map(self::bareName(...), $migrations->getRan());
         $files = [];
         foreach ($this->schemas->migrationPaths() as $directory) {
-            array_push($files, ...(glob(rtrim($directory, '/').'/*.php') ?: []));
+            $found = glob(rtrim($directory, '/').'/*.php');
+            if (is_array($found)) {
+                array_push($files, ...$found);
+            }
         }
         $pending = [];
         foreach ($files as $file) {

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 
 /**
  * One run of an operation as the pipeline sees it: the spec, the context and the number of the

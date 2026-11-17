@@ -6,7 +6,7 @@ namespace Vaulter\Events;
 
 use Closure;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Modules\ModuleId;
 
 /**
@@ -136,7 +136,7 @@ final class EventCatalog
                     continue;
                 }
                 foreach ($enum::cases() as $type) {
-                    yield [(string) $module, $type];
+                    yield [$module, $type];
                 }
             }
         }

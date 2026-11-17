@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Whether an idempotent operation that failed with a problem code stores the failure as its receipt:

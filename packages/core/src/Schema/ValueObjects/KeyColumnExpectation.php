@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema\ValueObjects;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 #[Api]
 final readonly class KeyColumnExpectation

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Observability;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 #[Internal]

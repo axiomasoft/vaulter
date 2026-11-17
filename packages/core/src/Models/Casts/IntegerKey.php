@@ -7,7 +7,7 @@ namespace Vaulter\Models\Casts;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** @implements CastsAttributes<int|string, int|string> */
 #[Internal]

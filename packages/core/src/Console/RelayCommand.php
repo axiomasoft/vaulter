@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Events\Outbox\OutboxRelay;
 
@@ -50,7 +50,7 @@ final class RelayCommand extends Command
         do {
             $finished = $relay->pass($consumer, $limit);
             $total += array_sum($finished);
-            $more = array_sum($finished) > 0 && !$this->option('once');
+            $more = array_sum($finished) > 0 && $this->option('once') !== true;
         } while ($more && microtime(true) - $started < ($maxSeconds ?? 50));
 
         $this->components->info(sprintf('Relayed %d outbox deliver%s.', $total, $total === 1 ? 'y' : 'ies'));

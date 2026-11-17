@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Data\Page;
 
 /**

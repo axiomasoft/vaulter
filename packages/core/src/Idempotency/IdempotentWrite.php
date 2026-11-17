@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * What makes a write idempotent by key (docs/adr/0029-idempotency.md): the codec of its result, the replay authorizer of its

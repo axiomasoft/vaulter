@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Models\Casts\IntegerKey;
 

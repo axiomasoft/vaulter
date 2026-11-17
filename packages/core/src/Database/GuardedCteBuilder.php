@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Database;
 
+use Packman\Attributes\Internal;
 use Staudenmeir\LaravelCte\Query\Builder;
-use Vaulter\Attributes\Internal;
 
 /**
  * {@see GuardedBuilder} for models that also run recursive/common table expressions

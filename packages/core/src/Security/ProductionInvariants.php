@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Security;
 
 use Illuminate\Support\Facades\Log;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Exceptions\Configuration\InsecureProductionConfiguration;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -48,7 +48,7 @@ final class ProductionInvariants
     public static function assertKeysMatchIds(array $byKey): void
     {
         foreach ($byKey as $key => $invariant) {
-            if ($invariant->id() !== (string) $key) {
+            if ($invariant->id() !== $key) {
                 throw new InvalidConfigurationException(sprintf('[Vaulter] ProductionInvariant contributed as "%s" must return that exact id().', $key));
             }
         }

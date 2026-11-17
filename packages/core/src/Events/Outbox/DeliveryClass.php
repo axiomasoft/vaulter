@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Outbox;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /** Whether an outbox consumer must see every event (durable) or only the current ones (ephemeral). */
 #[Spi(SpiKind::Call)]

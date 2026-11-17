@@ -6,14 +6,14 @@ namespace Vaulter\Console;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Enums\CheckStatus;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\OutputInterface;
-use Vaulter\Attributes\Internal;
-use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorReport;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Kernel;
 
 /**
@@ -41,7 +41,7 @@ final class DoctorCommand extends Command
         if ($sample === false || $sample < 1) {
             return $this->usage('--sample must be a positive integer.');
         }
-        $prefixes = array_values(array_filter(array_map(strval(...), (array) $this->option('check')), static fn (string $prefix): bool => $prefix !== ''));
+        $prefixes = array_values(array_filter(array_map(strval(...), $this->option('check')), static fn (string $prefix): bool => $prefix !== ''));
         $unknown = $registry->unmatched($prefixes);
         if ($unknown !== []) {
             return $this->usage('No doctor check matches --check='.implode(', ', $unknown).'.');
@@ -104,14 +104,14 @@ final class DoctorCommand extends Command
                 $this->line('  <fg=gray>detail: '.OutputFormatter::escape($check->detail).'</>');
             }
             foreach ($check->findings as $finding) {
-                [$mark, $color] = match ($finding->severity) {
-                    DoctorSeverity::Ok => ['ok  ', 'green'],
-                    DoctorSeverity::Warning => ['warn', 'yellow'],
-                    DoctorSeverity::Error => ['FAIL', 'red'],
+                [$mark, $color] = match ($finding->status) {
+                    CheckStatus::Ok, CheckStatus::Skipped => ['ok  ', 'green'],
+                    CheckStatus::Warning => ['warn', 'yellow'],
+                    CheckStatus::Error => ['FAIL', 'red'],
                 };
                 $this->line('  <fg='.$color.'>'.$mark.'</> '.OutputFormatter::escape($finding->message).' <fg=gray>['.$finding->code.']</>');
-                if ($finding->hint !== null) {
-                    $this->line('       <fg=gray>hint: '.OutputFormatter::escape($finding->hint).'</>');
+                if ($finding->remediation !== '') {
+                    $this->line('       <fg=gray>hint: '.OutputFormatter::escape($finding->remediation).'</>');
                 }
             }
         }

@@ -6,9 +6,10 @@ namespace Vaulter\Testing\Support;
 
 use Closure;
 use Illuminate\Support\Facades\Route;
+use LogicException;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 
 /**
  * Test-only versioned route that throws what a test hands it, so the problem renderer
@@ -27,7 +28,7 @@ final class ProblemProbeRoutes
         Route::get(self::path('{key}'), static function (string $key) use ($throwables): never {
             $throwable = $throwables[$key] ?? null;
             if ($throwable === null) {
-                throw new \LogicException('No probe registered for ['.$key.'].');
+                throw new LogicException('No probe registered for ['.$key.'].');
             }
 
             throw $throwable instanceof Closure ? $throwable() : $throwable;
@@ -36,6 +37,6 @@ final class ProblemProbeRoutes
 
     public static function path(string $key): string
     {
-        return app(RoutesConfig::class)->versionedPrefix().'/__probe/'.$key;
+        return app(RoutesOptions::class)->versionedPrefix().'/__probe/'.$key;
     }
 }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use LogicException;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * How the owner of an idempotent operation stores its result in a receipt and restores it on a replay (

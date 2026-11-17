@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * What stops the removal of a module that no foreign key, row count or reference shows: `vaulter:module:uninstall`

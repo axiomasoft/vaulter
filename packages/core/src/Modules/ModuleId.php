@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use InvalidArgumentException;
+use Packman\Attributes\Api;
 use Stringable;
-use Vaulter\Attributes\Api;
 
 /**
  * The stable name of a Vaulter module (`core`, `drive`, `webhooks`): the key of `vaulter.modules`

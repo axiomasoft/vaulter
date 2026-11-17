@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Support\Concerns;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Attributes\Icon;
 use Vaulter\Support\EnumCaseAttributeResolver;
 

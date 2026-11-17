@@ -7,7 +7,7 @@ namespace Vaulter\Schema;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 
 /**

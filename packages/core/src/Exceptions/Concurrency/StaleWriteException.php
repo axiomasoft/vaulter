@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Concurrency;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -28,6 +32,16 @@ final class StaleWriteException extends VaulterException implements ProblemExcep
     public static function of(string $aggregate, int|string $id): self
     {
         return new self($aggregate, (string) $id);
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: VaulterErrorCode::StaleWrite,
+            category: ErrorCategory::Validation,
+            details: ['aggregate' => $this->aggregate, 'id' => $this->id],
+        );
     }
 
     public function problemCode(): string

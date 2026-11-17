@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Http\Problems\ProblemCodeSource;
+use Packman\Attributes\Internal;
 
 /**
  * The sealed outcome of a valid compilation: every offered module with its state, and the

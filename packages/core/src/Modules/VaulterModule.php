@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The manifest of a module: who it is, what it needs and what it declares. A package's service

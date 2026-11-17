@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 
 /**
  * An offered module after compilation: whether it is active and why.
@@ -17,12 +18,12 @@ final readonly class ModuleState
     public const string REASON_OVERRIDE = 'override';
 
     /**
-     * @param class-string<VaulterModule> $manifest
-     * @param list<string>                $schemaPaths
+     * @param class-string<VaulterModule|ExtensionPlugin> $manifest
+     * @param list<string>                                $schemaPaths
      */
     public function __construct(
         public ModuleId $id,
-        /** @var class-string<VaulterModule> */
+        /** @var class-string<VaulterModule|ExtensionPlugin> */
         public string $manifest,
         public string $version,
         public Activation $activation,

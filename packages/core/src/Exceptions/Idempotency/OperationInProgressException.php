@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Idempotency;
 
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Throwable;
-use Vaulter\Attributes\Api;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -22,6 +26,12 @@ final class OperationInProgressException extends VaulterException implements Pro
     public function __construct(private readonly int $retryAfter = 1, ?Throwable $previous = null)
     {
         parent::__construct('[Vaulter] A request with the same idempotency key is still in progress; retry it later. Docs: '.self::docs('operation-in-progress'), 0, $previous);
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::OperationInProgress, category: ErrorCategory::Conflict, retryable: true);
     }
 
     public function problemCode(): string

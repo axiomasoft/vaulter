@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema\ValueObjects;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 #[Internal]
 final readonly class KeyColumnMismatch

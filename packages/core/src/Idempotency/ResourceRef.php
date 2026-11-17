@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * A neutral reference to the resource an idempotency receipt is about, or to the authorization scope it was

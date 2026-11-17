@@ -1,6 +1,6 @@
 {
-    "name": "axioma-studio/vaulter-core",
-    "description": "Vaulter kernel: module registry, operation pipeline, idempotency, events and outbox, problem details, tenancy and diagnostics. Install axioma-studio/vaulter for the full product.",
+    "name": "axiomasoft/vaulter-core",
+    "description": "Vaulter kernel: module registry, operation pipeline, idempotency, events and outbox, problem details, tenancy and diagnostics. Install axiomasoft/vaulter for the full product.",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -22,27 +22,38 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
+    "replace": {
+        "axioma-studio/vaulter-core": "self.version"
+    },
     "require": {
-        "php": "^8.4",
+        "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1",
+        "illuminate/console": "^13.0",
         "illuminate/contracts": "^13.0",
         "illuminate/database": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/routing": "^13.0",
         "illuminate/support": "^13.0",
-        "spatie/laravel-package-tools": "^1.92",
-        "staudenmeir/laravel-cte": "^1.12",
-        "psr/http-message": "^1.1|^2.0"
+        "illuminate/validation": "^13.0",
+        "psr/http-message": "^1.1|^2.0",
+        "psr/log": "^3.0",
+        "staudenmeir/laravel-cte": "^1.12"
     },
     "require-dev": {
+        "axiomasoft/packman-testkit": "^0.1",
         "opis/json-schema": "^2.4",
-        "orchestra/testbench": "^11.0",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2"
     },
     "suggest": {
-        "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
-        "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning.",
-        "axioma-studio/vaulter-drive": "File/folder tree behaviour + resumable uploads: StorageManager, the DriveHandle factory, PurgeTrash/SweepUploads. Required for Vaulter::for()/forStorage() and the Drive REST surface.",
-        "axioma-studio/vaulter-documents": "Document-node behaviour: document types and codecs, revisions, comments and export. Required for Vaulter::registerHandler()/registerExporter() and the document REST surface.",
-        "orchestra/testbench": "Testing kit (Vaulter\\Testing\\*): the base of every suite and of FreshApplication; the kit is loaded by tests only.",
+        "axiomasoft/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
+        "axiomasoft/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning.",
+        "axiomasoft/vaulter-drive": "File/folder tree behaviour + resumable uploads: StorageManager, the DriveHandle factory, PurgeTrash/SweepUploads. Required for Vaulter::for()/forStorage() and the Drive REST surface.",
+        "axiomasoft/vaulter-documents": "Document-node behaviour: document types and codecs, revisions, comments and export. Required for Vaulter::registerHandler()/registerExporter() and the document REST surface.",
+        "axiomasoft/packman-testkit": "Testing kit (`Packman\\Testkit\\*`) powering core test suites.",
+        "orchestra/testbench": "Testing kit: the base of every suite and of FreshApplication; the kit is loaded by tests only.",
         "opis/json-schema": "Testing kit: the OpenAPI contract check (VAULTER_OPENAPI_VALIDATE=1).",
         "symfony/yaml": "Testing kit: reads openapi/vaulter-v1.yaml for the contract check."
     },
@@ -57,6 +68,39 @@
         }
     },
     "extra": {
+        "packman": {
+            "schema-version": 1,
+            "package-type": "foundation",
+            "stability": "stable",
+            "error-prefix": "vaulter",
+            "owns": [
+                "Attributes",
+                "Configuration",
+                "Console",
+                "Contracts",
+                "Data",
+                "Database",
+                "Doctor",
+                "Errors",
+                "Events",
+                "Exceptions",
+                "Http",
+                "Idempotency",
+                "Internal",
+                "Laravel",
+                "Models",
+                "Modules",
+                "Observability",
+                "Operations",
+                "Providers",
+                "Schema",
+                "Security",
+                "Support",
+                "Tenancy",
+                "Testing",
+                "ValueObjects"
+            ]
+        },
         "laravel": {
             "providers": [
                 "Vaulter\\VaulterServiceProvider"

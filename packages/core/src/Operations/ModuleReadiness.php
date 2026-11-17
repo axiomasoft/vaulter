@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Kernel;
@@ -31,7 +31,7 @@ final class ModuleReadiness
     public function __construct(
         private readonly Kernel $kernel,
         private readonly VaulterDatabase $database,
-        private readonly DatabaseConfig $config,
+        private readonly DatabaseOptions $config,
         private readonly ModuleSchemas $schemas,
     ) {}
 

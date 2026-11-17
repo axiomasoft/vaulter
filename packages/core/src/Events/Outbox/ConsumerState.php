@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Outbox;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** The lifecycle of a registered outbox consumer. */
 #[Internal]

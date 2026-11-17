@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Config\Repository;
 use Illuminate\Console\Scheduling\Schedule;
-use Vaulter\Configuration\ScheduleConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Configuration\ScheduleFrequency;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Configuration\ScheduleOptions;
 
 dataset('frequencies', [
     'every minute' => ['everyMinute', '* * * * *'],
@@ -33,15 +32,15 @@ it('treats null as a disabled task', function (): void {
 it('rejects an unknown value', function (mixed $value): void {
     ScheduleFrequency::parse('vaulter.schedule.k', $value);
 })->with(['everySecond', 'dailyAt:25:00', 'dailyAt:3:10', 'hourlyAt:60', 'weeklyOn:7,01:00', '* * * *', '61 * * * *', '', 5, true, [['daily']]])
-    ->throws(InvalidConfigurationException::class);
+    ->throws(InvalidConfiguration::class);
 
 it('leaves keys missing from the host config off', function (): void {
-    $config = new ScheduleConfig(new Repository(['vaulter-x' => ['schedule' => ['a' => 'daily']]]));
+    $frequencies = ScheduleFrequency::fromMap('vaulter-x.schedule', ['a' => 'daily'], ['a', 'b']);
 
-    expect($config->frequencies('vaulter-x', ['a', 'b']))->toHaveKeys(['a', 'b'])
-        ->and($config->frequencies('vaulter-x', ['b'])['b'])->toBeNull();
+    expect($frequencies)->toHaveKeys(['a', 'b'])
+        ->and($frequencies['b'])->toBeNull();
 });
 
 it('requires a boolean enabled flag', function (): void {
-    (new ScheduleConfig(new Repository(['vaulter' => ['schedule' => ['enabled' => 'yes']]])))->enabled();
-})->throws(InvalidConfigurationException::class);
+    ScheduleOptions::fromArray(['enabled' => 'yes'], 'vaulter.schedule');
+})->throws(InvalidConfiguration::class);

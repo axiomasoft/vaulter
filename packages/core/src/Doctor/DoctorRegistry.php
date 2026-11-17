@@ -6,8 +6,8 @@ namespace Vaulter\Doctor;
 
 use Illuminate\Contracts\Container\Container;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
 use Vaulter\Kernel;
 
 /**
@@ -58,15 +58,7 @@ final readonly class DoctorRegistry
             return $checks;
         }
 
-        return array_values(array_filter($checks, static function (DoctorCheck $check) use ($prefixes): bool {
-            foreach ($prefixes as $prefix) {
-                if (self::matches($check->key(), $prefix)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }));
+        return array_values(array_filter($checks, static fn (DoctorCheck $check): bool => array_any($prefixes, fn ($prefix): bool => self::matches($check->key(), $prefix))));
     }
 
     /**
@@ -77,15 +69,7 @@ final readonly class DoctorRegistry
     {
         $keys = array_map(static fn (DoctorCheck $check): string => $check->key(), $this->all());
 
-        return array_values(array_filter($prefixes, static function (string $prefix) use ($keys): bool {
-            foreach ($keys as $key) {
-                if (self::matches($key, $prefix)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }));
+        return array_values(array_filter($prefixes, static fn (string $prefix): bool => array_all($keys, fn (string $key): bool => !self::matches($key, $prefix))));
     }
 
     /**

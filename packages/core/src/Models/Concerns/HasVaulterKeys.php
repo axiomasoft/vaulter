@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\MySqlConnection;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\IdsConfig;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Models\Casts\IntegerKey;
 use Vaulter\Schema\AutoIncrementIds;
@@ -37,7 +38,7 @@ trait HasVaulterKeys
             }
 
             // The seam lives on the concrete model (this trait), not Model.
-            $key = $model instanceof self ? $model->vaulterIdStrategyKey() : app(IdsConfig::class)->strategy();
+            $key = $model instanceof self ? $model->vaulterIdStrategyKey() : app(IdsOptions::class)->strategy;
             $newId = app(IdStrategyResolver::class)->resolve($key)->newId();
 
             if ($newId === null) {
@@ -76,7 +77,7 @@ trait HasVaulterKeys
 
     /** @return array<string, string> */
     #[Internal]
-    #[\Override]
+    #[Override]
     public function getCasts(): array
     {
         $casts = parent::getCasts();
@@ -93,7 +94,7 @@ trait HasVaulterKeys
      * @param array<string, mixed> $attributes
      */
     #[Internal]
-    #[\Override]
+    #[Override]
     protected function insertAndSetId(Builder $query, $attributes): void
     {
         $connection = $query->getConnection();
@@ -114,7 +115,7 @@ trait HasVaulterKeys
      */
     protected function vaulterIdStrategyKey(): string
     {
-        return app(IdsConfig::class)->strategy();
+        return app(IdsOptions::class)->strategy;
     }
 
     private function vaulterIdStrategy(): IdStrategy

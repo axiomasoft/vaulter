@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Contracts;
 
 use Illuminate\Database\Schema\Blueprint;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * Primary-key strategy. Drives column types in the published (and later

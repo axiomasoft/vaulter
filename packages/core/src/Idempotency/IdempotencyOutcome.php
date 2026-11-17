@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Whether the keyed write of the current request was answered from a receipt: the HTTP middleware reads it to

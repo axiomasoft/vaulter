@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 
 /**
  * The contributions of the active modules to each slot, read from the sealed registry. The consumer

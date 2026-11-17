@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\IdsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 use Vaulter\Schema\ValueObjects\KeyColumnMismatch;
 
-/** @internal */
 #[Internal]
 final class KeyColumnInspector
 {
     public function __construct(
         private readonly VaulterDatabase $db,
-        private readonly DatabaseConfig $database,
-        private readonly IdsConfig $ids,
+        private readonly DatabaseOptions $database,
+        private readonly IdsOptions $ids,
         private readonly ModuleSchemas $schemas,
     ) {}
 
@@ -81,7 +80,7 @@ final class KeyColumnInspector
 
         $expected = $expectation->kind === 'HK'
             ? HostKeyColumns::sqlType($this->db->driver())
-            : match ($this->ids->strategy()) {
+            : match ($this->ids->strategy) {
                 'bigint' => $this->db->driver() === 'pgsql' ? 'bigint' : 'bigint unsigned',
                 'ulid' => 'char(26)',
                 'uuid7' => $this->db->driver() === 'pgsql' ? 'uuid' : 'char(36)',

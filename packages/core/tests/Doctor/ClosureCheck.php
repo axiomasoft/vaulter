@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Doctor;
 
 use Closure;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 
 /** A check whose result a test supplies. */
 final class ClosureCheck implements DoctorCheck

@@ -9,29 +9,31 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use LogicException;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use stdClass;
 use Throwable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 
 #[Api]
 final class VaulterDatabase
 {
-    /** The outermost transaction attempt now running; `aborted` once its commit failed and it was retried. */
+    /**
+     * The outermost transaction attempt now running; `aborted` once its commit failed and it was retried.
+     */
     private ?stdClass $attempt = null;
 
     #[Internal]
     public function __construct(
-        private readonly DatabaseConfig $databaseConfig,
+        private readonly DatabaseOptions $databaseOptions,
         private readonly DatabaseManager $db,
         private readonly Container $container,
     ) {}
 
     public function connection(): Connection
     {
-        return $this->db->connection($this->databaseConfig->connection());
+        return $this->db->connection($this->databaseOptions->connection);
     }
 
     public function driver(): string
@@ -175,7 +177,7 @@ final class VaulterDatabase
             return;
         }
 
-        $this->connection()->table($this->databaseConfig->table($entity))
+        $this->connection()->table($this->databaseOptions->table($entity))
             ->where('id', $id)->lockForUpdate()->first(['id']);
     }
 
@@ -207,13 +209,17 @@ final class VaulterDatabase
         }
     }
 
-    /** Runs $callback once the outermost transaction has committed, never for a rolled-back attempt. */
+    /**
+     * Runs $callback once the outermost transaction has committed, never for a rolled-back attempt.
+     *
+     * @param Closure(): void $callback
+     */
     public function afterCommit(Closure $callback): void
     {
         $attempt = $this->connection()->transactionLevel() > 0 ? $this->attempt : null;
 
         $this->connection()->afterCommit(static function () use ($callback, $attempt): void {
-            if ($attempt === null || !$attempt->aborted) {
+            if ($attempt === null || $attempt->aborted !== true) {
                 $callback();
             }
         });

@@ -6,14 +6,14 @@ namespace Vaulter\Configuration;
 
 use Cron\CronExpression;
 use Illuminate\Console\Scheduling\Event;
-use Vaulter\Attributes\Api;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Packman\Attributes\Api;
+use Packman\Config\Exceptions\InvalidConfiguration;
 
 /**
  * One validated `schedule.*` config value. The grammar is closed so a typo fails at
  * boot instead of silently never running a maintenance task.
  */
-#[Api]
+#[Api(since: '1.0')]
 final readonly class ScheduleFrequency
 {
     private const array PLAIN = [
@@ -23,13 +23,13 @@ final readonly class ScheduleFrequency
 
     private function __construct(private string $method, private string $argument) {}
 
-    /** @throws InvalidConfigurationException */
+    /** @throws InvalidConfiguration */
     public static function parse(string $key, mixed $value): ?self
     {
         if ($value === null) {
             return null;
         }
-        $invalid = static fn (): InvalidConfigurationException => new InvalidConfigurationException(
+        $invalid = static fn (): InvalidConfiguration => InvalidConfiguration::forMessage(
             '[Vaulter] Invalid schedule frequency for '.$key.'.',
         );
         if (!is_string($value) || trim($value) === '') {
@@ -47,11 +47,33 @@ final readonly class ScheduleFrequency
         if (preg_match('/^weeklyOn:([0-6]),([01]\d|2[0-3]):([0-5]\d)$/', $value) === 1) {
             return new self('weeklyOn', substr($value, 9));
         }
-        if (count(preg_split('/\s+/', trim($value)) ?: []) === 5 && CronExpression::isValidExpression($value)) {
+        $parts = preg_split('/\s+/', trim($value));
+        if (is_array($parts) && count($parts) === 5 && CronExpression::isValidExpression($value)) {
             return new self('cron', trim($value));
         }
 
         throw $invalid();
+    }
+
+    /**
+     * @param list<string> $keys
+     *
+     * @throws InvalidConfiguration
+     *
+     * @return array<string, ?self>
+     */
+    public static function fromMap(string $path, mixed $values, array $keys): array
+    {
+        if (!is_array($values)) {
+            throw InvalidConfiguration::forMessage('[Vaulter] '.$path.' must be an array.');
+        }
+
+        $frequencies = [];
+        foreach ($keys as $key) {
+            $frequencies[$key] = self::parse($path.'.'.$key, $values[$key] ?? null);
+        }
+
+        return $frequencies;
     }
 
     public function applyTo(Event $event): Event

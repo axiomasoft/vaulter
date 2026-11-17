@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter-monorepo",
+    "name": "axiomasoft/vaulter-monorepo",
     "description": "Vaulter — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
     "type": "project",
     "license": "MIT",
@@ -10,33 +10,75 @@
             "email": "dv.vostrikov@gmail.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/*",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/vaulter": "1.0.x-dev",
+                    "axiomasoft/vaulter-azguard": "1.0.x-dev",
+                    "axiomasoft/vaulter-collaboration": "1.0.x-dev",
+                    "axiomasoft/vaulter-core": "1.0.x-dev",
+                    "axiomasoft/vaulter-documents": "1.0.x-dev",
+                    "axiomasoft/vaulter-drive": "1.0.x-dev",
+                    "axiomasoft/vaulter-filament": "1.0.x-dev",
+                    "axiomasoft/vaulter-media": "1.0.x-dev",
+                    "axiomasoft/vaulter-webhooks": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../packman/packages/*",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman": "0.1.x-dev",
+                    "axiomasoft/packman-devtools": "0.1.x-dev",
+                    "axiomasoft/packman-filament": "0.1.x-dev",
+                    "axiomasoft/packman-modules": "0.1.x-dev",
+                    "axiomasoft/packman-panels": "0.1.x-dev",
+                    "axiomasoft/packman-plugins": "0.1.x-dev",
+                    "axiomasoft/packman-schema": "0.1.x-dev",
+                    "axiomasoft/packman-testkit": "0.1.x-dev"
+                }
+            }
+        }
+    ],
     "require": {
-        "php": "^8.4",
-        "axioma-studio/vaulter-core": "@dev",
-        "axioma-studio/vaulter-media": "@dev",
-        "axioma-studio/vaulter-drive": "@dev",
-        "axioma-studio/vaulter-documents": "@dev"
+        "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1",
+        "axiomasoft/vaulter-core": "@dev",
+        "axiomasoft/vaulter-documents": "@dev",
+        "axiomasoft/vaulter-drive": "@dev",
+        "axiomasoft/vaulter-media": "@dev"
     },
     "require-dev": {
-        "opis/json-schema": "^2.4",
-        "symfony/yaml": "^8.0",
-        "laravel/pint": "^1.13",
-        "rector/rector": "^2.0",
-        "pestphp/pest": "^4.7",
-        "pestphp/pest-plugin-laravel": "^4.0",
-        "pestphp/pest-plugin-type-coverage": "^4.0",
-        "orchestra/testbench": "^11.0",
-        "phpstan/phpstan": "^2.0 <2.3.6",
-        "larastan/larastan": "^3.0",
+        "axiomasoft/packman-devtools": "^0.1",
+        "axiomasoft/packman-testkit": "^0.1",
+        "axiomasoft/vaulter-collaboration": "@dev",
+        "axiomasoft/vaulter-webhooks": "@dev",
+        "driftingly/rector-laravel": "^2.7",
         "firebase/php-jwt": "^7.0",
-        "spatie/laravel-permission": "^8.0",
+        "larastan/larastan": "^3.12",
         "laravel/pao": "^1.1",
+        "laravel/pint": "^1.32",
         "league/flysystem-aws-s3-v3": "^3.0",
-        "open-telemetry/sdk": "^1.2",
-        "open-telemetry/api": "^1.1",
         "nikic/php-parser": "^5.7",
-        "axioma-studio/vaulter-webhooks": "@dev",
-        "axioma-studio/vaulter-collaboration": "@dev"
+        "open-telemetry/api": "^1.1",
+        "open-telemetry/sdk": "^1.2",
+        "opis/json-schema": "^2.4",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2",
+        "phpstan/phpstan": "^2.2.16 <2.3.6",
+        "phpstan/phpstan-strict-rules": "^2.0.12",
+        "rector/rector": "^2.6",
+        "spatie/laravel-permission": "^8.0",
+        "symfony/yaml": "^8.0"
     },
     "autoload-dev": {
         "psr-4": {
@@ -47,46 +89,45 @@
             "Vaulter\\Load\\Tests\\": "load/tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "packages/*",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "axioma-studio/vaulter-azguard": "1.0.x-dev",
-                    "axioma-studio/vaulter-collaboration": "1.0.x-dev",
-                    "axioma-studio/vaulter-core": "1.0.x-dev",
-                    "axioma-studio/vaulter-documents": "1.0.x-dev",
-                    "axioma-studio/vaulter-drive": "1.0.x-dev",
-                    "axioma-studio/vaulter-filament": "1.0.x-dev",
-                    "axioma-studio/vaulter-media": "1.0.x-dev",
-                    "axioma-studio/vaulter": "1.0.x-dev",
-                    "axioma-studio/vaulter-webhooks": "1.0.x-dev"
-                }
-            }
+    "extra": {
+        "phpstan/extension-installer": {
+            "ignore": [
+                "larastan/larastan",
+                "nesbot/carbon",
+                "pestphp/pest",
+                "phpstan/phpstan-strict-rules"
+            ]
         }
-    ],
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
+        "process-timeout": 1200,
+        "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": false,
+            "phpstan/extension-installer": true,
+            "tbachert/spi": false
         }
     },
     "scripts": {
+        "lint": "vendor/bin/pint",
+        "lint:check": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G --no-progress",
+        "refactor": "vendor/bin/rector process",
+        "refactor:check": "vendor/bin/rector process --dry-run",
         "test": "scripts/t sqlite -p core",
+        "test:pg": "scripts/t pgsql -p core --full",
         "test:all": "scripts/t sqlite",
         "test:changed": "scripts/t --changed --db=pgsql",
         "test:db": "scripts/t pgsql --group=database",
         "test:full": "scripts/t sqlite --full",
         "test:baseline": "scripts/t baseline --compare",
-        "test:coverage": "vendor/bin/pest --coverage --min=80",
-        "test:types": "vendor/bin/pest --type-coverage --min=100",
-        "lint": "vendor/bin/pint",
-        "lint:check": "vendor/bin/pint --test",
-        "refactor": "vendor/bin/rector process",
-        "refactor:check": "vendor/bin/rector process --dry-run",
-        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"
+        "gate": "@php vendor/bin/packman gate",
+        "php-api": "@php vendor/bin/packman php-api --check",
+        "error-codes": "@php vendor/bin/packman error-codes --check",
+        "config-schema": "@php vendor/bin/packman config-schema --check",
+        "ai:sync": "@php vendor/bin/packman ai:sync --dry-run"
     }
 }

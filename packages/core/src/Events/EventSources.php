@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Events;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Vaulter\CoreModule;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\VaulterModule;
 
 /**
@@ -39,12 +41,17 @@ final readonly class EventSources
     {
         $sources = [];
         foreach (ModuleCatalog::of($app)->offered() as $manifest) {
-            if (!is_a($manifest, VaulterModule::class, true)) {
+            if (is_a($manifest, CoreModule::class, true)) {
+                $module = new CoreModule;
+                $builder = new ModuleBuilder(new ModuleId('core'));
+                $module->declareModule($builder);
+            } elseif (is_a($manifest, VaulterModule::class, true)) {
+                $module = new $manifest;
+                $builder = new ModuleBuilder($module->id());
+                $module->register($builder);
+            } else {
                 continue;
             }
-            $module = new $manifest;
-            $builder = new ModuleBuilder($module->id());
-            $module->register($builder);
             if ($builder->eventSources() !== []) {
                 $sources[$builder->module()->value] = $builder->eventSources();
             }

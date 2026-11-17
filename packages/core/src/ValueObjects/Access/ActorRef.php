@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Access;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 #[Api]
 final readonly class ActorRef

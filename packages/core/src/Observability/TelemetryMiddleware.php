@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Observability;
 
 use Closure;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Exceptions\Contracts\ProblemException;

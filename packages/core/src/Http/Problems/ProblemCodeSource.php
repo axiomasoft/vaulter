@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * A module's contribution to the problem-code catalogue, declared with `ModuleBuilder::problems()`. The

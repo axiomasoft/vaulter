@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
@@ -25,6 +27,9 @@ it('resolves each strategy key to its class', function (): void {
 
 it('rejects a non-uuid for a Vaulter uuid7 model that does not use HasUuids', function (): void {
     config()->set('vaulter.ids.strategy', 'uuid7');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = new class extends Model
     {
         use HasVaulterKeys;
@@ -36,6 +41,9 @@ it('rejects a non-uuid for a Vaulter uuid7 model that does not use HasUuids', fu
 
 it('falls back to the configured default when no key is given', function (): void {
     config()->set('vaulter.ids.strategy', 'ulid');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
 
     expect(app(IdStrategyResolver::class)->resolve())->toBeInstanceOf(UlidIds::class);
 });

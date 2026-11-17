@@ -6,11 +6,11 @@ namespace Vaulter\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Attributes\Internal;
 
 /**
  * One cache policy for the versioned API, decided here rather than in each controller:

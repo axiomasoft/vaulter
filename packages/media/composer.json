@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter-media",
+    "name": "axiomasoft/vaulter-media",
     "description": "Content-addressed file/blob layer (CAS) for Vaulter — sha256 dedup, race-free commit, two-phase GC over Flysystem.",
     "type": "library",
     "license": "MIT",
@@ -15,19 +15,19 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
+    "replace": {
+        "axioma-studio/vaulter-media": "self.version"
+    },
     "require": {
-        "php": "^8.4",
-        "axioma-studio/vaulter-core": "self.version",
-        "spatie/laravel-package-tools": "^1.92"
+        "php": ">=8.4 <8.6",
+        "axiomasoft/vaulter-core": "self.version"
     },
     "require-dev": {
-        "larastan/larastan": "^3.0",
-        "laravel/pint": "^1.13",
-        "orchestra/testbench": "^11.0",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0",
-        "pestphp/pest-plugin-type-coverage": "^4.0",
-        "phpstan/phpstan": "^2.0 <2.3.6"
+        "larastan/larastan": "^3.12",
+        "laravel/pint": "^1.32",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2",
+        "phpstan/phpstan": "^2.2.16 <2.3.6"
     },
     "autoload": {
         "psr-4": {

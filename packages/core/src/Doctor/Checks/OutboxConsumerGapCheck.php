@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor\Checks;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Events\Outbox\ConsumerState;
 use Vaulter\Events\Outbox\OutboxStore;
 
@@ -46,7 +46,7 @@ final readonly class OutboxConsumerGapCheck implements DoctorCheck
                 $findings[] = DoctorFinding::error(
                     code: 'core.outbox.consumer_gap',
                     message: sprintf('The outbox consumer %s was detached and missed %d event(s) in seqs [%d, %d].', $consumer['consumer_id'], $events, $from, $to),
-                    hint: sprintf('vaulter:relay:replay --consumer=%s --from=%d --to=%d (or --ack-only to accept the loss)', $consumer['consumer_id'], $from, $to),
+                    remediation: sprintf('vaulter:relay:replay --consumer=%s --from=%d --to=%d (or --ack-only to accept the loss)', $consumer['consumer_id'], $from, $to),
                     evidence: ['consumer' => $consumer['consumer_id'], 'from_seq' => $from, 'to_seq' => $to, 'events' => $events],
                 );
             }
@@ -58,7 +58,7 @@ final readonly class OutboxConsumerGapCheck implements DoctorCheck
             $findings[] = DoctorFinding::warning(
                 code: 'core.outbox.consumer_paused',
                 message: 'Paused outbox consumer(s) '.implode(', ', $paused).' hold retention until vaulter.outbox.max_consumer_hold_seconds, then are detached with a gap.',
-                hint: 'enable the module of the consumer again, or let the hold run out',
+                remediation: 'enable the module of the consumer again, or let the hold run out',
                 evidence: ['paused' => implode(',', $paused)],
             );
         }

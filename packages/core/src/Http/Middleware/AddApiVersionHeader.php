@@ -6,8 +6,8 @@ namespace Vaulter\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 
 /**
  * Marks every response of the versioned API with its major version, so a client can

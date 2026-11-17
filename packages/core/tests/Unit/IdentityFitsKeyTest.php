@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Schema\AutoIncrementIds;
+use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Identity;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
@@ -39,7 +42,7 @@ it('lets only a key the column can hold reach a query', function (): void {
 it('checks the signed bigint boundary without opening a database connection', function (string $driver): void {
     config()->set('database.connections.identity_bounds', ['driver' => $driver, 'database' => ':memory:']);
     $model = (new class extends Model {})->setConnection('identity_bounds');
-    $model->getConnection()->setPdo(static fn () => throw new RuntimeException('The key check opened PDO.'));
+    $model->getConnection()->setPdo(static fn (): never => throw new RuntimeException('The key check opened PDO.'));
 
     expect(Identity::fitsKey($model, '9223372036854775807'))->toBeTrue()
         ->and(Identity::fitsKey($model, '9223372036854775808'))->toBeFalse()
@@ -53,6 +56,9 @@ it('checks the signed bigint boundary without opening a database connection', fu
 
 it('keeps bigint primary keys lossless while retaining native integers when they fit', function (int|string $stored, int|string $expected): void {
     config()->set('vaulter.ids.strategy', 'bigint');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = new class extends Model
     {
         use HasVaulterKeys;
@@ -82,6 +88,9 @@ it('keeps bigint primary keys lossless while retaining native integers when they
 
 it('uses the final native table key without losing unrelated model casts', function (): void {
     config()->set('vaulter.ids.strategy', 'bigint');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = new #[Table(key: 'probe_id', keyType: 'int', incrementing: true)] class extends Model
     {
         use HasVaulterKeys;
@@ -102,12 +111,15 @@ it('uses the final native table key without losing unrelated model casts', funct
 it('keeps numeric admission for an alias of the built-in bigint strategy', function (): void {
     config()->set('vaulter.ids.strategies.counter', AutoIncrementIds::class);
     config()->set('vaulter.ids.strategy', 'counter');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     config()->set('database.connections.identity_bounds', ['driver' => 'mysql', 'database' => ':memory:']);
     $model = (new class extends Model
     {
         use HasVaulterKeys;
     })->setConnection('identity_bounds');
-    $model->getConnection()->setPdo(static fn () => throw new RuntimeException('The key check opened PDO.'));
+    $model->getConnection()->setPdo(static fn (): never => throw new RuntimeException('The key check opened PDO.'));
 
     expect(Identity::fitsKey($model, '18446744073709551615'))->toBeTrue()
         ->and(Identity::fitsKey($model, '18446744073709551616'))->toBeFalse()
@@ -116,6 +128,9 @@ it('keeps numeric admission for an alias of the built-in bigint strategy', funct
 
 it('preserves a configured model that explicitly declares opaque string keys', function (string $key): void {
     config()->set('vaulter.ids.strategy', 'bigint');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = new class extends Model
     {
         use HasVaulterKeys;
@@ -136,6 +151,9 @@ it('preserves a configured model that explicitly declares opaque string keys', f
 
 it('preserves opaque keys declared by native table metadata after trait initialization', function (): void {
     config()->set('vaulter.ids.strategy', 'bigint');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = new #[Table(key: 'host_key', keyType: 'string', incrementing: false)] class extends Model
     {
         use HasVaulterKeys;
@@ -150,6 +168,9 @@ it('preserves opaque keys declared by native table metadata after trait initiali
 
 it('preserves native unique string key traits alongside the bigint strategy', function (string $kind): void {
     config()->set('vaulter.ids.strategy', 'bigint');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = $kind === 'uuid' ? new class extends Model
     {
         use HasUuids;
@@ -171,11 +192,14 @@ it('preserves native unique string key traits alongside the bigint strategy', fu
 it('keeps Vaulter unsigned bigint keys on MySQL within the actual column range', function (string $driver): void {
     config()->set('database.connections.identity_bounds', ['driver' => $driver, 'database' => ':memory:']);
     config()->set('vaulter.ids.strategy', 'bigint');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(IdStrategyResolver::class);
     $model = (new class extends Model
     {
         use HasVaulterKeys;
     })->setConnection('identity_bounds');
-    $model->getConnection()->setPdo(static fn () => throw new RuntimeException('The key check opened PDO.'));
+    $model->getConnection()->setPdo(static fn (): never => throw new RuntimeException('The key check opened PDO.'));
     $unsigned = in_array($driver, ['mysql', 'mariadb'], true);
 
     expect(Identity::fitsKey($model, '9223372036854775807'))->toBeTrue()

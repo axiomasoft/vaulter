@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media;
 
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Vaulter\Attributes\Api;
+use Illuminate\Support\ServiceProvider;
+use Packman\Attributes\Api;
 use Vaulter\Modules\OffersModules;
 
 /**
@@ -19,17 +18,17 @@ use Vaulter\Modules\OffersModules;
  * provider only offers {@see MediaModule}; the core module kernel registers what the module declares.
  */
 #[Api]
-final class VaulterMediaServiceProvider extends PackageServiceProvider
+final class VaulterMediaServiceProvider extends ServiceProvider
 {
     use OffersModules;
 
-    public function configurePackage(Package $package): void
-    {
-        $package->name('vaulter-media')->hasTranslations();
-    }
-
-    public function packageRegistered(): void
+    public function register(): void
     {
         $this->offerModule(MediaModule::class);
+    }
+
+    public function boot(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
     }
 }

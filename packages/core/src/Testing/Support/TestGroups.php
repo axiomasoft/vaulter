@@ -6,7 +6,7 @@ namespace Vaulter\Testing\Support;
 
 use Closure;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Binds the Pest groups of one suite from its `groups.php`. Every suite keeps ONE declarative file next to its
@@ -79,7 +79,7 @@ final class TestGroups
                 $byZone[is_string($zone) ? $zone : $zone($path)][] = $path;
             }
             foreach ($byZone as $name => $zonePaths) {
-                pest()->group(...self::expand('database', (string) $name))->in(...$zonePaths);
+                pest()->group(...self::expand('database', $name))->in(...$zonePaths);
             }
         }
     }

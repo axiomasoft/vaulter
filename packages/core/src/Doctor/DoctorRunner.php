@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor;
 
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
 
 /**
  * Runs the selected checks and keeps one broken check from hiding the others: an exception
@@ -49,12 +51,12 @@ final readonly class DoctorRunner
             return new DoctorCheckResult($key, $this->titleOrKey($check), [DoctorFinding::error(
                 code: 'doctor.check_failed',
                 message: $exception::class,
-                hint: 'run with -v',
+                remediation: 'run with -v',
             )], $exposeMessages ? $exception->getMessage() : null);
         }
 
         if ($findings === []) {
-            $findings[] = DoctorFinding::error(code: 'doctor.no_findings', message: 'The check returned no findings.', hint: 'a check reports an ok finding when there is nothing to fix');
+            $findings[] = DoctorFinding::error(code: 'doctor.no_findings', message: 'The check returned no findings.', remediation: 'a check reports an ok finding when there is nothing to fix');
         }
 
         return new DoctorCheckResult($key, $title, $findings);
@@ -73,10 +75,18 @@ final readonly class DoctorRunner
     {
         $evidence = [];
         foreach (array_slice($finding->evidence, 0, self::MAX_EVIDENCE_ENTRIES, true) as $name => $value) {
-            $evidence[(string) $name] = self::scalar($value);
+            $evidence[$name] = self::scalar($value);
         }
 
-        return new DoctorFinding($finding->severity, $finding->code, $finding->message, $finding->hint, $evidence);
+        return new DoctorFinding(
+            status: $finding->status,
+            severity: $finding->severity,
+            code: $finding->code,
+            message: $finding->message,
+            remediation: $finding->remediation,
+            evidence: $evidence,
+            slice: $finding->slice,
+        );
     }
 
     /** Evidence is typed scalar, but a check is third-party code: anything else is replaced by its type. */

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Events\Outbox\OutboxStore;
 
 /** An outbox delivery leased by a relay that died keeps its lease until the next relay takes it over. */
@@ -37,10 +37,11 @@ final readonly class OutboxLeasesCheck implements DoctorCheck
 
         if ($stuck > 0) {
             return [DoctorFinding::at(
+                status: $context->strictStatus(),
                 severity: $context->strictSeverity(),
                 code: 'core.outbox.leases_stuck',
                 message: $stuck.' outbox deliver'.($stuck === 1 ? 'y holds' : 'ies hold').' a relay lease that expired more than 5 minutes ago.',
-                hint: 'the next vaulter:relay run takes them over; if they stay, check that the relay runs',
+                remediation: 'the next vaulter:relay run takes them over; if they stay, check that the relay runs',
                 evidence: ['stuck' => $stuck],
             )];
         }

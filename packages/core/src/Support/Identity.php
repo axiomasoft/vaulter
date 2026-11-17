@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Api;
+use LogicException;
+use Packman\Attributes\Api;
+use ReflectionMethod;
 use Vaulter\Models\Casts\IntegerKey;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 
@@ -84,9 +86,9 @@ final class Identity
     /** The model's own id strategy, including a panel override of the global one. */
     private static function vaulterStrategy(Model $model): string
     {
-        $strategy = (new \ReflectionMethod($model, 'vaulterIdStrategyKey'))->invoke($model);
+        $strategy = new ReflectionMethod($model, 'vaulterIdStrategyKey')->invoke($model);
         if (!is_string($strategy)) {
-            throw new \LogicException('A Vaulter model must declare a string id strategy key.');
+            throw new LogicException('A Vaulter model must declare a string id strategy key.');
         }
 
         return $strategy;

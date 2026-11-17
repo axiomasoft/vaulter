@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Events\Outbox;
 
 use Illuminate\Database\Query\Builder;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 
 /**
@@ -26,7 +26,7 @@ final class DeliveryControl
 {
     public function __construct(
         private readonly VaulterDatabase $database,
-        private readonly DatabaseConfig $tables,
+        private readonly DatabaseOptions $tables,
         public readonly string $eventId,
         public readonly string $consumerId,
         public readonly int $generation,

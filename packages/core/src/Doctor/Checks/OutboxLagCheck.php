@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Events\Outbox\OutboxStore;
 
 /** An outbox consumer whose oldest due delivery waits too long: the relay does not run or cannot keep up. */
@@ -46,7 +46,7 @@ final readonly class OutboxLagCheck implements DoctorCheck
             return [DoctorFinding::warning(
                 code: 'core.outbox.lagging',
                 message: 'The oldest due outbox delivery of '.implode(', ', array_keys($lagging)).' has waited '.intdiv(max($lagging), 60).' minutes for the relay.',
-                hint: 'run the scheduler (vaulter:relay) and the queue worker',
+                remediation: 'run the scheduler (vaulter:relay) and the queue worker',
                 evidence: ['lag_seconds' => max($lagging), 'consumers' => implode(',', array_keys($lagging)), 'limit_seconds' => self::MAX_LAG],
             )];
         }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Concerns;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Boots the package with opt-in modules switched on (`vaulter.modules.<id> = true`) before the application is built.

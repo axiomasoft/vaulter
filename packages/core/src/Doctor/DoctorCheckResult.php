@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
+use Packman\Doctor\Data\DoctorFinding;
 
 #[Api]
 final readonly class DoctorCheckResult

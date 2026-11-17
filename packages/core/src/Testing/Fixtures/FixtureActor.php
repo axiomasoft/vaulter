@@ -7,7 +7,7 @@ namespace Vaulter\Testing\Fixtures;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * An actor that is identified by its morph reference alone and holds no host
@@ -35,8 +35,8 @@ final class FixtureActor extends Model implements Authenticatable, Authorizable
     }
 
     /**
-     * @param iterable<string>|string $abilities
-     * @param array<mixed>|mixed      $arguments
+     * @param iterable<mixed>|string|\UnitEnum $abilities
+     * @param array<mixed>|mixed               $arguments
      */
     public function can($abilities, $arguments = []): bool
     {

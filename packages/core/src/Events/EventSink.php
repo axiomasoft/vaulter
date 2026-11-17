@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Events;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * A slot (`SlotKind::EventSink`, defined by core) that stores each domain event inside the transaction of the

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Support\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
 
 /**
  * A Vaulter model whose type is stored in a polymorphic column (the target of an activity row) is stored under a
@@ -18,7 +19,7 @@ use Vaulter\Attributes\Api;
 #[Api]
 trait HasStableMorphAlias
 {
-    #[\Override]
+    #[Override]
     public function getMorphClass(): string
     {
         return static::MORPH_ALIAS;

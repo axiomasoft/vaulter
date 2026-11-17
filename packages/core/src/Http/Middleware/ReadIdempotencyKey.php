@@ -9,8 +9,8 @@ use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Validation\ValidationException;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
 
@@ -45,6 +45,7 @@ final readonly class ReadIdempotencyKey
 
     public function __construct(private IdempotencyOutcome $outcome, private Encrypter $encrypter) {}
 
+    /** @param Closure(Request): mixed $next */
     public function handle(Request $request, Closure $next): Response
     {
         $values = $request->headers->all(strtolower(self::HEADER));

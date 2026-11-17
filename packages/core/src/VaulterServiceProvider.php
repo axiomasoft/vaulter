@@ -4,143 +4,47 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
-use Illuminate\Console\Application as Artisan;
-use Illuminate\Console\Events\CommandStarting;
-use Illuminate\Support\Facades\Route;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Vaulter\Attributes\Api;
-use Vaulter\Configuration\ConfigNormalizer;
-use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Console\DoctorCommand;
-use Vaulter\Console\ModulesCommand;
-use Vaulter\Http\Controllers\ModuleGraphInvalidController;
-use Vaulter\Modules\ModuleApplier;
-use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\ModuleCompiler;
+use Illuminate\Support\ServiceProvider;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Foundation\Concerns\RegistersPackageRegistrars;
+use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\Modules\OffersModules;
-use Vaulter\Providers\HttpRegistrar;
-use Vaulter\Security\ProductionInvariants;
+use Vaulter\Providers\CoreKernelRegistrar;
 
 /**
- * The core provider offers the core manifest and runs the module kernel:
- * it compiles every offered manifest once all providers registered, seals the result and applies the
- * declarations of the active modules (docs/adr/0027-kernel-boundaries-and-modules.md). It registers nothing else itself.
+ * The core provider offers {@see CoreModule} and delegates runtime wiring to {@see CoreKernelRegistrar}.
  */
-#[Api]
-final class VaulterServiceProvider extends PackageServiceProvider
+#[Api(since: '1.0')]
+final class VaulterServiceProvider extends ServiceProvider
 {
     use OffersModules;
-
-    public function configurePackage(Package $package): void
-    {
-        $package
-            ->name('vaulter')
-            ->hasTranslations();
+    use RegistersPackageRegistrars {
+        register as protected registerRegistrars;
+        boot as protected bootRegistrars;
     }
 
-    public function packageRegistered(): void
+    /** @var list<class-string<PackageRegistrar>> */
+    protected const array REGISTRARS = [
+        CoreKernelRegistrar::class,
+    ];
+
+    #[Override]
+    public function register(): void
     {
         $this->offerModule(CoreModule::class);
-        $this->registerModuleKernel();
+        $this->registerRegistrars();
     }
 
-    public function packageBooted(): void
+    public function boot(): void
     {
-        $this->bootModuleKernel();
-    }
-
-    /**
-     * The module graph is compiled and sealed in a booting callback: Laravel runs it after every
-     * provider registered and before any provider boots, so the order of package discovery does not
-     * matter and no provider's boot() validates the registry. Compilation never throws — an invalid
-     * graph is sealed as such: no module declaration is applied, only the kernel's own diagnostics
-     * (its config and schema, the problem renderer, `vaulter:modules` and `vaulter:doctor`).
-     */
-    private function registerModuleKernel(): void
-    {
-        $this->app->singletonIf(Kernel::class);
-        $this->app->singletonIf(ConfigNormalizer::class);
-        $this->app->singletonIf(ModuleApplier::class);
-        $this->app->booting(function (): void {
-            $catalog = ModuleCatalog::of($this->app);
-            $catalog->seal();
-            $kernel = $this->app->make(Kernel::class);
-            $kernel->seal((new ModuleCompiler)->compileOffered(
-                $catalog->offered(),
-                $this->app->make('config')->get('vaulter.modules', []),
-            ));
-
-            $applier = $this->app->make(ModuleApplier::class);
-            $applier->config('vaulter', dirname(__DIR__).'/config/vaulter.php');
-            $applier->schema(dirname(__DIR__).'/database/migrations');
-            $applier->registerModuleMiddleware();
-            (new HttpRegistrar)->register($this->app);
-
-            if (!$kernel->isValid()) {
-                $applier->normalizeConfig();
-                $this->registerDiagnosticCommands();
-
-                return;
-            }
-            $applier->register($kernel->compiled());
-        });
-        $this->app->booted(function (): void {
-            if ($this->app->runningInConsole() || !$this->app->environment('production') || !$this->app->make(Kernel::class)->isValid()) {
-                return;
-            }
-            $this->app->make(ProductionInvariants::class)->assertSecure();
-        });
-        // One listener for the canonical Symfony command name: global options, aliases and Artisan::call() resolve first.
-        $this->app->make('events')->listen(CommandStarting::class, function (CommandStarting $event): void {
-            if (!$this->app->environment('production') || !ProductionInvariants::guards($event->command) || !$this->app->make(Kernel::class)->isValid()) {
-                return;
-            }
-            $this->app->make(ProductionInvariants::class)->assertSecure();
-        });
-    }
-
-    private function bootModuleKernel(): void
-    {
-        $kernel = $this->app->make(Kernel::class);
-        (new HttpRegistrar)->boot($this->app);
-        if (!$kernel->isValid()) {
-            $this->registerInvalidGraphRoute();
-
-            return;
-        }
-
-        $this->app->make(ConfigValidator::class)->validate($this->app->make(VaulterConfig::class), $this->app);
-        $this->app->make(ModuleApplier::class)->boot(
-            $kernel->compiled(),
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter');
+        $this->bootRegistrars();
+        $this->app->make(CoreKernelRegistrar::class)->bootWithPublisher(
+            $this->app,
             function (array $paths, string $tag): void {
                 $this->publishes($paths, $tag);
             },
         );
-    }
-
-    private function registerDiagnosticCommands(): void
-    {
-        if ($this->app->runningInConsole()) {
-            Artisan::starting(static function (Artisan $artisan): void {
-                $artisan->resolveCommands([ModulesCommand::class, DoctorCommand::class]);
-            });
-        }
-    }
-
-    /** One catch-all route under the Vaulter prefix answers 503 `module_graph_invalid` instead of 404. */
-    private function registerInvalidGraphRoute(): void
-    {
-        if ($this->app->routesAreCached()) {
-            return;
-        }
-        $prefix = trim($this->app->make(RoutesConfig::class)->prefix(), '/');
-        // An empty prefix would make the catch-all answer 503 for the whole host application.
-        if ($prefix === '') {
-            return;
-        }
-        Route::any($prefix.'/{path?}', ModuleGraphInvalidController::class)->where('path', '.*');
     }
 }

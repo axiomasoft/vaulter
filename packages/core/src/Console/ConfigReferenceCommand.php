@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 
 /**
  * Regenerates the key table of the reference docs from the config files of every
@@ -41,7 +41,8 @@ final class ConfigReferenceCommand extends Command
      */
     public static function render(string $packages): string
     {
-        $files = glob($packages.'/*/config/*.php') ?: [];
+        $glob = glob($packages.'/*/config/*.php');
+        $files = is_array($glob) ? $glob : [];
         sort($files);
 
         $sections = [];
@@ -161,9 +162,9 @@ final class ConfigReferenceCommand extends Command
             $depth = 0;
             while (isset($tokens[$position])) {
                 $current = $tokens[$position];
-                if ($current === '[' || $current === '(' || $current === '{') {
+                if (in_array($current, ['[', '(', '{'], true)) {
                     $depth++;
-                } elseif ($current === ']' || $current === ')' || $current === '}') {
+                } elseif (in_array($current, [']', ')', '}'], true)) {
                     if ($depth === 0) {
                         break;
                     }
@@ -202,9 +203,9 @@ final class ConfigReferenceCommand extends Command
         $depth = 0;
         for ($i = $position; isset($tokens[$i]); $i++) {
             $token = $tokens[$i];
-            if ($token === '[' || $token === '(' || $token === '{') {
+            if (in_array($token, ['[', '(', '{'], true)) {
                 $depth++;
-            } elseif ($token === ']' || $token === ')' || $token === '}') {
+            } elseif (in_array($token, [']', ')', '}'], true)) {
                 if (--$depth === 0) {
                     return false;
                 }

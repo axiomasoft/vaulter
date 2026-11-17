@@ -10,10 +10,11 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Facade;
 use Orchestra\Testbench\TestCase;
+use Packman\Attributes\Internal;
 use Pest\TestSuite;
 use ReflectionMethod;
+use ReflectionProperty;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 
 /**
  * Boots a separate application of the running suite with extra config and providers, for a test about what happens
@@ -62,7 +63,7 @@ final class FreshApplication
             {
                 $base = self::$base ?? throw new RuntimeException('FreshApplication has no base test case');
                 /** @var array<int, class-string> $providers */
-                $providers = (new ReflectionMethod($base, 'getPackageProviders'))->invoke($base, $app);
+                $providers = new ReflectionMethod($base, 'getPackageProviders')->invoke($base, $app);
 
                 return [FreshApplicationSpy::class, ...self::$before, ...$providers, ...self::$after];
             }
@@ -70,7 +71,7 @@ final class FreshApplication
             protected function defineEnvironment($app): void
             {
                 $base = self::$base ?? throw new RuntimeException('FreshApplication has no base test case');
-                (new ReflectionMethod($base, 'defineEnvironment'))->invoke($base, $app);
+                new ReflectionMethod($base, 'defineEnvironment')->invoke($base, $app);
                 foreach (self::$config as $key => $value) {
                     $app['config']->set($key, $value);
                 }
@@ -82,7 +83,7 @@ final class FreshApplication
         $fresh::$after = $after;
 
         $current = Container::getInstance();
-        $bootstrappers = new \ReflectionProperty(Artisan::class, 'bootstrappers');
+        $bootstrappers = new ReflectionProperty(Artisan::class, 'bootstrappers');
         $kept = $bootstrappers->getValue();
         try {
             $bootstrappers->setValue(null, []);

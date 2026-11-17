@@ -6,12 +6,14 @@ use Carbon\CarbonImmutable;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Artisan;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\CheckStatus;
+use Packman\Doctor\Enums\Severity;
 use Vaulter\Doctor\Checks\QueueCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Tests\Doctor\ClosureCheck;
 
 function doctorContext(bool $production = false): DoctorContext
@@ -37,7 +39,7 @@ function okCheck(string $key): ClosureCheck
 }
 
 it('orders the checks by key', function (): void {
-    $keys = array_map(static fn ($check): string => $check->key(), doctorRegistry([okCheck('z.last'), okCheck('a.first'), okCheck('m.middle')])->all());
+    $keys = array_map(static fn (DoctorCheck $check): string => $check->key(), doctorRegistry([okCheck('z.last'), okCheck('a.first'), okCheck('m.middle')])->all());
 
     expect($keys)->toBe(['a.first', 'm.middle', 'z.last']);
 });
@@ -51,14 +53,14 @@ it('refuses a tagged service that is not a check', function (): void {
     $container->instance('not-a-check', new stdClass);
     $container->tag(['not-a-check'], DoctorRegistry::TAG);
 
-    (new DoctorRegistry($container))->all();
+    new DoctorRegistry($container)->all();
 })->throws(LogicException::class, 'must implement');
 
 it('selects checks by whole key segments', function (): void {
     $registry = doctorRegistry([okCheck('core.schema.tables'), okCheck('core.schema.key_types'), okCheck('core.schemaX'), okCheck('drive.scan.policy')]);
 
-    expect(array_map(static fn ($check): string => $check->key(), $registry->matching(['core.schema'])))->toBe(['core.schema.key_types', 'core.schema.tables'])
-        ->and(array_map(static fn ($check): string => $check->key(), $registry->matching(['drive', 'core.schemaX'])))->toBe(['core.schemaX', 'drive.scan.policy'])
+    expect(array_map(static fn (DoctorCheck $check): string => $check->key(), $registry->matching(['core.schema'])))->toBe(['core.schema.key_types', 'core.schema.tables'])
+        ->and(array_map(static fn (DoctorCheck $check): string => $check->key(), $registry->matching(['drive', 'core.schemaX'])))->toBe(['core.schemaX', 'drive.scan.policy'])
         ->and($registry->unmatched(['core.schema', 'nope', 'core.sch']))->toBe(['nope', 'core.sch']);
 });
 
@@ -72,12 +74,12 @@ it('turns an exception into doctor.check_failed without leaking its message', fu
     $failed = $report->checks[1]->findings[0];
 
     expect($report->checks[1]->key)->toBe('fake.throws')
-        ->and($failed->severity)->toBe(DoctorSeverity::Error)
+        ->and($failed->severity)->toBe(Severity::Error)
         ->and($failed->code)->toBe('doctor.check_failed')
         ->and($failed->message)->toBe(RuntimeException::class)
-        ->and($failed->hint)->toBe('run with -v')
+        ->and($failed->remediation)->toBe('run with -v')
         ->and(json_encode($report->toArray()))->not->toContain('hunter2')
-        ->and($report->checks[0]->findings[0]->severity)->toBe(DoctorSeverity::Ok)
+        ->and($report->checks[0]->findings[0]->status)->toBe(CheckStatus::Ok)
         ->and($report->exitCode())->toBe(1);
 });
 
@@ -90,7 +92,7 @@ it('keeps the exception message out of the findings and the JSON document, also 
     expect($quiet->checks[0]->detail)->toBeNull()
         ->and($verbose->checks[0]->detail)->toBe('dsn=pgsql://u:s3cret@db/app')
         ->and($verbose->checks[0]->findings[0]->message)->toBe(RuntimeException::class)
-        ->and($verbose->checks[0]->findings[0]->hint)->toBe('run with -v')
+        ->and($verbose->checks[0]->findings[0]->remediation)->toBe('run with -v')
         ->and(json_encode($verbose->toArray()))->not->toContain('s3cret');
 });
 
@@ -110,7 +112,7 @@ it('reports a check without findings as an implementation error', function (): v
 
     $finding = $runner->run(doctorContext())->checks[0]->findings[0];
 
-    expect($finding->code)->toBe('doctor.no_findings')->and($finding->severity)->toBe(DoctorSeverity::Error);
+    expect($finding->code)->toBe('doctor.no_findings')->and($finding->severity)->toBe(Severity::Error);
 });
 
 it('trims evidence to 20 short entries', function (): void {
@@ -119,14 +121,13 @@ it('trims evidence to 20 short entries', function (): void {
         $evidence['k'.$i] = $i;
     }
     $evidence['k0'] = str_repeat('x', 500);
-    $evidence['k1'] = ['nested'];
     $runner = new DoctorRunner(doctorRegistry([new ClosureCheck('fake.evidence', static fn (): array => [DoctorFinding::ok(code: 'fake.ev', message: 'evidence', evidence: $evidence)])]));
 
     $trimmed = $runner->run(doctorContext())->checks[0]->findings[0]->evidence;
 
     expect($trimmed)->toHaveCount(20)
         ->and(mb_strlen($trimmed['k0']))->toBe(200)
-        ->and($trimmed['k1'])->toBe('array');
+        ->and(fn (): DoctorFinding => DoctorFinding::ok(code: 'fake.ev', message: 'evidence', evidence: ['k1' => ['nested']]))->toThrow(InvalidArgumentException::class);
 });
 
 it('does not pass the queue check when the default connection is missing', function (): void {
@@ -149,12 +150,12 @@ it('does not pass the queue check when the default connection is missing', funct
         ],
     ]));
 
-    $missingReport = (new DoctorRunner(doctorRegistry([$missing])))->run(doctorContext());
-    $blankReport = (new DoctorRunner(doctorRegistry([$blankDriver])))->run(doctorContext());
-    $configuredReport = (new DoctorRunner(doctorRegistry([$configured])))->run(doctorContext());
+    $missingReport = new DoctorRunner(doctorRegistry([$missing]))->run(doctorContext());
+    $blankReport = new DoctorRunner(doctorRegistry([$blankDriver]))->run(doctorContext());
+    $configuredReport = new DoctorRunner(doctorRegistry([$configured]))->run(doctorContext());
 
     expect($missingReport->checks[0]->findings[0]->code)->toBe('core.queue.missing')
-        ->and($missingReport->checks[0]->findings[0]->severity)->toBe(DoctorSeverity::Error)
+        ->and($missingReport->checks[0]->findings[0]->severity)->toBe(Severity::Error)
         ->and($missingReport->checks[0]->findings[0]->evidence)->toBe(['connection' => 'redis'])
         ->and($missingReport->summary())->toBe(['ok' => 0, 'warning' => 0, 'error' => 1])
         ->and($missingReport->exitCode())->toBe(1)
@@ -166,11 +167,11 @@ it('does not pass the queue check when the default connection is missing', funct
 });
 
 it('counts findings and fails only on an error', function (): void {
-    $warning = new ClosureCheck('fake.warning', static fn (): array => [DoctorFinding::warning(code: 'w', message: 'careful')]);
-    $error = new ClosureCheck('fake.error', static fn (): array => [DoctorFinding::error(code: 'e', message: 'broken')]);
+    $warning = new ClosureCheck('fake.warning', static fn (): array => [DoctorFinding::warning(code: 'w', message: 'careful', remediation: 'watch out')]);
+    $error = new ClosureCheck('fake.error', static fn (): array => [DoctorFinding::error(code: 'e', message: 'broken', remediation: 'fix it')]);
 
-    $warned = (new DoctorRunner(doctorRegistry([okCheck('fake.ok'), $warning])))->run(doctorContext());
-    $broken = (new DoctorRunner(doctorRegistry([okCheck('fake.ok'), $warning, $error])))->run(doctorContext());
+    $warned = new DoctorRunner(doctorRegistry([okCheck('fake.ok'), $warning]))->run(doctorContext());
+    $broken = new DoctorRunner(doctorRegistry([okCheck('fake.ok'), $warning, $error]))->run(doctorContext());
 
     expect($warned->summary())->toBe(['ok' => 1, 'warning' => 1, 'error' => 0])
         ->and($warned->exitCode())->toBe(0)
@@ -179,8 +180,8 @@ it('counts findings and fails only on an error', function (): void {
 });
 
 it('exits 0, 1 and 2 from the command', function (): void {
-    $this->app->instance('fake.warning', new ClosureCheck('fake.warning', static fn (): array => [DoctorFinding::warning(code: 'w', message: 'careful')]));
-    $this->app->instance('fake.error', new ClosureCheck('fake.error', static fn (): array => [DoctorFinding::error(code: 'e', message: 'broken')]));
+    $this->app->instance('fake.warning', new ClosureCheck('fake.warning', static fn (): array => [DoctorFinding::warning(code: 'w', message: 'careful', remediation: 'watch out')]));
+    $this->app->instance('fake.error', new ClosureCheck('fake.error', static fn (): array => [DoctorFinding::error(code: 'e', message: 'broken', remediation: 'fix it')]));
     $this->app->tag(['fake.warning', 'fake.error'], DoctorRegistry::TAG);
 
     expect(Artisan::call('vaulter:doctor', ['--check' => ['fake.warning']]))->toBe(0)
@@ -190,7 +191,7 @@ it('exits 0, 1 and 2 from the command', function (): void {
 });
 
 it('prints the findings and their hints', function (): void {
-    $this->app->instance('fake.warning', new ClosureCheck('fake.warning', static fn (): array => [DoctorFinding::warning(code: 'fake.warn', message: 'careful <now>', hint: 'be careful')]));
+    $this->app->instance('fake.warning', new ClosureCheck('fake.warning', static fn (): array => [DoctorFinding::warning(code: 'fake.warn', message: 'careful <now>', remediation: 'be careful')]));
     $this->app->tag(['fake.warning'], DoctorRegistry::TAG);
 
     $this->artisan('vaulter:doctor', ['--check' => ['fake.warning']])
@@ -201,8 +202,8 @@ it('prints the findings and their hints', function (): void {
 });
 
 it('escalates a warning only under --production', function (): void {
-    expect(doctorContext()->strictSeverity())->toBe(DoctorSeverity::Warning)
-        ->and(doctorContext(production: true)->strictSeverity())->toBe(DoctorSeverity::Error)
+    expect(doctorContext()->strictSeverity())->toBe(Severity::Warning)
+        ->and(doctorContext(production: true)->strictSeverity())->toBe(Severity::Error)
         ->and(doctorContext(production: true)->mayProbeStorage())->toBeTrue()
         ->and(doctorContext()->mayProbeStorage())->toBeFalse();
 });

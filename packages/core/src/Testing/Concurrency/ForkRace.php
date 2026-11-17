@@ -8,10 +8,11 @@ use Closure;
 use Illuminate\Support\Facades\DB;
 use JsonException;
 use LogicException;
+use Packman\Attributes\Internal;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
 
 /**
  * Real concurrency on PostgreSQL: every task runs in its OWN forked process on its
@@ -44,7 +45,7 @@ final class ForkRace
     public static function skipUnlessSupported(TestCase $test, ?string $connection = null): void
     {
         if (!self::supported($connection)) {
-            $test->markTestSkipped('ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).');
+            Assert::markTestSkipped('ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).');
         }
     }
 
@@ -58,7 +59,7 @@ final class ForkRace
         $names = $connections === [] ? [DB::getDefaultConnection()] : $connections;
 
         foreach ($names as $name) {
-            $database = (string) DB::connection($name)->getDatabaseName();
+            $database = DB::connection($name)->getDatabaseName();
 
             if (!str_ends_with($database, '_test')) {
                 throw new LogicException("ForkRace refuses to race on a non-test database [{$database}] (connection {$name}).");
@@ -104,12 +105,14 @@ final class ForkRace
                     : self::readResult("{$dir}/result.{$i}");
             }
 
-            $ready = array_map(static fn (string $path): mixed => json_decode((string) file_get_contents($path), true), glob("{$dir}/ready.*") ?: []);
+            $readyGlob = glob("{$dir}/ready.*");
+            $ready = array_map(static fn (string $path): mixed => json_decode((string) file_get_contents($path), true), is_array($readyGlob) ? $readyGlob : []);
             fwrite(STDOUT, 'P38_FORK_PROOF '.json_encode(['barrier' => 'all ready files before task execution', 'participants' => $ready, 'timed_out' => array_keys($timedOut)]).PHP_EOL);
 
             return $outcomes;
         } finally {
-            array_map('unlink', glob("{$dir}/*") ?: []);
+            $cleanup = glob("{$dir}/*");
+            array_map(unlink(...), is_array($cleanup) ? $cleanup : []);
             @rmdir($dir);
         }
     }
@@ -118,7 +121,8 @@ final class ForkRace
      * Runs in the forked child and never returns: a child that went back into
      * PHPUnit would duplicate the test output and run the teardown twice.
      *
-     * @param list<string> $names
+     * @param Closure(): mixed $task
+     * @param list<string>     $names
      */
     private static function child(Closure $task, int $index, int $count, array $names, string $dir, int $timeoutMs): never
     {
@@ -139,7 +143,7 @@ final class ForkRace
 
             $deadline = hrtime(true) + $timeoutMs * 1_000_000;
 
-            while (count(glob("{$dir}/ready.*") ?: []) < $count) {
+            while (count(is_array($readyFiles = glob("{$dir}/ready.*")) ? $readyFiles : []) < $count) {
                 if (hrtime(true) >= $deadline) {
                     self::finish($dir, $index, ['ok' => false, 'value' => null, 'exception' => 'ForkRace\\BarrierTimeout', 'message' => 'barrier-timeout']);
                 }
@@ -169,7 +173,8 @@ final class ForkRace
             // substituted, so a failed task keeps its exception class.
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         } catch (JsonException $e) {
-            $json = json_encode(['ok' => false, 'value' => null, 'exception' => 'ForkRace\\UnserializableValue', 'message' => $e->getMessage()]) ?: '';
+            $encoded = json_encode(['ok' => false, 'value' => null, 'exception' => 'ForkRace\\UnserializableValue', 'message' => $e->getMessage()]);
+            $json = is_string($encoded) ? $encoded : '';
         }
 
         file_put_contents("{$dir}/result.{$index}", $json);
@@ -241,13 +246,7 @@ final class ForkRace
         }
 
         if (is_array($value)) {
-            foreach ($value as $item) {
-                if (!self::isJsonValue($item)) {
-                    return false;
-                }
-            }
-
-            return true;
+            return array_all($value, fn ($item): bool => self::isJsonValue($item));
         }
 
         return false;

@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter-azguard",
+    "name": "axiomasoft/vaulter-azguard",
     "description": "AzGuard permission bridge for Vaulter — a real AzGuardGuard adapter delegating to AzGuard v1 panel checks on resources and assignment scopes, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
     "type": "library",
     "license": "MIT",
@@ -15,21 +15,23 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
+    "replace": {
+        "axioma-studio/vaulter-azguard": "self.version"
+    },
     "require": {
-        "php": "^8.4",
-        "axioma-studio/vaulter-core": "self.version",
-        "axioma-studio/vaulter-drive": "self.version",
+        "php": ">=8.4 <8.6",
+        "axiomasoft/vaulter-core": "self.version",
+        "axiomasoft/vaulter-drive": "self.version",
         "axiomasoft/azguard": "dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba",
         "illuminate/contracts": "^13.0",
         "illuminate/support": "^13.0"
     },
     "require-dev": {
-        "axioma-studio/vaulter-media": "self.version",
-        "larastan/larastan": "^3.0",
-        "laravel/pint": "^1.13",
-        "orchestra/testbench": "^11.0",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "axiomasoft/vaulter-media": "self.version",
+        "larastan/larastan": "^3.12",
+        "laravel/pint": "^1.32",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2"
     },
     "autoload": {
         "psr-4": {

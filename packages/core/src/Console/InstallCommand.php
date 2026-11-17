@@ -7,11 +7,10 @@ namespace Vaulter\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
+use Packman\Attributes\Internal;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
-
-use Vaulter\Attributes\Internal;
 
 /**
  * Publishes the config of every installed Vaulter package and prints the host
@@ -37,8 +36,9 @@ final class InstallCommand extends Command
     public function handle(): int
     {
         $interactive = $this->input->isInteractive();
-        $middleware = $this->option('middleware');
-        if ($middleware !== null && preg_match('/^[A-Za-z0-9_\\\\.:,\-]+$/D', $middleware) !== 1) {
+        $rawMiddleware = $this->option('middleware');
+        $middleware = is_string($rawMiddleware) ? $rawMiddleware : null;
+        if ($rawMiddleware !== null && ($middleware === null || preg_match('/^[A-Za-z0-9_\\\\.:,\-]+$/D', $middleware) !== 1)) {
             $this->components->error('Invalid --middleware value.');
 
             return self::FAILURE;

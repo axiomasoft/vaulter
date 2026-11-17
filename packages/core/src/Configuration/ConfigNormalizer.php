@@ -6,7 +6,7 @@ namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Arr;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 #[Api]
@@ -66,16 +66,10 @@ final class ConfigNormalizer
     {
         $defaults = $this->stringKeyedEntries(Arr::dot($packageDefaults));
         // Decided before any default is written: filling a map's first key must not make the map look host-configured.
-        $configuredMaps = array_filter(self::REPLACEMENT_MAPS, static fn (string $map): bool => $config->has($map));
+        $configuredMaps = array_filter(self::REPLACEMENT_MAPS, $config->has(...));
 
         foreach ($defaults as $key => $value) {
-            $insideReplacementMap = false;
-            foreach ($configuredMaps as $map) {
-                if (str_starts_with($key, $map.'.')) {
-                    $insideReplacementMap = true;
-                    break;
-                }
-            }
+            $insideReplacementMap = array_any($configuredMaps, fn (string $map): bool => str_starts_with($key, $map.'.'));
             if (!$insideReplacementMap && !$config->has($key)) {
                 $config->set($key, $value);
             }

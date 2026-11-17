@@ -6,7 +6,7 @@ namespace Vaulter\Operations;
 
 use Closure;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The policy of every mutating operation: the policies the active modules declare with
@@ -61,7 +61,7 @@ final class OperationCatalog
                     if (isset($entries[$name])) {
                         throw new InvalidArgumentException(sprintf('[Vaulter] The operation "%s" is declared by both the module "%s" and the module "%s".', $name, $entries[$name]['module'], $module));
                     }
-                    $entries[$name] = ['module' => (string) $module, 'policy' => $policy];
+                    $entries[$name] = ['module' => $module, 'policy' => $policy];
                 }
             }
         }

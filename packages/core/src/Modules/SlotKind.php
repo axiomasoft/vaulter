@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * What a contribution to a slot may do. The kind is fixed by the module that defines the slot;

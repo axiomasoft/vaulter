@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Database;
 
 use Illuminate\Database\Query\Builder;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The base query builder of Vaulter models: statements that change rows are refused

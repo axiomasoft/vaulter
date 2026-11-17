@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Modules\Capabilities;
 use Vaulter\Modules\CompiledModules;
@@ -32,7 +32,11 @@ final class Kernel
     #[Internal]
     public function __construct(private readonly Container $container) {}
 
-    /** Called once by the core provider's booting callback. */
+    /**
+     * Called once by the core provider's booting callback.
+     *
+     * @internal Kernel sealing is internal wiring.
+     */
     #[Internal]
     public function seal(CompiledModules|InvalidModuleGraph $state): void
     {
@@ -102,7 +106,9 @@ final class Kernel
     }
 
     /**
-     * the sealed declarations, for the kernel's own wiring
+     * The sealed declarations, for the kernel's own wiring.
+     *
+     * @internal Kernel compiled graph is internal wiring.
      *
      * @throws ModuleGraphException
      */

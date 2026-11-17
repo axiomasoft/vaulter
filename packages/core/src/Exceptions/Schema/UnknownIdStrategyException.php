@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Schema;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -14,6 +18,12 @@ use Vaulter\Exceptions\VaulterException;
 #[Api]
 final class UnknownIdStrategyException extends VaulterException
 {
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::UnknownIdStrategy, category: ErrorCategory::Internal);
+    }
+
     /**
      * @param list<string> $available
      */

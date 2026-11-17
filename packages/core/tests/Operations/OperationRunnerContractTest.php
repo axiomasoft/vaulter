@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Idempotency\IdempotencyStore;
@@ -113,7 +113,7 @@ function orcSpec(string $name = 'core.probe.write'): OperationSpec
 
 function orcRows(): int
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count();
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count();
 }
 
 it('refuses a mutating operation no module declares before any claim or attempt', function (): void {
@@ -166,7 +166,7 @@ it('surfaces a failed after-commit callback as itself and never repeats the comm
         return 'committed-'.$runs;
     };
 
-    expect(fn () => $runner->write(orcSpec(), orcContext('K'), $attempt, orcWrite()))->toThrow(RuntimeException::class, 'after-commit failed');
+    expect(fn (): mixed => $runner->write(orcSpec(), orcContext('K'), $attempt, orcWrite()))->toThrow(RuntimeException::class, 'after-commit failed');
     expect($runs)->toBe(1)->and(orcRows())->toBe(1);
 
     // The client retries the unknown outcome with the same key: the committed historical result, no second mutation.
@@ -185,7 +185,7 @@ it('rolls the claim back with a failure that is not a cached refusal, so a retry
         return 'second';
     };
 
-    expect(fn () => $runner->write(orcSpec(), orcContext('K'), $attempt, orcWrite()))->toThrow(RuntimeException::class, 'transient');
+    expect(fn (): mixed => $runner->write(orcSpec(), orcContext('K'), $attempt, orcWrite()))->toThrow(RuntimeException::class, 'transient');
     expect(orcRows())->toBe(0)
         ->and($runner->write(orcSpec(), orcContext('K'), $attempt, orcWrite()))->toBe('second')
         ->and($runs)->toBe(2)

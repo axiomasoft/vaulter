@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Support\OpenApi;
 
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 
 /**
  * Thrown for an OpenAPI construct the test adapter cannot validate faithfully; the adapter

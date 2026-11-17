@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The container wiring of a module that a declaration cannot express (scoped or factory bindings,

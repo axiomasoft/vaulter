@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 
 /**
  * A refusal whose receipt was written: the attempt rolled back to its savepoint, the receipt is part of the

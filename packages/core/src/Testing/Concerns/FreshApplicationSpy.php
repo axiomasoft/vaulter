@@ -7,7 +7,7 @@ namespace Vaulter\Testing\Concerns;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Listed first among the providers of a {@see FreshApplication}, so its spies are in place before any other provider

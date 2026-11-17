@@ -7,10 +7,10 @@ namespace Vaulter\Events\Outbox;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\IdsConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
@@ -32,9 +32,9 @@ use Vaulter\Kernel;
 final readonly class OutboxWriter
 {
     public function __construct(
-        private VaulterConfig $config,
-        private DatabaseConfig $tables,
-        private IdsConfig $ids,
+        private VaulterOptions $config,
+        private DatabaseOptions $tables,
+        private IdsOptions $ids,
         private Kernel $kernel,
         private Container $container,
         private MetricsRecorder $metrics,
@@ -59,7 +59,7 @@ final readonly class OutboxWriter
                     'event_id' => $event->eventId,
                     'tenant_id' => $scope->tenantId,
                     'scope_kind' => $scope->driveId === null ? OutboxEnvelope::SCOPE_TENANT : OutboxEnvelope::SCOPE_DRIVE,
-                    'scope_id' => $scope->driveId === null ? null : (string) $scope->driveId,
+                    'scope_id' => $scope->driveId ?? null,
                     'aggregate_type' => $subject->type,
                     'aggregate_id' => $subject->id,
                     'sequence' => $event->sequence(),
@@ -115,12 +115,12 @@ final readonly class OutboxWriter
             return;
         }
 
-        throw new InvalidArgumentException('[Vaulter] The tenant id does not fit ids.host_keys ['.$this->ids->hostKeys().'].');
+        throw new InvalidArgumentException('[Vaulter] The tenant id does not fit ids.host_keys ['.$this->ids->hostKeys.'].');
     }
 
     private function tenantFits(string $tenantId, string $driver): bool
     {
-        return match ($this->ids->hostKeys()) {
+        return match ($this->ids->hostKeys) {
             'string' => mb_strlen($tenantId, 'UTF-8') <= 64,
             'bigint' => self::fitsBigint($tenantId, $driver),
             'uuid' => Str::isUuid($tenantId),

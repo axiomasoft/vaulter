@@ -7,11 +7,11 @@ namespace Vaulter\Console;
 use Composer\InstalledVersions;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Foundation\Application;
+use Packman\Attributes\Internal;
 use ReflectionClass;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\CompiledModules;
@@ -54,7 +54,11 @@ final class ModulesCommand extends Command
                 ($m['active'] ? 'yes' : 'no').' ('.$m['reason'].')',
                 $m['schema_pending'] === null ? 'unknown' : (string) count($m['schema_pending']),
                 (string) count($m['capabilities']),
-                implode(', ', array_map(static fn (array $s): string => $s['slot'].' +'.$s['contributions'], $m['slots'])) ?: '-',
+                (static function (array $slots): string {
+                    $rendered = implode(', ', array_map(static fn (array $s): string => $s['slot'].' +'.$s['contributions'], $slots));
+
+                    return $rendered !== '' ? $rendered : '-';
+                })($m['slots']),
             ], $modules),
         );
         $this->line('<fg=gray>fingerprint '.$compiled->fingerprint.'</>');
@@ -135,7 +139,7 @@ final class ModulesCommand extends Command
     private static function package(string $manifest): ?string
     {
         try {
-            $file = (string) (new ReflectionClass($manifest))->getFileName();
+            $file = (string) new ReflectionClass($manifest)->getFileName();
             $best = null;
             $bestLength = 0;
             foreach (InstalledVersions::getInstalledPackages() as $package) {

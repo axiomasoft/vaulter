@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Closure;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use stdClass;
 use Throwable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;

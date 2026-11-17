@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /**

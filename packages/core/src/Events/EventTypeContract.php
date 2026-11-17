@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Events;
 
 use BackedEnum;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Attributes\EventSpec;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
 
 /**
  * An event type a module contributes to the {@see EventCatalog}: a backed string enum of the

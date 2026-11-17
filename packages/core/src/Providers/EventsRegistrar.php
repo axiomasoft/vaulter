@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\EventSources;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Renders the operation catalogue: one row per mutating operation with its module, aggregate, concurrency

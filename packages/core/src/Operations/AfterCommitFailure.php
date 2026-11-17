@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
+use Packman\Attributes\Internal;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
 
 /**
  * A failure raised by an after-commit callback once the attempt had committed: carried out of the

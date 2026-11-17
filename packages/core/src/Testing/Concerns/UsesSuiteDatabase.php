@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Concerns;
 
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Env;
 use Orchestra\Testbench\TestCase;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 
 /**
@@ -23,7 +24,7 @@ trait UsesSuiteDatabase
      */
     protected function pinSuiteConnection(Application $app): void
     {
-        $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
+        $app['config']->set('vaulter.database.write_guard', (bool) Env::get('VAULTER_TEST_WRITE_GUARD', false));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());
         SuiteDatabaseConnection::isolateStorage($app);

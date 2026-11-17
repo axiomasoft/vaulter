@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * What a repeat of an operation does:

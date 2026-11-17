@@ -8,10 +8,10 @@ use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 
 #[Internal]
 final readonly class CacheCheck implements DoctorCheck
@@ -38,7 +38,7 @@ final readonly class CacheCheck implements DoctorCheck
             return [DoctorFinding::warning(
                 code: 'core.cache.not_shared',
                 message: 'The default cache is per process or per host: replay protection and rate limits do not hold across instances.',
-                hint: 'use redis, memcached, database or dynamodb as CACHE_STORE',
+                remediation: 'use redis, memcached, database or dynamodb as CACHE_STORE',
                 evidence: $evidence,
             )];
         }
@@ -48,7 +48,7 @@ final readonly class CacheCheck implements DoctorCheck
             return [DoctorFinding::warning(
                 code: 'core.cache.no_atomic_locks',
                 message: 'The default cache store has no atomic locks: scheduled tasks cannot run on one server only.',
-                hint: 'use a cache store that supports locks',
+                remediation: 'use a cache store that supports locks',
                 evidence: $evidence,
             )];
         }

@@ -1,0 +1,52 @@
+{
+    "schema_version": 1,
+    "name": "axiomasoft/vaulter-monorepo",
+    "profile": "laravel-package",
+    "php": ">=8.4 <8.6",
+    "phpstan_level": "max",
+    "provider_max_lines": 80,
+    "packages": [
+        {
+            "name": "axiomasoft/vaulter-core",
+            "path": "packages/core",
+            "namespace": "Vaulter\\",
+            "profile": "laravel-package",
+            "layer": "L1",
+            "type": "foundation",
+            "owns": [
+                "Attributes",
+                "Configuration",
+                "Console",
+                "Contracts",
+                "Data",
+                "Database",
+                "Doctor",
+                "Errors",
+                "Events",
+                "Exceptions",
+                "Http",
+                "Idempotency",
+                "Internal",
+                "Laravel",
+                "Models",
+                "Modules",
+                "Observability",
+                "Operations",
+                "Providers",
+                "Schema",
+                "Security",
+                "Support",
+                "Tenancy",
+                "Testing",
+                "ValueObjects"
+            ]
+        }
+    ],
+    "gates": {
+        "strict_ownership": true,
+        "provider_size_limit": 80,
+        "disallow_internal_cross_imports": true,
+        "require_api_manifest": true,
+        "error_urn_prefix": "urn:packman:problem:"
+    }
+}

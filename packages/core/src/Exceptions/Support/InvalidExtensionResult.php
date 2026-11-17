@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Support;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -73,6 +77,12 @@ final class InvalidExtensionResult extends VaulterException implements ProblemEx
             $middleware,
             $operation,
         ));
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::ExtensionFailed, category: ErrorCategory::Internal);
     }
 
     public function problemCode(): string

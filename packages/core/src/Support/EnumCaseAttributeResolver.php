@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Packman\Attributes\Internal;
 use ReflectionEnumUnitCase;
 use UnitEnum;
-use Vaulter\Attributes\Internal;
 
 /**
  * Resolves a single PHP attribute declared on an enum case, with per-instance

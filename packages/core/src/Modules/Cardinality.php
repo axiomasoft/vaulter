@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * How many active providers a capability, or contributions a slot, takes.

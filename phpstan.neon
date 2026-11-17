@@ -1,58 +1,31 @@
 includes:
+    - vendor/axiomasoft/packman-devtools/config/phpstan-base.neon
     - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
-    level: max
-
+    tmpDir: build/phpstan
     paths:
         - packages/core/src
         - packages/core/database
 
     inferPrivatePropertyTypeFromConstructor: true
-    reportUnmatchedIgnoredErrors: false
 
     ignoreErrors:
-        # Eloquent dynamic builder/property magic that Larastan cannot fully model.
-        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
-        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
-
-        # The traits of the testing kit are used by test files (Pest `uses()`) and by the test cases of other packages,
-        # never by code under packages/core/src: PHPStan cannot see a user and would call them unused.
+        # Illuminate\Database\Query\Builder and Staudenmeir\LaravelCte\Query\Builder declare incompatible PHPDoc parameter types for insertUsing/insertOrIgnoreUsing/updateFrom and bare Closure.
         -
-            identifier: trait.unused
-            paths:
-                - packages/core/src/Testing/Concerns/*.php
-                - packages/core/src/Testing/Support/OpenApi/ValidatesOpenApiResponses.php
+            identifier: method.childParameterType
+            message: '#of method Vaulter\\Database\\(GuardedBuilder|GuardedCteBuilder)::(insertUsing|insertOrIgnoreUsing|updateFrom)\(\) should be contravariant with parameter#'
+            path: packages/core/src/Database/GuardsStatements.php
 
-        # The kit reads the process environment of the test run on purpose (database engine, OpenAPI switch): it never
-        # runs with a cached configuration.
-        -
-            identifier: larastan.noEnvCallsOutsideOfConfig
-            path: packages/core/src/Testing/*
-
-        # Kernel traits whose users live in other packages since the drive model move: the models of vaulter-drive
-        # apply them, nothing in the core's own source does.
+        # Kernel traits consumed by satellite packages (vaulter-drive, vaulter-webhooks) or test suites.
         -
             identifier: trait.unused
             paths:
                 - packages/core/src/Events/Concerns/DescribesEvent.php
+                - packages/core/src/Models/Concerns/HasVaulterKeys.php
                 - packages/core/src/Support/Concerns/HasIcon.php
                 - packages/core/src/Support/Concerns/HasLabel.php
                 - packages/core/src/Support/Concerns/HasStableMorphAlias.php
-                # Applied by the models of the drive and of the webhooks package, by no model of the kernel.
-                - packages/core/src/Models/Concerns/HasVaulterKeys.php
-
-        # The commit path stages the upload stream INTO the CAS inside the transaction
-        # (uploadFile->execute), which may consume + fclose it; the finally re-guards
-        # with is_resource() to avoid a double-close. PHPStan proves the stream is a
-        # resource from the entry guard and cannot see that runtime mutation, so it
-        # flags the (genuinely necessary) re-check as always-true. Scoped to this line.
-        -
-            identifier: if.alwaysTrue
-            path: packages/core/src/Drive/Uploads/Actions/CommitUploadAction.php
-
-        # Offered to package providers (the manifest is declared from their register()); the
-        # package's own providers adopt it in their own items, the fixture provider in tests.
-        -
-            identifier: trait.unused
-            path: packages/core/src/Modules/OffersModules.php
+                - packages/core/src/Testing/Concerns/*.php
+                - packages/core/src/Testing/Support/OpenApi/ValidatesOpenApiResponses.php

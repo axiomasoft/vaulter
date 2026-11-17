@@ -31,7 +31,7 @@ it('matches a strong If-Match tag and refuses a weak or another one', function (
 ]);
 
 it('requires the header: missing is 428, and so is the wildcard', function (?string $header): void {
-    expect(fn () => Preconditions::matches(ifMatchRequest($header), '"abc"'))->toThrow(PreconditionRequiredException::class);
+    expect(fn (): bool => Preconditions::matches(ifMatchRequest($header), '"abc"'))->toThrow(PreconditionRequiredException::class);
 })->with(['missing' => [null], 'blank' => ['  '], 'wildcard' => ['*']]);
 
 it('answers 304 for a weak match of If-None-Match, the wildcard included', function (?string $header, bool $expected): void {

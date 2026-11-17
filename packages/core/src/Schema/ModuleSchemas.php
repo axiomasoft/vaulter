@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Vaulter\CoreModule;
 use Vaulter\Kernel;
 use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
@@ -31,6 +33,14 @@ final readonly class ModuleSchemas
     {
         $schemas = [];
         foreach ($this->ordered() as $module => $manifest) {
+            if ($manifest === CoreModule::class) {
+                $schema = $this->container->make(CoreModule::ownedSchema());
+                if ($schema instanceof ModuleSchema) {
+                    $schemas[$module] = $schema;
+                }
+
+                continue;
+            }
             if (!is_subclass_of($manifest, OwnsSchema::class)) {
                 continue;
             }
@@ -68,7 +78,7 @@ final readonly class ModuleSchemas
         return array_values(array_unique($paths));
     }
 
-    /** @return array<string, class-string<VaulterModule>> module id => manifest, a module after the ones it requires */
+    /** @return array<string, class-string<VaulterModule|ExtensionPlugin>> module id => manifest, a module after the ones it requires */
     private function ordered(): array
     {
         if (!$this->kernel->isValid()) {

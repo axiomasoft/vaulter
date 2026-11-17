@@ -6,7 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Events\Outbox\OutboxRelay;
 
@@ -50,7 +50,7 @@ final class RelayReplayCommand extends Command
             return self::FAILURE;
         }
 
-        if ($this->option('ack-only')) {
+        if ($this->option('ack-only') === true) {
             $this->components->info(sprintf('Acknowledged %d gap(s) of %s in [%s, %s].', $result['acknowledged'], $consumer, $from, $to));
 
             return self::SUCCESS;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Operations\OperationContext;
 use Vaulter\ValueObjects\Access\ActorRef;
 

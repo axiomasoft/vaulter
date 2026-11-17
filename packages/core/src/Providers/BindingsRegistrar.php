@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Vaulter\Providers;
 
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Configuration\ConfigNormalizer;
-use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\IdsConfig;
-use Vaulter\Configuration\ObservabilityConfig;
-use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdempotencyOptions;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\ModelsOptions;
+use Vaulter\Configuration\ObservabilityOptions;
+use Vaulter\Configuration\OutboxOptions;
+use Vaulter\Configuration\RoutesOptions;
+use Vaulter\Configuration\ScheduleOptions;
+use Vaulter\Configuration\SecurityOptions;
+use Vaulter\Configuration\TenancyOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Tenancy\TenantResolver;
@@ -51,30 +57,38 @@ final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
-        $app->singleton(VaulterConfig::class);
-        $app->singleton(DatabaseConfig::class);
-        $app->singleton(IdsConfig::class);
-        $app->singleton(TenancyConfig::class);
-        $app->singleton(ProductionInvariants::class, static function (Application $app): ProductionInvariants {
-            $risks = $app->make('config')->get('vaulter.security.accepted_risks', []);
+        $app->singletonIf(VaulterOptions::class, static function (Container $app): VaulterOptions {
+            $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter', []) : [];
 
-            return new ProductionInvariants($app->make(Kernel::class)->extensions(), is_array($risks) ? $risks : []);
+            return VaulterOptions::fromArray(is_array($raw) ? $raw : ['__invalid_root' => $raw], 'vaulter');
         });
+        $app->singleton(DatabaseOptions::class, static fn (Container $app): DatabaseOptions => $app->make(VaulterOptions::class)->database);
+        $app->singleton(IdsOptions::class, static fn (Container $app): IdsOptions => $app->make(VaulterOptions::class)->ids);
+        $app->singleton(TenancyOptions::class, static fn (Container $app): TenancyOptions => $app->make(VaulterOptions::class)->tenancy);
+        $app->singleton(SecurityOptions::class, static fn (Container $app): SecurityOptions => $app->make(VaulterOptions::class)->security);
+        $app->singleton(RoutesOptions::class, static fn (Container $app): RoutesOptions => $app->make(VaulterOptions::class)->routes);
+        $app->singleton(OutboxOptions::class, static fn (Container $app): OutboxOptions => $app->make(VaulterOptions::class)->outbox);
+        $app->singleton(IdempotencyOptions::class, static fn (Container $app): IdempotencyOptions => $app->make(VaulterOptions::class)->idempotency);
+        $app->singleton(ScheduleOptions::class, static fn (Container $app): ScheduleOptions => $app->make(VaulterOptions::class)->schedule);
+        $app->singleton(ObservabilityOptions::class, static fn (Container $app): ObservabilityOptions => $app->make(VaulterOptions::class)->observability);
+        $app->singleton(ModelsOptions::class, static fn (Container $app): ModelsOptions => $app->make(VaulterOptions::class)->models);
+
+        $app->singleton(ProductionInvariants::class, static fn (Application $app): ProductionInvariants => new ProductionInvariants(
+            $app->make(Kernel::class)->extensions(),
+            $app->make(SecurityOptions::class)->acceptedRisks,
+        ));
         $app->scoped(TenancyBypass::class);
         $app->scoped(TenantResolver::class, static function (Application $app): TenantResolver {
-            $resolver = $app->make($app->make(TenancyConfig::class)->resolver());
+            $resolver = $app->make($app->make(TenancyOptions::class)->requireResolver());
             if (!$resolver instanceof TenantResolver) {
                 throw new TenancyMisconfiguredException('TenantResolver binding returned an invalid object.');
             }
 
             return $resolver;
         });
-        $app->singleton(RoutesConfig::class);
         $app->singleton(VaulterHttpOperationMap::class);
         $app->singleton(VaulterThrottledRouteMap::class);
-        $app->singleton(ObservabilityConfig::class);
         $app->singletonIf(ConfigNormalizer::class);
-        $app->singleton(ConfigValidator::class);
 
         $app->singleton(VaulterDatabase::class);
         // One runner per process: it counts the writes inside its root transaction (nesting).
@@ -109,13 +123,13 @@ final class BindingsRegistrar implements ModuleBindings
             MetricsRecorder::class,
             static function (Application $app): MetricsRecorder {
 
-                $settings = $app->make(ObservabilityConfig::class);
+                $settings = $app->make(ObservabilityOptions::class);
 
-                if (!$settings->enabled()) {
+                if (!$settings->enabled) {
                     return new NullMetricsRecorder;
                 }
 
-                $class = $settings->recorder();
+                $class = $settings->recorder;
 
                 if (!is_string($class) || $class === '' || !class_exists($class)) {
                     self::logInvalidObservabilityRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);
@@ -145,13 +159,13 @@ final class BindingsRegistrar implements ModuleBindings
             TraceRecorder::class,
             static function (Application $app): TraceRecorder {
 
-                $settings = $app->make(ObservabilityConfig::class);
+                $settings = $app->make(ObservabilityOptions::class);
 
-                if (!$settings->tracingEnabled()) {
+                if (!$settings->tracing->enabled) {
                     return new NullTraceRecorder;
                 }
 
-                $class = $settings->tracingRecorder();
+                $class = $settings->tracing->recorder;
 
                 if (!is_string($class) || $class === '' || !class_exists($class)) {
                     self::logInvalidTraceRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);

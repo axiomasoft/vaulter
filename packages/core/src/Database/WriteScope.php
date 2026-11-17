@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Database;
 
 use Closure;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 /**
@@ -22,7 +22,7 @@ final class WriteScope
 {
     private int $depth = 0;
 
-    public function __construct(private readonly DatabaseConfig $config) {}
+    public function __construct(private readonly DatabaseOptions $options) {}
 
     /**
      * @template TReturn
@@ -59,7 +59,7 @@ final class WriteScope
     /** @throws WriteOutsideOperationException */
     public function assertOpen(string $target): void
     {
-        if ($this->depth === 0 && $this->config->writeGuard()) {
+        if ($this->depth === 0 && $this->options->writeGuard) {
             throw new WriteOutsideOperationException($target, $this->caller());
         }
     }

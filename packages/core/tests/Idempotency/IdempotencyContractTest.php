@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
 use Vaulter\Idempotency\IdempotencyDigest;
@@ -166,7 +166,7 @@ function icRun(OperationRunner $runner, OperationContext $context, Closure $atte
 
 function icRows(): int
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count();
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count();
 }
 
 it('keeps actors whose type or id holds the delimiter apart, in the tuple and in the scope digest', function (): void {
@@ -297,7 +297,7 @@ it('authorizes a replay now, before the receipt is decoded, and answers the hist
 
     $live = 'v2';
     $probe->deny = true;
-    expect(fn () => icRun(icRunner(), icContext($actor, 'K'), $attempt, $probe->write(['name' => 'a'])))->toThrow(RuntimeException::class, 'denied now');
+    expect(fn (): mixed => icRun(icRunner(), icContext($actor, 'K'), $attempt, $probe->write(['name' => 'a'])))->toThrow(RuntimeException::class, 'denied now');
     expect($probe->decodes)->toBe(0)
         ->and(app(IdempotencyOutcome::class)->replayed())->toBeFalse();
 

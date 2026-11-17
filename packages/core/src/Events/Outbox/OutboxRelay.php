@@ -8,11 +8,11 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use LogicException;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\OutboxConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\OutboxOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\EventCatalog;
@@ -42,13 +42,13 @@ final readonly class OutboxRelay
 {
     public function __construct(
         private OutboxStore $store,
-        private OutboxConfig $config,
-        private VaulterConfig $vaulterConfig,
+        private OutboxOptions $config,
+        private VaulterOptions $vaulterConfig,
         private Kernel $kernel,
         private Container $container,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
     ) {}
 
     /**
@@ -71,10 +71,10 @@ final readonly class OutboxRelay
                         continue;
                     }
                     $this->reconcile($id, $consumer, CarbonImmutable::now());
-                    $finished[$id] = $this->deliver($id, $consumer, $limit ?? $this->config->batch());
+                    $finished[$id] = $this->deliver($id, $consumer, $limit ?? $this->config->batch);
                 }
 
-                foreach ($this->store->detachExpired(CarbonImmutable::now()->subSeconds($this->config->maxConsumerHoldSeconds()), CarbonImmutable::now()) as $id => $events) {
+                foreach ($this->store->detachExpired(CarbonImmutable::now()->subSeconds($this->config->maxConsumerHoldSeconds), CarbonImmutable::now()) as $id => $events) {
                     if ($events > 0) {
                         $this->metrics->counter(name: 'vaulter_outbox_consumer_gap_events_total', amount: $events, labels: ['consumer' => $id]);
                     }
@@ -96,8 +96,8 @@ final readonly class OutboxRelay
         $now = CarbonImmutable::now();
 
         return $this->store->prune(
-            eventsBefore: $now->subSeconds($this->config->retentionSeconds()),
-            deadBefore: $now->subSeconds($this->config->deadRetentionSeconds()),
+            eventsBefore: $now->subSeconds($this->config->retentionSeconds),
+            deadBefore: $now->subSeconds($this->config->deadRetentionSeconds),
         );
     }
 
@@ -152,12 +152,12 @@ final readonly class OutboxRelay
     private function reconcile(string $id, OutboxConsumer $consumer, CarbonImmutable $now): void
     {
         $owner = $this->owner();
-        $generation = $this->store->leaseConsumer($id, $owner, $now, $this->config->leaseSeconds());
+        $generation = $this->store->leaseConsumer($id, $owner, $now, $this->config->leaseSeconds);
         if ($generation === null) {
             return;
         }
         try {
-            $through = $this->store->settledSeq($now->subSeconds($this->config->settleWindowSeconds()));
+            $through = $this->store->settledSeq($now->subSeconds($this->config->settleWindowSeconds));
             $this->store->reconcile($id, $generation, $this->subscribedTypes($consumer), $through, $now);
         } catch (LeaseLostException) {
             return;
@@ -169,14 +169,14 @@ final readonly class OutboxRelay
     private function deliver(string $id, OutboxConsumer $consumer, int $limit): int
     {
         $now = CarbonImmutable::now();
-        $claims = $this->store->claim($id, $this->owner(), $now, $this->config->leaseSeconds(), $limit);
+        $claims = $this->store->claim($id, $this->owner(), $now, $this->config->leaseSeconds, $limit);
         if ($claims === []) {
             return 0;
         }
 
         /** @var class-string<OutboxEvent> $model */
         $model = $this->vaulterConfig->outboxModel();
-        $events = $model::query()->whereIn('event_id', array_column($claims, 'event_id'))->get()->keyBy('event_id');
+        $events = $model::whereIn('event_id', array_column($claims, 'event_id'))->get()->keyBy('event_id');
 
         $finished = 0;
         foreach ($claims as $claim) {
@@ -189,7 +189,7 @@ final readonly class OutboxRelay
             }
             $control = new DeliveryControl($this->database, $this->tables, $claim['event_id'], $id, $claim['generation'], $claim['continuation']);
             try {
-                $result = $consumer->consume(OutboxEnvelope::fromModel($event), $control);
+                $result = $consumer->consume($event->toEnvelope(), $control);
             } catch (Throwable $exception) {
                 report($exception);
                 $result = ConsumeResult::retry($exception::class.': '.$exception->getMessage());
@@ -211,7 +211,7 @@ final readonly class OutboxRelay
         $attempts = $claim['attempts'] + 1;
         [$state, $retryAt] = match ($result->outcome) {
             ConsumeResult::DONE => [DeliveryState::Done, null],
-            ConsumeResult::RETRY => $attempts >= $this->config->maxAttempts()
+            ConsumeResult::RETRY => $attempts >= $this->config->maxAttempts
                 ? [DeliveryState::Dead, null]
                 : [DeliveryState::Pending, $now->addSeconds($this->backoff($attempts))],
             default => [DeliveryState::Dead, null],
@@ -236,9 +236,9 @@ final readonly class OutboxRelay
     /** Full jitter: a random delay up to min(cap, base · 2^attempts). */
     private function backoff(int $attempts): int
     {
-        $ceiling = min($this->config->backoffCapSeconds(), $this->config->backoffBaseSeconds() * (2 ** min($attempts, 30)));
+        $ceiling = min($this->config->backoffCapSeconds, $this->config->backoffBaseSeconds * (2 ** min($attempts, 30)));
 
-        return random_int(0, max((int) $ceiling, 0));
+        return random_int(0, max($ceiling, 0));
     }
 
     /**
@@ -264,7 +264,7 @@ final readonly class OutboxRelay
             $this->metrics->gauge(name: 'vaulter_outbox_lag_seconds', value: max(0, $now->getTimestamp() - $createdAt->getTimestamp()), labels: ['consumer' => $id]);
         }
         // The current DLQ size inside dead retention (a gauge, not an event counter); a drained consumer reads 0.
-        $dead = $this->store->deadRows($now->subSeconds($this->config->deadRetentionSeconds()));
+        $dead = $this->store->deadRows($now->subSeconds($this->config->deadRetentionSeconds));
         foreach (array_unique([...array_keys($dead), ...array_keys($this->consumers())]) as $id) {
             $this->metrics->gauge(name: 'vaulter_outbox_dead_rows', value: $dead[$id] ?? 0, labels: ['consumer' => $id]);
         }
@@ -272,6 +272,8 @@ final readonly class OutboxRelay
 
     private function owner(): string
     {
-        return substr(gethostname() ?: 'relay', 0, 32).':'.getmypid().':'.Str::lower(Str::random(8));
+        $hostname = gethostname();
+
+        return substr(is_string($hostname) && $hostname !== '' ? $hostname : 'relay', 0, 32).':'.getmypid().':'.Str::lower(Str::random(8));
     }
 }

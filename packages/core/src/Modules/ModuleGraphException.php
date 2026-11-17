@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -17,6 +21,12 @@ use Vaulter\Exceptions\VaulterException;
 final class ModuleGraphException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::ModuleGraphInvalid, category: ErrorCategory::Unavailable);
+    }
 
     /** @param list<string> $reasons */
     public static function invalid(array $reasons): self

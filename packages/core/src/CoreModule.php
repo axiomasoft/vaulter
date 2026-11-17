@@ -4,7 +4,26 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Concerns\Composition\ProvidesCapabilities;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\Cardinality as PluginCardinality;
+use Packman\Plugins\Enums\Contributions\SlotKind as PluginSlotKind;
+use Packman\Plugins\Laravel\PluginRegistrar;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Console\CommandsReferenceCommand;
 use Vaulter\Console\ConfigReferenceCommand;
 use Vaulter\Console\DoctorCommand;
@@ -18,7 +37,6 @@ use Vaulter\Console\PruneIdempotencyKeysCommand;
 use Vaulter\Console\PruneOutboxCommand;
 use Vaulter\Console\RelayCommand;
 use Vaulter\Console\RelayReplayCommand;
-use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Doctor\Checks\CacheCheck;
@@ -36,37 +54,37 @@ use Vaulter\Doctor\Checks\SchedulerCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Doctor\Checks\TenancyCheck;
+use Vaulter\Errors\VaulterProblemDefinitions;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Events\Outbox\OutboxSchedule;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Idempotency\IdempotencySchedule;
-use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
 use Vaulter\Observability\TelemetryMiddleware;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\EventsRegistrar;
+use Vaulter\Schema\CoreSchemaSets;
 use Vaulter\Schema\KernelSchema;
 use Vaulter\Security\TenancyInvariant;
 
 /**
- * The kernel's own module (docs/adr/0027-kernel-boundaries-and-modules.md): the `vaulter` config root, the schema of every create-migration
- * still shipped by core, the kernel commands and doctor checks, the
- * DoctorCheck slot every module contributes its checks to, the OperationMiddleware slot of the
- * operation pipeline with its telemetry middleware (docs/adr/0028-extension-slots-and-operation-pipeline.md), the EventSink slot of the event
- * recorder and the outbox: its OutboxConsumer slot, relay, replay and retention commands, schedule
- * and doctor checks.
+ * The kernel's own Packman extension plugin (`vaulter.core`), owning the `vaulter` config root,
+ * core outbox/idempotency schema sets, diagnostic checks, error definitions, and extension slots.
  */
-#[Internal]
-final class CoreModule implements OwnsSchema, VaulterModule
+#[Api(since: '1.0')]
+final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
 {
+    use Configurable;
+    use ContributesToSlots;
+    use OwnsSchema;
+    use ProvidesCapabilities;
+    use ProvidesDiagnostics;
+
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */
     private const array DOCTOR_CHECKS = [
         'core.database.connection' => DatabaseConnectionCheck::class,
@@ -86,36 +104,145 @@ final class CoreModule implements OwnsSchema, VaulterModule
         'core.production_invariants' => ProductionInvariantsCheck::class,
     ];
 
+    #[Override]
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest(
+            id: 'vaulter.core',
+            version: '1.0.0',
+            resourceRoot: __DIR__.'/../resources',
+        );
+    }
+
+    #[Override]
+    public function register(PluginRegistrar $registrar): void
+    {
+        $registrar
+            ->defineSlot(DoctorCheck::class, PluginSlotKind::Handler, PluginCardinality::Many)
+            ->defineSlot(OperationMiddleware::class, PluginSlotKind::OperationMiddleware, PluginCardinality::Many)
+            ->defineSlot(EventSink::class, PluginSlotKind::EventSink, PluginCardinality::Many)
+            ->defineSlot(OutboxConsumer::class, PluginSlotKind::OutboxConsumer, PluginCardinality::Many)
+            ->defineSlot(RouteLabelSource::class, PluginSlotKind::Contributor, PluginCardinality::Many)
+            ->defineSlot(ProductionInvariant::class, PluginSlotKind::Handler, PluginCardinality::Many)
+            ->contributeSlot(ProductionInvariant::class, 'core.tenancy', TenancyInvariant::class, 0, 'core.tenancy')
+            ->contributeSlot(OperationMiddleware::class, 'core.telemetry', TelemetryMiddleware::class);
+
+        foreach (self::DOCTOR_CHECKS as $key => $check) {
+            $registrar->contributeSlot(DoctorCheck::class, $key, $check, 0, $key);
+        }
+    }
+
+    #[Override]
+    public function configRoot(): string
+    {
+        return 'vaulter';
+    }
+
+    #[Override]
+    public function defaultConfigPath(): string
+    {
+        return __DIR__.'/../config/vaulter.php';
+    }
+
+    #[Override]
+    public function optionsClass(): string
+    {
+        return VaulterOptions::class;
+    }
+
+    #[Override]
+    public function tablePrefix(): string
+    {
+        return 'v_';
+    }
+
+    /** @return list<string> */
+    #[Override]
+    public function tableNouns(): array
+    {
+        return ['outbox', 'outbox_consumers', 'outbox_deliveries', 'idempotency_keys'];
+    }
+
+    #[Override]
+    public function migrationPath(): string
+    {
+        return __DIR__.'/../database/migrations';
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaSetProviders(): array
+    {
+        return [CoreSchemaSets::class];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaComponents(): array
+    {
+        return [KernelSchema::class];
+    }
+
+    /** @return array<class-string, array{kind: string, cardinality?: string}> */
+    #[Override]
+    public function definedSlots(): array
+    {
+        return [
+            DoctorCheck::class => ['kind' => PluginSlotKind::Handler->value, 'cardinality' => PluginCardinality::Many->value],
+            OperationMiddleware::class => ['kind' => PluginSlotKind::OperationMiddleware->value, 'cardinality' => PluginCardinality::Many->value],
+            EventSink::class => ['kind' => PluginSlotKind::EventSink->value, 'cardinality' => PluginCardinality::Many->value],
+            OutboxConsumer::class => ['kind' => PluginSlotKind::OutboxConsumer->value, 'cardinality' => PluginCardinality::Many->value],
+            RouteLabelSource::class => ['kind' => PluginSlotKind::Contributor->value, 'cardinality' => PluginCardinality::Many->value],
+            ProductionInvariant::class => ['kind' => PluginSlotKind::Handler->value, 'cardinality' => PluginCardinality::Many->value],
+        ];
+    }
+
+    /** @return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}> */
+    #[Override]
+    public function slotContributions(): array
+    {
+        $contributions = [
+            ['slot' => ProductionInvariant::class, 'id' => 'core.tenancy', 'implementation' => TenancyInvariant::class, 'priority' => 0, 'key' => 'core.tenancy'],
+            ['slot' => OperationMiddleware::class, 'id' => 'core.telemetry', 'implementation' => TelemetryMiddleware::class],
+        ];
+
+        foreach (self::DOCTOR_CHECKS as $key => $check) {
+            $contributions[] = ['slot' => DoctorCheck::class, 'id' => $key, 'implementation' => $check, 'key' => $key];
+        }
+
+        return $contributions;
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function healthChecks(): array
+    {
+        return array_values(self::DOCTOR_CHECKS);
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function problemProviders(): array
+    {
+        return [VaulterProblemDefinitions::class];
+    }
+
+    /** @return class-string<KernelSchema> */
+    #[Internal]
     public static function ownedSchema(): string
     {
         return KernelSchema::class;
     }
 
-    public function id(): ModuleId
-    {
-        return new ModuleId('core');
-    }
-
-    public function version(): string
-    {
-        return '1.0';
-    }
-
-    public function activation(): Activation
-    {
-        return Activation::Auto;
-    }
-
-    public function requires(): array
-    {
-        return [];
-    }
-
-    public function register(ModuleBuilder $module): void
+    /**
+     * Bridges core declarations into Vaulter's module compiler for domain modules not yet migrated to plugins.
+     */
+    #[Internal]
+    public function declareModule(ModuleBuilder $module): void
     {
         $module
-            ->config('vaulter', dirname(__DIR__).'/config/vaulter.php')
-            ->schema(dirname(__DIR__).'/database/migrations')
+            ->config('vaulter', __DIR__.'/../config/vaulter.php')
+            ->schema(__DIR__.'/../database/migrations')
             ->bindings(BindingsRegistrar::class)
             ->bindings(EventsRegistrar::class)
             ->problems(CoreProblemCodes::class)

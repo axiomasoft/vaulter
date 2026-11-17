@@ -1,11 +1,18 @@
 {
     "preset": "laravel",
-    "exclude": ["plans", "scripts/fixtures-strip"],
+    "exclude": [
+        "build",
+        "plans",
+        "scripts/fixtures-strip",
+        "var",
+        "vendor"
+    ],
     "rules": {
         "declare_strict_types": true,
         "final_class": false,
         "ordered_imports": {
-            "sort_algorithm": "alpha"
+            "sort_algorithm": "alpha",
+            "imports_order": ["class", "function", "const"]
         },
         "no_unused_imports": true,
         "phpdoc_align": {

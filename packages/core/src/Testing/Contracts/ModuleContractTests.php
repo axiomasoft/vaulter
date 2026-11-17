@@ -6,8 +6,8 @@ namespace Vaulter\Testing\Contracts;
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\App;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
 use Vaulter\CoreModule;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Http\Problems\ProblemCodeSource;
@@ -109,10 +109,10 @@ final class ModuleContractTests
      */
     private function footprint(): array
     {
-        $bindings = array_map('strval', array_keys(App::getBindings()));
+        $bindings = array_map(strval(...), array_keys(App::getBindings()));
         $listeners = [];
         foreach (App::make('events')->getRawListeners() as $event => $registered) {
-            $listeners[(string) $event] = is_countable($registered) ? count($registered) : 1;
+            $listeners[$event] = is_countable($registered) ? count($registered) : 1;
         }
         sort($bindings);
         ksort($listeners);

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use RuntimeException;
 
 /**
  * A stream wrapper whose reads always fail, to prove that a scanner never reports clean
@@ -25,7 +26,9 @@ final class FailingStream
             stream_wrapper_register(self::SCHEME, self::class);
         }
 
-        return fopen(self::SCHEME.'://bytes', 'rb') ?: throw new \RuntimeException('The failing stream could not be opened.');
+        $handle = fopen(self::SCHEME.'://bytes', 'rb');
+
+        return $handle !== false ? $handle : throw new RuntimeException('The failing stream could not be opened.');
     }
 
     /** Take the wrapper out again, once the stream is closed. */

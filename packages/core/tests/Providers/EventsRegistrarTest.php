@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Vaulter\Attributes\EventSpec;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Concerns\DescribesEvent;
 use Vaulter\Events\DomainEvent;
@@ -32,7 +34,7 @@ it('dates reconciliation after payload preparation and the insert wait within th
     $this->travelTo($started);
     $database = app(VaulterDatabase::class);
     $connection = $database->connection();
-    $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+    $table = app(DatabaseOptions::class)->table(OutboxStore::EVENTS);
     $wrappedTable = $connection->getQueryGrammar()->wrapTable($table);
     $active = true;
     $insertWaits = 0;
@@ -74,7 +76,7 @@ it('dates reconciliation after payload preparation and the insert wait within th
 it('rolls the inserted event back if its reconciliation timestamp cannot be stored', function (): void {
     $database = app(VaulterDatabase::class);
     $connection = $database->connection();
-    $wrappedTable = $connection->getQueryGrammar()->wrapTable(app(DatabaseConfig::class)->table(OutboxStore::EVENTS));
+    $wrappedTable = $connection->getQueryGrammar()->wrapTable(app(DatabaseOptions::class)->table(OutboxStore::EVENTS));
     $active = true;
     $connection->beforeExecuting(static function (string $sql) use (&$active, $wrappedTable): void {
         if ($active && str_starts_with(strtolower(ltrim($sql)), 'update') && str_contains($sql, $wrappedTable)) {
@@ -95,7 +97,7 @@ it('rolls the inserted event back if its reconciliation timestamp cannot be stor
 it('never treats an unstaged event as settled because its creation time is old', function (): void {
     $event = eventsRegistrarOutboxRow();
     $database = app(VaulterDatabase::class);
-    $database->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::EVENTS))
+    $database->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::EVENTS))
         ->where('event_id', $event['event_id'])
         ->update(['created_at' => now()->subDay(), 'staged_at' => null]);
 
@@ -185,7 +187,7 @@ it('compares UTC staging against absolute cutoffs with all microseconds through 
 
         try {
             $event = eventsRegistrarOutboxRow();
-            $database->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::EVENTS))
+            $database->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::EVENTS))
                 ->where('event_id', $event['event_id'])
                 ->update(['staged_at' => $staged->format('Y-m-d H:i:s.u')]);
 
@@ -239,7 +241,7 @@ it('does not refresh a stored occurrence or its timestamp on replay', function (
     $active = false;
     $updates = 0;
     $connection = $database->connection();
-    $wrappedTable = $connection->getQueryGrammar()->wrapTable(app(DatabaseConfig::class)->table(OutboxStore::EVENTS));
+    $wrappedTable = $connection->getQueryGrammar()->wrapTable(app(DatabaseOptions::class)->table(OutboxStore::EVENTS));
     $connection->beforeExecuting(static function (string $sql) use (&$active, &$updates, $wrappedTable): void {
         if ($active && str_starts_with(strtolower(ltrim($sql)), 'update') && str_contains($sql, $wrappedTable)) {
             $updates++;
@@ -266,6 +268,9 @@ it('does not refresh a stored occurrence or its timestamp on replay', function (
 it('rejects a tenant id the host key column cannot store before the insert', function (string $hostKeys, string $tenant): void {
     $previous = config('vaulter.ids.host_keys');
     config()->set('vaulter.ids.host_keys', $hostKeys);
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(OutboxWriter::class);
 
     try {
         $event = new HostKeyColumnProbeEvent($tenant);
@@ -276,6 +281,9 @@ it('rejects a tenant id the host key column cannot store before the insert', fun
         expect(OutboxEvent::query()->where('event_id', $event->eventId)->exists())->toBeFalse();
     } finally {
         config()->set('vaulter.ids.host_keys', $previous);
+        app()->forgetInstance(VaulterOptions::class);
+        app()->forgetInstance(IdsOptions::class);
+        app()->forgetInstance(OutboxWriter::class);
     }
 })->with([
     'varchar(64) and a 191-byte token' => ['string', str_repeat('a', 191)],
@@ -292,6 +300,9 @@ it('rejects a tenant id the host key column cannot store before the insert', fun
 it('stores a tenant id the host key column can hold, including null', function (string $hostKeys, ?string $tenant): void {
     $previous = config('vaulter.ids.host_keys');
     config()->set('vaulter.ids.host_keys', $hostKeys);
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
+    app()->forgetInstance(OutboxWriter::class);
 
     try {
         $event = new HostKeyColumnProbeEvent($tenant);
@@ -304,6 +315,9 @@ it('stores a tenant id the host key column can hold, including null', function (
             ->and($stored === null ? null : (string) $stored)->toBe($tenant);
     } finally {
         config()->set('vaulter.ids.host_keys', $previous);
+        app()->forgetInstance(VaulterOptions::class);
+        app()->forgetInstance(IdsOptions::class);
+        app()->forgetInstance(OutboxWriter::class);
     }
 })->with([
     'null' => ['string', null],
@@ -370,7 +384,7 @@ function eventsRegistrarInTimezone(string $timezone, Closure $check): void
 function eventsRegistrarOutboxRow(): array
 {
     $eventId = (string) Str::ulid();
-    $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+    $table = app(DatabaseOptions::class)->table(OutboxStore::EVENTS);
     app(VaulterDatabase::class)->connection()->table($table)->insert([
         'event_id' => $eventId,
         'tenant_id' => null,
@@ -393,7 +407,7 @@ function eventsRegistrarOutboxRow(): array
 function eventsRegistrarConsumer(int $from, int $to): void
 {
     $now = now();
-    app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::CONSUMERS))->insert([
+    app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::CONSUMERS))->insert([
         'consumer_id' => 'events.registrar.probe',
         'delivery_class' => 'durable',
         'state' => 'active',
@@ -416,7 +430,7 @@ function eventsRegistrarConsumer(int $from, int $to): void
 function eventsRegistrarDelivery(array $event, string $state, int $generation, int $attempts, ?string $owner = null): void
 {
     $now = now();
-    app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->insert([
+    app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->insert([
         'event_id' => $event['event_id'],
         'consumer_id' => 'events.registrar.probe',
         'outbox_seq' => $event['outbox_seq'],
@@ -434,7 +448,7 @@ function eventsRegistrarDelivery(array $event, string $state, int $generation, i
 
 function eventsRegistrarDeliveryRow(string $eventId): object
 {
-    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))
         ->where('event_id', $eventId)
         ->where('consumer_id', 'events.registrar.probe')
         ->first();

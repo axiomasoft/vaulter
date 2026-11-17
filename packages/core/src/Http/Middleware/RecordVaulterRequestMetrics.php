@@ -6,9 +6,9 @@ namespace Vaulter\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Support\LoadTier;
 

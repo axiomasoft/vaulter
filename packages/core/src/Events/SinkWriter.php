@@ -6,8 +6,8 @@ namespace Vaulter\Events;
 
 use Illuminate\Database\Connection;
 use LogicException;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Database\VaulterDatabase;
 
 /**

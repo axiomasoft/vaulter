@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The size of a scale test: the real one when the run is a full/discovery run (`scripts/t` exports VAULTER_FULL_SEEDS=1),

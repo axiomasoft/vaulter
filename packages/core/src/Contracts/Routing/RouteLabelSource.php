@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Routing;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The metric labels of the routes a module owns. The kernel records `vaulter_http_request_duration_seconds` and

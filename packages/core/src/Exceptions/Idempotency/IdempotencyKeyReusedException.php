@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Idempotency;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -25,6 +29,12 @@ final class IdempotencyKeyReusedException extends VaulterException implements Pr
             $operation,
             self::docs('idempotency-key-reused'),
         ));
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::IdempotencyKeyReused, category: ErrorCategory::Validation);
     }
 
     public function problemCode(): string

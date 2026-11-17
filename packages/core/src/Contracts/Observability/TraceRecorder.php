@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Observability;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * SDK-neutral tracing seam. Package code depends only on this

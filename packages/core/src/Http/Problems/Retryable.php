@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Whether a client may repeat a request that failed with a problem code (architecture#errors): never as it

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A JSON value in one key order. MySQL normalises a JSON column and returns object keys sorted (shortest first), so a

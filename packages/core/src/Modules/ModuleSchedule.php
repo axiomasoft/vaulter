@@ -6,8 +6,8 @@ namespace Vaulter\Modules;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The scheduled tasks of a module, declared by class with {@see ModuleBuilder::schedule()} and defined

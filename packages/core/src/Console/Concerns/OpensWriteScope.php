@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Console\Concerns;
 
+use Packman\Attributes\Internal;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
 /**

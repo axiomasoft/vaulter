@@ -6,8 +6,8 @@ namespace Vaulter\Events\Outbox;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ScheduleConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
 
@@ -27,7 +27,7 @@ final readonly class OutboxSchedule implements ModuleSchedule
 
     public function define(Schedule $schedule, Repository $config): void
     {
-        $frequencies = (new ScheduleConfig($config))->frequencies('vaulter', self::KEYS);
+        $frequencies = ScheduleFrequency::fromMap('vaulter.schedule', $config->get('vaulter.schedule', []), self::KEYS);
         foreach (self::TASKS as $key => [$command, $expiry]) {
             $frequency = $frequencies[$key] ?? null;
             if ($frequency !== null) {

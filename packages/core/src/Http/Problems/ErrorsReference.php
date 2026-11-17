@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Renders the error reference of the docs from the {@see ProblemCatalog}, so the docs

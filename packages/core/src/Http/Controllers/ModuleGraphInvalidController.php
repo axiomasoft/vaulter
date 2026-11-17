@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Controllers;
 
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleGraphException;
 

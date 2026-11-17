@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Middleware;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Kernel;
 

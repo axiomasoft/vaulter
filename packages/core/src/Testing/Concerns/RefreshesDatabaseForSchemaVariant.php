@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Concerns;
 
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Packman\Attributes\Internal;
 
 use function Orchestra\Testbench\load_migration_paths;
-
-use Vaulter\Attributes\Internal;
 
 /**
  * Reuses a server schema while RefreshDatabase rolls back each test's data.

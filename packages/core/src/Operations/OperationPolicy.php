@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The concurrency and idempotency policy of one mutating operation: the aggregate it changes

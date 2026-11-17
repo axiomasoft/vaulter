@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Concerns;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * For a test file that proves it needs no database: the suite TestCase still boots the application and its providers, but the

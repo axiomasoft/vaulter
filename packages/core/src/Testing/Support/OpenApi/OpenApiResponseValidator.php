@@ -7,8 +7,8 @@ namespace Vaulter\Testing\Support\OpenApi;
 use LogicException;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
+use Packman\Attributes\Internal;
 use stdClass;
-use Vaulter\Attributes\Internal;
 
 /**
  * Judges one HTTP response against its operation: status, headers, media type and body.

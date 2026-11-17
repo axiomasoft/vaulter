@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Events;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Support\Identity;
 
 /**

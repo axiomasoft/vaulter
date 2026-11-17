@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A module manifest whose module holds references other modules keep in its data (the media and its pins): it

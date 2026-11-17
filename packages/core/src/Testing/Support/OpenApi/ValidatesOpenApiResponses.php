@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Support\OpenApi;
 
 use Illuminate\Contracts\Http\Kernel;
-use Vaulter\Attributes\Internal;
+use Illuminate\Support\Env;
+use Packman\Attributes\Internal;
 
 /**
  * Switches the contract check on for a test case when VAULTER_OPENAPI_VALIDATE=1 (set in the
@@ -16,7 +17,7 @@ trait ValidatesOpenApiResponses
 {
     protected function validateOpenApiResponses(mixed $app): void
     {
-        if ((string) env('VAULTER_OPENAPI_VALIDATE') !== '1') {
+        if ((string) Env::get('VAULTER_OPENAPI_VALIDATE') !== '1') {
             return;
         }
 

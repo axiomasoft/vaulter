@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
-use Vaulter\Attributes\Api;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Api;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Contracts\IdStrategy;
 
 /**
@@ -80,11 +80,11 @@ final class VaulterSchema
      */
     public static function tenant(Blueprint $table): void
     {
-        if (!app(TenancyConfig::class)->enabled()) {
+        if (!app(TenancyOptions::class)->enabled) {
             return;
         }
 
-        HostKeyColumns::add(table: $table, column: TenancyConfig::COLUMN, nullable: true, index: true);
+        HostKeyColumns::add(table: $table, column: TenancyOptions::COLUMN, nullable: true, index: true);
     }
 
     /**

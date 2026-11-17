@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\VaulterOptions;
 
 /*
  * (Green guard, structurally no red-before — a dead-seam removal,
@@ -23,5 +23,5 @@ it('removes the dead StorageAdapter seam entirely, F-P3.1-03', function (): void
     expect(interface_exists('Vaulter\\Contracts\\Cas\\StorageAdapter'))->toBeFalse()
         ->and(class_exists('Vaulter\\Support\\DefaultStorageAdapter'))->toBeFalse()
         ->and($config)->not->toHaveKey('storage_adapter')
-        ->and(method_exists(VaulterConfig::class, 'storageAdapterClass'))->toBeFalse();
+        ->and(method_exists(VaulterOptions::class, 'storageAdapterClass'))->toBeFalse();
 });

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -14,6 +18,12 @@ use Vaulter\Exceptions\VaulterException;
 #[Api]
 final class MissingExtensionException extends VaulterException
 {
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::MissingExtension, category: ErrorCategory::Internal);
+    }
+
     public static function capability(string $contract): self
     {
         return new self(sprintf(

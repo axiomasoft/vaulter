@@ -1,0 +1,296 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-core configuration",
+    "type": "object",
+    "properties": {
+        "vaulter": {
+            "type": "object",
+            "properties": {
+                "database": {
+                    "type": "object",
+                    "properties": {
+                        "connection": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "table_prefix": {
+                            "type": "string",
+                            "default": "v_"
+                        },
+                        "write_guard": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "idempotency": {
+                    "type": "object",
+                    "properties": {
+                        "ttl_seconds": {
+                            "type": "integer",
+                            "default": 86400
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "ids": {
+                    "type": "object",
+                    "properties": {
+                        "host_keys": {
+                            "type": "string",
+                            "default": "string"
+                        },
+                        "strategies": {
+                            "type": "object",
+                            "properties": {
+                                "bigint": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "ulid": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "uuid7": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "strategy": {
+                            "type": "string",
+                            "default": "ulid"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "models": {
+                    "type": "object",
+                    "properties": {
+                        "outbox": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "modules": {
+                    "type": [
+                        "array",
+                        "object"
+                    ]
+                },
+                "observability": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "recorder": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "tracing": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "recorder": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "null"
+                                    ],
+                                    "default": null
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "outbox": {
+                    "type": "object",
+                    "properties": {
+                        "backoff_base_seconds": {
+                            "type": "integer",
+                            "default": 2
+                        },
+                        "backoff_cap_seconds": {
+                            "type": "integer",
+                            "default": 3600
+                        },
+                        "batch": {
+                            "type": "integer",
+                            "default": 100
+                        },
+                        "dead_retention_seconds": {
+                            "type": "integer",
+                            "default": 2592000
+                        },
+                        "lease_seconds": {
+                            "type": "integer",
+                            "default": 60
+                        },
+                        "max_attempts": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "max_consumer_hold_seconds": {
+                            "type": "integer",
+                            "default": 604800
+                        },
+                        "retention_seconds": {
+                            "type": "integer",
+                            "default": 604800
+                        },
+                        "settle_window_seconds": {
+                            "type": "integer",
+                            "default": 300
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "routes": {
+                    "type": "object",
+                    "properties": {
+                        "middleware": {
+                            "type": "object",
+                            "properties": {
+                                "authenticated": {
+                                    "type": "array"
+                                },
+                                "hub": {
+                                    "type": "array"
+                                },
+                                "public": {
+                                    "type": "array"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "prefix": {
+                            "type": "string",
+                            "default": "api/vaulter"
+                        },
+                        "rate_limits": {
+                            "type": "object",
+                            "properties": {
+                                "public": {
+                                    "type": "integer",
+                                    "default": 60
+                                },
+                                "uploads": {
+                                    "type": "integer",
+                                    "default": 120
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "schedule": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "idempotency_prune": {
+                            "type": "string",
+                            "default": "dailyAt:03:30"
+                        },
+                        "outbox_prune": {
+                            "type": "string",
+                            "default": "hourly"
+                        },
+                        "outbox_relay": {
+                            "type": "string",
+                            "default": "everyMinute"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "security": {
+                    "type": "object",
+                    "properties": {
+                        "accepted_risks": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "tenancy": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "resolver": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

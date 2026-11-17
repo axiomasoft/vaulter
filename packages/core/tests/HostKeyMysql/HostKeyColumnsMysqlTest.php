@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Schema\Blueprint;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\HostKeyColumns;
 
@@ -12,13 +14,17 @@ beforeEach(function (): void {
         $this->markTestSkipped('MySQL host-key DDL requires MySQL or MariaDB.');
     }
     config()->set('vaulter.database.table_prefix', 'hk_test_');
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(DatabaseOptions::class);
 });
 
 it('creates each configured MySQL host type with its nullability and index', function (string $type): void {
     config()->set('vaulter.ids.host_keys', $type);
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(IdsOptions::class);
     $db = app(VaulterDatabase::class)->connection();
     $schema = $db->getSchemaBuilder();
-    $table = app(DatabaseConfig::class)->table('node_grants');
+    $table = app(DatabaseOptions::class)->table('node_grants');
     try {
         $schema->create($table, function (Blueprint $blueprint): void {
             HostKeyColumns::add($blueprint, 'subject_id', nullable: false, index: true);

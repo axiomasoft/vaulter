@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Outbox\Models;
 
+use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Support\Identity;
 
 /**
  * One row of the neutral transactional outbox: a domain event written in the transaction of the
@@ -52,20 +56,20 @@ class OutboxEvent extends Model
     /**
      * Fully guarded: every column is system-computed; the sole writer, OutboxWriter, fills it with forceFill().
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('outbox');
+        return app(DatabaseOptions::class)->table('outbox');
     }
 
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [
@@ -89,5 +93,23 @@ class OutboxEvent extends Model
     protected function setStagedAtAttribute(DateTimeInterface|string|null $value): void
     {
         $this->attributes['staged_at'] = $value === null ? null : Carbon::parse($value, 'UTC')->utc()->format('Y-m-d H:i:s.u');
+    }
+
+    public function toEnvelope(): OutboxEnvelope
+    {
+        return new OutboxEnvelope(
+            eventId: $this->event_id,
+            outboxSeq: $this->outbox_seq,
+            type: $this->type,
+            external: $this->external,
+            tenantId: $this->tenant_id === null ? null : Identity::stringify($this->tenant_id),
+            scopeKind: $this->scope_kind,
+            scopeId: $this->scope_id,
+            aggregateType: $this->aggregate_type,
+            aggregateId: $this->aggregate_id,
+            sequence: $this->sequence,
+            createdAt: CarbonImmutable::instance($this->created_at),
+            payload: $this->payload,
+        );
     }
 }

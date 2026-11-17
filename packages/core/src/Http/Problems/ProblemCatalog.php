@@ -7,7 +7,7 @@ namespace Vaulter\Http\Problems;
 use Closure;
 use Illuminate\Contracts\Translation\Translator;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Every problem code the HTTP surface can answer with: the codes the active modules declare with
@@ -142,7 +142,7 @@ final class ProblemCatalog
                     if (isset($entries[$code])) {
                         throw new InvalidArgumentException(sprintf('[Vaulter] The problem code "%s" is declared by both the module "%s" and the module "%s".', $code, $entries[$code]['module'], $module));
                     }
-                    $entries[$code] = ['spec' => $spec, 'module' => (string) $module, 'namespace' => $source->translationNamespace()];
+                    $entries[$code] = ['spec' => $spec, 'module' => $module, 'namespace' => $source->translationNamespace()];
                 }
             }
         }

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -27,6 +31,17 @@ final class ReplayedProblemException extends VaulterException implements Problem
         private readonly array $headers = [],
     ) {
         parent::__construct(sprintf('[Vaulter] Replayed the stored refusal "%s" of an idempotent request; nothing ran.', $problem));
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        $code = VaulterErrorCode::tryFrom('vaulter.'.$this->problem) ?? VaulterErrorCode::ReplayedProblem;
+
+        return new ErrorDescriptor(
+            code: $code,
+            category: $this->status >= 500 ? ErrorCategory::Internal : ErrorCategory::Conflict,
+        );
     }
 
     public function problemCode(): string

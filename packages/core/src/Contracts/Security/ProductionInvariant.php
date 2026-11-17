@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Security;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * One narrow production-fatal condition of an active module. A module contributes its invariants to the

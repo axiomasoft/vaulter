@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Closure;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Idempotency\CachedRefusal;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotentWrite;

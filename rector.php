@@ -2,34 +2,43 @@
 
 declare(strict_types=1);
 
+use Packman\DevTools\Rector\PackmanRectorSet;
+use Rector\CodeQuality\Rector\Catch_\ThrowWithPreviousExceptionRector;
+use Rector\CodeQuality\Rector\ClassMethod\LocallyCalledStaticMethodToNonStaticRector;
+use Rector\CodeQuality\Rector\Identical\SimplifyBoolIdenticalTrueRector;
+use Rector\CodeQuality\Rector\If_\ExplicitNullableObjectInstanceRector;
 use Rector\CodingStyle\Rector\Use_\SeparateMultiUseImportsRector;
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\ClassMethod\RemoveEmptyClassMethodRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
+use Rector\DeadCode\Rector\FunctionLike\NarrowWideUnionReturnTypeRector;
+use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
+use Rector\Php82\Rector\Class_\ReadOnlyClassRector;
+use Rector\Php83\Rector\Class_\ReadOnlyAnonymousClassRector;
+use Rector\TypeDeclaration\Rector\ClassMethod\NarrowObjectReturnTypeRector;
 
-return RectorConfig::configure()
-    ->withPaths([
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->disableParallel();
+    $rectorConfig->paths([
         __DIR__.'/packages/core/src',
         __DIR__.'/packages/core/database',
         __DIR__.'/packages/core/tests',
-        // Root vendor already autoloads these three satellites (root
-        // composer.json `require`s them as path-repos for the core test fixtures),
-        // so their src is reachable here without a separate install. vaulter-filament
-        // (and vaulter-azguard, excluded from this batch's five-package
-        // scope) is NOT a root dependency — it gets its own package-local rector.php
-        // (packages/filament/rector.php) run from its own CI job instead.
-        __DIR__.'/packages/drive/src',
-        __DIR__.'/packages/media/src',
-        __DIR__.'/packages/documents/src',
-    ])
-    ->withPhpSets(php84: true)
-    ->withPreparedSets(
-        deadCode: true,
-        codeQuality: true,
-        codingStyle: true,
-        typeDeclarations: true,
-        privatization: true,
-        earlyReturn: true,
-    )
-    ->withSkip([
-        // Pint owns import ordering / formatting; avoid Rector fighting it.
-        SeparateMultiUseImportsRector::class,
     ]);
+    $rectorConfig->importNames(importDocBlockNames: false);
+    $rectorConfig->removeUnusedImports();
+
+    PackmanRectorSet::configure($rectorConfig, [
+        SeparateMultiUseImportsRector::class,
+        ReadOnlyClassRector::class,
+        ReadOnlyPropertyRector::class,
+        ReadOnlyAnonymousClassRector::class,
+        LocallyCalledStaticMethodToNonStaticRector::class,
+        ExplicitNullableObjectInstanceRector::class,
+        RemoveEmptyClassMethodRector::class,
+        RemoveUnusedPublicMethodParameterRector::class,
+        NarrowObjectReturnTypeRector::class,
+        NarrowWideUnionReturnTypeRector::class,
+        ThrowWithPreviousExceptionRector::class,
+        SimplifyBoolIdenticalTrueRector::class,
+    ]);
+};

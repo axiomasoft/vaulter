@@ -2,73 +2,73 @@
     "schema": "vaulter.release/v2",
     "php": [
         {
-            "name": "axioma-studio/vaulter-core",
+            "name": "axiomasoft/vaulter-core",
             "path": "packages/core",
-            "split": "axioma-studio/vaulter-core",
+            "split": "axiomasoft/vaulter-core",
             "channel": "public",
             "release_line": "php-public",
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter-media",
+            "name": "axiomasoft/vaulter-media",
             "path": "packages/media",
-            "split": "axioma-studio/vaulter-media",
+            "split": "axiomasoft/vaulter-media",
             "channel": "public",
             "release_line": "php-public",
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter-drive",
+            "name": "axiomasoft/vaulter-drive",
             "path": "packages/drive",
-            "split": "axioma-studio/vaulter-drive",
+            "split": "axiomasoft/vaulter-drive",
             "channel": "public",
             "release_line": "php-public",
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter-documents",
+            "name": "axiomasoft/vaulter-documents",
             "path": "packages/documents",
-            "split": "axioma-studio/vaulter-documents",
+            "split": "axiomasoft/vaulter-documents",
             "channel": "public",
             "release_line": "php-public",
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter-webhooks",
+            "name": "axiomasoft/vaulter-webhooks",
             "path": "packages/webhooks",
-            "split": "axioma-studio/vaulter-webhooks",
+            "split": "axiomasoft/vaulter-webhooks",
             "channel": "public",
             "release_line": "php-public",
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter-collaboration",
+            "name": "axiomasoft/vaulter-collaboration",
             "path": "packages/collaboration",
-            "split": "axioma-studio/vaulter-collaboration",
+            "split": "axiomasoft/vaulter-collaboration",
             "channel": "private",
             "release_line": "php-collaboration",
             "tag_prefix": "collaboration-v",
             "license": "proprietary",
             "access": "restricted",
             "tested_ranges": {
-                "axioma-studio/vaulter-core": "^1.0",
-                "axioma-studio/vaulter-drive": "^1.0",
-                "axioma-studio/vaulter-documents": "^1.0",
-                "axioma-studio/vaulter-media": "^1.0"
+                "axiomasoft/vaulter-core": "^1.0",
+                "axiomasoft/vaulter-drive": "^1.0",
+                "axiomasoft/vaulter-documents": "^1.0",
+                "axiomasoft/vaulter-media": "^1.0"
             }
         },
         {
-            "name": "axioma-studio/vaulter-filament",
+            "name": "axiomasoft/vaulter-filament",
             "path": "packages/filament",
-            "split": "axioma-studio/vaulter-filament",
+            "split": "axiomasoft/vaulter-filament",
             "channel": "public",
             "release_line": "php-public",
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter-azguard",
+            "name": "axiomasoft/vaulter-azguard",
             "path": "packages/azguard",
-            "split": "axioma-studio/vaulter-azguard",
+            "split": "axiomasoft/vaulter-azguard",
             "requires_tag": "axiomasoft/azguard",
             "excluded_unless_tagged": true,
             "channel": "public",
@@ -76,9 +76,9 @@
             "tag_prefix": "v"
         },
         {
-            "name": "axioma-studio/vaulter",
+            "name": "axiomasoft/vaulter",
             "path": "packages/vaulter",
-            "split": "axioma-studio/vaulter",
+            "split": "axiomasoft/vaulter",
             "metapackage": true,
             "channel": "public",
             "release_line": "php-public",

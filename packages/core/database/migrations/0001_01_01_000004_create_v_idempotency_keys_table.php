@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Migrations\Migration;
+use Illuminate\Container\Container;
 use Vaulter\Schema\KernelSchema;
+use Vaulter\Schema\VaulterMigration;
 
-return new class extends Migration
+return new class extends VaulterMigration
 {
     public function up(): void
     {
-        app(KernelSchema::class)->create(entity: 'idempotency_keys');
+        Container::getInstance()->make(KernelSchema::class)->create(entity: 'idempotency_keys');
     }
 
     public function down(): void
     {
-        app(KernelSchema::class)->drop(entity: 'idempotency_keys');
+        Container::getInstance()->make(KernelSchema::class)->drop(entity: 'idempotency_keys');
     }
 };

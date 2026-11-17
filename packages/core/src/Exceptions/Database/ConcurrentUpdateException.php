@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Database;
 
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Throwable;
-use Vaulter\Attributes\Api;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -22,6 +26,12 @@ final class ConcurrentUpdateException extends VaulterException implements Proble
     public function __construct(?Throwable $previous = null)
     {
         parent::__construct('[Vaulter] The request conflicted with a concurrent update; retry it. Docs: '.self::docs('concurrent-update'), 0, $previous);
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::ConcurrentUpdate, category: ErrorCategory::Conflict, retryable: true);
     }
 
     public function problemCode(): string

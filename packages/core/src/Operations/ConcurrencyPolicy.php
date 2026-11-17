@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * How an operation keeps a concurrent writer from losing its change:

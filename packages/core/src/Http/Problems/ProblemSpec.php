@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Problems;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * One problem code of a module (architecture#errors): the HTTP status, the exception that carries it,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Operations;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Support\Identity;
 
 /**

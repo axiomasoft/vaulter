@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Providers;
 
+use Closure;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Internal;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Internal;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Modules\ModuleSchedule;
 
@@ -34,9 +35,13 @@ final class SchedulingRegistrar
         return $frequency->applyTo($event)->withoutOverlapping($expiry)->onOneServer();
     }
 
-    /** Runs $callback on the scheduler whether it is resolved before or after this call. */
+    /**
+     * Runs $callback on the scheduler whether it is resolved before or after this call.
+     *
+     * @param Closure(Schedule): void $callback
+     */
     #[Internal]
-    public static function whenScheduling(Application $app, \Closure $callback): void
+    public static function whenScheduling(Application $app, Closure $callback): void
     {
         $app->afterResolving(Schedule::class, $callback);
         if ($app->resolved(Schedule::class)) {

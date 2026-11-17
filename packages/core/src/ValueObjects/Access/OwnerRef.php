@@ -6,7 +6,7 @@ namespace Vaulter\ValueObjects\Access;
 
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 #[Api]
 final readonly class OwnerRef

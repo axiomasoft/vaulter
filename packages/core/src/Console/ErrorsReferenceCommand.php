@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Packman\Attributes\Internal;
 use Symfony\Component\Console\Output\OutputInterface;
-use Vaulter\Attributes\Internal;
 use Vaulter\Http\Problems\ErrorsReference;
 use Vaulter\Http\Problems\ProblemCatalog;
 

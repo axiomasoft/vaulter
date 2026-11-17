@@ -6,9 +6,12 @@ use Illuminate\Container\Container;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
+use Vaulter\Modules\Capabilities;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\ExtensionRegistry;
 use Vaulter\Modules\InvalidModuleGraph;
+use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleGraphException;
@@ -26,8 +29,8 @@ it('freezes every builder once compiled, valid or not', function (bool $valid): 
     $result = (new ModuleCompiler)->compile($modules, []);
 
     expect($result)->toBeInstanceOf($valid ? CompiledModules::class : InvalidModuleGraph::class)
-        ->and(fn () => $module->builder?->provides(Greeter::class, PlainGreeter::class))->toThrow(RegistryFrozenException::class)
-        ->and(fn () => $module->builder?->defineCapability(Greeter::class, Cardinality::Many))->toThrow(RegistryFrozenException::class);
+        ->and(fn (): ?ModuleBuilder => $module->builder?->provides(Greeter::class, PlainGreeter::class))->toThrow(RegistryFrozenException::class)
+        ->and(fn (): ?ModuleBuilder => $module->builder?->defineCapability(Greeter::class, Cardinality::Many))->toThrow(RegistryFrozenException::class);
 })->with(['valid graph' => [true], 'invalid graph' => [false]]);
 
 it('refuses an offer after the catalogue is sealed and keeps one offer per class', function (): void {
@@ -58,13 +61,13 @@ it('reports an invalid graph on every read', function (): void {
         ->and($kernel->modules())->toBe([])
         ->and($kernel->fingerprint())->toBeNull()
         ->and(fn () => $kernel->assertValid())->toThrow(ModuleGraphException::class, 'module id "host" is declared twice')
-        ->and(fn () => $kernel->capabilities())->toThrow(ModuleGraphException::class)
-        ->and(fn () => $kernel->extensions())->toThrow(ModuleGraphException::class);
+        ->and(fn (): Capabilities => $kernel->capabilities())->toThrow(ModuleGraphException::class)
+        ->and(fn (): ExtensionRegistry => $kernel->extensions())->toThrow(ModuleGraphException::class);
 });
 
 it('refuses reads before the graph is compiled', function (): void {
     $kernel = new Kernel(new Container);
 
     expect($kernel->isSealed())->toBeFalse()
-        ->and(fn () => $kernel->capabilities())->toThrow(ModuleGraphException::class, 'not compiled yet');
+        ->and(fn (): Capabilities => $kernel->capabilities())->toThrow(ModuleGraphException::class, 'not compiled yet');
 });

@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter-drive",
+    "name": "axiomasoft/vaulter-drive",
     "description": "Drive behaviour for Vaulter — file/folder tree operations, storage manager and resumable uploads over the vaulter-core kernel and the vaulter-media CAS engine.",
     "type": "library",
     "license": "MIT",
@@ -15,23 +15,23 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
+    "replace": {
+        "axioma-studio/vaulter-drive": "self.version"
+    },
     "require": {
-        "php": "^8.4",
-        "axioma-studio/vaulter-core": "self.version",
-        "axioma-studio/vaulter-media": "self.version",
-        "spatie/laravel-package-tools": "^1.92",
+        "php": ">=8.4 <8.6",
+        "axiomasoft/vaulter-core": "self.version",
+        "axiomasoft/vaulter-media": "self.version",
         "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
-        "larastan/larastan": "^3.0",
-        "laravel/pint": "^1.13",
-        "orchestra/testbench": "^11.0",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0",
-        "pestphp/pest-plugin-type-coverage": "^4.0",
-        "phpstan/phpstan": "^2.0 <2.3.6",
+        "larastan/larastan": "^3.12",
+        "laravel/pint": "^1.32",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2",
+        "phpstan/phpstan": "^2.2.16 <2.3.6",
         "spatie/laravel-permission": "^8.0"
     },
     "suggest": {

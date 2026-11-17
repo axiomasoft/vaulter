@@ -20,7 +20,7 @@ it('runs the callback inside the tenancy bypass and returns its value', function
 it('nests and restores the previous state when the callback throws', function (): void {
     $bypass = app(TenancyBypass::class);
 
-    expect(fn () => Tenancy::without(static function () use ($bypass): void {
+    expect(fn (): mixed => Tenancy::without(static function () use ($bypass): void {
         Tenancy::without(static fn (): null => null);
         expect($bypass->active())->toBeTrue();
 

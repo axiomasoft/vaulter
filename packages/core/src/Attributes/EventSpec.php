@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Attributes;
 
 use Attribute;
+use Packman\Attributes\Api;
 use Vaulter\Events\EventTypeContract;
 
 /**

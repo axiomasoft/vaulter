@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Operations\OperationPolicySource;

@@ -14,15 +14,16 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Packman\Attributes\Internal;
 use Psr\Log\LoggerInterface;
+use stdClass;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
@@ -54,7 +55,7 @@ final readonly class ProblemRenderer
 
     public function __construct(
         private ProblemCatalog $catalog,
-        private RoutesConfig $routes,
+        private RoutesOptions $routes,
         private Translator $translator,
         private LoggerInterface $logger,
     ) {}
@@ -69,7 +70,7 @@ final readonly class ProblemRenderer
         return self::isVersioned($request, $this->routes);
     }
 
-    public static function isVersioned(Request $request, RoutesConfig $routes): bool
+    public static function isVersioned(Request $request, RoutesOptions $routes): bool
     {
         if (str_starts_with((string) $request->route()?->getName(), self::ROUTE_PREFIX)) {
             return true;
@@ -115,7 +116,7 @@ final readonly class ProblemRenderer
                 'retryable' => $retryable->value,
                 'request_id' => $requestId,
                 'errors' => $errors === [] ? null : $errors,
-                'meta' => $meta === [] ? new \stdClass : $meta,
+                'meta' => $meta === [] ? new stdClass : $meta,
             ],
             $status,
             $headers + [
@@ -137,7 +138,7 @@ final readonly class ProblemRenderer
             $details = $e->problemDetails();
             $errors = [];
             foreach ($details as $key => $value) {
-                if (strcasecmp((string) $key, 'errors') === 0) {
+                if (strcasecmp($key, 'errors') === 0) {
                     $errors = is_array($value) ? $value : [];
                     unset($details[$key]);
                 }
@@ -299,7 +300,7 @@ final readonly class ProblemRenderer
             return false;
         }
 
-        $prefix = trim($this->routes->prefix(), '/');
+        $prefix = trim($this->routes->prefix, '/');
 
         return $prefix !== '' && $request->is($prefix, $prefix.'/*');
     }

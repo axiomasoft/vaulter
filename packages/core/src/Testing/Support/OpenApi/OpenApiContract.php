@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Support\OpenApi;
 
 use LogicException;
+use Packman\Attributes\Internal;
 use stdClass;
 use Symfony\Component\Yaml\Yaml;
-use Vaulter\Attributes\Internal;
 
 /**
  * The OpenAPI 3.1 document as the contract tests read it: operations indexed by operationId,

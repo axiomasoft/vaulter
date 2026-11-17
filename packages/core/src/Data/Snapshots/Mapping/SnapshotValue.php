@@ -6,10 +6,11 @@ namespace Vaulter\Data\Snapshots\Mapping;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use Vaulter\Attributes\Internal;
+use DateTimeZone;
+use Packman\Attributes\Internal;
 use Vaulter\Support\Identity;
 
-/** @internal Scalar conversions shared by the snapshot mappers. */
+/** Scalar conversions shared by the snapshot mappers. */
 #[Internal]
 final readonly class SnapshotValue
 {
@@ -17,7 +18,7 @@ final readonly class SnapshotValue
 
     public static function time(?DateTimeInterface $time): ?DateTimeImmutable
     {
-        return $time === null ? null : DateTimeImmutable::createFromInterface($time)->setTimezone(new \DateTimeZone('UTC'));
+        return $time === null ? null : DateTimeImmutable::createFromInterface($time)->setTimezone(new DateTimeZone('UTC'));
     }
 
     public static function requiredTime(?DateTimeInterface $time): DateTimeImmutable
@@ -28,7 +29,7 @@ final readonly class SnapshotValue
     /** The REST shape of a time: what Carbon serialised before (UTC, microseconds, trailing Z). */
     public static function iso(?DateTimeInterface $time): ?string
     {
-        return $time === null ? null : DateTimeImmutable::createFromInterface($time)->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+        return $time === null ? null : DateTimeImmutable::createFromInterface($time)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
     }
 
     public static function id(mixed $id): string

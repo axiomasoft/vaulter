@@ -7,8 +7,8 @@ namespace Vaulter\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 
 /**
  * Gives every Vaulter request one correlation id: a well-formed incoming X-Request-Id is

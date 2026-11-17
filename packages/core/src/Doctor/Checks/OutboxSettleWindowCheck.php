@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor\Checks;
 
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\OutboxConfig;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Configuration\OutboxOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 
 /**
  * The outbox settle window must outlast the longest Vaulter transaction: reconciliation trusts only events
@@ -23,7 +23,7 @@ use Vaulter\Doctor\DoctorFinding;
 final readonly class OutboxSettleWindowCheck implements DoctorCheck
 {
     public function __construct(
-        private OutboxConfig $config,
+        private OutboxOptions $config,
         private VaulterDatabase $database,
     ) {}
 
@@ -39,11 +39,15 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $window = $this->config->settleWindowSeconds();
+        $window = $this->config->settleWindowSeconds;
         try {
             [$limits, $unbounded] = $this->limits();
         } catch (Throwable $exception) {
-            return [DoctorFinding::warning(code: 'core.outbox.settle_window_unknown', message: 'The transaction limits of the database could not be read: '.$exception->getMessage())];
+            return [DoctorFinding::warning(
+                code: 'core.outbox.settle_window_unknown',
+                message: 'The transaction limits of the database could not be read: '.$exception->getMessage(),
+                remediation: 'verify database connectivity and permissions to inspect transaction timeout settings',
+            )];
         }
 
         $longer = array_filter($limits, static fn (int $seconds): bool => $seconds > $window);
@@ -55,7 +59,7 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
                     $window,
                     implode(', ', array_map(static fn (string $name, int $seconds): string => $name.' = '.$seconds.'s', array_keys($longer), array_values($longer))),
                 ),
-                hint: 'raise vaulter.outbox.settle_window_seconds above the longest transaction the database allows',
+                remediation: 'raise vaulter.outbox.settle_window_seconds above the longest transaction the database allows',
                 evidence: ['settle_window_seconds' => $window, 'limits' => json_encode($limits, JSON_THROW_ON_ERROR)],
             )];
         }
@@ -64,7 +68,7 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
             return [DoctorFinding::warning(
                 code: 'core.outbox.settle_window_unbounded',
                 message: sprintf('The database does not limit %s: a transaction may outlive vaulter.outbox.settle_window_seconds (%d).', implode(', ', $unbounded), $window),
-                hint: 'set idle_in_transaction_session_timeout and statement_timeout below vaulter.outbox.settle_window_seconds',
+                remediation: 'set idle_in_transaction_session_timeout and statement_timeout below vaulter.outbox.settle_window_seconds',
                 evidence: ['settle_window_seconds' => $window, 'unbounded' => implode(', ', $unbounded)],
             )];
         }

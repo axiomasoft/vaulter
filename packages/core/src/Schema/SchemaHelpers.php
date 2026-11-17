@@ -9,10 +9,12 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Attributes\Internal;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use RuntimeException;
+use stdClass;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Contracts\IdStrategy;
 
 /**
@@ -25,18 +27,18 @@ final class SchemaHelpers
 {
     #[Internal]
     public function __construct(
-        private readonly DatabaseConfig $config,
+        private readonly DatabaseOptions $config,
         private readonly IdStrategyResolver $resolver,
     ) {}
 
     /**
      * The Schema builder for the connection Vaulter's tables live on
-     * (`DatabaseConfig::connection()`) — null defers to the host's default
+     * (`DatabaseOptions::$connection`) — null defers to the host's default
      * connection exactly as every call site did before this key existed.
      */
     public function schemaConnection(): Builder
     {
-        return Schema::connection($this->config->connection());
+        return Schema::connection($this->config->connection);
     }
 
     /**
@@ -46,7 +48,7 @@ final class SchemaHelpers
      */
     public function dbConnection(): Connection
     {
-        return DB::connection($this->config->connection());
+        return DB::connection($this->config->connection);
     }
 
     public function ids(): IdStrategy
@@ -208,11 +210,11 @@ final class SchemaHelpers
             return;
         }
         $engine = $db->selectOne('SELECT VERSION() AS v, @@SESSION.sql_mode AS m');
-        if (!$engine instanceof \stdClass || !is_string($engine->v ?? null) || !is_string($engine->m ?? null)) {
-            throw new \RuntimeException('Cannot prove enforced MySQL constraints.');
+        if (!$engine instanceof stdClass || !is_string($engine->v ?? null) || !is_string($engine->m ?? null)) {
+            throw new RuntimeException('Cannot prove enforced MySQL constraints.');
         }
         if (str_contains($engine->v, 'MariaDB') || version_compare($engine->v, '8.0.16', '<') || !str_contains($engine->m, 'STRICT_')) {
-            throw new \RuntimeException('Schema requires enforced MySQL CHECKs and strict numeric overflow.');
+            throw new RuntimeException('Schema requires enforced MySQL CHECKs and strict numeric overflow.');
         }
     }
 }

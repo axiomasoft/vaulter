@@ -6,9 +6,9 @@ namespace Vaulter\Tenancy;
 
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Grammar;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
-/** @internal Identifiers compile through the query grammar; tenant values stay bound. */
+/** Identifiers compile through the query grammar; tenant values stay bound. */
 #[Internal]
 final readonly class TenantIdentityPredicate implements Expression
 {

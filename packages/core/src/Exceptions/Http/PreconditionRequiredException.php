@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Http;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -41,6 +45,16 @@ final class PreconditionRequiredException extends VaulterException implements Pr
             '[Vaulter] If-Match: * is not accepted. Why: it matches any representation, so it cannot detect a lost update. Fix: send the ETag of the representation you read. Docs: '.self::docs('precondition-required'),
             'If-Match',
             'wildcard_not_allowed',
+        );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: VaulterErrorCode::PreconditionRequired,
+            category: ErrorCategory::Validation,
+            details: ['header' => $this->header, 'reason' => $this->reason],
         );
     }
 

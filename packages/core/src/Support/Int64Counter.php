@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
 
 /**

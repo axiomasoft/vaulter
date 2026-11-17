@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter",
+    "name": "axiomasoft/vaulter",
     "description": "Vaulter — embeddable file drive and documents for Laravel (core + media + drive + documents).",
     "type": "metapackage",
     "license": "MIT",
@@ -14,12 +14,15 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
+    "replace": {
+        "axioma-studio/vaulter": "self.version"
+    },
     "require": {
-        "php": "^8.4",
-        "axioma-studio/vaulter-core": "self.version",
-        "axioma-studio/vaulter-media": "self.version",
-        "axioma-studio/vaulter-drive": "self.version",
-        "axioma-studio/vaulter-documents": "self.version"
+        "php": ">=8.4 <8.6",
+        "axiomasoft/vaulter-core": "self.version",
+        "axiomasoft/vaulter-media": "self.version",
+        "axiomasoft/vaulter-drive": "self.version",
+        "axiomasoft/vaulter-documents": "self.version"
     },
     "extra": {
         "branch-alias": {

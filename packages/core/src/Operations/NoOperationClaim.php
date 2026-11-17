@@ -6,7 +6,7 @@ namespace Vaulter\Operations;
 
 use Closure;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Idempotency\IdempotentWrite;
 
 /**

@@ -7,11 +7,11 @@ namespace Vaulter\Testing\Support\OpenApi;
 use Closure;
 use Illuminate\Http\Request;
 use LogicException;
+use Packman\Attributes\Internal;
 use PHPUnit\Framework\AssertionFailedError;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Attributes\Internal;
 
 /**
  * Test-only global middleware: every response of a `vaulter.v1.*` route is checked against
@@ -31,6 +31,7 @@ final class ValidateOpenApiResponses
         return $name === self::PROBE || str_starts_with($name, self::PROBE.'.');
     }
 
+    /** @param Closure(Request): mixed $next */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
@@ -51,7 +52,7 @@ final class ValidateOpenApiResponses
         }
 
         $streamed = $response instanceof StreamedResponse || $response instanceof BinaryFileResponse;
-        $violations = (new OpenApiResponseValidator(OpenApiContract::shared()))->validate(
+        $violations = new OpenApiResponseValidator(OpenApiContract::shared())->validate(
             substr($name, strlen(self::PREFIX)),
             $response->getStatusCode(),
             $headers,

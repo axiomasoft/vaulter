@@ -10,10 +10,10 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use LogicException;
+use Packman\Attributes\Internal;
 use stdClass;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Schema\IdStrategyResolver;
@@ -43,7 +43,7 @@ final class IdempotencyStore
 
     public function __construct(
         private readonly VaulterDatabase $database,
-        private readonly DatabaseConfig $config,
+        private readonly DatabaseOptions $config,
         private readonly IdStrategyResolver $ids,
     ) {}
 
@@ -155,7 +155,7 @@ final class IdempotencyStore
         }
         $row = $rows->first();
 
-        return $row instanceof stdClass && is_string($row->scope_kind) && is_scalar($row->scope_id) ? new ScopeRef((string) $row->scope_kind, (string) $row->scope_id) : null;
+        return $row instanceof stdClass && is_string($row->scope_kind) && is_scalar($row->scope_id) ? new ScopeRef($row->scope_kind, (string) $row->scope_id) : null;
     }
 
     /**

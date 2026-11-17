@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\AssertionFailedError;
+use Vaulter\Configuration\ObservabilityOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Testing\FakeMetricsRecorder;
 
+function forgetRecorderOptions(object $app): void
+{
+    $app->forgetInstance(VaulterOptions::class);
+    $app->forgetInstance(ObservabilityOptions::class);
+    $app->forgetInstance(MetricsRecorder::class);
+}
+
 beforeEach(function (): void {
     config()->set('vaulter.observability.enabled', false);
-    config()->set('vaulter.observability.recorder', null);
-    $this->app->forgetInstance(MetricsRecorder::class);
+    config()->set('vaulter.observability.recorder');
+    forgetRecorderOptions($this->app);
 });
 
 it('resolves NullMetricsRecorder by default', function (): void {
@@ -20,6 +29,7 @@ it('resolves NullMetricsRecorder by default', function (): void {
 
 it('keeps Null when observability is disabled even if a recorder class is configured', function (): void {
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
+    forgetRecorderOptions($this->app);
 
     expect(app(MetricsRecorder::class))->toBeInstanceOf(NullMetricsRecorder::class);
 });
@@ -29,6 +39,7 @@ it('falls back to Null for a missing or invalid recorder class when enabled', fu
 
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', 'Definitely\\Missing\\Recorder');
+    forgetRecorderOptions($this->app);
 
     expect(app(MetricsRecorder::class))->toBeInstanceOf(NullMetricsRecorder::class);
     Log::shouldHaveReceived('warning');
@@ -39,6 +50,7 @@ it('falls back to Null when the configured class does not implement the contract
 
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', stdClass::class);
+    forgetRecorderOptions($this->app);
 
     expect(app(MetricsRecorder::class))->toBeInstanceOf(NullMetricsRecorder::class);
     Log::shouldHaveReceived('warning');
@@ -47,6 +59,7 @@ it('falls back to Null when the configured class does not implement the contract
 it('resolves a valid host adapter when observability is enabled', function (): void {
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
+    forgetRecorderOptions($this->app);
 
     $recorder = app(MetricsRecorder::class);
 

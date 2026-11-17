@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 
 /**
@@ -29,7 +30,7 @@ final class ModuleCatalog
         return $app->make(self::class);
     }
 
-    /** @param class-string<VaulterModule> $manifest */
+    /** @param class-string<VaulterModule|ExtensionPlugin> $manifest */
     public function offer(string $manifest): void
     {
         if ($this->sealed) {

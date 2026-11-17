@@ -1,8 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
-use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Console\Kernel;
@@ -10,7 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
-use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\CoreModule;
 use Vaulter\Exceptions\Configuration\InsecureProductionConfiguration;
@@ -49,7 +47,7 @@ it('does not guard a missing command name', function (): void {
 function tenancyInvariants(bool $enabled, array $acceptedRisks): ProductionInvariants
 {
     $container = new Container;
-    $container->instance(TenancyConfig::class, new TenancyConfig(new Repository(['vaulter' => ['tenancy' => ['enabled' => $enabled, 'resolver' => 'Missing\\Resolver']]])));
+    $container->instance(TenancyOptions::class, TenancyOptions::fromArray(['enabled' => $enabled, 'resolver' => 'Missing\\Resolver']));
     $compiled = (new ModuleCompiler)->compile([new CoreModule], []);
     assert($compiled instanceof CompiledModules);
 
@@ -141,7 +139,7 @@ function artisanLine(string $line): int
 {
     $artisan = app()->make(Kernel::class);
     $artisan->bootstrap();
-    $application = (new ReflectionMethod($artisan, 'getArtisan'))->invoke($artisan);
+    $application = new ReflectionMethod($artisan, 'getArtisan')->invoke($artisan);
     $application->setAutoExit(false);
     $application->setCatchExceptions(false);
 
@@ -153,7 +151,7 @@ it('refuses a guarded command with options before it, an abbreviation or an alia
     ProductionBootCase::fake('queue:work', ['qw:run']);
 
     expect(app()->environment('production'))->toBeTrue()
-        ->and(fn () => artisanLine($line))->toThrow(InsecureProductionConfiguration::class, 'core.tenancy')
+        ->and(fn (): int => artisanLine($line))->toThrow(InsecureProductionConfiguration::class, 'core.tenancy')
         ->and(ProductionBootCase::$handled)->toBe(0);
 })->with([
     'canonical' => ['queue:work'],

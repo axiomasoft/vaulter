@@ -10,11 +10,12 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
+use Packman\Attributes\Internal;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use RuntimeException;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Kernel;
 use Vaulter\Modules\GuardsRemoval;
@@ -56,7 +57,7 @@ final class ModuleUninstallCommand extends Command
 
     protected $description = 'Plan (dry run) or perform the removal of a Vaulter module\'s schema';
 
-    public function handle(Kernel $kernel, DatabaseConfig $config, VaulterDatabase $database, Migrator $migrator, Filesystem $files): int
+    public function handle(Kernel $kernel, DatabaseOptions $config, VaulterDatabase $database, Migrator $migrator, Filesystem $files): int
     {
         $force = $this->option('force') === true;
         $purge = $this->option('purge') === true;
@@ -70,8 +71,9 @@ final class ModuleUninstallCommand extends Command
 
             return self::FAILURE;
         }
-        $id = (string) $this->argument('module');
-        $module = $kernel->compiled()->module($id);
+        $rawId = $this->argument('module');
+        $id = is_string($rawId) ? $rawId : '';
+        $module = $id !== '' ? $kernel->compiled()->module($id) : null;
         if ($module === null) {
             $this->components->error('No installed module is called "'.$id.'".');
 
@@ -79,7 +81,7 @@ final class ModuleUninstallCommand extends Command
         }
 
         $migrations = self::migrations($module, $migrator);
-        $tables = array_map(static fn (string $entity): string => $config->table($entity), self::entities(array_keys($migrations)));
+        $tables = array_map($config->table(...), self::entities(array_keys($migrations)));
         $dependents = self::dependents($id, $kernel->modules());
         $connection = $database->connection();
         $incoming = self::incomingForeignKeys($tables, $connection);
@@ -423,8 +425,8 @@ final class ModuleUninstallCommand extends Command
      * references it may keep or that are kept on its data (a reference, like a foreign key, points along a Composer
      * dependency), and the guards of its removal.
      *
-     * @param  list<ModuleState>                          $modules
-     * @return array<string, class-string<VaulterModule>> module id => manifest class
+     * @param  list<ModuleState>                                          $modules
+     * @return array<string, class-string<ExtensionPlugin|VaulterModule>> module id => manifest class
      */
     private static function requirementClosure(string $id, array $modules): array
     {
@@ -438,9 +440,9 @@ final class ModuleUninstallCommand extends Command
                 return;
             }
             $closure[$module] = $manifests[$module];
-            /** @var VaulterModule $manifest */
             $manifest = new ($manifests[$module]);
-            foreach (array_keys($manifest->requires()) as $required) {
+            $requiredIds = $manifest instanceof VaulterModule ? array_keys($manifest->requires()) : $manifest->manifest()->requires;
+            foreach ($requiredIds as $required) {
                 $visit($required);
             }
         };
@@ -452,7 +454,7 @@ final class ModuleUninstallCommand extends Command
     /**
      * The references of the modules in `$closure` that hold some.
      *
-     * @param  array<string, class-string<VaulterModule>>                          $closure
+     * @param  array<string, class-string<ExtensionPlugin|VaulterModule>>          $closure
      * @return array{0: array<string, ModuleReferences>, 1: array<string, string>} holder id => its references; holder id => why it cannot be read
      */
     private function holders(array $closure): array
@@ -479,7 +481,7 @@ final class ModuleUninstallCommand extends Command
     /**
      * The removal guards of the modules in `$closure` that have one.
      *
-     * @param  array<string, class-string<VaulterModule>>                      $closure
+     * @param  array<string, class-string<ExtensionPlugin|VaulterModule>>      $closure
      * @return array{0: array<string, RemovalGuard>, 1: array<string, string>} module id => its guard; module id => why it cannot be read
      */
     private function guards(array $closure): array
@@ -521,7 +523,7 @@ final class ModuleUninstallCommand extends Command
             $incoming = [];
             // The connection's own schema: without one, MySQL lists the tables of every database on the server.
             foreach ($schema->getTables($schema->getCurrentSchemaName()) as $info) {
-                $table = (string) $info['name'];
+                $table = $info['name'];
                 if (in_array($table, $tables, true)) {
                     continue;
                 }

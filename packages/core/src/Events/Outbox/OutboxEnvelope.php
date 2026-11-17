@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Events\Outbox;
 
 use Carbon\CarbonImmutable;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use stdClass;
-use Vaulter\Attributes\Internal;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 
@@ -86,24 +85,5 @@ final readonly class OutboxEnvelope
             // An empty array would encode as [] where receivers expect an object.
             'data' => $event->data() === [] ? new stdClass : $event->data(),
         ];
-    }
-
-    #[Internal]
-    public static function fromModel(Models\OutboxEvent $row): self
-    {
-        return new self(
-            eventId: $row->event_id,
-            outboxSeq: (int) $row->outbox_seq,
-            type: $row->type,
-            external: (bool) $row->external,
-            tenantId: $row->tenant_id === null ? null : Identity::stringify($row->tenant_id),
-            scopeKind: $row->scope_kind,
-            scopeId: $row->scope_id,
-            aggregateType: $row->aggregate_type,
-            aggregateId: $row->aggregate_id,
-            sequence: $row->sequence,
-            createdAt: CarbonImmutable::instance($row->created_at),
-            payload: $row->payload,
-        );
     }
 }

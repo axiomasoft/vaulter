@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Events;
 
+use Packman\Attributes\Internal;
 use Vaulter\Attributes\EventSpec;
-use Vaulter\Attributes\Internal;
 
 /**
  * Renders the event catalogue table of the reference docs from the {@see EventSpec} of every type in the

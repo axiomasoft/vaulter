@@ -162,7 +162,7 @@ it('resolves declared schedules with constructor dependencies and preserves zero
         $this->app->make(Schedule::class);
     }
 
-    (new ModuleApplier($this->app))->register($compiled);
+    new ModuleApplier($this->app)->register($compiled);
 
     $events = [];
     foreach ($this->app->make(Schedule::class)->events() as $event) {
@@ -196,6 +196,6 @@ it('refuses a container binding that does not resolve to a module schedule', fun
     $this->app->instance(Schedule::class, new Schedule);
     $this->app->instance(ModulesInjectedSchedule::class, new stdClass);
 
-    expect(fn () => (new ModuleApplier($this->app))->register($compiled))
+    expect(fn () => new ModuleApplier($this->app)->register($compiled))
         ->toThrow(InvalidConfigurationException::class, 'must resolve to '.ModuleSchedule::class);
 });

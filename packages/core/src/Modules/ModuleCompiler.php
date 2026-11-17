@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Packman\Attributes\Internal;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use ReflectionEnum;
 use Throwable;
-use Vaulter\Attributes\Internal;
+use Vaulter\CoreModule;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
@@ -45,7 +48,7 @@ final class ModuleCompiler
         $reasons = [];
         $modules = [];
         foreach (array_values(array_unique($manifests)) as $class) {
-            if (!is_a($class, VaulterModule::class, true)) {
+            if (!is_a($class, VaulterModule::class, true) && !is_a($class, CoreModule::class, true)) {
                 $reasons[] = sprintf('%s is offered as a module but does not implement %s', $class, VaulterModule::class);
 
                 continue;
@@ -71,15 +74,15 @@ final class ModuleCompiler
     }
 
     /**
-     * @param list<VaulterModule> $modules
-     * @param array<mixed>        $overrides `vaulter.modules`: module id => bool
+     * @param list<VaulterModule|ExtensionPlugin> $modules
+     * @param array<mixed>                        $overrides `vaulter.modules`: module id => bool
      */
     public function compile(array $modules, array $overrides): CompiledModules|InvalidModuleGraph
     {
         $reasons = [];
 
         // 1. Identity, formats, overrides.
-        /** @var array<string, array{manifest: VaulterModule, version: string, activation: Activation, requires: array<string, string>}> $known */
+        /** @var array<string, array{manifest: VaulterModule|ExtensionPlugin, version: string, activation: Activation, requires: array<string, string>}> $known */
         $known = [];
         foreach ($modules as $manifest) {
             $read = $this->readManifest($manifest, $reasons);
@@ -117,7 +120,11 @@ final class ModuleCompiler
         foreach ($known as $id => $module) {
             $builders[$id] = $builder = new ModuleBuilder(new ModuleId($id));
             try {
-                $module['manifest']->register($builder);
+                if ($module['manifest'] instanceof CoreModule) {
+                    $module['manifest']->declareModule($builder);
+                } elseif ($module['manifest'] instanceof VaulterModule) {
+                    $module['manifest']->register($builder);
+                }
             } catch (Throwable $e) {
                 $reasons[] = sprintf('module "%s" failed to declare itself: %s', $id, $e->getMessage());
             }
@@ -271,7 +278,11 @@ final class ModuleCompiler
                 continue;
             }
             $list = $contributions[$contract] ?? [];
-            usort($list, static fn (SlotContribution $a, SlotContribution $b): int => $a->priority <=> $b->priority ?: strcmp($a->id, $b->id));
+            usort($list, static function (SlotContribution $a, SlotContribution $b): int {
+                $priority = $a->priority <=> $b->priority;
+
+                return $priority !== 0 ? $priority : strcmp($a->id, $b->id);
+            });
             $contributions[$contract] = $list;
             $this->duplicates(array_map(static fn (SlotContribution $c): string => $c->id, $list), sprintf('slot %s has the contribution id', $contract), $reasons);
             $this->duplicates(array_values(array_filter(array_map(static fn (SlotContribution $c): ?string => $c->key, $list), static fn (?string $key): bool => $key !== null)), sprintf('slot %s has the key', $contract), $reasons);
@@ -385,8 +396,16 @@ final class ModuleCompiler
      * @param  list<string>                                                                                     $reasons
      * @return array{id: string, version: string, activation: Activation, requires: array<string, string>}|null
      */
-    private function readManifest(VaulterModule $manifest, array &$reasons): ?array
+    private function readManifest(VaulterModule|ExtensionPlugin $manifest, array &$reasons): ?array
     {
+        if ($manifest instanceof CoreModule) {
+            return ['id' => 'core', 'version' => '1.0', 'activation' => Activation::Auto, 'requires' => []];
+        }
+        if (!$manifest instanceof VaulterModule) {
+            $reasons[] = sprintf('%s is offered as a module but does not implement %s', $manifest::class, VaulterModule::class);
+
+            return null;
+        }
         $class = $manifest::class;
         try {
             $id = $manifest->id()->value;
@@ -449,7 +468,7 @@ final class ModuleCompiler
         $state = [];
         foreach (array_keys($known) as $id) {
             if ($active[$id] && !isset($state[$id])) {
-                $this->visit((string) $id, [], $known, $active, $state, $cycles);
+                $this->visit($id, [], $known, $active, $state, $cycles);
             }
         }
 
@@ -468,7 +487,6 @@ final class ModuleCompiler
         $state[$id] = 'open';
         $path[] = $id;
         foreach (array_keys($known[$id]['requires']) as $dependency) {
-            $dependency = (string) $dependency;
             if (!isset($known[$dependency]) || !$active[$dependency]) {
                 continue;
             }
@@ -568,9 +586,13 @@ final class ModuleCompiler
 
                     continue;
                 }
+                if (new ReflectionEnum($class)->getBackingType()?->getName() !== 'string') {
+                    $reasons[] = sprintf('module "%s" declares the event types %s, which is not a string-backed enum', $id, $class);
+
+                    continue;
+                }
                 foreach ($class::cases() as $case) {
-                    // A non-string backing value (an int enum) is a malformed type, not a TypeError.
-                    $value = (string) $case->value;
+                    $value = $case->value;
                     if (preg_match(self::EVENT_TYPE, $value) !== 1) {
                         $reasons[] = sprintf('event types %s declare the malformed type "%s"', $class, $value);
 

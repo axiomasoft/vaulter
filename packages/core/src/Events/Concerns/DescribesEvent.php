@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Events\Concerns;
 
 use LogicException;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use ReflectionEnumUnitCase;
 use Vaulter\Attributes\EventSpec;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Support\Concerns\HasLabel;
 
@@ -28,7 +28,7 @@ trait DescribesEvent
         /** @var array<string, EventSpec> $specs */
         static $specs = [];
 
-        return $specs[$this->value] ??= ((new ReflectionEnumUnitCase(self::class, $this->name))->getAttributes(EventSpec::class)[0] ?? null)?->newInstance()
+        return $specs[$this->value] ??= (new ReflectionEnumUnitCase(self::class, $this->name)->getAttributes(EventSpec::class)[0] ?? null)?->newInstance()
             ?? throw new LogicException(sprintf('[Vaulter] The event type %s::%s has no %s.', self::class, $this->name, EventSpec::class));
     }
 }

@@ -45,7 +45,7 @@ it('serves a handler by key and lists the keys', function (): void {
 
     expect($registry->handlerKeys(Step::class))->toBe(['first', 'third'])
         ->and($registry->handler(Step::class, 'third'))->toBeInstanceOf(ThirdStep::class)
-        ->and(fn () => $registry->handler(Step::class, 'second'))->toThrow(MissingExtensionException::class, '"second"');
+        ->and(fn (): object => $registry->handler(Step::class, 'second'))->toThrow(MissingExtensionException::class, '"second"');
 });
 
 it('has no contributions for a slot no active module defines', function (): void {

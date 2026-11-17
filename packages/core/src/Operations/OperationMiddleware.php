@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Closure;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * A slot contribution that wraps every write operation. It calls `$next` exactly once with the

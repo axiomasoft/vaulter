@@ -12,9 +12,9 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Routing\Router;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Configuration\ConfigNormalizer;
-use Vaulter\Configuration\ScheduleConfig;
+use Vaulter\Configuration\ScheduleOptions;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 
@@ -121,7 +121,7 @@ final class ModuleApplier
      */
     public function config(string $root, string $file): void
     {
-        if (!($this->app instanceof CachesConfiguration && $this->app->configurationIsCached())) {
+        if (!$this->app instanceof CachesConfiguration || !self::isConfigurationCached($this->app)) {
             $config = $this->app->make(Repository::class);
             $shipped = require $file;
             if (!is_array($shipped)) {
@@ -205,7 +205,10 @@ final class ModuleApplier
         $app = $this->app;
         $define = static function (Schedule $scheduler) use ($app, $schedules): void {
             $config = $app->make(Repository::class);
-            if (!(new ScheduleConfig($config))->enabled()) {
+            $enabled = $app->bound(ScheduleOptions::class)
+                ? $app->make(ScheduleOptions::class)->enabled
+                : ($config->get('vaulter.schedule.enabled', true) === true);
+            if (!$enabled) {
                 return;
             }
             foreach ($schedules as $class) {
@@ -228,7 +231,7 @@ final class ModuleApplier
      */
     private function routes(string $module, string $file, string $fingerprint): void
     {
-        if ($this->app instanceof CachesRoutes && $this->app->routesAreCached()) {
+        if ($this->app instanceof CachesRoutes && self::isRoutesCached($this->app)) {
             return;
         }
         $router = $this->app->make(Router::class);
@@ -236,7 +239,7 @@ final class ModuleApplier
         foreach ($router->getRoutes()->getRoutes() as $route) {
             $before[spl_object_id($route)] = true;
         }
-        $router->middleware([EnsureModuleActive::ALIAS.':'.$module])->group($file);
+        $router->group(['middleware' => [EnsureModuleActive::ALIAS.':'.$module]], $file);
         foreach ($router->getRoutes()->getRoutes() as $route) {
             if (!isset($before[spl_object_id($route)])) {
                 $route->defaults(self::FINGERPRINT_DEFAULT, $fingerprint);
@@ -254,5 +257,15 @@ final class ModuleApplier
                 $callback($resolved);
             }
         }
+    }
+
+    private static function isConfigurationCached(CachesConfiguration $app): bool
+    {
+        return $app->configurationIsCached();
+    }
+
+    private static function isRoutesCached(CachesRoutes $app): bool
+    {
+        return $app->routesAreCached();
     }
 }

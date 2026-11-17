@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * One contribution to a slot, as the sealed registry lists it: ordered by `priority` ascending,

@@ -6,9 +6,9 @@ namespace Vaulter\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
-use Vaulter\Attributes\Internal;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Internal;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * Load-stand tier label (`S0`/`S`/`M`/`L`) from host middleware.

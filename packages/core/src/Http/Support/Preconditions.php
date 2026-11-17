@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Support;
 
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
 
 /**
@@ -62,25 +62,14 @@ final class Preconditions
         if ($header === null || trim($header) === '') {
             return false;
         }
-        foreach (self::tags($header) as $tag) {
-            if ($tag === '*' || self::opaque($tag) === self::opaque($currentEtag)) {
-                return true;
-            }
-        }
 
-        return false;
+        return array_any(self::tags($header), fn (string $tag): bool => $tag === '*' || self::opaque($tag) === self::opaque($currentEtag));
     }
 
     /** @param list<string> $tags */
     private static function strongMatch(array $tags, string $currentEtag): bool
     {
-        foreach ($tags as $tag) {
-            if (!str_starts_with($tag, 'W/') && hash_equals($currentEtag, $tag)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($tags, fn (string $tag): bool => !str_starts_with($tag, 'W/') && hash_equals($currentEtag, $tag));
     }
 
     /**

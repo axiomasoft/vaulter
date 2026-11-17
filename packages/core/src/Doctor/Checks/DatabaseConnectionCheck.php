@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor\Checks;
 
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\CheckStatus;
+use Packman\Doctor\Enums\Severity;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Doctor\DoctorSeverity;
 
 #[Internal]
 final readonly class DatabaseConnectionCheck implements DoctorCheck
@@ -36,7 +37,7 @@ final readonly class DatabaseConnectionCheck implements DoctorCheck
             $connection->selectOne('select 1');
         } catch (Throwable $exception) {
             // The driver message can hold the DSN with credentials.
-            return [DoctorFinding::error(code: 'core.database.unreachable', message: 'The Vaulter database connection is not reachable.', hint: 'check vaulter.database.connection and the DB_* settings', evidence: ['exception' => $exception::class])];
+            return [DoctorFinding::error(code: 'core.database.unreachable', message: 'The Vaulter database connection is not reachable.', remediation: 'check vaulter.database.connection and the DB_* settings', evidence: ['exception' => $exception::class])];
         }
 
         $driver = $connection->getDriverName();
@@ -46,10 +47,11 @@ final readonly class DatabaseConnectionCheck implements DoctorCheck
         }
 
         return [DoctorFinding::at(
-            severity: $driver === 'sqlite' ? $context->strictSeverity() : DoctorSeverity::Error,
+            status: $driver === 'sqlite' ? $context->strictStatus() : CheckStatus::Error,
+            severity: $driver === 'sqlite' ? $context->strictSeverity() : Severity::Error,
             code: $driver === 'sqlite' ? 'core.database.sqlite' : 'core.database.unsupported_driver',
             message: $driver === 'sqlite' ? 'SQLite is for tests and local development, not for production.' : 'The database driver "'.$driver.'" is not supported.',
-            hint: 'use PostgreSQL, MySQL or MariaDB',
+            remediation: 'use PostgreSQL, MySQL or MariaDB',
             evidence: $evidence,
         )];
     }

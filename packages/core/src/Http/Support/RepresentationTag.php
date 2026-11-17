@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Http\Support;
 
 use JsonException;
+use Packman\Attributes\Internal;
 use stdClass;
-use Vaulter\Attributes\Internal;
 
 /**
  * Strong entity tags of the versioned API.

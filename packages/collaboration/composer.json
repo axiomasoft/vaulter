@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter-collaboration",
+    "name": "axiomasoft/vaulter-collaboration",
     "description": "Real-time collaboration for Vaulter — Hocuspocus/Yjs document rooms, signed room tokens and the hub endpoints over the vaulter-documents module.",
     "type": "library",
     "license": "proprietary",
@@ -22,25 +22,25 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
+    "replace": {
+        "axioma-studio/vaulter-collaboration": "self.version"
+    },
     "require": {
-        "php": "^8.4",
-        "axioma-studio/vaulter-core": "^1.0",
-        "axioma-studio/vaulter-drive": "^1.0",
-        "axioma-studio/vaulter-documents": "^1.0",
-        "firebase/php-jwt": "^7.0",
-        "spatie/laravel-package-tools": "^1.92"
+        "php": ">=8.4 <8.6",
+        "axiomasoft/vaulter-core": "^1.0",
+        "axiomasoft/vaulter-drive": "^1.0",
+        "axiomasoft/vaulter-documents": "^1.0",
+        "firebase/php-jwt": "^7.0"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
-        "axioma-studio/vaulter-media": "^1.0",
-        "larastan/larastan": "^3.0",
-        "laravel/pint": "^1.13",
-        "orchestra/testbench": "^11.0",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0",
-        "pestphp/pest-plugin-type-coverage": "^4.0",
-        "phpstan/phpstan": "^2.0 <2.3.6",
+        "axiomasoft/vaulter-media": "^1.0",
+        "larastan/larastan": "^3.12",
+        "laravel/pint": "^1.32",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2",
+        "phpstan/phpstan": "^2.2.16 <2.3.6",
         "laravel/sanctum": "^4.0"
     },
     "autoload": {
@@ -70,7 +70,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axioma-studio/vaulter-core": "1.0.x-dev"
+                    "axiomasoft/vaulter-core": "1.0.x-dev"
                 }
             }
         },
@@ -80,7 +80,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axioma-studio/vaulter-media": "1.0.x-dev"
+                    "axiomasoft/vaulter-media": "1.0.x-dev"
                 }
             }
         },
@@ -90,7 +90,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axioma-studio/vaulter-drive": "1.0.x-dev"
+                    "axiomasoft/vaulter-drive": "1.0.x-dev"
                 }
             }
         },
@@ -100,7 +100,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axioma-studio/vaulter-documents": "1.0.x-dev"
+                    "axiomasoft/vaulter-documents": "1.0.x-dev"
                 }
             }
         }

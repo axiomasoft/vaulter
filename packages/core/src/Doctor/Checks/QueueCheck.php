@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 
 #[Internal]
 final readonly class QueueCheck implements DoctorCheck
@@ -33,7 +33,7 @@ final readonly class QueueCheck implements DoctorCheck
             return [DoctorFinding::error(
                 code: 'core.queue.missing',
                 message: 'The default queue connection is not configured.',
-                hint: 'define queue.connections.'.$default.' with a driver, or point QUEUE_CONNECTION at a connection that exists',
+                remediation: 'define queue.connections.'.$default.' with a driver, or point QUEUE_CONNECTION at a connection that exists',
                 evidence: ['connection' => $default],
             )];
         }
@@ -42,7 +42,7 @@ final readonly class QueueCheck implements DoctorCheck
             return [DoctorFinding::warning(
                 code: 'core.queue.synchronous',
                 message: 'The default queue runs jobs inline or drops them: webhook deliveries and content scans do not run in the background.',
-                hint: 'set QUEUE_CONNECTION to database, redis or another asynchronous driver',
+                remediation: 'set QUEUE_CONNECTION to database, redis or another asynchronous driver',
                 evidence: ['connection' => $default, 'driver' => $driver],
             )];
         }

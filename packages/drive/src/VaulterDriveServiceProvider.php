@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive;
 
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Vaulter\Attributes\Api;
+use Illuminate\Support\ServiceProvider;
+use Packman\Attributes\Api;
 use Vaulter\Modules\OffersModules;
 
 /**
@@ -14,17 +13,17 @@ use Vaulter\Modules\OffersModules;
  * declares, so a host that switches the drive off (`vaulter.modules.drive = false`) gets none of it.
  */
 #[Api]
-final class VaulterDriveServiceProvider extends PackageServiceProvider
+final class VaulterDriveServiceProvider extends ServiceProvider
 {
     use OffersModules;
 
-    public function configurePackage(Package $package): void
-    {
-        $package->name('vaulter-drive')->hasTranslations();
-    }
-
-    public function packageRegistered(): void
+    public function register(): void
     {
         $this->offerModule(DriveModule::class);
+    }
+
+    public function boot(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-drive');
     }
 }

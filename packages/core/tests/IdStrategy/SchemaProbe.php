@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\IdStrategy;
 
+use Closure;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\TenancyOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Schema\VaulterSchema;
 
 /**
@@ -16,7 +19,7 @@ use Vaulter\Schema\VaulterSchema;
  */
 final class SchemaProbe
 {
-    public const TABLE = 'v_schema_probe';
+    public const string TABLE = 'v_schema_probe';
 
     /**
      * Create the probe table through the convention helpers under the active
@@ -25,6 +28,8 @@ final class SchemaProbe
     public static function build(): void
     {
         config()->set('vaulter.tenancy.enabled', true);
+        app()->forgetInstance(VaulterOptions::class);
+        app()->forgetInstance(TenancyOptions::class);
 
         Schema::create(self::TABLE, function (Blueprint $table): void {
             VaulterSchema::key($table);
@@ -48,7 +53,7 @@ final class SchemaProbe
      * Introspect the exact emitted column type for a single helper call,
      * independent of the database grammar (reads the Blueprint definition).
      */
-    public static function emittedType(string $column, \Closure $define): ?string
+    public static function emittedType(string $column, Closure $define): ?string
     {
         $table = new Blueprint(DB::connection(), self::TABLE);
         $define($table);

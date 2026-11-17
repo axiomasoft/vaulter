@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Configuration;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A configured list of strings. A non-array falls back to the shipped default.

@@ -6,7 +6,7 @@ namespace Vaulter\Events;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;

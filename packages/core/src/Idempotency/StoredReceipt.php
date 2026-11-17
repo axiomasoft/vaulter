@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
+use Packman\Attributes\Internal;
 use stdClass;
-use Vaulter\Attributes\Internal;
 
 /**
  * A row of the idempotency table with typed fields: what {@see IdempotencyStore::claim()} returns for a digest

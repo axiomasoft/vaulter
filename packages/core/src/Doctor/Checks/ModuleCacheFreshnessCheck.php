@@ -8,10 +8,10 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
@@ -60,7 +60,7 @@ final readonly class ModuleCacheFreshnessCheck implements DoctorCheck
             }
         }
         $missing = array_values(array_unique($missing));
-        $cached = $this->app instanceof CachesRoutes && $this->app->routesAreCached();
+        $cached = $this->app instanceof CachesRoutes && self::routesCached($this->app);
 
         $findings = [];
         if ($stale !== []) {
@@ -68,7 +68,7 @@ final readonly class ModuleCacheFreshnessCheck implements DoctorCheck
             $findings[] = DoctorFinding::error(
                 code: 'core.modules.route_cache_stale',
                 message: 'Routes were cached under another module activation than the running one.',
-                hint: 'php artisan optimize:clear && php artisan optimize, then restart the workers',
+                remediation: 'php artisan optimize:clear && php artisan optimize, then restart the workers',
                 evidence: ['modules' => implode(', ', array_keys($stale)), 'routes' => array_sum($stale), 'cached' => $cached],
             );
         }
@@ -76,7 +76,7 @@ final readonly class ModuleCacheFreshnessCheck implements DoctorCheck
             $findings[] = DoctorFinding::error(
                 code: 'core.modules.routes_missing',
                 message: 'An active module declares routes that are not registered.',
-                hint: $cached ? 'php artisan optimize:clear && php artisan optimize, then restart the workers' : 'check that the module routes file mounts its routes',
+                remediation: $cached ? 'php artisan optimize:clear && php artisan optimize, then restart the workers' : 'check that the module routes file mounts its routes',
                 evidence: ['modules' => implode(', ', $missing), 'cached' => $cached],
             );
         }
@@ -99,5 +99,10 @@ final readonly class ModuleCacheFreshnessCheck implements DoctorCheck
         }
 
         return null;
+    }
+
+    private static function routesCached(CachesRoutes $app): bool
+    {
+        return $app->routesAreCached();
     }
 }

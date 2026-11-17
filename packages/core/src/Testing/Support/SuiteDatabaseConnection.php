@@ -6,10 +6,12 @@ namespace Vaulter\Testing\Support;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Env;
+use Packman\Attributes\Internal;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Metadata\Api\Groups;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Schema\ModuleSchemas;
 
 /**
@@ -30,7 +32,7 @@ final class SuiteDatabaseConnection
      */
     public static function isolateStorage(Application $app): void
     {
-        $token = (string) env('TEST_TOKEN', '');
+        $token = self::envString('TEST_TOKEN');
         if (preg_match('/^[0-9]+$/', $token) !== 1) {
             return;
         }
@@ -61,7 +63,7 @@ final class SuiteDatabaseConnection
 
     public static function engine(): string
     {
-        $driver = env('DB_CONNECTION');
+        $driver = Env::get('DB_CONNECTION');
 
         return is_string($driver) && $driver !== '' ? $driver : 'sqlite';
     }
@@ -85,7 +87,7 @@ final class SuiteDatabaseConnection
             }
             $wanted = substr($group, strlen('engine:'));
             if ($wanted === 'server' ? $family === 'sqlite' : $wanted !== $family) {
-                $test->markTestSkipped("Meant for the {$wanted} engine; this run is on {$engine}.");
+                Assert::markTestSkipped("Meant for the {$wanted} engine; this run is on {$engine}.");
             }
         }
     }
@@ -93,9 +95,9 @@ final class SuiteDatabaseConnection
     /** @return array<string, string|bool|null> */
     public static function resolve(): array
     {
-        $driver = env('DB_CONNECTION');
+        $driver = self::envString('DB_CONNECTION');
 
-        if ($driver === null || $driver === '' || $driver === 'sqlite') {
+        if ($driver === '' || $driver === 'sqlite') {
             // Foreign keys on, as on the server engines: without them a cascade or a dangling reference passes here only.
             return ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => true];
         }
@@ -104,7 +106,7 @@ final class SuiteDatabaseConnection
             throw new RuntimeException('Unsupported test DB_CONNECTION ['.$driver.']; use sqlite, pgsql, mysql or mariadb.');
         }
 
-        $database = (string) env('DB_DATABASE', 'vaulter_test');
+        $database = self::envString('DB_DATABASE', 'vaulter_test');
 
         if (!str_ends_with($database, '_test')) {
             throw new RuntimeException('Test database must end with _test: '.$database);
@@ -112,19 +114,19 @@ final class SuiteDatabaseConnection
 
         // A parallel run (scripts/test-db.sh) gives every worker its own database, `<base>_w<token>_test`,
         // created by the script; the `_test` suffix stays part of every name.
-        $token = (string) env('TEST_TOKEN', '');
-        if (env('VAULTER_TEST_DB_PER_PROCESS') === '1' && preg_match('/^[0-9]+$/', $token) === 1) {
+        $token = self::envString('TEST_TOKEN');
+        if (self::envString('VAULTER_TEST_DB_PER_PROCESS') === '1' && preg_match('/^[0-9]+$/', $token) === 1) {
             $database = substr($database, 0, -strlen('_test')).'_w'.$token.'_test';
         }
 
         if ($driver !== 'pgsql') {
             return [
                 'driver' => $driver,
-                'host' => (string) env('DB_HOST', '127.0.0.1'),
-                'port' => (string) env('DB_PORT', '3306'),
+                'host' => self::envString('DB_HOST', '127.0.0.1'),
+                'port' => self::envString('DB_PORT', '3306'),
                 'database' => $database,
-                'username' => (string) env('DB_USERNAME', 'vaulter'),
-                'password' => (string) env('DB_PASSWORD', ''),
+                'username' => self::envString('DB_USERNAME', 'vaulter'),
+                'password' => self::envString('DB_PASSWORD'),
                 'charset' => 'utf8mb4',
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',
@@ -134,16 +136,23 @@ final class SuiteDatabaseConnection
 
         return [
             'driver' => 'pgsql',
-            'host' => (string) env('DB_HOST', '127.0.0.1'),
-            'port' => (string) env('DB_PORT', '5432'),
+            'host' => self::envString('DB_HOST', '127.0.0.1'),
+            'port' => self::envString('DB_PORT', '5432'),
             'database' => $database,
-            'username' => (string) env('DB_USERNAME', 'vaulter'),
-            'password' => (string) env('DB_PASSWORD', ''),
+            'username' => self::envString('DB_USERNAME', 'vaulter'),
+            'password' => self::envString('DB_PASSWORD'),
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
         ];
+    }
+
+    private static function envString(string $key, string $default = ''): string
+    {
+        $raw = Env::get($key);
+
+        return is_scalar($raw) ? (string) $raw : $default;
     }
 }

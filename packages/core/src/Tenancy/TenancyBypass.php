@@ -6,10 +6,11 @@ namespace Vaulter\Tenancy;
 
 use Closure;
 use Fiber;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use stdClass;
 use WeakMap;
 
-/** @internal Scoped, fiber-local maintenance state; never serialized into jobs. */
+/** Scoped, fiber-local maintenance state; never serialized into jobs. */
 #[Internal]
 final class TenancyBypass
 {
@@ -21,7 +22,7 @@ final class TenancyBypass
     public function __construct()
     {
         $this->depth = new WeakMap;
-        $this->main = new \stdClass;
+        $this->main = new stdClass;
     }
 
     public function active(): bool

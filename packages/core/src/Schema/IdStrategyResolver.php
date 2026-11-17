@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\IdsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
 
@@ -21,7 +21,7 @@ use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
 #[Internal]
 final class IdStrategyResolver
 {
-    public function __construct(private readonly IdsConfig $idsConfig) {}
+    public function __construct(private readonly IdsOptions $idsOptions) {}
 
     /**
      * @var array<string, IdStrategy>
@@ -30,13 +30,13 @@ final class IdStrategyResolver
 
     public function resolve(?string $key = null): IdStrategy
     {
-        $key ??= $this->idsConfig->strategy();
+        $key ??= $this->idsOptions->strategy;
 
         if (isset($this->resolved[$key])) {
             return $this->resolved[$key];
         }
 
-        $strategies = $this->idsConfig->strategies();
+        $strategies = $this->idsOptions->strategies;
 
         if (!isset($strategies[$key])) {
             throw UnknownIdStrategyException::forKey($key, array_keys($strategies));

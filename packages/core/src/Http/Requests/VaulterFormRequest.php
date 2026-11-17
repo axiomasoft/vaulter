@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 #[Api]
 abstract class VaulterFormRequest extends FormRequest

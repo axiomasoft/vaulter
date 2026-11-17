@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Migrations\Migration;
+use Illuminate\Container\Container;
 use Vaulter\Schema\KernelSchema;
+use Vaulter\Schema\VaulterMigration;
 
-return new class extends Migration
+return new class extends VaulterMigration
 {
     public function up(): void
     {
-        app(KernelSchema::class)->create(entity: 'outbox_deliveries');
+        Container::getInstance()->make(KernelSchema::class)->create(entity: 'outbox_deliveries');
     }
 
     public function down(): void
     {
-        app(KernelSchema::class)->drop(entity: 'outbox_deliveries');
+        Container::getInstance()->make(KernelSchema::class)->drop(entity: 'outbox_deliveries');
     }
 };

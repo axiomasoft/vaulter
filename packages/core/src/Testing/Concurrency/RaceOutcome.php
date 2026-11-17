@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Concurrency;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The outcome of one ForkRace task, read back by the parent process.

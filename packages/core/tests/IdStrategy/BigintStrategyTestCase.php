@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\IdStrategy;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Vaulter\Tests\TestCase;
 
 /**
@@ -16,7 +17,7 @@ class BigintStrategyTestCase extends TestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

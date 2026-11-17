@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing;
 
+use Packman\Attributes\Api;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Observability\TraceRecorder;
 
 /**

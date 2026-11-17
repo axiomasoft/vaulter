@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The owner's current authorization of a replay (architecture#operation-chains «Replay»): a receipt is

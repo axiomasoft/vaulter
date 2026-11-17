@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A host entity that only exists as a morph reference, for fixtures that need a drive

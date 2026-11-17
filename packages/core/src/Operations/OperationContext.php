@@ -6,7 +6,7 @@ namespace Vaulter\Operations;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;

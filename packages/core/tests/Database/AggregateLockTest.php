@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Tests\TestCase;
 
@@ -15,7 +15,7 @@ it('takes the aggregate lock of any entity inside a transaction, on its own tabl
     $connection = $database->connection();
     $level = $connection->transactionLevel();
     $grammar = $connection->getQueryGrammar();
-    $table = app(DatabaseConfig::class)->table($entity);
+    $table = app(DatabaseOptions::class)->table($entity);
     $quoted = $grammar->wrapTable($table);
     // Aggregate roots use an id PK; the outbox and its consumer ledger are not aggregate roots.
     // TEMPORARY avoids committing the surrounding test transaction on MySQL.

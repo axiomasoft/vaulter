@@ -6,7 +6,7 @@ namespace Vaulter\Tenancy;
 
 use Closure;
 use Illuminate\Container\Container;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The tenancy entry point of the kernel: runs maintenance code outside the tenant boundary. The scope is

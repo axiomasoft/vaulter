@@ -49,11 +49,11 @@ it('сериализует read-modify-write под FOR UPDATE: оба ok, ит�
     forkRaceCounter();
 
     $outcomes = ForkRace::run([
-        fn () => DB::transaction(fn () => forkRaceBump(lock: true)),
-        fn () => DB::transaction(fn () => forkRaceBump(lock: true)),
+        fn () => DB::transaction(fn (): int => forkRaceBump(lock: true)),
+        fn () => DB::transaction(fn (): int => forkRaceBump(lock: true)),
     ]);
 
-    expect(array_map(fn (RaceOutcome $o) => $o->ok, $outcomes))->toBe([true, true])
+    expect(array_map(fn (RaceOutcome $o): bool => $o->ok, $outcomes))->toBe([true, true])
         ->and(DB::table('race_counter')->value('value'))->toBe(2);
 });
 
@@ -62,12 +62,12 @@ it('негативный контроль: без FOR UPDATE обновлени�
     forkRaceCounter();
 
     $outcomes = ForkRace::run([
-        fn () => DB::transaction(fn () => forkRaceBump(lock: false)),
-        fn () => DB::transaction(fn () => forkRaceBump(lock: false)),
+        fn () => DB::transaction(fn (): int => forkRaceBump(lock: false)),
+        fn () => DB::transaction(fn (): int => forkRaceBump(lock: false)),
     ]);
 
-    expect(array_map(fn (RaceOutcome $o) => $o->ok, $outcomes))->toBe([true, true])
-        ->and(array_map(fn (RaceOutcome $o) => $o->value, $outcomes))->toBe([0, 0])
+    expect(array_map(fn (RaceOutcome $o): bool => $o->ok, $outcomes))->toBe([true, true])
+        ->and(array_map(fn (RaceOutcome $o): mixed => $o->value, $outcomes))->toBe([0, 0])
         ->and(DB::table('race_counter')->value('value'))->toBe(1);
 });
 
@@ -77,11 +77,11 @@ it('каждая задача имеет своё соединение и ждё
     $parentPid = (int) DB::selectOne('select pg_backend_pid() as pid')->pid;
 
     $outcomes = ForkRace::run([
-        fn () => (int) DB::selectOne('select pg_backend_pid() as pid')->pid,
-        fn () => (int) DB::selectOne('select pg_backend_pid() as pid')->pid,
+        fn (): int => (int) DB::selectOne('select pg_backend_pid() as pid')->pid,
+        fn (): int => (int) DB::selectOne('select pg_backend_pid() as pid')->pid,
     ]);
 
-    [$first, $second] = array_map(fn (RaceOutcome $o) => $o->value, $outcomes);
+    [$first, $second] = array_map(fn (RaceOutcome $o): mixed => $o->value, $outcomes);
 
     expect($outcomes[0]->ok && $outcomes[1]->ok)->toBeTrue()
         ->and($first)->toBeInt()->not->toBe($second)
@@ -118,12 +118,12 @@ it('каждая задача имеет своё соединение и ждё
         };
         $outcomes = ForkRace::run([$task, $task], timeoutMs: 200);
 
-        expect(array_map(fn (RaceOutcome $o) => $o->exception, $outcomes))
+        expect(array_map(fn (RaceOutcome $o): ?string => $o->exception, $outcomes))
             ->toEqualCanonicalizing([RuntimeException::class, 'ForkRace\\BarrierTimeout'])
             ->and(file_exists($dir.'/task-started'))->toBeFalse();
     } finally {
         DB::forgetExtension($connection);
-        array_map('unlink', glob($dir.'/*') ?: []);
+        array_map(unlink(...), glob($dir.'/*') ?: []);
         rmdir($dir);
     }
 });
@@ -132,8 +132,8 @@ it('исключение задачи возвращается как исход
     ForkRace::skipUnlessSupported($this);
 
     $outcomes = ForkRace::run([
-        fn () => throw new RuntimeException('boom'),
-        fn () => 'fine',
+        fn (): never => throw new RuntimeException('boom'),
+        fn (): string => 'fine',
     ]);
 
     expect($outcomes[0]->ok)->toBeFalse()

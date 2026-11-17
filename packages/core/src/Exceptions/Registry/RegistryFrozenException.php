@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Registry;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Errors\VaulterErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -27,6 +31,12 @@ final class RegistryFrozenException extends VaulterException implements ProblemE
             .'Fix: register from a service provider (config, a container tag, or register() before booted). '
             .'Docs: '.self::docs('registry-frozen'),
         );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: VaulterErrorCode::RegistryFrozen, category: ErrorCategory::Internal);
     }
 
     public function problemCode(): string

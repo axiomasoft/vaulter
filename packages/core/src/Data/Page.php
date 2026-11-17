@@ -7,9 +7,9 @@ namespace Vaulter\Data;
 use ArrayIterator;
 use Countable;
 use IteratorAggregate;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Traversable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 
 /**
  * One page of a cursor-paginated public listing. The cursor is an opaque string:

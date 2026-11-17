@@ -6,7 +6,9 @@ namespace Vaulter\Doctor;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\CheckStatus;
 
 #[Internal]
 final readonly class DoctorReport
@@ -22,7 +24,12 @@ final readonly class DoctorReport
         $summary = ['ok' => 0, 'warning' => 0, 'error' => 0];
         foreach ($this->checks as $check) {
             foreach ($check->findings as $finding) {
-                $summary[$finding->severity->value]++;
+                $bucket = match ($finding->status) {
+                    CheckStatus::Warning => 'warning',
+                    CheckStatus::Error => 'error',
+                    default => 'ok',
+                };
+                $summary[$bucket]++;
             }
         }
 
@@ -47,10 +54,14 @@ final readonly class DoctorReport
                 'key' => $check->key,
                 'title' => $check->title,
                 'findings' => array_map(static fn (DoctorFinding $finding): array => [
-                    'severity' => $finding->severity->value,
+                    'severity' => match ($finding->status) {
+                        CheckStatus::Warning => 'warning',
+                        CheckStatus::Error => 'error',
+                        default => 'ok',
+                    },
                     'code' => $finding->code,
                     'message' => $finding->message,
-                    'hint' => $finding->hint,
+                    'hint' => $finding->remediation !== '' ? $finding->remediation : null,
                     'evidence' => (object) $finding->evidence,
                 ], $check->findings),
             ], $this->checks),

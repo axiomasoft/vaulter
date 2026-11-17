@@ -6,9 +6,9 @@ namespace Vaulter\Models\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
+use Override;
+use Packman\Attributes\Api;
 use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\GuardedBuilder;
 use Vaulter\Database\GuardedCteBuilder;
 use Vaulter\Database\WriteScope;
@@ -29,7 +29,7 @@ use Vaulter\Database\WriteScope;
 #[Api]
 trait GuardsWrites
 {
-    #[\Override]
+    #[Override]
     protected function newBaseQueryBuilder(): Builder
     {
         $connection = $this->getConnection();
@@ -41,8 +41,7 @@ trait GuardsWrites
     }
 
     /** The scoped service of the running request, job or Octane tick. */
-    #[Internal]
-    protected function vaulterWriteScope(): WriteScope
+    private function vaulterWriteScope(): WriteScope
     {
         return app(WriteScope::class);
     }
