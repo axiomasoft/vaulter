@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
-use Vaulter\Attributes\Api;
+use InvalidArgumentException;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -58,7 +63,7 @@ final class InvalidNodeNameException extends VaulterException implements Problem
     public static function forName(string $name, string $reason): self
     {
         $printable = json_encode($name, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-        $why = self::EXPLANATIONS[$reason] ?? throw new \InvalidArgumentException('Unknown node name reason '.$reason.'.');
+        $why = self::EXPLANATIONS[$reason] ?? throw new InvalidArgumentException('Unknown node name reason '.$reason.'.');
 
         return new self(
             "[Vaulter] The node name {$printable} is invalid: {$why}. "
@@ -84,5 +89,16 @@ final class InvalidNodeNameException extends VaulterException implements Problem
     public function problemDetails(): array
     {
         return ['reason' => $this->reason, 'errors' => ['name' => [$this->getMessage()]]];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::InvalidNodeName,
+            category: ErrorCategory::Validation,
+            path: '/name',
+            details: ['reason' => $this->reason, 'errors' => [$this->getMessage()]],
+        );
     }
 }

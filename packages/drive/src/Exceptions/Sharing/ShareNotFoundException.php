@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Sharing;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -37,5 +41,14 @@ final class ShareNotFoundException extends VaulterException implements ProblemEx
     public function httpStatus(): int
     {
         return 404;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::ShareNotFound,
+            category: ErrorCategory::NotFound,
+        );
     }
 }

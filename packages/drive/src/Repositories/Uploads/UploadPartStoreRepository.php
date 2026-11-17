@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
@@ -21,7 +21,7 @@ final class UploadPartStoreRepository
 {
     public function __construct(
         private readonly VaulterDatabase $database,
-        private readonly DriveConfig $driveConfig,
+        private readonly DriveOptions $driveConfig,
     ) {}
 
     /**

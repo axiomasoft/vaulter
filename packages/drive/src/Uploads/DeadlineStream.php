@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads;
 
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 
 /**
  * A read-only view of a borrowed staged stream that re-checks the completion

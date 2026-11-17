@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Validation\ValidationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -47,7 +47,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
         private UploadSessionStoreRepository $sessions,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private DriveConfig $driveConfig,
+        private DriveOptions $driveConfig,
         private UploadSessionReadRepository $reads,
     ) {}
 
@@ -169,7 +169,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
                 chunk: $chunk,
                 offset: $offset,
                 declaredTotal: $locked->total_size_bytes,
-                maxBytes: $this->driveConfig->maxFileSize(),
+                maxBytes: $this->driveConfig->uploads->maxFileSize,
             );
             $acceptedBytes = $newSize - $serverOffset;
 
@@ -248,7 +248,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
 
     private function assertWithinMaxBytes(UploadSession $session, int $size): void
     {
-        $max = $this->driveConfig->maxFileSize();
+        $max = $this->driveConfig->uploads->maxFileSize;
 
         if ($max === 0 || $size <= $max) {
             return;

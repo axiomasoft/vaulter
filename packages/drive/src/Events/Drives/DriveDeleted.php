@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Drives;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\ValueObjects\Access\ActorRef;

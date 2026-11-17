@@ -132,10 +132,10 @@ it('records single-shot upload bytes and chunk duration', function (): void {
     );
     app(IngestFileAction::class)->execute($context, new IngestFileInput(
         storage: $storage,
-        into: DriveTestHelpers::model($root),
         stream: DriveTestHelpers::streamFor('single-shot'),
         originalName: 'one.bin',
         mimeType: 'application/octet-stream',
+        into: DriveTestHelpers::model($root),
     ));
 
     $recorder = app(MetricsRecorder::class);

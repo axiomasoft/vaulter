@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\Fixtures;
 
 use Illuminate\Database\Query\Builder;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Models\FileRevisionBlob;
@@ -47,7 +47,7 @@ final class RevisionBlobPins
 
     private static function query(): Builder
     {
-        return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('blob_references'))
+        return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('blob_references'))
             ->where('owner_type', RevisionBlobLinks::OWNER_TYPE);
     }
 }

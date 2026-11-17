@@ -58,7 +58,7 @@ function changeKeyOf(object $drive, int|string $nodeId, int $user = 1): string
 {
     $actor = AccessTestHelpers::user($user);
 
-    return (new ReaderSyncIdentity((string) config('app.key'), 1))
+    return new ReaderSyncIdentity((string) config('app.key'), 1)
         ->syncKey($drive->model()->getRawOriginal('tenant_id'), $drive->model()->getKey(), new ActorRef($actor->getMorphClass(), (string) $actor->getKey()), $nodeId);
 }
 
@@ -186,11 +186,11 @@ it('(g) rejects a forged cursor and a cursor of another drive (400)', function (
 });
 
 it('(g) rejects a validly signed cursor naming another tenant', function (): void {
-    $forged = (new ChangeCursor(
+    $forged = new ChangeCursor(
         tenantId: 'tenant-b', driveId: (string) $this->drive->model()->getKey(),
         actorType: AccessTestHelpers::user(1)->getMorphClass(), actorId: (string) AccessTestHelpers::user(1)->getKey(), actorReason: '',
         keyGeneration: 1, epoch: 1, after: 0, issuedAt: now()->getTimestamp(), notAfter: now()->getTimestamp() + 60,
-    ))->encode((new ReaderSyncIdentity((string) config('app.key'), 1))->cursorSubkey());
+    )->encode(new ReaderSyncIdentity((string) config('app.key'), 1)->cursorSubkey());
 
     expect(fn () => $this->reader->changes()->list($forged))->toThrow(InvalidCursorException::class, 'another drive');
 });
@@ -265,7 +265,7 @@ it('starts a reader at the end of the journal', function (): void {
     $start = $this->reader->changes()->startCursor();
 
     expect($this->reader->changes()->list($start)->changes)->toBe([])
-        ->and(ChangeCursor::decode($start, (new ReaderSyncIdentity((string) config('app.key'), 1))->cursorSubkey())->after)->toBe(3);
+        ->and(ChangeCursor::decode($start, new ReaderSyncIdentity((string) config('app.key'), 1)->cursorSubkey())->after)->toBe(3);
 });
 
 it('(e) keys a node per typed system reason and gives an unbound, null or anonymous viewer no key', function (): void {

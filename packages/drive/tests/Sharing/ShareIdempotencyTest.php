@@ -8,9 +8,12 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Data\Snapshots\MintedShareLink;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Idempotency\RevokeReceipt;
 use Vaulter\Drive\Idempotency\ShareReceiptCodec;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Sharing\NodeShare;
@@ -147,12 +150,12 @@ it('decodes only the version it knows and never encodes a link with its token in
 
     expect(json_encode($body, JSON_THROW_ON_ERROR))->not->toContain($minted->token)
         ->and($codec->decode($body, 1))->toEqual($minted)
-        ->and(fn () => $codec->decode($body, 2))->toThrow(LogicException::class);
+        ->and(fn (): ShareLinkSnapshot|MintedShareLink|RevokeReceipt => $codec->decode($body, 2))->toThrow(LogicException::class);
 });
 
 it('keeps a node snapshot type out of the share codec', function (): void {
     $codec = new ShareReceiptCodec(app('encrypter'));
 
-    expect(fn () => $codec->encode($this->owner->root()))->toThrow(InvalidArgumentException::class)
+    expect(fn (): array => $codec->encode($this->owner->root()))->toThrow(InvalidArgumentException::class)
         ->and($this->owner->root())->toBeInstanceOf(NodeSnapshot::class);
 });

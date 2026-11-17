@@ -8,12 +8,12 @@ use DateTimeImmutable;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Changes\ReaderSyncIdentity;
-use Vaulter\Drive\Configuration\ChangesConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ChangesOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Drive\Data\NodePage;
 use Vaulter\Drive\Data\Snapshots\DocumentHeadSnapshot;
@@ -117,7 +117,7 @@ final readonly class NodeSnapshotMapper
                 'extension' => $node->extension,
                 'sizeBytes' => $node->size_bytes,
                 'sequence' => $node->sequence,
-                'inheritsAccess' => (bool) $node->inherit_grants,
+                'inheritsAccess' => (bool) $node->getAttribute('inherit_grants'),
                 'properties' => self::properties($node->properties),
                 'createdAt' => SnapshotValue::requiredTime($node->created_at),
                 'createdBy' => SnapshotValue::nullableId($node->getAttribute('created_by')),
@@ -203,7 +203,7 @@ final readonly class NodeSnapshotMapper
             return null;
         }
 
-        return new ReaderSyncIdentity($appKey, $this->container->make(ChangesConfig::class)->keyGeneration());
+        return new ReaderSyncIdentity($appKey, $this->container->make(ChangesOptions::class)->keyGeneration);
     }
 
     /**
@@ -212,7 +212,7 @@ final readonly class NodeSnapshotMapper
      */
     private function tenants(array $driveIds): array
     {
-        $class = $this->container->make(DriveConfig::class)->model('drive');
+        $class = $this->container->make(DriveOptions::class)->model('drive');
         $tenants = [];
         foreach ($class::query()->whereKey($driveIds)->get() as $drive) {
             $tenants[SnapshotValue::id($drive->getKey())] = ReaderSyncIdentity::tenant($drive->getRawOriginal('tenant_id'));

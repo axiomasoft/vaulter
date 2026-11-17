@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Media\Cas\BlobPinStore;
@@ -37,7 +37,7 @@ function pinStatusBlob(string $bytes): Blob
 /** @return list<object> */
 function pinStatusRows(): array
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('blob_references'))
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('blob_references'))
         ->orderBy('reference_key')->get()->all();
 }
 
@@ -263,14 +263,14 @@ it('accepts the longest owner type and reference key the columns hold', function
 it('lets the pin point at the blob and never the other way: the blob row cannot be deleted while pinned', function (): void {
     $blob = pinStatusBlob('restrict');
     CasTestHelpers::pin($blob, 'held');
-    $table = app(DatabaseConfig::class)->table('blob_references');
+    $table = app(DatabaseOptions::class)->table('blob_references');
 
     $foreign = Schema::connection(app(VaulterDatabase::class)->connection()->getName())->getForeignKeys($table);
     expect($foreign)->toHaveCount(1)
         ->and($foreign[0]['columns'])->toBe(['blob_id'])
-        ->and($foreign[0]['foreign_table'])->toBe(app(DatabaseConfig::class)->table('blobs'))
+        ->and($foreign[0]['foreign_table'])->toBe(app(DatabaseOptions::class)->table('blobs'))
         ->and(strtolower((string) $foreign[0]['on_delete']))->toBe('restrict')
-        ->and(Schema::getForeignKeys(app(DatabaseConfig::class)->table('blobs')))->toBe([]);
+        ->and(Schema::getForeignKeys(app(DatabaseOptions::class)->table('blobs')))->toBe([]);
 
     expect(fn () => app(VaulterDatabase::class)->transaction(fn () => Blob::query()->whereKey($blob->getKey())->delete()))
         ->toThrow(QueryException::class)

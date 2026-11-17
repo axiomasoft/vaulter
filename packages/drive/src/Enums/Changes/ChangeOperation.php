@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Changes;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * What a change-journal entry tells a syncing client to do with a node.

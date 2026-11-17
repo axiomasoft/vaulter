@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Tests\Types;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
@@ -21,7 +22,7 @@ abstract class TypesTestCase extends DocumentTestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

@@ -36,9 +36,9 @@ beforeEach(function (): void {
 function retentionProfile(RevisionRetentionPolicy $policy, string $key = 'default'): void
 {
     $registry = new ProfileRegistry;
-    $registry->register((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->revisionRetention($key === 'default' ? $policy : new RevisionRetentionPolicy)));
+    $registry->register((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->revisionRetention($key === 'default' ? $policy : new RevisionRetentionPolicy)));
     if ($key !== 'default') {
-        $registry->register((new Profile)->key($key)->drivePolicy(fn (DrivePolicyBuilder $p) => $p->revisionRetention($policy)));
+        $registry->register((new Profile)->key($key)->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->revisionRetention($policy)));
     }
     $registry->freeze();
     app()->instance(ProfileRegistry::class, $registry);
@@ -158,11 +158,11 @@ it('stamps superseded_at when a revision stops being the head, never on the head
 it('validates the retention policy', function (Closure $build): void {
     expect($build)->toThrow(InvalidProfileException::class);
 })->with([
-    'negative count' => [fn () => new RevisionRetentionPolicy(maxNoncurrentRevisions: -1)],
-    'zero max age' => [fn () => new RevisionRetentionPolicy(maxNoncurrentAgeDays: 0)],
-    'negative min age' => [fn () => new RevisionRetentionPolicy(minNoncurrentAgeDays: -1)],
-    'max age below min age' => [fn () => new RevisionRetentionPolicy(maxNoncurrentAgeDays: 3, minNoncurrentAgeDays: 7)],
-    'unprotected pins' => [fn () => new RevisionRetentionPolicy(protectPinned: false)],
+    'negative count' => [fn (): RevisionRetentionPolicy => new RevisionRetentionPolicy(maxNoncurrentRevisions: -1)],
+    'zero max age' => [fn (): RevisionRetentionPolicy => new RevisionRetentionPolicy(maxNoncurrentAgeDays: 0)],
+    'negative min age' => [fn (): RevisionRetentionPolicy => new RevisionRetentionPolicy(minNoncurrentAgeDays: -1)],
+    'max age below min age' => [fn (): RevisionRetentionPolicy => new RevisionRetentionPolicy(maxNoncurrentAgeDays: 3, minNoncurrentAgeDays: 7)],
+    'unprotected pins' => [fn (): RevisionRetentionPolicy => new RevisionRetentionPolicy(protectPinned: false)],
 ]);
 
 it('maps the profile revision limit onto the retention policy', function (): void {

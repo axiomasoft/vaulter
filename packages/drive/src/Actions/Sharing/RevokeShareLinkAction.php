@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\RevokeShareInput;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;

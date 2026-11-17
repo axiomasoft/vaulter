@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Repositories\Content;
 
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\ScanEvidence;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
@@ -23,7 +23,7 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 #[Internal]
 final readonly class ScanEvidenceRepository
 {
-    public function __construct(private DriveConfig $config, private ScanSnapshot $snapshots) {}
+    public function __construct(private DriveOptions $config, private ScanSnapshot $snapshots) {}
 
     public function identity(FileRevision $revision): ?ImmutableContentIdentity
     {

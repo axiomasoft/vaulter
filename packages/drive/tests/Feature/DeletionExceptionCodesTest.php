@@ -17,11 +17,11 @@ use Vaulter\Testing\Support\ProblemProbeRoutes;
  * trash root in the response of a member restore.
  */
 dataset('deletion exceptions', [
-    'node_trashed_by_ancestor' => [fn () => NodeTrashedByAncestorException::forNode((new Node)->forceFill(['id' => 5]), 3), 'node_trashed_by_ancestor', 409],
-    'restore_destination_required' => [fn () => RestoreDestinationRequiredException::forNode((new Node)->forceFill(['id' => 5])), 'restore_destination_required', 409],
-    'tree_traversal_incomplete' => [fn () => TreeTraversalIncompleteException::forBound(101), 'tree_traversal_incomplete', 409],
-    'drive_archived' => [fn () => DriveArchivedException::forDrive(7), 'drive_archived', 409],
-    'invalid_drive_state' => [fn () => InvalidDriveStateException::for(7, 'archive', DriveStatus::Archived), 'invalid_drive_state', 409],
+    'node_trashed_by_ancestor' => [fn (): NodeTrashedByAncestorException => NodeTrashedByAncestorException::forNode((new Node)->forceFill(['id' => 5]), 3), 'node_trashed_by_ancestor', 409],
+    'restore_destination_required' => [fn (): RestoreDestinationRequiredException => RestoreDestinationRequiredException::forNode((new Node)->forceFill(['id' => 5])), 'restore_destination_required', 409],
+    'tree_traversal_incomplete' => [fn (): TreeTraversalIncompleteException => TreeTraversalIncompleteException::forBound(101), 'tree_traversal_incomplete', 409],
+    'drive_archived' => [fn (): DriveArchivedException => DriveArchivedException::forDrive(7), 'drive_archived', 409],
+    'invalid_drive_state' => [fn (): InvalidDriveStateException => InvalidDriveStateException::for(7, 'archive', DriveStatus::Archived), 'invalid_drive_state', 409],
 ]);
 
 it('carries a stable problem code, status and an actionable message', function (Closure $make, string $code, int $status): void {

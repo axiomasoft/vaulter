@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 
 /** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
 test('vaulter-media configuration API matches the frozen golden (P2.5)', function (): void {
-    $reflection = new ReflectionClass(MediaConfig::class);
+    $reflection = new ReflectionClass(MediaOptions::class);
     $methods = [];
 
     foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -32,7 +32,7 @@ test('vaulter-media configuration API matches the frozen golden (P2.5)', functio
     }
 
     sort($methods);
-    $manifest = MediaConfig::class."\n".implode("\n", $methods)."\n";
+    $manifest = MediaOptions::class."\n".implode("\n", $methods)."\n";
     $golden = __DIR__.'/__snapshots__/public-api.txt';
 
     if (getenv('UPDATE_SNAPSHOT') === '1') {

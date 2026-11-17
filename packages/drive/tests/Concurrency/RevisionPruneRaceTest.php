@@ -17,6 +17,7 @@ use Vaulter\Drive\Profiles\RevisionRetentionPolicy;
 use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
  * On PostgreSQL: the pruning chooses its revisions without locks, so a
@@ -28,7 +29,7 @@ beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $registry = new ProfileRegistry;
-    $registry->register((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy
+    $registry->register((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $policy): DrivePolicyBuilder => $policy
         ->revisionRetention(new RevisionRetentionPolicy(maxNoncurrentRevisions: 0, minNoncurrentAgeDays: 0))));
     $registry->freeze();
     app()->instance(ProfileRegistry::class, $registry);
@@ -96,8 +97,8 @@ it('releases the bytes of a revision once when two deletes race', function (): v
         [0, 1],
     ));
 
-    $failed = array_values(array_filter($outcomes, static fn ($outcome): bool => !$outcome->ok));
-    expect(count(array_filter($outcomes, static fn ($outcome): bool => $outcome->ok)))->toBe(1)
+    $failed = array_values(array_filter($outcomes, static fn (RaceOutcome $outcome): bool => !$outcome->ok));
+    expect(count(array_filter($outcomes, static fn (RaceOutcome $outcome): bool => $outcome->ok)))->toBe(1)
         ->and($failed)->toHaveCount(1)
         ->and($failed[0]->failedWith(NodeNotFoundException::class))->toBeTrue($failed[0]->message ?? '')
         ->and(FileRevision::query()->whereKey($first)->exists())->toBeFalse()

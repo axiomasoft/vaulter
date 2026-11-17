@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;

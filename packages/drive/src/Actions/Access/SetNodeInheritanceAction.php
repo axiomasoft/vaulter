@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use LogicException;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
@@ -68,7 +69,7 @@ final readonly class SetNodeInheritanceAction
         return $this->database->transaction(function () use ($context, $node, $inherit, $mode, $expectedAccessVersion): Node {
             $locked = $this->store->lockForUpdate([$node->id])->first() ?? throw NodeNotFoundException::forId($node->id);
             $this->versions->assertExpected($locked, 'access_version', $expectedAccessVersion, AggregateVersion::NODE_ACCESS);
-            if ((bool) $locked->inherit_grants === $inherit) {
+            if ((bool) $locked->getAttribute('inherit_grants') === $inherit) {
                 return $locked;
             }
             $copies = !$inherit && $mode === InheritanceRestriction::CopyCurrent
@@ -129,7 +130,7 @@ final readonly class SetNodeInheritanceAction
     private function covering(array $grants): array
     {
         $roles = array_map(static fn (NodeGrant $grant): Role => $grant->role(), $grants);
-        $role = Role::covering($roles) ?? throw new \LogicException('[Vaulter] Inherited roles do not nest.');
+        $role = Role::covering($roles) ?? throw new LogicException('[Vaulter] Inherited roles do not nest.');
         $expiresAt = null;
         foreach ($grants as $grant) {
             if (!$grant->role()->covers($role)) {

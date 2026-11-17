@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Uploads;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 

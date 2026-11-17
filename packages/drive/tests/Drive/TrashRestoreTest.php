@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\OnNameConflict;
@@ -69,7 +70,7 @@ it('restore при живом сиблинге с тем же именем → �
     // A live sibling now owns the name.
     $drive->folders()->create('Docs');
 
-    expect(fn () => $drive->trash()->restore($original, new RestoreOptions(onConflict: OnNameConflict::Fail)))
+    expect(fn (): NodeSnapshot => $drive->trash()->restore($original, new RestoreOptions(onConflict: OnNameConflict::Fail)))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -84,7 +85,7 @@ it('restore без назначения отказывает, если исхо�
     $drive->nodes()->trash($child);
     $drive->nodes()->trash($parent);
 
-    expect(fn () => $drive->trash()->restore($child))->toThrow(RestoreDestinationRequiredException::class)
+    expect(fn (): NodeSnapshot => $drive->trash()->restore($child))->toThrow(RestoreDestinationRequiredException::class)
         ->and(DriveTestHelpers::model($child)->trashed_at)->not->toBeNull();
 
     $restored = $drive->trash()->restore($child, new RestoreOptions(destination: $drive->root()));
@@ -100,7 +101,7 @@ it('restore возвращает только своё поддерево: ра�
     $drive->nodes()->trash($early);
     $drive->nodes()->trash($folder);
 
-    expect(fn () => $drive->trash()->restore($member))->toThrow(NodeTrashedByAncestorException::class);
+    expect(fn (): NodeSnapshot => $drive->trash()->restore($member))->toThrow(NodeTrashedByAncestorException::class);
 
     $drive->trash()->restore($folder);
 
@@ -108,6 +109,6 @@ it('restore возвращает только своё поддерево: ра�
         ->and(DriveTestHelpers::model($member)->trashed_at)->toBeNull()
         ->and(DriveTestHelpers::model($member)->trash_root_id)->toBeNull()
         ->and(DriveTestHelpers::model($early)->trashed_at)->not->toBeNull()
-        ->and((string) DriveTestHelpers::model($early)->trash_root_id)->toBe((string) $early->id);
+        ->and((string) DriveTestHelpers::model($early)->trash_root_id)->toBe($early->id);
     expect(array_map(static fn ($node) => $node->id, $drive->trash()->list()->items))->toBe([$early->id]);
 });

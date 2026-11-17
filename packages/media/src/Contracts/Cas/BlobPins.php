@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Contracts\Cas;
 
 use Closure;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;

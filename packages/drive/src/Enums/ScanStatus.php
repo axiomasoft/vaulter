@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Malware-scan state of a file revision, as stored in its scan_status column.

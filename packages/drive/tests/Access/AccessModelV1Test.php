@@ -7,6 +7,7 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
@@ -79,12 +80,12 @@ it('requires Manage to restrict or restore inheritance', function (): void {
     AccessTestHelpers::grant($folder, RoleRegistry::ORGANIZER, subjectId: 5);
     $organizer = accessV1(AccessTestHelpers::user(5), $this->drive);
 
-    expect(fn () => $organizer->restrictInheritance($folder->id))->toThrow(PermissionDeniedException::class)
+    expect(fn (): NodeSnapshot => $organizer->restrictInheritance($folder->id))->toThrow(PermissionDeniedException::class)
         ->and($folder->refresh()->inherit_grants)->toBeTrue();
 
     $node = accessV1($this->owner, $this->drive)->restrictInheritance($folder->id);
     expect($node->inheritsAccess)->toBeFalse()
-        ->and(fn () => $organizer->restoreInheritance($folder->id))->toThrow(PermissionDeniedException::class);
+        ->and(fn (): NodeSnapshot => $organizer->restoreInheritance($folder->id))->toThrow(PermissionDeniedException::class);
 });
 
 it('restores inheritance and keeps the direct grants', function (): void {
@@ -175,7 +176,7 @@ it('grants the newest version of a role and refuses unknown roles', function ():
 
     expect($grant->role)->toBe(RoleRegistry::COMMENTER)
         ->and($grant->roleVersion)->toBe(1)
-        ->and(fn () => new GrantInput(subject: new Subject('user', 14), role: 'editor'))->toThrow(UnknownRoleException::class);
+        ->and(fn (): GrantInput => new GrantInput(subject: new Subject('user', 14), role: 'editor'))->toThrow(UnknownRoleException::class);
 });
 
 it('stays monotonic: adding a grant never removes an ability', function (): void {

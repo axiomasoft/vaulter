@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
@@ -33,8 +33,8 @@ it('warns about an unregistered default type', function (): void {
     $finding = documentsFindings('documents.types')[0];
 
     expect($finding->code)->toBe('documents.types_default_unregistered')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and(documentsFindings('documents.types', production: true)[0]->severity)->toBe(DoctorSeverity::Warning);
+        ->and($finding->severity)->toBe(Severity::Warning)
+        ->and(documentsFindings('documents.types', production: true)[0]->severity)->toBe(Severity::Warning);
 });
 
 it('counts the documents whose type is not registered', function (): void {
@@ -50,6 +50,6 @@ it('counts the documents whose type is not registered', function (): void {
     $finding = documentsFindings('documents.types')[1];
 
     expect($finding->code)->toBe('documents.types_unknown')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
+        ->and($finding->severity)->toBe(Severity::Warning)
         ->and($finding->evidence)->toBe(['documents' => 1, 'types' => 'acme/kanban']);
 });

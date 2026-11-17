@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
@@ -81,7 +82,7 @@ class DocumentRevision extends Model
         );
     }
 
-    #[\Override]
+    #[Override]
     protected static function booted(): void
     {
         static::updating(static function (self $revision): void {
@@ -92,10 +93,10 @@ class DocumentRevision extends Model
         });
     }
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('document_revisions');
+        return app(DatabaseOptions::class)->table('document_revisions');
     }
 
     /**
@@ -157,7 +158,7 @@ class DocumentRevision extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

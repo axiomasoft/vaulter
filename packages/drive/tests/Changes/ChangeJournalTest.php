@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
@@ -38,7 +38,7 @@ beforeEach(function (): void {
 /** @return list<array{seq: int, event_type: string, node_id: string, operation: string, reason: ?string, subtree: bool}> */
 function journalEntries(DriveHandle $drive): array
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('drive_changes'))
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('drive_changes'))
         ->where('drive_id', $drive->model()->getKey())->orderBy('seq')->get()
         ->map(static fn (object $row): array => [
             'seq' => (int) $row->seq,
@@ -61,7 +61,7 @@ function journalOf(DriveHandle $drive, string $nodeId): array
 
 function journalHead(DriveHandle $drive): object
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('drive_change_heads'))
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('drive_change_heads'))
         ->where('drive_id', $drive->model()->getKey())->sole();
 }
 

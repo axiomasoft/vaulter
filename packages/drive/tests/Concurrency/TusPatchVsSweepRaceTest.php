@@ -137,7 +137,7 @@ it('PATCH и sweep одной сессии: победитель ровно од
     $final = UploadSession::query()->findOrFail($sessionKey);
     $stagedSize = app(StagedUpload::class)->size($final);
 
-    array_map('unlink', glob("$dir/*") ?: []);
+    array_map(unlink(...), glob("$dir/*") ?: []);
     @rmdir($dir);
 
     $context = "patch: {$patchResult} | sweep: {$sweepResult} | status: {$final->status->value} | ".

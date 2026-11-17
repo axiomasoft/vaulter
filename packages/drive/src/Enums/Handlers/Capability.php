@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Handlers;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 
 /**

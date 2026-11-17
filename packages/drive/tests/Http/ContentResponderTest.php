@@ -80,7 +80,7 @@ it('strips CR/LF, control characters and path separators from the disposition', 
     expect($header)->not->toContain("\r")->not->toContain("\n")->not->toContain('/')
         ->and($header)->toStartWith('attachment; filename="')
         ->and(DownloadHeaders::disposition('inline', "\x00\x1F"))->toBe('inline; filename=download')
-        ->and(fn () => DownloadHeaders::disposition('form-data', 'a'))->toThrow(InvalidArgumentException::class);
+        ->and(fn (): string => DownloadHeaders::disposition('form-data', 'a'))->toThrow(InvalidArgumentException::class);
 });
 
 it('redirects to a signed URL of the exact requested revision in direct_signed mode, without caching', function (): void {

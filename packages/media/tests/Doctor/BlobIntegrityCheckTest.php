@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\CheckStatus;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Media\Cas\BlobScrubber;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Models\Cas\Blob;
@@ -39,7 +39,7 @@ it('is ok when no blob is marked', function (): void {
     $findings = blobIntegrityFindings();
 
     expect($findings)->toHaveCount(1)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Ok)
+        ->and($findings[0]->status)->toBe(CheckStatus::Ok)
         ->and($findings[0]->code)->toBe('media.blobs.integrity');
 });
 
@@ -55,11 +55,11 @@ it('warns about the marked blobs and names the way to heal them', function (): v
     $findings = blobIntegrityFindings();
 
     expect($findings)->toHaveCount(1)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Warning)
+        ->and($findings[0]->status)->toBe(CheckStatus::Warning)
         ->and($findings[0]->code)->toBe('media.blobs.integrity')
         ->and($findings[0]->evidence['failed'])->toBe(2)
         ->and($findings[0]->evidence['blobs'])->toContain((string) $first->getKey())->toContain((string) $second->getKey())
-        ->and($findings[0]->hint)->toContain('upload the same bytes again');
+        ->and($findings[0]->remediation)->toContain('upload the same bytes again');
 });
 
 it('lists no more blobs than the sample limit', function (): void {
@@ -87,5 +87,5 @@ it('goes back to ok after the ingest heals the blobs, and changes nothing it rep
     $store->commit(CasTestHelpers::streamFor('heal then ok'), BlobScope::tenant('1'));
 
     expect(DB::table((new Blob)->getTable())->count())->toBe(count($before))
-        ->and(blobIntegrityFindings()[0]->severity)->toBe(DoctorSeverity::Ok);
+        ->and(blobIntegrityFindings()[0]->status)->toBe(CheckStatus::Ok);
 });

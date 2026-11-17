@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\ValueObjects\Events;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Support\Identity;
 
 /**

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts\Access;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * A capability marker: the {@see PermissionDriver} implementing it declares

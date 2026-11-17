@@ -22,7 +22,7 @@ it('captures independent policy snapshots and rejects later mutation', function 
         ->and($snapshot->getDocumentTypes())->toBe(['vaulter/rich-text'])->and($snapshot->grantsEnabled())->toBeFalse()
         ->and($snapshot->shareLinksEnabled())->toBeFalse()->and($snapshot->commentsEnabled())->toBeFalse()
         ->and($snapshot->getRevisionLimit())->toBe(2)->and($snapshot->getTrashRetentionDays())->toBe(0);
-    expect(fn () => $snapshot->disk('escape'))->toThrow(LogicException::class)
+    expect(fn (): Profile => $snapshot->disk('escape'))->toThrow(LogicException::class)
         ->and(fn () => $registry->all()['project']->grants())->toThrow(LogicException::class)
         ->and(fn () => $registry->register((new Profile)->key('later')))->toThrow(LogicException::class);
 });

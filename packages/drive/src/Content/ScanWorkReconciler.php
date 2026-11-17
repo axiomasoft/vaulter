@@ -7,11 +7,12 @@ namespace Vaulter\Drive\Content;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Throwable;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Drive\Actions\Content\SupersedeScanWorkAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Drive;
@@ -22,25 +23,27 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 #[Internal]
 final readonly class ScanWorkReconciler
 {
-    public function __construct(private VaulterDatabase $database, private DriveConfig $config,
-        private DriveConfig $driveConfig, private ScanObligationRepository $work,
+    public function __construct(private VaulterDatabase $database, private DriveOptions $config,
+        private DriveOptions $driveConfig, private ScanObligationRepository $work,
         private RecoverScanWorkAction $recover, private SupersedeScanWorkAction $supersede,
         private ScanPolicyResolver $policies, private Dispatcher $bus) {}
 
     public function afterCommit(ScanObligation $work): void
     {
-        $this->database->afterCommit(fn () => $this->publish($work));
+        $this->database->afterCommit(function () use ($work): void {
+            $this->publish($work);
+        });
     }
 
     public function publish(ScanObligation $work): bool
     {
         try {
             $job = new ScanFileRevision($work->id, $work->generation, $work->drive_id, $work->tenant_id);
-            $job->onQueue($this->driveConfig->scanQueue());
+            $job->onQueue($this->driveConfig->uploads->scan->queue);
             $this->bus->dispatch($job);
 
             return true;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             Log::warning('Vaulter scanner publication failed; durable work remains due.');
 
             return false;
@@ -54,7 +57,7 @@ final readonly class ScanWorkReconciler
     {
         $started = microtime(true);
         $now = $this->work->now();
-        $cooldown = $this->driveConfig->scanWork('publish_cooldown_seconds');
+        $cooldown = $this->driveConfig->uploads->scan->workValue('publish_cooldown_seconds');
         $counts = ['scanned' => 0, 'published' => 0, 'failed' => 0, 'stalled_configuration' => 0, 'remaining_due' => 0];
         $class = $this->config->model('scan_obligation');
         $query = app(TenancyBoundary::class)->constrain($class::query())->whereIn('state', ['pending', 'retry_wait', 'leased'])

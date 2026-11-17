@@ -14,17 +14,17 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
-use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Contracts\DriveHandle;
@@ -86,7 +86,7 @@ final class ScanLifecycleContractTests
         }
 
         $configureHost();
-        $spec = App::make(ScanConfig::class)->globalSpec();
+        $spec = App::make(ScanOptions::class)->globalSpec();
         Assert::assertNotSame(ScanMode::Off, $spec->mode, 'Scanning is off in the host configuration, so there is no lifecycle to prove.');
 
         $this->scanner = new FakeContentScanner($spec->scannerKey, $spec->scannerVersion);
@@ -248,7 +248,7 @@ final class ScanLifecycleContractTests
 
     private function revision(NodeSnapshot $node): FileRevision
     {
-        $class = App::make(DriveConfig::class)->model('node');
+        $class = App::make(DriveOptions::class)->model('node');
 
         return $class::query()->findOrFail($node->id)->file()->firstOrFail()->currentRevision()->firstOrFail();
     }
@@ -287,7 +287,7 @@ final class ScanLifecycleContractTests
         $jobs = Bus::dispatched(ScanFileRevision::class)->values();
         foreach ($jobs->slice($this->processed) as $job) {
             if ($job instanceof ScanFileRevision) {
-                $this->within($job->tenantId === null ? null : (string) $job->tenantId, static fn (): mixed => App::call([$job, 'handle']));
+                $this->within($job->tenantId === null ? null : (string) $job->tenantId, static fn (): mixed => App::call($job->handle(...)));
             }
         }
         $this->processed = $jobs->count();
@@ -297,7 +297,7 @@ final class ScanLifecycleContractTests
     {
         $model = $drive->model();
         $options = ['--drive' => (string) $model->id, '--json' => true];
-        if (App::make(TenancyConfig::class)->enabled()) {
+        if (App::make(TenancyOptions::class)->enabled) {
             $options['--tenant'] = (string) $model->tenant_id;
         }
         $exit = $this->within($model->tenant_id === null ? null : (string) $model->tenant_id, static fn (): int => Artisan::call('vaulter:scan:reconcile', $options));
@@ -323,7 +323,7 @@ final class ScanLifecycleContractTests
 
     private function currentTenant(): ?string
     {
-        if (!App::make(TenancyConfig::class)->enabled()) {
+        if (!App::make(TenancyOptions::class)->enabled) {
             return null;
         }
         $tenant = App::make(TenantResolver::class)->current();
@@ -345,7 +345,7 @@ final class ScanLifecycleContractTests
      */
     private function within(?string $tenant, Closure $callback): mixed
     {
-        if ($tenant === null || !App::make(TenancyConfig::class)->enabled()) {
+        if ($tenant === null || !App::make(TenancyOptions::class)->enabled) {
             return $callback();
         }
         $previous = App::make(TenantResolver::class);

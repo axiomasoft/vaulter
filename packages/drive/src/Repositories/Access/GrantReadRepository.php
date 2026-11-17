@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Repositories\Access;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Packman\Attributes\Internal;
 use UnexpectedValueException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Node;
@@ -26,7 +26,7 @@ use Vaulter\Drive\Tenancy\TenancyBoundary;
 final class GrantReadRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
         private readonly TenancyBoundary $boundary,
     ) {}
 

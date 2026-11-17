@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use DateTimeImmutable;
-use Vaulter\Attributes\Internal;
+use InvalidArgumentException;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
-use Vaulter\Drive\Configuration\DownloadsConfig;
+use Vaulter\Drive\Configuration\DownloadsOptions;
 use Vaulter\Drive\Data\FileStream;
 use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -31,7 +32,7 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class ContentDelivery
 {
-    public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private DownloadGuards $guards, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}
+    public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private DownloadGuards $guards, private BlobStore $blobs, private DownloadsOptions $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}
 
     public function stream(DriveContext $context, Node $node, FileRevision $revision): FileStream
     {
@@ -53,11 +54,11 @@ final readonly class ContentDelivery
     {
         $node = $this->authorize($context, $node);
         $this->guards->check($context, $node, $revision);
-        if ($this->downloads->deliveryMode() !== 'direct_signed') {
+        if ($this->downloads->deliveryMode !== 'direct_signed') {
             throw ProfileRestrictionException::forOperation('direct_content_url');
         }
-        if ($ttlSeconds < 1 || $ttlSeconds > $this->downloads->directTtlSeconds()) {
-            throw new \InvalidArgumentException('Direct URL TTL exceeds the configured bound.');
+        if ($ttlSeconds < 1 || $ttlSeconds > $this->downloads->directTtlSeconds) {
+            throw new InvalidArgumentException('Direct URL TTL exceeds the configured bound.');
         }
         [, $selected] = $this->availability->selection($node, $revision);
         $identity = $this->evidence->identity($selected) ?? throw new ContentUnavailableException;
@@ -88,6 +89,8 @@ final readonly class ContentDelivery
             throw NodeNotFoundException::forId($node->id);
         }
 
-        return new FileStream($stream, $revision->original_name ?: $node->name, $revision->mime_type ?? 'application/octet-stream', $revision->size_bytes, $revision->sha256, $this->revisions->map($revision, $node->file()->firstOrFail()));
+        $displayName = $revision->original_name !== '' ? $revision->original_name : $node->name;
+
+        return new FileStream($stream, $displayName, $revision->mime_type ?? 'application/octet-stream', $revision->size_bytes, $revision->sha256, $this->revisions->map($revision, $node->file()->firstOrFail()));
     }
 }

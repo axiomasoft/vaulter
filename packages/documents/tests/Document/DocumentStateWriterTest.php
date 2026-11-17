@@ -81,8 +81,8 @@ it('captures the working state verbatim into a checkpoint', function (): void {
     $result = writeState($node, new DocumentStateChange(
         cause: StateWriteCause::Update,
         content: DocumentTestHelpers::content('captured'),
-        collabState: "yjs\0bytes",
         schemaVersion: 2,
+        collabState: "yjs\0bytes",
         actorId: 5,
         forceCheckpoint: true,
         label: 'labelled',
@@ -113,9 +113,9 @@ it('checkpoints by interval: none inside it, an autosave one after it', function
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 60);
     $node = writerDocument();
 
-    $inside = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('inside')));
+    $inside = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('inside'), schemaVersion: 1));
     $this->travel(61)->seconds();
-    $after = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('after')));
+    $after = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('after'), schemaVersion: 1));
 
     expect($inside->checkpoint)->toBeNull()
         ->and($after->checkpoint?->is_autosave)->toBeTrue()
@@ -145,12 +145,11 @@ it('moves the epoch for restore and for a JSON replace of Yjs state, never for c
     $node = writerDocument();
     $source = DocumentTestHelpers::head($node);
 
-    $collab = writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, schemaVersion: 1, content: null, collabState: "room\0state"));
+    $collab = writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, content: null, schemaVersion: 1, collabState: "room\0state"));
     $restore = writeState($node, new DocumentStateChange(
         cause: StateWriteCause::Restore,
-        schemaVersion: 1,
         content: DocumentTestHelpers::content('v1'),
-        collabState: null,
+        schemaVersion: 1,
         forceCheckpoint: true,
         restoredFrom: $source,
     ));
@@ -167,13 +166,12 @@ it('keeps the collaborative state a generation closes over in a revision before 
     $node = writerDocument();
     $source = DocumentTestHelpers::head($node);
     // Collaboration wrote a state the interval did not checkpoint: no revision holds it.
-    writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, schemaVersion: 1, content: DocumentTestHelpers::content('saved edits'), collabState: "room\0state"));
+    writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, content: DocumentTestHelpers::content('saved edits'), schemaVersion: 1, collabState: "room\0state"));
 
     $closing = writeState($node, new DocumentStateChange(
         cause: $cause,
-        schemaVersion: 1,
         content: DocumentTestHelpers::content('replacement'),
-        collabState: null,
+        schemaVersion: 1,
         forceCheckpoint: $cause === StateWriteCause::Restore,
         restoredFrom: $cause === StateWriteCause::Restore ? $source : null,
     ));
@@ -191,11 +189,11 @@ it('adds no revision when the state a generation closes over is already one, or 
     $node = writerDocument();
     $source = DocumentTestHelpers::head($node);
     if ($collaborative) {
-        writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, schemaVersion: 1, content: DocumentTestHelpers::content('saved'), collabState: 'checkpointed', forceCheckpoint: true));
+        writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, content: DocumentTestHelpers::content('saved'), schemaVersion: 1, collabState: 'checkpointed', forceCheckpoint: true));
     }
     $before = DocumentTestHelpers::document($node)->revision_count;
 
-    writeState($node, new DocumentStateChange(cause: StateWriteCause::Restore, schemaVersion: 1, content: DocumentTestHelpers::content('v1'), collabState: null, forceCheckpoint: true, restoredFrom: $source));
+    writeState($node, new DocumentStateChange(cause: StateWriteCause::Restore, content: DocumentTestHelpers::content('v1'), schemaVersion: 1, forceCheckpoint: true, restoredFrom: $source));
 
     expect(DocumentTestHelpers::document($node)->revision_count)->toBe($before + 1);
 })->with(['checkpointed Yjs state' => [true], 'no Yjs state' => [false]]);
@@ -203,10 +201,10 @@ it('adds no revision when the state a generation closes over is already one, or 
 it('prunes after a checkpoint with the head and pinned checkpoints kept', function (): void {
     config()->set('vaulter-documents.revisions.limit', 1);
     $node = writerDocument();
-    $pinned = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('pin'), forceCheckpoint: true, keepForever: true))->checkpoint;
+    $pinned = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('pin'), schemaVersion: 1, forceCheckpoint: true, keepForever: true))->checkpoint;
 
     foreach (['a', 'b', 'c'] as $text) {
-        writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content($text), forceCheckpoint: true));
+        writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content($text), schemaVersion: 1, forceCheckpoint: true));
     }
 
     $numbers = DocumentTestHelpers::revisions($node)->pluck('number')->all();
@@ -218,7 +216,7 @@ it('stamps the node change but never its sequence', function (): void {
     $node = writerDocument();
     $sequence = $node->refresh()->sequence;
 
-    writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('touch'), actorId: 9));
+    writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('touch'), schemaVersion: 1, actorId: 9));
 
     expect($node->refresh()->sequence)->toBe($sequence)
         ->and((string) $node->updated_by)->toBe('9');
@@ -228,7 +226,7 @@ it('copies the tenant of the aggregate onto its checkpoints', function (): void 
     $node = writerDocument();
     app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['tenant_id' => 'tenant-a']));
 
-    $checkpoint = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('t'), forceCheckpoint: true))->checkpoint;
+    $checkpoint = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('t'), schemaVersion: 1, forceCheckpoint: true))->checkpoint;
 
     expect((string) $checkpoint?->tenant_id)->toBe('tenant-a');
 });
@@ -249,7 +247,7 @@ it('rejects rich-text prepared payload after a locked Markdown transition withou
     app('events')->listen(DocumentContentUpdated::class, function ($event) use (&$events): void {
         $events[] = $event;
     });
-    $snapshot = static fn () => array_map(static fn ($t) => DB::table($t)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions']);
+    $snapshot = static fn (): array => array_map(static fn (string $t) => DB::table($t)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions']);
     $before = $snapshot();
     $action = app(UpdateDocumentContentAction::class);
     $context = DocumentTestHelpers::context($node);

@@ -20,7 +20,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    config()->set('vaulter.database.connection', null);
+    config()->set('vaulter.database.connection');
 });
 
 it('rolls back an Action insertion on the dedicated Vaulter connection', function (): void {

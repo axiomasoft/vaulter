@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Quota;
 
 use Illuminate\Database\Query\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Support\Identity;
 
@@ -27,7 +27,7 @@ final readonly class QuotaCalculator
 {
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
     ) {}
 
     public function usedBytes(int|string $driveId): int

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Http\Controllers\Access\CreateGrantController;
 use Vaulter\Drive\Http\Controllers\Access\ListGrantsController;
 use Vaulter\Drive\Http\Controllers\Access\RestoreInheritanceController;
@@ -73,7 +73,7 @@ use Vaulter\Http\Middleware\ReadIdempotencyKey;
 | this one.
 */
 
-$routes = app(RoutesConfig::class);
+$routes = app(RoutesOptions::class);
 $id = '[A-Za-z0-9_-]+';
 
 Route::prefix($routes->versionedPrefix())

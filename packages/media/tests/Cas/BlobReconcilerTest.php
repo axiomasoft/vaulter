@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Contracts\Cas\BlobStore;
@@ -78,8 +78,8 @@ it('читает строки блобов (берёт lock) раньше, че�
     // locking read of the batch comes first, the pin count after it (as in the collector's mark).
     $connection = app(VaulterDatabase::class)->connection();
     $grammar = $connection->getQueryGrammar();
-    $blobs = $grammar->wrapTable(app(DatabaseConfig::class)->table('blobs'));
-    $pins = $grammar->wrapTable(app(DatabaseConfig::class)->table('blob_references'));
+    $blobs = $grammar->wrapTable(app(DatabaseOptions::class)->table('blobs'));
+    $pins = $grammar->wrapTable(app(DatabaseOptions::class)->table('blob_references'));
     $blobKey = $grammar->wrap($blob->getQualifiedKeyName());
     $connection->enableQueryLog();
     $connection->flushQueryLog();

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Data\UploadSource;
@@ -33,11 +33,11 @@ it('releases the drive pins and only them before the revision edge table is drop
 
     revisionBlobsMigration()->down();
 
-    expect(Schema::hasTable(app(DatabaseConfig::class)->table('file_revision_blobs')))->toBeFalse()
+    expect(Schema::hasTable(app(DatabaseOptions::class)->table('file_revision_blobs')))->toBeFalse()
         ->and(app(BlobPins::class)->countByOwner())->toBe(['documents.attachment' => 1]);
 
     revisionBlobsMigration()->up();
-    expect(Schema::hasTable(app(DatabaseConfig::class)->table('file_revision_blobs')))->toBeTrue();
+    expect(Schema::hasTable(app(DatabaseOptions::class)->table('file_revision_blobs')))->toBeTrue();
 });
 
 it('rolls back an empty edge table without a pin to release', function (): void {

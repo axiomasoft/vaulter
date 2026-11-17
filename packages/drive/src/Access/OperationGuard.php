@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Access;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Drive\Access\ValueObjects\GrantSet;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -34,7 +34,7 @@ final readonly class OperationGuard
         private AccessResolver $resolver,
         private NodeLocator $locator,
         private ProfilePolicy $profiles,
-        private TenancyConfig $tenancy,
+        private TenancyOptions $tenancy,
         private TenancyBoundary $boundary,
     ) {}
 
@@ -316,7 +316,7 @@ final readonly class OperationGuard
     /** Tenant enforcement is connected by the strict tenancy integration. */
     private function tenantBoundary(Node $node): void
     {
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertNode($node);
         }
     }
@@ -329,7 +329,7 @@ final readonly class OperationGuard
      */
     private function tenantBoundaryMany(array $nodes): void
     {
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertNodes($nodes);
         }
     }

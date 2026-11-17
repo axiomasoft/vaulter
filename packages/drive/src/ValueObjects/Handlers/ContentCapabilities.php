@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\ValueObjects\Handlers;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * What a client may do with a node's content: a file handler declares it per file, a

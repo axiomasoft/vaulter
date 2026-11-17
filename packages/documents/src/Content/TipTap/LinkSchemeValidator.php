@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Strict allow-list guard for `href` URL schemes in TipTap content. Shared by the store-time
@@ -67,13 +67,7 @@ final readonly class LinkSchemeValidator
 
         $normalized = mb_strtolower(trim($stripped));
 
-        foreach (self::DANGEROUS_SCHEMES as $scheme) {
-            if (str_starts_with($normalized, $scheme.':')) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(self::DANGEROUS_SCHEMES, fn (string $scheme): bool => str_starts_with($normalized, $scheme.':'));
     }
 
     /**

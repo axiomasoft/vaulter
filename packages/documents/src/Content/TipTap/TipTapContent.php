@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Documents\Content\ContentHasher;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
@@ -223,7 +223,7 @@ final readonly class TipTapContent implements DocumentContent
     /** A value that means nothing (null, [] or ''), so dropping it loses nothing. */
     private static function blank(mixed $value): bool
     {
-        return $value === null || $value === [] || $value === '';
+        return in_array($value, [null, [], ''], true);
     }
 
     // ─── Store time: strict ──────────────────────────────────────────────────
@@ -266,7 +266,7 @@ final readonly class TipTapContent implements DocumentContent
 
         foreach ($node as $field => $value) {
             if (!in_array($field, self::nodeFields($type), true) && !self::blank($value)) {
-                throw InvalidDocumentContentException::malformedNode($type, (string) $field);
+                throw InvalidDocumentContentException::malformedNode($type, $field);
             }
         }
 
@@ -385,13 +385,7 @@ final readonly class TipTapContent implements DocumentContent
             return false;
         }
 
-        foreach ($value as $item) {
-            if (self::carriesDangerousScheme($item)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($value, fn ($item): bool => self::carriesDangerousScheme($item));
     }
 
     // ─── Read time: decay ────────────────────────────────────────────────────

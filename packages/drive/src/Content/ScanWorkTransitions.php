@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Content;
 
 use DateTimeImmutable;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Models\Content\ScanObligation;

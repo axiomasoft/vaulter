@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
+use Packman\Attributes\Api;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
-use Vaulter\Attributes\Api;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Covers the node/mark set the package

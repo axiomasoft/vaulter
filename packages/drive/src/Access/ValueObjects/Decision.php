@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use LogicException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Access\Roles\Role;
 
 /**

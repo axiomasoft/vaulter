@@ -23,9 +23,9 @@ it('creates a panel\'s tables on the connection named by vaulter.database.connec
         'prefix' => '',
     ]);
     config()->set('vaulter.database.connection', 'vaulter_other');
+    config()->set('vaulter.database.table_prefix', 'conntest_');
 
     $builder = app(DriveSchema::class);
-    config()->set('vaulter.database.table_prefix', 'conntest_');
 
     $builder->create(entity: 'drives');
 
@@ -34,7 +34,7 @@ it('creates a panel\'s tables on the connection named by vaulter.database.connec
             ->and(Schema::hasTable('conntest_drives'))->toBeFalse();
     } finally {
         $builder->drop(entity: 'drives');
-        config()->set('vaulter.database.connection', null);
+        config()->set('vaulter.database.connection');
         config()->set('vaulter.database.table_prefix', 'v_');
     }
 });
@@ -48,14 +48,14 @@ it('routes a default Vaulter model\'s connection through vaulter.database.connec
     config()->set('vaulter.database.connection', 'vaulter_other');
 
     expect((new Node)->getConnectionName())->toBe('vaulter_other');
-    config()->set('vaulter.database.connection', null);
+    config()->set('vaulter.database.connection');
 });
 
 it('control: vaulter.database.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
     expect(config('vaulter.database.connection'))->toBeNull();
 
-    $builder = app(DriveSchema::class);
     config()->set('vaulter.database.table_prefix', 'conntestctrl_');
+    $builder = app(DriveSchema::class);
 
     $builder->create(entity: 'drives');
 
@@ -64,7 +64,7 @@ it('control: vaulter.database.connection=null (the default) leaves every write o
             ->and((new Node)->getConnectionName())->toBeNull();
     } finally {
         $builder->drop(entity: 'drives');
-        config()->set('vaulter.database.connection', null);
+        config()->set('vaulter.database.connection');
         config()->set('vaulter.database.table_prefix', 'v_');
     }
 });

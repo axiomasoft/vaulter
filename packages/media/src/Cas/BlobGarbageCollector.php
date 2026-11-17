@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
@@ -58,7 +59,7 @@ final readonly class BlobGarbageCollector
         private BlobPinStore $pins,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
     ) {}
 
     /**
@@ -251,9 +252,9 @@ final readonly class BlobGarbageCollector
      * the only valid behaviour is to inherit the enclosing transaction's isolation. The
      * advisory lock + FOR UPDATE still serialise the critical section either way.
      *
-     * @param \Closure(Blob): bool $work
+     * @param Closure(Blob): bool $work
      */
-    private function lockedTransaction(Blob $candidate, \Closure $work, bool $serializable = false): bool
+    private function lockedTransaction(Blob $candidate, Closure $work, bool $serializable = false): bool
     {
         return $this->database->transaction(function () use ($candidate, $work, $serializable): bool {
             if ($serializable && $this->lock->isPostgres() && $this->database->connection()->transactionLevel() <= 1) {
@@ -274,9 +275,9 @@ final readonly class BlobGarbageCollector
      * (see lockedTransaction), this only drives the retry loop. On MySQL/SQLite the
      * FOR-UPDATE/single-writer path already serialises, so run once.
      *
-     * @param \Closure(): bool $unit
+     * @param Closure(): bool $unit
      */
-    private function serializable(\Closure $unit): bool
+    private function serializable(Closure $unit): bool
     {
         if (!$this->lock->isPostgres()) {
             return $unit();
@@ -397,10 +398,10 @@ final readonly class BlobGarbageCollector
      * Queries and materialised batches hold at most BATCH_SIZE rows, as the
      * system (no panel/workspace — GC is ACL-blind).
      *
-     * @param  \Closure(Builder<Blob>): Builder<Blob> $scope
+     * @param  Closure(Builder<Blob>): Builder<Blob> $scope
      * @return iterable<Collection<int, Blob>>
      */
-    private function candidateBatches(\Closure $scope): iterable
+    private function candidateBatches(Closure $scope): iterable
     {
         $model = $this->mediaConfig->blobModel();
         $query = $scope($model::query());

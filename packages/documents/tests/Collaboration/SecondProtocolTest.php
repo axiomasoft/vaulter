@@ -25,6 +25,7 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Kernel;
 use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\SlotContribution;
 
 uses(OperationsTestCase::class, DatabaseMigrations::class, WithAcme::class);
 
@@ -35,7 +36,7 @@ function disableFixtureAdapter(): void
     $old = app(Kernel::class)->compiled();
     $contributions = $old->contributions;
     foreach ([CollaborationProtocolDriver::class, PendingStateDrainer::class] as $slot) {
-        $contributions[$slot] = array_values(array_filter($contributions[$slot] ?? [], fn ($entry) => $entry->key !== 'acme-ot'));
+        $contributions[$slot] = array_values(array_filter($contributions[$slot] ?? [], fn (SlotContribution $entry): bool => $entry->key !== 'acme-ot'));
     }
     $kernel = new Kernel(app());
     $kernel->seal(new CompiledModules(...array_replace(get_object_vars($old), ['contributions' => $contributions])));
@@ -75,7 +76,7 @@ it('runs ACK checkpoint drain transition restore and fences the previous credent
     expect($changed->epoch)->toBe($settled->epoch + 1);
     // The ordinary replacement captures the accepted old projection before reseeding.
     $source = Document::query()->where('node_id', $this->node->id)->firstOrFail()->revisions()->get()
-        ->first(fn ($revision) => $revision->content === $two);
+        ->first(fn ($revision): bool => $revision->content === $two);
     expect($source)->not->toBeNull();
     $this->documents->restore($this->node, $source->getKey());
     $restored = $this->documents->content($this->node);

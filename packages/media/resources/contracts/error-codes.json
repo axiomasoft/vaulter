@@ -1,0 +1,17 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/vaulter-media",
+    "codes": [
+        {
+            "package": "axiomasoft/vaulter-media",
+            "enum": "Vaulter\\Media\\Errors\\MediaErrorCode",
+            "case": "BlobUnavailable",
+            "code": "media.blob_unavailable",
+            "type": "urn:packman:problem:media.blob_unavailable",
+            "status": 409,
+            "title": "Blob bytes are unavailable",
+            "retryable": true,
+            "category": "conflict"
+        }
+    ]
+}

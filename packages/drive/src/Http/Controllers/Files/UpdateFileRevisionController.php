@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Controllers\Files;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Http\Requests\Files\UpdateFileRevisionRequest;
 use Vaulter\Drive\Http\Resources\FileRevisionResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;

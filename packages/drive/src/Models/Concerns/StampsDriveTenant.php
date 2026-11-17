@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Models\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -19,10 +19,10 @@ trait StampsDriveTenant
     public static function bootStampsDriveTenant(): void
     {
         static::creating(static function (Model $row): void {
-            if (!app(TenancyConfig::class)->enabled()) {
+            if (!app(TenancyOptions::class)->enabled) {
                 return;
             }
-            $config = app(DriveConfig::class);
+            $config = app(DriveOptions::class);
             $driveId = $row->getAttribute('drive_id');
             if ($driveId === null) {
                 $nodeId = $row->getAttribute('node_id');

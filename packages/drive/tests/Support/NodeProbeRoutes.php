@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
@@ -30,7 +30,7 @@ final class NodeProbeRoutes
 
     public static function register(): void
     {
-        $routes = app(RoutesConfig::class);
+        $routes = app(RoutesOptions::class);
 
         Route::prefix($routes->versionedPrefix())
             ->middleware($routes->authenticatedMiddleware())
@@ -41,7 +41,7 @@ final class NodeProbeRoutes
                     $snapshot = $drive->nodes()->find($node);
                     $resource = new NodeResource($snapshot, $drive->nodes()->abilities($snapshot));
                     if (Preconditions::notModified($request, $resource->etag())) {
-                        return (new Response(status: 304))->setEtag($resource->etag());
+                        return new Response(status: 304)->setEtag($resource->etag());
                     }
 
                     return $resource->response()->setEtag($resource->etag());
@@ -66,6 +66,6 @@ final class NodeProbeRoutes
 
     public static function path(string $node): string
     {
-        return app(RoutesConfig::class)->versionedPrefix().'/__probe/nodes/'.$node;
+        return app(RoutesOptions::class)->versionedPrefix().'/__probe/nodes/'.$node;
     }
 }

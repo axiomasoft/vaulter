@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Http\Middleware;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Drive\Exceptions\Sharing\SharePasswordRequiredException;
 use Vaulter\Drive\Sharing\ShareContext;
@@ -51,6 +51,7 @@ final class ResolveShareToken
         private readonly ShareRedeemer $redeemer,
     ) {}
 
+    /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->route('token');

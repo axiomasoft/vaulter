@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Handlers;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter as NodePresenterContract;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;

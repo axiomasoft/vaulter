@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Access\Drivers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\Subject;

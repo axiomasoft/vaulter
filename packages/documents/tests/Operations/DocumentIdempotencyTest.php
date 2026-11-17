@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
+use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
@@ -157,7 +158,7 @@ it('does not return a purged document from an old receipt through permissions on
         'restore' => fn () => $keyed->restore($node->id, $revision->id, $state),
     };
     $retry();
-    $receiptCount = DB::table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count();
+    $receiptCount = DB::table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count();
     $system->nodes()->trash($node->id);
     $system->trash()->purge($node->id);
     if (!$keepEdit) {
@@ -166,7 +167,7 @@ it('does not return a purged document from an old receipt through permissions on
     }
 
     expect($retry)->toThrow(NodeNotFoundException::class)
-        ->and(DB::table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count())->toBe($receiptCount)
+        ->and(DB::table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count())->toBe($receiptCount)
         ->and(Document::query()->where('node_id', $node->id)->exists())->toBeFalse();
 })->with(['update', 'snapshot', 'restore'])->with([true, false]);
 
@@ -292,11 +293,11 @@ it('round-trips the receipts and decodes only the version it knows', function ()
         ->and($revisions->decode($revisions->encode($checkpoint), 1))->toEqual($checkpoint)
         ->and($comments->decode($comments->encode($comment), 1))->toEqual($comment)
         ->and($comments->decode($comments->encode($deleted), 1))->toEqual($deleted)
-        ->and(fn () => $documents->decode($documents->encode($document), 2))->toThrow(LogicException::class)
-        ->and(fn () => $revisions->decode($revisions->encode($checkpoint), 2))->toThrow(LogicException::class)
-        ->and(fn () => $comments->decode($comments->encode($comment), 2))->toThrow(LogicException::class)
-        ->and(fn () => $documents->encode($comment))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => $comments->encode($document))->toThrow(InvalidArgumentException::class);
+        ->and(fn (): DocumentSnapshot => $documents->decode($documents->encode($document), 2))->toThrow(LogicException::class)
+        ->and(fn (): DocumentRevisionSnapshot => $revisions->decode($revisions->encode($checkpoint), 2))->toThrow(LogicException::class)
+        ->and(fn (): CommentSnapshot|CommentDeleteReceipt => $comments->decode($comments->encode($comment), 2))->toThrow(LogicException::class)
+        ->and(fn (): array => $documents->encode($comment))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): array => $comments->encode($document))->toThrow(InvalidArgumentException::class);
     expect($document)->toBeInstanceOf(DocumentSnapshot::class);
 });
 
@@ -326,7 +327,7 @@ it('treats an omitted expected state version and an explicit null as one request
     $keyed = Documents::in($system->withIdempotencyKey('null-1'));
 
     $saved = $keyed->update($node->id, DocumentTestHelpers::content('second')->toArray());
-    expect($keyed->update($node->id, DocumentTestHelpers::content('second')->toArray(), null))->toEqual($saved)
+    expect($keyed->update($node->id, DocumentTestHelpers::content('second')->toArray()))->toEqual($saved)
         ->and(fn () => $keyed->update($node->id, DocumentTestHelpers::content('second')->toArray(), $state))->toThrow(IdempotencyKeyReusedException::class)
         ->and(Document::query()->where('node_id', $node->id)->firstOrFail()->state_version)->toBe($state + 1);
 });
@@ -336,7 +337,7 @@ it('keeps the raw receipt of a document update semantic: state version and hash,
     $node = Documents::in($system)->create('Spec', content: DocumentTestHelpers::content('first')->toArray());
     $saved = Documents::in($system->withIdempotencyKey('raw-doc-1'))->update($node->id, DocumentTestHelpers::content('second')->toArray());
 
-    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->where('idempotency_key', base64_encode('raw-doc-1'))->first();
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->where('idempotency_key', base64_encode('raw-doc-1'))->first();
     $raw = (string) $row?->receipt_body;
 
     expect($row?->receipt_headers)->toBeNull()

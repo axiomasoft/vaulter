@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Drive\Providers\BindingsRegistrar;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /** @return array<string, Event> keyed by the task name */
 function bootDriveSchedule(array $config = []): array
@@ -69,7 +69,7 @@ it('rejects an invalid frequency at boot', function (): void {
     config(['vaulter-drive.schedule.uploads_sweep' => 'often']);
 
     (new BindingsRegistrar)->boot(app());
-})->throws(InvalidConfigurationException::class);
+})->throws(InvalidConfiguration::class);
 
 /** @return array<string, Event> the change-journal prune keyed by its description */
 function bootChangesPruneSchedule(array $config): array

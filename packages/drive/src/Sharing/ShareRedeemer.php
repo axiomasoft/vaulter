@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Actions\Sharing\RedeemShareLinkAction;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 

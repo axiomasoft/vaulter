@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Repositories;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\File;
 
 /**
@@ -17,7 +17,7 @@ use Vaulter\Drive\Models\File;
 final class FileStoreRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
     ) {}
 
     /** Read the aggregate and its revision counter under the caller's row lock. */

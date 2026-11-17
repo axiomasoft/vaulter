@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 
 /**
@@ -23,8 +23,8 @@ interface NodeSnapshotContributor
      * The facts of every node of the page as model-free snapshots, before any fragment, viewer state or reader key
      * is added; the contributor reads its own aggregates by the node ids, never a node row.
      *
-     * @param  list<NodeSnapshot>    $nodes every node of the page
-     * @return array<string, object> node id (string) => fragment
+     * @param  list<NodeSnapshot>       $nodes every node of the page
+     * @return array<array-key, object> node id (string) => fragment
      */
     public function contribute(array $nodes): array;
 }

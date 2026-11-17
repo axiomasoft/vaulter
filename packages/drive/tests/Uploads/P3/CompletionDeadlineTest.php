@@ -6,8 +6,9 @@ use Illuminate\Filesystem\FilesystemAdapter as LaravelDisk;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\FilesystemAdapter;
+use Psr\Http\Message\StreamInterface;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
@@ -78,13 +79,13 @@ final class DeadlineUnboundedWrapper
 }
 
 it('D19-config types the completion budget as 1..300 seconds with a 60 second default', function (): void {
-    expect(app(DriveConfig::class)->completeTimeoutSeconds())->toBe(60);
+    expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(60);
     config()->set('vaulter-drive.uploads.resumable.complete_timeout_seconds', 0);
-    expect(app(DriveConfig::class)->completeTimeoutSeconds())->toBe(1);
+    expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(1);
     config()->set('vaulter-drive.uploads.resumable.complete_timeout_seconds', 3600);
-    expect(app(DriveConfig::class)->completeTimeoutSeconds())->toBe(300);
+    expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(300);
     config()->set('vaulter-drive.uploads.resumable.complete_timeout_seconds', 'nope');
-    expect(app(DriveConfig::class)->completeTimeoutSeconds())->toBe(60);
+    expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(60);
 });
 
 it('D19-slow-stream refuses a staged stream that outlives the budget between chunks without publishing', function (): void {
@@ -126,7 +127,7 @@ it('D19-retry shares one monotonic budget across attempts instead of resetting i
 it('D19-request starts the budget once before the session critical section of UploadOperations::complete', function (): void {
     $session = assembledDeadlineUpload(bytes: 16);
     $reads = 0;
-    app()->instance(CompletionClock::class, new CompletionClock(app(DriveConfig::class), steppingClock(100.0, $reads)));
+    app()->instance(CompletionClock::class, new CompletionClock(app(DriveOptions::class), steppingClock(100.0, $reads)));
     config()->set('vaulter-drive.uploads.resumable.complete_timeout_seconds', 60);
 
     $uploads = app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('upload test')->uploads();
@@ -162,7 +163,7 @@ it('D19-transport refuses a stream without an enforceable timeout as an unsuppor
     stream_wrapper_register('vaulterdeadline', DeadlineUnboundedWrapper::class);
     try {
         $stream = fopen('vaulterdeadline://staged', 'rb');
-        expect(fn () => CompletionDeadline::start(seconds: 5)->bound(stream: $stream, uploadId: 'up-user'))
+        expect(fn (): StreamInterface => CompletionDeadline::start(seconds: 5)->bound(stream: $stream, uploadId: 'up-user'))
             ->toThrow(UploadConflictException::class, 'does not support a bounded transport timeout');
         fclose($stream);
     } finally {
@@ -176,7 +177,7 @@ it('D19-interrupted rejects a staged stream that stops making progress', functio
     $stream = CompletionDeadline::start(seconds: 5, clock: steppingClock(0.01))->bound(stream: $source, uploadId: 'up-cut');
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => $stream->read(10))->toThrow(RuntimeException::class, 'made no progress');
+        expect(fn (): string => $stream->read(10))->toThrow(RuntimeException::class, 'made no progress');
     } finally {
         restore_error_handler();
         fclose($source);
@@ -195,7 +196,7 @@ it('D19-preflight refuses an unboundable remote disk before any staged open, CAS
     $spy = Mockery::spy(FilesystemAdapter::class);
     Storage::set('local', new LaravelDisk(new Flysystem($spy), $spy));
     $reads = 0;
-    app()->instance(CompletionClock::class, new CompletionClock(app(DriveConfig::class), steppingClock(0.001, $reads)));
+    app()->instance(CompletionClock::class, new CompletionClock(app(DriveOptions::class), steppingClock(0.001, $reads)));
 
     $uploads = app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('upload test')->uploads();
     expect(fn () => $uploads->complete($session->getKey()))->toThrow(UploadConflictException::class, 'does not support a bounded transport timeout');

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\DriveConfigValidator;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\DriveOptionsValidator;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Drive\Profiles\Profile;
@@ -39,6 +39,7 @@ it('inherits global flags and cannot enable a globally disabled feature', functi
 
 it('conjoins every explicit profile flag with the global policy', function (string $feature): void {
     config()->set('vaulter-drive.features.'.$feature, true);
+    app()->forgetInstance(DriveOptions::class);
     $setter = ['grants' => 'grants', 'share_links' => 'shareLinks'][$feature];
     $profile = (new Profile)->key('p');
     expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeTrue();
@@ -59,15 +60,15 @@ it('conjoins the comments flag with the option of the module that owns comments'
 it('rejects malformed profile values', function (Closure $build): void {
     $build();
 })->with([
-    'key underscore' => fn () => (new Profile)->key('project_drive'),
-    'blank key' => fn () => (new Profile)->key(''),
-    'long key' => fn () => (new Profile)->key(str_repeat('a', 65)),
-    'owner class' => fn () => (new Profile)->owners(stdClass::class),
-    'negative quota' => fn () => (new Profile)->defaultQuota(-1),
-    'zero revisions' => fn () => (new Profile)->revisionLimit(0),
-    'negative retention' => fn () => (new Profile)->trashRetentionDays(-1),
-    'blank disk' => fn () => (new Profile)->disk(''),
-    'negative upload size' => fn () => new UploadPolicy(maxFileSize: -1),
+    'key underscore' => fn (): Profile => (new Profile)->key('project_drive'),
+    'blank key' => fn (): Profile => (new Profile)->key(''),
+    'long key' => fn (): Profile => (new Profile)->key(str_repeat('a', 65)),
+    'owner class' => fn (): Profile => (new Profile)->owners(stdClass::class),
+    'negative quota' => fn (): Profile => (new Profile)->defaultQuota(-1),
+    'zero revisions' => fn (): Profile => (new Profile)->revisionLimit(0),
+    'negative retention' => fn (): Profile => (new Profile)->trashRetentionDays(-1),
+    'blank disk' => fn (): Profile => (new Profile)->disk(''),
+    'negative upload size' => fn (): UploadPolicy => new UploadPolicy(maxFileSize: -1),
 ])->throws(InvalidProfileException::class);
 
 it('checks owner subtypes and leaves empty owner restrictions open', function (): void {
@@ -81,8 +82,8 @@ it('checks owner subtypes and leaves empty owner restrictions open', function ()
 it('rejects unknown disks and permission driver keys at validation', function (Profile $profile): void {
     app(ProfilePolicy::class)->validate($profile);
 })->with([
-    'disk' => fn () => (new Profile)->key('p')->disk('missing'),
-    'driver' => fn () => (new Profile)->key('p')->permissionDriver('missing'),
+    'disk' => fn (): Profile => (new Profile)->key('p')->disk('missing'),
+    'driver' => fn (): Profile => (new Profile)->key('p')->permissionDriver('missing'),
 ])->throws(InvalidConfigurationException::class);
 
 it('hydrates DI profile providers only once during boot validation', function (): void {
@@ -94,15 +95,16 @@ it('hydrates DI profile providers only once during boot validation', function ()
             return $profile->key('custom');
         }
     };
-    app()->bind($provider::class, function () use (&$count, $provider) {
+    app()->bind($provider::class, function () use (&$count, $provider): object {
         $count++;
 
         return $provider;
     });
     config()->set('vaulter-drive.profiles.providers', [$provider::class]);
+    app()->forgetInstance(DriveOptions::class);
     app()->forgetInstance(ProfileRegistry::class);
-    (new DriveConfigValidator(app('config')))->validate(app(DriveConfig::class), app());
+    new DriveOptionsValidator(app('config'))->validate(app(DriveOptions::class), app());
     app(ProfileRegistry::class);
-    (new DriveConfigValidator(app('config')))->validate(app(DriveConfig::class), app());
+    new DriveOptionsValidator(app('config'))->validate(app(DriveOptions::class), app());
     expect($count)->toBe(1);
 });

@@ -10,9 +10,8 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Artisan;
 use Packman\Attributes\Internal;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
-use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\PluginModuleBridge;
 
 /**
  * Regenerates the command table of the reference docs from the registered vaulter:*
@@ -75,15 +74,13 @@ final class CommandsReferenceCommand extends Command
      */
     private static function declaredCommands(Container $container): array
     {
+        $catalog = ModuleCatalog::of($container);
         $classes = [];
-        foreach (ModuleCatalog::of($container)->offered() as $manifest) {
-            if (!is_a($manifest, VaulterModule::class, true)) {
-                continue;
+        foreach ($catalog->offered() as $manifest) {
+            $builder = PluginModuleBridge::buildOffered($manifest, $catalog->pluginSpec($manifest));
+            if ($builder !== null) {
+                array_push($classes, ...$builder->commandClasses());
             }
-            $module = new $manifest;
-            $builder = new ModuleBuilder($module->id());
-            $module->register($builder);
-            array_push($classes, ...$builder->commandClasses());
         }
 
         return $classes;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\ActivityGate;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Vaulter\Drive\Tests\TestCase;
 
 /**
@@ -16,7 +17,7 @@ abstract class ActivityDisabledTestCase extends TestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

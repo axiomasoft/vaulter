@@ -12,7 +12,7 @@ use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Actions\Content\ReuseScanEvidenceAction;
 use Vaulter\Drive\Actions\Content\RevokeScanEvidenceAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
-use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanRequest;
@@ -60,7 +60,7 @@ function scanBoundaryFixture(?Blob $sharedBlob = null, ?Drive $drive = null): ar
     (new FileRevisionBlob)->forceFill(['file_revision_id' => $revision->id, 'blob_id' => $blob->id, 'role' => 'data', 'ordinal' => 0])->save();
     $file->forceFill(['current_revision_id' => $revision->id])->save();
 
-    return [$drive, $revision, $blob, DriveContext::system($drive, 'scan boundary fixture'), app(ScanConfig::class)->globalSpec()];
+    return [$drive, $revision, $blob, DriveContext::system($drive, 'scan boundary fixture'), app(ScanOptions::class)->globalSpec()];
 }
 
 it('persists work and request atomically and preserves explicit rescan request dedup across generations', function (): void {
@@ -216,9 +216,9 @@ it('settles unsupported manifests without opening bytes and rejects fabricated p
 });
 
 it('SEC-R07 validates structured verdicts before persistence', function (): void {
-    expect(fn () => new ScanResult(ScanVerdict::Clean, 'unknown'))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new ScanResult(ScanVerdict::Failed, 'raw scanner details'))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new ScanResult(ScanVerdict::Failed, 'unsupported', true))->toThrow(InvalidArgumentException::class);
+    expect(fn (): ScanResult => new ScanResult(ScanVerdict::Clean, 'unknown'))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): ScanResult => new ScanResult(ScanVerdict::Failed, 'raw scanner details'))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): ScanResult => new ScanResult(ScanVerdict::Failed, 'unsupported', true))->toThrow(InvalidArgumentException::class);
 });
 
 it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner epoch refuses old evidence', function (): void {
@@ -232,7 +232,7 @@ it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner e
         ->and($revision->fresh()->scan_status)->toBe('clean')->and($rescan->fresh()->outcome)->toBe('failed')
         ->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->not->toBeNull();
     config()->set('vaulter-drive.scan.scanner_version', '2');
-    $newSpec = app(ScanConfig::class)->globalSpec();
+    $newSpec = app(ScanOptions::class)->globalSpec();
     expect(app(ScanEvidenceRepository::class)->compatible($revision, $newSpec))->toBeNull();
     $newWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $newSpec, (string) Str::uuid(), $context));
     expect($newWork->id)->not->toBe($work->id)->and($newWork->generation)->toBe(1)->and($newWork->state)->toBe('pending');

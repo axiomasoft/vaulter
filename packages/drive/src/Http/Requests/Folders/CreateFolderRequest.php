@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Folders;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Support\DriveNameRules;
 use Vaulter\Http\Requests\VaulterFormRequest;
 

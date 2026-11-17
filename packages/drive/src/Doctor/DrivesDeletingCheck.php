@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveModelsOptions;
 use Vaulter\Drive\Enums\DriveStatus;
 
 #[Internal]
@@ -17,7 +17,7 @@ final readonly class DrivesDeletingCheck implements DoctorCheck
 {
     private const int HOURS = 24;
 
-    public function __construct(private DriveConfig $config) {}
+    public function __construct(private DriveModelsOptions $models) {}
 
     public function key(): string
     {
@@ -33,7 +33,7 @@ final readonly class DrivesDeletingCheck implements DoctorCheck
     {
         // Timestamps of the drive table follow the application's timezone.
         $since = CarbonImmutable::instance($context->now)->setTimezone(date_default_timezone_get())->subHours(self::HOURS);
-        $stuck = $this->config->model('drive')::query()->where('status', DriveStatus::Deleting->value)->where('updated_at', '<', $since)->count();
+        $stuck = $this->models->drive::query()->where('status', DriveStatus::Deleting->value)->where('updated_at', '<', $since)->count();
 
         if ($stuck === 0) {
             return [DoctorFinding::ok(code: 'drive.drives.deleting_none', message: 'No drive has been waiting to be purged for more than a day.')];
@@ -42,7 +42,7 @@ final readonly class DrivesDeletingCheck implements DoctorCheck
         return [DoctorFinding::warning(
             code: 'drive.drives.deleting_stuck',
             message: $stuck.' drive(s) have been in deleting status for more than '.self::HOURS.' hours.',
-            hint: 'run vaulter:drives:purge --dry-run; check that it is scheduled',
+            remediation: 'run vaulter:drives:purge --dry-run; check that it is scheduled',
             evidence: ['drives' => $stuck],
         )];
     }

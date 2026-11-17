@@ -6,7 +6,8 @@ namespace Vaulter\Drive\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use LogicException;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
 use Vaulter\Drive\Http\Resources\Access\GrantResource;
 use Vaulter\Drive\Http\Resources\AggregatePreconditions;
@@ -35,7 +36,7 @@ final readonly class ListGrantsController
         $etag = AggregatePreconditions::accessTag($drive->nodes()->find($node));
         $access = $drive->access();
         if (!$access instanceof AccessOperations) {
-            throw new \LogicException('The drive access operations must be the drive package implementation.');
+            throw new LogicException('The drive access operations must be the drive package implementation.');
         }
         $response = PageResponse::make($access->paginate($node, $perPage, $cursor), static fn (GrantSnapshot $grant): GrantResource => new GrantResource($grant), $perPage);
 

@@ -12,9 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -108,7 +108,7 @@ trait InteractsWithVaulter
     /** @return Collection<int, Activity> */
     private function vaulterEvents(EventTypeContract $type): Collection
     {
-        $activity = App::make(DriveConfig::class)->model('activity');
+        $activity = App::make(DriveOptions::class)->model('activity');
 
         return Vaulter::withoutTenancy(static fn () => $activity::query()->where('verb', $type->value)->get());
     }
@@ -121,7 +121,7 @@ trait InteractsWithVaulter
     {
         // The current row by id (a snapshot names it): an absent node has no visibility to assert.
         $key = $node instanceof NodeSnapshot ? $node->id : $node;
-        $row = Vaulter::withoutTenancy(static fn () => App::make(DriveConfig::class)->model('node')::query()->find($key));
+        $row = Vaulter::withoutTenancy(static fn () => App::make(DriveOptions::class)->model('node')::query()->find($key));
         Assert::assertInstanceOf(Node::class, $row, 'The node does not exist, so its visibility is not defined.');
 
         try {

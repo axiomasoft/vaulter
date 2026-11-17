@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Facades\Vaulter;
@@ -50,10 +51,10 @@ abstract class VaulterFactory extends Factory
     }
 
     /**
-     * @param  array<string, mixed> $arguments
+     * @param  array<array-key, mixed> $arguments
      * @return static
      */
-    #[\Override]
+    #[Override]
     protected function newInstance(array $arguments = [])
     {
         $new = parent::newInstance($arguments);
@@ -67,7 +68,7 @@ abstract class VaulterFactory extends Factory
      *
      * @param array<string, mixed> $attributes
      */
-    #[\Override]
+    #[Override]
     public function insert(array $attributes = [], ?Model $parent = null): void
     {
         throw new LogicException('Vaulter factories create through Operations: use create(), not insert().');
@@ -79,7 +80,7 @@ abstract class VaulterFactory extends Factory
     /**
      * @param Collection<int, TModel> $results
      */
-    #[\Override]
+    #[Override]
     protected function store(Collection $results)
     {
         $results->each(function (Model $draft): void {

@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Http\Controllers\Documents;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\DocumentContentResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
@@ -31,7 +31,7 @@ final readonly class ShowDocumentContentController
         $resource = new DocumentContentResource($this->documents->in($drive)->content($node));
 
         if (Preconditions::notModified($request, $resource->etag())) {
-            return (new Response(status: 304))->setEtag($resource->etag());
+            return new Response(status: 304)->setEtag($resource->etag());
         }
 
         return $resource->response()->setEtag($resource->etag());

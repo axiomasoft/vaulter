@@ -20,11 +20,15 @@
     },
     "require": {
         "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1",
         "axiomasoft/vaulter-core": "self.version",
         "axiomasoft/vaulter-media": "self.version",
         "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {
+        "axiomasoft/packman-testkit": "^0.1",
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
         "larastan/larastan": "^3.12",
@@ -49,6 +53,52 @@
         }
     },
     "extra": {
+        "packman": {
+            "schema-version": 1,
+            "package-type": "domain",
+            "stability": "stable",
+            "error-prefix": "drive",
+            "owns": [
+                "Access",
+                "Actions",
+                "Activity",
+                "Changes",
+                "Concerns",
+                "Configuration",
+                "Console",
+                "Content",
+                "Contracts",
+                "Data",
+                "Doctor",
+                "Enums",
+                "Errors",
+                "Events",
+                "Exceptions",
+                "Facades",
+                "Handlers",
+                "Http",
+                "Idempotency",
+                "Jobs",
+                "Models",
+                "Naming",
+                "Operations",
+                "Policies",
+                "Profiles",
+                "Providers",
+                "Queries",
+                "Quota",
+                "Repositories",
+                "Rules",
+                "Schema",
+                "Security",
+                "Sharing",
+                "Support",
+                "Tenancy",
+                "Testing",
+                "Uploads",
+                "ValueObjects"
+            ]
+        },
         "laravel": {
             "providers": [
                 "Vaulter\\Drive\\VaulterDriveServiceProvider"
@@ -62,6 +112,19 @@
         }
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "../../../packman/packages/*",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman": "0.1.x-dev",
+                    "axiomasoft/packman-plugins": "0.1.x-dev",
+                    "axiomasoft/packman-schema": "0.1.x-dev",
+                    "axiomasoft/packman-testkit": "0.1.x-dev"
+                }
+            }
+        },
         {
             "type": "path",
             "url": "../core",

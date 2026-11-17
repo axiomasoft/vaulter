@@ -1,14 +1,14 @@
-# Vaulter · Documents
+# Vaulter · Documents (`axiomasoft/vaulter-documents`)
 
-`axioma-studio/vaulter-documents` adds **document nodes** to Vaulter: TipTap-based editing, a bounded revision history
+`axiomasoft/vaulter-documents` adds **document nodes** to Vaulter: TipTap-based editing, a bounded revision history
 (named checkpoints, restore), comments and export (HTML, Markdown). A document is a node of the drive tree
 (`kind = document`) whose content lives in the `v_documents` aggregate, authorized by the drive's access model.
 
-It depends on `axioma-studio/vaulter-core` and `axioma-studio/vaulter-drive` and is part of the `axioma-studio/vaulter`
+It depends on `axiomasoft/vaulter-core` and `axiomasoft/vaulter-drive` and is part of the `axiomasoft/vaulter`
 metapackage (core, media, drive, documents). It is an *auto* module: installing the package activates it.
 
 ```bash
-composer require axioma-studio/vaulter-documents   # or axioma-studio/vaulter, which includes it
+composer require axiomasoft/vaulter-documents   # or axiomasoft/vaulter, which includes it
 php artisan migrate
 ```
 

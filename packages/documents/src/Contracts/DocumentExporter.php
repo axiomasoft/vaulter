@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * Renders the content of a document into a file format. Registered in

@@ -12,10 +12,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Override;
+use Packman\Attributes\Internal;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Database\Factories\NodeFactory;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
@@ -114,13 +115,13 @@ class Node extends Model
         return new NodeQueryBuilder($query, $this);
     }
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
         // Honour an explicitly-set table (staudenmeir swaps it to the recursive
         // CTE alias during descendants()/ancestors()); only fall back to the
         // shared schema name when none was set.
-        return $this->table ?? app(DatabaseConfig::class)->table('nodes');
+        return $this->table ?? app(DatabaseOptions::class)->table('nodes');
     }
 
     /**
@@ -186,7 +187,7 @@ class Node extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'parent_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('node'), 'parent_id');
     }
 
     /**
@@ -194,7 +195,7 @@ class Node extends Model
      */
     public function children(): HasMany
     {
-        return $this->hasMany(app(DriveConfig::class)->model('node'), 'parent_id');
+        return $this->hasMany(app(DriveOptions::class)->model('node'), 'parent_id');
     }
 
     /**
@@ -202,7 +203,7 @@ class Node extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('drive'), 'drive_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -212,7 +213,7 @@ class Node extends Model
      */
     public function file(): HasOne
     {
-        return $this->hasOne(app(DriveConfig::class)->model('file'), 'node_id');
+        return $this->hasOne(app(DriveOptions::class)->model('file'), 'node_id');
     }
 
     /**
@@ -228,7 +229,7 @@ class Node extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

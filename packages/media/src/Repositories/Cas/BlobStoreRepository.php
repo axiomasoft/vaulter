@@ -6,9 +6,10 @@ namespace Vaulter\Media\Repositories\Cas;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use RuntimeException;
 use Vaulter\Media\Cas\BlobLock;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -24,7 +25,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 final readonly class BlobStoreRepository
 {
     public function __construct(
-        private readonly MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
         private BlobLock $lock,
     ) {}
 
@@ -77,7 +78,7 @@ final readonly class BlobStoreRepository
             $winner = $this->lockedLookup(sha256: $sha256, scope: $scope);
 
             if ($winner === null) {
-                throw new \RuntimeException("Lost the blob INSERT race for {$sha256} but the winning row is not visible.");
+                throw new RuntimeException("Lost the blob INSERT race for {$sha256} but the winning row is not visible.");
             }
 
             $this->resurrect($winner);

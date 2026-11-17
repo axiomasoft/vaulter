@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Tests\State;
 
+use Override;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Fixtures\State\FakePendingStateDrainer;
 use Vaulter\Documents\Tests\Fixtures\State\PendingDrainerModule;
@@ -26,7 +27,7 @@ abstract class StateTestCase extends DocumentTestCase
             $absent ? null : FakePendingStateDrainer::class);
     }
 
-    #[\Override]
+    #[Override]
     protected function getPackageProviders($app): array
     {
         return [...parent::getPackageProviders($app), PendingDrainerProvider::class];

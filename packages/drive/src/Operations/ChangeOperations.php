@@ -8,9 +8,9 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\PermissionDriverManager;
@@ -18,8 +18,8 @@ use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Changes\ChangeJournal;
 use Vaulter\Drive\Changes\ReaderSyncIdentity;
-use Vaulter\Drive\Configuration\ChangesConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ChangesOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -30,6 +30,7 @@ use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
@@ -59,13 +60,14 @@ final readonly class ChangeOperations
         private OperationGuard $guard,
         private NodeSnapshotMapper $mapper,
         private VaulterDatabase $database,
-        private DriveConfig $config,
-        private ChangesConfig $changes,
-        private TenancyConfig $tenancy,
+        private DriveOptions $config,
+        private ChangesOptions $changes,
+        private TenancyOptions $tenancy,
         private TenancyBoundary $boundary,
         private Repository $repository,
         private PermissionDriverManager $drivers,
         private GrantReadRepository $grants,
+        private ProfilePolicy $profilePolicy,
     ) {}
 
     /**
@@ -101,7 +103,7 @@ final readonly class ChangeOperations
      */
     public function list(string $cursor, int $limit = 100): ChangePage
     {
-        $max = $this->changes->maxPageSize();
+        $max = $this->changes->maxPageSize;
         if ($limit < 1 || $limit > $max) {
             throw new InvalidArgumentException("[Vaulter] The change page limit must be between 1 and {$max}.");
         }
@@ -149,7 +151,7 @@ final readonly class ChangeOperations
         // Nothing is handed out once the cursor died while the page was projected: the
         // deadline, the key generation and, outside a transaction, the head again.
         $this->assertLive($notAfter, Carbon::now());
-        if ($position->keyGeneration !== $this->changes->keyGeneration()) {
+        if ($position->keyGeneration !== $this->changes->keyGeneration) {
             throw CursorExpiredException::reset();
         }
         if (!$inTransaction) {
@@ -236,7 +238,7 @@ final readonly class ChangeOperations
      */
     private function deadline(Drive $drive, int $issuedAt, ?int $latched, Carbon $now): int
     {
-        $deadline = $issuedAt + $this->changes->cursorMaxAgeSeconds();
+        $deadline = $issuedAt + $this->changes->cursorMaxAgeSeconds;
         if ($latched !== null) {
             $deadline = min($deadline, $latched);
         }
@@ -249,7 +251,7 @@ final readonly class ChangeOperations
     private function grantExpiry(Drive $drive, Carbon $now): ?int
     {
         $actor = $this->context->actor->authorizable();
-        if ($actor === null || !$this->config->featureEnabled('grants', $drive->profile)) {
+        if ($actor === null || !$this->profilePolicy->featureEnabledForKey($drive->profile, 'grants')) {
             return null;
         }
         $driver = $this->drivers->forProfile($drive->profile);
@@ -289,7 +291,7 @@ final readonly class ChangeOperations
         if (!$drive instanceof Drive || $drive->status === DriveStatus::Deleting) {
             throw NodeNotFoundException::forId($this->context->driveId());
         }
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertDrive($drive);
         }
 
@@ -301,16 +303,16 @@ final readonly class ChangeOperations
         $identity = $this->identity();
         $principal = $this->principal();
 
-        return (new ChangeCursor(
+        return new ChangeCursor(
             tenantId: self::tenant($drive), driveId: Identity::stringify($drive->getKey()),
             actorType: $principal['type'], actorId: $principal['id'], actorReason: $principal['reason'],
             keyGeneration: $identity->keyGeneration, epoch: $epoch, after: $after, issuedAt: $issuedAt, notAfter: $notAfter,
-        ))->encode($identity->cursorSubkey());
+        )->encode($identity->cursorSubkey());
     }
 
     private function identity(): ReaderSyncIdentity
     {
-        return new ReaderSyncIdentity($this->appKey(), $this->changes->keyGeneration());
+        return new ReaderSyncIdentity($this->appKey(), $this->changes->keyGeneration);
     }
 
     /**

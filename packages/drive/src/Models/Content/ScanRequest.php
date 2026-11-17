@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Models\Content;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -33,14 +34,14 @@ class ScanRequest extends Model
 
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('scan_requests');
+        return app(DatabaseOptions::class)->table('scan_requests');
     }
 
     /** @return array<string,string> */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

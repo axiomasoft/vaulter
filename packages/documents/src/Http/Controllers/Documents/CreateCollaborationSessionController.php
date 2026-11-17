@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Documents;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Http\Requests\CreateCollaborationSessionRequest;
 use Vaulter\Documents\Http\Resources\CollaborationSessionResource;
 use Vaulter\Documents\Operations\DocumentOperations;
@@ -27,6 +27,6 @@ final readonly class CreateCollaborationSessionController
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
         $session = $drive->extension(DocumentOperations::class)->collaborationSession($node, $request->clientSchemaVersion());
 
-        return (new CollaborationSessionResource($session))->response()->setStatusCode(201);
+        return new CollaborationSessionResource($session)->response()->setStatusCode(201);
     }
 }

@@ -9,10 +9,11 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Cas\BlobScrubber;
 use Vaulter\Media\Cas\Sha256ContentStore;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
@@ -87,7 +88,7 @@ function healStore(StorageDriver $driver): Vaulter\Media\Cas\BlobStore
         app(BlobLock::class),
         app(BlobStoreRepository::class),
         app(VaulterDatabase::class),
-        app(MediaConfig::class),
+        app(MediaOptions::class),
     );
 }
 
@@ -183,10 +184,10 @@ it('keeps the mark when the rewrite fails', function (): void {
         app(BlobLock::class),
         app(BlobStoreRepository::class),
         app(VaulterDatabase::class),
-        app(MediaConfig::class),
+        app(MediaOptions::class),
     );
 
-    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('rewrite fails'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class, 'disk full')
+    expect(fn (): Blob => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('rewrite fails'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class, 'disk full')
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad');
 });
@@ -233,10 +234,10 @@ it('keeps the mark and the previous object when the driver reports a failed writ
         app(BlobLock::class),
         app(BlobStoreRepository::class),
         app(VaulterDatabase::class),
-        app(MediaConfig::class),
+        app(MediaOptions::class),
     );
 
-    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('write reports false'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class)
+    expect(fn (): Blob => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('write reports false'), BlobScope::tenant('1'))))->toThrow(RuntimeException::class)
         ->and($blob->fresh()->integrity_failed_at)->not->toBeNull()
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad');
@@ -248,7 +249,7 @@ it('keeps the mark when the store does not remove the bad object', function (): 
     // bad object stays, and the conditional promote keeps it.
     $store = healStore(healDriver(delete: static function (): void {}));
 
-    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('undeletable'), BlobScope::tenant('1'))))
+    expect(fn (): Blob => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('undeletable'), BlobScope::tenant('1'))))
         ->toThrow(RuntimeException::class, 'was not healed')
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad object!');
@@ -303,7 +304,7 @@ it('does not succeed a dedup hit while a same-length object still mismatches', f
     Storage::disk('local')->put($blob->storage_key, 'SAME LEN');
     $store = healStore(healDriver(put: static fn (): bool => false));
 
-    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same len'), BlobScope::tenant('1'))))
+    expect(fn (): Blob => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same len'), BlobScope::tenant('1'))))
         ->toThrow(RuntimeException::class)
         ->and($blob->fresh()->integrity_failed_at)->toBeNull()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('SAME LEN');
@@ -349,7 +350,7 @@ it('refuses a stalled dedup verification without repeatedly reading or replacing
         : $inner->get($key, $disk)));
 
     try {
-        expect(fn () => $store->commit(CasTestHelpers::streamFor('kept bytes'), BlobScope::tenant('1')))
+        expect(fn (): BlobSnapshot => $store->commit(CasTestHelpers::streamFor('kept bytes'), BlobScope::tenant('1')))
             ->toThrow(RuntimeException::class, 'Content stream made no progress.');
         expect(Storage::disk('local')->get($blob->storage_key))->toBe('kept bytes')
             ->and($blob->fresh()->isIntact())->toBeTrue()
@@ -364,7 +365,7 @@ it('refuses a dedup hit when the canonical object cannot be replaced', function 
     Storage::disk('local')->put($blob->storage_key, 'SAME LEN');
     $store = healStore(healDriver(delete: static function (): void {}));
 
-    expect(fn () => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same len'), BlobScope::tenant('1'))))
+    expect(fn (): Blob => CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same len'), BlobScope::tenant('1'))))
         ->toThrow(RuntimeException::class, 'was not rewritten')
         ->and($blob->fresh()->integrity_failed_at)->toBeNull()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('SAME LEN');
@@ -419,7 +420,7 @@ it('keeps the mark and restores the previous object when the swap onto the canon
         }
     };
 
-    expect(fn () => CasTestHelpers::row(healStore($driver)->commit(CasTestHelpers::streamFor('restore me'), BlobScope::tenant('1'))))
+    expect(fn (): Blob => CasTestHelpers::row(healStore($driver)->commit(CasTestHelpers::streamFor('restore me'), BlobScope::tenant('1'))))
         ->toThrow(RuntimeException::class, 'swap failed')
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->get($canonical))->toBe('bad bytes')

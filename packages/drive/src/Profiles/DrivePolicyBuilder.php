@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Profiles;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /** The fluent half of Profile::drivePolicy(); build() validates the result. */
 #[Api]

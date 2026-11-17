@@ -1,10 +1,11 @@
-Vaulter\Media\Configuration\MediaConfig
-  __construct(\Illuminate\Contracts\Config\Repository $config)
+Vaulter\Media\Configuration\MediaOptions
+  __construct(string $disk = 'local', \Vaulter\Media\Configuration\DedupScope $dedupScope = \Vaulter\Media\Configuration\DedupScope::Tenant, int $gcGraceHours = 24, int $orphanGraceHours = 24, int $scrubLimit = 100, ?int $scrubMaxBytes = NULL, ?int $scrubMaxSeconds = NULL, ?string $scheduleBlobsGc = 'dailyAt:04:00', ?string $scheduleBlobsReconcile = 'weeklyOn:0,04:30', string $contentStore = 'Vaulter\\Media\\Cas\\Sha256ContentStore', string $storageDriver = 'Vaulter\\Media\\Cas\\FlysystemStorageDriver', string $blobStore = 'Vaulter\\Media\\Cas\\BlobStore', string $blobModel = 'Vaulter\\Media\\Models\\Cas\\Blob')
   blobModel(): string
   blobStore(): string
   contentStore(): string
   dedupScope(): Vaulter\Media\Configuration\DedupScope
   disk(): string
+  fromArray(array $config, string $path = 'vaulter-media'): self
   gcGraceHours(int $override = 0): int
   orphanGraceHours(int $override = 0): int
   scrubLimit(?int $override = NULL): int

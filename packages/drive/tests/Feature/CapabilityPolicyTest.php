@@ -41,7 +41,7 @@ it('resolves the higher-priority handler when two EDITABLE handlers claim the sa
     Vaulter::handlers()->register(LowPriorityRivalHandler::class);
     Vaulter::handlers()->register(HighPriorityRivalHandler::class);
 
-    $file = FileDescriptor::make(nodeId: 1, filename: 'contested.riv', detectedMime: null);
+    $file = FileDescriptor::make(nodeId: 1, filename: 'contested.riv');
 
     $handler = app(FileHandlerRegistry::class)->resolve($file, Capability::Edit);
 

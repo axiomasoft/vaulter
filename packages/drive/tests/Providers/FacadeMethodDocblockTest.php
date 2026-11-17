@@ -17,7 +17,7 @@ use Vaulter\Drive\Vaulter;
  * forgets its docblock line fails this test instead of silently regressing.
  */
 it('lists every public Vaulter method in the facade @method docblock, F-P2.1-01', function (): void {
-    $managerMethods = collect((new ReflectionClass(Vaulter::class))->getMethods(ReflectionMethod::IS_PUBLIC))
+    $managerMethods = collect(new ReflectionClass(Vaulter::class)->getMethods(ReflectionMethod::IS_PUBLIC))
         ->reject(fn (ReflectionMethod $method): bool => $method->isStatic() || $method->isConstructor())
         ->map(fn (ReflectionMethod $method): string => $method->getName())
         ->values()
@@ -25,7 +25,7 @@ it('lists every public Vaulter method in the facade @method docblock, F-P2.1-01'
 
     expect($managerMethods)->toHaveCount(7);
 
-    $doc = (new ReflectionClass(VaulterFacade::class))->getDocComment();
+    $doc = new ReflectionClass(VaulterFacade::class)->getDocComment();
 
     expect($doc)->not->toBeFalse();
 

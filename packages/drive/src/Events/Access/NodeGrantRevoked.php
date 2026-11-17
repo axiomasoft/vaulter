@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Access;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;

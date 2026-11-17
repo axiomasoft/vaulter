@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveModelsOptions;
 
 /**
  * The durable scan obligations of uploaded content. A lease nobody renews, work that never became due
@@ -25,7 +25,7 @@ final readonly class ScanObligationsCheck implements DoctorCheck
     /** Outcomes and reasons of work that settled without a verdict. */
     private const array UNSCANNED = ['failed', 'unsupported', 'too_large', 'password_protected', 'access_denied', 'unknown'];
 
-    public function __construct(private DriveConfig $config) {}
+    public function __construct(private DriveModelsOptions $models) {}
 
     public function key(): string
     {
@@ -40,7 +40,7 @@ final readonly class ScanObligationsCheck implements DoctorCheck
     public function run(DoctorContext $context): array
     {
         $now = CarbonImmutable::instance($context->now)->utc();
-        $obligation = $this->config->model('scan_obligation');
+        $obligation = $this->models->scanObligation;
 
         $expiredLeases = $obligation::query()->where('state', 'leased')->where('lease_expires_at', '<', $now)->count();
         $overdue = $obligation::query()->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<', $now->subMinutes(self::OVERDUE_MINUTES))->count();
@@ -56,10 +56,11 @@ final readonly class ScanObligationsCheck implements DoctorCheck
         $findings = [];
         if ($expiredLeases > 0 || $overdue > 0) {
             $findings[] = DoctorFinding::at(
+                status: $context->strictStatus(),
                 severity: $context->strictSeverity(),
                 code: 'drive.scan.obligations_stuck',
                 message: $expiredLeases.' scan lease(s) expired and '.$overdue.' obligation(s) are overdue by more than '.self::OVERDUE_MINUTES.' minutes.',
-                hint: 'run vaulter:scan:reconcile --all-tenants --dry-run; check the scan queue worker',
+                remediation: 'run vaulter:scan:reconcile --all-tenants --dry-run; check the scan queue worker',
                 evidence: ['expired_leases' => $expiredLeases, 'overdue' => $overdue],
             );
         }
@@ -67,7 +68,7 @@ final readonly class ScanObligationsCheck implements DoctorCheck
             $findings[] = DoctorFinding::warning(
                 code: 'drive.scan.obligations_unscanned',
                 message: array_sum($unscanned).' revision(s) settled without a scan verdict.',
-                hint: 'run vaulter:scan:reconcile --all-tenants --dry-run; retry with vaulter:scan:rescan --retry-failed',
+                remediation: 'run vaulter:scan:reconcile --all-tenants --dry-run; retry with vaulter:scan:rescan --retry-failed',
                 evidence: array_slice($unscanned, 0, 10, true),
             );
         }

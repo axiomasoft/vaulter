@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\NodeUserState;
 use Vaulter\Support\Identity;

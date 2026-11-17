@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Sharing;
 
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Content\DownloadGuards;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;

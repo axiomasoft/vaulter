@@ -62,10 +62,8 @@ it('диспатчит StorageCreated с корнем при провижене'
 
     $drive = DriveTestHelpers::drive();
 
-    Event::assertDispatched(DriveCreated::class, function (DriveCreated $event) use ($drive): bool {
-        return $event->storage->id === (string) $drive->model()->getKey()
-            && $event->root->kind === NodeKind::Folder;
-    });
+    Event::assertDispatched(DriveCreated::class, fn (DriveCreated $event): bool => $event->storage->id === (string) $drive->model()->getKey()
+        && $event->root->kind === NodeKind::Folder);
 });
 
 it('returns the registered profile object through the core handle contract', function (): void {

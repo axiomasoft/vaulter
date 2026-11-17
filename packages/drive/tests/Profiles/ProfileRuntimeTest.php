@@ -76,6 +76,7 @@ it('intersects MIME predicates and size limits while combining blocked extension
         ->and(fn () => $policy->assertAllowed($profile, 10, 'image/jpeg', 'jpg'))->toThrow(ProfileRestrictionException::class)
         ->and(fn () => $policy->assertAllowed($profile, 10, 'image/png', 'EXE'))->toThrow(ProfileRestrictionException::class);
     config()->set('vaulter-drive.uploads.allowed_mime_types', ['text/*']);
+    $policy = app(EffectiveUploadPolicy::class);
     expect($policy->mimeAllowed($profile, 'image/png'))->toBeFalse();
 });
 
@@ -105,7 +106,7 @@ it('uses the profile retention cutoff per drive and preserves an explicit mainte
 it('prunes by the profile revision limit while preserving head, pinned revisions and the allocation high-watermark', function (): void {
     // revisionLimit(2) keeps the head and one more unpinned revision; age protection off.
     driveProfile((new Profile)->key('default')
-        ->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->revisionRetention(new RevisionRetentionPolicy(minNoncurrentAgeDays: 0)))
+        ->drivePolicy(fn (DrivePolicyBuilder $policy): DrivePolicyBuilder => $policy->revisionRetention(new RevisionRetentionPolicy(minNoncurrentAgeDays: 0)))
         ->revisionLimit(2));
     $handle = DriveTestHelpers::drive();
     $node = $handle->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('one'), 'a.txt'));

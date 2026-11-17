@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Documents\Configuration\DocumentsOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -66,10 +67,10 @@ class NodeComment extends Model
         'anchor',
     ];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('node_comments');
+        return app(DatabaseOptions::class)->table('node_comments');
     }
 
     /**
@@ -77,7 +78,7 @@ class NodeComment extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('node'), 'node_id');
     }
 
     /**
@@ -85,7 +86,7 @@ class NodeComment extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(app(DocumentsConfig::class)->model('node_comment'), 'parent_id');
+        return $this->belongsTo(app(DocumentsOptions::class)->model('node_comment'), 'parent_id');
     }
 
     /**
@@ -93,7 +94,7 @@ class NodeComment extends Model
      */
     public function replies(): HasMany
     {
-        return $this->hasMany(app(DocumentsConfig::class)->model('node_comment'), 'parent_id');
+        return $this->hasMany(app(DocumentsOptions::class)->model('node_comment'), 'parent_id');
     }
 
     /**
@@ -112,7 +113,7 @@ class NodeComment extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

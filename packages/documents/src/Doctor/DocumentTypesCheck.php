@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Doctor;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 
 #[Internal]
 final readonly class DocumentTypesCheck implements DoctorCheck
 {
-    public function __construct(private DocumentsConfig $config, private DocumentTypeRegistry $types) {}
+    public function __construct(private DocumentsOptions $options, private DocumentTypeRegistry $types) {}
 
     public function key(): string
     {
@@ -30,10 +30,15 @@ final readonly class DocumentTypesCheck implements DoctorCheck
     public function run(DoctorContext $context): array
     {
         $findings = [];
-        $default = $this->config->defaultType();
+        $default = $this->options->defaultType;
         $findings[] = $this->types->has($default)
             ? DoctorFinding::ok(code: 'documents.types_default_ok', message: 'The default document type "'.$default.'" is registered.', evidence: ['default_type' => $default])
-            : DoctorFinding::warning(code: 'documents.types_default_unregistered', message: 'The default document type "'.$default.'" is not registered.', hint: 'register the type or change vaulter-documents.default_type', evidence: ['default_type' => $default]);
+            : DoctorFinding::warning(
+                code: 'documents.types_default_unregistered',
+                message: 'The default document type "'.$default.'" is not registered.',
+                remediation: 'register the type or change vaulter-documents.default_type',
+                evidence: ['default_type' => $default],
+            );
 
         $unknown = [];
         foreach (Document::query()->toBase()->selectRaw('type, count(*) as total')->groupBy('type')->pluck('total', 'type') as $type => $total) {
@@ -46,7 +51,7 @@ final readonly class DocumentTypesCheck implements DoctorCheck
             : DoctorFinding::warning(
                 code: 'documents.types_unknown',
                 message: array_sum($unknown).' document(s) have a type that is not registered.',
-                hint: 'register the missing type; such documents cannot be opened or exported',
+                remediation: 'register the missing type; such documents cannot be opened or exported',
                 evidence: ['documents' => array_sum($unknown), 'types' => implode(', ', array_slice(array_keys($unknown), 0, 10))],
             );
 

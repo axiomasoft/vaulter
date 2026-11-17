@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Node;
@@ -24,7 +24,7 @@ use Vaulter\Support\Identity;
 final class DocumentRevisionReadRepository
 {
     public function __construct(
-        private readonly DocumentsConfig $documentsConfig,
+        private readonly DocumentsOptions $documentsConfig,
     ) {}
 
     /**

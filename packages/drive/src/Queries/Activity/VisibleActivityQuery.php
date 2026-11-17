@@ -8,10 +8,10 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Cursor;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ListingConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\ListingOptions;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeSort;
@@ -29,7 +29,7 @@ final readonly class VisibleActivityQuery
     /** Context keys that describe who holds access; only a Share-capable reader sees them. */
     private const array PRIVILEGED_CONTEXT_KEYS = ['subject_type', 'subject_id', 'permissions', 'token_prefix'];
 
-    public function __construct(private DriveConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
+    public function __construct(private DriveOptions $config, private ListingOptions $listing, private OperationGuard $guard, private Repository $repository) {}
 
     /** @return VisibleActivityPaginator<Activity> */
     public function execute(DriveContext $context, ListOptions $options, ?Node $node = null, ?EventTypeContract $verb = null): VisibleActivityPaginator
@@ -42,7 +42,7 @@ final readonly class VisibleActivityQuery
         $query = $this->base($context, $node, $verb);
         $last = $cursor === null ? null : ['created_at' => $this->scalar($cursor->parameter('created_at')), 'id' => $this->scalar($cursor->parameter('id'))];
         $visible = [];
-        $remaining = $this->listing->scanBudget();
+        $remaining = $this->listing->scanBudget;
         while ($remaining > 0 && count($visible) < $options->perPage) {
             $batchQuery = clone $query;
             $this->after($batchQuery, $last);

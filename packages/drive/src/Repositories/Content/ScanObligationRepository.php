@@ -7,9 +7,10 @@ namespace Vaulter\Drive\Repositories\Content;
 use DateTimeImmutable;
 use DateTimeZone;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use stdClass;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanRequest;
 
@@ -21,7 +22,7 @@ use Vaulter\Drive\Models\Content\ScanRequest;
 #[Internal]
 final readonly class ScanObligationRepository
 {
-    public function __construct(private DriveConfig $config, private VaulterDatabase $database) {}
+    public function __construct(private DriveOptions $config, private VaulterDatabase $database) {}
 
     public function find(int|string $id): ?ScanObligation
     {
@@ -105,7 +106,7 @@ final readonly class ScanObligationRepository
             'pgsql' => "SELECT clock_timestamp() AT TIME ZONE 'UTC' AS scan_now",
             default => 'SELECT CURRENT_TIMESTAMP AS scan_now',
         });
-        if (!$row instanceof \stdClass || !isset($row->scan_now) || !is_string($row->scan_now)) {
+        if (!$row instanceof stdClass || !isset($row->scan_now) || !is_string($row->scan_now)) {
             throw new LogicException('Database clock is unavailable.');
         }
 

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;
@@ -49,7 +50,7 @@ function changeRaceSkipOnSqlite(object $test): void
 /** The sync key a user reader gets for $nodeId in $drive: a remove names the node only by it. */
 function changeRaceKey(DriveHandle $drive, TestUser $user, int|string $nodeId): string
 {
-    return (new ReaderSyncIdentity((string) config('app.key'), 1))
+    return new ReaderSyncIdentity((string) config('app.key'), 1)
         ->syncKey($drive->model()->getRawOriginal('tenant_id'), $drive->model()->getKey(), new ActorRef($user->getMorphClass(), (string) $user->getKey()), $nodeId);
 }
 
@@ -57,7 +58,7 @@ function changeRaceKey(DriveHandle $drive, TestUser $user, int|string $nodeId): 
 function changeRaceSeedOldEntries(DriveHandle $drive, int $count): void
 {
     $db = app(VaulterDatabase::class)->connection();
-    $table = app(DatabaseConfig::class)->table('drive_changes');
+    $table = app(DatabaseOptions::class)->table('drive_changes');
     $rows = [];
     foreach (range(1, $count) as $seq) {
         $rows[] = ['drive_id' => $drive->model()->getKey(), 'seq' => $seq, 'change_id' => sprintf('race%022d', $seq), 'event_type' => 'node.moved',
@@ -66,7 +67,7 @@ function changeRaceSeedOldEntries(DriveHandle $drive, int $count): void
     foreach (array_chunk($rows, 500) as $chunk) {
         $db->table($table)->insert($chunk);
     }
-    $db->table(app(DatabaseConfig::class)->table('drive_change_heads'))->where('drive_id', $drive->model()->getKey())->update(['last_seq' => $count]);
+    $db->table(app(DatabaseOptions::class)->table('drive_change_heads'))->where('drive_id', $drive->model()->getKey())->update(['last_seq' => $count]);
 }
 
 it('allocates seqs without gaps and a concurrent reader sees every committed rename', function (): void {
@@ -183,7 +184,7 @@ it('never skips an entry committed after a transaction snapshot, nor projects it
     // MySQL runs this in REPEATABLE READ, its default: the snapshot is taken by the first
     // read, before the other session moves the folder out of the reader's view and journals
     // it. PostgreSQL's READ COMMITTED reads the move at once; both must end the same way.
-    $inside = app(VaulterDatabase::class)->transaction(static function () use ($db, $side, $reader, $start, $driveId, $doc, $hidden) {
+    $inside = app(VaulterDatabase::class)->transaction(static function () use ($db, $side, $reader, $start, $driveId, $doc, $hidden): ChangePage {
         $db->table('v_nodes')->where('id', $doc->id)->value('parent_id');
         DB::connection($side)->transaction(static function () use ($side, $driveId, $doc, $hidden): void {
             DB::connection($side)->table('v_nodes')->where('id', $doc->id)->update(['parent_id' => $hidden->id]);
@@ -210,7 +211,7 @@ it('expires a cursor inside a transaction when a prune committed after its snaps
     $side = changeRaceSideConnection();
     $db = app(VaulterDatabase::class)->connection();
 
-    expect(fn () => app(VaulterDatabase::class)->transaction(static function () use ($db, $side, $drive, $start) {
+    expect(fn () => app(VaulterDatabase::class)->transaction(static function () use ($db, $side, $drive, $start): ChangePage {
         $db->table('v_drive_changes')->count();
         DB::connection($side)->transaction(static function () use ($side, $drive): void {
             DB::connection($side)->table('v_drive_changes')->where('drive_id', $drive->model()->getKey())->where('seq', '<=', 3)->delete();
@@ -239,6 +240,6 @@ it('expires a cursor outside a transaction when a prune lands between head and e
         });
     });
 
-    expect(fn () => $drive->changes()->list($start))->toThrow(CursorExpiredException::class)
+    expect(fn (): ChangePage => $drive->changes()->list($start))->toThrow(CursorExpiredException::class)
         ->and($pruned)->toBeTrue();
 });

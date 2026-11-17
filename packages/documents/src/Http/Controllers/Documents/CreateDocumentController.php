@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Documents;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateDocumentRequest;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;

@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Http\Resources\AggregatePreconditions;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Profiles;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Profiles\Profile;
 
@@ -18,7 +19,7 @@ final readonly class CommentsProfileOption implements ProfileOption
 {
     public const string NAME = 'comments';
 
-    public function __construct(private DocumentsConfig $config) {}
+    public function __construct(private Container $container) {}
 
     public function name(): string
     {
@@ -27,7 +28,7 @@ final readonly class CommentsProfileOption implements ProfileOption
 
     public function enabled(): bool
     {
-        return $this->config->commentsEnabled();
+        return $this->container->make(DocumentsOptions::class)->comments->enabled;
     }
 
     public function validate(Profile $profile): void {}

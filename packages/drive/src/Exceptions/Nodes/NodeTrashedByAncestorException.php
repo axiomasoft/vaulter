@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -22,6 +26,7 @@ final class NodeTrashedByAncestorException extends VaulterException implements P
         parent::__construct($message);
     }
 
+    /** @internal */
     #[Internal]
     public static function forNode(Node $node, int|string $trashRootId): self
     {
@@ -53,5 +58,15 @@ final class NodeTrashedByAncestorException extends VaulterException implements P
     public function problemDetails(): array
     {
         return ['context' => ['trash_root_id' => (string) $this->trashRootId]];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::NodeTrashedByAncestor,
+            category: ErrorCategory::Conflict,
+            details: ['trash_root_id' => (string) $this->trashRootId],
+        );
     }
 }

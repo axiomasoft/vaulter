@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Repositories\Sharing;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -23,7 +23,7 @@ use Vaulter\Drive\Tenancy\TenancyBoundary;
 final class NodeShareReadRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
     ) {}
 
     /**

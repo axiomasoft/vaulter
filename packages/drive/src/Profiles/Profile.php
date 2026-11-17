@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Profiles;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
 
 /** A fluent policy builder; the registry stores independent frozen snapshots. */
@@ -160,7 +160,7 @@ final class Profile
         $this->revisionLimit = $max;
         $current = $this->drive ?? new DrivePolicy;
         $retention = $current->revisionRetention;
-        $this->drive = (new DrivePolicyBuilder($current))->revisionRetention(new RevisionRetentionPolicy(
+        $this->drive = new DrivePolicyBuilder($current)->revisionRetention(new RevisionRetentionPolicy(
             maxNoncurrentRevisions: $max === null ? null : $max - 1,
             maxNoncurrentAgeDays: $retention->maxNoncurrentAgeDays,
             minNoncurrentAgeDays: $retention->minNoncurrentAgeDays,
@@ -233,7 +233,7 @@ final class Profile
             return $policy;
         }
 
-        return (new DrivePolicyBuilder($policy))->maxFileBytes($legacy)->build();
+        return new DrivePolicyBuilder($policy)->maxFileBytes($legacy)->build();
     }
 
     public function getPermissionDriver(): ?string

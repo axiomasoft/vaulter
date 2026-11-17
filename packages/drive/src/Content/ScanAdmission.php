@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Actions\Content\ReuseScanEvidenceAction;

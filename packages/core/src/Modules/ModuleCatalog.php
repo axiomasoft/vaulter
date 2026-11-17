@@ -20,6 +20,9 @@ final class ModuleCatalog
     /** @var list<string> */
     private array $offered = [];
 
+    /** @var array<class-string<ExtensionPlugin>, PluginModuleSpec> */
+    private array $pluginSpecs = [];
+
     private bool $sealed = false;
 
     /** The catalogue of the application; any provider may be the first to offer, so it binds itself. */
@@ -41,10 +44,27 @@ final class ModuleCatalog
         }
     }
 
+    public function offerPlugin(PluginModuleSpec $spec): void
+    {
+        $this->offer($spec->plugin);
+        $this->pluginSpecs[$spec->plugin] = $spec;
+    }
+
     /** @return list<string> in the order of the offers */
     public function offered(): array
     {
         return $this->offered;
+    }
+
+    /** @return array<class-string<ExtensionPlugin>, PluginModuleSpec> */
+    public function pluginSpecs(): array
+    {
+        return $this->pluginSpecs;
+    }
+
+    public function pluginSpec(string $manifest): ?PluginModuleSpec
+    {
+        return $this->pluginSpecs[$manifest] ?? null;
     }
 
     public function seal(): void

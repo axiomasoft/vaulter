@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Repositories\Changes;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Changes\ChangeJournal;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
@@ -21,7 +21,7 @@ final readonly class ChangeEntryRepository
 {
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
     ) {}
 
     public function exists(string $changeId): bool
@@ -67,8 +67,29 @@ final readonly class ChangeEntryRepository
             ->orderBy('seq')
             ->limit($limit);
 
-        /** @var list<object{seq: int|string, change_id: string, event_type: string, node_id: int|string, operation: string, reason: ?string, subtree: bool|int|string, node_sequence: int|string|null}> */
-        return $query->get(['seq', 'change_id', 'event_type', 'node_id', 'operation', 'reason', 'subtree', 'node_sequence'])->all();
+        $rows = [];
+        foreach ($query->get(['seq', 'change_id', 'event_type', 'node_id', 'operation', 'reason', 'subtree', 'node_sequence']) as $raw) {
+            $seq = $raw->seq;
+            $changeId = $raw->change_id;
+            $eventType = $raw->event_type;
+            $nodeId = $raw->node_id;
+            $operation = $raw->operation;
+            $reason = $raw->reason;
+            $subtree = $raw->subtree;
+            $nodeSequence = $raw->node_sequence;
+            $rows[] = (object) [
+                'seq' => is_int($seq) || is_string($seq) ? $seq : 0,
+                'change_id' => is_string($changeId) ? $changeId : '',
+                'event_type' => is_string($eventType) ? $eventType : '',
+                'node_id' => is_int($nodeId) || is_string($nodeId) ? $nodeId : '',
+                'operation' => is_string($operation) ? $operation : '',
+                'reason' => is_string($reason) ? $reason : null,
+                'subtree' => is_bool($subtree) || is_int($subtree) || is_string($subtree) ? $subtree : false,
+                'node_sequence' => is_int($nodeSequence) || is_string($nodeSequence) ? $nodeSequence : null,
+            ];
+        }
+
+        return $rows;
     }
 
     /** The highest seq that occurred at or before $threshold, or null when none did. */

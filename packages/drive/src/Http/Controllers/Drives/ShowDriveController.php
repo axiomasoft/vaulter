@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Drives;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
@@ -24,7 +24,7 @@ final readonly class ShowDriveController
             $root = $handle->root();
 
             // The tag is in the body only: a drive (its quota moves without its version) is never stored.
-            return (new DriveResource($handle->snapshot(), $handle->quota(), $root->id))->response();
+            return new DriveResource($handle->snapshot(), $handle->quota(), $root->id)->response();
         });
     }
 }

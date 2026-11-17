@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Access\Roles;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Enums\Access\Ability;
 
 /**
@@ -52,14 +52,7 @@ final readonly class Role
     public static function covering(array $roles): ?self
     {
         foreach ($roles as $candidate) {
-            $all = true;
-            foreach ($roles as $role) {
-                if (!$candidate->covers($role)) {
-                    $all = false;
-
-                    break;
-                }
-            }
+            $all = array_all($roles, fn ($role) => $candidate->covers($role));
             if ($all) {
                 return $candidate;
             }

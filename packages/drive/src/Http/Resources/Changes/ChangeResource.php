@@ -6,7 +6,8 @@ namespace Vaulter\Drive\Http\Resources\Changes;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
@@ -30,7 +31,7 @@ final class ChangeResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         /** @var NodeChange $change */

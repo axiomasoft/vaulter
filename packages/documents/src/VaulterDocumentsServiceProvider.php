@@ -5,25 +5,37 @@ declare(strict_types=1);
 namespace Vaulter\Documents;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 use Packman\Attributes\Api;
-use Vaulter\Modules\OffersModules;
+use Packman\Foundation\Concerns\RegistersPackageRegistrars;
+use Packman\Foundation\Contracts\PackageRegistrar;
+use Vaulter\Documents\Providers\DocumentsPackageRegistrar;
 
 /**
- * The documents package only offers {@see DocumentsModule}: the core module kernel registers its use cases,
- * revisions, comments, export and HTTP routes while the module is active.
+ * Vaulter Documents — collaborative document aggregates, revisions, comments, and exports.
  */
-#[Api]
+#[Api(since: '1.0')]
 final class VaulterDocumentsServiceProvider extends ServiceProvider
 {
-    use OffersModules;
+    use RegistersPackageRegistrars {
+        register as protected registerRegistrars;
+        boot as protected bootRegistrars;
+    }
 
+    /** @var list<class-string<PackageRegistrar>> */
+    protected const array REGISTRARS = [
+        DocumentsPackageRegistrar::class,
+    ];
+
+    #[Override]
     public function register(): void
     {
-        $this->offerModule(DocumentsModule::class);
+        $this->registerRegistrars();
     }
 
     public function boot(): void
     {
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-documents');
+        $this->bootRegistrars();
     }
 }

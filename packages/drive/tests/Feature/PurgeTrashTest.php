@@ -111,12 +111,12 @@ it('does not physically purge a node restored between candidate materialisation 
     // TOCTOU window between candidate materialisation and the transaction that
     // physically (and irreversibly, ADR-0016) deletes the subtree.
     Node::retrieved(function (Node $model) use ($drive, $targetId, &$restoredOnce): void {
-        if ($restoredOnce || (string) $model->getKey() !== (string) $targetId) {
+        if ($restoredOnce || (string) $model->getKey() !== $targetId) {
             return;
         }
 
         $restoredOnce = true;
-        $drive->trash()->restore((string) $targetId);
+        $drive->trash()->restore($targetId);
     });
 
     $this->artisan('vaulter:trash:purge')->assertSuccessful();

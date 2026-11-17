@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Http\Requests\Access\CreateGrantRequest;
 use Vaulter\Drive\Http\Resources\Access\GrantResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
@@ -20,6 +20,6 @@ final readonly class CreateGrantController
     {
         $grant = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node))->access()->grant($node, $request->toData());
 
-        return (new GrantResource($grant))->response()->setStatusCode(201);
+        return new GrantResource($grant)->response()->setStatusCode(201);
     }
 }

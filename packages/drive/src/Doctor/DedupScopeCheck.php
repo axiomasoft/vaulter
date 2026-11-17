@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Media\Configuration\DedupScope;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 
 #[Internal]
 final readonly class DedupScopeCheck implements DoctorCheck
 {
-    public function __construct(private MediaConfig $config, private ProfileRegistry $profiles) {}
+    public function __construct(private MediaOptions $options, private ProfileRegistry $profiles) {}
 
     public function key(): string
     {
@@ -29,8 +29,8 @@ final readonly class DedupScopeCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $scope = $this->config->dedupScope();
-        $disks = DiskSet::of($this->config, $this->profiles);
+        $scope = $this->options->dedupScope;
+        $disks = DiskSet::of($this->options, $this->profiles);
         $evidence = ['scope' => $scope->value, 'disks' => implode(', ', $disks)];
 
         // A blob is shared by the drives of one tenant: two of them on different disks would point
@@ -39,7 +39,7 @@ final readonly class DedupScopeCheck implements DoctorCheck
             return [DoctorFinding::warning(
                 code: 'media.dedup.scope_spans_disks',
                 message: 'Profiles store on different disks while deduplication is shared by tenant.',
-                hint: 'set vaulter-media.dedup.scope to drive, or give every profile the same disk',
+                remediation: 'set vaulter-media.dedup.scope to drive, or give every profile the same disk',
                 evidence: $evidence,
             )];
         }

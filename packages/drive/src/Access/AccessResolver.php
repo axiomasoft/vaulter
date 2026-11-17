@@ -7,8 +7,10 @@ namespace Vaulter\Drive\Access;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use LogicException;
+use Packman\Attributes\Internal;
+use RuntimeException;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\AccessSource;
@@ -16,7 +18,7 @@ use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\GrantSet;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -24,6 +26,7 @@ use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Repositories\NodeReadRepository;
@@ -54,12 +57,13 @@ use Vaulter\Support\Identity;
 final class AccessResolver
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
         private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
         private readonly DriveReadRepository $storages,
-        private readonly TenancyConfig $tenancy,
+        private readonly TenancyOptions $tenancy,
         private readonly TenancyBoundary $boundary,
+        private readonly ProfilePolicy $profilePolicy,
     ) {}
 
     /**
@@ -152,7 +156,7 @@ final class AccessResolver
         foreach ($this->decisions($driver, $actor, $scope, $subjects) as [, $decision]) {
             $roleBits |= $decision->role->bits;
         }
-        if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
+        if ($subjects === [] || !$this->profilePolicy->featureEnabledForKey($drive->profile, 'grants')) {
             return array_fill_keys(array_map(static fn (Node $node): string => Identity::stringify($node->id), $nodes), new GrantSet(allowedBits: $roleBits));
         }
 
@@ -168,7 +172,7 @@ final class AccessResolver
         foreach ($chains as $chain) {
             foreach ($chain as $row) {
                 if (!is_int($row->id) && !is_string($row->id)) {
-                    throw new \LogicException('Invalid ancestor identity.');
+                    throw new LogicException('Invalid ancestor identity.');
                 }
                 $ids[] = $row->id;
             }
@@ -280,7 +284,7 @@ final class AccessResolver
             $sources[] = new AccessSource(grantId: null, subject: $subject, role: $decision->role->key, roleVersion: $decision->role->version,
                 originNodeId: null, inherited: false, expiresAt: null);
         }
-        $allowed = (new GrantSet(allowedBits: $bits))->allows($ability);
+        $allowed = new GrantSet(allowedBits: $bits)->allows($ability);
 
         return new AccessExplanation(
             allowed: $allowed,
@@ -298,7 +302,7 @@ final class AccessResolver
      */
     public function canCreateIn(Authorizable $actor, Drive $drive): bool
     {
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $drive = $this->boundary->assertDrive($drive);
         }
 
@@ -344,7 +348,7 @@ final class AccessResolver
         $driveModel = $this->vaulterConfig->model('drive');
         $nodeModel = $this->vaulterConfig->model('node');
         foreach ($this->boundary->constrain($driveModel::query())->cursor() as $drive) {
-            if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
+            if (!$this->profilePolicy->featureEnabledForKey($drive->profile, 'grants')) {
                 continue;
             }
             $driver = $this->drivers->forProfile($drive->profile);
@@ -353,7 +357,7 @@ final class AccessResolver
             foreach (array_chunk($candidates, 500) as $chunk) {
                 foreach ($nodeModel::query()->where('drive_id', $drive->id)->whereKey($chunk)->pluck('id') as $id) {
                     if (!is_int($id) && !is_string($id)) {
-                        throw new \LogicException('Invalid shared node identity.');
+                        throw new LogicException('Invalid shared node identity.');
                     }
                     $ids[] = $id;
                 }
@@ -374,10 +378,10 @@ final class AccessResolver
      */
     public function grantAnchorIdsIn(Authorizable $actor, Drive $drive): array
     {
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $drive = $this->boundary->assertDrive($drive);
         }
-        if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
+        if (!$this->profilePolicy->featureEnabledForKey($drive->profile, 'grants')) {
             return [];
         }
         $driver = $this->drivers->forProfile($drive->profile);
@@ -408,7 +412,7 @@ final class AccessResolver
                 break;
             }
         }
-        if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)) {
+        if ($subjects === [] || !$this->profilePolicy->featureEnabledForKey($this->storageOf($node)->profile, 'grants')) {
             return ['grants' => [], 'boundary' => $boundary];
         }
 
@@ -482,7 +486,7 @@ final class AccessResolver
             NodeReadRepository::DEFAULT_MAX_DEPTH,
             static fn (): Collection => $node->ancestors()->get(),
         );
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertTree($ancestors, $this->storageOf($node));
         }
 
@@ -516,7 +520,7 @@ final class AccessResolver
             // A node always belongs to a storage (FK cascade); a missing storage is
             // a corrupt state — deny by surfacing an empty workspace scope is unsafe,
             // so we fail loud rather than silently open.
-            throw new \RuntimeException(sprintf(
+            throw new RuntimeException(sprintf(
                 'Vaulter could not resolve the storage [%s] for node [%s].',
                 Identity::stringify($node->drive_id),
                 Identity::stringify($node->id),

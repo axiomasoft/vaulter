@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Idempotency;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Enums\Access\Ability;

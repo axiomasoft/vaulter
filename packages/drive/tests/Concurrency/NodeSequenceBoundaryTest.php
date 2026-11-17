@@ -20,6 +20,7 @@ use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);
@@ -62,7 +63,7 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
     foreach ($outcomes as $outcome) {
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
-    $values = array_map(static fn ($outcome): array => $outcome->value, $outcomes);
+    $values = array_map(static fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
     expect(array_unique(array_column($values, 'process')))->toHaveCount(2)
         ->and(array_unique(array_column($values, 'backend')))->toHaveCount(2);
     $winner = array_values(array_filter($values, static fn (array $value): bool => $value['ok']));
@@ -208,7 +209,7 @@ it('SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two r
                 ->and($outcome->value['source_open'])->toBeTrue()
                 ->and($outcome->value['nonseekable'])->toBeTrue();
         }
-        $values = array_map(static fn ($outcome): array => $outcome->value, $outcomes);
+        $values = array_map(static fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
         expect(array_unique(array_column($values, 'pid')))->toHaveCount(2)
             ->and(array_unique(array_column($values, 'backend')))->toHaveCount(2)
             ->and(array_unique(array_column($values, 'id')))->toHaveCount(1)

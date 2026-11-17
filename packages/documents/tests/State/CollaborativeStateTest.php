@@ -7,6 +7,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\State\CheckpointOutcome;
 use Vaulter\Documents\State\CheckpointPublication;
 use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
@@ -120,8 +121,8 @@ it('returns null without a write for a missing, stale or unmapped aggregate id',
 it('refuses a node that does not exist or is not a document', function (): void {
     $root = $this->node->parent_id;
 
-    expect(fn () => collabStateIn(static fn (CollaborativeState $state) => $state->lock(999_999)))->toThrow(NodeNotFoundException::class)
-        ->and(fn () => collabStateIn(static fn (CollaborativeState $state) => $state->lock($root)))->toThrow(NotADocumentException::class);
+    expect(fn (): mixed => collabStateIn(static fn (CollaborativeState $state): LockedDocumentState => $state->lock(999_999)))->toThrow(NodeNotFoundException::class)
+        ->and(fn (): mixed => collabStateIn(static fn (CollaborativeState $state): LockedDocumentState => $state->lock($root)))->toThrow(NotADocumentException::class);
 });
 
 it('reports a trashed document instead of refusing it, so its pending edits can still drain', function (): void {
@@ -152,8 +153,8 @@ it('keeps the highest sequence of the current generation in the marker', functio
 });
 
 it('sets a marker only for the current generation and a sequence of at least one', function (): void {
-    expect(fn () => collabStateMark($this->node, 1, generation: 1))->toThrow(LogicException::class)
-        ->and(fn () => collabStateMark($this->node, 0))->toThrow(InvalidArgumentException::class)
+    expect(fn (): PendingMarker => collabStateMark($this->node, 1, generation: 1))->toThrow(LogicException::class)
+        ->and(fn (): PendingMarker => collabStateMark($this->node, 0))->toThrow(InvalidArgumentException::class)
         ->and(GrantedDocuments::aggregate($this->node)->pending_generation)->toBeNull();
 });
 
@@ -161,7 +162,7 @@ it('publishes a covering checkpoint as the working state and clears the marker',
     collabStateMark($this->node, 3);
     $before = GrantedDocuments::aggregate($this->node);
 
-    $outcome = collabStateIn(function (CollaborativeState $state) {
+    $outcome = collabStateIn(function (CollaborativeState $state): CheckpointOutcome {
         $locked = $state->lock($this->node->getKey());
 
         return $state->publishCheckpoint($locked, collabStatePublication($locked, 3));
@@ -188,9 +189,7 @@ it('keeps the marker of an edit appended after the merge read the log', function
     // … an append commits seq 4 while it merges …
     collabStateMark($this->node, 4);
     // … and it publishes what it merged, through 3.
-    $outcome = collabStateIn(function (CollaborativeState $state) use ($read) {
-        return $state->publishCheckpoint($state->lock($this->node->getKey()), collabStatePublication($read, 3));
-    });
+    $outcome = collabStateIn(fn (CollaborativeState $state): CheckpointOutcome => $state->publishCheckpoint($state->lock($this->node->getKey()), collabStatePublication($read, 3)));
     $document = GrantedDocuments::aggregate($this->node);
 
     expect($outcome->published)->toBeTrue()
@@ -201,7 +200,7 @@ it('keeps the marker of an edit appended after the merge read the log', function
     // The append before the read and the publication in the other order end the same: the marker stays at 4.
     $other = GrantedDocuments::document(level: null);
     collabStateMark($other, 3);
-    $published = collabStateIn(static function (CollaborativeState $state) use ($other) {
+    $published = collabStateIn(static function (CollaborativeState $state) use ($other): CheckpointOutcome {
         $locked = $state->lock($other->getKey());
 
         return $state->publishCheckpoint($locked, collabStatePublication($locked, 3));
@@ -216,7 +215,7 @@ it('loses the CAS on a moved state version or a closed generation and changes no
     collabStateMark($this->node, 3);
     $before = GrantedDocuments::aggregate($this->node);
 
-    [$stale, $closed] = collabStateIn(function (CollaborativeState $state) {
+    [$stale, $closed] = collabStateIn(function (CollaborativeState $state): array {
         $locked = $state->lock($this->node->getKey());
 
         return [
@@ -239,14 +238,14 @@ it('loses the CAS on a moved state version or a closed generation and changes no
 });
 
 it('clears a covered marker even when the published state is the one already there', function (): void {
-    $published = collabStateIn(function (CollaborativeState $state) {
+    $published = collabStateIn(function (CollaborativeState $state): CheckpointOutcome {
         $locked = $state->lock($this->node->getKey());
 
         return $state->publishCheckpoint($locked, collabStatePublication($locked, 0));
     });
     collabStateMark($this->node, 1);
 
-    $again = collabStateIn(function (CollaborativeState $state) {
+    $again = collabStateIn(function (CollaborativeState $state): CheckpointOutcome {
         $locked = $state->lock($this->node->getKey());
 
         return $state->publishCheckpoint($locked, collabStatePublication($locked, 1));
@@ -290,9 +289,9 @@ it('refuses half a marker or a sequence below one in the database', function (ar
 ]);
 
 it('validates a publication before it reaches the document', function (): void {
-    expect(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, -1), expectedStateVersion: 0, coveredThrough: 0, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: -1, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: 0, collabState: '', content: []))->toThrow(InvalidArgumentException::class);
+    expect(fn (): CheckpointPublication => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, -1), expectedStateVersion: 0, coveredThrough: 0, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): CheckpointPublication => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: -1, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): CheckpointPublication => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: 0, collabState: '', content: []))->toThrow(InvalidArgumentException::class);
 });
 
 it('accepts only the issued object of the current transaction attempt for every write', function (): void {
@@ -301,9 +300,9 @@ it('accepts only the issued object of the current transaction attempt for every 
         $forged = new LockedDocumentState(...get_object_vars($locked));
         $before = GrantedDocuments::aggregate($this->node)->getAttributes();
         foreach ([$forged, clone $locked] as $token) {
-            expect(fn () => $state->markPending($token, $locked->binding, 1))->toThrow(LogicException::class)
-                ->and(fn () => $state->publishCheckpoint($token, collabStatePublication($locked, 1)))->toThrow(LogicException::class)
-                ->and(fn () => $state->transition($token, new CollaborativeStateTransition(
+            expect(fn (): PendingMarker => $state->markPending($token, $locked->binding, 1))->toThrow(LogicException::class)
+                ->and(fn (): CheckpointOutcome => $state->publishCheckpoint($token, collabStatePublication($locked, 1)))->toThrow(LogicException::class)
+                ->and(fn (): CheckpointOutcome => $state->transition($token, new CollaborativeStateTransition(
                     $locked->binding, $locked->stateVersion, $locked->type, $locked->schemaVersion,
                     $locked->binding?->protocol, $locked->binding?->stateFormat,
                     OpaqueContent::fromArray($locked->content), null,
@@ -328,8 +327,8 @@ it('expires tokens after commit or rollback and never revives them at the same t
         expect($e->getMessage())->toBe('abandoned preparation');
     }
     collabStateIn(function (CollaborativeState $state) use ($old): void {
-        expect(fn () => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class)
-            ->and(fn () => $state->publishCheckpoint($old, collabStatePublication($old, 1)))->toThrow(LogicException::class);
+        expect(fn (): PendingMarker => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class)
+            ->and(fn (): CheckpointOutcome => $state->publishCheckpoint($old, collabStatePublication($old, 1)))->toThrow(LogicException::class);
         $fresh = $state->lock($this->node->getKey());
         expect($state->markPending($fresh, $fresh->binding, 2)->throughSeq)->toBe(2);
     });
@@ -345,7 +344,7 @@ it('expires a rolled-back savepoint token while the outer transaction remains li
             });
         } catch (RuntimeException) {
         }
-        expect(fn () => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class);
+        expect(fn (): PendingMarker => $state->markPending($old, $old->binding, 1))->toThrow(LogicException::class);
         $fresh = $state->lock($this->node->getKey());
         expect($state->markPending($fresh, $fresh->binding, 1)->throughSeq)->toBe(1);
     });
@@ -378,7 +377,7 @@ it('refuses a token on another live connection before querying the aggregate', f
         try {
             config()->set('vaulter.database.connection', 'token_other');
             expect($database->connection())->toBe($other);
-            expect(fn () => $state->markPending($locked, $locked->binding, 1))->toThrow(LogicException::class);
+            expect(fn (): PendingMarker => $state->markPending($locked, $locked->binding, 1))->toThrow(LogicException::class);
         } finally {
             config()->set('vaulter.database.connection', $original);
             $other->rollBack();

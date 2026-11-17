@@ -84,14 +84,14 @@ it('SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inhe
     $job = new ScanFileRevision($this->work->id, $this->work->generation, $this->drive->id, 'A');
     $resolver = app(TenantResolver::class);
     $resolver->tenant = 'B';
-    expect(fn () => app()->call([$job, 'handle']))->toThrow(NodeNotFoundException::class);
-    expect(fn () => Vaulter::withoutTenancy(fn () => app()->call([$job, 'handle'])))->toThrow(NodeNotFoundException::class);
+    expect(fn () => app()->call($job->handle(...)))->toThrow(NodeNotFoundException::class);
+    expect(fn (): mixed => Vaulter::withoutTenancy(fn () => app()->call($job->handle(...))))->toThrow(NodeNotFoundException::class);
     $resolver->tenant = null;
-    expect(fn () => app()->call([$job, 'handle']))->toThrow(TenancyMisconfiguredException::class);
+    expect(fn () => app()->call($job->handle(...)))->toThrow(TenancyMisconfiguredException::class);
     $resolver->tenant = 'A';
     expect(fn () => app()->call([new ScanFileRevision($this->work->id, $this->work->generation, $this->drive->id, 'B'), 'handle']))->toThrow(NodeNotFoundException::class);
     expect($this->scanner->reads)->toBe(0)->and($this->work->refresh()->attempt)->toBe(0);
-    app()->call([$job, 'handle']);
+    app()->call($job->handle(...));
     expect($this->scanner->reads)->toBe(1)->and(is_resource($this->scanner->stream))->toBeFalse()
         ->and($this->work->refresh()->outcome)->toBe('clean');
 });

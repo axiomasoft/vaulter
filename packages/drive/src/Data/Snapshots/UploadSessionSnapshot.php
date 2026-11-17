@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Snapshots;
 
 use DateTimeImmutable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -39,7 +39,11 @@ final readonly class UploadSessionSnapshot
         public ?DateTimeImmutable $expiresAt,
     ) {}
 
-    /** The snapshot of a current session row: its own tenant. */
+    /**
+     * The snapshot of a current session row: its own tenant.
+     *
+     * @internal
+     */
     #[Internal]
     public static function fromModel(UploadSession $session): self
     {
@@ -49,6 +53,8 @@ final readonly class UploadSessionSnapshot
     /**
      * The snapshot of the session an operation answered with, which may be the one an idempotency receipt decoded: a
      * receipt does not keep the tenant, so it is named by the caller's trusted drive context, never guessed.
+     *
+     * @internal
      */
     #[Internal]
     public static function fromResult(UploadSession $session, int|string|null $tenantId): self

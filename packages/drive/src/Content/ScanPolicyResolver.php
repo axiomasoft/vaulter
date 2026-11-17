@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver as Resolver;
 use Vaulter\Drive\Models\Drive;
@@ -69,7 +69,7 @@ final readonly class ScanPolicyResolver implements Resolver
 
     public function initialize(Drive $drive, DriveContext $context): void
     {
-        if (app(TenancyConfig::class)->enabled()) {
+        if (app(TenancyOptions::class)->enabled) {
             $drive = app(TenancyBoundary::class)->assertDrive($drive);
         }
         foreach ($this->desired($drive) as $spec) {

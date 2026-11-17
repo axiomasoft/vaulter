@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\Sanctum;
 use Laravel\Sanctum\SanctumServiceProvider;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
@@ -56,12 +56,12 @@ it('serves a valid public share without a Sanctum token', function (): void {
 it('retains legacy authenticated middleware and appends the package middleware once in every stack', function (): void {
     $package = [AssignCorrelationId::class, AddApiVersionHeader::class, ApplyResponseCachePolicy::class, RecordVaulterRequestMetrics::class];
     config()->set('vaulter.routes.middleware.authenticated', ['api']);
-    expect(app(RoutesConfig::class)->authenticatedMiddleware())->toBe(['api', ...$package]);
-    config()->set('vaulter.routes.middleware.authenticated', null);
+    expect(app(RoutesOptions::class)->authenticatedMiddleware())->toBe(['api', ...$package]);
+    config()->set('vaulter.routes.middleware.authenticated');
     foreach (['authenticated', 'public', 'hub'] as $stack) {
         config()->set('vaulter.routes.middleware.'.$stack, ['api', ...$package]);
     }
-    expect(app(RoutesConfig::class)->authenticatedMiddleware())->toBe(['api', ...$package])
-        ->and(app(RoutesConfig::class)->publicMiddleware())->toBe(['api', ...$package])
-        ->and(app(RoutesConfig::class)->hubMiddleware())->toBe(['api', ...$package]);
+    expect(app(RoutesOptions::class)->authenticatedMiddleware())->toBe(['api', ...$package])
+        ->and(app(RoutesOptions::class)->publicMiddleware())->toBe(['api', ...$package])
+        ->and(app(RoutesOptions::class)->hubMiddleware())->toBe(['api', ...$package]);
 });

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Contracts\Cas;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * A thin abstraction over a Flysystem disk: the byte plane under the CAS.
@@ -51,5 +52,5 @@ interface StorageDriver
      * A short-lived signed URL for the object, when the disk supports it; null on
      * disks (local/sqlite test) that cannot mint one.
      */
-    public function temporaryUrl(string $key, \DateTimeInterface $expiresAt, ?string $disk = null): ?string;
+    public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string;
 }

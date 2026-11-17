@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * How full a drive is against its quota.

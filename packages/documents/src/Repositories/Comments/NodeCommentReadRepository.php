@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Comments;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Drive\Models\Node;
 
@@ -19,7 +19,7 @@ use Vaulter\Drive\Models\Node;
 final class NodeCommentReadRepository
 {
     public function __construct(
-        private readonly DocumentsConfig $documentsConfig,
+        private readonly DocumentsOptions $documentsConfig,
     ) {}
 
     /**

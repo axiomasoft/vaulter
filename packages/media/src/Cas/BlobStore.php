@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
@@ -38,7 +38,7 @@ final readonly class BlobStore implements BlobStoreContract
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
         private VaulterDatabase $database,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
     ) {}
 
     /**
@@ -63,6 +63,8 @@ final readonly class BlobStore implements BlobStoreContract
     /**
      * commitStaged() for the media and drive internals that go on with the committed row in their own transaction
      * (link it, pin it): the row is the one the snapshot of commitStaged() is taken from.
+     *
+     * @internal
      */
     #[Internal]
     public function commitStagedRow(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob

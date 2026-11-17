@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
@@ -29,8 +30,8 @@ it('trashing a folder stamps the root on every member and the root points at its
     $trashed = $drive->nodes()->trash($folder);
 
     expect($trashed->trashRoot)->toBeTrue()
-        ->and((string) DriveTestHelpers::model($folder)->trash_root_id)->toBe((string) $folder->id)
-        ->and((string) DriveTestHelpers::model($sub)->trash_root_id)->toBe((string) $folder->id)
+        ->and((string) DriveTestHelpers::model($folder)->trash_root_id)->toBe($folder->id)
+        ->and((string) DriveTestHelpers::model($sub)->trash_root_id)->toBe($folder->id)
         ->and(DriveTestHelpers::model($live)->trash_root_id)->toBeNull();
 });
 
@@ -43,10 +44,10 @@ it('lists only the explicit roots and flags them as trash roots', function (): v
     $drive->nodes()->trash($folder);
 
     $items = $drive->trash()->list()->items;
-    $ids = array_map(static fn ($node) => $node->id, $items);
+    $ids = array_map(static fn (NodeSnapshot $node): string => $node->id, $items);
 
     expect($ids)->toContain($folder->id)->toContain($early->id)->not->toContain($member->id)
-        ->and(array_unique(array_map(static fn ($node) => $node->trashRoot, $items)))->toBe([true]);
+        ->and(array_unique(array_map(static fn (NodeSnapshot $node): bool => $node->trashRoot, $items)))->toBe([true]);
     // A member mapped to a snapshot is not a root.
     $snapshot = app(NodeSnapshotMapper::class)->map(DriveTestHelpers::model($member), $drive->actor()->ref());
     expect($snapshot->trashRoot)->toBeFalse();
@@ -65,7 +66,7 @@ it('restoring a root keeps an independently trashed descendant in the trash with
     expect(DriveTestHelpers::model($member)->trashed_at)->toBeNull()
         ->and(DriveTestHelpers::model($member)->trash_root_id)->toBeNull()
         ->and(DriveTestHelpers::model($early)->trashed_at)->not->toBeNull()
-        ->and((string) DriveTestHelpers::model($early)->trash_root_id)->toBe((string) $early->id);
+        ->and((string) DriveTestHelpers::model($early)->trash_root_id)->toBe($early->id);
 
     // The remaining root is restorable to its original (now live) parent.
     expect($drive->trash()->restore($early)->parentId)->toBe($folder->id);
@@ -123,8 +124,8 @@ it('the retention candidates are the roots only, and the row lock refuses a memb
     $drive->nodes()->trash($early);
     $drive->nodes()->trash($folder);
 
-    $candidates = app(NodeReadRepository::class)->trashedBefore(IlluminateCarbon::now()->addMinute())->pluck('id')->map(fn ($id) => (string) $id)->sort()->values()->all();
-    $expected = collect([$folder->id, $early->id])->map(fn ($id) => (string) $id)->sort()->values()->all();
+    $candidates = app(NodeReadRepository::class)->trashedBefore(IlluminateCarbon::now()->addMinute())->pluck('id')->map(fn ($id): string => (string) $id)->sort()->values()->all();
+    $expected = collect([$folder->id, $early->id])->map(fn ($id): string => (string) $id)->sort()->values()->all();
     expect($candidates)->toBe($expected);
 
     $store = app(NodeStoreRepository::class);
@@ -145,7 +146,7 @@ it('answers the REST restore of a member and of a node without a home with the s
     $this->postJson('api/vaulter/v1/nodes/'.$member->id.'/restore', [], ['If-Match' => DriveV1::tagFor($actor, $member->id)])
         ->assertStatus(409)
         ->assertJsonPath('code', 'node_trashed_by_ancestor')
-        ->assertJsonPath('meta.context.trash_root_id', (string) $folder->id);
+        ->assertJsonPath('meta.context.trash_root_id', $folder->id);
 
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);

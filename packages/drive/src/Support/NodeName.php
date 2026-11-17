@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Support;
 
 use Normalizer;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Drive\Naming\NamePolicy;
 

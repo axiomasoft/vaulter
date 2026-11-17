@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\ValueObjects;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The rendered file of one document export, with the source it was rendered from:

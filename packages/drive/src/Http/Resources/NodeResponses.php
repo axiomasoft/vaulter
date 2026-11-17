@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Contracts\DriveHandle;
@@ -116,7 +116,7 @@ final readonly class NodeResponses
             throw PermissionDeniedException::forAbility($ability->value);
         }
 
-        if (!Preconditions::matches($request, (new NodeResource($snapshot, $abilities))->etag())) {
+        if (!Preconditions::matches($request, new NodeResource($snapshot, $abilities)->etag())) {
             throw StaleNodeException::forNode($snapshot->id);
         }
 
@@ -174,7 +174,7 @@ final readonly class NodeResponses
         try {
             [$snapshot, $abilities] = $this->located($request, $drive, $id, false);
             preg_match_all('/\s*(\*|(?:W\/)?"[^"]*")\s*(?:,|$)/', $header, $matches);
-            $current = (new NodeResource($snapshot, $abilities))->etag();
+            $current = new NodeResource($snapshot, $abilities)->etag();
             foreach ($matches[1] as $tag) {
                 if (!str_starts_with($tag, 'W/') && hash_equals($current, $tag)) {
                     return $snapshot->sequence;

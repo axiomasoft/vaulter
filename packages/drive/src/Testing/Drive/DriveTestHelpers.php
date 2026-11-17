@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Testing\Drive;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use RuntimeException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -102,7 +103,10 @@ final class DriveTestHelpers
      */
     public static function streamFor(string $bytes): mixed
     {
-        $stream = fopen('php://temp', 'r+b') ?: throw new \RuntimeException('Cannot open a memory stream.');
+        $stream = fopen('php://temp', 'r+b');
+        if ($stream === false) {
+            throw new RuntimeException('Cannot open a memory stream.');
+        }
         fwrite($stream, $bytes);
         rewind($stream);
 

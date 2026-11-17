@@ -20,9 +20,13 @@
     },
     "require": {
         "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1",
         "axiomasoft/vaulter-core": "self.version"
     },
     "require-dev": {
+        "axiomasoft/packman-testkit": "^0.1",
         "larastan/larastan": "^3.12",
         "laravel/pint": "^1.32",
         "orchestra/testbench": "^11.3",
@@ -40,6 +44,32 @@
         }
     },
     "extra": {
+        "packman": {
+            "schema-version": 1,
+            "package-type": "capability",
+            "stability": "stable",
+            "error-prefix": "media",
+            "owns": [
+                "Cas",
+                "Configuration",
+                "Console",
+                "Content",
+                "Contracts",
+                "Data",
+                "Doctor",
+                "Enums",
+                "Errors",
+                "Exceptions",
+                "Http",
+                "Models",
+                "Providers",
+                "Repositories",
+                "Schema",
+                "Support",
+                "Testing",
+                "ValueObjects"
+            ]
+        },
         "laravel": {
             "providers": [
                 "Vaulter\\Media\\VaulterMediaServiceProvider"
@@ -50,6 +80,19 @@
         }
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "../../../packman/packages/*",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman": "0.1.x-dev",
+                    "axiomasoft/packman-plugins": "0.1.x-dev",
+                    "axiomasoft/packman-schema": "0.1.x-dev",
+                    "axiomasoft/packman-testkit": "0.1.x-dev"
+                }
+            }
+        },
         {
             "type": "path",
             "url": "../core",

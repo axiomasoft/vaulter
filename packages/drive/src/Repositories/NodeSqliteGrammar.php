@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Repositories;
 
+use Packman\Attributes\Internal;
 use Staudenmeir\LaravelAdjacencyList\Query\Grammars\SQLiteGrammar;
-use Vaulter\Attributes\Internal;
 
 #[Internal]
 final class NodeSqliteGrammar extends SQLiteGrammar

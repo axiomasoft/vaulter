@@ -10,16 +10,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Documents\Casts\BinaryString;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\State\CollaborationStateBinding;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -94,11 +95,11 @@ class Document extends Model
      * provider so the model does not reach into the container. They read the
      * config repository on every call, so runtime config changes still apply.
      *
-     * @var array{database: DatabaseConfig, vaulter: DriveConfig, documents: DocumentsConfig}|null
+     * @var array{database: DatabaseOptions, vaulter: DriveOptions, documents: DocumentsOptions}|null
      */
     private static ?array $configuration = null;
 
-    public static function configure(DatabaseConfig $database, DriveConfig $vaulter, DocumentsConfig $documents): void
+    public static function configure(DatabaseOptions $database, DriveOptions $vaulter, DocumentsOptions $documents): void
     {
         self::$configuration = ['database' => $database, 'vaulter' => $vaulter, 'documents' => $documents];
     }
@@ -108,7 +109,7 @@ class Document extends Model
         return DocumentFactory::new();
     }
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
         return $this->table ?? self::configuration()['database']->table('documents');
@@ -170,7 +171,7 @@ class Document extends Model
     }
 
     /**
-     * @return array{database: DatabaseConfig, vaulter: DriveConfig, documents: DocumentsConfig}
+     * @return array{database: DatabaseOptions, vaulter: DriveOptions, documents: DocumentsOptions}
      */
     private static function configuration(): array
     {
@@ -180,7 +181,7 @@ class Document extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Testing\Contracts;
 
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\UpgradesSchema;
 

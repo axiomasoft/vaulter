@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Drive;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -86,10 +88,10 @@ class UploadSession extends Model
         'expected_sha256',
     ];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('upload_sessions');
+        return app(DatabaseOptions::class)->table('upload_sessions');
     }
 
     /**
@@ -99,7 +101,7 @@ class UploadSession extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('drive'), 'drive_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -109,7 +111,7 @@ class UploadSession extends Model
      */
     public function parts(): HasMany
     {
-        return $this->hasMany(app(DriveConfig::class)->model('upload_part'), 'upload_session_id');
+        return $this->hasMany(app(DriveOptions::class)->model('upload_part'), 'upload_session_id');
     }
 
     /**
@@ -119,7 +121,7 @@ class UploadSession extends Model
      */
     public function assembledBlob(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('blob'), 'assembled_blob_id');
+        return $this->belongsTo(app(MediaOptions::class)->blobModel, 'assembled_blob_id');
     }
 
     /**
@@ -164,7 +166,7 @@ class UploadSession extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

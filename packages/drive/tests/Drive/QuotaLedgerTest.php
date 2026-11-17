@@ -102,7 +102,7 @@ it('charges a copy with the head it copies, not the source history', function ()
     quotaLedgerRevision($drive, $node, str_repeat('b', 30));
     expect(quotaLedgerUsed($drive))->toBe(40);
 
-    $copy = $drive->nodes()->copy($node, destination: null, options: new CopyOptions(name: 'copy.bin'));
+    $copy = $drive->nodes()->copy($node, options: new CopyOptions(name: 'copy.bin'));
 
     expect(DriveTestHelpers::model($copy)->file()->firstOrFail()->versions()->count())->toBe(1)
         ->and(quotaLedgerUsed($drive))->toBe(70);
@@ -132,9 +132,9 @@ it('refuses a revision past the quota and still lets a drive over its quota dele
     quotaLedgerRevision($drive, $node, str_repeat('b', 4));
     // 10 retained bytes; a quota of 12 admits 2 more, not 3.
     app(VaulterDatabase::class)->write(fn () => $drive->model()->forceFill(['quota_bytes' => 12])->save());
-    expect(fn () => quotaLedgerRevision($drive, $node, 'ccc'))->toThrow(QuotaExceededException::class)
-        ->and(fn () => $drive->files()->restoreRevision($node, $old))->toThrow(QuotaExceededException::class)
-        ->and(fn () => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('ccc'), 'b.bin'), new UploadOptions(onConflict: OnNameConflict::Rename)))->toThrow(QuotaExceededException::class)
+    expect(fn (): FileRevisionSnapshot => quotaLedgerRevision($drive, $node, 'ccc'))->toThrow(QuotaExceededException::class)
+        ->and(fn (): FileRevisionSnapshot => $drive->files()->restoreRevision($node, $old))->toThrow(QuotaExceededException::class)
+        ->and(fn (): NodeSnapshot => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('ccc'), 'b.bin'), new UploadOptions(onConflict: OnNameConflict::Rename)))->toThrow(QuotaExceededException::class)
         ->and(quotaLedgerUsed($drive))->toBe(10);
 
     // A lowered quota leaves the drive over it: deleting still works and frees bytes.

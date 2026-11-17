@@ -7,8 +7,9 @@ namespace Vaulter\Drive\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\RevisionOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Models\Drive;
@@ -42,7 +43,7 @@ final class FileRevisionFactory extends VaulterFactory
      * @param  string|null          $relationship
      * @return static
      */
-    #[\Override]
+    #[Override]
     public function for($factory, $relationship = null)
     {
         if ($factory instanceof Node) {
@@ -63,7 +64,7 @@ final class FileRevisionFactory extends VaulterFactory
         return $this->withVaulter(['bytes' => $bytes, 'mime' => $mimeType]);
     }
 
-    #[\Override]
+    #[Override]
     protected function persist(Model $draft): Model
     {
         $file = $this->stateObject('file', Node::class);
@@ -78,7 +79,7 @@ final class FileRevisionFactory extends VaulterFactory
             new RevisionOptions(declaredMimeType: $this->stateString('mime', 'text/plain')),
         );
 
-        $class = app(DriveConfig::class)->model('file_revision');
+        $class = app(DriveOptions::class)->model('file_revision');
 
         return $this->withTenant(static fn (): Model => $class::query()->whereKey($snapshot->id)->firstOrFail());
     }

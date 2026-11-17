@@ -4,8 +4,24 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Concerns\Composition\ProvidesCapabilities;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\Cardinality;
+use Packman\Plugins\Enums\Contributions\SlotKind;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Doctor\Checks\RoutesAuthCheck;
@@ -14,18 +30,7 @@ use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
 use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Drive\Activity\ActivitySink;
 use Vaulter\Drive\Changes\ChangeJournalSink;
-use Vaulter\Drive\Console\MakeFileHandlerCommand;
-use Vaulter\Drive\Console\MakePermissionDriverCommand;
-use Vaulter\Drive\Console\MakeProfileCommand;
-use Vaulter\Drive\Console\PruneChangesCommand;
-use Vaulter\Drive\Console\PruneRevisionsCommand;
-use Vaulter\Drive\Console\PurgeDrivesCommand;
-use Vaulter\Drive\Console\PurgeTrashCommand;
-use Vaulter\Drive\Console\ReconcileScanWorkCommand;
-use Vaulter\Drive\Console\RecountDrivesCommand;
-use Vaulter\Drive\Console\RescanFileRevisionsCommand;
-use Vaulter\Drive\Console\ResetChangesCommand;
-use Vaulter\Drive\Console\SweepUploadsCommand;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
@@ -53,21 +58,15 @@ use Vaulter\Drive\Doctor\ScanPolicyCheck;
 use Vaulter\Drive\Doctor\ScanScannerCheck;
 use Vaulter\Drive\Doctor\ScanScopeCheck;
 use Vaulter\Drive\Doctor\UploadsTmpCheck;
-use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Errors\DriveProblemDefinitions;
 use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Handlers\NodePresenter as CoreNodePresenter;
-use Vaulter\Drive\Http\Problems\DriveProblemCodes;
-use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Drive\Http\Support\DriveRouteLabels;
-use Vaulter\Drive\Operations\DriveOperationPolicies;
-use Vaulter\Drive\Providers\AccessRegistrar;
-use Vaulter\Drive\Providers\BindingsRegistrar;
-use Vaulter\Drive\Providers\DriveSliceRegistrar;
-use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Drive\Schema\DriveSchema;
+use Vaulter\Drive\Schema\DriveSchemaSets;
 use Vaulter\Drive\Security\PermissionDriverInvariant;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
 use Vaulter\Drive\Uploads\Inspection\MimeConsistencyInspector;
@@ -76,23 +75,20 @@ use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Events\EventSink;
-use Vaulter\Modules\Activation;
-use Vaulter\Modules\Cardinality;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\OwnsSchema;
-use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
 
 /**
- * The drive module: everything of the drive package — the REST routes (nodes, files, uploads, grants,
- * shares, activity and the change feed), access, the change journal, the scaffolding commands, the doctor
- * checks, the event types with the activity and change-journal event sinks, and the bindings.
- * `vaulter.modules.drive = false` removes all of it.
+ * The drive extension plugin (`vaulter.drive`): tree/file/upload/access/share/change-feed domain,
+ * schema, error catalog, capabilities, extension slots, and diagnostic checks.
  */
-#[Internal]
-final class DriveModule implements OwnsSchema, VaulterModule
+#[Api(since: '1.0')]
+final class DriveModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
 {
+    use Configurable;
+    use ContributesToSlots;
+    use OwnsSchema;
+    use ProvidesCapabilities;
+    use ProvidesDiagnostics;
+
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */
     private const array DOCTOR_CHECKS = [
         'drive.uploads.tmp' => UploadsTmpCheck::class,
@@ -103,131 +99,181 @@ final class DriveModule implements OwnsSchema, VaulterModule
         'drive.scan.scope' => ScanScopeCheck::class,
         'drive.drives.deleting' => DrivesDeletingCheck::class,
         'drive.drives.usage' => DrivesUsageCheck::class,
-        // The checks of the disks of the profiles: the profiles are the drive's, the keys keep the media.* identity.
         'media.disk.probe' => DiskProbeCheck::class,
         'media.dedup.scope' => DedupScopeCheck::class,
-        // The kernel's own check of the route stack, run while the drive routes are mounted.
         'core.routes.auth' => RoutesAuthCheck::class,
         'core.access.driver' => AccessDriverCheck::class,
-        // The invariants of the tree and its aggregates: the check reads the drive, node, file and document tables.
         'core.schema.integrity' => SchemaIntegrityCheck::class,
     ];
 
-    public static function ownedSchema(): string
+    #[Override]
+    public function manifest(): PluginManifest
     {
-        return DriveSchema::class;
+        return new PluginManifest(
+            id: 'vaulter.drive',
+            version: '1.0.0',
+            requires: ['vaulter.core', 'vaulter.media'],
+            resourceRoot: dirname(__DIR__).'/resources',
+        );
     }
 
-    public function id(): ModuleId
+    #[Override]
+    public function register(PluginRegistrar $registrar): void {}
+
+    #[Override]
+    public function configRoot(): string
     {
-        return new ModuleId('drive');
+        return 'vaulter-drive';
     }
 
-    public function version(): string
+    #[Override]
+    public function defaultConfigPath(): string
     {
-        return '1.0';
+        return dirname(__DIR__).'/config/vaulter-drive.php';
     }
 
-    public function activation(): Activation
+    #[Override]
+    public function optionsClass(): string
     {
-        return Activation::Auto;
+        return DriveOptions::class;
     }
 
-    public function requires(): array
+    #[Override]
+    public function tablePrefix(): string
     {
-        return ['core' => '^1.0', 'media' => '^1.0'];
+        return 'v_';
     }
 
-    public function register(ModuleBuilder $module): void
+    /** @return list<string> */
+    #[Override]
+    public function tableNouns(): array
     {
-        $module
-            ->config('vaulter-drive', dirname(__DIR__).'/config/vaulter-drive.php')
-            ->schema(dirname(__DIR__).'/database/migrations')
-            ->routes(dirname(__DIR__).'/routes/drive.php')
-            ->problems(DriveProblemCodes::class)
-            ->problems(DriveSliceProblemCodes::class)
-            ->operations(DriveOperationPolicies::class)
-            // The drive's event types and its two event sinks.
-            ->events(DriveEventType::class)
-            ->slot(ProductionInvariant::class, PermissionDriverInvariant::class, 'drive.permission-driver', key: 'drive.permission-driver')
-            ->slot(EventSink::class, ActivitySink::class, 'drive.activity')
-            ->slot(EventSink::class, ChangeJournalSink::class, 'drive.changes')
-            ->slot(RouteLabelSource::class, DriveRouteLabels::class, 'drive.routes')
-            ->bindings(DriveSliceRegistrar::class)
-            ->bindings(AccessRegistrar::class)
-            ->bindings(BindingsRegistrar::class)
-            ->commands(
-                PurgeTrashCommand::class,
-                PurgeDrivesCommand::class,
-                RecountDrivesCommand::class,
-                PruneRevisionsCommand::class,
-                SweepUploadsCommand::class,
-                ReconcileScanWorkCommand::class,
-                RescanFileRevisionsCommand::class,
-                PruneChangesCommand::class,
-                ResetChangesCommand::class,
-                MakeProfileCommand::class,
-                MakeFileHandlerCommand::class,
-                MakePermissionDriverCommand::class,
-            )
-            ->schedule(SchedulingRegistrar::class)
-            ->defineCapability(DriveHandleFactoryContract::class, Cardinality::RequiredSingle)
-            ->provides(DriveHandleFactoryContract::class, DriveHandleFactory::class)
-            ->defineSlot(NodeSnapshotContributor::class, SlotKind::Contributor, Cardinality::Many)
-            ->defineSlot(DriveExtension::class, SlotKind::Handler, Cardinality::Many);
+        return [
+            'drives',
+            'nodes',
+            'files',
+            'file_revisions',
+            'file_revision_blobs',
+            'scan_policy_states',
+            'scan_obligations',
+            'scan_backfill_runs',
+            'scan_requests',
+            'scan_evidence',
+            'node_grants',
+            'node_shares',
+            'node_user_states',
+            'upload_sessions',
+            'upload_parts',
+            'activity',
+            'drive_change_heads',
+            'drive_changes',
+        ];
+    }
+
+    #[Override]
+    public function migrationPath(): string
+    {
+        return dirname(__DIR__).'/database/migrations';
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaSetProviders(): array
+    {
+        return [DriveSchemaSets::class];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaComponents(): array
+    {
+        return [DriveSchema::class];
+    }
+
+    /** @return array<class-string, string> */
+    #[Override]
+    public function definedCapabilities(): array
+    {
+        return [
+            DriveHandleFactoryContract::class => Cardinality::RequiredSingle->value,
+            NodePresenter::class => Cardinality::RequiredSingle->value,
+        ];
+    }
+
+    /** @return array<class-string, class-string|array{config: string, default?: class-string|null}> */
+    #[Override]
+    public function providedCapabilities(): array
+    {
+        return [
+            DriveHandleFactoryContract::class => DriveHandleFactory::class,
+            NodePresenter::class => CoreNodePresenter::class,
+        ];
+    }
+
+    /** @return array<class-string, array{kind: string, cardinality?: string}> */
+    #[Override]
+    public function definedSlots(): array
+    {
+        $handler = ['kind' => SlotKind::Handler->value, 'cardinality' => Cardinality::Many->value];
+        $guard = ['kind' => SlotKind::Guard->value, 'cardinality' => Cardinality::Many->value];
+
+        return [
+            NodeSnapshotContributor::class => ['kind' => SlotKind::Contributor->value, 'cardinality' => Cardinality::Many->value],
+            DriveExtension::class => $handler,
+            PermissionDriver::class => $handler,
+            FileHandler::class => $handler,
+            KindPresenter::class => $handler,
+            NodeContentLifecycle::class => $handler,
+            UploadProtocolHandler::class => $handler,
+            UploadInspector::class => $guard,
+            DownloadGuard::class => $guard,
+            ProfileOption::class => $handler,
+        ];
+    }
+
+    /** @return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}> */
+    #[Override]
+    public function slotContributions(): array
+    {
+        $contributions = [
+            ['slot' => ProductionInvariant::class, 'id' => 'drive.permission-driver', 'implementation' => PermissionDriverInvariant::class, 'key' => 'drive.permission-driver'],
+            ['slot' => EventSink::class, 'id' => 'drive.activity', 'implementation' => ActivitySink::class],
+            ['slot' => EventSink::class, 'id' => 'drive.changes', 'implementation' => ChangeJournalSink::class],
+            ['slot' => RouteLabelSource::class, 'id' => 'drive.routes', 'implementation' => DriveRouteLabels::class],
+            ['slot' => PermissionDriver::class, 'id' => 'drive.permission.database', 'implementation' => DatabasePermissionDriver::class, 'key' => 'database'],
+            ['slot' => PermissionDriver::class, 'id' => 'drive.permission.gate', 'implementation' => GatePermissionDriver::class, 'key' => 'gate'],
+            ['slot' => PermissionDriver::class, 'id' => 'drive.permission.spatie', 'implementation' => SpatiePermissionDriver::class, 'key' => 'spatie'],
+            ['slot' => FileHandler::class, 'id' => 'drive.file-handler.preview', 'implementation' => PreviewHandler::class, 'key' => 'vaulter/preview'],
+            ['slot' => FileHandler::class, 'id' => 'drive.file-handler.download', 'implementation' => DownloadOnlyHandler::class, 'key' => 'vaulter/download'],
+            ['slot' => NodeContentLifecycle::class, 'id' => 'drive.lifecycle.file', 'implementation' => FileContentLifecycle::class, 'key' => NodeKind::File->value],
+            ['slot' => NodeContentLifecycle::class, 'id' => 'drive.lifecycle.shortcut', 'implementation' => ShortcutPurgeLifecycle::class, 'key' => NodeKind::Shortcut->value],
+            ['slot' => UploadProtocolHandler::class, 'id' => 'drive.upload.tus', 'implementation' => TusUploadHandler::class, 'key' => UploadProtocol::Tus->value],
+            ['slot' => UploadProtocolHandler::class, 'id' => 'drive.upload.s3-multipart', 'implementation' => S3MultipartHandler::class, 'key' => UploadProtocol::S3Multipart->value],
+            ['slot' => UploadInspector::class, 'id' => 'drive.inspector.filename', 'implementation' => FilenameInspector::class, 'priority' => -100],
+            ['slot' => UploadInspector::class, 'id' => 'drive.inspector.size', 'implementation' => SizeInspector::class, 'priority' => -90],
+            ['slot' => UploadInspector::class, 'id' => 'drive.inspector.mime-consistency', 'implementation' => MimeConsistencyInspector::class, 'priority' => -80],
+            ['slot' => UploadInspector::class, 'id' => 'drive.inspector.scan-dispatch', 'implementation' => ScanDispatchInspector::class, 'priority' => 0],
+            ['slot' => DownloadGuard::class, 'id' => 'drive.content-availability', 'implementation' => ContentAvailabilityGuard::class],
+        ];
 
         foreach (self::DOCTOR_CHECKS as $key => $check) {
-            $module->slot(DoctorCheck::class, $check, $key, key: $key);
+            $contributions[] = ['slot' => DoctorCheck::class, 'id' => $key, 'implementation' => $check, 'key' => $key];
         }
 
-        $this->capabilities($module);
-        $this->slots($module);
+        return $contributions;
     }
 
-    /** The seams the drive owns as capabilities: the handle factory and the node presenter. */
-    private function capabilities(ModuleBuilder $module): void
+    /** @return list<class-string> */
+    #[Override]
+    public function healthChecks(): array
     {
-        $module
-            ->defineCapability(NodePresenter::class, Cardinality::RequiredSingle)
-            ->provides(NodePresenter::class, CoreNodePresenter::class);
+        return array_values(self::DOCTOR_CHECKS);
     }
 
-    /**
-     * The slots the drive defines and its own contributions, in the order the drive ran them before the
-     * slots existed.
-     */
-    private function slots(ModuleBuilder $module): void
+    /** @return list<class-string> */
+    #[Override]
+    public function problemProviders(): array
     {
-        $module
-            ->defineSlot(PermissionDriver::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(FileHandler::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(KindPresenter::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(NodeContentLifecycle::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(UploadProtocolHandler::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(UploadInspector::class, SlotKind::Guard, Cardinality::Many)
-            ->defineSlot(DownloadGuard::class, SlotKind::Guard, Cardinality::Many)
-            ->defineSlot(ProfileOption::class, SlotKind::Handler, Cardinality::Many);
-
-        foreach ([
-            'database' => DatabasePermissionDriver::class,
-            'gate' => GatePermissionDriver::class,
-            'spatie' => SpatiePermissionDriver::class,
-        ] as $key => $driver) {
-            $module->slot(PermissionDriver::class, $driver, 'drive.permission.'.$key, key: $key);
-        }
-
-        $module
-            ->slot(FileHandler::class, PreviewHandler::class, 'drive.file-handler.preview', key: 'vaulter/preview')
-            ->slot(FileHandler::class, DownloadOnlyHandler::class, 'drive.file-handler.download', key: 'vaulter/download')
-            ->slot(NodeContentLifecycle::class, FileContentLifecycle::class, 'drive.lifecycle.file', key: NodeKind::File->value)
-            ->slot(NodeContentLifecycle::class, ShortcutPurgeLifecycle::class, 'drive.lifecycle.shortcut', key: NodeKind::Shortcut->value)
-            ->slot(UploadProtocolHandler::class, TusUploadHandler::class, 'drive.upload.tus', key: UploadProtocol::Tus->value)
-            ->slot(UploadProtocolHandler::class, S3MultipartHandler::class, 'drive.upload.s3-multipart', key: UploadProtocol::S3Multipart->value)
-            // The inspectors ran by priority descending (100, 90, 80, 0); the slot orders by priority ascending.
-            ->slot(UploadInspector::class, FilenameInspector::class, 'drive.inspector.filename', priority: -100)
-            ->slot(UploadInspector::class, SizeInspector::class, 'drive.inspector.size', priority: -90)
-            ->slot(UploadInspector::class, MimeConsistencyInspector::class, 'drive.inspector.mime-consistency', priority: -80)
-            ->slot(UploadInspector::class, ScanDispatchInspector::class, 'drive.inspector.scan-dispatch', priority: 0)
-            ->slot(DownloadGuard::class, ContentAvailabilityGuard::class, 'drive.content-availability');
+        return [DriveProblemDefinitions::class];
     }
 }

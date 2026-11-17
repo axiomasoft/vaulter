@@ -71,9 +71,9 @@ it('keeps the complete storage and folder event contracts', function (): void {
     $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->folders()->create('Contract folder');
     $created = OutboxEvent::query()->where('type', DriveEventType::FolderCreated->value)->orderByDesc('outbox_seq')->firstOrFail();
 
-    expect($created->aggregate_id)->toBe((string) $folder->id)
+    expect($created->aggregate_id)->toBe($folder->id)
         ->and(mutationEnvelope($created))->toEqual([
-            'subject' => ['type' => 'node', 'id' => (string) $folder->id],
+            'subject' => ['type' => 'node', 'id' => $folder->id],
             'data' => ['parent_id' => (string) $root->getKey()],
             'actor' => ['type' => (new TestUser)->getMorphClass(), 'id' => '17'],
         ])
@@ -139,20 +139,20 @@ it('preserves move, rename and copy payloads and activity context', function ():
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($node, $to);
     $moved = OutboxEvent::query()->where('type', DriveEventType::NodeMoved->value)->sole();
     expect(mutationEnvelope($moved)['data'])->toEqual([
-        'from_parent_id' => (string) $from->id,
-        'to_parent_id' => (string) $to->id,
-    ])->and($moved->payload['drive_id'])->toBe((string) $node->driveId);
+        'from_parent_id' => $from->id,
+        'to_parent_id' => $to->id,
+    ])->and($moved->payload['drive_id'])->toBe($node->driveId);
     expect(Activity::query()->where('verb', DriveEventType::NodeMoved->value)->sole()->context)->toEqual([
         'correlation_id' => 'mutation-contract',
-        'from_parent_id' => (string) $from->id,
-        'to_parent_id' => (string) $to->id,
+        'from_parent_id' => $from->id,
+        'to_parent_id' => $to->id,
     ]);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($node, 'New');
     $renamed = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
     // The names travel only in the activity context.
     expect(mutationEnvelope($renamed)['data'])->toBe([])
-        ->and(CanonicalJson::of($renamed->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $node->id]));
+        ->and(CanonicalJson::of($renamed->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => $node->id]));
     expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->sole()->context)->toEqual([
         'correlation_id' => 'mutation-contract',
         'from' => 'Old',
@@ -161,14 +161,14 @@ it('preserves move, rename and copy payloads and activity context', function ():
 
     $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($node, $from, options: new CopyOptions(name: 'Copied'));
     $copied = OutboxEvent::query()->where('type', DriveEventType::NodeCopied->value)->sole();
-    expect($copied->aggregate_id)->toBe((string) $copy->id)
+    expect($copied->aggregate_id)->toBe($copy->id)
         ->and(mutationEnvelope($copied))->toMatchArray([
-            'subject' => ['type' => 'node', 'id' => (string) $copy->id],
-            'data' => ['source_id' => (string) $node->id, 'destination_id' => (string) $from->id],
+            'subject' => ['type' => 'node', 'id' => $copy->id],
+            'data' => ['source_id' => $node->id, 'destination_id' => $from->id],
         ]);
     expect(Activity::query()->where('verb', DriveEventType::NodeCopied->value)->sole()->context)->toEqual([
         'correlation_id' => 'mutation-contract',
-        'source_id' => (string) $node->id,
+        'source_id' => $node->id,
         'name' => 'Copied',
     ]);
 });
@@ -217,9 +217,9 @@ it('preserves trash and restore payloads including actor and destination', funct
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->trash($node);
     $trashed = OutboxEvent::query()->where('type', DriveEventType::NodeTrashed->value)->sole();
     expect($trashed->scope_kind)->toBe('drive')
-        ->and($trashed->aggregate_id)->toBe((string) $node->id)
+        ->and($trashed->aggregate_id)->toBe($node->id)
         ->and(mutationEnvelope($trashed))->toEqual([
-            'subject' => ['type' => 'node', 'id' => (string) $node->id],
+            'subject' => ['type' => 'node', 'id' => $node->id],
             'data' => [],
             'actor' => ['type' => (new TestUser)->getMorphClass(), 'id' => '17'],
         ]);
@@ -234,10 +234,10 @@ it('preserves trash and restore payloads including actor and destination', funct
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->trash()->restore($node);
     $restored = OutboxEvent::query()->where('type', DriveEventType::NodeRestored->value)->sole();
     expect($restored->scope_kind)->toBe('drive')
-        ->and($restored->aggregate_id)->toBe((string) $node->id)
+        ->and($restored->aggregate_id)->toBe($node->id)
         ->and(mutationEnvelope($restored))->toEqual([
-            'subject' => ['type' => 'node', 'id' => (string) $node->id],
-            'data' => ['parent_id' => (string) $parent->id],
+            'subject' => ['type' => 'node', 'id' => $node->id],
+            'data' => ['parent_id' => $parent->id],
             'actor' => ['type' => (new TestUser)->getMorphClass(), 'id' => '17'],
         ]);
     $activity = Activity::query()->where('verb', DriveEventType::NodeRestored->value)->sole();
@@ -246,7 +246,7 @@ it('preserves trash and restore payloads including actor and destination', funct
         ->and($activity->context)->toEqual([
             'correlation_id' => 'mutation-contract',
             'name' => 'Child',
-            'parent_id' => (string) $parent->id,
+            'parent_id' => $parent->id,
         ]);
 });
 
@@ -254,7 +254,7 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
     $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
     $folder = $drive->folders()->create('Deleted');
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'f.bin'), new UploadOptions(parent: $folder));
-    $ids = [(string) $folder->id, (string) $file->id];
+    $ids = [$folder->id, $file->id];
 
     $drive->nodes()->trash($folder);
 

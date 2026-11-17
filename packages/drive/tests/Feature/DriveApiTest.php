@@ -6,7 +6,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
@@ -319,7 +319,7 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
         $this->postJson($base.'/folders', ['name' => 'Sib'.$i])->assertCreated();
     }
 
-    $storageTable = app(DatabaseConfig::class)->table('drives');
+    $storageTable = app(DatabaseOptions::class)->table('drives');
     $storageQueries = 0;
 
     DB::listen(function (object $query) use (&$storageQueries, $storageTable): void {

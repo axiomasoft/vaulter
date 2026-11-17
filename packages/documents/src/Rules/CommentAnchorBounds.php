@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Translation\PotentiallyTranslatedString;
 use JsonException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** The size and nesting bound shared by nullable HTTP array anchors and the PHP input. */
 #[Internal]

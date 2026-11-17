@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Idempotency;
 
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;

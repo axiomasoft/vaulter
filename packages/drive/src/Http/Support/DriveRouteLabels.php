@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 
 /** The metric labels of the drive's routes (the RouteLabelSource contribution of the drive module). */

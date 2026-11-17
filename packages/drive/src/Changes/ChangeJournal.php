@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Changes;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Enums\Events\DriveEventType;

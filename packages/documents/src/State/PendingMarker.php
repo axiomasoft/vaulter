@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\State;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 
 /**
  * The pending-state marker of a document: edits of collaboration generation `$generation` up to the log sequence

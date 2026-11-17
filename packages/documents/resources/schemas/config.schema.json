@@ -1,0 +1,136 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-documents configuration",
+    "type": "object",
+    "properties": {
+        "vaulter-documents": {
+            "type": "object",
+            "properties": {
+                "broadcast": {
+                    "type": "object",
+                    "properties": {
+                        "channel_prefix": {
+                            "type": "string",
+                            "default": "vaulter.documents"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "collaboration": {
+                    "type": "object",
+                    "properties": {
+                        "session_ttl": {
+                            "type": "integer",
+                            "default": 300
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "comments": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "content": {
+                    "type": "object",
+                    "properties": {
+                        "max_size_kb": {
+                            "type": "integer",
+                            "default": 5120
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "default_type": {
+                    "type": "string",
+                    "default": "vaulter/rich-text"
+                },
+                "exporters": {
+                    "type": "array"
+                },
+                "models": {
+                    "type": "object",
+                    "properties": {
+                        "document_revision": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "node_comment": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "revisions": {
+                    "type": "object",
+                    "properties": {
+                        "checkpoint_interval_seconds": {
+                            "type": "integer",
+                            "default": 300
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "tiptap": {
+                    "type": "object",
+                    "properties": {
+                        "extra_attributes": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        },
+                        "extra_marks": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        },
+                        "extra_nodes": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        },
+                        "url_attributes": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "types": {
+                    "type": "array"
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

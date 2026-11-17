@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Repositories;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Support\Identity;
 
@@ -25,7 +25,7 @@ use Vaulter\Support\Identity;
 final class NodeStoreRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
         private readonly VaulterDatabase $database,
     ) {}
 
@@ -159,6 +159,7 @@ final class NodeStoreRepository
 
         // MySQL refuses a foreign-key cascade deeper than 15 levels (error 3008) and a node tree can be 130 deep: delete the
         // subtree leaves first, level by level, so that no single DELETE cascades through more than the dependents of one level.
+        /** @var array<int|string, ?string> $parents */
         $parents = [];
         foreach ($ids->chunk(1000) as $chunk) {
             foreach ($model::query()->whereKey($chunk->all())->toBase()->get(['id', 'parent_id']) as $row) {

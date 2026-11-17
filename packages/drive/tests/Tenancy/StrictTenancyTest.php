@@ -102,13 +102,13 @@ it('V31 null refuses current authority while normalized tenant ids retain leadin
 it('I15 restores nested maintenance exceptions without carrying bypass into a Fiber', function (): void {
     $a = AccessTestHelpers::storage();
     app(TenantResolver::class)->tenant = 'B';
-    expect(fn () => Vaulter::withoutTenancy(function () use ($a): void {
+    expect(fn (): mixed => Vaulter::withoutTenancy(function () use ($a): void {
         expect(Node::query()->findOrFail(Vaulter::drive($a)->asSystem('maintenance')->root()->id)->tenant_id)->toBe('A');
         $fiber = new Fiber(function () use ($a): void {
             expect(fn () => Vaulter::drive($a))->toThrow(NodeNotFoundException::class);
         });
         $fiber->start();
-        Vaulter::withoutTenancy(fn () => throw new RuntimeException('nested'));
+        Vaulter::withoutTenancy(fn (): never => throw new RuntimeException('nested'));
     }))->toThrow(RuntimeException::class, 'nested');
     expect(fn () => Vaulter::drive($a))->toThrow(NodeNotFoundException::class);
 });

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Contracts;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\Drive;
 
 #[Internal]

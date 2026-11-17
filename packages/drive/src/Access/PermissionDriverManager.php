@@ -6,15 +6,15 @@ namespace Vaulter\Drive\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use ReflectionMethod;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
 use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
 use Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
@@ -52,12 +52,16 @@ final class PermissionDriverManager
      */
     private array $resolved = [];
 
+    private AccessOptions $activeOptions;
+
     #[Internal]
     public function __construct(
-        private readonly AccessConfig $accessConfig,
+        private readonly AccessOptions $accessOptions,
         private readonly Container $container,
         private readonly bool $isProduction,
-    ) {}
+    ) {
+        $this->activeOptions = $accessOptions;
+    }
 
     /**
      * The driver for the given key (default: the configured driver). Memoised per
@@ -66,7 +70,13 @@ final class PermissionDriverManager
      */
     public function driver(?string $key = null): PermissionDriver
     {
-        $key ??= $this->accessConfig->permissionDriver();
+        $options = $this->container->bound(AccessOptions::class) ? $this->container->make(AccessOptions::class) : $this->accessOptions;
+        if ($options !== $this->activeOptions) {
+            $this->activeOptions = $options;
+            $this->resolved = [];
+        }
+
+        $key ??= $options->permissionDriver;
 
         $class = $this->classFor($key);
 
@@ -127,7 +137,7 @@ final class PermissionDriverManager
             return true;
         }
 
-        $declaration = (new ReflectionMethod($driver, 'subjectsFor'))->getDeclaringClass();
+        $declaration = new ReflectionMethod($driver, 'subjectsFor')->getDeclaringClass();
 
         if (in_array($declaration->getName(), self::NON_ENUMERATING_BASE_LANES, true)) {
             return false;

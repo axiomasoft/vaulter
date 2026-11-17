@@ -108,7 +108,7 @@ it('схема каждого пресета принимает характер
     ];
 
     foreach ($extensions as $extension) {
-        expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$probes[$extension]]], $schema))
+        expect(fn (): TipTapContent => TipTapContent::fromArray(['type' => 'doc', 'content' => [$probes[$extension]]], $schema))
             ->not->toThrow(InvalidDocumentContentException::class);
     }
 })->with([
@@ -156,7 +156,7 @@ it('сообщает о потере при чтении: lossless только 
  * документированного addAttributes() расширений, а не с живого round-trip'а редактора.
  */
 it('store-time allow-list принимает АТРИБУТЫ, которые extension реально сериализует, R-01', function (array $node): void {
-    expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$node]]))
+    expect(fn (): TipTapContent => TipTapContent::fromArray(['type' => 'doc', 'content' => [$node]]))
         ->not->toThrow(InvalidDocumentContentException::class);
 })->with([
     'Link: весь мешок марки, включая class=null' => [[
@@ -188,7 +188,7 @@ it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты 
         ]],
     ]];
 
-    expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
+    expect(fn (): TipTapContent => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
 
     config()->set('vaulter-documents.tiptap.extra_nodes', ['mention']);
     config()->set('vaulter-documents.tiptap.extra_marks', ['highlight']);
@@ -218,7 +218,7 @@ it('конфиг-шов: URL-несущий атрибут ХОСТА прове
     config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src']]);
 
-    expect(fn () => TipTapContent::fromArray([
+    expect(fn (): TipTapContent => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'iframe', 'attrs' => ['src' => $url]]],
     ]))->toThrow(InvalidDocumentContentException::class);
@@ -235,7 +235,7 @@ it('конфиг-шов: URL-атрибут под неочевидным име
     config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => ['location']]);
     config()->set('vaulter-documents.tiptap.url_attributes', ['embed' => ['location']]);
 
-    expect(fn () => TipTapContent::fromArray([
+    expect(fn (): TipTapContent => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'embed', 'attrs' => ['location' => 'javascript:alert(1)']]],
     ]))->toThrow(InvalidDocumentContentException::class);
@@ -275,7 +275,7 @@ it('конфиг-шов НЕ расширяет схемы URL-несущих а
     // хост не может протащить javascript:.
     config()->set('vaulter-documents.tiptap.extra_attributes', ['link' => ['href']]);
 
-    expect(fn () => TipTapContent::fromArray([
+    expect(fn (): TipTapContent => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
             'type' => 'paragraph',
@@ -444,7 +444,7 @@ it('fail-closed по значению: опасная схема в ЛЮБОМ �
     config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => [$attribute]]);
 
-    expect(fn () => TipTapContent::fromArray([
+    expect(fn (): TipTapContent => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'embed', 'attrs' => [$attribute => $value]]],
     ]))->toThrow(InvalidDocumentContentException::class);
@@ -506,7 +506,7 @@ it('round-trips everything fromArray() accepts without loss', function (array $d
 ]);
 
 it('rejects at store what a read would drop', function (array $doc): void {
-    expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
+    expect(fn (): TipTapContent => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
     expect(TipTapContent::decayReporting($doc)[1])->toBeFalse();
 })->with([
     'root attrs outside the allow-list' => [['type' => 'doc', 'attrs' => ['meta' => 'x'], 'content' => []]],
@@ -525,7 +525,7 @@ it('checks the URL of a mark on a non-text node at store time, as on text', func
 })->throws(InvalidDocumentContentException::class);
 
 it('keeps lossless the normalisations that drop nothing', function (array $doc): void {
-    expect(fn () => TipTapContent::fromArray($doc))->not->toThrow(InvalidDocumentContentException::class);
+    expect(fn (): TipTapContent => TipTapContent::fromArray($doc))->not->toThrow(InvalidDocumentContentException::class);
     expect(TipTapContent::decayReporting($doc)[1])->toBeTrue();
 })->with([
     'empty root attrs' => [['type' => 'doc', 'attrs' => [], 'content' => []]],

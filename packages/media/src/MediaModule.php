@@ -4,86 +4,155 @@ declare(strict_types=1);
 
 namespace Vaulter\Media;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Media\Cas\BlobPinReferences;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Concerns\Composition\ProvidesCapabilities;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\Cardinality;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
-use Vaulter\Media\Console\GcBlobsCommand;
-use Vaulter\Media\Console\ReconcileBlobsCommand;
-use Vaulter\Media\Console\ScrubBlobsCommand;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Doctor\BlobIntegrityCheck;
 use Vaulter\Media\Doctor\BlobPinsCheck;
-use Vaulter\Media\Http\Problems\MediaProblemCodes;
-use Vaulter\Media\Providers\BindingsRegistrar;
-use Vaulter\Media\Providers\SchedulingRegistrar;
+use Vaulter\Media\Errors\MediaProblemDefinitions;
 use Vaulter\Media\Schema\MediaSchema;
-use Vaulter\Modules\Activation;
-use Vaulter\Modules\Cardinality;
-use Vaulter\Modules\HoldsReferences;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\OwnsSchema;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Media\Schema\MediaSchemaSets;
 
 /**
- * The media module: the content-addressed store engine, the pins that keep blobs alive, its blob
- * maintenance commands and schedules, the blob_unavailable problem, the pins doctor check and the content-scanner
- * and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
+ * The media extension plugin (`vaulter.media`): CAS store engine, blob pins,
+ * storage driver and optional content scanner capabilities, error catalog, and diagnostics.
  */
-#[Internal]
-final class MediaModule implements HoldsReferences, OwnsSchema, VaulterModule
+#[Api(since: '1.0')]
+final class MediaModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
 {
-    /** The pins other modules keep on the media's blobs, for vaulter:module:uninstall. */
-    public static function heldReferences(): string
+    use Configurable;
+    use ContributesToSlots;
+    use OwnsSchema;
+    use ProvidesCapabilities;
+    use ProvidesDiagnostics;
+
+    #[Override]
+    public function manifest(): PluginManifest
     {
-        return BlobPinReferences::class;
+        return new PluginManifest(
+            id: 'vaulter.media',
+            version: '1.0.0',
+            requires: ['vaulter.core'],
+            resourceRoot: dirname(__DIR__).'/resources',
+        );
     }
 
-    public static function ownedSchema(): string
+    #[Override]
+    public function register(PluginRegistrar $registrar): void {}
+
+    #[Override]
+    public function configRoot(): string
     {
-        return MediaSchema::class;
+        return 'vaulter-media';
     }
 
-    public function id(): ModuleId
+    #[Override]
+    public function defaultConfigPath(): string
     {
-        return new ModuleId('media');
+        return dirname(__DIR__).'/config/vaulter-media.php';
     }
 
-    public function version(): string
+    #[Override]
+    public function optionsClass(): string
     {
-        return '1.0';
+        return MediaOptions::class;
     }
 
-    public function activation(): Activation
+    #[Override]
+    public function tablePrefix(): string
     {
-        return Activation::Auto;
+        return 'v_';
     }
 
-    public function requires(): array
+    /** @return list<string> */
+    #[Override]
+    public function tableNouns(): array
     {
-        return ['core' => '^1.0'];
+        return ['blobs', 'blob_references'];
     }
 
-    public function register(ModuleBuilder $module): void
+    #[Override]
+    public function migrationPath(): string
     {
-        $module
-            ->config('vaulter-media', dirname(__DIR__).'/config/vaulter-media.php')
-            ->schema(dirname(__DIR__).'/database/migrations')
-            ->bindings(BindingsRegistrar::class)
-            ->problems(MediaProblemCodes::class)
-            ->commands(GcBlobsCommand::class, ReconcileBlobsCommand::class, ScrubBlobsCommand::class)
-            ->schedule(SchedulingRegistrar::class)
-            // The scanner the host names in `vaulter-drive.scan.scanner`; none configured means no scanning.
-            ->defineCapability(ContentScanner::class, Cardinality::OptionalSingle)
-            ->providesFromConfig(ContentScanner::class, 'vaulter-drive.scan.scanner')
-            // The CAS storage engine the host picks in `vaulter-media.storage_driver` (Flysystem by default).
-            ->defineCapability(StorageDriver::class, Cardinality::RequiredSingle)
-            ->providesFromConfig(StorageDriver::class, 'vaulter-media.storage_driver', FlysystemStorageDriver::class)
-            // The pins per owner type, warning about owners whose module is not active.
-            ->slot(DoctorCheck::class, BlobPinsCheck::class, 'media.blobs.pins', key: 'media.blobs.pins')
-            // The blobs the integrity scrub marked as damaged.
-            ->slot(DoctorCheck::class, BlobIntegrityCheck::class, 'media.blobs.integrity', key: 'media.blobs.integrity');
+        return dirname(__DIR__).'/database/migrations';
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaSetProviders(): array
+    {
+        return [MediaSchemaSets::class];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaComponents(): array
+    {
+        return [MediaSchema::class];
+    }
+
+    /** @return array<class-string, string> */
+    #[Override]
+    public function definedCapabilities(): array
+    {
+        return [
+            ContentScanner::class => Cardinality::OptionalSingle->value,
+            StorageDriver::class => Cardinality::RequiredSingle->value,
+        ];
+    }
+
+    /** @return array<class-string, class-string|array{config: string, default?: class-string|null}> */
+    #[Override]
+    public function providedCapabilities(): array
+    {
+        return [
+            ContentScanner::class => ['config' => 'vaulter-drive.scan.scanner'],
+            StorageDriver::class => ['config' => 'vaulter-media.storage_driver', 'default' => FlysystemStorageDriver::class],
+        ];
+    }
+
+    /** @return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}> */
+    #[Override]
+    public function slotContributions(): array
+    {
+        return [
+            ['slot' => DoctorCheck::class, 'id' => 'media.blobs.pins', 'implementation' => BlobPinsCheck::class, 'key' => 'media.blobs.pins'],
+            ['slot' => DoctorCheck::class, 'id' => 'media.blobs.integrity', 'implementation' => BlobIntegrityCheck::class, 'key' => 'media.blobs.integrity'],
+        ];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function healthChecks(): array
+    {
+        return [
+            BlobPinsCheck::class,
+            BlobIntegrityCheck::class,
+        ];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function problemProviders(): array
+    {
+        return [MediaProblemDefinitions::class];
     }
 }

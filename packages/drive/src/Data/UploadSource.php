@@ -7,11 +7,11 @@ namespace Vaulter\Drive\Data;
 use ArrayObject;
 use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 
 #[Api]
 final readonly class UploadSource

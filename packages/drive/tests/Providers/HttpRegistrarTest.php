@@ -18,8 +18,8 @@ use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\PluginModuleBridge;
 
 it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity): void {
     config()->set('vaulter-drive.features.activity', $activity);
@@ -37,10 +37,11 @@ it('declares the v1 routes and commands, registered whatever the feature flags s
     config()->set('vaulter.routes.middleware.authenticated', ['host.auth']);
     config()->set('vaulter-drive.uploads.resumable.enabled', $uploads);
     config()->set('vaulter-drive.features.grants', $grants);
-    $module = new ModuleBuilder(new ModuleId('drive'));
-    (new DriveModule)->register($module);
+    $spec = app(ModuleCatalog::class)->pluginSpec(DriveModule::class);
+    $module = PluginModuleBridge::buildOffered(DriveModule::class, $spec);
     $driveRoutes = realpath(__DIR__.'/../../routes/drive.php');
 
+    expect($module)->not->toBeNull();
     // The grants, shares, activity and change-feed routes live in the same file: the module declares no other.
     expect(array_map(realpath(...), $module->routeFiles()))->toBe([$driveRoutes])
         ->and($module->commandClasses())->toContain(PurgeTrashCommand::class, PurgeDrivesCommand::class, RecountDrivesCommand::class, PruneRevisionsCommand::class, SweepUploadsCommand::class);

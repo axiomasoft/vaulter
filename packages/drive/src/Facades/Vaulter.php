@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Contracts\DriveHandle;

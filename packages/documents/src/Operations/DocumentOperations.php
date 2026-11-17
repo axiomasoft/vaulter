@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Operations;
 
 use Closure;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Pagination\CursorPaginator;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Page;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
@@ -17,7 +18,7 @@ use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
@@ -104,7 +105,7 @@ final readonly class DocumentOperations implements DriveExtension
         private NodeLocator $locator,
         private OperationGuard $guard,
         private ProfilePolicy $profiles,
-        private DocumentsConfig $config,
+        private Container $container,
         private DocumentTypeRegistry $types,
         private ContentDecoder $decoder,
         private CreateDocumentAction $create,
@@ -162,7 +163,7 @@ final readonly class DocumentOperations implements DriveExtension
         $created = $this->write('create', function () use ($name, $type, $content, $parent, $options): NodeSnapshot {
             $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
             $this->guard->authorizeCreate($this->context, $parent);
-            $documentType = $this->types->get($type ?? $this->config->defaultType());
+            $documentType = $this->types->get($type ?? $this->container->make(DocumentsOptions::class)->defaultType);
             $this->profiles->assertDocumentType(drive: $this->context->drive, type: $documentType->key());
 
             $node = $this->create->execute($this->context, new CreateDocumentInput(

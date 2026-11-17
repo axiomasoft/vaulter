@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Vaulter\Documents\Actions\Comments\AddCommentAction;
 use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
 use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Data\Comments\ResolveCommentInput;
@@ -51,7 +51,7 @@ it('adds a comment and dispatches CommentAdded on the node channel', function ()
         $channels = $event->broadcastOn();
 
         return $channels[0] instanceof PrivateChannel
-            && $channels[0]->name === 'private-'.app(DocumentsConfig::class)->channelPrefix().'.'.$node->getKey();
+            && $channels[0]->name === 'private-'.app(DocumentsOptions::class)->broadcast->channelPrefix.'.'.$node->getKey();
     });
 });
 
@@ -108,7 +108,5 @@ it('permanently deletes a comment and dispatches CommentDeleted', function (): v
 
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 
-    Event::assertDispatched(CommentDeleted::class, function (CommentDeleted $e) use ($id): bool {
-        return $e->comment->id === (string) $id && $e->actor->id === 5;
-    });
+    Event::assertDispatched(CommentDeleted::class, fn (CommentDeleted $e): bool => $e->comment->id === (string) $id && $e->actor->id === 5);
 });

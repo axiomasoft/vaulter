@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
 use Vaulter\Drive\Data\Snapshots\MintedShareLink;

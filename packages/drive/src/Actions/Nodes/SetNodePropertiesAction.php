@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -58,7 +58,7 @@ final readonly class SetNodePropertiesAction
 
             $next = $this->policy->patchProperties(drive: $context->drive, current: $current->properties,
                 namespace: $data->namespace, set: $data->set, unset: $data->unset, system: $context->actor->isSystem());
-            if ($next == $current->properties) {
+            if (self::sameProperties($next, $current->properties)) {
                 return $current;
             }
 
@@ -68,5 +68,17 @@ final readonly class SetNodePropertiesAction
 
             return $current;
         });
+    }
+
+    private static function sameProperties(mixed $left, mixed $right): bool
+    {
+        if ($left === $right) {
+            return true;
+        }
+        if (!is_array($left) || !is_array($right) || count($left) !== count($right)) {
+            return false;
+        }
+
+        return array_all($left, fn ($value, $key): bool => array_key_exists($key, $right) && self::sameProperties($value, $right[$key]));
     }
 }

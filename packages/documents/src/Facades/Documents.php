@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Operations\CommentOperations;

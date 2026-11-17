@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Activity;
 
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use RuntimeException;
 use Vaulter\Drive\Models\Activity\Activity;
 
 /**
@@ -36,7 +37,7 @@ final class ActivityTestHelpers
 
         $row = $rows->first();
         if ($rows->count() !== 1 || $row === null) {
-            throw new \RuntimeException("Expected exactly one [{$verb}] activity row, found {$rows->count()}.");
+            throw new RuntimeException("Expected exactly one [{$verb}] activity row, found {$rows->count()}.");
         }
 
         return $row;

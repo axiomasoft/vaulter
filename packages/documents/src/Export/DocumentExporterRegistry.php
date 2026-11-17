@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Export;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Exceptions\DuplicateDocumentExporterException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;

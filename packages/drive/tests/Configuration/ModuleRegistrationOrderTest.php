@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\Configuration\DedupScope;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\FreshApplication;
 
@@ -18,7 +18,7 @@ it('retains module defaults and applies host settings when modules register befo
         before: [VaulterDriveServiceProvider::class, VaulterMediaServiceProvider::class],
     );
 
-    expect($app->make(DriveConfig::class)->maxFileSize())->toBe(2048)
-        ->and($app->make(MediaConfig::class)->dedupScope())->toBe(DedupScope::Drive)
+    expect($app->make(DriveOptions::class)->uploads->maxFileSize)->toBe(2048)
+        ->and($app->make(MediaOptions::class)->dedupScope())->toBe(DedupScope::Drive)
         ->and($app['config']->get('vaulter-drive.models.upload_part'))->not->toBeNull();
 });

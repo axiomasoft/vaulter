@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Operations;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Encryption\Encrypter;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Access\OperationGuard;
@@ -16,7 +16,7 @@ use Vaulter\Drive\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\RotateShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\UpdateShareLinkAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Sharing\ShareOperations as Contract;
 use Vaulter\Drive\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Drive\Data\Sharing\RevokeShareInput;
@@ -44,7 +44,7 @@ use Vaulter\Operations\OperationSpec;
 final readonly class ShareOperations implements Contract
 {
     #[Internal]
-    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private DriveConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner, private Encrypter $encrypter, private ExactListing $cursors) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private DriveOptions $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner, private Encrypter $encrypter, private ExactListing $cursors) {}
 
     /** @return list<ShareLinkSnapshot> */
     public function list(NodeSnapshot|string|int $node): array
@@ -132,7 +132,7 @@ final readonly class ShareOperations implements Contract
         $page = $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage, cursor: $position);
 
         return new Page(
-            items: array_values(array_map(fn (NodeShare $share): ShareLinkSnapshot => $this->mapper->share($share), $page->items())),
+            items: array_values(array_map($this->mapper->share(...), $page->items())),
             nextCursor: $this->cursors->sealCursor($page->nextCursor(), 'shares-list', $scope),
         );
     }

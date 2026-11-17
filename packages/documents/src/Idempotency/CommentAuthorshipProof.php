@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Idempotency;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Whether the attempt of one keyed comment write proved its right by authorship. The {@see CommentReplayAuthorizer} is

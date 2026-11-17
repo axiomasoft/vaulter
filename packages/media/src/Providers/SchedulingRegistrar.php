@@ -6,8 +6,8 @@ namespace Vaulter\Media\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ScheduleConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar as CoreSchedulingRegistrar;
 
@@ -24,7 +24,8 @@ final class SchedulingRegistrar implements ModuleSchedule
 
     public function define(Schedule $schedule, Repository $config): void
     {
-        foreach ((new ScheduleConfig($config))->frequencies('vaulter-media', self::KEYS) as $key => $frequency) {
+        foreach (self::KEYS as $key) {
+            $frequency = ScheduleFrequency::parse('vaulter-media.schedule.'.$key, $config->get('vaulter-media.schedule.'.$key));
             if ($frequency !== null) {
                 CoreSchedulingRegistrar::task($schedule, self::COMMANDS[$key], $frequency, CoreSchedulingRegistrar::DEFAULT_EXPIRY);
             }

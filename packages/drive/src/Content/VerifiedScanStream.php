@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Throwable;
 
 /**
  * A copy of the bytes a scan actually read, with the digest of that copy.
@@ -63,7 +64,7 @@ final readonly class VerifiedScanStream
 
                 return null;
             }
-        } catch (\Throwable) {
+        } catch (Throwable) {
             if (is_resource($copy)) {
                 fclose($copy);
             }

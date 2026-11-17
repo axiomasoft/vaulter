@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Repositories;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Drive\Models\Drive;
@@ -22,7 +22,7 @@ use Vaulter\Drive\Models\Drive;
 final class DriveStoreRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
         private readonly VaulterDatabase $database,
     ) {}
 

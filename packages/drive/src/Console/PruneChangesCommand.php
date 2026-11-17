@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\ChangesConfig;
+use Vaulter\Drive\Configuration\ChangesOptions;
 use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 
@@ -35,7 +35,7 @@ final class PruneChangesCommand extends Command
 
     protected $description = 'Delete drive change-journal entries past the retention window.';
 
-    public function handle(ChangeHeadRepository $heads, ChangeEntryRepository $entries, VaulterDatabase $database, ChangesConfig $config): int
+    public function handle(ChangeHeadRepository $heads, ChangeEntryRepository $entries, VaulterDatabase $database, ChangesOptions $config): int
     {
         $override = $this->option('days');
         if ($override !== null && (!is_string($override) || preg_match('/^\d+$/', $override) !== 1 || (int) $override < 1)) {
@@ -43,7 +43,7 @@ final class PruneChangesCommand extends Command
 
             return self::INVALID;
         }
-        $days = $override === null ? $config->retentionDays() : (int) $override;
+        $days = $override === null ? $config->retentionDays : (int) $override;
         $threshold = Carbon::now()->subDays($days);
         $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
 

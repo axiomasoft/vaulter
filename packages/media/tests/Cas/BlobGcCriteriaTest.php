@@ -62,7 +62,7 @@ it('refuses an ingest whose digest a row records with another size and overwrite
         : Storage::disk('local')->delete($blob->storage_key);
     $before = $blob->fresh();
 
-    expect(fn () => gcCriteriaIngest('collide me', $scope, 'collider'))->toThrow(RuntimeException::class, 'the ingest is refused');
+    expect(fn (): Blob => gcCriteriaIngest('collide me', $scope, 'collider'))->toThrow(RuntimeException::class, 'the ingest is refused');
 
     $after = $blob->fresh();
     expect($after->status)->toBe($status)
@@ -87,7 +87,7 @@ it('refuses a pin of a pending row, loses nothing, and lands the commit after th
 
     // The pending row belongs to its commit: a reference-only pin and a re-commit + pin are both refused.
     expect(fn () => CasTestHelpers::pin($pending, 'reference'))->toThrow(BlobUnavailableException::class)
-        ->and(fn () => gcCriteriaIngest('pending bytes', $scope, 'ingest'))->toThrow(BlobUnavailableException::class)
+        ->and(fn (): Blob => gcCriteriaIngest('pending bytes', $scope, 'ingest'))->toThrow(BlobUnavailableException::class)
         ->and(CasTestHelpers::pins($pending))->toBe(0)
         ->and($pending->fresh()->status)->toBe(BlobStatus::Pending)
         ->and(gcCriteriaContents($pending))->toBe('pending bytes');

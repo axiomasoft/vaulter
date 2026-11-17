@@ -16,12 +16,15 @@ use RuntimeException;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Throwable;
 use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\CoreModule;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Kernel;
 use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\HoldsReferences;
+use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleReferences;
 use Vaulter\Modules\ModuleState;
+use Vaulter\Modules\PluginModuleBridge;
 use Vaulter\Modules\RemovalGuard;
 use Vaulter\Modules\VaulterModule;
 
@@ -392,9 +395,14 @@ final class ModuleUninstallCommand extends Command
     {
         $dependents = [];
         foreach ($modules as $module) {
-            /** @var VaulterModule $manifest */
+            if ($module->manifest === CoreModule::class) {
+                continue;
+            }
             $manifest = new ($module->manifest);
-            if (array_key_exists($id, $manifest->requires())) {
+            $requires = $manifest instanceof VaulterModule
+                ? array_keys($manifest->requires())
+                : array_keys(PluginModuleBridge::requires($manifest));
+            if (in_array($id, $requires, true)) {
                 $dependents[] = $module->id->value;
             }
         }
@@ -441,7 +449,11 @@ final class ModuleUninstallCommand extends Command
             }
             $closure[$module] = $manifests[$module];
             $manifest = new ($manifests[$module]);
-            $requiredIds = $manifest instanceof VaulterModule ? array_keys($manifest->requires()) : $manifest->manifest()->requires;
+            $requiredIds = $manifest instanceof VaulterModule
+                ? array_keys($manifest->requires())
+                : ($manifests[$module] === CoreModule::class
+                    ? []
+                    : array_keys(PluginModuleBridge::requires($manifest)));
             foreach ($requiredIds as $required) {
                 $visit($required);
             }
@@ -459,13 +471,20 @@ final class ModuleUninstallCommand extends Command
      */
     private function holders(array $closure): array
     {
+        $specs = ModuleCatalog::of($this->laravel)->pluginSpecs();
         $holders = $unreadable = [];
         foreach ($closure as $module => $manifest) {
-            if (!is_subclass_of($manifest, HoldsReferences::class)) {
+            $class = null;
+            if (is_subclass_of($manifest, HoldsReferences::class)) {
+                $class = $manifest::heldReferences();
+            } elseif (isset($specs[$manifest]) && $specs[$manifest]->heldReferences !== null) {
+                $class = $specs[$manifest]->heldReferences;
+            }
+            if ($class === null) {
                 continue;
             }
             try {
-                $references = $this->laravel->make($manifest::heldReferences());
+                $references = $this->laravel->make($class);
                 if ($references instanceof ModuleReferences) {
                     $holders[$module] = $references;
                 }
@@ -486,13 +505,20 @@ final class ModuleUninstallCommand extends Command
      */
     private function guards(array $closure): array
     {
+        $specs = ModuleCatalog::of($this->laravel)->pluginSpecs();
         $guards = $unreadable = [];
         foreach ($closure as $module => $manifest) {
-            if (!is_subclass_of($manifest, GuardsRemoval::class)) {
+            $class = null;
+            if (is_subclass_of($manifest, GuardsRemoval::class)) {
+                $class = $manifest::removalGuard();
+            } elseif (isset($specs[$manifest]) && $specs[$manifest]->removalGuard !== null) {
+                $class = $specs[$manifest]->removalGuard;
+            }
+            if ($class === null) {
                 continue;
             }
             try {
-                $guard = $this->laravel->make($manifest::removalGuard());
+                $guard = $this->laravel->make($class);
                 if (!$guard instanceof RemovalGuard) {
                     throw new RuntimeException(sprintf('%s is not a %s', get_debug_type($guard), RemovalGuard::class));
                 }

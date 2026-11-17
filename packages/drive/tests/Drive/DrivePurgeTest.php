@@ -182,7 +182,7 @@ it('purges each child of the root as a root operation of the system actor "drive
     Queue::fake();
     $drive = DriveTestHelpers::drive();
     $id = $drive->model()->getKey();
-    $children = [(string) $drive->folders()->create('one')->id, (string) $drive->folders()->create('two')->id];
+    $children = [$drive->folders()->create('one')->id, $drive->folders()->create('two')->id];
     $drive->delete();
     $inside = [];
     Node::retrieved(function (Node $model) use (&$inside, $children): void {
@@ -208,7 +208,7 @@ it('purges the other children and raises the first refusal when one child fails,
     $drive->delete();
     $fail = true;
     Node::retrieved(static function (Node $model) use (&$fail, $bad): void {
-        if ($fail && (string) $model->getKey() === (string) $bad->id && app(OperationRunner::class)->inOperation()) {
+        if ($fail && (string) $model->getKey() === $bad->id && app(OperationRunner::class)->inOperation()) {
             throw new RuntimeException('boom');
         }
     });

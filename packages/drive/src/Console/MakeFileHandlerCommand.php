@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Scaffolds a host-owned file handler with a Pest test on its contract suite. Registration stays

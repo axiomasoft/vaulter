@@ -70,15 +70,16 @@ it('fills pages across hidden windows and retains stable tuple ties', function (
 
 it('continues from last scanned tuple even for an empty budget-limited page', function (): void {
     config()->set('vaulter-drive.listing.scan_budget', 2);
+    $operation = app()->makeWith(ActivityOperations::class, ['context' => $this->context]);
     $visible = AccessTestHelpers::folder($this->drive, null, 'visible');
     $hidden = AccessTestHelpers::folder($this->drive, null, 'hidden');
     AccessTestHelpers::grant($visible, RoleRegistry::READER);
     $row = visibleActivityRow($visible, 1);
     visibleActivityRow($hidden, 2);
     visibleActivityRow($hidden, 3);
-    $page = $this->operation->forDrive();
+    $page = $operation->forDrive();
     expect($page->items)->toBe([])->and($page->nextCursor)->not->toBeNull();
-    $next = $this->operation->forDrive(new ListOptions(cursor: $page->nextCursor));
+    $next = $operation->forDrive(new ListOptions(cursor: $page->nextCursor));
     expect($next->items)->toHaveCount(1)->and($next->items[0]->id)->toBe((string) $row->id);
 });
 

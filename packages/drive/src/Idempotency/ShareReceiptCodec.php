@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Idempotency;
 use Illuminate\Contracts\Encryption\StringEncrypter;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\MintedShareLink;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;

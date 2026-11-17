@@ -63,7 +63,7 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
     // include=children is the first page only (no full walk): here an empty page that
     // still carries a cursor, and never a walled-off child.
     $children = $this->getJson('api/vaulter/v1/nodes/'.$this->folder->id.'?include=children')->assertOk()->json('data.children');
-    expect(array_intersect(array_column($children['data'], 'id'), array_map('strval', $hidden)))->toBe([])
+    expect(array_intersect(array_column($children['data'], 'id'), array_map(strval(...), $hidden)))->toBe([])
         ->and($children['meta']['next_cursor'])->not->toBeNull();
     config()->set('vaulter-drive.listing.scan_budget', 1000);
     $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
@@ -177,7 +177,7 @@ it('paginates trash in canonical default position name and id order without skip
         $found = array_merge($found, array_column($response->json('data'), 'id'));
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);
-    expect($found)->toBe(array_map('strval', $ids));
+    expect($found)->toBe(array_map(strval(...), $ids));
 });
 
 it('scans shared candidates across storages without totals or blocked rows', function (): void {

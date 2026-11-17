@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Kernel;
 use Vaulter\Media\Providers\BindingsRegistrar;
 use Vaulter\Media\VaulterMediaServiceProvider;
@@ -31,5 +31,5 @@ it('refuses to boot with the retired global dedup scope', function (): void {
     config()->set('vaulter-media.dedup.scope', 'global');
 
     expect(fn () => (new BindingsRegistrar)->boot(app()))
-        ->toThrow(InvalidConfigurationException::class, 'must not be shared across tenants');
+        ->toThrow(InvalidConfiguration::class, 'must not be shared across tenants');
 });

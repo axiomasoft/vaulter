@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Changes\ReaderSyncIdentity;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;
@@ -13,7 +14,6 @@ use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
@@ -142,9 +142,9 @@ it('cannot collide adjacent fields and keeps the exact bytes of every value', fu
 it('has no sync identity for an anonymous reader, an empty key or a non-positive generation', function (Closure $build): void {
     $build();
 })->with([
-    'anonymous' => fn () => ReaderSyncIdentity::principal(new ActorRef(null, null)),
-    'empty key' => fn () => new ReaderSyncIdentity('', 1),
-    'zero generation' => fn () => new ReaderSyncIdentity(SYNC_APP_KEY, 0),
+    'anonymous' => fn (): array => ReaderSyncIdentity::principal(new ActorRef(null, null)),
+    'empty key' => fn (): ReaderSyncIdentity => new ReaderSyncIdentity('', 1),
+    'zero generation' => fn (): ReaderSyncIdentity => new ReaderSyncIdentity(SYNC_APP_KEY, 0),
 ])->throws(InvalidArgumentException::class);
 
 describe('committed C0 bootstrap', function (): void {
@@ -244,5 +244,5 @@ describe('committed C0 bootstrap', function (): void {
         'zero max age' => [['vaulter-drive.changes.cursor_max_age_seconds' => 0]],
         'max age over 30 days' => [['vaulter-drive.changes.cursor_max_age_seconds' => 2_592_001]],
         'max age over the retention' => [['vaulter-drive.changes.retention_days' => 1, 'vaulter-drive.changes.cursor_max_age_seconds' => 86_401]],
-    ])->throws(InvalidConfigurationException::class);
+    ])->throws(InvalidConfiguration::class);
 });

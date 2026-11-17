@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Documents\Errors\DocumentsErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -44,5 +48,15 @@ final class DocumentTypeUnavailableException extends VaulterException implements
     public function problemDetails(): array
     {
         return ['context' => ['type' => $this->type]];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DocumentsErrorCode::DocumentTypeUnavailable,
+            category: ErrorCategory::Conflict,
+            details: ['type' => $this->type],
+        );
     }
 }

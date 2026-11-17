@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Media\Testing\Contracts;
 
 use DateTimeImmutable;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
+use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Api;
 use Vaulter\Media\Content\ScanInput;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
@@ -97,7 +98,10 @@ final class ContentScannerContractTests
 
     private function scan(ContentScanner $scanner, string $bytes): ScanResult
     {
-        $stream = fopen('php://temp', 'r+b') ?: throw new \RuntimeException('A scratch stream could not be opened.');
+        $stream = fopen('php://temp', 'r+b');
+        if ($stream === false) {
+            throw new RuntimeException('A scratch stream could not be opened.');
+        }
         fwrite($stream, $bytes);
         rewind($stream);
         try {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Tests\Http;
 
 use Illuminate\Testing\TestResponse;
+use RuntimeException;
 use Vaulter\Drive\Testing\Http\V1;
 
 /** Fixtures of the documents REST v1 suite on top of the core V1 helpers; every call runs as the test's acting user. */
@@ -39,7 +40,7 @@ final class DocumentsV1
     {
         $etag = test()->getJson(self::url('documents/'.$nodeId.'/content'))->assertOk()->headers->get('ETag');
 
-        return is_string($etag) ? $etag : throw new \RuntimeException('No ETag on documents.content.show');
+        return is_string($etag) ? $etag : throw new RuntimeException('No ETag on documents.content.show');
     }
 
     /** @return array{If-Match: string} */
@@ -67,6 +68,6 @@ final class DocumentsV1
     {
         $id = test()->postJson(self::url('drives/'.$driveId.'/documents'), $body + ['name' => 'Spec'])->assertCreated()->json('data.id');
 
-        return is_string($id) ? $id : throw new \RuntimeException('Document was not created');
+        return is_string($id) ? $id : throw new RuntimeException('Document was not created');
     }
 }

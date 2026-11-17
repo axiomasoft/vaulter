@@ -51,7 +51,6 @@ afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 function rsmdrvMatrix(): array
 {
     $caller = 'the answer is scoped to the caller, not to a resource: there is no id to hide (owner: ListSharedWithMeV1Test, ExactListingTest)';
-    $list = 'a list: a hidden parent is the concealed 404 of R3; the hidden children and the cursor are held by ReadPaginationSecurityTest (D21)';
     $noList = 'not a list or search: it answers one resource, R3 holds it';
     $noDownload = 'not a download: no bytes leave the route';
     $feed = 'the change feed may expose scanned progress, has_more and anonymous keyed removes by D20: its cursor is not compared with a world without the object (owner: P5.9, ChangesFeedV1Test)';

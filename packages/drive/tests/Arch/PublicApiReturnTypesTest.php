@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Operations\FileOperations;
 use Vaulter\Drive\Operations\FolderOperations;
@@ -22,7 +22,7 @@ use Vaulter\Drive\Operations\TrashOperations;
 it('keeps Eloquent out of the drive operations and handle', function (string $class): void {
     $leaks = [];
     $forbidden = [Model::class, Builder::class, Collection::class, AbstractPaginator::class, AbstractCursorPaginator::class];
-    foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+    foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
         if ($method->isConstructor() || str_contains((string) $method->getDocComment(), '@internal') || $method->getAttributes(Internal::class) !== []) {
             continue;
         }

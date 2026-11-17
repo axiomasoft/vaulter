@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Closure;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;

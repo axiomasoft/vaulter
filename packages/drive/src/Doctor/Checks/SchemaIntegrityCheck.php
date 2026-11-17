@@ -5,20 +5,21 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor\Checks;
 
 use Illuminate\Database\Query\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\CheckStatus;
+use Packman\Doctor\Enums\Severity;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Support\Identity;
 
 /** Samples the structural invariants of the tree and its aggregates: at most --sample rows per invariant. */
 #[Internal]
 final readonly class SchemaIntegrityCheck implements DoctorCheck
 {
-    public function __construct(private VaulterDatabase $database, private DatabaseConfig $tables) {}
+    public function __construct(private VaulterDatabase $database, private DatabaseOptions $tables) {}
 
     public function key(): string
     {
@@ -42,17 +43,18 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
             'i6_files_with_foreign_head' => $this->foreignHead('files', 'file_revisions', 'file_id', $limit),
             'i6_documents_with_foreign_head' => $this->foreignHead('documents', 'document_revisions', 'document_id', $limit),
         ];
-        $broken = array_filter($broken);
+        $broken = array_filter($broken, static fn (int $count): bool => $count > 0);
 
         if ($broken === []) {
             return [DoctorFinding::ok(code: 'core.schema.integrity_ok', message: 'No broken invariant in the sample.', evidence: ['sample' => $limit])];
         }
 
         return [DoctorFinding::at(
-            severity: DoctorSeverity::Warning,
+            status: CheckStatus::Warning,
+            severity: Severity::Warning,
             code: 'core.schema.integrity_broken',
             message: count($broken).' invariant(s) are broken in the sampled rows.',
-            hint: 'the counts are lower bounds (at most --sample rows per invariant); inspect the listed rows before repairing',
+            remediation: 'the counts are lower bounds (at most --sample rows per invariant); inspect the listed rows before repairing',
             evidence: ['sample' => $limit, ...$broken],
         )];
     }

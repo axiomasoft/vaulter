@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Access;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The internal bitmask behind {@see Ability}: exactly one bit per ability, so a

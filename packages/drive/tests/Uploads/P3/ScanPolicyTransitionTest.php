@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\RestoreNodeAction;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\DriveOptionsValidator;
+use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
@@ -54,7 +56,7 @@ it('SEC-POLICY preserves first new content boundary across reactivation and off'
     config()->set('vaulter-drive.scan.rollout_key', 'first');
     $context = DriveContext::system($drive, 'fixture');
     app(VaulterDatabase::class)->transaction(fn () => app(ScanPolicyResolver::class)->initialize($drive, $context));
-    $class = app(DriveConfig::class)->model('scan_policy_state');
+    $class = app(DriveOptions::class)->model('scan_policy_state');
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
     config()->set('vaulter-drive.scan.mode', 'off');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -124,7 +126,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
     $bind = function (ScanMode $mode): void {
         $registry = new ProfileRegistry;
         $registry->register((new Profile)->key('default')->uploads(new UploadPolicy(scanMode: $mode, scanPolicyVersion: 'profile-v1')));
-        $policy = new ProfilePolicy(app(DriveConfig::class), app('config'), $registry, app(ScanConfig::class), app(Kernel::class));
+        $policy = new ProfilePolicy(app(DriveOptions::class), app('config'), $registry, app(ScanOptions::class), app(Kernel::class));
         $resolver = new ScanPolicyResolver($policy, $registry, app(ScanPolicyStateRepository::class), app(ScanSnapshot::class), app(ActivateScanPolicyAction::class));
         app()->instance(ScanPolicyResolver::class, $resolver);
         app()->instance(Vaulter\Drive\Contracts\Content\ScanPolicyResolver::class, $resolver);
@@ -171,30 +173,30 @@ it('SEC-POLICY missing scanner and conflicting required aliases fail scanner boo
     config()->set('vaulter-drive.scan.mode', 'all_content');
     expect(fn () => (new BindingsRegistrar)->register(app()))
         ->toThrow(InvalidConfigurationException::class);
-    config()->set('vaulter-drive.scan.mode', null);
+    config()->set('vaulter-drive.scan.mode');
     config()->set('vaulter-drive.scan.required', true);
     config()->set('vaulter-drive.uploads.scan.required', false);
-    expect(fn () => app(ScanConfig::class)->globalSpec())
-        ->toThrow(InvalidConfigurationException::class);
+    expect(fn () => app(ScanOptions::class)->globalSpec())
+        ->toThrow(InvalidConfiguration::class);
 });
 
 it('SEC-POLICY rejects sync null or missing broker retry time with a configured scanner', function (string $driver, ?int $retry): void {
     config()->set('queue.default', 'scanner');
     config()->set('queue.connections.scanner', ['driver' => $driver, 'retry_after' => $retry]);
-    expect(fn () => app(DriveConfig::class)->validateScanWork(requireBroker: true))
+    expect(fn () => app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class), requireBroker: true))
         ->toThrow(InvalidConfigurationException::class);
 })->with(['sync' => ['sync', 180], 'null' => ['null', 180], 'missing visibility' => ['database', null], 'short visibility' => ['database', 120]]);
 
 it('SEC-POLICY permits asynchronous scanner work only with actual ordered broker settings', function (): void {
     config()->set('queue.default', 'database');
     config()->set('queue.connections.database.retry_after', 180);
-    app(DriveConfig::class)->validateScanWork(requireBroker: true);
+    app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class), requireBroker: true);
     expect(config('queue.connections.database.driver'))->toBe('database');
 });
 
 it('SEC-POLICY off without a scanner leaves unrelated broker timing unrestricted', function (): void {
     config()->set('queue.default', 'database');
     config()->set('queue.connections.database.retry_after', 90);
-    app(DriveConfig::class)->validateScanWork();
+    app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class));
     expect(config('queue.connections.database.retry_after'))->toBe(90);
 });

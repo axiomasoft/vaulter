@@ -1,0 +1,136 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-media configuration",
+    "type": "object",
+    "properties": {
+        "vaulter-media": {
+            "type": "object",
+            "properties": {
+                "blob_store": {
+                    "type": [
+                        "string",
+                        "integer",
+                        "number",
+                        "boolean",
+                        "array",
+                        "object",
+                        "null"
+                    ]
+                },
+                "content_store": {
+                    "type": [
+                        "string",
+                        "integer",
+                        "number",
+                        "boolean",
+                        "array",
+                        "object",
+                        "null"
+                    ]
+                },
+                "dedup": {
+                    "type": "object",
+                    "properties": {
+                        "scope": {
+                            "type": "string",
+                            "default": "tenant"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "disk": {
+                    "type": "string",
+                    "default": "local"
+                },
+                "gc": {
+                    "type": "object",
+                    "properties": {
+                        "grace_hours": {
+                            "type": "integer",
+                            "default": 24
+                        },
+                        "orphan_grace_hours": {
+                            "type": "integer",
+                            "default": 24
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "models": {
+                    "type": "object",
+                    "properties": {
+                        "blob": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "schedule": {
+                    "type": "object",
+                    "properties": {
+                        "blobs_gc": {
+                            "type": "string",
+                            "default": "dailyAt:04:00"
+                        },
+                        "blobs_reconcile": {
+                            "type": "string",
+                            "default": "weeklyOn:0,04:30"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "scrub": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "default": 100
+                        },
+                        "max_bytes": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "max_seconds": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "null"
+                            ],
+                            "default": null
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "storage_driver": {
+                    "type": [
+                        "string",
+                        "integer",
+                        "number",
+                        "boolean",
+                        "array",
+                        "object",
+                        "null"
+                    ]
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

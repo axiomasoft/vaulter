@@ -6,7 +6,7 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -52,7 +52,7 @@ it('fails loud when the open null driver is selected in production', function ()
     config()->set('vaulter-drive.access.permission_driver', 'null');
 
     // Simulate production: the manager rejects the open null driver.
-    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: true);
+    $manager = new PermissionDriverManager(accessOptions: app(AccessOptions::class), container: app(), isProduction: true);
 
     expect(fn (): mixed => $manager->driver())
         ->toThrow(MissingPermissionDriverException::class);
@@ -61,7 +61,7 @@ it('fails loud when the open null driver is selected in production', function ()
 it('allows the open null driver outside production', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'null');
 
-    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: false);
+    $manager = new PermissionDriverManager(accessOptions: app(AccessOptions::class), container: app(), isProduction: false);
 
     // Open in non-prod: every actor gets full access via the override.
     $storage = AccessTestHelpers::storage();
@@ -76,7 +76,7 @@ it('allows the open null driver outside production', function (): void {
 it('throws on an unknown driver key', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'does-not-exist');
 
-    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: false);
+    $manager = new PermissionDriverManager(accessOptions: app(AccessOptions::class), container: app(), isProduction: false);
 
     expect(fn (): mixed => $manager->driver())
         ->toThrow(MissingPermissionDriverException::class);

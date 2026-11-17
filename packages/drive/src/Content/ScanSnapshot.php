@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Media\Cas\BlobLock;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
@@ -21,16 +22,21 @@ use Vaulter\Media\Models\Cas\Blob;
 #[Internal]
 final readonly class ScanSnapshot
 {
-    public function __construct(private DriveConfig $config, private VaulterDatabase $database, private BlobLock $lock) {}
+    public function __construct(
+        private DriveOptions $options,
+        private MediaOptions $mediaOptions,
+        private VaulterDatabase $database,
+        private BlobLock $lock,
+    ) {}
 
     /** @return array{revision:FileRevision,file:File,node:Node,drive:Drive,blob:?Blob,identity:?ImmutableContentIdentity} */
     public function load(FileRevision $revision, bool $lock = false): array
     {
-        $revisionClass = $this->config->model('file_revision');
-        $fileClass = $this->config->model('file');
-        $nodeClass = $this->config->model('node');
-        $driveClass = $this->config->model('drive');
-        $blobClass = $this->config->model('blob');
+        $revisionClass = $this->options->model('file_revision');
+        $fileClass = $this->options->model('file');
+        $nodeClass = $this->options->model('node');
+        $driveClass = $this->options->model('drive');
+        $blobClass = $this->mediaOptions->blobModel;
         $persisted = $revisionClass::query()->whereKey($revision->getRawOriginal($revision->getKeyName()))->first();
         $file = $persisted === null ? null : $fileClass::query()->whereKey($persisted->file_id)->first();
         $node = $file === null ? null : $nodeClass::query()->whereKey($file->node_id)->first();
@@ -61,10 +67,10 @@ final readonly class ScanSnapshot
         }
         $identity = null;
         if ($blob !== null && $persisted->manifest_blob_id === null && !$blob->chunked && $blob->status === BlobStatus::Committed && $persisted->committed_at !== null && in_array($persisted->status, ['committed', 'superseded'], true)) {
-            $edgeClass = $this->config->model('file_revision_blob');
+            $edgeClass = $this->options->model('file_revision_blob');
             $edges = $edgeClass::query()->where('file_revision_id', $persisted->id)->get();
             $edge = $edges->first();
-            if ($edge !== null && $edges->count() === 1 && (string) $edge->blob_id === (string) $blob->id && $edge->role === 'data' && (int) $edge->ordinal === 0 && $blob->sha256 === $persisted->sha256 && $blob->size_bytes === $persisted->size_bytes && $blob->isIntact() && ($blob->tenant_id === null || (string) $blob->tenant_id === (string) $drive->tenant_id) && ($blob->storage_id === null || (string) $blob->storage_id === (string) $drive->id)) {
+            if ($edge !== null && $edges->count() === 1 && (string) $edge->blob_id === (string) $blob->id && $edge->role === 'data' && $edge->ordinal === 0 && $blob->sha256 === $persisted->sha256 && $blob->size_bytes === $persisted->size_bytes && $blob->isIntact() && ($blob->tenant_id === null || (string) $blob->tenant_id === (string) $drive->tenant_id) && ($blob->storage_id === null || (string) $blob->storage_id === (string) $drive->id)) {
                 $identity = new ImmutableContentIdentity($blob->id, $blob->scope_key, $blob->disk, $blob->storage_key, $blob->storage_version, $persisted->sha256, $persisted->size_bytes);
             }
         }

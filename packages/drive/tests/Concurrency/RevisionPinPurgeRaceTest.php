@@ -47,7 +47,7 @@ it('keeps the bytes of an ingest that races the purge of a file with the same co
         static function () use ($drive): string {
             usleep(150_000);
 
-            return (string) $drive->files()->upload(UploadSource::fromString('shared content', 'new.txt'))->id;
+            return $drive->files()->upload(UploadSource::fromString('shared content', 'new.txt'))->id;
         },
     ]);
     foreach ($outcomes as $outcome) {

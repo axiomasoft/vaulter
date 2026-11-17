@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
@@ -22,7 +23,7 @@ use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\OperationGuard;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\DriveStatus;
@@ -48,8 +49,8 @@ final readonly class CollaborationAccessPolicy
         private ContentDecoder $decoder,
         private DocumentQuery $query,
         private Kernel $kernel,
-        private DocumentsConfig $config,
-        private DriveConfig $drives,
+        private Container $container,
+        private DriveOptions $drives,
         private AccessResolver $resolver,
     ) {}
 
@@ -105,7 +106,7 @@ final readonly class CollaborationAccessPolicy
             tenant: $node->tenant_id === null ? null : Identity::stringify($node->tenant_id), principal: $context->actor->ref(),
             mode: $writable ? CollaborationMode::Write : CollaborationMode::Read, generation: $binding->generation,
             schemaVersion: $binding->schemaVersion, documentType: $aggregate->type, protocol: $binding->protocol,
-            stateFormat: $binding->stateFormat, notAfter: Carbon::now()->getTimestamp() + $this->config->collaborationSessionTtl(),
+            stateFormat: $binding->stateFormat, notAfter: Carbon::now()->getTimestamp() + $this->container->make(DocumentsOptions::class)->collaboration->sessionTtl,
         ), $ability, $driveActive);
     }
 

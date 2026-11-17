@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\State;
 
 use Closure;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Operations\Operation;
 use Vaulter\Operations\OperationMiddleware;

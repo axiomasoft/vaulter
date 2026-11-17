@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Data\Snapshots;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
@@ -33,6 +33,7 @@ final readonly class BlobSnapshot
         public ?string $storageId,
     ) {}
 
+    /** @internal */
     #[Internal]
     public static function fromModel(Blob $blob): self
     {
@@ -45,7 +46,7 @@ final readonly class BlobSnapshot
             storageKey: $blob->storage_key,
             status: $blob->status,
             intact: $blob->isIntact(),
-            chunked: (bool) $blob->chunked,
+            chunked: (bool) $blob->getAttribute('chunked'),
             tenantId: SnapshotValue::nullableId($blob->tenant_id),
             storageId: SnapshotValue::nullableId($blob->storage_id),
         );

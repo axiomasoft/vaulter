@@ -131,14 +131,12 @@ it('builds the canonical key and promotes the exact checksum and bytes', functio
 
     $driver->shouldReceive('exists')->once()->with($key, 'archive')->andReturn(false);
     $driver->shouldReceive('put')->once()->withArgs(
-        function (string $actualKey, $actualStream, ?string $disk, bool $ifNoneMatch, array $options) use ($bytes, $key, $sha256): bool {
-            return $actualKey === $key
-                && is_resource($actualStream)
-                && stream_get_contents($actualStream) === $bytes
-                && $disk === 'archive'
-                && $ifNoneMatch
-                && $options === ['ChecksumSHA256' => base64_encode(hex2bin($sha256))];
-        },
+        fn (string $actualKey, $actualStream, ?string $disk, bool $ifNoneMatch, array $options): bool => $actualKey === $key
+            && is_resource($actualStream)
+            && stream_get_contents($actualStream) === $bytes
+            && $disk === 'archive'
+            && $ifNoneMatch
+            && $options === ['ChecksumSHA256' => base64_encode(hex2bin($sha256))],
     )->andReturn(true);
 
     $store->promote($staged, $key, 'archive');

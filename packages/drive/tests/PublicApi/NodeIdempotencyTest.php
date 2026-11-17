@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
@@ -291,7 +291,7 @@ it('replays an upload initiation with the same session', function (): void {
         ->and($second->targetParentId)->toBe($folder->id)
         ->and($session->fresh()->getRawOriginal())->toBe($persisted)
         ->and(UploadSession::query()->count())->toBe(1)->and(nodeEvents(DriveEventType::UploadInitiated))->toBe(1);
-    expect(fn () => UploadsOf::handle(($this->keyed)('up-1'))->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetParent: $folder->id, targetName: 'big.bin', totalSizeBytes: 11)))->toThrow(IdempotencyKeyReusedException::class);
+    expect(fn (): UploadSessionSnapshot => UploadsOf::handle(($this->keyed)('up-1'))->initiate(new InitiateUploadInput(protocol: UploadProtocol::Tus, targetParent: $folder->id, targetName: 'big.bin', totalSizeBytes: 11)))->toThrow(IdempotencyKeyReusedException::class);
 });
 
 it('leaves one effect and one event for a repeated star, unstar and retention', function (): void {
@@ -349,7 +349,7 @@ it('keeps the raw receipt of a move semantic: the codec fields and version, no t
     $moved = ($this->keyed)('raw-move-1')->nodes()->move($file->id, $folder->id);
 
     /** @var stdClass $row */
-    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->where('idempotency_key', base64_encode('raw-move-1'))->first();
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->where('idempotency_key', base64_encode('raw-move-1'))->first();
     $body = json_decode((string) $row->receipt_body, true, flags: JSON_THROW_ON_ERROR);
 
     expect($row->receipt_kind)->toBe('drive.node-snapshot')

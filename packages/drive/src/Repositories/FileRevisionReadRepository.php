@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
@@ -26,7 +26,7 @@ use Vaulter\Support\Identity;
 final class FileRevisionReadRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
     ) {}
 
     /**

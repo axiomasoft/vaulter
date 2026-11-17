@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Scaffolds a host-owned document type with an opaque JSON codec. Registration stays

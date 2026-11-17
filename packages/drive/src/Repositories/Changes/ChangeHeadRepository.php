@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Repositories\Changes;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Changes\ChangeJournal;
 use Vaulter\Support\Identity;
@@ -20,7 +20,7 @@ final readonly class ChangeHeadRepository
 {
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
     ) {}
 
     /** Create the head of a drive unless it exists; true when this call created it. */

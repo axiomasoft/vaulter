@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Contracts\DriveHandle as DriveHandleContract;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveProvisioner;
@@ -23,7 +24,7 @@ beforeEach(fn () => Storage::fake('local'));
 function deepDrive(int $maxDepth): DriveHandleContract
 {
     $registry = new ProfileRegistry;
-    $registry->register((new Profile)->key('default')->drivePolicy(static fn (DrivePolicyBuilder $p) => $p->maxFolderDepth($maxDepth)));
+    $registry->register((new Profile)->key('default')->drivePolicy(static fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFolderDepth($maxDepth)));
     $registry->freeze();
     app()->instance(ProfileRegistry::class, $registry);
     app()->forgetInstance(DriveProvisioner::class);
@@ -38,12 +39,12 @@ function deepChain(DriveHandleContract $drive, int $levels): array
     $parent = null;
     for ($level = 1; $level <= $levels; $level++) {
         $folder = $drive->folders()->create('d'.$level, $parent);
-        $ids[] = (string) $folder->id;
+        $ids[] = $folder->id;
         $parent = $folder;
     }
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('deep bytes'), 'deep.bin'), new UploadOptions(parent: $parent));
 
-    return [$ids, (string) $file->id];
+    return [$ids, $file->id];
 }
 
 it('copy, trash and purge see exactly the full set of a deep tree', function (int $levels, int $maxDepth): void {
@@ -69,7 +70,7 @@ it('copy, trash and purge see exactly the full set of a deep tree', function (in
     expect(Node::query()->whereKey($all)->count())->toBe(0)
         ->and(Node::query()->whereKey($copy->id)->count())->toBe(1);
     Event::assertDispatched(NodePurged::class, function (NodePurged $event) use ($all): bool {
-        $given = array_map('strval', $event->nodeIds);
+        $given = array_map(strval(...), $event->nodeIds);
         sort($given);
         $expected = $all;
         sort($expected);
@@ -96,7 +97,7 @@ it('fails closed before any write when a tree is deeper than the traversal can p
     }
     $before = Node::query()->whereNotNull('trashed_at')->count();
 
-    expect(fn () => $drive->nodes()->trash($top))->toThrow(TreeTraversalIncompleteException::class)
-        ->and(fn () => $drive->nodes()->copy($top))->toThrow(TreeTraversalIncompleteException::class)
+    expect(fn (): NodeSnapshot => $drive->nodes()->trash($top))->toThrow(TreeTraversalIncompleteException::class)
+        ->and(fn (): NodeSnapshot => $drive->nodes()->copy($top))->toThrow(TreeTraversalIncompleteException::class)
         ->and(Node::query()->whereNotNull('trashed_at')->count())->toBe($before);
 });

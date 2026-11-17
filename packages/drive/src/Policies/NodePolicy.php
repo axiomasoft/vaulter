@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Policies;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Node;

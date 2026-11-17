@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Sharing;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Support\Identity;
 

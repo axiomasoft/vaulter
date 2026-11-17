@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Sharing;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Who may open a share link. The token is always required; the audience

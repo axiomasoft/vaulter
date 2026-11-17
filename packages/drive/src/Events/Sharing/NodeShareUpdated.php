@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Sharing;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Events\DriveEventType;

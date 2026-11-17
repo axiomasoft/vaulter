@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Profiles;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -25,16 +25,21 @@ use Vaulter\Media\Enums\Cas\ScanMode;
 #[Internal]
 final readonly class ProfilePolicy
 {
-    public function __construct(private DriveConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private Kernel $kernel) {}
+    public function __construct(private DriveOptions $options, private Repository $repository, private ProfileRegistry $profiles, private ScanOptions $scan, private Kernel $kernel) {}
 
     public function featureEnabled(Profile $profile, string $feature): bool
     {
         // A feature a module owns is on only while that module contributes the option and has it on.
         $global = $feature === 'comments'
             ? $this->option('comments')?->enabled() === true
-            : $this->config->featureEnabled($feature);
+            : $this->options->featureEnabled($feature);
 
         return $global && ($profile->featureFlag($feature) ?? true);
+    }
+
+    public function featureEnabledForKey(string $profileKey, string $feature): bool
+    {
+        return $this->featureEnabled($this->profiles->get($profileKey), $feature);
     }
 
     public function validate(Profile $profile): void
@@ -47,7 +52,7 @@ final readonly class ProfilePolicy
         if ($profile->getDisk() !== null && !is_array($this->repository->get('filesystems.disks.'.$profile->getDisk()))) {
             throw new InvalidConfigurationException('Unknown profile disk '.$profile->getDisk().'.');
         }
-        if ($profile->getPermissionDriver() !== null && !(new PermissionDriverCatalog($this->config->access(), $this->kernel))->has($profile->getPermissionDriver())) {
+        if ($profile->getPermissionDriver() !== null && !new PermissionDriverCatalog($this->options->access, $this->kernel)->has($profile->getPermissionDriver())) {
             throw new InvalidConfigurationException('Unknown profile permission driver.');
         }
         foreach ($this->kernel->extensions()->resolve(ProfileOption::class) as $option) {

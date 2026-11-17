@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Access;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\AccessOptions;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Kernel;
 
@@ -17,7 +17,7 @@ use Vaulter\Kernel;
 #[Internal]
 final readonly class PermissionDriverCatalog
 {
-    public function __construct(private AccessConfig $access, private Kernel $kernel) {}
+    public function __construct(private AccessOptions $access, private Kernel $kernel) {}
 
     /** @return array<string, string> key => class */
     public function classes(): array
@@ -29,7 +29,7 @@ final readonly class PermissionDriverCatalog
             }
         }
 
-        return [...$classes, ...$this->access->permissionDrivers()];
+        return [...$classes, ...$this->access->permissionDrivers];
     }
 
     public function has(string $key): bool

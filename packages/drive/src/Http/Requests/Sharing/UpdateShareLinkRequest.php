@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Requests\VaulterFormRequest;
@@ -24,7 +24,7 @@ final class UpdateShareLinkRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(SharingConfig $sharingConfig): array
+    public function rules(SharingOptions $sharingConfig): array
     {
         return [
             'audience' => ['sometimes', Rule::enum(ShareAudience::class)],
@@ -33,7 +33,7 @@ final class UpdateShareLinkRequest extends VaulterFormRequest
                 'sometimes',
                 'date',
                 'after:now',
-                'before_or_equal:'.Carbon::now()->addHours($sharingConfig->maxTtlHours())->toDateTimeString(),
+                'before_or_equal:'.Carbon::now()->addHours($sharingConfig->maxTtlHours)->toDateTimeString(),
             ],
             'max_uses' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ];

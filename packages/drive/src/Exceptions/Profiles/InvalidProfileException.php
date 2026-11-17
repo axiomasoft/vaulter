@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Profiles;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -43,6 +47,15 @@ final class InvalidProfileException extends VaulterException
             .'strategy is incoherent on the shared v_* schema (one nodes table = one PK type). '
             .'Fix: either drop idStrategy() (use config(vaulter.ids.strategy)) or declare own tables '
             .'via tablePrefix()/tables() (advanced per-panel mode).',
+        );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::InvalidProfile,
+            category: ErrorCategory::Internal,
         );
     }
 }

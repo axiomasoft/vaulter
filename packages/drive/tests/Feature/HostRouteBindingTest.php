@@ -20,7 +20,7 @@ it('resolves a host node parameter with the host model', function (): void {
         $table->id();
     });
     $project = HostProject::create();
-    Route::get('/projects/{node}', fn (HostProject $node) => (string) $node->getKey())
+    Route::get('/projects/{node}', fn (HostProject $node): string => (string) $node->getKey())
         ->middleware(SubstituteBindings::class);
     $this->get('/projects/'.$project->getKey())->assertOk()->assertSee((string) $project->getKey());
 });

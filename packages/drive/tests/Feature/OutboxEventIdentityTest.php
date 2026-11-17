@@ -21,7 +21,7 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
         $drive->nodes()->rename($node, $name);
     }
 
-    $rows = OutboxEvent::query()->where('aggregate_id', (string) $node->id)
+    $rows = OutboxEvent::query()->where('aggregate_id', $node->id)
         ->where('type', DriveEventType::NodeRenamed->value)->orderBy('outbox_seq')->get();
 
     $names = Activity::query()->whereIn('event_id', $rows->pluck('event_id'))->orderBy('id')->get()->pluck('context.to')->all();
@@ -46,7 +46,7 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
     $drive->trash()->restore($node);
     $drive->nodes()->trash($node);
 
-    $rows = OutboxEvent::query()->where('aggregate_id', (string) $node->id)
+    $rows = OutboxEvent::query()->where('aggregate_id', $node->id)
         ->whereIn('type', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])
         ->orderBy('outbox_seq')->get();
 

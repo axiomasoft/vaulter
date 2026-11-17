@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Support;
 
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Http\Resources\PageResponse;
 

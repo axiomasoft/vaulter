@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts\Handlers;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Enums\Handlers\Capability;
 use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 

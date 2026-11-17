@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Http\Resources\Drive;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Override;
+use Packman\Attributes\Internal;
 use stdClass;
-use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter;
@@ -68,7 +69,7 @@ final class NodeResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         return $this->representation;

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Repositories\Content;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Models\Cas\Blob;
 
 /**
@@ -22,18 +23,21 @@ use Vaulter\Media\Models\Cas\Blob;
 #[Internal]
 final readonly class ScanAuthorityRepository
 {
-    public function __construct(private DriveConfig $config) {}
+    public function __construct(
+        private DriveOptions $options,
+        private MediaOptions $mediaOptions,
+    ) {}
 
     public function drive(int|string $id): ?Drive
     {
-        $class = $this->config->model('drive');
+        $class = $this->options->model('drive');
 
         return $class::query()->whereKey($id)->first();
     }
 
     public function driveOrFail(int|string $id): Drive
     {
-        $class = $this->config->model('drive');
+        $class = $this->options->model('drive');
 
         return $class::query()->whereKey($id)->firstOrFail();
     }
@@ -41,35 +45,35 @@ final readonly class ScanAuthorityRepository
     /** Re-reads by the persisted key, so attributes changed on the passed model are never trusted. */
     public function persistedDriveOrFail(Drive $drive): Drive
     {
-        $class = $this->config->model('drive');
+        $class = $this->options->model('drive');
 
         return $class::query()->whereKey($drive->getRawOriginal($drive->getKeyName()))->firstOrFail();
     }
 
     public function lockDriveOrFail(int|string $id): Drive
     {
-        $class = $this->config->model('drive');
+        $class = $this->options->model('drive');
 
         return $class::query()->whereKey($id)->lockForUpdate()->firstOrFail();
     }
 
     public function revision(int|string $id): ?FileRevision
     {
-        $class = $this->config->model('file_revision');
+        $class = $this->options->model('file_revision');
 
         return $class::query()->whereKey($id)->first();
     }
 
     public function revisionOrFail(int|string $id): FileRevision
     {
-        $class = $this->config->model('file_revision');
+        $class = $this->options->model('file_revision');
 
         return $class::query()->whereKey($id)->firstOrFail();
     }
 
     public function blob(int|string $id): ?Blob
     {
-        $class = $this->config->model('blob');
+        $class = $this->mediaOptions->blobModel;
 
         return $class::query()->whereKey($id)->first();
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
 use Vaulter\Drive\Enums\NodeKind;

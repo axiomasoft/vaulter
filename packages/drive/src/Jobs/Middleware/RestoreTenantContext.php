@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Auth;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
@@ -30,6 +30,7 @@ final class RestoreTenantContext
         return $this->actor;
     }
 
+    /** @param Closure(object): mixed $next */
     public function handle(object $job, Closure $next): mixed
     {
         return app(TenancyBypass::class)->suspend(function () use ($job, $next): mixed {

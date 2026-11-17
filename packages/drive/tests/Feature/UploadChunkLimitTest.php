@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -34,7 +34,7 @@ function chunkLimitStorage(): Drive
 it('ключ max_chunk_bytes имеет непустой дефолт — из коробки чанк ограничен, RV-03', function (): void {
     // Config-honesty: до фикса дефолт был 0 = «кап отключён», то есть обещанная защита из
     // коробки не стояла вовсе.
-    expect(app(DriveConfig::class)->maxChunkSize())->toBeGreaterThan(0)
+    expect(app(DriveOptions::class)->uploads->resumable->maxChunkSize)->toBeGreaterThan(0)
         ->and(config('vaulter-drive.uploads.resumable.max_chunk_size'))->toBeGreaterThan(0);
 });
 

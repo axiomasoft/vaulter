@@ -70,7 +70,7 @@ it('charges only live copied descendants and excludes trashed children', functio
     $drive->nodes()->trash($trashed);
     $used = $drive->model()->refresh()->used_bytes;
 
-    $copy = $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'Copy'));
+    $copy = $drive->nodes()->copy($folder, options: new CopyOptions(name: 'Copy'));
 
     expect(DriveTestHelpers::model($copy)->children()->pluck('name')->all())->toBe(['live.bin'])
         ->and($drive->model()->refresh()->used_bytes)->toBe($used + 3);

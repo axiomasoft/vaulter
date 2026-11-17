@@ -67,7 +67,7 @@ it('falls back to DownloadOnly for an archive / unknown type', function (): void
 });
 
 it('never returns null — DownloadOnly is the guaranteed terminal resolution', function (): void {
-    $file = FileDescriptor::make(nodeId: 1, filename: 'mystery', detectedMime: null);
+    $file = FileDescriptor::make(nodeId: 1, filename: 'mystery');
 
     expect($this->registry->resolve($file, Capability::Download))
         ->toBeInstanceOf(DownloadOnlyHandler::class);

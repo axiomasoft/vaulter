@@ -1,0 +1,160 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/vaulter-documents",
+    "codes": [
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "CollaborationProtocolContract",
+            "code": "documents.collaboration_protocol_contract",
+            "type": "urn:packman:problem:documents.collaboration_protocol_contract",
+            "status": 503,
+            "title": "Collaboration protocol contract error",
+            "retryable": false,
+            "category": "unavailable"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "CollaborationUnavailable",
+            "code": "documents.collaboration_unavailable",
+            "type": "urn:packman:problem:documents.collaboration_unavailable",
+            "status": 409,
+            "title": "Collaboration unavailable",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "CommentNotFound",
+            "code": "documents.comment_not_found",
+            "type": "urn:packman:problem:documents.comment_not_found",
+            "status": 404,
+            "title": "Comment not found",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentContentDegraded",
+            "code": "documents.document_content_degraded",
+            "type": "urn:packman:problem:documents.document_content_degraded",
+            "status": 409,
+            "title": "Document content degraded",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentRevisionNotFound",
+            "code": "documents.document_revision_not_found",
+            "type": "urn:packman:problem:documents.document_revision_not_found",
+            "status": 404,
+            "title": "Document revision not found",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentStateMismatch",
+            "code": "documents.document_state_mismatch",
+            "type": "urn:packman:problem:documents.document_state_mismatch",
+            "status": 412,
+            "title": "Document state mismatch",
+            "retryable": true,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentStatePending",
+            "code": "documents.document_state_pending",
+            "type": "urn:packman:problem:documents.document_state_pending",
+            "status": 409,
+            "title": "Document state pending drain",
+            "retryable": true,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentStateTooLarge",
+            "code": "documents.document_state_too_large",
+            "type": "urn:packman:problem:documents.document_state_too_large",
+            "status": 413,
+            "title": "Document state too large",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentTypeUnavailable",
+            "code": "documents.document_type_unavailable",
+            "type": "urn:packman:problem:documents.document_type_unavailable",
+            "status": 409,
+            "title": "Document type unavailable",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DuplicateRegistration",
+            "code": "documents.duplicate_registration",
+            "type": "urn:packman:problem:documents.duplicate_registration",
+            "status": 500,
+            "title": "Duplicate registration",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "InvalidDocumentContent",
+            "code": "documents.invalid_document_content",
+            "type": "urn:packman:problem:documents.invalid_document_content",
+            "status": 422,
+            "title": "Invalid document content",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "NotADocument",
+            "code": "documents.not_a_document",
+            "type": "urn:packman:problem:documents.not_a_document",
+            "status": 409,
+            "title": "Node is not a document",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "UnknownDocumentType",
+            "code": "documents.unknown_document_type",
+            "type": "urn:packman:problem:documents.unknown_document_type",
+            "status": 422,
+            "title": "Unknown document type",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "UnknownExportFormat",
+            "code": "documents.unknown_export_format",
+            "type": "urn:packman:problem:documents.unknown_export_format",
+            "status": 422,
+            "title": "Unknown export format",
+            "retryable": false,
+            "category": "validation"
+        }
+    ]
+}

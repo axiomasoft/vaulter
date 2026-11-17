@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
@@ -38,7 +39,7 @@ it('цикл-гард: запрет перемещения в самого се�
     $drive = DriveTestHelpers::drive();
     $folder = $drive->folders()->create('A');
 
-    expect(fn () => $drive->nodes()->move($folder, $folder))
+    expect(fn (): NodeSnapshot => $drive->nodes()->move($folder, $folder))
         ->toThrow(NodeCycleException::class);
 });
 
@@ -48,7 +49,7 @@ it('цикл-гард: запрет перемещения в собственн
     $a = $drive->folders()->create('A');
     $child = $drive->folders()->create('child', $a);
 
-    expect(fn () => $drive->nodes()->move($a, $child))
+    expect(fn (): NodeSnapshot => $drive->nodes()->move($a, $child))
         ->toThrow(NodeCycleException::class);
 });
 
@@ -91,7 +92,7 @@ it('move отклоняет конфликт имён в месте назнач
     $moving = $drive->folders()->create('dup', $b);
 
     // $moving is "dup" under B; A already has a live "dup".
-    expect(fn () => $drive->nodes()->move($moving, $a))
+    expect(fn (): NodeSnapshot => $drive->nodes()->move($moving, $a))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -102,7 +103,7 @@ it('move отклоняет кросс-storage перемещение', function
     $node = $driveA->folders()->create('A');
     $foreignParent = $driveB->folders()->create('B');
 
-    expect(fn () => $driveA->nodes()->move($node, $foreignParent))
+    expect(fn (): NodeSnapshot => $driveA->nodes()->move($node, $foreignParent))
         ->toThrow(NodeNotFoundException::class);
 });
 
@@ -115,7 +116,7 @@ it('rename меняет имя и проверяет конфликт сибли
     $renamed = $drive->nodes()->rename($a, 'Renamed');
     expect($renamed->name)->toBe('Renamed');
 
-    expect(fn () => $drive->nodes()->rename($renamed, 'B'))
+    expect(fn (): NodeSnapshot => $drive->nodes()->rename($renamed, 'B'))
         ->toThrow(NodeNameConflictException::class);
 });
 

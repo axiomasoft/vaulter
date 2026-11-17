@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /** Authorized limits for one node (nodeId is never the document aggregate id). */

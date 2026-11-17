@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -58,5 +62,14 @@ final class OffsetMismatchException extends VaulterException implements ProblemE
     public function problemHeaders(): array
     {
         return ['Upload-Offset' => (string) $this->serverOffset, 'Tus-Resumable' => '1.0.0'];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::UploadOffsetMismatch,
+            category: ErrorCategory::Conflict,
+        );
     }
 }

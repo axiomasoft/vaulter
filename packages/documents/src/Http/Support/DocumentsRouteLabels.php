@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 
 /** The metric labels of the documents' routes: documents and comments (the RouteLabelSource contribution of the documents module). */

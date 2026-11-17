@@ -65,7 +65,7 @@ it('embeds the presentation in the NodeResource payload', function (): void {
         parent: DriveTestHelpers::model($drive->root()),
     ));
 
-    $payload = (new NodeResource(app(NodeSnapshotMapper::class)->map($node), NodeAbilities::denied()))->toArray(request());
+    $payload = new NodeResource(app(NodeSnapshotMapper::class)->map($node), NodeAbilities::denied())->toArray(request());
 
     expect($payload)->toHaveKey('presentation')->not->toHaveKey('handler')
         ->and($payload['presentation'])->toBeArray()
@@ -81,7 +81,7 @@ it('omits the presentation for a folder node', function (): void {
     $drive = DocumentTestHelpers::drive();
     $folder = $drive->folders()->create('Plain');
 
-    $payload = (new NodeResource($folder, NodeAbilities::denied()))->toArray(request());
+    $payload = new NodeResource($folder, NodeAbilities::denied())->toArray(request());
 
     expect($folder->kind)->toBe(NodeKind::Folder)
         ->and($payload['presentation'])->toBeNull();

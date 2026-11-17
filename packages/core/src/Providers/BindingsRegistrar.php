@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Providers;
 
 use Illuminate\Container\Container;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Packman\Attributes\Internal;
+use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Configuration\IdempotencyOptions;
@@ -57,21 +57,21 @@ final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
-        $app->singletonIf(VaulterOptions::class, static function (Container $app): VaulterOptions {
-            $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter', []) : [];
-
-            return VaulterOptions::fromArray(is_array($raw) ? $raw : ['__invalid_root' => $raw], 'vaulter');
-        });
-        $app->singleton(DatabaseOptions::class, static fn (Container $app): DatabaseOptions => $app->make(VaulterOptions::class)->database);
-        $app->singleton(IdsOptions::class, static fn (Container $app): IdsOptions => $app->make(VaulterOptions::class)->ids);
-        $app->singleton(TenancyOptions::class, static fn (Container $app): TenancyOptions => $app->make(VaulterOptions::class)->tenancy);
-        $app->singleton(SecurityOptions::class, static fn (Container $app): SecurityOptions => $app->make(VaulterOptions::class)->security);
-        $app->singleton(RoutesOptions::class, static fn (Container $app): RoutesOptions => $app->make(VaulterOptions::class)->routes);
-        $app->singleton(OutboxOptions::class, static fn (Container $app): OutboxOptions => $app->make(VaulterOptions::class)->outbox);
-        $app->singleton(IdempotencyOptions::class, static fn (Container $app): IdempotencyOptions => $app->make(VaulterOptions::class)->idempotency);
-        $app->singleton(ScheduleOptions::class, static fn (Container $app): ScheduleOptions => $app->make(VaulterOptions::class)->schedule);
-        $app->singleton(ObservabilityOptions::class, static fn (Container $app): ObservabilityOptions => $app->make(VaulterOptions::class)->observability);
-        $app->singleton(ModelsOptions::class, static fn (Container $app): ModelsOptions => $app->make(VaulterOptions::class)->models);
+        $app->bind(VaulterOptions::class, static fn (Container $app): VaulterOptions => CompiledOptionsCache::resolve(
+            $app,
+            'vaulter',
+            static fn (array $raw): VaulterOptions => VaulterOptions::fromArray($raw, 'vaulter'),
+        ));
+        $app->bind(DatabaseOptions::class, static fn (Container $app): DatabaseOptions => $app->make(VaulterOptions::class)->database);
+        $app->bind(IdsOptions::class, static fn (Container $app): IdsOptions => $app->make(VaulterOptions::class)->ids);
+        $app->bind(TenancyOptions::class, static fn (Container $app): TenancyOptions => $app->make(VaulterOptions::class)->tenancy);
+        $app->bind(SecurityOptions::class, static fn (Container $app): SecurityOptions => $app->make(VaulterOptions::class)->security);
+        $app->bind(RoutesOptions::class, static fn (Container $app): RoutesOptions => $app->make(VaulterOptions::class)->routes);
+        $app->bind(OutboxOptions::class, static fn (Container $app): OutboxOptions => $app->make(VaulterOptions::class)->outbox);
+        $app->bind(IdempotencyOptions::class, static fn (Container $app): IdempotencyOptions => $app->make(VaulterOptions::class)->idempotency);
+        $app->bind(ScheduleOptions::class, static fn (Container $app): ScheduleOptions => $app->make(VaulterOptions::class)->schedule);
+        $app->bind(ObservabilityOptions::class, static fn (Container $app): ObservabilityOptions => $app->make(VaulterOptions::class)->observability);
+        $app->bind(ModelsOptions::class, static fn (Container $app): ModelsOptions => $app->make(VaulterOptions::class)->models);
 
         $app->singleton(ProductionInvariants::class, static fn (Application $app): ProductionInvariants => new ProductionInvariants(
             $app->make(Kernel::class)->extensions(),

@@ -7,12 +7,12 @@ namespace Vaulter\Drive\Access\Drivers;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\ValueObjects\Access\OwnerRef;
@@ -44,7 +44,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
 final class GatePermissionDriver implements PermissionDriver
 {
     public function __construct(
-        private readonly AccessConfig $accessConfig,
+        private readonly AccessOptions $accessConfig,
         private readonly RoleRegistry $roles,
     ) {}
 
@@ -62,7 +62,7 @@ final class GatePermissionDriver implements PermissionDriver
         }
 
         $granted = [];
-        foreach ($this->accessConfig->gateAbilityMap() as $role => $ability) {
+        foreach ($this->accessConfig->gateAbilities as $role => $ability) {
             if ($this->gateAllows($actor, $ability, [$this->contextFor($scope)])) {
                 $granted[] = $this->roles->latest($role);
             }
@@ -77,7 +77,7 @@ final class GatePermissionDriver implements PermissionDriver
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
-        if ($this->gateAllows($actor, $this->accessConfig->gateSuperAbility(), [$this->contextFor($scope)])) {
+        if ($this->gateAllows($actor, $this->accessConfig->gateSuperAbility, [$this->contextFor($scope)])) {
             return Effect::Allow;
         }
 
@@ -112,7 +112,7 @@ final class GatePermissionDriver implements PermissionDriver
      */
     public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
-        return $this->gateAllows($actor, $this->accessConfig->gateCreateAbility(), [$this->contextFor($scope)]);
+        return $this->gateAllows($actor, $this->accessConfig->gateCreateAbility, [$this->contextFor($scope)]);
     }
 
     /**

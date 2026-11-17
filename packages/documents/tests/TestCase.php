@@ -29,7 +29,7 @@ abstract class TestCase extends OrchestraTestCase
         return [
             // Core owns the schema (v_nodes/v_drives/... + v_node_comments/
             // v_documents/v_document_revisions), the Node/Storage models, Access/Sharing/
-            // Activity and Configuration\DriveConfig.
+            // Activity and Configuration\DriveOptions.
             VaulterServiceProvider::class,
             // The document-node tests build their Storage fixtures through
             // Vaulter::drive() (a Drive handle) — documents requires only core in

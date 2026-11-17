@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Contracts\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;

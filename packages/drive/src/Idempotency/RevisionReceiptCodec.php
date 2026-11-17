@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Idempotency;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Enums\ScanStatus;
 use Vaulter\Idempotency\ReceiptCodec;
@@ -96,7 +96,9 @@ final class RevisionReceiptCodec implements ReceiptCodec
             return null;
         }
 
-        return DateTimeImmutable::createFromFormat(self::TIME, $value) ?: throw new LogicException('[Vaulter] A revision receipt holds a malformed time.');
+        $parsed = DateTimeImmutable::createFromFormat(self::TIME, $value);
+
+        return $parsed !== false ? $parsed : throw new LogicException('[Vaulter] A revision receipt holds a malformed time.');
     }
 
     private static function nullable(mixed $value): ?string

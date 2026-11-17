@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\Tenancy;
@@ -28,7 +28,7 @@ final class ResetChangesCommand extends Command
 
     protected $description = 'Expire every change-journal cursor of a drive, forcing its clients to resynchronize.';
 
-    public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, DriveConfig $config): int
+    public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, DriveOptions $config): int
     {
         // A required argument is always one string; the check narrows Symfony's argument type.
         $label = $this->argument('drive');

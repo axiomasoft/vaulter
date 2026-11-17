@@ -30,7 +30,7 @@ it('gives documents v1 controllers no public method besides the constructor and 
     $offenders = [];
     foreach ((new Finder)->files()->in($root)->name('*.php') as $file) {
         $class = 'Vaulter\\Documents\\Http\\Controllers\\'.str_replace(['/', '.php'], ['\\', ''], substr($file->getPathname(), strlen($root) + 1));
-        foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+        foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
                 $offenders[] = $class.'::'.$method->getName();
             }

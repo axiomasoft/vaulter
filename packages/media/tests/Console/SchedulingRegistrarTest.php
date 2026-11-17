@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Configuration\ScheduleOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Media\Providers\BindingsRegistrar;
 
 /** @return array<string, Event> keyed by the task name */
 function bootMediaSchedule(array $config = []): array
 {
     config($config);
+    app()->forgetInstance(VaulterOptions::class);
+    app()->forgetInstance(ScheduleOptions::class);
     app()->forgetInstance(Schedule::class);
 
     $tasks = [];
@@ -46,4 +50,4 @@ it('rejects an invalid frequency at boot', function (): void {
     config(['vaulter-media.schedule.blobs_gc' => 'whenever']);
 
     (new BindingsRegistrar)->boot(app());
-})->throws(InvalidConfigurationException::class);
+})->throws(InvalidConfiguration::class);

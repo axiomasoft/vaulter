@@ -8,10 +8,10 @@ use Closure;
 use Illuminate\Database\Query\Builder;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Data\Snapshots\BlobSnapshot;
@@ -51,9 +51,9 @@ final readonly class BlobPinStore implements BlobPins
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
         private ContentStore $content,
-        private DatabaseConfig $databaseConfig,
+        private DatabaseOptions $databaseConfig,
         private IdStrategyResolver $ids,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
     ) {}
 
     public function pin(BlobSnapshot|int|string $blob, string $ownerType, string $referenceKey): void

@@ -6,7 +6,8 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 
 /**
@@ -25,7 +26,7 @@ final class CollaborationSessionResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         /** @var CollaborationSession $session */

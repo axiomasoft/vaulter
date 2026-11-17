@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Models\Access\NodeGrant;
@@ -25,7 +25,7 @@ use Vaulter\Drive\Models\Node;
 final class GrantStoreRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
     ) {}
 
     public function grant(Node $node, GrantInput $data, int|string|null $grantedBy = null): NodeGrant

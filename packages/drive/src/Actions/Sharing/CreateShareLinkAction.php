@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Actions\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
@@ -19,7 +19,7 @@ use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Sharing\NodeShareCreated;
 use Vaulter\Drive\Models\Drive;
-use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Sharing\NodeShareStoreRepository;
@@ -37,9 +37,9 @@ use Vaulter\Events\EventRecorder;
  * The role and audience obey {@see ShareLinkRules}, and the expiry may not pass the
  * drive profile's maxShareLinkTtlDays. A link is never minted immortal by omission
  * without an `expiresAt` the Action stamps
- * `now() + sharingConfig->defaultTtlHours()` (cut back to the profile limit) at mint
+ * `now() + sharingConfig->defaultTtlHours` (cut back to the profile limit) at mint
  * time, NOT a DB column default, so it stays host-config-overridable. An explicit
- * `expiresAt` above `sharingConfig->maxTtlHours()` is rejected before minting.
+ * `expiresAt` above `sharingConfig->maxTtlHours` is rejected before minting.
  *
  * Authorization (the actor may Share the node) is enforced by the caller before
  * reaching the Action — the Action mints + persists, it does not re-authorize.
@@ -48,13 +48,13 @@ use Vaulter\Events\EventRecorder;
 final readonly class CreateShareLinkAction
 {
     public function __construct(
-        private SharingConfig $sharingConfig,
+        private SharingOptions $sharingConfig,
         private ShareTokenMinter $minter,
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
         private NodeLocator $locator,
         private ShareLinkRules $rules,
-        private TenancyConfig $tenancy,
+        private TenancyOptions $tenancy,
         private EventRecorder $recorder,
         private AccessSnapshotMapper $accessSnapshots,
     ) {}
@@ -84,7 +84,7 @@ final readonly class CreateShareLinkAction
         $expiresAt = $data->expiresAt ?? $this->defaultExpiry($context->drive, $now);
 
         return $this->database->transaction(function () use ($context, $node, $data, $role, $passwordHash, $expiresAt): MintedShareLink {
-            [$share, $token] = $this->minter->mint(fn (string $tokenHash, string $tokenPrefix) => $this->shares->create(
+            [$share, $token] = $this->minter->mint(fn (string $tokenHash, string $tokenPrefix): NodeShare => $this->shares->create(
                 node: $node,
                 tokenHash: $tokenHash,
                 tokenPrefix: $tokenPrefix,
@@ -107,21 +107,21 @@ final readonly class CreateShareLinkAction
 
     private function assertTenantAudience(ShareAudience $audience): void
     {
-        if ($audience === ShareAudience::Tenant && !$this->tenancy->enabled()) {
+        if ($audience === ShareAudience::Tenant && !$this->tenancy->enabled) {
             throw new InvalidArgumentException('The tenant audience needs tenancy to be enabled.');
         }
     }
 
     private function assertWithinConfiguredTtl(Carbon $expiresAt, Carbon $now): void
     {
-        if ($expiresAt->lte($now) || $expiresAt->gt($now->copy()->addHours($this->sharingConfig->maxTtlHours()))) {
+        if ($expiresAt->lte($now) || $expiresAt->gt($now->copy()->addHours($this->sharingConfig->maxTtlHours))) {
             throw new InvalidArgumentException('Share expiry must be within the configured TTL.');
         }
     }
 
     private function defaultExpiry(Drive $drive, Carbon $now): Carbon
     {
-        $expiresAt = $now->copy()->addHours($this->sharingConfig->defaultTtlHours());
+        $expiresAt = $now->copy()->addHours($this->sharingConfig->defaultTtlHours);
         $limit = $this->rules->latestExpiry($drive, $now);
 
         return $limit !== null && $expiresAt->gt($limit) ? $limit : $expiresAt;

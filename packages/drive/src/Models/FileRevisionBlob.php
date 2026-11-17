@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Models;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
@@ -40,20 +41,20 @@ class FileRevisionBlob extends Pivot
      * (updateOrInsert), never Eloquent mass-assignment, so this is pure
      * defense-in-depth against a future Eloquent-based write.
      *
-     * @var list<string>
+     * @var array<string>|bool
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('file_revision_blobs');
+        return app(DatabaseOptions::class)->table('file_revision_blobs');
     }
 
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

@@ -65,11 +65,12 @@ it('отказывает часть S3 больше объявленного р�
     expect($parts->sizeOf($session->refresh(), 1))->toBe(0);
 
     config()->set('vaulter-drive.uploads.max_file_size', 4);
+    $cappedHandler = app(S3MultipartHandler::class);
     $capped = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 100);
-    $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('ab'));
-    $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('xy'));
+    $cappedHandler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('ab'));
+    $cappedHandler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('xy'));
 
-    expect(fn () => $handler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('12345')))
+    expect(fn () => $cappedHandler->putPart($capped->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('12345')))
         ->toThrow(ValidationException::class);
     expect($parts->sizeOf($capped->refresh(), 1))->toBe(2);
 });
@@ -87,7 +88,7 @@ it('tus PATCH больше объявленной длины не пишет б�
 it('пустой PATCH при неизвестной длине завершает tus и позволяет commit', function (): void {
     $bytes = 'deferred upload';
     $storage = UploadTestHelpers::storage();
-    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: null, targetName: 'deferred.bin');
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, targetName: 'deferred.bin');
     $handler = app(TusUploadHandler::class);
     $staged = app(StagedUpload::class);
 
@@ -176,7 +177,7 @@ it('append не поднимает пиковую память до размер
     ini_set('memory_limit', '512M');
 
     $storage = UploadTestHelpers::storage();
-    $session = UploadTestHelpers::session($storage, totalSizeBytes: null);
+    $session = UploadTestHelpers::session($storage);
 
     $staged = app(StagedUpload::class);
     $key = $staged->keyFor($session->refresh());
@@ -213,7 +214,7 @@ it('append не поднимает пиковую память до размер
 
 it('commit отклоняет объект с mime image/png и magic-bytes ZIP, F-P1.4-11', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = UploadTestHelpers::session($storage, totalSizeBytes: null);
+    $session = UploadTestHelpers::session($storage);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['mime_type' => 'image/png'])->save());
 
     // A genuine ZIP archive (finfo reliably detects application/zip) declared as PNG.

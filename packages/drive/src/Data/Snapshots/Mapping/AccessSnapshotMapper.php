@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Snapshots\Mapping;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;

@@ -7,12 +7,12 @@ namespace Vaulter\Drive\Tenancy;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\IdsConfig;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\IdsOptions;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
@@ -25,7 +25,7 @@ use Vaulter\Tenancy\TenantIdentityPredicate;
 #[Internal]
 final readonly class TenancyBoundary
 {
-    public function __construct(private TenancyConfig $config, private DriveConfig $models, private IdsConfig $ids,
+    public function __construct(private TenancyOptions $config, private DriveOptions $models, private IdsOptions $ids,
         private Container $container, private TenancyBypass $bypass) {}
 
     public static function normalize(int|string|null $tenant): ?string
@@ -35,7 +35,7 @@ final readonly class TenancyBoundary
 
     public function enforced(): bool
     {
-        return $this->config->enabled() && !$this->bypass->active();
+        return $this->config->enabled && !$this->bypass->active();
     }
 
     public function current(): string
@@ -63,7 +63,7 @@ final readonly class TenancyBoundary
 
     public function assertOwner(Model $owner): Model
     {
-        if (!$this->config->enabled()) {
+        if (!$this->config->enabled) {
             return $owner;
         }
         $current = $this->enforced() ? $this->current() : null;
@@ -127,7 +127,7 @@ final readonly class TenancyBoundary
         foreach (array_keys($keys) as $key) {
             $row = $fresh[$key] ?? throw NodeNotFoundException::forId('node');
             $drive = $drives[(string) $row->drive_id] ?? throw NodeNotFoundException::forId('drive');
-            if ($this->config->enabled() && self::normalize($row->tenant_id) !== self::normalize($drive->tenant_id)) {
+            if ($this->config->enabled && self::normalize($row->tenant_id) !== self::normalize($drive->tenant_id)) {
                 throw NodeNotFoundException::forId('node');
             }
             $result[$key] = $drive;
@@ -139,7 +139,7 @@ final readonly class TenancyBoundary
     /** @param iterable<Node|\stdClass> $nodes Already fetched adjacency rows. */
     public function assertTree(iterable $nodes, Drive $drive): void
     {
-        if (!$this->config->enabled()) {
+        if (!$this->config->enabled) {
             return;
         }
         $drive = $this->assertDrive($drive);
@@ -167,7 +167,7 @@ final readonly class TenancyBoundary
             throw NodeNotFoundException::forId('drive');
         }
         $drive = $this->assertDrive($drive);
-        if ($this->config->enabled() && self::normalize($fresh->tenant_id) !== self::normalize($drive->tenant_id)) {
+        if ($this->config->enabled && self::normalize($fresh->tenant_id) !== self::normalize($drive->tenant_id)) {
             throw NodeNotFoundException::forId('node');
         }
 
@@ -213,7 +213,7 @@ final readonly class TenancyBoundary
      */
     private function tenantPredicate(Builder $query, string $tenant): Builder
     {
-        $type = $this->ids->hostKeys();
+        $type = $this->ids->hostKeys;
         if (($type === 'bigint' && filter_var($tenant, FILTER_VALIDATE_INT) === false)
             || ($type === 'uuid' && preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/D', $tenant) !== 1)) {
             return $query->whereRaw('1 = 0');
@@ -231,7 +231,7 @@ final readonly class TenancyBoundary
     {
         $class = $this->models->model('drive');
         $query = $class::query()->whereKey($driveId);
-        if ($this->config->enabled()) {
+        if ($this->config->enabled) {
             $current = self::normalize($this->container->make(TenantResolver::class)->current());
             if ($current === null) {
                 throw new TenancyMisconfiguredException('Strict queue execution requires a current tenant.');

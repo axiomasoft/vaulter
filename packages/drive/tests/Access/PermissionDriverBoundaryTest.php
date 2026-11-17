@@ -6,18 +6,14 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Drive\Testing\NullPermissionDriver;
 
-class ActorOnlyBoundaryDriver extends DatabasePermissionDriver implements NonEnumeratingPermissionDriver
-{
-    public function subjectsFor(Authorizable $actor): array
-    {
-        return parent::subjectsFor($actor);
-    }
-}
+class ActorOnlyBoundaryDriver extends DatabasePermissionDriver implements NonEnumeratingPermissionDriver {}
 
 it('retains actor-only classification without naming an optional bridge', function (): void {
     $manager = app(PermissionDriverManager::class);
@@ -36,9 +32,11 @@ it('retains actor-only classification without naming an optional bridge', functi
 
 it('rejects the open testing driver in production through a neutral contract', function (): void {
     config()->set('vaulter-drive.access.permission_drivers.open', NullPermissionDriver::class);
-    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: true);
+    app()->forgetInstance(DriveOptions::class);
+    app()->forgetInstance(AccessOptions::class);
+    $manager = new PermissionDriverManager(accessOptions: app(AccessOptions::class), container: app(), isProduction: true);
 
-    expect(fn () => $manager->driver('open'))->toThrow(MissingPermissionDriverException::class);
+    expect(fn (): PermissionDriver => $manager->driver('open'))->toThrow(MissingPermissionDriverException::class);
 });
 
 it('rejects an uninstalled bridge driver as unknown', function (): void {

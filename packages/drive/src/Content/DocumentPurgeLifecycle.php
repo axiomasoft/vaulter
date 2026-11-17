@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
@@ -24,7 +24,7 @@ final readonly class DocumentPurgeLifecycle implements NodeContentLifecycle, Pur
 {
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $databaseConfig,
+        private DatabaseOptions $databaseConfig,
     ) {}
 
     public function kind(): NodeKind

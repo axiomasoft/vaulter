@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Resources\FileRevisionResource;
 use Vaulter\Drive\Http\Resources\NodeResponses;

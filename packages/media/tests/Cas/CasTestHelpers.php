@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests\Cas;
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\IdsConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Contracts\Cas\BlobPins;
@@ -67,16 +67,16 @@ final class CasTestHelpers
             'reference_key' => $reference,
             'created_at' => now(),
         ];
-        $id = app(IdStrategyResolver::class)->resolve(app(IdsConfig::class)->strategy())->newId();
+        $id = app(IdStrategyResolver::class)->resolve(app(IdsOptions::class)->strategy)->newId();
 
-        app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('blob_references'))
+        app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('blob_references'))
             ->insert($id === null ? $row : ['id' => $id, ...$row]);
     }
 
     /** The number of pins of $blob. */
     public static function pins(Blob $blob): int
     {
-        return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('blob_references'))
+        return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('blob_references'))
             ->where('blob_id', $blob->getKey())->count();
     }
 
@@ -191,7 +191,7 @@ final class CasTestHelpers
         string $scope = 't-default',
     ): array {
         $blobScope = BlobScope::fromSegment($scope);
-        $resolver = app(IdStrategyResolver::class)->resolve(app(IdsConfig::class)->strategy());
+        $resolver = app(IdStrategyResolver::class)->resolve(app(IdsOptions::class)->strategy);
         $rows = [];
         $hashes = [];
 

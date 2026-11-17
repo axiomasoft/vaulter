@@ -5,17 +5,17 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Testing\Fixtures\Panels\FakeProject;
 use Vaulter\Testing\Fixtures\TestUser;
-use Vaulter\VaulterServiceProvider;
 
 /**
  * The types of the Vaulter models stored in a polymorphic column are constant aliases, whatever the class name
@@ -56,7 +56,7 @@ it('gives the host subclass configured in vaulter-drive.models the same alias', 
 
     expect($node->getMorphClass())->toBe('vaulter.node')
         ->and($drive->getMorphClass())->toBe('vaulter.drive')
-        ->and((new (app(DriveConfig::class)->model('node')))->getMorphClass())->toBe(Node::MORPH_ALIAS);
+        ->and((new (app(DriveOptions::class)->model('node')))->getMorphClass())->toBe(Node::MORPH_ALIAS);
 });
 
 it('is not renamed by a host morph map and is not refused by enforceMorphMap', function (): void {
@@ -103,8 +103,7 @@ it('merges the aliases without erasing a host morph map entry', function (): voi
     Relation::morphMap(['project' => FakeProject::class]);
 
     // Register again over a map the host already filled: booted() runs the callback at once on a booted app.
-    $provider = new VaulterServiceProvider(app());
-    (new ReflectionMethod($provider, 'bootModuleKernel'))->invoke($provider);
+    (new BindingsRegistrar)->boot(app());
 
     expect(Relation::getMorphedModel('project'))->toBe(FakeProject::class)
         ->and(Relation::getMorphedModel('vaulter.node'))->toBe(Node::class);

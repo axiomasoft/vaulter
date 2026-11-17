@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Support;
 
 use Illuminate\Pagination\CursorPaginator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -78,7 +78,7 @@ final readonly class SharedNodeResolver
         // Every row is a direct child of an in-scope folder; checking again keeps a
         // misshaped tree from ever listing a node outside the link.
         return new Page(
-            items: array_values(array_filter($page->items(), static fn (Node $child): bool => $context->containsNode($child))),
+            items: array_values(array_filter($page->items(), $context->containsNode(...))),
             nextCursor: $this->cursors->sealCursor($page->nextCursor(), 'share-children', $scope),
         );
     }

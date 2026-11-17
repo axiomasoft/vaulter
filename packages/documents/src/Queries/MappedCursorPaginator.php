@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Queries;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A cursor page whose items were mapped to snapshots: the cursors stay those of the

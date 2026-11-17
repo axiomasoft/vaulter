@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Types;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /** Intrinsic content features; collaboration depends on the active runtime. */
 #[Api]

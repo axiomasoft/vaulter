@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\DocumentHeadSnapshot;
 use Vaulter\Drive\Data\Snapshots\FileHeadSnapshot;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -160,7 +160,9 @@ final class NodeSnapshotCodec implements ReceiptCodec
             return null;
         }
 
-        return DateTimeImmutable::createFromFormat(self::TIME, $value) ?: throw new LogicException('[Vaulter] A node receipt holds a malformed time.');
+        $parsed = DateTimeImmutable::createFromFormat(self::TIME, $value);
+
+        return $parsed !== false ? $parsed : throw new LogicException('[Vaulter] A node receipt holds a malformed time.');
     }
 
     private static function nullableString(mixed $value): ?string

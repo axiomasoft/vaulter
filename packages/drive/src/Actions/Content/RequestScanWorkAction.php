@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Actions\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
@@ -30,7 +30,7 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 #[Internal]
 final readonly class RequestScanWorkAction
 {
-    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyOptions $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function ensure(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, DriveContext $context): ScanObligation
     {
@@ -51,7 +51,7 @@ final readonly class RequestScanWorkAction
             throw new LogicException('Scan work requires a configured scanner identity.');
         }
         $snapshot = $this->snapshots->load($revision, true);
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertDrive($snapshot['drive']);
         }
         if ((string) $snapshot['drive']->id !== (string) $context->driveId()) {
@@ -75,7 +75,7 @@ final readonly class RequestScanWorkAction
         $work ??= $this->work->make();
         $createdAt = $work->getAttribute('created_at') ?? $now;
         $work->forceFill(['revision_id' => $r->id, 'drive_id' => $snapshot['drive']->id,
-            'tenant_id' => $snapshot['drive']->tenant_id, 'blob_id' => $blob?->id, 'scope_key' => $blob === null ? 'unavailable' : $blob->scope_key,
+            'tenant_id' => $snapshot['drive']->tenant_id, 'blob_id' => $blob?->id, 'scope_key' => $blob->scope_key ?? 'unavailable',
             'content_identity' => $identityHash, 'sha256' => $r->sha256, 'size_bytes' => $r->size_bytes,
             'spec_key' => $spec->specKey(), 'scanner_key' => $spec->scannerKey, 'scanner_version' => $spec->scannerVersion,
             'policy_version' => $spec->policyVersion, 'generation' => $generation, 'attempt' => 0,
@@ -85,8 +85,8 @@ final readonly class RequestScanWorkAction
         $this->work->recordRequest($work, $requestKey, $now, $rescan ? 'explicit_rescan' : 'admission', $context->correlationId);
         if ($unsupported) {
             $work->forceFill(['attempt' => 1])->save();
-            $this->transitions->append($work, new ScanResult(ScanVerdict::Failed, $r->manifest_blob_id !== null || $blob?->chunked ? 'unsupported' : 'unknown'), $now);
-            $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $r->manifest_blob_id !== null || $blob?->chunked ? 'unsupported' : 'unknown'])->save();
+            $this->transitions->append($work, new ScanResult(ScanVerdict::Failed, $r->manifest_blob_id !== null || $blob?->chunked === true ? 'unsupported' : 'unknown'), $now);
+            $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $r->manifest_blob_id !== null || $blob?->chunked === true ? 'unsupported' : 'unknown'])->save();
         } elseif (!$rescan) {
             // A same-drive reupload may reuse existing exact-byte proof, but always
             // materializes its own request and evidence row before commit.

@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Data\Access;
 
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\GrantScope;

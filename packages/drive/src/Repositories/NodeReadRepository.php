@@ -9,19 +9,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use LogicException;
+use Packman\Attributes\Internal;
+use stdClass;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Nodes\TreeTraversalIncompleteException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Drive\Support\NodeName;
@@ -58,11 +61,12 @@ final class NodeReadRepository
     private const int WHERE_IN_BIND_LIMIT = 900;
 
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
         private readonly AccessResolver $access,
         private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
         private readonly MetricsRecorder $metrics,
+        private readonly ProfilePolicy $profilePolicy,
     ) {}
 
     public function find(int|string $id): ?Node
@@ -79,7 +83,7 @@ final class NodeReadRepository
      */
     public function forStorage(Drive $storage): Builder
     {
-        if (app(TenancyConfig::class)->enabled()) {
+        if (app(TenancyOptions::class)->enabled) {
             $storage = app(TenancyBoundary::class)->assertDrive($storage);
         }
 
@@ -258,8 +262,8 @@ final class NodeReadRepository
     }
 
     /**
-     * @param  list<int|string>               $parentIds
-     * @return array<string, list<\stdClass>>
+     * @param  list<int|string>              $parentIds
+     * @return array<string, list<stdClass>>
      */
     public function ancestorChains(array $parentIds): array
     {
@@ -275,7 +279,7 @@ final class NodeReadRepository
         $initialPath = $grammar->compileInitialPath('id', '__acl_path');
         $seed = $this->whereKeyInBounded($query, $parentIds)
             ->select(['id', 'parent_id', 'drive_id', 'inherit_grants'])->selectRaw('id as origin, 0 as depth');
-        $strict = app(TenancyConfig::class)->enabled();
+        $strict = app(TenancyOptions::class)->enabled;
         if ($strict) {
             $seed->addSelect('tenant_id');
         }
@@ -297,13 +301,13 @@ final class NodeReadRepository
         $chains = [];
         $byDrive = [];
         foreach ($rows as $row) {
-            if (!$row instanceof \stdClass || (!is_string($row->origin) && !is_int($row->origin))) {
-                throw new \LogicException('Invalid ancestor chain row.');
+            if (!$row instanceof stdClass || (!is_string($row->origin) && !is_int($row->origin))) {
+                throw new LogicException('Invalid ancestor chain row.');
             }
             $chains[Identity::stringify($row->origin)][] = $row;
             if ($strict) {
                 if (!is_int($row->drive_id) && !is_string($row->drive_id)) {
-                    throw new \LogicException('Invalid ancestor drive key.');
+                    throw new LogicException('Invalid ancestor drive key.');
                 }
                 $byDrive[Identity::stringify($row->drive_id)][] = $row;
             }
@@ -635,7 +639,7 @@ final class NodeReadRepository
     {
         foreach ($this->profiles()->all() as $profile) {
             $driver = $this->drivers->forProfile($profile->getKey());
-            if ($this->vaulterConfig->featureEnabled('grants', $profile->getKey())
+            if ($this->profilePolicy->featureEnabledForKey($profile->getKey(), 'grants')
                 && $driver instanceof GrantAuthoritativeDriver
                 && $driver->isGrantAuthoritative()) {
                 return true;
@@ -666,12 +670,12 @@ final class NodeReadRepository
         $openIds = [];
         foreach (app(TenancyBoundary::class)->constrain($driveModel::query())->cursor() as $drive) {
             $driver = $this->drivers->forProfile($drive->profile);
-            if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)
+            if (!$this->profilePolicy->featureEnabledForKey($drive->profile, 'grants')
                 || !$driver instanceof GrantAuthoritativeDriver
                 || !$driver->isGrantAuthoritative()) {
                 foreach ($this->query()->where('drive_id', $drive->id)->pluck('id') as $id) {
                     if (!is_int($id) && !is_string($id)) {
-                        throw new \LogicException('Invalid candidate node identity.');
+                        throw new LogicException('Invalid candidate node identity.');
                     }
                     $openIds[] = $id;
                 }
@@ -800,7 +804,7 @@ final class NodeReadRepository
 
     private function scopedNode(Node $node): Node
     {
-        if (!app(TenancyConfig::class)->enabled()) {
+        if (!app(TenancyOptions::class)->enabled) {
             return $node;
         }
         app(TenancyBoundary::class)->assertNode($node);
@@ -813,7 +817,7 @@ final class NodeReadRepository
      */
     private function checkedTree(Collection $nodes, Node $root): Collection
     {
-        if (app(TenancyConfig::class)->enabled()) {
+        if (app(TenancyOptions::class)->enabled) {
             $boundary = app(TenancyBoundary::class);
             $boundary->assertTree($nodes, $boundary->assertNode($root));
         }

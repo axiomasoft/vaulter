@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Repositories\Activity;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
@@ -28,7 +28,7 @@ use Vaulter\Events\EventTypeContract;
 final class ActivityReadRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
     ) {}
 
     /**

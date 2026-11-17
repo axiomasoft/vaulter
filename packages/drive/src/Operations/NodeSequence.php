@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Operations;
 
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Drive\Models\Node;

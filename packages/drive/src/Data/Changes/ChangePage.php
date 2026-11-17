@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Changes;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * A page of a drive's change journal. Apply the changes in order (a node may appear

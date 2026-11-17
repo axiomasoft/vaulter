@@ -8,8 +8,8 @@ use Closure;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 
 /**

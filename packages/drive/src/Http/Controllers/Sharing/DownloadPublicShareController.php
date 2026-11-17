@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Sharing;
 
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;

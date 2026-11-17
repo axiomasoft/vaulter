@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Access\Roles;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 
@@ -75,7 +75,7 @@ final class RoleRegistry
      */
     public function all(): array
     {
-        return array_map(fn (string $key): Role => $this->latest($key), $this->keys());
+        return array_map($this->latest(...), $this->keys());
     }
 
     /** @return list<string> */

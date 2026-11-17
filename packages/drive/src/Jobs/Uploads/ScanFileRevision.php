@@ -7,14 +7,16 @@ namespace Vaulter\Drive\Jobs\Uploads;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use LogicException;
+use Packman\Attributes\Internal;
+use Throwable;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\FailScanAttemptAction;
 use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
-use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\PrivateScanReader;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\VerifiedScanStream;
@@ -48,15 +50,15 @@ final class ScanFileRevision implements ShouldQueue
     }
 
     public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots,
-        ScanConfig $config, VaulterDatabase $database): void
+        ScanOptions $config, VaulterDatabase $database): void
     {
-        if (app(TenancyConfig::class)->enabled()) {
+        if (app(TenancyOptions::class)->enabled) {
             app(TenancyBoundary::class)->assertJobDrive($this->driveId, $this->tenantId);
         }
         $database->write(fn () => app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $fence, $fail, $settle, $reader, $snapshots, $config)));
     }
 
-    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
+    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanOptions $config): void
     {
         // The queued scope is a fence, never a permission to derive a different tenant.
         $row = $work->find($this->obligationId);
@@ -90,7 +92,7 @@ final class ScanFileRevision implements ShouldQueue
 
                 return;
             }
-        } catch (\LogicException) {
+        } catch (LogicException) {
             $fail->execute($attempt, 'content_identity_mismatch');
 
             return;
@@ -99,7 +101,7 @@ final class ScanFileRevision implements ShouldQueue
         try {
             try {
                 $stream = $reader->open($attempt);
-            } catch (\LogicException) {
+            } catch (LogicException) {
                 $fail->execute($attempt, 'content_identity_mismatch');
 
                 return;
@@ -137,7 +139,7 @@ final class ScanFileRevision implements ShouldQueue
             }
         } catch (InvalidConfigurationException $exception) {
             throw $exception;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $result = new ScanResult(ScanVerdict::Failed, 'unknown');
         } finally {
             if (is_resource($stream)) {

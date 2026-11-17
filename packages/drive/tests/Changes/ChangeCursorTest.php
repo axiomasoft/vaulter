@@ -31,9 +31,9 @@ function changeCursorV2Payload(array $override = []): array
 
 it('round-trips its scoped position through an opaque url-safe token', function (): void {
     $subkey = hex2bin(CHANGE_CURSOR_SUBKEY_HEX);
-    $token = (new ChangeCursor('t-1', '42', 'App\Models\User', '7', '', 3, 2, 17, 100, 86500))->encode($subkey);
+    $token = new ChangeCursor('t-1', '42', 'App\Models\User', '7', '', 3, 2, 17, 100, 86500)->encode($subkey);
     $cursor = ChangeCursor::decode($token, $subkey);
-    $system = ChangeCursor::decode((new ChangeCursor(null, '42', 'vaulter:system', '', 'replication', 1, 1, 0, 0, 1))->encode($subkey), $subkey);
+    $system = ChangeCursor::decode(new ChangeCursor(null, '42', 'vaulter:system', '', 'replication', 1, 1, 0, 0, 1)->encode($subkey), $subkey);
 
     expect($token)->toMatch('/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/')
         ->and([$cursor->tenantId, $cursor->driveId, $cursor->actorType, $cursor->actorId, $cursor->actorReason, $cursor->keyGeneration, $cursor->epoch, $cursor->after, $cursor->issuedAt, $cursor->notAfter])

@@ -8,8 +8,8 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use JsonSerializable;
+use Packman\Attributes\Internal;
 use Traversable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Models\Node;
 

@@ -8,6 +8,12 @@ parameters:
     paths:
         - packages/core/src
         - packages/core/database
+        - packages/media/src
+        - packages/media/database
+        - packages/drive/src
+        - packages/drive/database
+        - packages/documents/src
+        - packages/documents/database
 
     inferPrivatePropertyTypeFromConstructor: true
 
@@ -18,14 +24,32 @@ parameters:
             message: '#of method Vaulter\\Database\\(GuardedBuilder|GuardedCteBuilder)::(insertUsing|insertOrIgnoreUsing|updateFrom)\(\) should be contravariant with parameter#'
             path: packages/core/src/Database/GuardsStatements.php
 
-        # Kernel traits consumed by satellite packages (vaulter-drive, vaulter-webhooks) or test suites.
+        # Illuminate\Database\Eloquent\Factories\Factory::for() omits the generic type argument in Laravel's PHPDoc.
+        -
+            identifier: method.childParameterType
+            message: '#of method Vaulter\\Drive\\Database\\Factories\\(DriveFactory|FileRevisionFactory)::for\(\) should be contravariant with parameter#'
+            paths:
+                - packages/drive/database/factories/DriveFactory.php
+                - packages/drive/database/factories/FileRevisionFactory.php
+
+        # Shipped host/test-kit traits consumed by host apps or Pest test suites outside src/.
         -
             identifier: trait.unused
             paths:
-                - packages/core/src/Events/Concerns/DescribesEvent.php
-                - packages/core/src/Models/Concerns/HasVaulterKeys.php
-                - packages/core/src/Support/Concerns/HasIcon.php
-                - packages/core/src/Support/Concerns/HasLabel.php
-                - packages/core/src/Support/Concerns/HasStableMorphAlias.php
                 - packages/core/src/Testing/Concerns/*.php
                 - packages/core/src/Testing/Support/OpenApi/ValidatesOpenApiResponses.php
+                - packages/media/src/Testing/Contracts/StorageDriverContractTests.php
+                - packages/drive/src/Concerns/HasDrives.php
+                - packages/drive/src/Testing/Concerns/ExercisesWideNodeListing.php
+                - packages/documents/src/Testing/Contracts/DocumentTypeContractTests.php
+                - packages/documents/src/Testing/Contracts/CollaborationProtocolContractTests.php
+
+        # NullPermissionDriver implements PermissionDriver::override(): ?Effect, returning Effect::Allow unconditionally by design.
+        -
+            identifier: return.unusedType
+            path: packages/drive/src/Testing/NullPermissionDriver.php
+
+        # Larastan marks forwarded Eloquent/Container/Auth magic reflections as isStatic(): true, colliding with phpstan-strict-rules.
+        -
+            identifier: staticMethod.dynamicCall
+            message: '#^Dynamic call to static method (Illuminate\\Database\\Eloquent\\(Builder|Model)|Vaulter\\Drive\\Repositories\\NodeQueryBuilder|Illuminate\\Container\\Container|Illuminate\\Contracts\\Auth\\(Guard|Authenticatable))#'

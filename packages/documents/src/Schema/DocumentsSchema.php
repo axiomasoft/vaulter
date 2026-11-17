@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\ModuleSchema;

@@ -5,8 +5,9 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
@@ -33,7 +34,6 @@ use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Modules\CompiledModules;
 use Vaulter\Modules\SlotContribution;
@@ -104,7 +104,7 @@ it('returns a complete immutable grant under the configured TTL and scope ceilin
 
 it('bounds TTL structurally', function (mixed $ttl): void {
     config()->set('vaulter-documents.collaboration.session_ttl', $ttl);
-    expect(fn () => app(DocumentsConfig::class)->collaborationSessionTtl())->toThrow(InvalidConfigurationException::class);
+    expect(fn () => app(DocumentsOptions::class))->toThrow(InvalidConfiguration::class);
 })->with([0, -1, 301, '300', 1.5, null]);
 
 it('narrows mismatching client schemas and archived drives to read', function (?int $client, bool $archived): void {

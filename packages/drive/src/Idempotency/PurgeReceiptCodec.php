@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Idempotency;
 
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Idempotency\ReceiptCodec;
 use Vaulter\Idempotency\ResourceRef;
 

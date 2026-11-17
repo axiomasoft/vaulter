@@ -6,10 +6,12 @@ namespace Vaulter\Schema;
 
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\CoreModule;
 use Vaulter\Kernel;
 use Vaulter\Modules\OwnsSchema;
+use Vaulter\Modules\PluginModuleBridge;
 use Vaulter\Modules\VaulterModule;
 
 /**
@@ -41,13 +43,26 @@ final readonly class ModuleSchemas
 
                 continue;
             }
-            if (!is_subclass_of($manifest, OwnsSchema::class)) {
+            if (is_subclass_of($manifest, OwnsSchema::class)) {
+                $schema = $this->container->make($manifest::ownedSchema());
+                if ($schema instanceof ModuleSchema) {
+                    $schemas[$module] = $schema;
+                }
+
                 continue;
             }
+            if (is_subclass_of($manifest, WithSchema::class)) {
+                $instance = $this->container->make($manifest);
+                if ($instance instanceof WithSchema) {
+                    foreach ($instance->schemaComponents() as $component) {
+                        $schema = $this->container->make($component);
+                        if ($schema instanceof ModuleSchema) {
+                            $schemas[$module] = $schema;
 
-            $schema = $this->container->make($manifest::ownedSchema());
-            if ($schema instanceof ModuleSchema) {
-                $schemas[$module] = $schema;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -99,8 +114,13 @@ final readonly class ModuleSchemas
             $visited[$module] = true;
 
             $manifest = $this->container->make($manifests[$module]);
-            foreach ($manifest instanceof VaulterModule ? array_keys($manifest->requires()) : [] as $required) {
-                $visit($required);
+            $required = $manifest instanceof VaulterModule
+                ? array_keys($manifest->requires())
+                : ($manifest instanceof ExtensionPlugin && $manifests[$module] !== CoreModule::class
+                    ? array_keys(PluginModuleBridge::requires($manifest))
+                    : []);
+            foreach ($required as $dependency) {
+                $visit($dependency);
             }
             $ordered[$module] = $manifests[$module];
         };

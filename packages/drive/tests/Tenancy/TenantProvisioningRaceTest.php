@@ -11,6 +11,7 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 uses(TestCase::class, DatabaseMigrations::class);
@@ -41,7 +42,7 @@ it('V31 a real PG owner profile race has one tenant winner and a hidden loser', 
     $outcomes = ForkRace::run($tasks);
     expect($outcomes[0]->ok)->toBeTrue()->and($outcomes[1]->ok)->toBeTrue()
         ->and($outcomes[0]->value['pid'])->not->toBe($outcomes[1]->value['pid']);
-    $values = array_map(fn ($outcome): array => $outcome->value, $outcomes);
+    $values = array_map(fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
     expect(array_filter($values, fn (array $value): bool => $value['winner']))->toHaveCount(1)
         ->and(Drive::query()->where('owner_id', 7788)->count())->toBe(1);
     $winner = array_values(array_filter($values, fn (array $value): bool => $value['winner']))[0];

@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Operations;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Operations\OperationContext;
 use Vaulter\ValueObjects\Access\Actor;
@@ -46,6 +46,7 @@ final readonly class DriveContext
         $this->idempotencyKey = $operation->idempotencyKey;
     }
 
+    /** @internal */
     #[Internal]
     public static function for(Drive $drive, Actor $actor, string $correlationId, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
     {
@@ -62,6 +63,7 @@ final readonly class DriveContext
         );
     }
 
+    /** @internal */
     #[Internal]
     public static function system(Drive $drive, string $reason, ?string $correlationId = null): self
     {

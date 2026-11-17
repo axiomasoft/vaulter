@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Actions\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Models\Content\ScanPolicyState;

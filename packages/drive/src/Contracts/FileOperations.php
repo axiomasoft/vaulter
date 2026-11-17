@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Data\FileStream;
 use Vaulter\Drive\Data\ListOptions;

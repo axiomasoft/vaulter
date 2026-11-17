@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
@@ -19,7 +19,7 @@ use Vaulter\Documents\Operations\DocumentOperations;
 it('keeps Eloquent out of the documents operations', function (string $class): void {
     $leaks = [];
     $forbidden = [Model::class, Builder::class, Collection::class, AbstractPaginator::class, AbstractCursorPaginator::class];
-    foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+    foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
         if ($method->isConstructor() || str_contains((string) $method->getDocComment(), '@internal') || $method->getAttributes(Internal::class) !== []) {
             continue;
         }
@@ -43,7 +43,7 @@ it('keeps Eloquent out of the documents operations', function (string $class): v
 
 it('keeps every public documents operation typed', function (string $class): void {
     $untyped = [];
-    foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+    foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
         if ($method->isConstructor()) {
             continue;
         }

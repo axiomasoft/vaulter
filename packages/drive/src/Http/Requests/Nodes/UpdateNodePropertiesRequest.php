@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -37,8 +37,9 @@ final class UpdateNodePropertiesRequest extends VaulterFormRequest
     /** @return array<string, string> */
     public function set(): array
     {
+        $raw = $this->input('set');
         $set = [];
-        foreach ($this->arrayInput('set') as $key => $value) {
+        foreach (is_array($raw) ? $raw : [] as $key => $value) {
             if (is_string($value)) {
                 $set[(string) $key] = $value;
             }

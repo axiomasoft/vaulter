@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
@@ -64,7 +65,7 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
     $drive->model()->forceFill(['quota_bytes' => 19])->save();
     $counts = [Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()];
 
-    expect(fn (): NodeSnapshot => $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'copy')))->toThrow(QuotaExceededException::class);
+    expect(fn (): NodeSnapshot => $drive->nodes()->copy($folder, options: new CopyOptions(name: 'copy')))->toThrow(QuotaExceededException::class);
 
     expect([Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()])->toBe($counts)
         ->and(Node::query()->where('name', 'copy')->exists())->toBeFalse()
@@ -79,7 +80,7 @@ it('reserves a revision against the database quota value despite a stale node an
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
     // 14 retained bytes; the stale node still says 4.
     $drive->model()->forceFill(['quota_bytes' => 21])->save();
-    expect(fn () => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt')))
+    expect(fn (): FileRevisionSnapshot => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt')))
         ->toThrow(QuotaExceededException::class);
     $drive->model()->forceFill(['quota_bytes' => 22])->save();
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt'));
@@ -92,7 +93,7 @@ it('copies a stale file from its current head and reserves that exact size', fun
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'));
     $stale = DriveTestHelpers::model($node);
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
-    $copy = $drive->nodes()->copy($node, destination: null, options: new CopyOptions(name: 'copy.txt'));
+    $copy = $drive->nodes()->copy($node, options: new CopyOptions(name: 'copy.txt'));
     expect($copy->sizeBytes)->toBe(10)
         ->and($copy->file->sizeBytes)->toBe(10)
         ->and($drive->model()->refresh()->used_bytes)->toBe(4 + 10 + 10);

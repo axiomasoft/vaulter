@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
@@ -22,9 +22,9 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * Action (share_role_not_allowed), so the one rule table lives in one place.
  *
  * role defaults to reader and audience to anyone. An EXPLICIT `expires_at` is bounded
- * above by `$sharingConfig->maxTtlHours()` and by the drive
+ * above by `$sharingConfig->maxTtlHours` and by the drive
  * profile's maxShareLinkTtlDays (checked by the Action) — an omitted `expires_at`
- * defaults to `$sharingConfig->defaultTtlHours()` in {@see CreateShareLinkAction},
+ * defaults to `$sharingConfig->defaultTtlHours` in {@see CreateShareLinkAction},
  * which this request never sees.
  */
 #[Internal]
@@ -33,7 +33,7 @@ final class StoreShareLinkRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(SharingConfig $sharingConfig): array
+    public function rules(SharingOptions $sharingConfig): array
     {
         return [
             'role' => ['nullable', 'string', Rule::in((new RoleRegistry)->keys())],
@@ -44,7 +44,7 @@ final class StoreShareLinkRequest extends VaulterFormRequest
                 'nullable',
                 'date',
                 'after:now',
-                'before_or_equal:'.Carbon::now()->addHours($sharingConfig->maxTtlHours())->toDateTimeString(),
+                'before_or_equal:'.Carbon::now()->addHours($sharingConfig->maxTtlHours)->toDateTimeString(),
             ],
             'max_uses' => ['nullable', 'integer', 'min:1'],
         ];

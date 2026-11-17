@@ -6,7 +6,8 @@ namespace Vaulter\Drive\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use LogicException;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Http\Resources\Sharing\ShareResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
@@ -26,7 +27,7 @@ final readonly class ListSharesController
         $cursor = PageResponse::cursor($request);
         $shares = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node))->shares();
         if (!$shares instanceof ShareOperations) {
-            throw new \LogicException('The drive share operations must be the drive package implementation.');
+            throw new LogicException('The drive share operations must be the drive package implementation.');
         }
 
         return PageResponse::make($shares->paginate($node, $perPage, $cursor), static fn (ShareLinkSnapshot $share): ShareResource => new ShareResource($share), $perPage);

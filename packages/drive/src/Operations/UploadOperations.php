@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Closure;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Uploads\AbortUploadAction;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -51,7 +51,7 @@ final readonly class UploadOperations
         private UploadSessionReadRepository $sessions,
         private TusUploadHandler $tus,
         private S3MultipartHandler $s3,
-        private DriveConfig $config,
+        private DriveOptions $config,
         private NodeLocator $locator,
         private OperationGuard $guard,
         private OperationRunner $runner,
@@ -85,7 +85,7 @@ final readonly class UploadOperations
         );
 
         $session = $this->write('initiate', function () use ($input): UploadSession {
-            if (!$this->config->resumableEnabled()) {
+            if (!$this->config->uploads->resumable->enabled) {
                 // The target is looked up first, so a disabled feature does not tell a
                 // caller which ids exist: invisible → 404, visible → 403.
                 $target = $this->locator->find(context: $this->context, key: $input->targetNode ?? $input->targetParent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
@@ -141,7 +141,11 @@ final readonly class UploadOperations
         });
     }
 
-    /** Protocol adapters use the same current ownership/ACL boundary. */
+    /**
+     * Protocol adapters use the same current ownership/ACL boundary.
+     *
+     * @internal
+     */
     #[Internal]
     public function status(UploadSessionSnapshot|UploadSession|int|string $session): UploadSession
     {
@@ -212,7 +216,7 @@ final readonly class UploadOperations
      */
     private function assertResumable(): void
     {
-        if (!$this->config->resumableEnabled()) {
+        if (!$this->config->uploads->resumable->enabled) {
             throw ProfileRestrictionException::forOperation('resumable_upload');
         }
     }

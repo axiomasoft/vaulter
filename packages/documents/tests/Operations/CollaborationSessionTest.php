@@ -17,7 +17,9 @@ use Vaulter\Kernel;
 
 uses(WithAcme::class);
 
-beforeEach(fn () => expect(app(Kernel::class)->reasons())->toBe([]));
+beforeEach(function (): void {
+    expect(app(Kernel::class)->reasons())->toBe([]);
+});
 
 it('issues through the documents handle with a typed principal and opaque verifier roundtrip', function (): void {
     $drive = Docs::drive();

@@ -6,18 +6,14 @@ namespace Vaulter\Drive\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Drive\Configuration\AccessConfig;
-use Vaulter\Drive\Configuration\ChangesConfig;
-use Vaulter\Drive\Configuration\DownloadsConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ListingConfig;
-use Vaulter\Drive\Configuration\ScanConfig;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\RoutesOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Content\OffScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
@@ -29,6 +25,7 @@ use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Tenancy\ShareTenantContext;
 use Vaulter\Drive\Vaulter;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Modules\ModuleBindings;
@@ -36,7 +33,7 @@ use Vaulter\Support\Identity;
 
 /**
  * The drive slices, declared by DriveModule: profiles, scan policy,
- * sharing, listing and downloads config, file handlers and presentation, the drive read repository, the
+ * sharing, listing and downloads options, file handlers and presentation, the drive read repository, the
  * `Vaulter` manager and the public-share and upload rate limiters.
  */
 #[Internal]
@@ -44,39 +41,34 @@ final class DriveSliceRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
-        $app->singleton(ScanConfig::class);
         $app->bind(ProfilePolicy::class);
         $app->bindIf(ScanPolicyResolver::class, OffScanPolicyResolver::class);
         $app->scoped(ShareTenantContext::class);
-        $app->singleton(AccessConfig::class);
-        $app->singleton(ListingConfig::class);
-        $app->singleton(SharingConfig::class);
-        $app->singleton(DownloadsConfig::class);
-        $app->singleton(ChangesConfig::class);
         $app->bind(NodeLocator::class);
 
         // Scoped: DriveReadRepository memoizes find() by id in
         // an in-request identity map, so `AccessResolver::storageOf()` resolved
-        // fresh per NodeResource (no explicit AccessResolver binding — see below)
-        // still hits the SAME repository instance across a listing page, collapsing
-        // the storage lookup from O(N) to O(1) per page. scoped() (not singleton())
-        // resets the cache between requests/jobs on Octane/queue workers.
+        // fresh per NodeResource still hits the SAME repository instance across a listing page.
         $app->scoped(DriveReadRepository::class);
 
         $app->singleton(
             ProfileRegistry::class,
-            static fn (Application $app): ProfileRegistry => ProfileRegistry::fromConfig(
-                providerClasses: $app->make(DriveConfig::class)->profileProviders(),
-                defaultClass: $app->make(DriveConfig::class)->defaultProfile(),
-                container: $app,
-            ),
+            static function (Application $app): ProfileRegistry {
+                $profiles = self::bootOptions($app)->profiles;
+
+                return ProfileRegistry::fromConfig(
+                    providerClasses: $profiles->providers,
+                    defaultClass: $profiles->default,
+                    container: $app,
+                );
+            },
         );
 
         $app->singleton(Vaulter::class);
         $app->alias(Vaulter::class, 'vaulter');
 
         $app->bind(ShareTokenGenerator::class, static function (Application $app): ShareTokenGenerator {
-            $generator = $app->make($app->make(SharingConfig::class)->tokenGenerator());
+            $generator = $app->make($app->make(SharingOptions::class)->tokenGenerator);
             if (!$generator instanceof ShareTokenGenerator) {
                 throw new InvalidConfigurationException('[Vaulter] Sharing token generator binding must return a ShareTokenGenerator.');
             }
@@ -84,22 +76,8 @@ final class DriveSliceRegistrar implements ModuleBindings
             return $generator;
         });
 
-        // The host-user resolver seam stays in axioma-studio/vaulter-documents
-        // (ADR-0015) — collaboration is documents-only machinery.
-        //
-        // The format-extensibility registry: a drive-only host (no
-        // vaulter-documents installed) still needs a preview/download handler
-        // descriptor, so the ENGINE (not just its contract) is core-owned. Singleton —
-        // it memoises the merged handler set + resolutions. `Vaulter::handlers()->register()`
-        // / `handlers()` resolve this binding unconditionally now (no MissingPackage
-        // fail-loud — the engine always exists; only extra formats need a package
-        // installed).
         $app->singleton(FileHandlerRegistry::class);
         $app->bind(\Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
-
-        // The preview and download-only baseline is the drive module's contribution to the FileHandler slot,
-        // so a stale or emptied host `handlers` config cannot drop it; `vaulter.file_handlers` stays the host's tag.
-
     }
 
     private static function resolveContract(Application $app, string $contract): mixed
@@ -109,22 +87,34 @@ final class DriveSliceRegistrar implements ModuleBindings
 
     public function boot(Application $app): void
     {
-        $app->make(ProfileRegistry::class);
-        $downloads = $app->make(DownloadsConfig::class);
-        $downloads->directTtlSeconds();
-        if ($downloads->deliveryMode() === 'direct_signed' && (!$app->bound(DirectContentUrlSigner::class) || !self::resolveContract($app, DirectContentUrlSigner::class) instanceof DirectContentUrlSigner)) {
+        $options = self::bootOptions($app);
+        $registry = $app->make(ProfileRegistry::class);
+        $downloads = $options->downloads;
+        if ($downloads->deliveryMode === 'direct_signed' && (!$app->bound(DirectContentUrlSigner::class) || !self::resolveContract($app, DirectContentUrlSigner::class) instanceof DirectContentUrlSigner)) {
             throw new InvalidConfigurationException('Direct content delivery requires an exact immutable content signer.');
         }
-        if (self::resolveContract($app, ScanPolicyResolver::class) instanceof OffScanPolicyResolver) {
-            foreach ($app->make(ProfileRegistry::class)->all() as $profile) {
-                foreach ($app->make(ProfilePolicy::class)->scanSpecs($profile) as $spec) {
-                    if ($spec->mode !== ScanMode::Off) {
-                        throw new InvalidConfigurationException('Enabled scan policy requires the drive scan runtime.');
-                    }
+        $policy = new ProfilePolicy($options, $app->make(Repository::class), $registry, $options->scan, $app->make(Kernel::class));
+        $scanEnabled = false;
+        foreach ($registry->all() as $profile) {
+            foreach ($policy->scanSpecs($profile) as $spec) {
+                if ($spec->mode !== ScanMode::Off) {
+                    $scanEnabled = true;
+
+                    break 2;
                 }
             }
         }
+        if ($scanEnabled && self::resolveContract($app, ScanPolicyResolver::class) instanceof OffScanPolicyResolver) {
+            throw new InvalidConfigurationException('Enabled scan policy requires the drive scan runtime.');
+        }
         $this->registerRateLimiters();
+    }
+
+    private static function bootOptions(Application $app): DriveOptions
+    {
+        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter-drive', []) : [];
+
+        return DriveOptions::fromArray(is_array($raw) ? $raw : [], 'vaulter-drive');
     }
 
     /** A host limiter of the same name wins: it is registered only when none exists. */
@@ -132,7 +122,7 @@ final class DriveSliceRegistrar implements ModuleBindings
     {
         if (RateLimiter::limiter('vaulter-public') === null) {
             RateLimiter::for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
-                app(RoutesConfig::class)->publicRateLimit(),
+                app(RoutesOptions::class)->rateLimits->public,
             )->by($request->ip() ?? 'unknown'));
         }
 
@@ -143,7 +133,7 @@ final class DriveSliceRegistrar implements ModuleBindings
                     ? 'actor:'.Identity::stringify($user->getAuthIdentifier())
                     : 'ip:'.($request->ip() ?? 'unknown');
 
-                return Limit::perMinute(app(RoutesConfig::class)->uploadsRateLimit())->by($key);
+                return Limit::perMinute(app(RoutesOptions::class)->rateLimits->uploads)->by($key);
             });
         }
     }

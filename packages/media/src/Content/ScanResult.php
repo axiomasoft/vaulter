@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Content;
 
-use Vaulter\Attributes\Api;
+use InvalidArgumentException;
+use Packman\Attributes\Api;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 #[Api]
@@ -15,10 +16,10 @@ final readonly class ScanResult
     public function __construct(public ScanVerdict $verdict, public ?string $reason = null, public bool $retryable = false)
     {
         if ($verdict !== ScanVerdict::Failed && ($reason !== null || $retryable)) {
-            throw new \InvalidArgumentException('Successful verdict cannot carry a failure.');
+            throw new InvalidArgumentException('Successful verdict cannot carry a failure.');
         }
         if ($verdict === ScanVerdict::Failed && (!in_array($reason, self::REASONS, true) || ($retryable && !in_array($reason, ['scanner_timeout', 'scanner_unavailable', 'transient_io'], true)))) {
-            throw new \InvalidArgumentException('Invalid structured scan failure.');
+            throw new InvalidArgumentException('Invalid structured scan failure.');
         }
     }
 }

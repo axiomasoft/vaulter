@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\RevisionOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -27,6 +27,6 @@ final readonly class AddFileRevisionController
         $expected = $this->nodes->expectedSequence($request, $drive, $node, Ability::Edit);
         $revision = $drive->files()->addRevision($node, UploadSource::fromUploadedFile($request->uploadedFile()), new RevisionOptions(expectedSequence: $expected));
 
-        return (new FileRevisionResource($revision))->response()->setStatusCode(201);
+        return new FileRevisionResource($revision)->response()->setStatusCode(201);
     }
 }

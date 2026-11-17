@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;

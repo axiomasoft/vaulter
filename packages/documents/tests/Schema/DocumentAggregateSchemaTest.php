@@ -69,8 +69,8 @@ it('keeps one aggregate per node, unique checkpoint numbers and nonnegative coun
     $row = DB::table('v_documents')->where('id', $document)->first();
 
     expect([$row->collab_epoch, $row->state_version, $row->checkpoint_state_version, $row->revision_count])->toBe([0, 0, 0, 0])
-        ->and(fn () => DB::transaction(fn () => aggregateRow('v_documents', ['node_id' => $node->getKey(), 'type' => 'vaulter/rich-text', 'schema_version' => 1])))->toThrow(QueryException::class)
-        ->and(fn () => DB::transaction(fn () => aggregateRow('v_document_revisions', ['document_id' => $document, 'type' => 'vaulter/rich-text', 'number' => 1, 'schema_version' => 1])))->toThrow(QueryException::class);
+        ->and(fn () => DB::transaction(fn (): int|string => aggregateRow('v_documents', ['node_id' => $node->getKey(), 'type' => 'vaulter/rich-text', 'schema_version' => 1])))->toThrow(QueryException::class)
+        ->and(fn () => DB::transaction(fn (): int|string => aggregateRow('v_document_revisions', ['document_id' => $document, 'type' => 'vaulter/rich-text', 'number' => 1, 'schema_version' => 1])))->toThrow(QueryException::class);
 
     foreach (['collab_epoch', 'state_version', 'checkpoint_state_version'] as $column) {
         expect(fn () => DB::transaction(fn () => DB::table('v_documents')->where('id', $document)->update([$column => -1])))->toThrow(QueryException::class);

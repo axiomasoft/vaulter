@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
@@ -42,7 +42,7 @@ final readonly class ShowNodeController
 
         if ($include === []) {
             if (Preconditions::notModified($request, $resource->etag())) {
-                return (new Response(status: 304))->setEtag($resource->etag());
+                return new Response(status: 304)->setEtag($resource->etag());
             }
 
             return $resource->response()->setEtag($resource->etag());

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Console\PruneChangesCommand;
 use Vaulter\Drive\Contracts\DriveHandle;
@@ -19,14 +19,14 @@ uses(TestCase::class, DatabaseMigrations::class);
 
 function pruneHead(DriveHandle $drive): object
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('drive_change_heads'))
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('drive_change_heads'))
         ->where('drive_id', $drive->model()->getKey())->sole();
 }
 
 /** @return list<int> */
 function pruneSeqs(DriveHandle $drive): array
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('drive_changes'))
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('drive_changes'))
         ->where('drive_id', $drive->model()->getKey())->orderBy('seq')->pluck('seq')->map(static fn (mixed $seq): int => (int) $seq)->all();
 }
 
@@ -75,7 +75,7 @@ it('rejects a --days that is not a positive integer', function (): void {
 
 it('prunes in batches of a thousand under the head lock', function (): void {
     $drive = DriveTestHelpers::drive();
-    $table = app(DatabaseConfig::class)->table('drive_changes');
+    $table = app(DatabaseOptions::class)->table('drive_changes');
     $db = app(VaulterDatabase::class)->connection();
     $rows = [];
     foreach (range(1, PruneChangesCommand::BATCH + 5) as $seq) {
@@ -85,7 +85,7 @@ it('prunes in batches of a thousand under the head lock', function (): void {
     foreach (array_chunk($rows, 200) as $chunk) {
         $db->table($table)->insert($chunk);
     }
-    $db->table(app(DatabaseConfig::class)->table('drive_change_heads'))->where('drive_id', $drive->model()->getKey())->update(['last_seq' => PruneChangesCommand::BATCH + 5]);
+    $db->table(app(DatabaseOptions::class)->table('drive_change_heads'))->where('drive_id', $drive->model()->getKey())->update(['last_seq' => PruneChangesCommand::BATCH + 5]);
     $deletes = 0;
     $db->listen(static function ($query) use (&$deletes, $table): void {
         if (str_starts_with(strtolower($query->sql), 'delete') && str_contains($query->sql, $table)) {

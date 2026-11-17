@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\CheckStatus;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -33,7 +33,7 @@ it('reports no pins on an empty store', function (): void {
     $findings = blobPinsFindings();
 
     expect($findings)->toHaveCount(1)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Ok)
+        ->and($findings[0]->status)->toBe(CheckStatus::Ok)
         ->and($findings[0]->code)->toBe('media.blobs.pins')
         ->and($findings[0]->message)->toBe('No blob is pinned.');
 });
@@ -48,13 +48,13 @@ it('prints the pins per owner type and warns only about an owner whose module is
 
     // The drive is not installed in the media suite; the media module itself is active.
     expect($findings)->toHaveCount(2)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Ok)
+        ->and($findings[0]->status)->toBe(CheckStatus::Ok)
         ->and($findings[0]->message)->toBe('Pins by owner type: drive.revision_blob=2, media.preview=1.')
         ->and($findings[0]->evidence)->toBe(['drive.revision_blob' => 2, 'media.preview' => 1])
-        ->and($findings[1]->severity)->toBe(DoctorSeverity::Warning)
+        ->and($findings[1]->status)->toBe(CheckStatus::Warning)
         ->and($findings[1]->code)->toBe('media.blobs.pins_inactive_owner')
         ->and($findings[1]->evidence)->toBe(['owner_type' => 'drive.revision_blob', 'module' => 'drive', 'state' => 'not installed', 'pins' => 2])
-        ->and($findings[1]->hint)->toContain('own purge or rollback');
+        ->and($findings[1]->remediation)->toContain('own purge or rollback');
 });
 
 it('changes nothing it reports on', function (): void {

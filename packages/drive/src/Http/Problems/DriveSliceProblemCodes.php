@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Problems;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Revisions;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Content\DocumentStateWriter;
@@ -75,16 +75,16 @@ final readonly class RestoreDocumentRevisionAction
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Restore,
                 content: OpaqueContent::fromArray($source->content ?? []),
-                collabState: $source->collab_state,
                 schemaVersion: $source->schema_version,
-                documentType: $source->type,
-                protocol: $source->collab_protocol,
-                stateFormat: $source->collab_state_format,
+                collabState: $source->collab_state,
                 actorId: $actorId,
                 expectedStateVersion: $data->expectedStateVersion,
                 forceCheckpoint: true,
                 label: sprintf('Restored from #%d', $source->number),
                 restoredFrom: $source,
+                documentType: $source->type,
+                protocol: $source->collab_protocol,
+                stateFormat: $source->collab_state_format,
             ));
             $revision = $result->checkpoint ?? throw new LogicException('[Vaulter] A restore must create a checkpoint.');
 

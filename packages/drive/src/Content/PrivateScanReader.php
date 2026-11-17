@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Media\Contracts\Cas\BlobStore;

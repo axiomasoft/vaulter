@@ -7,23 +7,25 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Doctor\DedupScopeCheck;
 use Vaulter\Drive\Doctor\DiskProbeCheck;
 use Vaulter\Drive\Doctor\DiskSet;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\MediaModule;
 
 /** @return list<DoctorFinding> */
 function mediaFindings(string $key, bool $production = false, bool $probe = false): array
 {
+    app()->forgetInstance(MediaOptions::class);
     $report = app(DoctorRunner::class)->run(new DoctorContext(production: $production, probeStorage: $probe, sampleLimit: 1000, now: CarbonImmutable::now('UTC')), [$key]);
 
     return $report->checks[0]->findings;
@@ -35,7 +37,7 @@ it('does not touch a disk without --probe-storage', function (): void {
     $findings = mediaFindings('media.disk.probe');
 
     expect($findings)->toHaveCount(1)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Ok)
+        ->and($findings[0]->severity)->toBe(Severity::Info)
         ->and($findings[0]->message)->toContain('not evaluated; pass --probe-storage')
         ->and($findings[0]->evidence['skipped'])->toBeTrue()
         ->and(Storage::disk('local')->allFiles())->toBe([]);
@@ -77,9 +79,9 @@ it('reports a disk that fails without quoting the driver message and leaves noth
     $disk = Storage::disk('local');
     Storage::set('local', new class($disk) extends FilesystemAdapter
     {
-        public function __construct(private readonly Filesystem $inner)
+        public function __construct(Filesystem $inner)
         {
-            parent::__construct($inner->getDriver(), $inner->getAdapter(), []);
+            parent::__construct($inner->getDriver(), $inner->getAdapter());
         }
 
         public function readStream($path)
@@ -90,7 +92,7 @@ it('reports a disk that fails without quoting the driver message and leaves noth
 
     $finding = mediaFindings('media.disk.probe', probe: true)[0];
 
-    expect($finding->severity)->toBe(DoctorSeverity::Error)
+    expect($finding->severity)->toBe(Severity::Error)
         ->and($finding->code)->toBe('media.disk.probe_failed')
         ->and($finding->evidence['stage'])->toBe('read')
         ->and(json_encode($finding))->not->toContain('hunter2')
@@ -102,9 +104,9 @@ it('does not call a disk healthy when the test object cannot be deleted', functi
     $disk = Storage::disk('local');
     Storage::set('local', new class($disk) extends FilesystemAdapter
     {
-        public function __construct(private readonly Filesystem $inner)
+        public function __construct(Filesystem $inner)
         {
-            parent::__construct($inner->getDriver(), $inner->getAdapter(), []);
+            parent::__construct($inner->getDriver(), $inner->getAdapter());
         }
 
         public function delete($paths)
@@ -116,7 +118,7 @@ it('does not call a disk healthy when the test object cannot be deleted', functi
     $finding = mediaFindings('media.disk.probe', probe: true)[0];
 
     expect($finding->code)->toBe('media.disk.probe_delete_failed')
-        ->and($finding->severity)->toBe(DoctorSeverity::Error)
+        ->and($finding->severity)->toBe(Severity::Error)
         ->and($finding->evidence['object'])->toStartWith('.vaulter-doctor/')
         ->and($disk->allFiles())->toHaveCount(1)
         ->and(json_encode($finding))->not->toContain('hunter2');
@@ -127,7 +129,7 @@ it('reports a disk that is not configured', function (): void {
 
     $finding = mediaFindings('media.disk.probe', probe: true)[0];
 
-    expect($finding->code)->toBe('media.disk.probe_failed')->and($finding->severity)->toBe(DoctorSeverity::Error);
+    expect($finding->code)->toBe('media.disk.probe_failed')->and($finding->severity)->toBe(Severity::Error);
 });
 
 it('warns when tenant-wide deduplication spans disks', function (): void {
@@ -141,8 +143,8 @@ it('warns when tenant-wide deduplication spans disks', function (): void {
 
     $finding = mediaFindings('media.dedup.scope')[0];
     expect($finding->code)->toBe('media.dedup.scope_spans_disks')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and(mediaFindings('media.dedup.scope', production: true)[0]->severity)->toBe(DoctorSeverity::Warning);
+        ->and($finding->severity)->toBe(Severity::Warning)
+        ->and(mediaFindings('media.dedup.scope', production: true)[0]->severity)->toBe(Severity::Warning);
 
     foreach (['drive', 'off'] as $scope) {
         config(['vaulter-media.dedup.scope' => $scope]);
@@ -163,9 +165,9 @@ it('makes no write to the database', function (): void {
 });
 
 it('contributes the disk and dedup-scope checks as the drive and keeps them with the drive module (D33)', function (): void {
-    $keys = array_map(static fn ($check): string => $check->key(), app(DoctorRegistry::class)->all());
-    $drive = (new ReflectionClassConstant(DriveModule::class, 'DOCTOR_CHECKS'))->getValue();
-    $media = new ReflectionMethod(MediaModule::class, 'register');
+    $keys = array_map(static fn (DoctorCheck $check): string => $check->key(), app(DoctorRegistry::class)->all());
+    $drive = new ReflectionClassConstant(DriveModule::class, 'DOCTOR_CHECKS')->getValue();
+    $media = new ReflectionClass(MediaModule::class);
 
     expect($keys)->toContain('media.disk.probe', 'media.dedup.scope')
         ->and($drive)->toHaveKeys(['media.disk.probe', 'media.dedup.scope'])
@@ -182,6 +184,7 @@ it('lists the media default disk and each distinct profile disk once', function 
     $registry->register((new Profile)->key('second')->disk('beta'));
     $registry->register((new Profile)->key('third')->disk('beta'));
     config()->set('vaulter-media.disk', 'alpha');
+    app()->forgetInstance(MediaOptions::class);
 
-    expect(DiskSet::of(app(MediaConfig::class), $registry))->toBe(['alpha', 'beta']);
+    expect(DiskSet::of(app(MediaOptions::class), $registry))->toBe(['alpha', 'beta']);
 });

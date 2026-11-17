@@ -33,7 +33,7 @@ final class VaulterDatabase
 
     public function connection(): Connection
     {
-        return $this->db->connection($this->databaseOptions->connection);
+        return $this->db->connection($this->options()->connection);
     }
 
     public function driver(): string
@@ -177,8 +177,15 @@ final class VaulterDatabase
             return;
         }
 
-        $this->connection()->table($this->databaseOptions->table($entity))
+        $this->connection()->table($this->options()->table($entity))
             ->where('id', $id)->lockForUpdate()->first(['id']);
+    }
+
+    private function options(): DatabaseOptions
+    {
+        return $this->container->bound(DatabaseOptions::class)
+            ? $this->container->make(DatabaseOptions::class)
+            : $this->databaseOptions;
     }
 
     /**

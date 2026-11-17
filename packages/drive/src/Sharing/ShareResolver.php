@@ -12,9 +12,9 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Content\DownloadGuards;
@@ -72,7 +72,7 @@ final readonly class ShareResolver
         private ShareContentGuard $content,
         private ShareLinkRules $rules,
         private ShareSession $sessions,
-        private TenancyConfig $tenancy,
+        private TenancyOptions $tenancy,
         private Container $container,
     ) {}
 
@@ -202,7 +202,7 @@ final readonly class ShareResolver
             return null;
         }
 
-        if (!$drive instanceof Drive || ($this->tenancy->enabled() && ($drive->tenant_id === null || TenancyBoundary::normalize($node->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id))) || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id
+        if (!$drive instanceof Drive || ($this->tenancy->enabled && ($drive->tenant_id === null || TenancyBoundary::normalize($node->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id))) || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id
             || !$this->rules->holds($drive, $share, Carbon::now())) {
             return null;
         }
@@ -245,7 +245,7 @@ final readonly class ShareResolver
         }
 
         $drive = $node->storage()->first();
-        if (!$drive instanceof Drive || ($this->tenancy->enabled() && $drive->tenant_id === null)) {
+        if (!$drive instanceof Drive || ($this->tenancy->enabled && $drive->tenant_id === null)) {
             return false;
         }
 
@@ -288,7 +288,7 @@ final readonly class ShareResolver
 
         $drive = $node->storage()->first();
         // Without strict tenancy there is no host tenant to compare with.
-        if (!$drive instanceof Drive || $drive->tenant_id === null || !$this->tenancy->enabled()) {
+        if (!$drive instanceof Drive || $drive->tenant_id === null || !$this->tenancy->enabled) {
             return false;
         }
 

@@ -61,21 +61,19 @@ it('refuses an update whose precheck went stale to a restore that committed befo
     try {
         $results = RaceFixtures::race([
             // The caller's check sees a writable document; the restore lands before the action's first statement.
-            static function () use ($node, $update, $dir): array {
-                return RaceFixtures::attempt(static function () use ($node, $update, $dir): void {
-                    app(ContentDecoder::class)->editableType(DocumentTestHelpers::document($node));
-                    $armed = true;
-                    app(VaulterDatabase::class)->connection()->beforeExecuting(static function () use (&$armed, $dir): void {
-                        if (!$armed) {
-                            return;
-                        }
-                        $armed = false;
-                        touch($dir.'/prechecked');
-                        degradedRaceWait($dir.'/restored');
-                    });
-                    $update('late edit');
+            static fn (): array => RaceFixtures::attempt(static function () use ($node, $update, $dir): void {
+                app(ContentDecoder::class)->editableType(DocumentTestHelpers::document($node));
+                $armed = true;
+                app(VaulterDatabase::class)->connection()->beforeExecuting(static function () use (&$armed, $dir): void {
+                    if (!$armed) {
+                        return;
+                    }
+                    $armed = false;
+                    touch($dir.'/prechecked');
+                    degradedRaceWait($dir.'/restored');
                 });
-            },
+                $update('late edit');
+            }),
             static function () use ($node, $degraded, $dir): array {
                 degradedRaceWait($dir.'/prechecked');
                 $outcome = RaceFixtures::attempt(static fn () => app(RestoreDocumentRevisionAction::class)->execute(
@@ -87,7 +85,7 @@ it('refuses an update whose precheck went stale to a restore that committed befo
             },
         ]);
     } finally {
-        array_map('unlink', glob($dir.'/*') ?: []);
+        array_map(unlink(...), glob($dir.'/*') ?: []);
         rmdir($dir);
     }
 

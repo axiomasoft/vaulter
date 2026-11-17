@@ -8,11 +8,11 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
@@ -60,7 +60,7 @@ final readonly class UploadSessionManager
         private UploadSessionReadRepository $sessionsRead,
         private StagedUpload $staged,
         private VaulterDatabase $database,
-        private DriveConfig $driveConfig,
+        private DriveOptions $driveConfig,
         private EventRecorder $recorder,
     ) {}
 
@@ -90,10 +90,10 @@ final readonly class UploadSessionManager
                 'expected_sha256' => $data->expectedSha256,
                 'total_size_bytes' => $data->totalSizeBytes,
                 'received_bytes' => 0,
-                'chunk_size' => $this->driveConfig->chunkSize(),
+                'chunk_size' => $this->driveConfig->uploads->resumable->chunkSize,
                 'mime_type' => $data->mimeType,
                 'metadata' => [...$data->metadata, 'actor_type' => $context->actor->ref()->type, 'expected_sequence' => $data->expectedSequence],
-                'expires_at' => Carbon::now()->addHours($this->driveConfig->sessionTtlHours()),
+                'expires_at' => Carbon::now()->addHours($this->driveConfig->uploads->resumable->sessionTtlHours),
                 'created_by' => $context->actor->ref()->id,
             ]);
 
@@ -156,9 +156,7 @@ final readonly class UploadSessionManager
     {
         $this->assertTenant($session);
 
-        return $this->database->retryingOutermost(fn (): mixed => $this->database->transaction(function () use ($session, $operation): mixed {
-            return $operation($this->sessions->acquireForPatch($session));
-        }, attempts: 1), $attempts);
+        return $this->database->retryingOutermost(fn (): mixed => $this->database->transaction(fn (): mixed => $operation($this->sessions->acquireForPatch($session)), attempts: 1), $attempts);
     }
 
     /**
@@ -305,15 +303,15 @@ final readonly class UploadSessionManager
      */
     private function assertTenant(UploadSession $session): void
     {
-        if (!app(TenancyConfig::class)->enabled()) {
+        if (!app(TenancyOptions::class)->enabled) {
             return;
         }
-        $class = app(DriveConfig::class)->model('upload_session');
+        $class = app(DriveOptions::class)->model('upload_session');
         $fresh = $class::query()->whereKey($session->getRawOriginal($session->getKeyName()))->first();
         if (!$fresh instanceof UploadSession) {
             throw NodeNotFoundException::forId('upload');
         }
-        $driveClass = app(DriveConfig::class)->model('drive');
+        $driveClass = app(DriveOptions::class)->model('drive');
         $drive = $driveClass::query()->whereKey($fresh->drive_id)->first();
         if (!$drive instanceof Drive) {
             throw NodeNotFoundException::forId('drive');
@@ -326,7 +324,7 @@ final readonly class UploadSessionManager
 
     private function assertWithinMaxBytes(?int $totalSizeBytes): void
     {
-        $max = $this->driveConfig->maxFileSize();
+        $max = $this->driveConfig->uploads->maxFileSize;
 
         if ($max === 0 || $totalSizeBytes === null) {
             return;
@@ -347,7 +345,7 @@ final readonly class UploadSessionManager
      */
     private function assertWithinActiveSessionCap(int|string|null $actorId): void
     {
-        $max = $this->driveConfig->maxActiveSessionsPerActor();
+        $max = $this->driveConfig->uploads->resumable->maxActiveSessionsPerActor;
 
         if ($max === 0 || $actorId === null) {
             return;
@@ -355,7 +353,6 @@ final readonly class UploadSessionManager
 
         if ($this->sessionsRead->countActiveForActor($actorId) >= $max) {
             throw new TooManyRequestsHttpException(
-                retryAfter: null,
                 message: "Too many active upload sessions ({$max} max) for this actor.",
             );
         }

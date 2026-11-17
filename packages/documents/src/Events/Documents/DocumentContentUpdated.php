@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Documents;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use LogicException;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\DocumentEventType;
@@ -68,11 +70,10 @@ final readonly class DocumentContentUpdated extends DriveEvent
     /**
      * Key of the document this write belongs to: the owner of {@see $version}, as the key column carries it.
      */
-    #[Api]
     public function documentId(): int|string
     {
         return Identity::key($this->versionRow->document_id)
-            ?? throw new \LogicException('A document event carries a revision without a document key.');
+            ?? throw new LogicException('A document event carries a revision without a document key.');
     }
 
     public function type(): DocumentEventType
@@ -110,7 +111,7 @@ final readonly class DocumentContentUpdated extends DriveEvent
         return ActivityTarget::of($this->nodeRow);
     }
 
-    #[\Override]
+    #[Override]
     public function isExternal(): bool
     {
         return $this->created;

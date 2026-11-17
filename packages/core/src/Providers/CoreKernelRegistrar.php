@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\Route;
 use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Laravel\ExtensionFacetRegistrar;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Plugins\Laravel\ExtensionRegistrar;
-use Packman\Schema\Laravel\SchemaExtensions;
+use Packman\PackmanServiceProvider;
+use Packman\Plugins\Contracts\Registry\PluginActivationGate;
+use Packman\Plugins\Laravel\PluginsServiceProvider;
+use Packman\Schema\Laravel\SchemaServiceProvider;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Console\DoctorCommand;
@@ -30,6 +31,8 @@ use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
+use Vaulter\Modules\VaulterExtensionFacets;
+use Vaulter\Modules\VaulterPluginActivationGate;
 use Vaulter\Security\ProductionInvariants;
 
 /**
@@ -63,7 +66,7 @@ final class CoreKernelRegistrar implements PackageRegistrar
 
             $kernel = $app->make(Kernel::class);
             $overrides = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter.modules', []) : [];
-            $kernel->seal((new ModuleCompiler)->compileOffered($catalog->offered(), $overrides));
+            $kernel->seal((new ModuleCompiler)->compileOffered($catalog->offered(), $overrides, $catalog->pluginSpecs()));
 
             $applier = $app->make(ModuleApplier::class);
             $applier->config('vaulter', dirname(__DIR__, 2).'/config/vaulter.php');
@@ -114,7 +117,8 @@ final class CoreKernelRegistrar implements PackageRegistrar
             return;
         }
 
-        $options = $app->make(VaulterOptions::class);
+        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter', []) : [];
+        $options = VaulterOptions::fromArray(is_array($raw) ? $raw : ['__invalid_root' => $raw], 'vaulter');
         if ($options->tenancy->enabled) {
             $options->tenancy->requireResolver();
             if (!self::isTenantResolver($app->make(TenantResolver::class))) {
@@ -138,9 +142,15 @@ final class CoreKernelRegistrar implements PackageRegistrar
             }
         }
 
-        ExtensionRegistrar::builtIn(CoreModule::class);
-        ExtensionFacetRegistrar::register($app, CoreModule::class, dirname(__DIR__, 2).'/composer.json');
-        SchemaExtensions::register($app, CoreModule::class);
+        $app->register(PackmanServiceProvider::class);
+        $app->register(PluginsServiceProvider::class);
+        $app->register(SchemaServiceProvider::class);
+        $app->singletonIf(
+            PluginActivationGate::class,
+            static fn (Application $app): PluginActivationGate => new VaulterPluginActivationGate($app),
+        );
+
+        VaulterExtensionFacets::register($app, CoreModule::class, dirname(__DIR__, 2).'/composer.json');
 
         if ($config !== null) {
             foreach ($preserved as $key => $value) {

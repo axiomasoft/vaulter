@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Idempotency;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Drive\Idempotency\ReceiptFields;
@@ -81,8 +81,6 @@ final readonly class DocumentSnapshotCodec implements ReceiptCodec
             documentId: ReceiptFields::text($body, 'document_id', self::RECEIPT),
             type: $type,
             schemaVersion: $schemaVersion,
-            collabProtocol: ReceiptFields::nullableText($body, 'collab_protocol'),
-            collabStateFormat: ReceiptFields::nullableText($body, 'collab_state_format'),
             typeAvailable: ReceiptFields::bool($body, 'type_available', self::RECEIPT),
             editable: ReceiptFields::bool($body, 'editable', self::RECEIPT),
             epoch: ReceiptFields::int($body, 'epoch', self::RECEIPT),
@@ -95,6 +93,8 @@ final readonly class DocumentSnapshotCodec implements ReceiptCodec
             collabStateSize: ReceiptFields::nullableInt($body, 'collab_state_size'),
             updatedAt: ReceiptFields::requiredTime($body, 'updated_at', self::RECEIPT),
             updatedBy: ReceiptFields::nullableText($body, 'updated_by'),
+            collabProtocol: ReceiptFields::nullableText($body, 'collab_protocol'),
+            collabStateFormat: ReceiptFields::nullableText($body, 'collab_state_format'),
         );
     }
 

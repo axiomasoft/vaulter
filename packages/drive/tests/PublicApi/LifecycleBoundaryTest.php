@@ -60,7 +60,7 @@ final readonly class LifecycleBoundaryFailingFile implements NodeContentLifecycl
     public function purge(DriveContext $context, NodeSnapshot $node): void
     {
         $this->actual->purge($context, $node);
-        if ((string) $node->id === (string) $this->failedNodeId) {
+        if ($node->id === (string) $this->failedNodeId) {
             throw $this->failure;
         }
     }
@@ -118,14 +118,9 @@ it('rejects duplicate lifecycle registrations without replacing the first handle
     expect(fn () => $registry->register($handler))->toThrow(DuplicateNodeContentLifecycleException::class)
         ->and($registry->forKind(NodeKind::File))->toBe($handler);
 
-    config()->set('vaulter.content_lifecycles', [FileContentLifecycle::class]);
-    app()->forgetInstance(NodeContentLifecycleRegistry::class);
-    try {
-        expect(fn () => (new BindingsRegistrar)->boot(app()))->toThrow(DuplicateNodeContentLifecycleException::class);
-    } finally {
-        config()->set('vaulter.content_lifecycles', []);
-        app()->forgetInstance(NodeContentLifecycleRegistry::class);
-    }
+    $app = clone app();
+    $app->tag([FileContentLifecycle::class], 'vaulter.content_lifecycles');
+    expect(fn () => (new BindingsRegistrar)->boot($app))->toThrow(DuplicateNodeContentLifecycleException::class);
 });
 
 it('copies and restores immutable payload identity edge attributes and metadata with correct sequence', function (): void {

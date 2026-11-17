@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Handlers;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use InvalidArgumentException;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Handlers\FileHandler;
 use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry as FileHandlerRegistryContract;
 use Vaulter\Drive\Enums\Handlers\Capability;
@@ -68,7 +69,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
     private array $cache = [];
 
     public function __construct(
-        private readonly DriveConfig $driveConfig,
+        private readonly DriveOptions $driveConfig,
         private readonly Container $container,
     ) {}
 
@@ -225,7 +226,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
             $handlers,
             static fn (FileHandler $handler): bool => in_array(
                 $extension,
-                array_map(static fn (string $ext): string => mb_strtolower($ext), $handler->extensions()),
+                array_map(mb_strtolower(...), $handler->extensions()),
                 strict: true,
             ),
         ));
@@ -255,10 +256,8 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
             $byClass[$handler::class] = $handler;
         }
 
-        foreach ($this->driveConfig->handlers() as $class) {
-            if (!isset($byClass[$class])) {
-                $byClass[$class] = $this->checkedInstance($class);
-            }
+        foreach ($this->driveConfig->handlers as $class) {
+            $byClass[$class] ??= $this->checkedInstance($class);
         }
 
         foreach ($this->runtime as $handler) {
@@ -313,7 +312,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
     private function assertKey(FileHandler $handler): void
     {
         if (preg_match('/^[a-z0-9-]+\/[a-z0-9-]+$/D', $handler->key()) !== 1) {
-            throw new \InvalidArgumentException('File handler key must have the format vendor/name.');
+            throw new InvalidArgumentException('File handler key must have the format vendor/name.');
         }
     }
 

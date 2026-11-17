@@ -8,9 +8,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Support\UtcDateTimeCast;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -67,14 +67,14 @@ class Blob extends Model
      * reference at the wrong bytes. The sole writer, BlobStoreRepository, uses
      * forceFill() exclusively and is unaffected by this list.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('blobs');
+        return app(DatabaseOptions::class)->table('blobs');
     }
 
     /**
@@ -83,7 +83,6 @@ class Blob extends Model
      * object. The mark is media's own state — the drive's scan quarantine is a different thing — and a consumer that
      * hands the bytes out refuses a blob that is not intact.
      */
-    #[Api]
     public function isIntact(): bool
     {
         return $this->integrity_failed_at === null;
@@ -127,7 +126,7 @@ class Blob extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

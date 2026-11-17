@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
@@ -55,6 +55,6 @@ final readonly class SpreadsheetDocumentType implements DocumentType
 
     public function features(): DocumentFeatures
     {
-        return new DocumentFeatures(editable: true, previewable: true, downloadable: false, thumbnailable: false);
+        return new DocumentFeatures(editable: true, previewable: true, thumbnailable: false, downloadable: false);
     }
 }

@@ -20,7 +20,7 @@ beforeEach(function (): void {
 });
 
 it('global больше не строится: нет общей области между тенантами', function (): void {
-    expect(fn () => BlobScope::forUpload('global', '1', '10'))->toThrow(InvalidArgumentException::class);
+    expect(fn (): BlobScope => BlobScope::forUpload('global', '1', '10'))->toThrow(InvalidArgumentException::class);
 });
 
 it('tenant без тенанта: одинаковые байты в разных дисках → ДВА блоба', function (): void {

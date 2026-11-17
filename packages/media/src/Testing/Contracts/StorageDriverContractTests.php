@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Media\Testing\Contracts;
 
 use DateTimeImmutable;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 
 /**
  * Local disk contract. Caller configures an isolated default/explicit disk before
  * invoking this kit. This does not qualify S3 atomic conditional writes or signing.
  */
-// @phpstan-ignore trait.unused (Public host testing trait; consumed by Pest outside src, like DocumentTypeContractTests.)
 #[Api]
 trait StorageDriverContractTests
 {

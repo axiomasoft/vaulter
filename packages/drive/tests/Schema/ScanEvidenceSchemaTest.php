@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Schema\ModuleSchemas;
 
 uses(TestCase::class);
@@ -76,14 +76,14 @@ it('creates the scan evidence and work schema with enforced checks and foreign k
 })->with(['bigint', 'ulid', 'uuid7']);
 
 it('guards scan authority against mass assignment and validates aliased model subclasses', function (): void {
-    $config = app(DriveConfig::class);
+    $config = app(DriveOptions::class);
     foreach (['scan_obligation', 'scan_request', 'scan_evidence', 'scan_policy_state', 'scan_backfill_run'] as $alias) {
         $class = $config->model($alias);
         $model = new $class;
         expect($model->isFillable('tenant_id'))->toBeFalse()->and($model->isFillable('outcome'))->toBeFalse()
             ->and($model->isFillable('lease_token'))->toBeFalse();
         config()->set('vaulter-drive.models.'.$alias, Drive::class);
-        expect(fn () => $config->model($alias))->toThrow(InvalidConfigurationException::class);
+        expect(fn () => app(DriveOptions::class)->model($alias))->toThrow(InvalidConfiguration::class);
         config()->set('vaulter-drive.models.'.$alias, $class);
     }
 });

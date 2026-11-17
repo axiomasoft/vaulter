@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Validation\ValidationException;
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -53,7 +53,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         private UploadSessionStoreRepository $sessions,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private DriveConfig $driveConfig,
+        private DriveOptions $driveConfig,
         private UploadSessionReadRepository $reads,
     ) {}
 
@@ -342,7 +342,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      */
     private function readPartWithinLimit(mixed $chunk): string
     {
-        $max = $this->driveConfig->maxChunkSize();
+        $max = $this->driveConfig->uploads->resumable->maxChunkSize;
 
         $bytes = $max > 0
             ? stream_get_contents($chunk, $max + 1)
@@ -371,7 +371,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
             ]);
         }
 
-        $max = $this->driveConfig->maxFileSize();
+        $max = $this->driveConfig->uploads->maxFileSize;
         if ($max > 0 && $projected > $max) {
             throw ValidationException::withMessages([
                 'received_bytes' => "The upload exceeded the maximum allowed {$max} bytes.",

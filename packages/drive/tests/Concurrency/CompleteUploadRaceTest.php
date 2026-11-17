@@ -125,24 +125,22 @@ it('SEC-CLEANUP-mutex holds the session lock through the outer commit against ab
     unlink($barrier);
     try {
         $outcomes = ForkRace::run([
-            static function () use ($session, $barrier): string {
-                return app(VaulterDatabase::class)->transaction(function () use ($session, $barrier): string {
-                    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'locked upload'), session: $session);
-                    if (app(StagedUpload::class)->size($session->fresh()) !== 4) {
-                        throw new RuntimeException('Protocol staging disappeared before outer commit.');
-                    }
-                    file_put_contents($barrier, 'locked');
-                    $deadline = microtime(true) + 5;
-                    while (!is_file($barrier.'.checked') && microtime(true) < $deadline) {
-                        usleep(1000);
-                    }
-                    if (!is_file($barrier.'.checked')) {
-                        throw new RuntimeException('Mutex contender never completed.');
-                    }
+            static fn (): string => app(VaulterDatabase::class)->transaction(function () use ($session, $barrier): string {
+                $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'locked upload'), session: $session);
+                if (app(StagedUpload::class)->size($session->fresh()) !== 4) {
+                    throw new RuntimeException('Protocol staging disappeared before outer commit.');
+                }
+                file_put_contents($barrier, 'locked');
+                $deadline = microtime(true) + 5;
+                while (!is_file($barrier.'.checked') && microtime(true) < $deadline) {
+                    usleep(1000);
+                }
+                if (!is_file($barrier.'.checked')) {
+                    throw new RuntimeException('Mutex contender never completed.');
+                }
 
-                    return (string) $node->id;
-                }, attempts: 1);
-            },
+                return (string) $node->id;
+            }, attempts: 1),
             static function () use ($session, $barrier): int {
                 $deadline = microtime(true) + 5;
                 while (!is_file($barrier) && microtime(true) < $deadline) {

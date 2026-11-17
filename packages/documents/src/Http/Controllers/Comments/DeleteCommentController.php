@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Http\Controllers\Comments;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\CommentPreconditions;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;

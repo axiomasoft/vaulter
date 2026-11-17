@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
@@ -28,7 +28,7 @@ use Vaulter\Support\Identity;
 final class DriveReadRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
     ) {}
 
     /** @var array<string, Drive|null> */

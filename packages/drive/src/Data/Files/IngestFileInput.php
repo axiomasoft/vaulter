@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Files;
 
+use DateTimeInterface;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
@@ -39,7 +40,7 @@ final readonly class IngestFileInput
         public OnNameConflict $onConflict = OnNameConflict::Fail,
         public ?PreparedUpload $prepared = null,
         public ?string $declaredMimeType = null,
-        public ?\DateTimeInterface $clientModifiedAt = null,
+        public ?DateTimeInterface $clientModifiedAt = null,
     ) {}
 
     /**

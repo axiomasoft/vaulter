@@ -8,12 +8,11 @@ use Illuminate\Support\Facades\Route;
 use Vaulter\Documents\DocumentsModule;
 use Vaulter\Documents\Http\Controllers\Documents\CreateCollaborationSessionController;
 use Vaulter\Documents\Http\Controllers\Documents\UpdateDocumentContentController;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\PluginModuleBridge;
 
 it('declares the existing route file during package configuration and mounts installed document routes', function (): void {
-    $module = new ModuleBuilder(new ModuleId('documents'));
-    (new DocumentsModule)->register($module);
+    $module = PluginModuleBridge::buildOffered(DocumentsModule::class, app(ModuleCatalog::class)->pluginSpec(DocumentsModule::class));
     expect(array_map(realpath(...), $module->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/documents.php')]);
 
     config()->set('vaulter.routes.prefix', 'host/documents');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle as Contract;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Operations\UploadOperations;

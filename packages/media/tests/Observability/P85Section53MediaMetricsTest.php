@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Configuration\ObservabilityOptions;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobReconciler;
@@ -17,6 +19,8 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
+    $this->app->forgetInstance(VaulterOptions::class);
+    $this->app->forgetInstance(ObservabilityOptions::class);
     $this->app->forgetInstance(MetricsRecorder::class);
 });
 

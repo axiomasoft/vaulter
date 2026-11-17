@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Presentation;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\SupportsCollaboration;

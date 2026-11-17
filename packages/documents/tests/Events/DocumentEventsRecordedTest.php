@@ -103,7 +103,7 @@ it('records comment events in both sinks', function (): void {
     expect(documentEventsCount(Activity::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
         ->and(documentEventsCount(OutboxEvent::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
         ->and(CanonicalJson::of($added->payload['subject']))->toBe(CanonicalJson::of(['type' => 'comment', 'id' => (string) $comment->id]))
-        ->and(CanonicalJson::of($added->payload['data']))->toBe(CanonicalJson::of(['comment_id' => (string) $comment->id, 'node_id' => (string) $node->id]))
+        ->and(CanonicalJson::of($added->payload['data']))->toBe(CanonicalJson::of(['comment_id' => (string) $comment->id, 'node_id' => $node->id]))
         ->and($added->payload['actor']['id'])->toBe('9')
         ->and(json_encode($added->payload, JSON_THROW_ON_ERROR))->not->toContain('hello')
         ->and(Activity::query()->where('verb', DocumentEventType::CommentAdded->value)->sole()->target_id)->toEqual($node->id);

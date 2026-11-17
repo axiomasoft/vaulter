@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobReconciler;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Tenancy\Tenancy;
 
 /**
@@ -36,12 +36,6 @@ final class ReconcileBlobsCommand extends Command
 {
     use OpensWriteScope;
 
-    public function __construct(
-        private readonly MediaConfig $mediaConfig,
-    ) {
-        parent::__construct();
-    }
-
     protected $signature = 'vaulter:blobs:reconcile
         {--orphans : Also walk the disk for orphan objects (bytes with no blob row)}
         {--disk= : The disk to scan for orphans (defaults to the configured CAS disk)}
@@ -50,12 +44,12 @@ final class ReconcileBlobsCommand extends Command
 
     protected $description = 'Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3)';
 
-    public function handle(BlobReconciler $reconciler): int
+    public function handle(BlobReconciler $reconciler, MediaOptions $mediaConfig): int
     {
-        return Tenancy::without(fn (): int => $this->runMaintenance($reconciler));
+        return Tenancy::without(fn (): int => $this->runMaintenance($reconciler, $mediaConfig));
     }
 
-    private function runMaintenance(BlobReconciler $reconciler): int
+    private function runMaintenance(BlobReconciler $reconciler, MediaOptions $mediaConfig): int
     {
         $report = $reconciler->reconcile();
 
@@ -75,18 +69,18 @@ final class ReconcileBlobsCommand extends Command
             $this->components->info('No dangling rows detected.');
         }
 
-        if ($this->option('orphans')) {
-            return $this->walkOrphans(reconciler: $reconciler, exit: $exit);
+        if ((bool) $this->option('orphans')) {
+            return $this->walkOrphans(reconciler: $reconciler, mediaConfig: $mediaConfig, exit: $exit);
         }
 
-        if ($this->option('prune')) {
+        if ((bool) $this->option('prune')) {
             $this->components->warn('--prune has no effect without --orphans; nothing pruned.');
         }
 
         return $exit;
     }
 
-    private function walkOrphans(BlobReconciler $reconciler, int $exit): int
+    private function walkOrphans(BlobReconciler $reconciler, MediaOptions $mediaConfig, int $exit): int
     {
         $disk = $this->diskOption();
         $grace = $this->orphanGraceOption();
@@ -116,7 +110,7 @@ final class ReconcileBlobsCommand extends Command
         $this->components->info(
             "Orphan walk ({$mode}): scanned {$result['scanned']}, found ".count($result['orphans']).
             ", pruned {$result['pruned']}, skipped {$result['skipped']} ".
-            '(disk '.($disk ?? $this->mediaConfig->disk()).', grace '.$this->mediaConfig->orphanGraceHours($grace).'h).',
+            '(disk '.($disk ?? $mediaConfig->disk()).', grace '.$mediaConfig->orphanGraceHours($grace).'h).',
         );
 
         if ($pruneRefused) {

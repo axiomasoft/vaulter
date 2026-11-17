@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Configuration;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Where identical bytes share one stored blob. Deduplication never

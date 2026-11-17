@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Data\DriveRef;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;

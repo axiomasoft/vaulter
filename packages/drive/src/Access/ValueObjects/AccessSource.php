@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * One role that applies to the explained node: a grant (direct or inherited from

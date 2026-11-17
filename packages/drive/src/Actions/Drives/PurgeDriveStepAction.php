@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Enums\DriveStatus;
@@ -43,11 +43,11 @@ final readonly class PurgeDriveStepAction
     public const int BATCH = 100;
 
     public function __construct(
-        private DriveConfig $config,
+        private DriveOptions $config,
         private VaulterDatabase $database,
         private PurgeNodeAction $purge,
         private UploadSessionManager $uploads,
-        private DriveConfig $driveConfig,
+        private DriveOptions $driveConfig,
         private NodeStoreRepository $nodes,
         private EventRecorder $recorder,
         private ChangeEntryRepository $changes,

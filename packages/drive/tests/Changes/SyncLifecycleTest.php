@@ -10,6 +10,7 @@ use Vaulter\Drive\Access\AccessInvalidation;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Changes\ReaderSyncIdentity;
+use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\DriveRef;
 use Vaulter\Drive\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
@@ -37,7 +38,7 @@ function syncAt(int $offset): void
 
 function syncDeadline(string $cursor): int
 {
-    return ChangeCursor::decode($cursor, (new ReaderSyncIdentity((string) config('app.key'), 1))->cursorSubkey())->notAfter;
+    return ChangeCursor::decode($cursor, new ReaderSyncIdentity((string) config('app.key'), 1)->cursorSubkey())->notAfter;
 }
 
 beforeEach(function (): void {
@@ -169,7 +170,7 @@ it('expires every cursor of a drive or of all drives on a host invalidation, seq
     app(AccessInvalidation::class)->changed(null, 'host-role');
 
     expect(fn () => $this->reader->changes()->list($mine))->toThrow(CursorExpiredException::class)
-        ->and(fn () => $other->changes()->list($theirs))->toThrow(CursorExpiredException::class)
+        ->and(fn (): ChangePage => $other->changes()->list($theirs))->toThrow(CursorExpiredException::class)
         ->and($this->heads->find($this->drive->model()->getKey()))->toMatchArray(['last_seq' => $seq, 'epoch' => 3])
         ->and($this->reader->changes()->list($this->reader->changes()->startCursor())->changes)->toBe([]);
 });

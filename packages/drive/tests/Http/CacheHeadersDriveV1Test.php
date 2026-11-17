@@ -41,7 +41,7 @@ it('never stores lists, drives, mutations, downloads or errors', function (): vo
         'nodes.show 404' => $this->getJson(V1::url('nodes/no-such-node')),
     ];
 
-    foreach ($responses as $route => $response) {
+    foreach ($responses as $response) {
         expect($response->headers->get('Cache-Control'))->toContain('no-store')->not->toContain('public');
     }
     expect($responses['nodes.update']->headers->get('Cache-Control'))->not->toContain('no-cache');

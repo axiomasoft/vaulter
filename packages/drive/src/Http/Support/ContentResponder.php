@@ -6,13 +6,13 @@ namespace Vaulter\Drive\Http\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Access\OperationGuard;
-use Vaulter\Drive\Configuration\DownloadsConfig;
+use Vaulter\Drive\Configuration\DownloadsOptions;
 use Vaulter\Drive\Content\ContentDelivery;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\FileStream;
@@ -50,7 +50,7 @@ final readonly class ContentResponder
 {
     public function __construct(
         private ContentDelivery $delivery,
-        private DownloadsConfig $downloads,
+        private DownloadsOptions $downloads,
         private NodeLocator $locator,
         private FileRevisionReadRepository $revisions,
         private MetricsRecorder $metrics,
@@ -61,7 +61,7 @@ final readonly class ContentResponder
     public function file(Request $request, DriveHandle $drive, string $nodeId, ?string $revisionId, string $disposition = 'attachment'): Response
     {
         $startedAt = hrtime(true);
-        if ($this->downloads->deliveryMode() === 'direct_signed') {
+        if ($this->downloads->deliveryMode === 'direct_signed') {
             return $this->redirect($request, $drive, $nodeId, $revisionId);
         }
 
@@ -111,7 +111,7 @@ final readonly class ContentResponder
         if (!in_array($revision->status, ['committed', 'superseded'], true)) {
             throw NodeNotFoundException::forId($nodeId);
         }
-        $url = $this->delivery->directUrl($context, $node, $revision, $this->downloads->directTtlSeconds());
+        $url = $this->delivery->directUrl($context, $node, $revision, $this->downloads->directTtlSeconds);
 
         return new RedirectResponse($url->url, 302, [
             'Cache-Control' => 'private, no-store',

@@ -27,6 +27,9 @@ use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\MintedShareLink;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
@@ -69,9 +72,9 @@ it('archive flips the status, returns a snapshot and unarchive reverts it', func
 it('refuses an invalid transition with invalid_drive_state', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    expect(fn () => $drive->unarchive())->toThrow(InvalidDriveStateException::class);
+    expect(fn (): DriveSnapshot => $drive->unarchive())->toThrow(InvalidDriveStateException::class);
     $drive->archive();
-    expect(fn () => $drive->archive())->toThrow(InvalidDriveStateException::class);
+    expect(fn (): DriveSnapshot => $drive->archive())->toThrow(InvalidDriveStateException::class);
     try {
         $drive->archive();
     } catch (InvalidDriveStateException $exception) {
@@ -90,12 +93,12 @@ it('an archived drive refuses mutations, purge and creation of non-system actors
 
     $system->archive();
 
-    expect(fn () => $actor->folders()->create('New'))->toThrow(DriveArchivedException::class)
-        ->and(fn () => $actor->nodes()->rename($folder, 'Renamed'))->toThrow(DriveArchivedException::class)
-        ->and(fn () => $actor->nodes()->trash($folder))->toThrow(DriveArchivedException::class)
-        ->and(fn () => $actor->trash()->restore($trashed))->toThrow(DriveArchivedException::class)
+    expect(fn (): NodeSnapshot => $actor->folders()->create('New'))->toThrow(DriveArchivedException::class)
+        ->and(fn (): NodeSnapshot => $actor->nodes()->rename($folder, 'Renamed'))->toThrow(DriveArchivedException::class)
+        ->and(fn (): NodeSnapshot => $actor->nodes()->trash($folder))->toThrow(DriveArchivedException::class)
+        ->and(fn (): NodeSnapshot => $actor->trash()->restore($trashed))->toThrow(DriveArchivedException::class)
         ->and(fn () => $actor->trash()->purge($trashed))->toThrow(DriveArchivedException::class)
-        ->and(fn () => $actor->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'x.bin'), new UploadOptions))
+        ->and(fn (): NodeSnapshot => $actor->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'x.bin'), new UploadOptions))
         ->toThrow(DriveArchivedException::class);
 
     // Reads and metadata stay open.
@@ -114,7 +117,7 @@ it('an archived drive refuses grant and share changes', function (): void {
     $actor = $system->actingAs($user);
     $system->archive();
 
-    expect(fn () => $actor->shares()->create($folder, new ShareLinkInput))->toThrow(DriveArchivedException::class);
+    expect(fn (): MintedShareLink => $actor->shares()->create($folder, new ShareLinkInput))->toThrow(DriveArchivedException::class);
 });
 
 it('archive and unarchive need Manage on the root or the system actor', function (): void {
@@ -125,7 +128,7 @@ it('archive and unarchive need Manage on the root or the system actor', function
     $reader->exists = true;
     AccessTestHelpers::grant($system->root(), RoleRegistry::READER, subjectId: 33, subjectType: $reader->getMorphClass());
 
-    expect(fn () => $system->actingAs($reader)->archive())->toThrow(PermissionDeniedException::class)
+    expect(fn (): DriveSnapshot => $system->actingAs($reader)->archive())->toThrow(PermissionDeniedException::class)
         ->and($system->snapshot()->status)->toBe(DriveStatus::Active);
 
     $owner = DriveTestHelpers::actor($system, 34);
@@ -145,8 +148,8 @@ it('a drive being deleted is absent for users and the handle', function (): void
     $deleted = $system->delete();
     expect($deleted->status)->toBe(DriveStatus::Deleting);
 
-    expect(fn () => $actor->root())->toThrow(StorageNotFoundException::class)
-        ->and(fn () => $system->snapshot())->toThrow(StorageNotFoundException::class);
+    expect(fn (): NodeSnapshot => $actor->root())->toThrow(StorageNotFoundException::class)
+        ->and(fn (): DriveSnapshot => $system->snapshot())->toThrow(StorageNotFoundException::class);
     $context = DriveContext::system($model, 'test fixture');
     expect(fn () => app(OperationGuard::class)->authorize($context, Ability::View, DriveTestHelpers::model($folder)))
         ->toThrow(NodeNotFoundException::class);

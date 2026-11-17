@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Operations;
 
 use Closure;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Documents\Actions\Comments\AddCommentAction;
 use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
@@ -74,7 +74,7 @@ final readonly class CommentOperations implements DriveExtension
         $page = $this->query->comments($node, $options ?? new ListOptions);
 
         return new Page(
-            items: array_values(array_map(fn (NodeComment $comment): CommentSnapshot => $this->mapper->comment($comment), $page->items())),
+            items: array_values(array_map($this->mapper->comment(...), $page->items())),
             nextCursor: $page->nextCursor()?->encode(),
         );
     }

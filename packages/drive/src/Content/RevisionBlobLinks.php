@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Repositories\FileRevisionBlobStoreRepository;
 use Vaulter\Media\Contracts\Cas\BlobPins;

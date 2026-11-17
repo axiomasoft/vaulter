@@ -99,7 +99,6 @@ it('R07Model resolves UploadFileData name from override not original', function 
         storage: $storage,
         stream: $stream,
         originalName: 'original.bin',
-        name: null,
     );
 
     expect($withOverride->resolvedName())->toBe('override.bin')

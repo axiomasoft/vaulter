@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Resources;
 
 use Closure;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;

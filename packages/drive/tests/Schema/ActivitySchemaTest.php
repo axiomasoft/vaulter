@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 
@@ -13,7 +13,7 @@ use Vaulter\Drive\Models\Activity\Activity;
  * or delete path for an audit row.
  */
 it('creates the v_activity table with every §2.9 column', function (): void {
-    $table = app(DatabaseConfig::class)->table('activity');
+    $table = app(DatabaseOptions::class)->table('activity');
 
     expect(Schema::hasColumns($table, [
         'id', 'tenant_id', 'drive_id', 'actor_type', 'actor_id', 'verb',
@@ -23,7 +23,7 @@ it('creates the v_activity table with every §2.9 column', function (): void {
 });
 
 it('is append-only: no updated_at and no soft-delete column', function (): void {
-    $table = app(DatabaseConfig::class)->table('activity');
+    $table = app(DatabaseOptions::class)->table('activity');
 
     expect(Schema::hasColumn($table, 'created_at'))->toBeTrue()
         ->and(Schema::hasColumn($table, 'updated_at'))->toBeFalse()

@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Actions\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Data\Sharing\UpdateShareLinkInput;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -39,12 +39,12 @@ use Vaulter\Events\EventRecorder;
 final readonly class UpdateShareLinkAction
 {
     public function __construct(
-        private SharingConfig $sharingConfig,
+        private SharingOptions $sharingConfig,
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
         private NodeLocator $locator,
         private ShareLinkRules $rules,
-        private TenancyConfig $tenancy,
+        private TenancyOptions $tenancy,
         private EventRecorder $recorder,
         private AggregateVersion $versions,
         private AccessSnapshotMapper $accessSnapshots,
@@ -62,11 +62,11 @@ final readonly class UpdateShareLinkAction
         }
         if ($changes->expiresAt !== null) {
             $this->rules->assertExpiry($context->drive, $changes->expiresAt, $now);
-            if ($changes->expiresAt->lte($now) || $changes->expiresAt->gt($now->copy()->addHours($this->sharingConfig->maxTtlHours()))) {
+            if ($changes->expiresAt->lte($now) || $changes->expiresAt->gt($now->copy()->addHours($this->sharingConfig->maxTtlHours))) {
                 throw new InvalidArgumentException('Share expiry must be within the configured TTL.');
             }
         }
-        if ($changes->audience === ShareAudience::Tenant && !$this->tenancy->enabled()) {
+        if ($changes->audience === ShareAudience::Tenant && !$this->tenancy->enabled) {
             throw new InvalidArgumentException('The tenant audience needs tenancy to be enabled.');
         }
 

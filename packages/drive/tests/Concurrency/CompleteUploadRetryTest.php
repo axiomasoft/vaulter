@@ -106,6 +106,6 @@ it('does not retry a non-concurrency failure', function (): void {
     }
     app()->instance(BlobStore::class, $store);
 
-    expect(fn () => retryUploadOperations($session)->complete(UploadSessionSnapshot::fromModel($session)))->toThrow(RuntimeException::class, 'disk full')
+    expect(fn (): NodeSnapshot => retryUploadOperations($session)->complete(UploadSessionSnapshot::fromModel($session)))->toThrow(RuntimeException::class, 'disk full')
         ->and($calls)->toBe(1);
 });

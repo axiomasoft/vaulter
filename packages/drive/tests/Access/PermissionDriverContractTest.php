@@ -78,8 +78,6 @@ it('yields identical decisions across pass-through host-role drivers on a shared
 
     // …and a stub driver that ALSO contributes only the actor, no roles/override.
     $stubDecisions = decisionsOver(bindDriver(new RoleStubDriver(
-        role: null,
-        overrideEffect: null,
         includeActor: true,
     )));
 

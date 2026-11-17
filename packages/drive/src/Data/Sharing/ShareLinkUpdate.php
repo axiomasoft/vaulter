@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
 /**

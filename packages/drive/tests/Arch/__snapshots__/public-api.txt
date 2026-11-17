@@ -140,72 +140,81 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   isComplete(\Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
-Vaulter\Drive\Configuration\AccessConfig
-  gateAbilityMap(): array
-  gateCreateAbility(): string
-  gateSuperAbility(): string
-  permissionDriver(): string
-  permissionDrivers(): array
-  spatieCreatePermission(): string
-  spatiePermissionMap(): array
-  spatieRoleSubjectType(): string
-  spatieSuperPermission(): string
-  spatieTeamSubjectType(): string
-  spatieTeamsEnabled(): bool
+Vaulter\Drive\Configuration\AccessOptions
+  __construct(string $permissionDriver = 'database', array $permissionDrivers = self::DEFAULT_PERMISSION_DRIVERS, array $gateAbilities = self::DEFAULT_ROLE_ABILITIES, string $gateSuperAbility = 'vaulter.super', string $gateCreateAbility = 'vaulter.create', array $spatiePermissions = self::DEFAULT_ROLE_ABILITIES, string $spatieSuperPermission = 'vaulter.super', string $spatieCreatePermission = 'vaulter.create', bool $spatieTeams = false, string $spatieRoleSubjectType = 'role', string $spatieTeamSubjectType = 'team')
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
-Vaulter\Drive\Configuration\ChangesConfig
-  cursorMaxAgeSeconds(): int
-  keyGeneration(): int
-  maxPageSize(): int
-  retentionDays(): int
+Vaulter\Drive\Configuration\ChangesOptions
+  __construct(int $retentionDays = self::DEFAULT_RETENTION_DAYS, int $maxPageSize = self::DEFAULT_MAX_PAGE_SIZE, int $keyGeneration = self::DEFAULT_KEY_GENERATION, int $cursorMaxAgeSeconds = self::DEFAULT_CURSOR_MAX_AGE_SECONDS)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
-Vaulter\Drive\Configuration\DownloadsConfig
-  deliveryMode(): string
-  directTtlSeconds(): int
-  inlineMimeTypes(): array
+Vaulter\Drive\Configuration\DownloadsOptions
+  __construct(string $deliveryMode = 'strict', int $directTtlSeconds = 60, array $inlineMimeTypes = self::DEFAULT_INLINE_MIME_WHITELIST)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
-Vaulter\Drive\Configuration\DriveConfig
-  access(): \Vaulter\Drive\Configuration\AccessConfig
-  allowedMimeTypes(): array
-  blockedExtensions(): array
-  changes(): \Vaulter\Drive\Configuration\ChangesConfig
-  chunkSize(): int
-  completeTimeoutSeconds(): int
-  defaultQuota(): ?int
-  downloads(): \Vaulter\Drive\Configuration\DownloadsConfig
-  featureEnabled(string $feature, ?string $profile = null): bool
-  leaseSeconds(): int
-  listing(): \Vaulter\Drive\Configuration\ListingConfig
-  maxActiveSessionsPerActor(): int
-  maxAttempts(): int
-  maxChunkSize(): int
-  maxFileSize(): int
-  metadataAllowedKeys(): array
-  metadataMaxValueLength(): int
-  resumableEnabled(): bool
-  scan(): \Vaulter\Drive\Configuration\ScanConfig
-  scanQueue(): string
-  scanWork(string $key): int
-  scannerTimeoutSeconds(): int
-  sessionTtlHours(): int
-  sharing(): \Vaulter\Drive\Configuration\SharingConfig
-  trashRetentionDays(): int
-  validateScanWork(bool $requireBroker = false): void
+Vaulter\Drive\Configuration\DriveFeaturesOptions
+  __construct(bool $grants = true, bool $activity = true, bool $changes = true, bool $shareLinks = false, bool $publicListing = false)
+  flag(string $feature): bool
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
-Vaulter\Drive\Configuration\ListingConfig
-  scanBudget(): int
+Vaulter\Drive\Configuration\DriveModelsOptions
+  __construct(string $drive = 'Vaulter\Drive\Models\Drive', string $node = 'Vaulter\Drive\Models\Node', string $file = 'Vaulter\Drive\Models\File', string $scanObligation = 'Vaulter\Drive\Models\Content\ScanObligation', string $scanRequest = 'Vaulter\Drive\Models\Content\ScanRequest', string $scanEvidence = 'Vaulter\Drive\Models\Content\ScanEvidenceRecord', string $scanPolicyState = 'Vaulter\Drive\Models\Content\ScanPolicyState', string $scanBackfillRun = 'Vaulter\Drive\Models\Content\ScanBackfillRun', string $fileRevision = 'Vaulter\Drive\Models\FileRevision', string $fileRevisionBlob = 'Vaulter\Drive\Models\FileRevisionBlob', string $grant = 'Vaulter\Drive\Models\Access\NodeGrant', string $nodeShare = 'Vaulter\Drive\Models\Sharing\NodeShare', string $activity = 'Vaulter\Drive\Models\Activity\Activity', string $uploadSession = 'Vaulter\Drive\Models\Uploads\UploadSession', string $uploadPart = 'Vaulter\Drive\Models\Uploads\UploadPart')
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
-Vaulter\Drive\Configuration\ScanConfig
+Vaulter\Drive\Configuration\DriveOptions
+  __construct(\Vaulter\Drive\Configuration\ProfilesOptions $profiles = Vaulter\Drive\Configuration\ProfilesOptions, \Vaulter\Drive\Configuration\ScanOptions $scan = Vaulter\Drive\Configuration\ScanOptions, \Vaulter\Drive\Configuration\DriveFeaturesOptions $features = Vaulter\Drive\Configuration\DriveFeaturesOptions, \Vaulter\Drive\Configuration\DrivesOptions $drives = Vaulter\Drive\Configuration\DrivesOptions, \Vaulter\Drive\Configuration\AccessOptions $access = Vaulter\Drive\Configuration\AccessOptions, \Vaulter\Drive\Configuration\ListingOptions $listing = Vaulter\Drive\Configuration\ListingOptions, \Vaulter\Drive\Configuration\SharingOptions $sharing = Vaulter\Drive\Configuration\SharingOptions, \Vaulter\Drive\Configuration\DownloadsOptions $downloads = Vaulter\Drive\Configuration\DownloadsOptions, \Vaulter\Drive\Configuration\ChangesOptions $changes = Vaulter\Drive\Configuration\ChangesOptions, array $handlers = [], \Vaulter\Drive\Configuration\UploadsOptions $uploads = Vaulter\Drive\Configuration\UploadsOptions, \Vaulter\Drive\Configuration\TrashOptions $trash = Vaulter\Drive\Configuration\TrashOptions, \Vaulter\Drive\Configuration\QuotaOptions $quota = Vaulter\Drive\Configuration\QuotaOptions, \Vaulter\Drive\Configuration\DriveScheduleOptions $schedule = Vaulter\Drive\Configuration\DriveScheduleOptions, \Vaulter\Drive\Configuration\DriveModelsOptions $models = Vaulter\Drive\Configuration\DriveModelsOptions)
+  featureEnabled(string $feature): bool
+  fromArray(array $config, string $path = 'vaulter-drive'): \self
+
+Vaulter\Drive\Configuration\DriveScheduleOptions
+  __construct(?string $changesPrune = 'dailyAt:03:20', ?string $uploadsSweep = 'hourlyAt:15', ?string $trashPurge = 'dailyAt:03:30', ?string $drivesPurge = 'hourlyAt:25', ?string $revisionsPrune = 'dailyAt:03:40', ?string $scanReconcile = 'everyFiveMinutes', ?string $drivesRecount = null)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\DrivesOptions
+  __construct(bool $deleteWithOwner = false)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\ListingOptions
+  __construct(int $scanBudget = 1000)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\ProfilesOptions
+  __construct(string $default = 'Vaulter\Drive\Profiles\DefaultProfile', array $providers = [])
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\QuotaOptions
+  __construct(?int $defaultBytes = null)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\ResumableMetadataOptions
+  __construct(array $allowedKeys = self::DEFAULT_ALLOWED_KEYS, int $maxValueLength = 512)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\ResumableUploadsOptions
+  __construct(bool $enabled = true, int $chunkSize = 8388608, int $maxChunkSize = 67108864, int $sessionTtlHours = 24, int $completeTimeoutSeconds = 60, int $maxActiveSessionsPerActor = 20, \Vaulter\Drive\Configuration\ResumableMetadataOptions $metadata = Vaulter\Drive\Configuration\ResumableMetadataOptions)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\ScanOptions
+  __construct(\Vaulter\Media\Enums\Cas\ScanMode $mode = Vaulter\Media\Enums\Cas\ScanMode::Off, ?string $scanner = null, ?string $scannerKey = null, ?string $scannerVersion = null, ?string $policyVersion = null, ?string $rolloutKey = null)
+  fromSections(mixed $raw, \Vaulter\Drive\Configuration\UploadsScanOptions $alias, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
   globalSpec(): \Vaulter\Drive\Content\ScanPolicySpec
-  mode(): \Vaulter\Media\Enums\Cas\ScanMode
-  scanner(): ?string
 
-Vaulter\Drive\Configuration\SharingConfig
-  defaultTtlHours(): int
-  maxTtlHours(): int
-  prefixLength(): int
-  tokenGenerator(): string
-  urlBase(): string
+Vaulter\Drive\Configuration\SharingOptions
+  __construct(string $tokenGenerator = 'Vaulter\Drive\Support\RandomShareTokenGenerator', string $urlBase = '/share', int $prefixLength = 8, int $defaultTtlHours = 72, int $maxTtlHours = 720)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\TrashOptions
+  __construct(int $retentionDays = 30)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\UploadsOptions
+  __construct(\Vaulter\Drive\Configuration\UploadsScanOptions $scan = Vaulter\Drive\Configuration\UploadsScanOptions, int $maxFileSize = 5368709120, array $allowedMimeTypes = [], array $blockedExtensions = [], bool $rejectMimeMismatch = true, \Vaulter\Drive\Configuration\ResumableUploadsOptions $resumable = Vaulter\Drive\Configuration\ResumableUploadsOptions)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+
+Vaulter\Drive\Configuration\UploadsScanOptions
+  __construct(?bool $required = null, ?\Vaulter\Media\Enums\Cas\ScanMode $mode = null, ?string $scanner = null, ?string $scannerKey = null, ?string $scannerVersion = null, ?string $policyVersion = null, ?string $rolloutKey = null, string $queue = 'default', int $leaseSeconds = 120, int $scannerTimeoutSeconds = 60, int $maxAttempts = 5, int $publishCooldownSeconds = 30, int $recoveryBatch = 100, int $cleanupBatch = 100)
+  fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
+  workValue(string $key): int
 
 Vaulter\Drive\Events\Access\EffectivePermissionsChanged
   activityContext(): array

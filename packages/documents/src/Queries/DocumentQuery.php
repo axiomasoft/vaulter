@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Queries;
 
 use Illuminate\Pagination\CursorPaginator;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
@@ -29,7 +29,7 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class DocumentQuery
 {
-    public function __construct(private DocumentsConfig $config) {}
+    public function __construct(private DocumentsOptions $config) {}
 
     public function document(Node $node): Document
     {

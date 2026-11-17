@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Exceptions\Cas;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Errors\MediaErrorCode;
 use Vaulter\Support\Identity;
 
 /**
@@ -31,6 +35,15 @@ final class BlobUnavailableException extends VaulterException implements Problem
         return new self(
             '[Vaulter] The bytes of blob ['.Identity::stringify($blobId).'] are unavailable (status '.$status->value.'). '.
             'Fix: commit the bytes again through BlobStore::commitStaged() and pin the returned blob.',
+        );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: MediaErrorCode::BlobUnavailable,
+            category: ErrorCategory::Conflict,
         );
     }
 

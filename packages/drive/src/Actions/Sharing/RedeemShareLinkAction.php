@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Sharing;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Repositories\Sharing\NodeShareStoreRepository;

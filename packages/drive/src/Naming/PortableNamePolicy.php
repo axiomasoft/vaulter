@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Naming;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Drive\Support\NodeName;
 
@@ -50,7 +50,7 @@ final readonly class PortableNamePolicy implements NamePolicy
             throw InvalidNodeNameException::forName($name, InvalidNodeNameException::RESERVED_NAME);
         }
 
-        if (strlen((string) mb_convert_encoding($name, 'UTF-16LE', 'UTF-8')) / 2 > NodeName::MAX_BYTES) {
+        if (strlen(mb_convert_encoding($name, 'UTF-16LE', 'UTF-8')) / 2 > NodeName::MAX_BYTES) {
             throw InvalidNodeNameException::forName($name, InvalidNodeNameException::TOO_LONG);
         }
 

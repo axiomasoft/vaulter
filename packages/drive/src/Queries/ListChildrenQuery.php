@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Queries;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\NodePage;
 use Vaulter\Drive\Models\Node;

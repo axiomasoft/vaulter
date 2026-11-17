@@ -10,7 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Cas\BlobPinStore;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -99,7 +99,7 @@ it('sweepPending ретраит транзиентный serialization-failure 4
         app(BlobPinStore::class),
         app(MetricsRecorder::class),
         app(VaulterDatabase::class),
-        mediaConfig: app(MediaConfig::class),
+        mediaConfig: app(MediaOptions::class),
     );
 
     // Pre-fix: the first 40001 propagates and aborts the pass. Post-fix: the unit is

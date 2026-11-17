@@ -80,7 +80,7 @@ function bootFreshDocumentsApplication(array $config, array $before = [], array 
 }
 
 it('refuses to boot when the default type is not registered', function (): void {
-    expect(fn () => bootFreshDocumentsApplication(['vaulter-documents.default_type' => 'acme/kanban']))
+    expect(fn (): Application => bootFreshDocumentsApplication(['vaulter-documents.default_type' => 'acme/kanban']))
         ->toThrow(InvalidConfigurationException::class, 'vaulter-documents.default_type "acme/kanban" is not a registered document type');
 });
 
@@ -106,6 +106,6 @@ it('accepts a default type a provider registers in boot(), on either side of the
 })->with(['before', 'after']);
 
 it('refuses to boot when the vaulter.document_types tag resolves to something that is not a type', function (): void {
-    expect(fn () => bootFreshDocumentsApplication([], before: [NotADocumentTypeTagProvider::class]))
+    expect(fn (): Application => bootFreshDocumentsApplication([], before: [NotADocumentTypeTagProvider::class]))
         ->toThrow(InvalidConfigurationException::class, 'Document type "stdClass" did not resolve to a');
 });

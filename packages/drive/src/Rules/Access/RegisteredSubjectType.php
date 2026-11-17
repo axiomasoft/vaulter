@@ -9,7 +9,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Translation\PotentiallyTranslatedString;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A grant subject_type must resolve to a REAL host model:

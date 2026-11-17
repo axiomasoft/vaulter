@@ -26,7 +26,7 @@ function namePolicyReason(callable $apply): ?string
 }
 
 it('refuses names desktop systems cannot hold under portable-v1, each with its reason', function (string $name, string $reason): void {
-    expect(namePolicyReason(fn () => (new PortableNamePolicy)->apply($name)))->toBe($reason);
+    expect(namePolicyReason(fn (): string => (new PortableNamePolicy)->apply($name)))->toBe($reason);
 })->with([
     'leading space' => [' a.txt', 'leading_or_trailing_space'],
     'trailing space' => ['a.txt ', 'leading_or_trailing_space'],
@@ -68,8 +68,8 @@ it('keeps only the base rules under permissive-v1', function (): void {
         ->and($policy->apply('a:b'))->toBe('a:b')
         ->and($policy->apply('CON.txt'))->toBe('CON.txt')
         ->and($policy->apply(' a.txt'))->toBe(' a.txt')
-        ->and(namePolicyReason(fn () => $policy->apply('a/b')))->toBe('separator')
-        ->and(namePolicyReason(fn () => $policy->apply('..')))->toBe('path_alias');
+        ->and(namePolicyReason(fn (): string => $policy->apply('a/b')))->toBe('separator')
+        ->and(namePolicyReason(fn (): string => $policy->apply('..')))->toBe('path_alias');
 });
 
 it('treats NFC/NFD and case variants as the same sibling name, but not the same node', function (): void {

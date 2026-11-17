@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanWorkTransitions;
@@ -21,11 +21,11 @@ use Vaulter\Drive\Tenancy\TenancyBoundary;
 #[Internal]
 final readonly class FailScanAttemptAction
 {
-    public function __construct(private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private VaulterDatabase $database, private TenancyOptions $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function execute(ScanAttempt $attempt, string $reason): bool
     {
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertJobDrive($attempt->driveId, $attempt->tenantId);
         }
         if (!in_array($reason, ['content_identity_mismatch', 'access_denied', 'unsupported', 'unknown'], true)) {

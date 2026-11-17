@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
@@ -53,7 +53,7 @@ final readonly class RichTextDocumentType implements DocumentType, SupportsColla
 
     public function features(): DocumentFeatures
     {
-        return new DocumentFeatures(editable: true, previewable: true, downloadable: false, thumbnailable: false);
+        return new DocumentFeatures(editable: true, previewable: true, thumbnailable: false, downloadable: false);
     }
 
     public function collaborationStateFormat(): string

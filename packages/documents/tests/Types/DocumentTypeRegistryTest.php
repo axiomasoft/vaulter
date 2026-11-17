@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider;
+use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Exceptions\DuplicateDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Facades\Documents;
@@ -44,7 +45,7 @@ it('answers has, get and find for registered and unknown keys', function (): voi
         ->and($types->find('acme/gone'))->toBeNull()
         ->and($types->find('vaulter/rich-text'))->toBeInstanceOf(RichTextDocumentType::class);
 
-    expect(fn () => $types->get('acme/gone'))->toThrow(UnknownDocumentTypeException::class);
+    expect(fn (): DocumentType => $types->get('acme/gone'))->toThrow(UnknownDocumentTypeException::class);
 });
 
 it('refuses a duplicate key and replaces only through replace()', function (): void {

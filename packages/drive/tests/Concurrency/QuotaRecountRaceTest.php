@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Actions\Drives\RecountDriveQuotaAction;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Models\Drive;
@@ -31,7 +32,7 @@ it('a recount racing an upload leaves used_bytes equal to the revision sum', fun
 
     $outcomes = ForkRace::run([
         static fn (): string => (string) app(RecountDriveQuotaAction::class)->execute($driveId)['after'],
-        static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(str_repeat('u', 64)), 'late.bin'), new UploadOptions(parent: $parents[1]))->id,
+        static fn (): string => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(str_repeat('u', 64)), 'late.bin'), new UploadOptions(parent: $parents[1]))->id,
     ]);
 
     expect($outcomes[0]->ok)->toBeTrue($outcomes[0]->message ?? '')
@@ -48,7 +49,7 @@ it('a recount racing a revision delete leaves used_bytes equal to the revision s
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first'), 'a.bin'));
     $second = $drive->files()->addRevision($file, UploadSource::fromStream(DriveTestHelpers::streamFor('second-bytes'), 'a.bin'));
     $revisions = $drive->files()->revisions($file)->items;
-    $old = array_values(array_filter($revisions, static fn ($revision): bool => $revision->id !== $second->id))[0];
+    $old = array_values(array_filter($revisions, static fn (FileRevisionSnapshot $revision): bool => $revision->id !== $second->id))[0];
     Drive::query()->whereKey($driveId)->update(['used_bytes' => 1]);
 
     $outcomes = ForkRace::run([

@@ -6,7 +6,7 @@ namespace Vaulter\Media\Content;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 #[Api]
 final readonly class SignedContentUrl

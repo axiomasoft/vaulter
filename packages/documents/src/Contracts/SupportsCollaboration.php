@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /** Optional: the document type can be edited by several clients at once. */
 #[Spi(SpiKind::Implement)]

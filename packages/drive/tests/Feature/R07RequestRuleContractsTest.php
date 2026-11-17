@@ -271,7 +271,7 @@ it('R07Request validates create-folder name and nullable parent_id', function ()
 });
 
 it('R07Request enforces the dedicated upload size ceiling on the file rule only', function (): void {
-    config()->set('vaulter-drive.uploads.max_file_size', 1 * 1024);
+    config()->set('vaulter-drive.uploads.max_file_size', 1024);
     $base = 'api/vaulter/v1/drives/'.r07StorageId().'/files';
 
     $response = $this->postJson($base, [

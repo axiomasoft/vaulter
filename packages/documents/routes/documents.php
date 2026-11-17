@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Documents\Http\Controllers\Comments\AddCommentController;
 use Vaulter\Documents\Http\Controllers\Comments\DeleteCommentController;
 use Vaulter\Documents\Http\Controllers\Comments\ListCommentsController;
@@ -35,7 +35,7 @@ use Vaulter\Http\Middleware\ReadIdempotencyKey;
 | shares a URL with the drive package.
 */
 
-$routes = app(RoutesConfig::class);
+$routes = app(RoutesOptions::class);
 $id = '[A-Za-z0-9_-]+';
 
 Route::prefix($routes->versionedPrefix())

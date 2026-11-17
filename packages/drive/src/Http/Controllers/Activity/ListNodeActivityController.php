@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Http\Controllers\Activity;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Drive\Http\Resources\Activity\ActivityResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
@@ -21,7 +21,7 @@ use Vaulter\Support\LoadTier;
 #[Internal]
 final readonly class ListNodeActivityController
 {
-    public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private MetricsRecorder $metrics, private DriveConfig $config) {}
+    public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private MetricsRecorder $metrics, private DriveOptions $config) {}
 
     public function __invoke(Request $request, string $node): JsonResponse
     {

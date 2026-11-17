@@ -6,7 +6,8 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
@@ -26,7 +27,7 @@ final class DocumentRevisionResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         /** @var DocumentRevisionSnapshot $revision */

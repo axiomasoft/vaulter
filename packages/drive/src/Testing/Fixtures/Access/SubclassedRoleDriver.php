@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Testing\Fixtures\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
 
 /**
  * A host driver following the DOCUMENTED extension path (review): it
@@ -38,7 +38,7 @@ final class SubclassedRoleDriver extends DatabasePermissionDriver
 
         return [
             Subject::ofModel($actor),
-            new Subject(type: app(AccessConfig::class)->spatieRoleSubjectType(), id: '7'),
+            new Subject(type: app(AccessOptions::class)->spatieRoleSubjectType, id: '7'),
         ];
     }
 }

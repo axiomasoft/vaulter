@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 
 #[Internal]
 final readonly class IntlCheck implements DoctorCheck
@@ -31,7 +31,7 @@ final readonly class IntlCheck implements DoctorCheck
         return [DoctorFinding::warning(
             code: 'drive.intl_missing',
             message: 'ext-intl is missing: file names are not normalized to NFC, so visually equal names can differ.',
-            hint: 'install the PHP intl extension',
+            remediation: 'install the PHP intl extension',
         )];
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -168,7 +168,7 @@ it('retains completed checkpoints when a later optimized mark batch rolls back',
     $blobs = r21SeedCandidates(1005);
     $updates = 0;
     DB::listen(function (QueryExecuted $query) use (&$updates): void {
-        if (str_starts_with(strtolower($query->sql), 'update') && str_contains($query->sql, app(DatabaseConfig::class)->table('blobs'))) {
+        if (str_starts_with(strtolower($query->sql), 'update') && str_contains($query->sql, app(DatabaseOptions::class)->table('blobs'))) {
             if (++$updates === 1002) {
                 throw new RuntimeException('Later batch failed');
             }
@@ -194,7 +194,7 @@ it('advances sparse string and native UUID keys with configured models', functio
     });
     // The pins of these foreign-keyed rows: a pins table of the same key type, without the foreign key to v_blobs
     // (rolled back with the test's transaction).
-    $pins = app(DatabaseConfig::class)->table('blob_references');
+    $pins = app(DatabaseOptions::class)->table('blob_references');
     Schema::drop($pins);
     Schema::create($pins, function (Blueprint $table) use ($keyType): void {
         $table->id();
@@ -253,7 +253,7 @@ it('uses the same PostgreSQL lock namespace for every batched mark candidate bef
 
     expect(app(BlobGarbageCollector::class)->mark(graceHours: 24)['tombstoned'])->toBe(3);
     $lockIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'pg_advisory_xact_lock'));
-    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, app(DatabaseConfig::class)->table('blob_references')));
+    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, app(DatabaseOptions::class)->table('blob_references')));
     expect($lockIndex)->not->toBeNull()->and($lockIndex)->toBeLessThan($edgeIndex);
 
     config()->set('database.connections.r21_probe', config('database.connections.testing'));

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
@@ -20,9 +20,9 @@ final readonly class NodeLocator
 {
     #[Internal]
     public function __construct(
-        private DriveConfig $config,
+        private DriveOptions $config,
         private VaulterDatabase $database,
-        private TenancyConfig $tenancy,
+        private TenancyOptions $tenancy,
         private TenancyBoundary $boundary,
     ) {}
 
@@ -88,7 +88,7 @@ final readonly class NodeLocator
         $model = new $class;
         $model->setConnection($this->database->connection()->getName());
 
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertDrive($context->drive);
         }
 

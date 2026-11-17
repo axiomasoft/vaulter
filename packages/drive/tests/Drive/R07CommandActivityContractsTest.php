@@ -98,7 +98,7 @@ it('createFolder activity context carries owner and creator ids', function (): v
         'kind' => 'folder',
         'name' => 'Audited',
         'correlation_id' => 'audited-folder',
-        'parent_id' => (string) $drive->root()->id,
+        'parent_id' => $drive->root()->id,
     ])
         ->and($folder->createdBy)->toEqual('42');
 });
@@ -128,7 +128,7 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
 
     expect($drive->model()->refresh()->used_bytes)->toBe($used)
         ->and(Activity::query()->where('verb', DriveEventType::NodePurged->value)->sole()->context)->toEqual([
-            'node_ids' => [(string) $folder->id],
+            'node_ids' => [$folder->id],
             'freed_bytes' => 0,
             'correlation_id' => 'audited-purge',
         ]);
@@ -162,7 +162,6 @@ it('upload session initiated activity carries the exact lifecycle context', func
         targetParent: $drive->root(),
         targetName: 'ctx.bin',
         totalSizeBytes: 8,
-        mimeType: null,
     ));
 
     $row = Activity::query()->where('verb', DriveEventType::UploadInitiated->value)->sole();

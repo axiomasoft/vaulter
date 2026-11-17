@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Snapshots;
 
 use DateTimeImmutable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 
 /**

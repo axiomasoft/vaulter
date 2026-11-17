@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Queries;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use InvalidArgumentException;
 use JsonException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Data\ListOptions;

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Documents\Errors\DocumentsErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -58,5 +62,15 @@ final class CollaborationUnavailableException extends VaulterException implement
     public function problemDetails(): array
     {
         return ['context' => array_filter(['reason' => $this->reason, 'type' => $this->type], static fn (?string $value): bool => $value !== null)];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DocumentsErrorCode::CollaborationUnavailable,
+            category: ErrorCategory::Conflict,
+            details: array_filter(['reason' => $this->reason, 'type' => $this->type], static fn (?string $value): bool => $value !== null),
+        );
     }
 }

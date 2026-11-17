@@ -119,8 +119,7 @@ it('SEC-R19-replay returns the committed result without ingesting or comparing t
     $bytes = 'committed session bytes';
     $manager = app(UploadSessionManager::class);
     $session = $manager->initiate(context: DriveContext::system($this->drive->model(), 'test fixture'), data: new InitiateUploadInput(
-        protocol: UploadProtocol::S3Multipart,
-        targetNode: $node, targetName: 'replay.txt', totalSizeBytes: strlen($bytes),
+        protocol: UploadProtocol::S3Multipart, targetName: 'replay.txt', targetNode: $node, totalSizeBytes: strlen($bytes),
         mimeType: 'text/plain', expectedSequence: 7,
     ));
     $handler = app(S3MultipartHandler::class);

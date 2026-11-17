@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
@@ -43,7 +44,7 @@ final readonly class DocumentStateWriter
         private DocumentStoreRepository $documents,
         private DocumentRevisionStoreRepository $revisions,
         private NodeStoreRepository $nodes,
-        private DocumentsConfig $documentsConfig,
+        private Container $container,
         private VaulterDatabase $database,
         private ContentDecoder $decoder,
     ) {}
@@ -65,7 +66,7 @@ final readonly class DocumentStateWriter
 
         $checkpointDue = $this->intervalElapsed($locked);
         $hash = $change->content?->contentHash() ?? $locked->content_hash;
-        if (!($change->cause === StateWriteCause::Update && $locked->collab_protocol !== null) && $change->cause->skipsIdenticalWrite() && $hash === $locked->content_hash && $change->collabState === $locked->collab_state) {
+        if (($change->cause !== StateWriteCause::Update || $locked->collab_protocol === null) && $change->cause->skipsIdenticalWrite() && $hash === $locked->content_hash && $change->collabState === $locked->collab_state) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
         }
 
@@ -110,7 +111,7 @@ final readonly class DocumentStateWriter
                 $attributes['collab_state_format'] = $type->collaborationStateFormat();
             }
         }
-        if ($change->cause === StateWriteCause::Transition || $change->cause === StateWriteCause::Restore || $change->cause === StateWriteCause::Copy) {
+        if (in_array($change->cause, [StateWriteCause::Transition, StateWriteCause::Restore, StateWriteCause::Copy], true)) {
             $attributes['type'] = $change->documentType ?? $locked->type;
             $attributes['collab_protocol'] = $change->protocol;
             $attributes['collab_state_format'] = $change->stateFormat;
@@ -212,7 +213,7 @@ final readonly class DocumentStateWriter
 
         $this->revisions->prune(
             document: $document,
-            max: $this->documentsConfig->revisionLimit(),
+            max: $this->container->make(DocumentsOptions::class)->revisions->limit,
             headId: $revision->id,
         );
 
@@ -221,7 +222,7 @@ final readonly class DocumentStateWriter
 
     private function intervalElapsed(Document $document): bool
     {
-        $interval = $this->documentsConfig->checkpointIntervalSeconds();
+        $interval = $this->container->make(DocumentsOptions::class)->revisions->checkpointIntervalSeconds;
         $last = $document->last_checkpoint_at;
 
         return $interval === 0 || $last === null || $last->lessThanOrEqualTo(Carbon::now()->subSeconds($interval));

@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
@@ -72,7 +72,7 @@ final readonly class DocumentResponses
                 throw DriveArchivedException::forDrive(Identity::stringify($model->getKey()));
             }
 
-            if (!Preconditions::matches($request, (new DocumentContentResource($document))->etag())) {
+            if (!Preconditions::matches($request, new DocumentContentResource($document)->etag())) {
                 throw new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId);
             }
 

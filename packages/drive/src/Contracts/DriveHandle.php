@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Contracts;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\Access\AccessOperations;
 use Vaulter\Drive\Contracts\Activity\ActivityOperations;
 use Vaulter\Drive\Contracts\Sharing\ShareOperations;
@@ -23,7 +23,11 @@ use Vaulter\ValueObjects\Access\Actor;
 #[Api]
 interface DriveHandle
 {
-    /** The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
+    /**
+     * The Eloquent row, for Vaulter packages and tests; hosts use snapshot().
+     *
+     * @internal
+     */
     #[Internal]
     public function model(): Drive;
 

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use RuntimeException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -17,7 +18,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 #[Internal]
 final readonly class ScanBackfillReconciler
 {
-    public function __construct(private DriveConfig $config, private VaulterDatabase $database,
+    public function __construct(private DriveOptions $config, private VaulterDatabase $database,
         private ScanPolicyResolver $policies, private ScanSnapshot $snapshots,
         private RequestScanWorkAction $request, private ScanWorkReconciler $publisher) {}
 
@@ -93,7 +94,7 @@ final readonly class ScanBackfillReconciler
                         if ($cursor === null || $cursor->last_admission_sequence !== $run->last_admission_sequence
                             || (string) $cursor->last_revision_id !== (string) $run->last_revision_id) {
                             // Throwing rolls back materialization made by a competing cursor loser.
-                            throw new \RuntimeException('Scan backfill cursor changed.');
+                            throw new RuntimeException('Scan backfill cursor changed.');
                         }
                         $cursor->forceFill(['last_admission_sequence' => $revision->scan_admission_sequence,
                             'last_revision_id' => $revision->id])->save();
@@ -103,7 +104,7 @@ final readonly class ScanBackfillReconciler
 
                         return $obligation !== null;
                     });
-                } catch (\RuntimeException $exception) {
+                } catch (RuntimeException $exception) {
                     if ($exception->getMessage() !== 'Scan backfill cursor changed.') {
                         throw $exception;
                     }

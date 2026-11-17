@@ -9,8 +9,10 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use InvalidArgumentException;
+use LogicException;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
@@ -58,7 +60,11 @@ final readonly class DriveHandle implements Contract
     #[Internal]
     public function __construct(private Drive $drive, private Container $container, private ?Actor $explicitActor = null, private ?string $correlationId = null, private ?string $idempotencyKey = null, private ?string $requestFingerprint = null) {}
 
-    /** The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
+    /**
+     * The Eloquent row, for Vaulter packages and tests; hosts use snapshot().
+     *
+     * @internal
+     */
     #[Internal]
     public function model(): Drive
     {
@@ -156,7 +162,7 @@ final readonly class DriveHandle implements Contract
     public function withCorrelationId(string $correlationId): static
     {
         if (trim($correlationId) === '' || strlen($correlationId) > 191 || preg_match('/[\x00-\x1F\x7F]/', $correlationId) === 1) {
-            throw new \InvalidArgumentException('Invalid correlation ID.');
+            throw new InvalidArgumentException('Invalid correlation ID.');
         }
 
         return new self($this->drive, $this->container, $this->explicitActor, $correlationId, $this->idempotencyKey, $this->requestFingerprint);
@@ -165,7 +171,7 @@ final readonly class DriveHandle implements Contract
     public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
     {
         if ($key === '' || strlen($key) > 255) {
-            throw new \InvalidArgumentException('[Vaulter] An idempotency key must be between 1 and 255 bytes.');
+            throw new InvalidArgumentException('[Vaulter] An idempotency key must be between 1 and 255 bytes.');
         }
 
         return new self($this->drive, $this->container, $this->explicitActor, $this->correlationId, $key, $requestFingerprint);
@@ -255,7 +261,7 @@ final readonly class DriveHandle implements Contract
 
         $instance = $this->container->makeWith($class, ['handle' => $this, 'context' => $this->context()]);
         if (!$instance instanceof $operations) {
-            throw new \LogicException('An extension binding must implement its requested class or contract.');
+            throw new LogicException('An extension binding must implement its requested class or contract.');
         }
 
         return $instance;
@@ -271,7 +277,7 @@ final readonly class DriveHandle implements Contract
     {
         $instance = $this->container->makeWith($class, ['context' => $this->context()]);
         if (!$instance instanceof $class) {
-            throw new \LogicException('An operations binding must implement its requested class or contract.');
+            throw new LogicException('An operations binding must implement its requested class or contract.');
         }
 
         return $instance;

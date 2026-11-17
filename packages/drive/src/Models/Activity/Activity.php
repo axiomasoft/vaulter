@@ -7,8 +7,9 @@ namespace Vaulter\Drive\Models\Activity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Events\EventTypeCast;
 use Vaulter\Events\EventTypeContract;
@@ -65,14 +66,14 @@ class Activity extends Model
      * system-recorded metadata about a domain event, never user input. The sole
      * writer, ActivityStoreRepository, already uses forceFill() exclusively.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('activity');
+        return app(DatabaseOptions::class)->table('activity');
     }
 
     /**
@@ -90,7 +91,7 @@ class Activity extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

@@ -120,7 +120,7 @@ it('два конкурентных PATCH с одинаковым offset — р�
     $stagedSha = $stream !== null ? hashStream($stream) : null;
 
     // Cleanup.
-    array_map('unlink', glob("$dir/*") ?: []);
+    array_map(unlink(...), glob("$dir/*") ?: []);
     @rmdir($dir);
 
     // Exactly ONE PATCH applied (the other is a conflict); the pre-fix code lets both

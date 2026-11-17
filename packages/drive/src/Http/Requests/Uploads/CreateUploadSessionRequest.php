@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Uploads;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
@@ -138,10 +138,10 @@ final class CreateUploadSessionRequest extends VaulterFormRequest
      * @param  array<string, string> $overrides
      * @return array<string, string>
      */
-    public function allowedMetadata(DriveConfig $config, array $overrides = []): array
+    public function allowedMetadata(DriveOptions $config, array $overrides = []): array
     {
-        $allowedKeys = $config->metadataAllowedKeys();
-        $maxLength = $config->metadataMaxValueLength();
+        $allowedKeys = $config->uploads->resumable->metadata->allowedKeys;
+        $maxLength = $config->uploads->resumable->metadata->maxValueLength;
         $allowed = [];
         foreach ([...$this->metadata(), ...$overrides] as $key => $value) {
             if (in_array($key, $allowedKeys, true)) {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Database\Factories;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 
 /**

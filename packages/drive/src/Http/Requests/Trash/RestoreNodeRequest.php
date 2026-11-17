@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Trash;
 
 use Illuminate\Validation\Rule;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Http\Requests\VaulterFormRequest;
 

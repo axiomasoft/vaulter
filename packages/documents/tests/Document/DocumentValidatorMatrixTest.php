@@ -27,6 +27,7 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -87,33 +88,33 @@ function matrixWriters(): array
     );
 
     return [
-        'rename' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive) => $drive->nodes()->rename($node->getKey(), 'Renamed', expectedSequence: 0)],
+        'rename' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->nodes()->rename($node->getKey(), 'Renamed', expectedSequence: 0)],
         'move' => ['prepare' => null, 'act' => static function (Node $node, DriveHandle $drive): void {
             $folder = $drive->folders()->create('Target');
             $drive->nodes()->move($node->getKey(), $folder->id);
         }],
-        'trash' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive) => $drive->nodes()->trash($node->getKey(), expectedSequence: 0)],
+        'trash' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->nodes()->trash($node->getKey(), expectedSequence: 0)],
         'trash restore' => [
-            'prepare' => static fn (Node $node, DriveHandle $drive) => $drive->nodes()->trash($node->getKey()),
-            'act' => static fn (Node $node, DriveHandle $drive) => $drive->trash()->restore($node->getKey()),
+            'prepare' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->nodes()->trash($node->getKey()),
+            'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->trash()->restore($node->getKey()),
         ],
-        'setProperties' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive) => $drive->nodes()->setProperties($node->getKey(), 'acme', ['k' => 'v'], expectedSequence: 0)],
+        'setProperties' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->nodes()->setProperties($node->getKey(), 'acme', ['k' => 'v'], expectedSequence: 0)],
         // Stars are personal: a user actor, never the system.
-        'star' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive) => $drive->actingAs(DriveTestHelpers::actor($drive, 9))->nodes()->star($node->getKey())],
+        'star' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->actingAs(DriveTestHelpers::actor($drive, 9))->nodes()->star($node->getKey())],
         'unstar' => [
-            'prepare' => static fn (Node $node, DriveHandle $drive) => $drive->actingAs(DriveTestHelpers::actor($drive, 9))->nodes()->star($node->getKey()),
-            'act' => static fn (Node $node, DriveHandle $drive) => $drive->actingAs(DriveTestHelpers::actor($drive, 9))->nodes()->unstar($node->getKey()),
+            'prepare' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->actingAs(DriveTestHelpers::actor($drive, 9))->nodes()->star($node->getKey()),
+            'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->actingAs(DriveTestHelpers::actor($drive, 9))->nodes()->unstar($node->getKey()),
         ],
-        'restrictInheritance' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive) => $drive->access()->restrictInheritance($node->getKey())],
-        'copy' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive) => $drive->nodes()->copy($node->getKey())],
-        'update' => ['prepare' => null, 'act' => static fn (Node $node) => $update($node, 'edited')],
+        'restrictInheritance' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->access()->restrictInheritance($node->getKey())],
+        'copy' => ['prepare' => null, 'act' => static fn (Node $node, DriveHandle $drive): NodeSnapshot => $drive->nodes()->copy($node->getKey())],
+        'update' => ['prepare' => null, 'act' => static fn (Node $node): mixed => $update($node, 'edited')],
         'update (identical content)' => [
-            'prepare' => static fn (Node $node) => $update($node, 'edited'),
-            'act' => static fn (Node $node) => $update($node, 'edited'),
+            'prepare' => static fn (Node $node): mixed => $update($node, 'edited'),
+            'act' => static fn (Node $node): mixed => $update($node, 'edited'),
         ],
         'update (document with Yjs state)' => [
             'prepare' => static fn (Node $node) => matrixYjs($node, 'room', seed: true),
-            'act' => static fn (Node $node) => $update($node, 'json replace'),
+            'act' => static fn (Node $node): mixed => $update($node, 'json replace'),
         ],
         'collab seed' => ['prepare' => null, 'act' => static fn (Node $node) => matrixYjs($node, 'seeded', seed: true)],
         'collab store' => [

@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
@@ -59,14 +60,14 @@ class NodeGrant extends Model
      * critical. The sole writer, GrantStoreRepository, uses forceFill()
      * exclusively and is unaffected by this list.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('node_grants');
+        return app(DatabaseOptions::class)->table('node_grants');
     }
 
     /**
@@ -74,7 +75,7 @@ class NodeGrant extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('node'), 'node_id');
     }
 
     /**
@@ -138,7 +139,7 @@ class NodeGrant extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

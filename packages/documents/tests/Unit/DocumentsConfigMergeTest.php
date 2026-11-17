@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Foundation\Application;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -52,7 +53,7 @@ it('preserves a valid host model subclass when the documents provider registers 
     $applier->config('vaulter-documents', dirname(__DIR__, 2).'/config/vaulter-documents.php');
     $applier->normalizeConfig();
 
-    expect(app(DocumentsConfig::class)->model('node_comment'))->toBe(ConfigMergeHostNodeComment::class)
+    expect(app(DocumentsOptions::class)->model('node_comment'))->toBe(ConfigMergeHostNodeComment::class)
         ->and(config('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class);
 });
 
@@ -65,12 +66,13 @@ it('preserves cached module configuration during registration and adds no file h
     ]];
     $config = new Repository($values);
     $app->instance('config', $config);
+    $app->alias('config', ConfigRepository::class);
 
     // Shipped defaults are loaded later by the shared normalizer at boot.
-    (new ModuleApplier($app))->config('vaulter-documents', dirname(__DIR__, 2).'/config/vaulter-documents.php');
+    new ModuleApplier($app)->config('vaulter-documents', dirname(__DIR__, 2).'/config/vaulter-documents.php');
     (new BindingsRegistrar)->register($app);
 
     expect($config->all())->toBe($values)
-        ->and($app->make(DocumentsConfig::class)->model('node_comment'))->toBe(ConfigMergeHostNodeComment::class);
+        ->and($app->make(DocumentsOptions::class)->model('node_comment'))->toBe(ConfigMergeHostNodeComment::class);
     expect(iterator_to_array($app->tagged('vaulter.file_handlers')))->toBe([]);
 });

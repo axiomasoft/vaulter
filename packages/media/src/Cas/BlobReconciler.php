@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
-use Vaulter\Attributes\Internal;
+use InvalidArgumentException;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\ListableContentStore;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -69,7 +70,7 @@ final readonly class BlobReconciler
         private BlobLock $lock,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
     ) {}
 
     /**
@@ -387,7 +388,7 @@ final readonly class BlobReconciler
 
         try {
             $scope = BlobScope::fromSegment($matches['scope']);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return null;
         }
         $sha256 = $matches['sha256'];

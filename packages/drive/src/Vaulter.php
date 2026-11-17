@@ -8,8 +8,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Contracts\DriveHandle;
@@ -96,7 +96,7 @@ final readonly class Vaulter
         try {
             return $this->container->make(Kernel::class)->capabilities()->require(DriveHandleFactory::class);
         } catch (MissingExtensionException) {
-            throw MissingPackageException::forContract(DriveHandleFactory::class, 'axioma-studio/vaulter-drive');
+            throw MissingPackageException::forContract(DriveHandleFactory::class, 'axiomasoft/vaulter-drive');
         }
     }
 }

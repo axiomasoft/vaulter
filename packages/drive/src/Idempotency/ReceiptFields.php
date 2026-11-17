@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Idempotency;
 use DateTimeImmutable;
 use DateTimeInterface;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** Reading and writing the fields of a drive receipt body; a missing or malformed field is a broken receipt, never a guess. */
 #[Internal]
@@ -68,7 +68,9 @@ final class ReceiptFields
             return null;
         }
 
-        return DateTimeImmutable::createFromFormat(self::TIME, $value) ?: throw new LogicException(sprintf('[Vaulter] A %s receipt holds a malformed time "%s".', $receipt, $key));
+        $parsed = DateTimeImmutable::createFromFormat(self::TIME, $value);
+
+        return $parsed !== false ? $parsed : throw new LogicException(sprintf('[Vaulter] A %s receipt holds a malformed time "%s".', $receipt, $key));
     }
 
     /** @param array<array-key, mixed> $fields */

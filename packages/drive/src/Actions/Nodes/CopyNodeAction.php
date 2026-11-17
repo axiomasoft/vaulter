@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
-use Vaulter\Attributes\Internal;
+use LogicException;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
@@ -115,7 +116,7 @@ final readonly class CopyNodeAction
                 $copy = $this->copyNode(context: $context, source: $current, parentId: $parentId,
                     name: $resolvedName, sources: $sources->all(), addedBytes: $copiedBytes);
                 if ($copiedBytes !== $addedBytes) {
-                    throw new \LogicException('Copy lifecycle byte accounting is inconsistent.');
+                    throw new LogicException('Copy lifecycle byte accounting is inconsistent.');
                 }
                 $this->recorder->record(new NodeCopied(nodeSnapshots: $this->snapshots, source: $current, copy: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
 

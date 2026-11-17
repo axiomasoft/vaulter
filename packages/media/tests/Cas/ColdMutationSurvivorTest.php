@@ -16,7 +16,7 @@ use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Cas\StagedTempObject;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
@@ -45,7 +45,7 @@ function r18Collector(FakeMetricsRecorder $metrics): BlobGarbageCollector
         app(BlobPinStore::class),
         $metrics,
         app(VaulterDatabase::class),
-        mediaConfig: app(MediaConfig::class),
+        mediaConfig: app(MediaOptions::class),
     );
 }
 
@@ -58,7 +58,7 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
         app(BlobLock::class),
         $metrics,
         app(VaulterDatabase::class),
-        mediaConfig: app(MediaConfig::class),
+        mediaConfig: app(MediaOptions::class),
     );
 }
 
@@ -333,8 +333,7 @@ it('uses the explicit blob disk instead of the configured default', function ():
     Storage::fake('archive');
 
     $blob = CasTestHelpers::row(app(BlobStoreContract::class)->commit(
-        CasTestHelpers::streamFor('explicit archive disk'),
-        disk: 'archive', scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
+        CasTestHelpers::streamFor('explicit archive disk'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'), disk: 'archive'));
 
     expect($blob->disk)->toBe('archive');
     Storage::disk('archive')->assertExists($blob->storage_key);
@@ -516,7 +515,7 @@ it('closes the promoted staged stream even when the driver owns no reference to 
     $driver->shouldReceive('exists')->once()->andReturn(false);
     $driver->shouldReceive('put')->once()->andReturn(true);
 
-    (new Sha256ContentStore($driver))->promote($staged, 'key');
+    new Sha256ContentStore($driver)->promote($staged, 'key');
 
     expect(is_resource($staged->handle))->toBeFalse();
 });
@@ -567,7 +566,7 @@ it('passes an empty checksum for an invalid staged digest', function (): void {
     set_error_handler(static fn (): bool => true);
 
     try {
-        (new Sha256ContentStore($driver))->promote($staged, 'key');
+        new Sha256ContentStore($driver)->promote($staged, 'key');
     } finally {
         restore_error_handler();
     }
@@ -583,6 +582,6 @@ it('throws when a staged temp path disappears before it is reopened', function (
         sizeBytes: 0,
     );
 
-    expect(fn () => $staged->readStream())
+    expect(fn (): mixed => $staged->readStream())
         ->toThrow(RuntimeException::class, 'Unable to reopen staged temp file');
 });

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -41,7 +41,9 @@ final readonly class DeleteDriveAction
                 $this->recorder->record(EffectivePermissionsChanged::forDrive(drive: $drive, reason: DriveEventType::DriveDeleted->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
             $driveId = $drive->id;
-            $this->database->afterCommit(static fn () => PurgeDriveJob::dispatch($driveId));
+            $this->database->afterCommit(static function () use ($driveId): void {
+                dispatch(new PurgeDriveJob($driveId));
+            });
 
             return $drive;
         });

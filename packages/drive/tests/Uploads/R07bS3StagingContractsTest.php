@@ -325,8 +325,7 @@ it('[r07bS3] controller resolves the storage root when session target_parent_id 
     $session = UploadTestHelpers::session(
         $storage,
         protocol: UploadProtocol::S3Multipart,
-        totalSizeBytes: 3,
-        parentId: null,   // target_parent_id = null
+        totalSizeBytes: 3,   // target_parent_id = null
         createdBy: 1,  // the current actor owns this legacy-shaped session
     );
 

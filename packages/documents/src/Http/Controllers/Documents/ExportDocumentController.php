@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Http\Controllers\Documents;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Drive\Http\Support\ContentResponder;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;

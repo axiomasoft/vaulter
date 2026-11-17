@@ -6,9 +6,11 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Throwable;
 use Vaulter\Console\Concerns\OpensWriteScope;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\DriveOptionsValidator;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
@@ -29,18 +31,16 @@ final class ReconcileScanWorkCommand extends Command
     protected $description = 'Recover bounded scan intents, backfill discovery and committed upload cleanup.';
 
     public function handle(ScanWorkReconciler $work, ScanBackfillReconciler $backfill, UploadCleanupReconciler $cleanup,
-        DriveConfig $config): int
+        DriveOptions $config): int
     {
         $started = microtime(true);
         try {
             $scope = RescanFileRevisionsCommand::scope($this);
-            $config->validateScanWork(requireBroker: app(Kernel::class)->capabilities()->has(ContentScanner::class));
+            app(DriveOptionsValidator::class)->validateScanWork($config, requireBroker: app(Kernel::class)->capabilities()->has(ContentScanner::class));
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    $result = Tenancy::without(fn (): int => $this->handle($work, $backfill, $cleanup, $config));
-
-                    return $result;
+                    return Tenancy::without(fn (): int => $this->handle($work, $backfill, $cleanup, $config));
                 } finally {
                     $this->withinMaintenanceScope = false;
                 }
@@ -64,7 +64,7 @@ final class ReconcileScanWorkCommand extends Command
             }
             $remaining = $seconds - (int) (microtime(true) - $started);
             if ($remaining > 0) {
-                $out = array_replace($out, $cleanup->reconcile($config->scanWork('cleanup_batch'), $remaining, $dryRun, $ids));
+                $out = array_replace($out, $cleanup->reconcile($config->uploads->scan->workValue('cleanup_batch'), $remaining, $dryRun, $ids));
             }
             $out['elapsed_ms'] = (int) ((microtime(true) - $started) * 1000);
             $this->line(json_encode($out, JSON_THROW_ON_ERROR));
@@ -78,7 +78,7 @@ final class ReconcileScanWorkCommand extends Command
             $this->error('Invalid scan maintenance scope or bounds.');
 
             return 2;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $this->error('Scan reconciliation could not complete safely.');
 
             return 1;

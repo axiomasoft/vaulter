@@ -7,13 +7,13 @@ namespace Vaulter\Drive\Testing\Contracts;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Node;
@@ -78,7 +78,7 @@ final class PermissionDriverContractTests
             $resolver = App::make(AccessResolver::class);
             $decisions = [];
             // The fixture names its nodes by snapshot; the resolver decides on the current rows, read by id here.
-            $nodes = App::make(DriveConfig::class)->model('node');
+            $nodes = App::make(DriveOptions::class)->model('node');
             foreach (['parent' => $fixture->parent, 'child' => $fixture->child] as $label => $snapshot) {
                 $node = $nodes::query()->findOrFail($snapshot->id);
                 foreach (Ability::cases() as $ability) {

@@ -10,7 +10,7 @@ use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
@@ -128,7 +128,7 @@ it('SEC-R03 folder COPY creates every child obligation and later failure rolls b
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $copy = app(CopyNodeAction::class)->execute($context, new CopyNodeInput($folder, $drive->rootNode()->firstOrFail(), 'copy'));
     expect($copy->children()->count())->toBe(2);
-    $workClass = app(DriveConfig::class)->model('scan_obligation');
+    $workClass = app(DriveOptions::class)->model('scan_obligation');
     expect($workClass::query()->count())->toBe(2)->and($drive->refresh()->scan_admission_sequence)->toBe(4);
     $beforeNodes = Node::query()->count();
     $writes = 0;

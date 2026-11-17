@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Contracts\Cas;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**

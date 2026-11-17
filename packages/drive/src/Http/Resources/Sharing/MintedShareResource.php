@@ -6,7 +6,8 @@ namespace Vaulter\Drive\Http\Resources\Sharing;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\MintedShareLink;
 
 /**
@@ -28,14 +29,14 @@ final class MintedShareResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         /** @var MintedShareLink $minted */
         $minted = $this->resource;
 
         return [
-            ...(new ShareResource($minted->link))->toArray($request),
+            ...new ShareResource($minted->link)->toArray($request),
             'token' => $minted->token,
             'url' => rtrim($this->urlBase, '/').'/'.$minted->token,
         ];

@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Validation\ValidationException;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
@@ -49,7 +49,7 @@ final readonly class StagedUpload
 
     public function __construct(
         private StorageDriver $driver,
-        private DriveConfig $driveConfig,
+        private DriveOptions $driveConfig,
     ) {}
 
     public function stageSource(UploadSource $source, ?int $maximum = null, ?string $declaredMime = null, ?string $name = null): PreparedUpload
@@ -159,7 +159,7 @@ final readonly class StagedUpload
             return 0;
         }
 
-        return (int) $disk->size($key);
+        return $disk->size($key);
     }
 
     /**
@@ -254,7 +254,7 @@ final readonly class StagedUpload
      */
     public function rangeMatches(UploadSession $session, mixed $chunk, int $offset): bool
     {
-        $max = $this->driveConfig->maxChunkSize();
+        $max = $this->driveConfig->uploads->resumable->maxChunkSize;
         $chunkBytes = $max > 0 ? stream_get_contents($chunk, $max + 1) : stream_get_contents($chunk);
 
         if ($chunkBytes === false) {
@@ -335,14 +335,14 @@ final readonly class StagedUpload
      */
     private function assertChunkWithinLimit(mixed $chunk): void
     {
-        $max = $this->driveConfig->maxChunkSize();
+        $max = $this->driveConfig->uploads->resumable->maxChunkSize;
 
         if ($max <= 0) {
             return;
         }
 
         $stat = is_resource($chunk) ? fstat($chunk) : false;
-        $size = is_array($stat) ? (int) $stat['size'] : 0;
+        $size = is_array($stat) ? $stat['size'] : 0;
 
         if ($size > $max) {
             $this->rejectOversizeChunk($size, $max);
@@ -363,7 +363,7 @@ final readonly class StagedUpload
      */
     private function copyChunkWithinLimit(mixed $chunk, mixed $buffer): void
     {
-        $max = $this->driveConfig->maxChunkSize();
+        $max = $this->driveConfig->uploads->resumable->maxChunkSize;
 
         if ($max <= 0) {
             stream_copy_to_stream($chunk, $buffer);

@@ -222,7 +222,7 @@ it('answers abilitiesMany exactly like abilities for every role and leaves hidde
     if ($role === null) {
         expect($many)->toBe([]);
     } else {
-        expect(array_map('strval', array_keys($many)))->toBe([$source->id])
+        expect(array_map(strval(...), array_keys($many)))->toBe([$source->id])
             ->and($many[$source->id]->toArray())->toBe($this->actor->nodes()->abilities($source)->toArray());
     }
     expect(operationMatrixState())->toBe($before);

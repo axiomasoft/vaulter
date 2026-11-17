@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Snapshots\Mapping;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
@@ -26,10 +26,10 @@ final readonly class DocumentSnapshotMapper
      */
     public function document(Document $document, ?DocumentRevision $head, ?DocumentRevision $revision = null): DocumentSnapshot
     {
-        $typeKey = $revision === null ? $document->type : $revision->type;
+        $typeKey = $revision->type ?? $document->type;
         $typeAvailable = $this->decoder->available($typeKey);
         $source = $revision ?? $head;
-        $schemaVersion = $revision === null ? $document->schema_version : $revision->schema_version;
+        $schemaVersion = $revision->schema_version ?? $document->schema_version;
         $read = $this->decoder->read($typeKey, $revision === null ? $document->content : $revision->content, $schemaVersion);
 
         return new DocumentSnapshot(
@@ -52,11 +52,11 @@ final readonly class DocumentSnapshotMapper
             content: $read->content,
             revision: $source === null ? null : $this->revision($source, $document),
             contentHash: $revision === null ? $document->content_hash : $revision->content_hash,
-            collabProtocol: $revision === null ? $document->collab_protocol : $revision->collab_protocol,
-            collabStateFormat: $revision === null ? $document->collab_state_format : $revision->collab_state_format,
             collabStateSize: $revision === null ? $document->collab_state_size : $revision->collab_state_size,
             updatedAt: SnapshotValue::requiredTime($revision === null ? $document->updated_at : $revision->created_at),
             updatedBy: SnapshotValue::nullableId($revision === null ? $document->updated_by : $revision->created_by),
+            collabProtocol: $revision === null ? $document->collab_protocol : $revision->collab_protocol,
+            collabStateFormat: $revision === null ? $document->collab_state_format : $revision->collab_state_format,
         );
     }
 
@@ -71,9 +71,6 @@ final readonly class DocumentSnapshotMapper
             type: $revision->type,
             number: $revision->number,
             schemaVersion: $revision->schema_version,
-            collabProtocol: $revision->collab_protocol,
-            collabStateFormat: $revision->collab_state_format,
-            epoch: $revision->collab_epoch,
             stateVersion: $revision->state_version,
             label: $revision->label,
             isAutosave: $revision->is_autosave,
@@ -85,6 +82,9 @@ final readonly class DocumentSnapshotMapper
             collabStateSize: $revision->collab_state_size,
             createdAt: SnapshotValue::requiredTime($revision->created_at),
             createdBy: SnapshotValue::nullableId($revision->created_by),
+            collabProtocol: $revision->collab_protocol,
+            collabStateFormat: $revision->collab_state_format,
+            epoch: $revision->collab_epoch,
         );
     }
 

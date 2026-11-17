@@ -27,7 +27,7 @@ it('collects a post-promote SQL rollback only after grace under the lossless loc
     app()->instance(ContentStore::class, new FailingPromoteContentStore($content, after: true));
     $scope = BlobScope::tenant('019a0000-1234-7000-8000-123456789abc');
     $bytes = 'promoted then rollback';
-    expect(fn () => CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope)))->toThrow(RuntimeException::class);
+    expect(fn (): Blob => CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope)))->toThrow(RuntimeException::class);
     expect(Blob::query()->count())->toBe(0);
     app()->instance(ContentStore::class, $content);
     $key = $content->keyFor($scope, hash('sha256', $bytes));
@@ -50,15 +50,13 @@ it('serializes GC against a writer of the same scope and keeps reachable bytes',
     $version = CasTestHelpers::reference();
     $outcomes = ForkRace::run([
         fn (): array => app(BlobGarbageCollector::class)->sweep(),
-        function () use ($scope, $bytes, $version): string {
-            return app(VaulterDatabase::class)->transaction(function () use ($scope, $bytes, $version): string {
-                $store = app(BlobStore::class);
-                $fresh = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor($bytes), $scope));
-                CasTestHelpers::pin($fresh, $version);
+        fn (): string => app(VaulterDatabase::class)->transaction(function () use ($scope, $bytes, $version): string {
+            $store = app(BlobStore::class);
+            $fresh = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor($bytes), $scope));
+            CasTestHelpers::pin($fresh, $version);
 
-                return (string) $fresh->getKey();
-            });
-        },
+            return (string) $fresh->getKey();
+        }),
     ]);
     foreach ($outcomes as $outcome) {
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');

@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Events\Access;
 
 use Carbon\CarbonImmutable;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\AccessInvalidation;
 use Vaulter\Drive\Enums\Access\InvalidationScope;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -75,7 +75,11 @@ final readonly class EffectivePermissionsChanged extends DriveEvent
         }
     }
 
-    /** The change reaches the node and, for a folder, everything under it. */
+    /**
+     * The change reaches the node and, for a folder, everything under it.
+     *
+     * @internal
+     */
     #[Internal]
     public static function forNode(Node $node, string $reason, ActorRef $actor, string $correlationId): self
     {
@@ -91,7 +95,11 @@ final readonly class EffectivePermissionsChanged extends DriveEvent
         );
     }
 
-    /** The purge of a node subtree whose rows are gone: the drive, its tenant and profile come from the context. */
+    /**
+     * The purge of a node subtree whose rows are gone: the drive, its tenant and profile come from the context.
+     *
+     * @internal
+     */
     #[Internal]
     public static function forPurgedSubtree(Drive $drive, mixed $nodeId, string $reason, ActorRef $actor, string $correlationId): self
     {
@@ -107,6 +115,7 @@ final readonly class EffectivePermissionsChanged extends DriveEvent
         );
     }
 
+    /** @internal */
     #[Internal]
     public static function forDrive(Drive $drive, string $reason, ActorRef $actor, string $correlationId): self
     {

@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Database\Factories;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\CreateFolderOptions;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
@@ -56,7 +57,7 @@ final class NodeFactory extends VaulterFactory
         return $this->withVaulter(['container' => $container]);
     }
 
-    #[\Override]
+    #[Override]
     protected function persist(Model $draft): Model
     {
         $container = $this->stateObject('container', Model::class) ?? throw new LogicException('A node needs a place: Node::factory()->in($drive|$folder)->create().');
@@ -69,7 +70,7 @@ final class NodeFactory extends VaulterFactory
             ? $handle->files()->upload(UploadSource::fromString($this->stateText('bytes', ''), $name), new UploadOptions(parent: $parent?->id, declaredMimeType: $this->stateString('mime')))
             : $handle->folders()->create($name, $parent?->id, new CreateFolderOptions);
 
-        $class = app(DriveConfig::class)->model('node');
+        $class = app(DriveOptions::class)->model('node');
 
         return $this->withTenant(static fn (): Model => $class::query()->whereKey($snapshot->id)->firstOrFail());
     }

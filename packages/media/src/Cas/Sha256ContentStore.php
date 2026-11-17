@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
+use Throwable;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\ListableContentStore;
 use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
@@ -31,7 +32,7 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
     private const int CHUNK_BYTES = 1_048_576;
 
     public function __construct(
-        private readonly StorageDriver $driver,
+        private StorageDriver $driver,
     ) {}
 
     /**
@@ -84,7 +85,7 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
             }
 
             fclose($target);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             if (is_resource($target)) {
                 fclose($target);
             }

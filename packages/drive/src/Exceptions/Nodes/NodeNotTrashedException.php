@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -24,6 +28,7 @@ final class NodeNotTrashedException extends VaulterException implements ProblemE
 
     private const int HTTP_STATUS = 409;
 
+    /** @internal */
     #[Internal]
     public static function forNode(Node $node): self
     {
@@ -43,5 +48,14 @@ final class NodeNotTrashedException extends VaulterException implements ProblemE
     public function httpStatus(): int
     {
         return self::HTTP_STATUS;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::NodeNotTrashed,
+            category: ErrorCategory::Conflict,
+        );
     }
 }

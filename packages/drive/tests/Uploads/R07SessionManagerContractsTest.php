@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -87,7 +87,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
         'expected_sha256' => str_repeat('a', 64),
         'total_size_bytes' => 128,
         'received_bytes' => 0,
-        'chunk_size' => app(DriveConfig::class)->chunkSize(),
+        'chunk_size' => app(DriveOptions::class)->uploads->resumable->chunkSize,
         'mime_type' => 'application/octet-stream',
         'metadata' => ['filename' => 'shape.bin', 'actor_type' => TestUser::class, 'expected_sequence' => null],
         'created_by' => '42',

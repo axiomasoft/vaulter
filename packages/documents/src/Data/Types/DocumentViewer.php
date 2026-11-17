@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Types;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /** The client component key and its document-specific props. */
 #[Api]

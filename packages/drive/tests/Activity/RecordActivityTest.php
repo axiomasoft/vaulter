@@ -9,11 +9,12 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Activity\ActivityRecorder;
 use Vaulter\Drive\Changes\ChangeJournalSink;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Activity\RecordActivityCommand;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -128,8 +129,8 @@ it('writes one node.moved row with from/to parent context', function (): void {
     $row = ActivityTestHelpers::only(DriveEventType::NodeMoved->value);
 
     expect($row->target_id)->toEqual($child->id)
-        ->and($row->context['from_parent_id'])->toEqual((string) $a->id)
-        ->and($row->context['to_parent_id'])->toEqual((string) $b->id);
+        ->and($row->context['from_parent_id'])->toEqual($a->id)
+        ->and($row->context['to_parent_id'])->toEqual($b->id);
 });
 
 it('writes one node.renamed row with the old + new name', function (): void {
@@ -154,7 +155,7 @@ it('writes one node.copied row targeting the copy and naming the source', functi
     $row = ActivityTestHelpers::only(DriveEventType::NodeCopied->value);
 
     expect($row->target_id)->toEqual($copy->id)
-        ->and($row->context['source_id'])->toEqual((string) $source->id);
+        ->and($row->context['source_id'])->toEqual($source->id);
 });
 
 it('writes one node.trashed and one node.restored row across the lifecycle', function (): void {
@@ -180,7 +181,7 @@ it('writes one node.purged row with the freed bytes and ids (no target)', functi
     expect($row->target_id)->toBeNull()
         ->and($row->drive_id)->toEqual($node->driveId)
         ->and($row->context['freed_bytes'])->toBeGreaterThan(0)
-        ->and($row->context['node_ids'])->toContain((string) $node->id);
+        ->and($row->context['node_ids'])->toContain($node->id);
 });
 
 it('writes one grant.created row from the grant event', function (): void {
@@ -248,7 +249,7 @@ it('rolls the originating action back when the activity write fails', function (
     $actor = DriveTestHelpers::actor($drive, 7);
 
     // A store repository that always fails simulates a broken audit sink.
-    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(DriveConfig::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends ActivityStoreRepository
+    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(DriveOptions::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends ActivityStoreRepository
     {
         #[Override]
         public function record(RecordActivityCommand $command): bool
@@ -257,7 +258,7 @@ it('rolls the originating action back when the activity write fails', function (
         }
     });
 
-    expect(fn () => $drive->actingAs($actor)->folders()->create('lost'))->toThrow(RuntimeException::class, 'audit sink is down')
+    expect(fn (): NodeSnapshot => $drive->actingAs($actor)->folders()->create('lost'))->toThrow(RuntimeException::class, 'audit sink is down')
         ->and(DriveTestHelpers::model($drive->root()->id)->children()->where('name', 'lost')->exists())->toBeFalse()
         ->and(Activity::query()->where('verb', DriveEventType::FolderCreated->value)->exists())->toBeFalse();
 });
@@ -358,7 +359,7 @@ function plainDomainEvent(string $driveId): DomainEvent
 {
     return new readonly class(recordActivityActor(), 'corr-plain', $driveId) extends DomainEvent
     {
-        public function __construct(ActorRef $actor, string $correlationId, private readonly string $driveId)
+        public function __construct(ActorRef $actor, string $correlationId, private string $driveId)
         {
             parent::__construct($actor, $correlationId);
         }
@@ -391,7 +392,7 @@ it('records an activity row without a target for an event that is no DriveEvent,
     $event = plainDomainEvent((string) $storage->getKey());
 
     $inserted = app(ActivityRecorder::class)->record($event);
-    $sink = (new ChangeJournalSink(app(DriveConfig::class), app()))->record($event, new SinkWriter(app(VaulterDatabase::class)));
+    $sink = new ChangeJournalSink(app(DriveOptions::class), app())->record($event, new SinkWriter(app(VaulterDatabase::class)));
 
     $row = ActivityTestHelpers::only(DriveEventType::DriveCreated->value);
 

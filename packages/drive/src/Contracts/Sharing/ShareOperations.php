@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts\Sharing;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Drive\Data\Snapshots\MintedShareLink;

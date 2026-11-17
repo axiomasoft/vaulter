@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\NodeKind;
@@ -25,7 +26,7 @@ it('копия файла переиспользует ОДИН блоб чер�
 
     $original = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared content'), 'a.txt'));
 
-    $copy = $drive->nodes()->copy($original, destination: null, options: new CopyOptions(name: 'a-copy.txt'));
+    $copy = $drive->nodes()->copy($original, options: new CopyOptions(name: 'a-copy.txt'));
 
     expect($copy->kind)->toBe(NodeKind::File)
         ->and($copy->name)->toBe('a-copy.txt')
@@ -49,7 +50,7 @@ it('глубокая копия папки клонирует всё подде�
     $drive->folders()->create('Leaf', $sub);
     $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('file bytes'), 'data.bin'), new UploadOptions(parent: $sub));
 
-    $copy = $drive->nodes()->copy($root, destination: null, options: new CopyOptions(name: 'Project Copy'));
+    $copy = $drive->nodes()->copy($root, options: new CopyOptions(name: 'Project Copy'));
 
     // 4 source nodes + 4 copied = 8 (Project, Sub, Leaf, data.bin) ×2.
     expect(Node::query()->where('kind', '!=', NodeKind::Folder->value)->count())->toBe(2) // two file nodes
@@ -78,7 +79,7 @@ it('copies every descendant when its id is a suffix of an ancestor id', function
         $parentId = $id;
     }
 
-    $copy = $drive->nodes()->copy(2100, destination: null, options: new CopyOptions(name: 'Copied'));
+    $copy = $drive->nodes()->copy(2100, options: new CopyOptions(name: 'Copied'));
 
     $middle = DriveTestHelpers::model($copy)->children()->where('name', 'Middle')->sole();
     $suffix = $middle->children()->where('name', 'Suffix')->sole();
@@ -91,6 +92,6 @@ it('copy отклоняет конфликт имён в месте назнач
     $a = $drive->folders()->create('A');
     $drive->folders()->create('B');
 
-    expect(fn () => $drive->nodes()->copy($a, destination: null, options: new CopyOptions(name: 'B', onConflict: OnNameConflict::Fail)))
+    expect(fn (): NodeSnapshot => $drive->nodes()->copy($a, options: new CopyOptions(name: 'B', onConflict: OnNameConflict::Fail)))
         ->toThrow(NodeNameConflictException::class);
 });

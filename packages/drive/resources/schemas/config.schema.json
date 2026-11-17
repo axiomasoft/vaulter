@@ -1,0 +1,736 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-drive configuration",
+    "type": "object",
+    "properties": {
+        "vaulter-drive": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "object",
+                    "properties": {
+                        "gate": {
+                            "type": "object",
+                            "properties": {
+                                "abilities": {
+                                    "type": "object",
+                                    "properties": {
+                                        "commenter": {
+                                            "type": "string",
+                                            "default": "vaulter.comment"
+                                        },
+                                        "organizer": {
+                                            "type": "string",
+                                            "default": "vaulter.organize"
+                                        },
+                                        "owner": {
+                                            "type": "string",
+                                            "default": "vaulter.manage"
+                                        },
+                                        "previewer": {
+                                            "type": "string",
+                                            "default": "vaulter.preview"
+                                        },
+                                        "reader": {
+                                            "type": "string",
+                                            "default": "vaulter.view"
+                                        },
+                                        "writer": {
+                                            "type": "string",
+                                            "default": "vaulter.edit"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "create_ability": {
+                                    "type": "string",
+                                    "default": "vaulter.create"
+                                },
+                                "super_ability": {
+                                    "type": "string",
+                                    "default": "vaulter.super"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "permission_driver": {
+                            "type": "string",
+                            "default": "database"
+                        },
+                        "permission_drivers": {
+                            "type": "object",
+                            "properties": {
+                                "database": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "gate": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "null": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "spatie": {
+                                    "type": [
+                                        "string",
+                                        "integer",
+                                        "number",
+                                        "boolean",
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "spatie": {
+                            "type": "object",
+                            "properties": {
+                                "create_permission": {
+                                    "type": "string",
+                                    "default": "vaulter.create"
+                                },
+                                "permissions": {
+                                    "type": "object",
+                                    "properties": {
+                                        "commenter": {
+                                            "type": "string",
+                                            "default": "vaulter.comment"
+                                        },
+                                        "organizer": {
+                                            "type": "string",
+                                            "default": "vaulter.organize"
+                                        },
+                                        "owner": {
+                                            "type": "string",
+                                            "default": "vaulter.manage"
+                                        },
+                                        "previewer": {
+                                            "type": "string",
+                                            "default": "vaulter.preview"
+                                        },
+                                        "reader": {
+                                            "type": "string",
+                                            "default": "vaulter.view"
+                                        },
+                                        "writer": {
+                                            "type": "string",
+                                            "default": "vaulter.edit"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "role_subject_type": {
+                                    "type": "string",
+                                    "default": "role"
+                                },
+                                "super_permission": {
+                                    "type": "string",
+                                    "default": "vaulter.super"
+                                },
+                                "team_subject_type": {
+                                    "type": "string",
+                                    "default": "team"
+                                },
+                                "teams": {
+                                    "type": "boolean",
+                                    "default": false
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "changes": {
+                    "type": "object",
+                    "properties": {
+                        "cursor_max_age_seconds": {
+                            "type": "integer",
+                            "default": 86400
+                        },
+                        "key_generation": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "max_page_size": {
+                            "type": "integer",
+                            "default": 1000
+                        },
+                        "retention_days": {
+                            "type": "integer",
+                            "default": 30
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "downloads": {
+                    "type": "object",
+                    "properties": {
+                        "delivery_mode": {
+                            "type": "string",
+                            "default": "strict"
+                        },
+                        "direct_ttl_seconds": {
+                            "type": "integer",
+                            "default": 60
+                        },
+                        "inline_mime_types": {
+                            "type": "array"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "drives": {
+                    "type": "object",
+                    "properties": {
+                        "delete_with_owner": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "features": {
+                    "type": "object",
+                    "properties": {
+                        "activity": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "changes": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "grants": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "public_listing": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "share_links": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "handlers": {
+                    "type": [
+                        "array",
+                        "object"
+                    ]
+                },
+                "listing": {
+                    "type": "object",
+                    "properties": {
+                        "scan_budget": {
+                            "type": "integer",
+                            "default": 1000
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "models": {
+                    "type": "object",
+                    "properties": {
+                        "activity": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "drive": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "file": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "file_revision": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "file_revision_blob": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "grant": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "node": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "node_share": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "scan_backfill_run": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "scan_evidence": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "scan_obligation": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "scan_policy_state": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "scan_request": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "upload_part": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "upload_session": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "profiles": {
+                    "type": "object",
+                    "properties": {
+                        "default": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "providers": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "scan": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "policy_version": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "required": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "rollout_key": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "scanner": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "scanner_key": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "scanner_version": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "schedule": {
+                    "type": "object",
+                    "properties": {
+                        "changes_prune": {
+                            "type": "string",
+                            "default": "dailyAt:03:20"
+                        },
+                        "drives_purge": {
+                            "type": "string",
+                            "default": "hourlyAt:25"
+                        },
+                        "drives_recount": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "revisions_prune": {
+                            "type": "string",
+                            "default": "dailyAt:03:40"
+                        },
+                        "scan_reconcile": {
+                            "type": "string",
+                            "default": "everyFiveMinutes"
+                        },
+                        "trash_purge": {
+                            "type": "string",
+                            "default": "dailyAt:03:30"
+                        },
+                        "uploads_sweep": {
+                            "type": "string",
+                            "default": "hourlyAt:15"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "sharing": {
+                    "type": "object",
+                    "properties": {
+                        "default_ttl_hours": {
+                            "type": "integer",
+                            "default": 72
+                        },
+                        "max_ttl_hours": {
+                            "type": "integer",
+                            "default": 720
+                        },
+                        "prefix_length": {
+                            "type": "integer",
+                            "default": 8
+                        },
+                        "token_generator": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "url_base": {
+                            "type": "string",
+                            "default": "/share"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "trash": {
+                    "type": "object",
+                    "properties": {
+                        "retention_days": {
+                            "type": "integer",
+                            "default": 30
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "uploads": {
+                    "type": "object",
+                    "properties": {
+                        "allowed_mime_types": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        },
+                        "max_file_size": {
+                            "type": "integer",
+                            "default": 5368709120
+                        },
+                        "resumable": {
+                            "type": "object",
+                            "properties": {
+                                "chunk_size": {
+                                    "type": "integer",
+                                    "default": 8388608
+                                },
+                                "complete_timeout_seconds": {
+                                    "type": "integer",
+                                    "default": 60
+                                },
+                                "enabled": {
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "max_active_sessions_per_actor": {
+                                    "type": "integer",
+                                    "default": 20
+                                },
+                                "max_chunk_size": {
+                                    "type": "integer",
+                                    "default": 67108864
+                                },
+                                "metadata": {
+                                    "type": "object",
+                                    "properties": {
+                                        "allowed_keys": {
+                                            "type": "array"
+                                        },
+                                        "max_value_length": {
+                                            "type": "integer",
+                                            "default": 512
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "session_ttl_hours": {
+                                    "type": "integer",
+                                    "default": 24
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "scan": {
+                            "type": "object",
+                            "properties": {
+                                "cleanup_batch": {
+                                    "type": "integer",
+                                    "default": 100
+                                },
+                                "lease_seconds": {
+                                    "type": "integer",
+                                    "default": 120
+                                },
+                                "max_attempts": {
+                                    "type": "integer",
+                                    "default": 5
+                                },
+                                "mode": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "policy_version": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "publish_cooldown_seconds": {
+                                    "type": "integer",
+                                    "default": 30
+                                },
+                                "queue": {
+                                    "type": "string",
+                                    "default": "default"
+                                },
+                                "recovery_batch": {
+                                    "type": "integer",
+                                    "default": 100
+                                },
+                                "required": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "rollout_key": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "scanner": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "scanner_key": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "scanner_timeout_seconds": {
+                                    "type": "integer",
+                                    "default": 60
+                                },
+                                "scanner_version": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

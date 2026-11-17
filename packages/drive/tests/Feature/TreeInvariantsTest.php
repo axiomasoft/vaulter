@@ -298,7 +298,7 @@ it('takes the tree lock before any node row lock', function (string $operation):
         'rename' => $drive->nodes()->rename($folder, 'Renamed'),
     };
 
-    $storageLock = array_key_first(array_filter($queries, static fn (string $sql): bool => treeLockStatement($sql)));
+    $storageLock = array_key_first(array_filter($queries, treeLockStatement(...)));
     $nodeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, 'order by')));
 
     expect($storageLock)->not->toBeNull()
@@ -351,7 +351,7 @@ it('purges trash under the tree lock taken before the trashed root row', functio
 
     $this->artisan('vaulter:trash:purge', ['--days' => 1])->assertSuccessful();
 
-    $treeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => treeLockStatement($sql)));
+    $treeLock = array_key_first(array_filter($queries, treeLockStatement(...)));
     $rootLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, '"trashed_at" <=') && str_contains($sql, 'limit 1')));
 
     expect($treeLock)->not->toBeNull()

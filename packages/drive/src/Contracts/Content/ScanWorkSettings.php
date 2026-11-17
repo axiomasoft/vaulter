@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts\Content;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** @internal Durable scan-work tuning, supplied by the package that runs the scan jobs. */
 #[Internal]

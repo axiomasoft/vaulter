@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads\Inspection;
 
 use finfo;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use RuntimeException;
+use ZipArchive;
 
 /**
  * Content-vs-declared-mime sniffer for the assembled resumable object. A resumable commit must not trust the CLIENT's declared
@@ -31,21 +33,21 @@ final class MimeSniffer
     {
         $stream = fopen($path, 'rb');
         if ($stream === false) {
-            throw new \RuntimeException('Unable to inspect upload.');
+            throw new RuntimeException('Unable to inspect upload.');
         }
         try {
             $head = fread($stream, self::SNIFF_BYTES);
             if ($head === false) {
-                throw new \RuntimeException('Unable to inspect upload.');
+                throw new RuntimeException('Unable to inspect upload.');
             }
-            $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($head);
+            $mime = new finfo(FILEINFO_MIME_TYPE)->buffer($head);
         } finally {
             fclose($stream);
         }
         // OOXML refinement requires bounded ZIP metadata, never just the suffix.
         if ($mime === 'application/zip') {
-            $zip = new \ZipArchive;
-            if ($zip->open($path, \ZipArchive::RDONLY) === true) {
+            $zip = new ZipArchive;
+            if ($zip->open($path, ZipArchive::RDONLY) === true) {
                 try {
                     $entry = $zip->statName('[Content_Types].xml');
                     if (is_array($entry) && $entry['size'] <= 65536) {
@@ -101,7 +103,8 @@ final class MimeSniffer
             return true;
         }
 
-        $detected = $this->normalise((new finfo(FILEINFO_MIME_TYPE))->buffer($head) ?: null);
+        $sniffed = new finfo(FILEINFO_MIME_TYPE)->buffer($head);
+        $detected = $this->normalise($sniffed !== false ? $sniffed : null);
 
         if ($this->isGeneric($detected)) {
             return true;

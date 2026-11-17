@@ -42,7 +42,7 @@ it('resolves the registered lifecycle of a kind', function (): void {
     $registry->register($handler);
 
     expect($registry->forKind(NodeKind::File))->toBe($handler)
-        ->and(fn () => $registry->forKind(NodeKind::Document))->toThrow(UnsupportedNodeKindException::class);
+        ->and(fn (): NodeContentLifecycle => $registry->forKind(NodeKind::Document))->toThrow(UnsupportedNodeKindException::class);
 });
 
 it('refuses a second registration of a kind with duplicate_registration and keeps the first', function (): void {

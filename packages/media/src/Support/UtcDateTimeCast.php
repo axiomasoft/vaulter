@@ -9,7 +9,7 @@ use DateTimeInterface;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** @implements CastsAttributes<CarbonImmutable,DateTimeInterface|string> */
 #[Internal]

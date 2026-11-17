@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Database\Factories\DriveFactory;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -75,10 +76,10 @@ class Drive extends Model
         return DriveFactory::new();
     }
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('drives');
+        return app(DatabaseOptions::class)->table('drives');
     }
 
     /**
@@ -96,7 +97,7 @@ class Drive extends Model
      */
     public function nodes(): HasMany
     {
-        return $this->hasMany(app(DriveConfig::class)->model('node'), 'drive_id');
+        return $this->hasMany(app(DriveOptions::class)->model('node'), 'drive_id');
     }
 
     /**
@@ -106,13 +107,13 @@ class Drive extends Model
      */
     public function rootNode(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'root_node_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('node'), 'root_node_id');
     }
 
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

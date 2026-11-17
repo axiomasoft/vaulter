@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveModelsOptions;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Support\Identity;
@@ -21,7 +21,7 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class DrivesUsageCheck implements DoctorCheck
 {
-    public function __construct(private DriveConfig $config, private QuotaCalculator $quota) {}
+    public function __construct(private DriveModelsOptions $models, private QuotaCalculator $quota) {}
 
     public function key(): string
     {
@@ -35,7 +35,7 @@ final readonly class DrivesUsageCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $drives = $this->config->model('drive')::query()->where('status', '!=', DriveStatus::Deleting->value)
+        $drives = $this->models->drive::query()->where('status', '!=', DriveStatus::Deleting->value)
             ->orderBy('id')->limit($context->sampleLimit)->get(['id', 'used_bytes']);
         $ids = [];
         foreach ($drives as $drive) {
@@ -49,7 +49,7 @@ final readonly class DrivesUsageCheck implements DoctorCheck
         $drifted = 0;
         $largest = 0;
         foreach ($drives as $drive) {
-            $drift = abs(($calculated[Identity::stringify($drive->getKey())] ?? 0) - (int) $drive->used_bytes);
+            $drift = abs(($calculated[Identity::stringify($drive->getKey())] ?? 0) - (is_numeric($used = $drive->getAttribute('used_bytes')) ? (int) $used : 0));
             if ($drift > 0) {
                 $drifted++;
                 $largest = max($largest, $drift);
@@ -63,7 +63,7 @@ final readonly class DrivesUsageCheck implements DoctorCheck
         return [DoctorFinding::warning(
             code: 'drive.drives.usage_drift',
             message: $drifted.' of '.$drives->count().' sampled drive(s) store a used_bytes that differs from their retained revisions.',
-            hint: 'run vaulter:drives:recount --dry-run, then without it',
+            remediation: 'run vaulter:drives:recount --dry-run, then without it',
             evidence: ['drifted' => $drifted, 'checked' => $drives->count(), 'largest_drift_bytes' => $largest],
         )];
     }

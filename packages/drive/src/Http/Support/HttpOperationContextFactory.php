@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -139,7 +139,7 @@ final readonly class HttpOperationContextFactory
         $actor = $handle->actor()->authorizable();
         $anchors = $actor === null ? [] : $this->access->grantAnchorIdsIn($actor, $handle->model());
         foreach (array_chunk($anchors, 200) as $chunk) {
-            $ids = array_map(static fn (int|string $id): string => Identity::stringify($id), $chunk);
+            $ids = array_map(Identity::stringify(...), $chunk);
             foreach ($handle->nodes()->abilitiesMany($ids) as $abilities) {
                 if ($abilities->flags[Ability::View->value] ?? false) {
                     return true;

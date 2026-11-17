@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Documents\Errors\DocumentsErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -48,5 +52,15 @@ final class UnsupportedDocumentContentException extends VaulterException impleme
     public function problemDetails(): array
     {
         return ['reason' => 'unsupported_content'];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DocumentsErrorCode::InvalidDocumentContent,
+            category: ErrorCategory::Validation,
+            details: ['reason' => 'unsupported_content'],
+        );
     }
 }

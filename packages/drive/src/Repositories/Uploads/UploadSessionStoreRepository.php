@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -24,7 +24,7 @@ final class UploadSessionStoreRepository
 {
     public function __construct(
         private readonly VaulterDatabase $database,
-        private readonly DriveConfig $driveConfig,
+        private readonly DriveOptions $driveConfig,
     ) {}
 
     /**
@@ -97,7 +97,7 @@ final class UploadSessionStoreRepository
                 ['upload:'.$session->upload_id],
             );
 
-            if (!(is_object($granted) && ($granted->granted ?? false) === true)) {
+            if (!is_object($granted) || ($granted->granted ?? false) !== true) {
                 throw UploadConflictException::forSession($session->upload_id);
             }
 
@@ -228,7 +228,7 @@ final class UploadSessionStoreRepository
         if ($session->status !== UploadStatus::Assembled || $resultNodeId === null || $resultRevisionId === null || $inputFingerprint === null || preg_match('/^[a-f0-9]{64}$/', $inputFingerprint) !== 1) {
             throw UploadConflictException::forClosedSession($session->upload_id);
         }
-        $nodeClass = app(DriveConfig::class)->model('node');
+        $nodeClass = app(DriveOptions::class)->model('node');
         $node = $nodeClass::query()->where('drive_id', $session->drive_id)->whereKey($resultNodeId)->first();
         $file = $node?->file()->first();
         $revision = $file?->versions()->whereKey($resultRevisionId)->first();

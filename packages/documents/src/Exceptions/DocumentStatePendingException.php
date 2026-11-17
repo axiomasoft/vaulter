@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Documents\Errors\DocumentsErrorCode;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -49,5 +53,15 @@ final class DocumentStatePendingException extends VaulterException implements Pr
     public function problemDetails(): array
     {
         return ['node_id' => $this->marker->nodeId];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DocumentsErrorCode::DocumentStatePending,
+            category: ErrorCategory::Conflict,
+            details: ['node_id' => $this->marker->nodeId],
+        );
     }
 }

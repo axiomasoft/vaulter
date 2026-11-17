@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobGarbageCollector;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Tenancy\Tenancy;
 
 /**
@@ -23,24 +23,18 @@ final class GcBlobsCommand extends Command
 {
     use OpensWriteScope;
 
-    public function __construct(
-        private readonly MediaConfig $mediaConfig,
-    ) {
-        parent::__construct();
-    }
-
     protected $signature = 'vaulter:blobs:gc
         {--grace= : Override the GC grace window in hours (floored at 1h)}
         {--pending : Also sweep crashed-staging PENDING blobs}';
 
     protected $description = 'Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3)';
 
-    public function handle(BlobGarbageCollector $collector): int
+    public function handle(BlobGarbageCollector $collector, MediaOptions $mediaConfig): int
     {
-        return Tenancy::without(fn (): int => $this->runMaintenance($collector));
+        return Tenancy::without(fn (): int => $this->runMaintenance($collector, $mediaConfig));
     }
 
-    private function runMaintenance(BlobGarbageCollector $collector): int
+    private function runMaintenance(BlobGarbageCollector $collector, MediaOptions $mediaConfig): int
     {
         $grace = $this->graceOption();
 
@@ -48,10 +42,10 @@ final class GcBlobsCommand extends Command
 
         $this->components->info(
             "Tombstoned {$result['tombstoned']}, swept {$result['swept']}, skipped {$result['skipped']} ".
-            '(grace '.$this->mediaConfig->gcGraceHours($grace).'h).',
+            '(grace '.$mediaConfig->gcGraceHours($grace).'h).',
         );
 
-        if ($this->option('pending')) {
+        if ((bool) $this->option('pending')) {
             $pending = $collector->sweepPending(graceHours: $grace);
 
             $this->components->info("Pending sweep: swept {$pending['swept']}, skipped {$pending['skipped']}.");

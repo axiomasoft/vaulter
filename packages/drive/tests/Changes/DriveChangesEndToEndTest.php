@@ -68,7 +68,7 @@ function changesKey(DriveHandle $reader, string $nodeId): string
     $drive = DriveTestHelpers::model($nodeId)->drive_id;
     $model = app(config('vaulter-drive.models.drive', Drive::class))->newQuery()->findOrFail($drive);
 
-    return (new ReaderSyncIdentity((string) config('app.key'), 1))
+    return new ReaderSyncIdentity((string) config('app.key'), 1)
         ->syncKey($model->getRawOriginal('tenant_id'), $model->getKey(), new ActorRef($user->getMorphClass(), (string) $user->getKey()), $nodeId);
 }
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Changes;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\ChangesConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\ChangesOptions;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -20,11 +20,11 @@ final class ListChangesRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(ChangesConfig $changes): array
+    public function rules(ChangesOptions $changes): array
     {
         return [
             'cursor' => ['required', 'string', 'max:2048'],
-            'limit' => ['sometimes', 'integer', 'between:1,'.$changes->maxPageSize()],
+            'limit' => ['sometimes', 'integer', 'between:1,'.$changes->maxPageSize],
         ];
     }
 

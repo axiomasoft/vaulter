@@ -7,8 +7,9 @@ namespace Vaulter\Drive;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use LogicException;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandle as Contract;
 use Vaulter\Drive\Contracts\DriveHandleFactory as Factory;
 use Vaulter\Drive\Models\Drive;
@@ -18,10 +19,10 @@ use Vaulter\Drive\Tenancy\TenancyBoundary;
 #[Internal]
 final readonly class DriveHandleFactory implements Factory
 {
-    public function __construct(private Container $container, private DriveConfig $config)
+    public function __construct(private Container $container, private DriveOptions $config)
     {
         if (PHP_INT_SIZE !== 8) {
-            throw new \LogicException('Node sequence APIs require a 64-bit PHP runtime.');
+            throw new LogicException('Node sequence APIs require a 64-bit PHP runtime.');
         }
     }
 
@@ -54,7 +55,7 @@ final readonly class DriveHandleFactory implements Factory
         if (!$drive->exists || (!is_int($key) && !is_string($key))) {
             throw new InvalidArgumentException('A persisted drive is required.');
         }
-        $class = $this->config->model('drive');
+        $this->config->model('drive');
         $fresh = $this->container->make(TenancyBoundary::class)->assertDrive($drive);
 
         return new DriveHandle(drive: $fresh, container: $this->container);

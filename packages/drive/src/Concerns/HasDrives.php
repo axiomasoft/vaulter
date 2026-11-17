@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\DriveStatus;
@@ -31,8 +31,8 @@ trait HasDrives
         $event = method_exists(static::class, 'forceDeleted') ? 'forceDeleted' : 'deleted';
 
         static::registerModelEvent($event, static function (Model $owner): void {
-            $config = self::vaulter(DriveConfig::class);
-            if (!self::vaulter(DriveConfig::class)->drivesDeleteWithOwner()) {
+            $config = self::vaulter(DriveOptions::class);
+            if (!self::vaulter(DriveOptions::class)->drives->deleteWithOwner) {
                 return;
             }
             // The owner is gone, so its drives are deleted outside any tenant scope.
@@ -61,7 +61,7 @@ trait HasDrives
     #[Internal]
     public function drives(): MorphMany
     {
-        return $this->morphMany(self::vaulter(DriveConfig::class)->model('drive'), 'owner');
+        return $this->morphMany(self::vaulter(DriveOptions::class)->model('drive'), 'owner');
     }
 
     /**

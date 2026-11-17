@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Comments;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Documents\Rules\CommentAnchorBounds;
 
 /**

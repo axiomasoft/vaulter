@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Illuminate\Database\Eloquent\Builder;
+use Packman\Attributes\Internal;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Drive;
@@ -20,7 +20,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 #[Internal]
 final readonly class UploadCleanupReconciler
 {
-    public function __construct(private VaulterDatabase $database, private UploadSessionStoreRepository $sessions, private StagedUpload $staged, private DriveConfig $config) {}
+    public function __construct(private VaulterDatabase $database, private UploadSessionStoreRepository $sessions, private StagedUpload $staged, private DriveOptions $config) {}
 
     /** @param list<int|string>|Builder<Drive>|null $driveIds
      * @return array{cleanup_completed:int,cleanup_failed:int,cleanup_pending:int}
@@ -66,7 +66,7 @@ final readonly class UploadCleanupReconciler
                     || (string) $locked->assembled_blob_id !== (string) $locked->result_blob_id) {
                     throw new RuntimeException('Upload cleanup has incomplete committed pointers.');
                 }
-                $nodeClass = app(DriveConfig::class)->model('node');
+                $nodeClass = app(DriveOptions::class)->model('node');
                 $node = $nodeClass::query()->where('drive_id', $locked->drive_id)->whereKey($locked->result_node_id)->first();
                 $revision = $node?->file()->first()?->versions()->whereKey($locked->result_revision_id)->first();
                 if ($revision === null || (string) $revision->blob_id !== (string) $locked->result_blob_id) {

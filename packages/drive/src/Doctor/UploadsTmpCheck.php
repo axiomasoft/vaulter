@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Drive\Configuration\UploadsOptions;
 
 #[Internal]
 final readonly class UploadsTmpCheck implements DoctorCheck
 {
-    public function __construct(private DriveConfig $config) {}
+    public function __construct(private UploadsOptions $uploads) {}
 
     public function key(): string
     {
@@ -28,15 +28,25 @@ final readonly class UploadsTmpCheck implements DoctorCheck
     public function run(DoctorContext $context): array
     {
         $directory = sys_get_temp_dir();
-        $maxFileSize = $this->config->maxFileSize();
+        $maxFileSize = $this->uploads->maxFileSize;
         $free = @disk_free_space($directory);
         $evidence = ['writable' => is_writable($directory), 'free_bytes' => $free === false ? null : (int) $free, 'max_file_size' => $maxFileSize];
 
         if (!is_writable($directory)) {
-            return [DoctorFinding::error(code: 'drive.uploads.tmp_not_writable', message: 'The temporary directory is not writable: resumable uploads cannot stage chunks.', hint: 'make sys_get_temp_dir() writable for the PHP user', evidence: $evidence)];
+            return [DoctorFinding::error(
+                code: 'drive.uploads.tmp_not_writable',
+                message: 'The temporary directory is not writable: resumable uploads cannot stage chunks.',
+                remediation: 'make sys_get_temp_dir() writable for the PHP user',
+                evidence: $evidence,
+            )];
         }
         if ($free !== false && $free <= $maxFileSize) {
-            return [DoctorFinding::error(code: 'drive.uploads.tmp_too_small', message: 'The temporary directory has less free space than the largest accepted file.', hint: 'free up space or lower vaulter-drive.uploads.max_file_size', evidence: $evidence)];
+            return [DoctorFinding::error(
+                code: 'drive.uploads.tmp_too_small',
+                message: 'The temporary directory has less free space than the largest accepted file.',
+                remediation: 'free up space or lower vaulter-drive.uploads.max_file_size',
+                evidence: $evidence,
+            )];
         }
 
         return [DoctorFinding::ok(code: 'drive.uploads.tmp_ok', message: 'The temporary directory is writable and larger than the largest accepted file.', evidence: $evidence)];

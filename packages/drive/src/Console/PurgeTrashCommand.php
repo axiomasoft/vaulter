@@ -7,13 +7,13 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Profiles\ProfileRegistry;
@@ -37,25 +37,36 @@ final class PurgeTrashCommand extends Command
 
     public function __construct(
         private readonly VaulterDatabase $database,
-        private readonly DriveConfig $driveConfig,
         private readonly ProfileRegistry $profiles,
     ) {
         parent::__construct();
     }
 
-    public function handle(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics, OperationRunner $runner): int
-    {
-        return Tenancy::without(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics, $runner));
+    public function handle(
+        NodeReadRepository $nodes,
+        NodeStoreRepository $store,
+        PurgeNodeAction $purge,
+        MetricsRecorder $metrics,
+        OperationRunner $runner,
+        DriveOptions $driveOptions,
+    ): int {
+        return Tenancy::without(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics, $runner, $driveOptions));
     }
 
-    private function runMaintenance(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics, OperationRunner $runner): int
-    {
+    private function runMaintenance(
+        NodeReadRepository $nodes,
+        NodeStoreRepository $store,
+        PurgeNodeAction $purge,
+        MetricsRecorder $metrics,
+        OperationRunner $runner,
+        DriveOptions $driveOptions,
+    ): int {
         $purgedRoots = 0;
         $purgedNodeCount = 0;
         $skipped = 0;
         $failed = false;
         $metrics->timing(name: 'vaulter_purge_duration_seconds', operation: function () use (
-            $nodes, $store, $purge, $metrics, $runner, &$purgedRoots, &$purgedNodeCount, &$skipped, &$failed,
+            $nodes, $store, $purge, $metrics, $runner, $driveOptions, &$purgedRoots, &$purgedNodeCount, &$skipped, &$failed,
         ): void {
             $candidates = $nodes->trashedBefore(Carbon::now())->get();
             foreach ($candidates as $node) {
@@ -69,7 +80,7 @@ final class PurgeTrashCommand extends Command
                     $override = $this->option('days');
                     $days = (is_string($override) || is_int($override)) && is_numeric($override)
                         ? max((int) $override, 0)
-                        : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $this->driveConfig->trashRetentionDays());
+                        : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $driveOptions->trash->retentionDays);
                     $threshold = Carbon::now()->subDays($days);
                     // Each root is one root operation `drive.trash.purge`: the documents drain runs before its
                     // transaction, and a root that stays refused (document_state_pending) rolls back only itself.

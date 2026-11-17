@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Types;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Log;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Exceptions\DuplicateDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;

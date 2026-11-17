@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Migrations\Migration;
+use Illuminate\Container\Container;
 use Vaulter\Documents\Schema\DocumentsSchema;
+use Vaulter\Schema\VaulterMigration;
 
-return new class extends Migration
+return new class extends VaulterMigration
 {
     public function up(): void
     {
-        app(DocumentsSchema::class)->create(entity: 'document_revisions');
+        Container::getInstance()->make(DocumentsSchema::class)->create(entity: 'document_revisions');
     }
 
     public function down(): void
     {
-        app(DocumentsSchema::class)->drop(entity: 'document_revisions');
+        Container::getInstance()->make(DocumentsSchema::class)->drop(entity: 'document_revisions');
     }
 };

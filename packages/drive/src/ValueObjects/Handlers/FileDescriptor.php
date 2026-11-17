@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\ValueObjects\Handlers;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The immutable description of a file the {@see

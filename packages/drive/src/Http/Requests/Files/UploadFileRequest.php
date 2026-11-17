@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Files;
 
 use Illuminate\Http\UploadedFile;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -20,7 +20,7 @@ final class UploadFileRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(DriveConfig $driveConfig): array
+    public function rules(DriveOptions $driveConfig): array
     {
         return [
             'file' => self::fileRules($driveConfig),
@@ -34,14 +34,14 @@ final class UploadFileRequest extends VaulterFormRequest
      *
      * @return list<string>
      */
-    public static function fileRules(DriveConfig $driveConfig): array
+    public static function fileRules(DriveOptions $driveConfig): array
     {
         $rules = ['required', 'file'];
-        $maxFileSize = $driveConfig->maxFileSize();
+        $maxFileSize = $driveConfig->uploads->maxFileSize;
         if ($maxFileSize > 0) {
             $rules[] = 'max:'.($maxFileSize / 1024);
         }
-        $allowedMimes = $driveConfig->allowedMimeTypes();
+        $allowedMimes = $driveConfig->uploads->allowedMimeTypes;
         if ($allowedMimes !== []) {
             $rules[] = 'mimetypes:'.implode(',', $allowedMimes);
         }

@@ -25,7 +25,7 @@ it('V03 serializes revisions and accounts for every retained revision', function
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('old'), 'a.txt'));
     // Both children inherit revision 1, even after the winner commits revision 2.
     $outcomes = ForkRace::run(array_map(
-        static fn (string $bytes): Closure => static fn (): string => (string) $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'a.txt'))->id,
+        static fn (string $bytes): Closure => static fn (): string => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'a.txt'))->id,
         ['short', 'a much longer head'],
     ));
     foreach ($outcomes as $outcome) {

@@ -362,5 +362,5 @@ it('routes each mixed pending page by stored protocol and never drops unknown ma
     guardMark($known->id, 3);
     app(PendingStateGuard::class)->drainTrashed($this->handle->model()->getKey(), wholeDrive: true);
     expect($unknown->fresh()->pending_through_seq)->toBe(1)
-        ->and(array_map(static fn ($call) => $call['marker']->nodeId, FakePendingStateDrainer::$calls))->toContain((string) $known->id);
+        ->and(array_map(static fn (array $call) => $call['marker']->nodeId, FakePendingStateDrainer::$calls))->toContain((string) $known->id);
 });

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Support\Identity;
@@ -43,7 +43,7 @@ final class PurgeDriveJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
     public function handle(PurgeDriveStepAction $step, VaulterDatabase $database): void
     {
         if (!$database->write(fn (): bool => $step->execute($this->driveId))) {
-            self::dispatch($this->driveId);
+            dispatch(new self($this->driveId));
         }
     }
 }

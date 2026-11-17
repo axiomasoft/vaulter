@@ -4,31 +4,44 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Concerns\Composition\ProvidesCapabilities;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\Cardinality;
+use Packman\Plugins\Enums\Contributions\SlotKind;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Contracts\Routing\RouteLabelSource;
-use Vaulter\Documents\Console\MakeDocumentTypeCommand;
-use Vaulter\Documents\Console\MakeExporterCommand;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Doctor\DocumentTypesCheck;
-use Vaulter\Documents\Enums\DocumentEventType;
+use Vaulter\Documents\Errors\DocumentsProblemDefinitions;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
-use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Http\Support\DocumentsRouteLabels;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
-use Vaulter\Documents\Operations\DocumentsOperationPolicies;
 use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Profiles\AllowedDocumentTypesProfileOption;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
-use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Schema\DocumentsSchema;
+use Vaulter\Documents\Schema\DocumentsSchemaSets;
 use Vaulter\Documents\State\PendingPurgeDrain;
 use Vaulter\Documents\State\PendingStateDrainer;
 use Vaulter\Documents\Support\DocumentHeads;
@@ -40,85 +53,151 @@ use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Enums\NodeKind;
-use Vaulter\Modules\Activation;
-use Vaulter\Modules\Cardinality;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\OwnsSchema;
-use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
 use Vaulter\Operations\OperationMiddleware;
 
 /**
- * The documents module: document types, revisions, comments and export, their routes and commands. The
- * realtime transport is a capability it defines and the collaboration module provides.
+ * The documents extension plugin (`vaulter.documents`): rich-text/spreadsheet documents,
+ * revisions, threaded comments, export capabilities, error catalog, schema sets, and diagnostics.
  */
-#[Internal]
-final class DocumentsModule implements OwnsSchema, VaulterModule
+#[Api(since: '1.0')]
+final class DocumentsModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
 {
-    public static function ownedSchema(): string
+    use Configurable;
+    use ContributesToSlots;
+    use OwnsSchema;
+    use ProvidesCapabilities;
+    use ProvidesDiagnostics;
+
+    #[Override]
+    public function manifest(): PluginManifest
     {
-        return DocumentsSchema::class;
+        return new PluginManifest(
+            id: 'vaulter.documents',
+            version: '1.0.0',
+            requires: ['vaulter.core', 'vaulter.drive'],
+            resourceRoot: dirname(__DIR__).'/resources',
+        );
     }
 
-    public function id(): ModuleId
+    #[Override]
+    public function register(PluginRegistrar $registrar): void {}
+
+    #[Override]
+    public function configRoot(): string
     {
-        return new ModuleId('documents');
+        return 'vaulter-documents';
     }
 
-    public function version(): string
+    #[Override]
+    public function defaultConfigPath(): string
     {
-        return '1.0';
+        return dirname(__DIR__).'/config/vaulter-documents.php';
     }
 
-    public function activation(): Activation
+    #[Override]
+    public function optionsClass(): string
     {
-        return Activation::Auto;
+        return DocumentsOptions::class;
     }
 
-    public function requires(): array
+    #[Override]
+    public function tablePrefix(): string
     {
-        return ['core' => '^1.0', 'drive' => '^1.0'];
+        return 'v_';
     }
 
-    public function register(ModuleBuilder $module): void
+    /** @return list<string> */
+    #[Override]
+    public function tableNouns(): array
     {
-        $module
-            ->config('vaulter-documents', dirname(__DIR__).'/config/vaulter-documents.php')
-            ->schema(dirname(__DIR__).'/database/migrations')
-            ->routes(dirname(__DIR__).'/routes/documents.php')
-            ->problems(DocumentsProblemCodes::class)
-            ->operations(DocumentsOperationPolicies::class)
-            ->events(DocumentEventType::class)
-            ->bindings(BindingsRegistrar::class)
-            ->commands(MakeDocumentTypeCommand::class, MakeExporterCommand::class)
-            ->slot(RouteLabelSource::class, DocumentsRouteLabels::class, 'documents.routes')
-            ->slot(DoctorCheck::class, DocumentTypesCheck::class, 'documents.types', key: 'documents.types')
-            // The drive's node snapshots carry the `document` fragment; a handle serves the document and comment operations.
-            ->slot(NodeSnapshotContributor::class, DocumentHeads::class, 'documents.heads', key: DocumentHeads::KEY)
-            ->slot(DriveExtension::class, DocumentOperations::class, 'documents.operations', key: DocumentOperations::class)
-            ->slot(DriveExtension::class, CommentOperations::class, 'documents.comments', key: CommentOperations::class)
-            // Documents are presented and copied/purged by the documents module, not by the file machinery.
-            ->slot(KindPresenter::class, DocumentPresenter::class, 'documents.presenter', key: NodeKind::Document->value)
-            ->slot(NodeContentLifecycle::class, DocumentContentLifecycle::class, 'documents.lifecycle', key: NodeKind::Document->value)
-            // A trash purge drains pending documents before its transaction; the lifecycle re-checks the marker under lock.
-            ->slot(OperationMiddleware::class, PendingPurgeDrain::class, 'documents.pending-purge-drain')
-            ->slot(ProfileOption::class, CommentsProfileOption::class, 'documents.profile.comments', key: CommentsProfileOption::NAME)
-            ->slot(ProfileOption::class, AllowedDocumentTypesProfileOption::class, 'documents.profile.allowed-document-types', key: AllowedDocumentTypesProfileOption::NAME)
-            // The slots the module defines and its built-in contributions; a host adds its own through config class-strings.
-            ->defineSlot(DocumentType::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(DocumentExporter::class, SlotKind::Handler, Cardinality::Many)
-            ->slot(DocumentType::class, RichTextDocumentType::class, 'documents.type.rich-text', key: RichTextDocumentType::KEY)
-            ->slot(DocumentType::class, MarkdownDocumentType::class, 'documents.type.markdown', key: MarkdownDocumentType::KEY)
-            ->slot(DocumentExporter::class, HtmlExporter::class, 'documents.exporter.html', key: 'vaulter/html')
-            ->slot(DocumentExporter::class, MarkdownExporter::class, 'documents.exporter.markdown', key: 'vaulter/markdown')
-            // The export filename scheme and the realtime transport are capabilities. The transport is optional: the
-            // collaboration module (a package of its own) provides it, and without it documents are edited one at a time.
-            ->defineCapability(ExportFilenameResolver::class, Cardinality::RequiredSingle)
-            ->provides(ExportFilenameResolver::class, DefaultExportFilenameResolver::class)
-            ->defineSlot(CollaborationProtocolDriver::class, SlotKind::Handler, Cardinality::Many)
-            // Brings a pending document's working state up to the collaboration log: without a provider such a
-            // document answers 409 document_state_pending instead of serving or replacing stale content.
-            ->defineSlot(PendingStateDrainer::class, SlotKind::Handler, Cardinality::Many);
+        return ['node_comments', 'documents', 'document_revisions'];
+    }
+
+    #[Override]
+    public function migrationPath(): string
+    {
+        return dirname(__DIR__).'/database/migrations';
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaSetProviders(): array
+    {
+        return [DocumentsSchemaSets::class];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function schemaComponents(): array
+    {
+        return [DocumentsSchema::class];
+    }
+
+    /** @return array<class-string, string> */
+    #[Override]
+    public function definedCapabilities(): array
+    {
+        return [
+            ExportFilenameResolver::class => Cardinality::RequiredSingle->value,
+        ];
+    }
+
+    /** @return array<class-string, class-string|array{config: string, default?: class-string|null}> */
+    #[Override]
+    public function providedCapabilities(): array
+    {
+        return [
+            ExportFilenameResolver::class => DefaultExportFilenameResolver::class,
+        ];
+    }
+
+    /** @return array<class-string, array{kind: string, cardinality?: string}> */
+    #[Override]
+    public function definedSlots(): array
+    {
+        $handler = ['kind' => SlotKind::Handler->value, 'cardinality' => Cardinality::Many->value];
+
+        return [
+            DocumentType::class => $handler,
+            DocumentExporter::class => $handler,
+            CollaborationProtocolDriver::class => $handler,
+            PendingStateDrainer::class => $handler,
+        ];
+    }
+
+    /** @return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}> */
+    #[Override]
+    public function slotContributions(): array
+    {
+        return [
+            ['slot' => RouteLabelSource::class, 'id' => 'documents.routes', 'implementation' => DocumentsRouteLabels::class],
+            ['slot' => DoctorCheck::class, 'id' => 'documents.types', 'implementation' => DocumentTypesCheck::class, 'key' => 'documents.types'],
+            ['slot' => NodeSnapshotContributor::class, 'id' => 'documents.heads', 'implementation' => DocumentHeads::class, 'key' => DocumentHeads::KEY],
+            ['slot' => DriveExtension::class, 'id' => 'documents.operations', 'implementation' => DocumentOperations::class, 'key' => DocumentOperations::class],
+            ['slot' => DriveExtension::class, 'id' => 'documents.comments', 'implementation' => CommentOperations::class, 'key' => CommentOperations::class],
+            ['slot' => KindPresenter::class, 'id' => 'documents.presenter', 'implementation' => DocumentPresenter::class, 'key' => NodeKind::Document->value],
+            ['slot' => NodeContentLifecycle::class, 'id' => 'documents.lifecycle', 'implementation' => DocumentContentLifecycle::class, 'key' => NodeKind::Document->value],
+            ['slot' => OperationMiddleware::class, 'id' => 'documents.pending-purge-drain', 'implementation' => PendingPurgeDrain::class],
+            ['slot' => ProfileOption::class, 'id' => 'documents.profile.comments', 'implementation' => CommentsProfileOption::class, 'key' => CommentsProfileOption::NAME],
+            ['slot' => ProfileOption::class, 'id' => 'documents.profile.allowed-document-types', 'implementation' => AllowedDocumentTypesProfileOption::class, 'key' => AllowedDocumentTypesProfileOption::NAME],
+            ['slot' => DocumentType::class, 'id' => 'documents.type.rich-text', 'implementation' => RichTextDocumentType::class, 'key' => RichTextDocumentType::KEY],
+            ['slot' => DocumentType::class, 'id' => 'documents.type.markdown', 'implementation' => MarkdownDocumentType::class, 'key' => MarkdownDocumentType::KEY],
+            ['slot' => DocumentExporter::class, 'id' => 'documents.exporter.html', 'implementation' => HtmlExporter::class, 'key' => 'vaulter/html'],
+            ['slot' => DocumentExporter::class, 'id' => 'documents.exporter.markdown', 'implementation' => MarkdownExporter::class, 'key' => 'vaulter/markdown'],
+        ];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function healthChecks(): array
+    {
+        return [DocumentTypesCheck::class];
+    }
+
+    /** @return list<class-string> */
+    #[Override]
+    public function problemProviders(): array
+    {
+        return [DocumentsProblemDefinitions::class];
     }
 }

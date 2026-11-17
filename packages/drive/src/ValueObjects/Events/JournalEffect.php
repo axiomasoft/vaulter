@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\ValueObjects\Events;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Events\DriveEvent;

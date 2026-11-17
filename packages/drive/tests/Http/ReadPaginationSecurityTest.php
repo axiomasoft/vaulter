@@ -73,10 +73,12 @@ it('keeps a long typed host and filter scope out of the cursor, seeks raw keys, 
     AccessTestHelpers::folder($this->storage, null, 'hidden-1');
     AccessTestHelpers::folder($this->storage, null, 'hidden-2');
     config()->set('vaulter-drive.listing.scan_budget', 1);
+    $listing = app(ExactListing::class);
     $roots = fn () => Node::query()->where('name', 'like', 'hidden-%');
     $empty = $listing->page($this->actor, $roots(), $order, 5, null, 'roots');
     expect($empty->items)->toBe([])->and($empty->scanned)->toBe(1)->and($empty->nextCursor)->toBeString();
     config()->set('vaulter-drive.listing.scan_budget', 1000);
+    $listing = app(ExactListing::class);
     expect($listing->page($this->actor, $roots(), $order, 5, $empty->nextCursor, 'roots')->items)->toBe([])
         ->and(fn () => $listing->page($this->actor, $roots(), $order, 5, $empty->nextCursor, 'roots-other'))->toThrow(InvalidCursorException::class);
 });

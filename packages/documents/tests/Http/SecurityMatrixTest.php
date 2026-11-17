@@ -244,7 +244,7 @@ function smdocCheck(string $row, string $route): void
             // The reason is checked where the actor is made, before any operation of the route can start.
             expect(fn () => $world['handle']->asSystem(''))->toThrow(InvalidArgumentException::class)
                 ->and(fn () => $world['handle']->asSystem("  \t"))->toThrow(InvalidArgumentException::class)
-                ->and(fn () => DriveContext::system($world['handle']->model(), ''))->toThrow(InvalidArgumentException::class)
+                ->and(fn (): DriveContext => DriveContext::system($world['handle']->model(), ''))->toThrow(InvalidArgumentException::class)
                 ->and(smdocState($world))->toBe($before);
         })(),
         'R9' => (function () use ($route, $world): void {

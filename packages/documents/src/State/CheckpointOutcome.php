@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\State;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 
 /**
  * What {@see CollaborativeState::publishCheckpoint()} did. A publication that lost its CAS (`$published` false: the

@@ -137,32 +137,32 @@ it('R07b: resumable session rules() enforces protocol, name, sha256, mime and me
     // L29: protocol in:... rule
     $this->postJson($base, ['protocol' => 'unknown-proto', 'name' => 'f.bin', 'total_size_bytes' => 1])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.protocol', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.protocol', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L32: name max:255 rule
     $this->postJson($base, ['name' => str_repeat('x', 256), 'total_size_bytes' => 1])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.name', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.name', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L33: total_size_bytes min:0 rule
     $this->postJson($base, ['name' => 'f.bin', 'total_size_bytes' => -1])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.total_size_bytes', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.total_size_bytes', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L34: expected_sha256 size:64 rule (63 chars is too short)
     $this->postJson($base, ['name' => 'f.bin', 'total_size_bytes' => 1, 'expected_sha256' => str_repeat('a', 63)])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.expected_sha256', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.expected_sha256', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L35: mime_type max:191 rule
     $this->postJson($base, ['name' => 'f.bin', 'total_size_bytes' => 1, 'mime_type' => str_repeat('m', 192)])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.mime_type', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.mime_type', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L36: metadata array rule
     $this->postJson($base, ['name' => 'f.bin', 'total_size_bytes' => 1, 'metadata' => 'scalar'])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.metadata', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.metadata', fn ($e): bool => is_array($e) && count($e) > 0);
 });
 
 // ── UploadFileRequest: name() (L91) ──────────────────────────────────────────
@@ -190,21 +190,21 @@ it('R07b: UploadFileRequest rules() has file required, name max and name regex (
 
     // L29: file required
     $this->postJson($base, [])->assertUnprocessable()
-        ->assertJsonPath('errors.file', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.file', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L43: name max:255
     $this->postJson($base, [
         'file' => UploadedFile::fake()->createWithContent('t.txt', 'data'),
         'name' => str_repeat('z', 256),
     ])->assertUnprocessable()
-        ->assertJsonPath('errors.name', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.name', fn ($e): bool => is_array($e) && count($e) > 0);
 
     // L43: name regex (path separator)
     $this->postJson($base, [
         'file' => UploadedFile::fake()->createWithContent('t.txt', 'data'),
         'name' => 'bad/name',
     ])->assertUnprocessable()
-        ->assertJsonPath('errors.name', fn ($e) => is_array($e) && count($e) > 0);
+        ->assertJsonPath('errors.name', fn ($e): bool => is_array($e) && count($e) > 0);
 });
 
 // ── PurgeTrashCommand: retention eligibility and reported root counts ──────────

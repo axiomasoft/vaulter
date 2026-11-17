@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Http\Controllers\Comments;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\CommentPreconditions;
 use Vaulter\Documents\Http\Resources\CommentResource;

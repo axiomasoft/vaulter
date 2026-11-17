@@ -7,11 +7,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Symfony\Component\Console\Command\Command;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\BlobScrubber;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -210,18 +210,23 @@ it('takes the sample and the budgets from vaulter-media.scrub when no option is 
         scrubCommit($bytes);
     }
     config()->set('vaulter-media.scrub.limit', '2');
+    app()->forgetInstance(MediaOptions::class);
+    app()->forgetInstance(BlobScrubber::class);
 
     expect(app(BlobScrubber::class)->scrub(dryRun: true))->toMatchArray(['visited' => 2, 'stopped_by' => 'limit']);
 
     config()->set('vaulter-media.scrub.limit', 100);
     config()->set('vaulter-media.scrub.max_bytes', 4);
+    app()->forgetInstance(MediaOptions::class);
+    app()->forgetInstance(BlobScrubber::class);
 
     expect(app(BlobScrubber::class)->scrub(dryRun: true))->toMatchArray(['visited' => 2, 'bytes' => 6, 'stopped_by' => 'max_bytes']);
 
-    config()->set('vaulter-media.scrub.max_bytes', null);
+    config()->set('vaulter-media.scrub.max_bytes');
     config()->set('vaulter-media.scrub.limit', 0);
+    app()->forgetInstance(MediaOptions::class);
 
-    expect(fn () => app(MediaConfig::class)->scrubLimit())->toThrow(InvalidConfigurationException::class);
+    expect(fn () => app(MediaOptions::class))->toThrow(InvalidConfiguration::class);
 });
 
 it('leaves chunked, pending, tombstoned and deleted blobs alone and honours the scope', function (): void {

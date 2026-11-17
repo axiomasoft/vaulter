@@ -6,9 +6,9 @@ namespace Vaulter\Documents\Testing\Contracts;
 
 use Closure;
 use Illuminate\Support\Carbon;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
 use Throwable;
-use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
@@ -20,7 +20,6 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * normalize the adapter's real verifier result, never the expected grant. Adapters
  * additionally assert their own room/options relationship and checkpoint invariants.
  */
-// @phpstan-ignore trait.unused (Public host testing trait; consumed by Pest outside src, like DocumentTypeContractTests.)
 #[Api]
 trait CollaborationProtocolContractTests
 {

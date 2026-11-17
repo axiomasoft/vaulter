@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Sharing;
 
 use Closure;
 use Illuminate\Database\QueryException;
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Drive\Support\ShareToken;
 
@@ -25,7 +25,7 @@ final readonly class ShareTokenMinter
 {
     private const int MAX_ATTEMPTS = 5;
 
-    public function __construct(private SharingConfig $config, private ShareTokenGenerator $tokens, private VaulterDatabase $database) {}
+    public function __construct(private SharingOptions $config, private ShareTokenGenerator $tokens, private VaulterDatabase $database) {}
 
     /**
      * @template T
@@ -35,7 +35,7 @@ final readonly class ShareTokenMinter
      */
     public function mint(Closure $persist): array
     {
-        $prefixLength = $this->config->prefixLength();
+        $prefixLength = $this->config->prefixLength;
 
         for ($attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++) {
             $token = $this->tokens->generate();

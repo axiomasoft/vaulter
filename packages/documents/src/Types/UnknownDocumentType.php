@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
@@ -55,6 +55,6 @@ final readonly class UnknownDocumentType implements DocumentType
 
     public function features(): DocumentFeatures
     {
-        return new DocumentFeatures(editable: false, previewable: false, downloadable: false, thumbnailable: false);
+        return new DocumentFeatures(editable: false, previewable: false, thumbnailable: false, downloadable: false);
     }
 }

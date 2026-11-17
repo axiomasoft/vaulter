@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Changes;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 

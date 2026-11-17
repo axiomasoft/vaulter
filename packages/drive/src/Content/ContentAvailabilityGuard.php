@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
@@ -30,7 +30,7 @@ use Vaulter\Media\Models\Cas\Blob;
 #[Internal]
 final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
-    public function __construct(private DriveConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
+    public function __construct(private DriveOptions $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
 
     /**
      * The slot entry: the snapshots name the selected node and revision, the current rows are read by their ids and

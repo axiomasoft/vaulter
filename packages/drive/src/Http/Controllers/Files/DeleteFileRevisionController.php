@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
 

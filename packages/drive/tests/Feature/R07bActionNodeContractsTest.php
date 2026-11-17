@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\RevisionOptions;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
@@ -92,7 +93,7 @@ it('UploadFile L78: a smaller version is charged in full and refused at capacity
     expect($drive->model()->refresh()->used_bytes)->toBe(8);
 
     $drive->model()->forceFill(['quota_bytes' => 13])->save();
-    expect(fn () => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdef'), 'f.bin')))
+    expect(fn (): FileRevisionSnapshot => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdef'), 'f.bin')))
         ->toThrow(QuotaExceededException::class);
     expect($drive->model()->refresh()->used_bytes)->toBe(8);
 
@@ -109,7 +110,7 @@ it('UploadFile L80/L81: sibling-name conflict is rejected for a new-file upload'
 
     // Second upload with the same resolved name must throw.
     // IfNegated mutant: skips assertNameAvailable for non-version uploads → no throw.
-    expect(fn () => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('b'), 'dup.bin')))
+    expect(fn (): NodeSnapshot => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('b'), 'dup.bin')))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -166,7 +167,7 @@ it('UploadFile L249: a same-size version is refused while the drive is over its 
     // Force storage into over-quota state (used > quota).
     $drive->model()->forceFill(['quota_bytes' => 4, 'used_bytes' => 5])->save();
 
-    expect(fn () => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('world'), 'f.bin')))
+    expect(fn (): FileRevisionSnapshot => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('world'), 'f.bin')))
         ->toThrow(QuotaExceededException::class);
     expect($drive->model()->refresh()->used_bytes)->toBe(5);
 });
@@ -180,7 +181,7 @@ it('UploadFile L249 Increment: a 1-byte over-quota upload is rejected', function
 
     // delta = 1 − 0 = 1 (new file). Must exceed quota: 5+1 > 5 → throw.
     // Increment mutant: $delta <= 1 → skips check → upload silently succeeds.
-    expect(fn () => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'f.bin')))
+    expect(fn (): NodeSnapshot => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'f.bin')))
         ->toThrow(QuotaExceededException::class);
 });
 
@@ -282,7 +283,7 @@ it('CopyNode L70: copying a 1-byte file increments used_bytes by exactly 1', fun
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'tiny.bin'));
     $usedBefore = $drive->model()->refresh()->used_bytes;
 
-    $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'tiny-copy.bin'));
+    $drive->nodes()->copy($source, options: new CopyOptions(name: 'tiny-copy.bin'));
 
     // Increment mutant: addedBytes > 1 → 1 is not > 1 → skip → used_bytes unchanged.
     expect($drive->model()->refresh()->used_bytes)->toBe($usedBefore + 1);
@@ -294,9 +295,9 @@ it('CopyNode: inherit_grants and properties propagate from source to copy', func
     $drive = DriveTestHelpers::drive();
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.bin'));
 
-    $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'copy.bin'));
+    $copy = $drive->nodes()->copy($source, options: new CopyOptions(name: 'copy.bin'));
 
-    expect((bool) $copy->inheritsAccess)->toBeTrue()
+    expect($copy->inheritsAccess)->toBeTrue()
         ->and($copy->properties)->toBe([]);
 });
 
@@ -315,7 +316,7 @@ it('CopyNode rejects a real shortcut before inserting a copy or charging quota',
     ];
     $before = $state();
 
-    expect(fn () => $drive->nodes()->copy($source, options: new CopyOptions(name: 'Shortcut Copy')))
+    expect(fn (): NodeSnapshot => $drive->nodes()->copy($source, options: new CopyOptions(name: 'Shortcut Copy')))
         ->toThrow(UnsupportedNodeKindException::class)
         ->and($state())->toBe($before)
         ->and(DriveTestHelpers::model($source)->shortcut_target_id)->toEqual($target->id);
@@ -326,7 +327,7 @@ it('CopyNode L151: copied file version has status=committed', function (): void 
     $drive = DriveTestHelpers::drive();
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'src.bin'));
 
-    $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'src-copy.bin'));
+    $copy = $drive->nodes()->copy($source, options: new CopyOptions(name: 'src-copy.bin'));
 
     $version = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->first();
     // RemoveArrayItem mutant: 'status' key missing → DB default (likely null or empty).

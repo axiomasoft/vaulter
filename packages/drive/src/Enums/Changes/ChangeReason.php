@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Changes;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Why a node is removed from a reader's view. Only `deleted` is stored;

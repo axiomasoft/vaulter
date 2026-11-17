@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Types\DocumentFeatures;
@@ -54,7 +55,7 @@ it('describes each built-in type by key, viewer and collaboration', function ():
 });
 
 it('restricts markdown to the nodes and marks Markdown can represent', function (array $doc): void {
-    expect(fn () => (new MarkdownDocumentType)->codec()->decode($doc, 1))->toThrow(InvalidDocumentContentException::class);
+    expect(fn (): DocumentContent => (new MarkdownDocumentType)->codec()->decode($doc, 1))->toThrow(InvalidDocumentContentException::class);
     expect((new RichTextDocumentType)->codec()->decode($doc, 1))->toBeInstanceOf(TipTapContent::class);
 })->with([
     'image' => [['type' => 'doc', 'content' => [['type' => 'image', 'attrs' => ['src' => 'https://example.com/a.png']]]]],
@@ -67,7 +68,7 @@ it('keeps the markdown schema closed to host editor extensions', function (): vo
     $doc = ['type' => 'doc', 'content' => [['type' => 'callout']]];
 
     expect((new RichTextDocumentType)->codec()->decode($doc, 1))->toBeInstanceOf(TipTapContent::class);
-    expect(fn () => (new MarkdownDocumentType)->codec()->decode($doc, 1))->toThrow(InvalidDocumentContentException::class);
+    expect(fn (): DocumentContent => (new MarkdownDocumentType)->codec()->decode($doc, 1))->toThrow(InvalidDocumentContentException::class);
 });
 
 it('accepts any JSON object for an opaque type and refuses a list', function (): void {
@@ -75,5 +76,5 @@ it('accepts any JSON object for an opaque type and refuses a list', function ():
 
     expect($codec->decode(['sheets' => ['s1' => []]], 1))->toBeInstanceOf(OpaqueContent::class)
         ->and($codec->decode([], 1)->toArray())->toBe([]);
-    expect(fn () => $codec->decode([1, 2, 3], 1))->toThrow(InvalidDocumentContentException::class);
+    expect(fn (): DocumentContent => $codec->decode([1, 2, 3], 1))->toThrow(InvalidDocumentContentException::class);
 });

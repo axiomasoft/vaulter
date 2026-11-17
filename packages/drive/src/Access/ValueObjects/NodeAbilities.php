@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Node;
@@ -31,6 +31,7 @@ final readonly class NodeAbilities
         public array $flags,
     ) {}
 
+    /** @internal */
     #[Internal]
     public static function for(?Authorizable $actor, Node $node, AccessResolver $resolver): self
     {

@@ -4,45 +4,44 @@ declare(strict_types=1);
 
 use Composer\InstalledVersions;
 use Illuminate\Config\Repository;
-use Vaulter\Drive\Configuration\ChangesConfig;
-use Vaulter\Drive\Configuration\DownloadsConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ListingConfig;
-use Vaulter\Drive\Configuration\ScanConfig;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Drive\Configuration\ChangesOptions;
+use Vaulter\Drive\Configuration\DownloadsOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\ListingOptions;
+use Vaulter\Drive\Configuration\ScanOptions;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Profiles\DefaultProfile;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Models\Cas\Blob;
 
-it('reads drive settings live and uses the canonical byte ceiling', function (): void {
-    $repository = new Repository(['vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php']);
-    $config = new DriveConfig($repository);
+it('reads drive settings cleanly and uses the canonical byte ceiling', function (): void {
+    $raw = require __DIR__.'/../../config/vaulter-drive.php';
+    $options = DriveOptions::fromArray($raw);
 
-    expect($config->maxFileSize())->toBe(5_368_709_120)
-        ->and($config->resumableEnabled())->toBeTrue()
-        ->and($config->model('upload_session'))->toBe(UploadSession::class)
-        ->and($config->model('upload_part'))->toBe(UploadPart::class);
+    expect($options->uploads->maxFileSize)->toBe(5_368_709_120)
+        ->and($options->uploads->resumable->enabled)->toBeTrue()
+        ->and($options->model('upload_session'))->toBe(UploadSession::class)
+        ->and($options->model('upload_part'))->toBe(UploadPart::class);
 
-    $repository->set('vaulter-drive.uploads.max_file_size', 1025);
-    $repository->set('vaulter-drive.uploads.resumable.enabled', false);
+    $raw['uploads']['max_file_size'] = 1025;
+    $raw['uploads']['resumable']['enabled'] = false;
+    $updated = DriveOptions::fromArray($raw);
 
-    expect($config->maxFileSize())->toBe(1025)
-        ->and($config->resumableEnabled())->toBeFalse();
+    expect($updated->uploads->maxFileSize)->toBe(1025)
+        ->and($updated->uploads->resumable->enabled)->toBeFalse();
 });
 
-it('preserves resumable boolean casting for live canonical settings', function (mixed $value, bool $enabled): void {
-    $repository = new Repository;
-    $config = new DriveConfig($repository);
+it('preserves resumable boolean casting for canonical settings', function (mixed $value, bool $enabled): void {
+    expect(DriveOptions::fromArray([])->uploads->resumable->enabled)->toBeTrue();
 
-    expect($config->resumableEnabled())->toBeTrue();
+    $options = DriveOptions::fromArray(['uploads' => ['resumable' => ['enabled' => $value]]]);
 
-    $repository->set('vaulter-drive.uploads.resumable.enabled', $value);
-
-    expect($config->resumableEnabled())->toBe($enabled);
+    expect($options->uploads->resumable->enabled)->toBe($enabled);
 })->with([
     'integer zero' => [0, false],
     'string zero' => ['0', false],
@@ -55,24 +54,23 @@ it('preserves resumable boolean casting for live canonical settings', function (
 ]);
 
 it('preserves bounded resumable defaults and filters metadata keys', function (): void {
-    $config = new DriveConfig(new Repository(['vaulter-drive' => ['uploads' => ['resumable' => [
+    $options = DriveOptions::fromArray(['uploads' => ['resumable' => [
         'chunk_size' => 0, 'max_chunk_size' => -2, 'session_ttl_hours' => 0,
         'max_active_sessions_per_actor' => -1,
         'metadata' => ['allowed_keys' => ['filename', '', false], 'max_value_length' => 0],
-    ]]]]));
+    ]]]);
 
-    expect($config->chunkSize())->toBe(1)
-        ->and($config->maxChunkSize())->toBe(0)
-        ->and($config->sessionTtlHours())->toBe(1)
-        ->and($config->maxActiveSessionsPerActor())->toBe(0)
-        ->and($config->metadataAllowedKeys())->toBe(['filename'])
-        ->and($config->metadataMaxValueLength())->toBe(1);
+    expect($options->uploads->resumable->chunkSize)->toBe(1)
+        ->and($options->uploads->resumable->maxChunkSize)->toBe(0)
+        ->and($options->uploads->resumable->sessionTtlHours)->toBe(1)
+        ->and($options->uploads->resumable->maxActiveSessionsPerActor)->toBe(0)
+        ->and($options->uploads->resumable->metadata->allowedKeys)->toBe(['filename'])
+        ->and($options->uploads->resumable->metadata->maxValueLength)->toBe(1);
 });
 
 it('rejects incompatible drive model overrides', function (): void {
-    $config = new DriveConfig(new Repository(['vaulter-drive' => ['models' => ['upload_session' => stdClass::class]]]));
-
-    expect(fn () => $config->model('upload_session'))->toThrow(InvalidConfigurationException::class);
+    expect(fn (): DriveOptions => DriveOptions::fromArray(['models' => ['upload_session' => stdClass::class]]))
+        ->toThrow(InvalidConfiguration::class);
 });
 
 it('owns the config sections of the drive concepts under vaulter-drive (P4.11)', function (): void {
@@ -91,76 +89,70 @@ it('owns the config sections of the drive concepts under vaulter-drive (P4.11)',
 });
 
 it('reads the handler, profile and feature keys of the drive root', function (): void {
-    $repository = new Repository(['vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php']);
-    $config = new DriveConfig($repository);
+    $raw = require __DIR__.'/../../config/vaulter-drive.php';
+    $options = DriveOptions::fromArray($raw);
 
-    expect($config->profileProviders())->toBe([])
-        ->and($config->defaultProfile())->toBe(DefaultProfile::class)
-        ->and($config->handlers())->toBe([])
-        ->and($config->featureFlag('grants'))->toBeTrue()
-        ->and($config->featureFlag('share_links'))->toBeFalse()
-        ->and($config->featureFlag('unknown'))->toBeFalse()
-        ->and($config->drivesDeleteWithOwner())->toBeFalse();
+    expect($options->profiles->providers)->toBe([])
+        ->and($options->profiles->default)->toBe(DefaultProfile::class)
+        ->and($options->handlers)->toBe([])
+        ->and($options->features->flag('grants'))->toBeTrue()
+        ->and($options->features->flag('share_links'))->toBeFalse()
+        ->and($options->features->flag('unknown'))->toBeFalse()
+        ->and($options->drives->deleteWithOwner)->toBeFalse();
 
-    $repository->set('vaulter-drive.handlers', [PreviewHandler::class, 'Not\\A\\Handler', 7]);
-    $repository->set('vaulter-drive.drives.delete_with_owner', true);
-    $repository->set('vaulter-drive.features.share_links', true);
+    $raw['handlers'] = [PreviewHandler::class, 'Not\\A\\Handler', 7];
+    $raw['drives']['delete_with_owner'] = true;
+    $raw['features']['share_links'] = true;
+    $updated = DriveOptions::fromArray($raw);
 
-    expect($config->handlers())->toBe([PreviewHandler::class])
-        ->and($config->drivesDeleteWithOwner())->toBeTrue()
-        ->and($config->featureFlag('share_links'))->toBeTrue();
+    expect($updated->handlers)->toBe([PreviewHandler::class])
+        ->and($updated->drives->deleteWithOwner)->toBeTrue()
+        ->and($updated->features->flag('share_links'))->toBeTrue();
 });
 
 it('rejects a profile list that is not a list of ProfileProvider classes', function (mixed $providers): void {
-    $repository = new Repository(['vaulter-drive' => ['profiles' => ['providers' => $providers]]]);
-
-    (new DriveConfig($repository))->profileProviders();
+    DriveOptions::fromArray(['profiles' => ['providers' => $providers]]);
 })->with([
     'a map' => [['a' => DefaultProfile::class]],
     'a foreign class' => [[stdClass::class]],
     'a scalar' => ['nope'],
-])->throws(InvalidConfigurationException::class, 'vaulter-drive.profiles.providers');
+])->throws(InvalidConfiguration::class, 'vaulter-drive.profiles.providers');
 
 it('resolves a swappable drive model from vaulter-drive.models and refuses a foreign class', function (): void {
-    $repository = new Repository(['vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php']);
-    $config = new DriveConfig($repository);
+    $raw = require __DIR__.'/../../config/vaulter-drive.php';
     $subclass = new class extends Node {};
 
-    expect($config->model('node'))->toBe(Node::class);
+    expect(DriveOptions::fromArray($raw)->model('node'))->toBe(Node::class);
 
-    $repository->set('vaulter-drive.models.node', $subclass::class);
+    $raw['models']['node'] = $subclass::class;
+    expect(DriveOptions::fromArray($raw)->model('node'))->toBe($subclass::class);
 
-    expect($config->model('node'))->toBe($subclass::class);
-
-    $repository->set('vaulter-drive.models.node', stdClass::class);
-
-    expect(fn () => $config->model('node'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.node');
-    expect(fn () => $config->model('outbox'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.outbox');
+    expect(fn (): DriveOptions => DriveOptions::fromArray(['models' => ['node' => stdClass::class]]))
+        ->toThrow(InvalidConfiguration::class, 'vaulter-drive.models.node');
+    expect(fn (): DriveOptions => DriveOptions::fromArray(['models' => ['outbox' => stdClass::class]]))
+        ->toThrow(InvalidConfiguration::class, 'vaulter-drive.models.outbox');
 });
 
-it('resolves the upload models, the blob model of the media package and the accessors of the drive sections', function (): void {
-    $repository = new Repository([
-        'vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php',
-        'vaulter-media' => require InstalledVersions::getInstallPath('axioma-studio/vaulter-media').'/config/vaulter-media.php',
-    ]);
-    $config = new DriveConfig($repository);
+it('resolves the upload models, the blob model of the media package and the compiled drive sections', function (): void {
+    $raw = require __DIR__.'/../../config/vaulter-drive.php';
+    $media = MediaOptions::fromArray(require InstalledVersions::getInstallPath('axiomasoft/vaulter-media').'/config/vaulter-media.php');
+    $options = DriveOptions::fromArray($raw);
+    $repository = new Repository(['vaulter-drive' => $raw]);
 
-    expect($config->model('upload_session'))->toBe(UploadSession::class)
-        ->and($config->model('upload_part'))->toBe(UploadPart::class)
-        ->and($config->model('blob'))->toBe(Blob::class)
-        ->and($config->featureEnabled('changes'))->toBe($repository->get('vaulter-drive.features.changes') === true)
-        ->and($config->access()->permissionDriver())->toBeString()
-        ->and($config->scan())->toBeInstanceOf(ScanConfig::class)
-        ->and($config->listing())->toBeInstanceOf(ListingConfig::class)
-        ->and($config->sharing())->toBeInstanceOf(SharingConfig::class)
-        ->and($config->downloads())->toBeInstanceOf(DownloadsConfig::class)
-        ->and($config->changes())->toBeInstanceOf(ChangesConfig::class);
+    expect($options->model('upload_session'))->toBe(UploadSession::class)
+        ->and($options->model('upload_part'))->toBe(UploadPart::class)
+        ->and($media->blobModel)->toBe(Blob::class)
+        ->and($options->featureEnabled('changes'))->toBe($repository->get('vaulter-drive.features.changes') === true)
+        ->and($options->access->permissionDriver)->toBeString()
+        ->and($options->scan)->toBeInstanceOf(ScanOptions::class)
+        ->and($options->listing)->toBeInstanceOf(ListingOptions::class)
+        ->and($options->sharing)->toBeInstanceOf(SharingOptions::class)
+        ->and($options->downloads)->toBeInstanceOf(DownloadsOptions::class)
+        ->and($options->changes)->toBeInstanceOf(ChangesOptions::class);
 
-    $repository->set('vaulter-drive.features.changes', false);
+    $raw['features']['changes'] = false;
+    expect(DriveOptions::fromArray($raw)->featureEnabled('changes'))->toBeFalse();
 
-    expect($config->featureEnabled('changes'))->toBeFalse();
-
-    $repository->set('vaulter-drive.features.changes', true);
-
-    expect($config->featureEnabled('changes'))->toBeTrue();
+    $raw['features']['changes'] = true;
+    expect(DriveOptions::fromArray($raw)->featureEnabled('changes'))->toBeTrue();
 });

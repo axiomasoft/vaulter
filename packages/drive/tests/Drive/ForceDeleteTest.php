@@ -61,7 +61,7 @@ it('purge физически удаляет всё поддерево', function
     $drive->trash()->purge($folder);
 
     // Purge physically removes the entire subtree; only the drive root survives.
-    expect(array_map('strval', Node::query()->pluck('id')->all()))->toBe([$drive->root()->id])
+    expect(array_map(strval(...), Node::query()->pluck('id')->all()))->toBe([$drive->root()->id])
         ->and(Node::query()->whereIn('id', [$folder->id, $sub->id, $file->id])->exists())->toBeFalse();
 });
 

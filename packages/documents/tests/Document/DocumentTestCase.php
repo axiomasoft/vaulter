@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Tests\Document;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Vaulter\Documents\Tests\Concerns\PreparesDocumentVersionSchema;
 use Vaulter\Documents\Tests\TestCase;
 
@@ -21,7 +22,7 @@ abstract class DocumentTestCase extends TestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

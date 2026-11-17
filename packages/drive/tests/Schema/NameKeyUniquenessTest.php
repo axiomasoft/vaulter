@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Drive;
@@ -79,7 +79,7 @@ it('lets a node change only the case of its own name', function (): void {
 
 it('backs sibling uniqueness with name_key instead of lower(name)', function (): void {
     $db = app(VaulterDatabase::class)->connection();
-    $nodes = app(DatabaseConfig::class)->table('nodes');
+    $nodes = app(DatabaseOptions::class)->table('nodes');
     $index = collect($db->getSchemaBuilder()->getIndexes($nodes))->firstWhere('name', $nodes.'_sibling_uniq');
 
     expect($index)->not->toBeNull()

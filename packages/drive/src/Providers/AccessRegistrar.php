@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Providers;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\PermissionDriverManager;
-use Vaulter\Drive\Configuration\AccessConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Policies\NodePolicy;
@@ -24,40 +25,30 @@ final class AccessRegistrar implements ModuleBindings
     {
         $app->bind(OperationGuard::class);
 
-        // Drive ACL: the host-role driver manager resolves the
-        // configured PermissionDriver (default 'database'), keyed per driver-key, and
-        // enforces the null-driver fail-loud guard in production. The
-        // AccessResolver (Vaulter-owned, NON-swappable) is auto-wired from it.
         $app->singleton(
             PermissionDriverManager::class,
             fn (): PermissionDriverManager => new PermissionDriverManager(
-                accessConfig: $app->make(AccessConfig::class),
+                accessOptions: $app->make(AccessOptions::class),
                 container: $app,
                 isProduction: $app->environment('production'),
             ),
         );
 
-        // The contract binding resolves the active driver — so a host that injects
-        // PermissionDriver directly (or swaps it in tests) gets the configured lane.
         $app->bind(
             PermissionDriver::class,
             fn (): PermissionDriver => $app->make(PermissionDriverManager::class)->driver(),
         );
-
     }
 
     public function boot(Application $app): void
     {
-        $this->registerPolicies();
-    }
-
-    private function registerPolicies(): void
-    {
-        Gate::policy(app(DriveConfig::class)->model('node'), NodePolicy::class);
+        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter-drive', []) : [];
+        $nodeModel = DriveOptions::fromArray(is_array($raw) ? $raw : [], 'vaulter-drive')->models->node;
+        Gate::policy($nodeModel, NodePolicy::class);
 
         // Cover the base model too, so a host that route-binds the base Node (not a
         // subclass) still hits the policy.
-        if (app(DriveConfig::class)->model('node') !== Node::class) {
+        if ($nodeModel !== Node::class) {
             Gate::policy(Node::class, NodePolicy::class);
         }
     }

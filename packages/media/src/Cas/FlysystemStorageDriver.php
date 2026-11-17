@@ -10,8 +10,9 @@ use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\UnableToRetrieveMetadata;
-use Vaulter\Attributes\Internal;
-use Vaulter\Media\Configuration\MediaConfig;
+use Packman\Attributes\Internal;
+use Throwable;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 
@@ -26,7 +27,7 @@ use Vaulter\Media\Contracts\Cas\StorageDriver;
 final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriver
 {
     public function __construct(
-        private readonly MediaConfig $mediaConfig,
+        private readonly MediaOptions $mediaConfig,
     ) {}
 
     public function disk(?string $disk = null): Filesystem
@@ -95,7 +96,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
 
                 return false;
             }
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             // Reclaim the partial temp; the canonical key was never written.
             $this->deleteQuietly($filesystem, $tempKey);
 
@@ -121,7 +122,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
         // success while the canonical key was never written (review def.1 + def.2).
         try {
             $moved = $filesystem->move($tempKey, $key);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $this->deleteQuietly($filesystem, $tempKey);
 
             throw $exception;

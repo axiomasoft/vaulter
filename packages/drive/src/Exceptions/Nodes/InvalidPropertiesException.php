@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
-use Vaulter\Attributes\Api;
+use InvalidArgumentException;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -46,7 +51,7 @@ final class InvalidPropertiesException extends VaulterException implements Probl
 
     public static function because(string $reason, string $subject = ''): self
     {
-        $why = self::EXPLANATIONS[$reason] ?? throw new \InvalidArgumentException('Unknown properties reason '.$reason.'.');
+        $why = self::EXPLANATIONS[$reason] ?? throw new InvalidArgumentException('Unknown properties reason '.$reason.'.');
         $printable = $subject === '' ? '' : ' '.json_encode($subject, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
         return new self('[Vaulter] Invalid node properties'.$printable.': '.$why.'. '
@@ -70,5 +75,15 @@ final class InvalidPropertiesException extends VaulterException implements Probl
     public function problemDetails(): array
     {
         return ['reason' => $this->reason];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::InvalidProperties,
+            category: ErrorCategory::Validation,
+            details: ['reason' => $this->reason],
+        );
     }
 }

@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Drives;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Resources\AggregatePreconditions;
 use Vaulter\Drive\Http\Resources\DriveResource;

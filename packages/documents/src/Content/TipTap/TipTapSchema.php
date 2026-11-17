@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Api;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 
 /**
  * The nodes, marks and attributes one TipTap-based document type accepts.
@@ -141,7 +141,7 @@ final readonly class TipTapSchema
     public function nodeTypes(): array
     {
         return $this->hostExtensions
-            ? array_values(array_unique([...$this->nodes, ...$this->config()->tiptapExtraNodes()]))
+            ? array_values(array_unique([...$this->nodes, ...$this->config()->tiptap->extraNodes]))
             : $this->nodes;
     }
 
@@ -149,7 +149,7 @@ final readonly class TipTapSchema
     public function markTypes(): array
     {
         return $this->hostExtensions
-            ? array_values(array_unique([...$this->marks, ...$this->config()->tiptapExtraMarks()]))
+            ? array_values(array_unique([...$this->marks, ...$this->config()->tiptap->extraMarks]))
             : $this->marks;
     }
 
@@ -174,7 +174,7 @@ final readonly class TipTapSchema
         $canon = self::ATTRIBUTES[$type] ?? [];
 
         return $this->hostExtensions
-            ? array_values(array_unique([...$canon, ...($this->config()->tiptapExtraAttributes()[$type] ?? [])]))
+            ? array_values(array_unique([...$canon, ...($this->config()->tiptap->extraAttributes[$type] ?? [])]))
             : $canon;
     }
 
@@ -192,7 +192,7 @@ final readonly class TipTapSchema
      */
     public function urlAttributes(string $type): array
     {
-        $declared = $this->hostExtensions ? ($this->config()->tiptapUrlAttributes()[$type] ?? []) : [];
+        $declared = $this->hostExtensions ? ($this->config()->tiptap->urlAttributes[$type] ?? []) : [];
         $inferred = array_intersect($this->attributes($type), self::INFERRED_URL_ATTRIBUTE_NAMES);
 
         return array_values(array_unique([
@@ -202,8 +202,8 @@ final readonly class TipTapSchema
         ]));
     }
 
-    private function config(): DocumentsConfig
+    private function config(): DocumentsOptions
     {
-        return app(DocumentsConfig::class);
+        return app(DocumentsOptions::class);
     }
 }

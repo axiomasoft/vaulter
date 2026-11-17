@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Http\Support;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\HeaderUtils;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DownloadsConfig;
+use Vaulter\Drive\Configuration\DownloadsOptions;
 
 /**
  * The ONE shared response-header builder for a file download, used by BOTH PHP-stream download surfaces — the identity
@@ -96,7 +96,7 @@ final class DownloadHeaders
 
         $normalized = strtolower(trim($declaredMime));
 
-        if (!in_array($normalized, app(DownloadsConfig::class)->inlineMimeTypes(), true)) {
+        if (!in_array($normalized, app(DownloadsOptions::class)->inlineMimeTypes, true)) {
             return 'application/octet-stream';
         }
 

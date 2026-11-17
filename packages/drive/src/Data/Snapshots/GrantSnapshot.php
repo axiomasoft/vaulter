@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Snapshots;
 
 use DateTimeImmutable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\GrantScope;
 

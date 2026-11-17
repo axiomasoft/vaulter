@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;

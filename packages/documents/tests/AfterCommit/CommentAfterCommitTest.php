@@ -64,7 +64,7 @@ it('delivers nothing before the outer commit and exactly one event after it, wit
     $eventIds = array_map(static fn (object $e): string => $e->eventId, $seen->getArrayCopy());
 
     expect(count($seen))->toBe(3)
-        ->and(array_map('get_class', $seen->getArrayCopy()))->toBe([CommentAdded::class, CommentResolved::class, CommentDeleted::class])
+        ->and(array_map(get_class(...), $seen->getArrayCopy()))->toBe([CommentAdded::class, CommentResolved::class, CommentDeleted::class])
         ->and(count(array_unique($eventIds)))->toBe(3)
         // The delivered occurrences are the ones the activity and outbox rows committed.
         ->and(Activity::query()->whereIn('event_id', $eventIds)->count())->toBe(3)

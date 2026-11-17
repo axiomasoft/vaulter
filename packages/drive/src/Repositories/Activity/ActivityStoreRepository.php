@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Activity;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Activity\RecordActivityCommand;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Schema\IdStrategyResolver;
@@ -29,7 +29,7 @@ use Vaulter\Schema\IdStrategyResolver;
 class ActivityStoreRepository
 {
     public function __construct(
-        private readonly DriveConfig $vaulterConfig,
+        private readonly DriveOptions $vaulterConfig,
         private readonly VaulterDatabase $database,
         private readonly IdStrategyResolver $ids,
     ) {}

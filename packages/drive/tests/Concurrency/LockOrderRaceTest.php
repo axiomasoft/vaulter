@@ -103,14 +103,14 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
                 });
 
                 // No outer retry: expose a lock-order cycle rather than hide it.
-                return $db->transaction(static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared bytes'), 'dedup.txt'), new UploadOptions(parent: $uploadParent))->id, 1);
+                return $db->transaction(static fn (): string => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared bytes'), 'dedup.txt'), new UploadOptions(parent: $uploadParent))->id, 1);
             },
             static function () use ($drive, $source, $copyParent, $barrier, $wait): string {
                 $db = app(VaulterDatabase::class)->connection();
                 file_put_contents($barrier.'/copy-pid', (string) $db->selectOne('SELECT pg_backend_pid() AS pid')->pid);
                 $wait(static fn (): bool => is_file($barrier.'/quota-held'));
 
-                return $db->transaction(static fn (): string => (string) $drive->nodes()->copy($source, destination: $copyParent, options: new CopyOptions(name: 'copy.txt'))->id, 1);
+                return $db->transaction(static fn (): string => $drive->nodes()->copy($source, destination: $copyParent, options: new CopyOptions(name: 'copy.txt'))->id, 1);
             },
         ], timeoutMs: 12_000);
         foreach ($outcomes as $outcome) {
@@ -119,7 +119,7 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
         expect($drive->model()->refresh()->used_bytes)->toBe(3 * strlen('shared bytes'))
             ->and((int) File::query()->sum('size_bytes'))->toBe(3 * strlen('shared bytes'));
     } finally {
-        array_map('unlink', glob($barrier.'/*') ?: []);
+        array_map(unlink(...), glob($barrier.'/*') ?: []);
         rmdir($barrier);
     }
 });

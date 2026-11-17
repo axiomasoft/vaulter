@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Actions\Content;
 
 use DateTimeImmutable;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanWorkTransitions;

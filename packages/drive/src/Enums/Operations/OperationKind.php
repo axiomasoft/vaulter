@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Operations;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /** Public operation categories; private scanner authority is a separate service. */
 #[Api]

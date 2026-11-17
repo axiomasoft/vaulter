@@ -65,7 +65,7 @@ it('accepts no mass assignment at all', function (): void {
 it('exposes no general update on the checkpoint store', function (): void {
     $methods = array_map(
         static fn (ReflectionMethod $method): string => $method->getName(),
-        (new ReflectionClass(DocumentRevisionStoreRepository::class))->getMethods(ReflectionMethod::IS_PUBLIC),
+        new ReflectionClass(DocumentRevisionStoreRepository::class)->getMethods(ReflectionMethod::IS_PUBLIC),
     );
 
     expect($methods)->toEqualCanonicalizing(['__construct', 'create', 'setRetention', 'prune']);

@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -28,7 +28,7 @@ use Vaulter\Drive\Repositories\DriveStoreRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -52,10 +52,10 @@ final readonly class DriveProvisioner
         private DriveStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
         private ProfileRegistry $profiles,
         private ProfilePolicy $policy,
-        private DriveConfig $config,
+        private DriveOptions $config,
         private EventRecorder $recorder,
         private ChangeHeadRepository $heads,
         private DriveSnapshotMapper $driveSnapshots,
@@ -105,7 +105,7 @@ final readonly class DriveProvisioner
                 'owner_id' => $owner->getKey(),
                 'name' => $this->defaultName($owner),
                 'disk' => $this->profiles->get($panel)->getDisk() ?? $this->mediaConfig->disk(),
-                'quota_bytes' => $this->profiles->get($panel)->getDefaultQuota() ?? $this->config->defaultQuota(),
+                'quota_bytes' => $this->profiles->get($panel)->getDefaultQuota() ?? $this->config->quota->defaultBytes,
                 'used_bytes' => 0,
             ];
             if (app(TenancyBoundary::class)->enforced()) {
@@ -148,7 +148,7 @@ final readonly class DriveProvisioner
 
         return $this->database->transaction(function () use ($storage): Node {
             $this->database->lockAggregate('drives', $storage->id);
-            $class = app(DriveConfig::class)->model('drive');
+            $class = app(DriveOptions::class)->model('drive');
             $storage = $class::query()->whereKey($storage->getRawOriginal($storage->getKeyName()))->lockForUpdate()->firstOrFail();
             $storage = app(TenancyBoundary::class)->assertDrive($storage);
             $existing = $storage->rootNode()->first();

@@ -6,7 +6,8 @@ namespace Vaulter\Documents\State;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
+use LogicException;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
@@ -48,7 +49,7 @@ final readonly class PendingStateGuard
         return new PendingMarker(
             documentId: Identity::stringify($document->getKey()),
             nodeId: Identity::stringify($document->node_id),
-            binding: new CollaborationStateBinding($document->pending_protocol ?? throw new \LogicException('Incomplete pending binding.'), $document->pending_state_format ?? throw new \LogicException('Incomplete pending binding.'), $document->pending_schema_version ?? 0, $document->pending_generation),
+            binding: new CollaborationStateBinding($document->pending_protocol ?? throw new LogicException('Incomplete pending binding.'), $document->pending_state_format ?? throw new LogicException('Incomplete pending binding.'), $document->pending_schema_version ?? 0, $document->pending_generation),
             throughSeq: $document->pending_through_seq,
         );
     }

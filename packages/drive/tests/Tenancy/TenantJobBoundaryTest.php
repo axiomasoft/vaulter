@@ -45,16 +45,16 @@ it('V08 validates host A B A restores on next exception and fails absent or fore
     $mA = new RestoreTenantContext($a->id, 'A');
     $mB = new RestoreTenantContext($b->id, 'B');
     $resolver->tenant = 'A';
-    expect(fn () => $mA->handle($job, fn () => throw new RuntimeException('work failed')))->toThrow(RuntimeException::class);
+    expect(fn (): mixed => $mA->handle($job, fn (): never => throw new RuntimeException('work failed')))->toThrow(RuntimeException::class);
     expect($resolver->current())->toBe('A')->and($mA->actor())->toBeNull();
     $resolver->tenant = 'B';
     $mB->handle($job, $next);
-    Vaulter::withoutTenancy(fn () => $mA->handle($job, $next));
+    Vaulter::withoutTenancy(fn (): mixed => $mA->handle($job, $next));
     $resolver->tenant = null;
     $mA->handle($job, $next);
     $resolver->tenant = 'A';
     $mA->handle($job, $next);
-    (new RestoreTenantContext($a->id, null))->handle($job, $next);
+    new RestoreTenantContext($a->id, null)->handle($job, $next);
     expect($called)->toBe(2)->and($job->failures)->toHaveCount(3)
         ->and($job->failures[0])->toBeInstanceOf(NodeNotFoundException::class)
         ->and($job->failures[1])->toBeInstanceOf(TenancyMisconfiguredException::class)
@@ -75,7 +75,7 @@ it('V08 a deleted queued actor fails without promotion to system or invoking nex
             $this->failure = $exception;
         }
     };
-    config()->set('auth.guards.web.provider', null);
+    config()->set('auth.guards.web.provider');
     $middleware = new RestoreTenantContext($drive->id, 'A', new ActorRef('deleted-user', 999));
     $called = false;
     $middleware->handle($job, function () use (&$called): void {
@@ -106,6 +106,6 @@ it('V08 rehydrates a user through Auth and evaluates changed permissions at exec
     };
     $middleware->handle(new stdClass, $next);
     $grant->delete();
-    expect(fn () => $middleware->handle(new stdClass, $next))->toThrow(NodeNotFoundException::class);
+    expect(fn (): mixed => $middleware->handle(new stdClass, $next))->toThrow(NodeNotFoundException::class);
     expect($worked)->toBe(1)->and($middleware->actor())->toBeNull();
 });

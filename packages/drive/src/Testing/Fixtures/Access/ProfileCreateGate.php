@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Fixtures\Access;
 
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 

@@ -6,7 +6,8 @@ namespace Vaulter\Drive\Tenancy;
 
 use Closure;
 use Fiber;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use stdClass;
 use Vaulter\Drive\Models\Drive;
 use WeakMap;
 
@@ -22,7 +23,7 @@ final class ShareTenantContext
     public function __construct()
     {
         $this->drives = new WeakMap;
-        $this->main = new \stdClass;
+        $this->main = new stdClass;
     }
 
     public function drive(): ?Drive

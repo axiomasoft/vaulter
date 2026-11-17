@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Testing\Http;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
+use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -77,7 +78,7 @@ final class V1
         $user = auth()->user();
         try {
             if (!$user instanceof Authorizable) {
-                throw new \RuntimeException('ifMatch() needs an authenticated user');
+                throw new RuntimeException('ifMatch() needs an authenticated user');
             }
             $drive = app(Vaulter::class)->drive(app(HttpResourceResolver::class)->driveOfNode((string) $nodeId))->actingAs($user);
 

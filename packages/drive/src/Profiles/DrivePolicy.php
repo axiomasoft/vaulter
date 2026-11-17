@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Profiles;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Drive\Naming\NamePolicy;
 use Vaulter\Drive\Naming\PermissiveNamePolicy;

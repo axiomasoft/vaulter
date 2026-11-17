@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
 use LogicException;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Data\Snapshots\FileHeadSnapshot;
 use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;

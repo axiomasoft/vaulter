@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Vaulter\Drive\Testing\Fixtures\Panels\TeamProfile;
 
 /**
@@ -28,7 +29,7 @@ abstract class PanelTestCase extends TestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

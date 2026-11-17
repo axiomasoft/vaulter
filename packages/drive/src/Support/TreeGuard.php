@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Support;
 
 use Illuminate\Support\Collection;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;

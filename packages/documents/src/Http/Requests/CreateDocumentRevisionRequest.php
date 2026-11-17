@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /** POST documents/{node}/revisions: an optional label and whether retention keeps the revision forever. */

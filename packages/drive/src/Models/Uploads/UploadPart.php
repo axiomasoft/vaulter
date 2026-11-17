@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Models\Uploads;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
@@ -45,20 +46,20 @@ class UploadPart extends Pivot
      * insert/update), never Eloquent mass-assignment, so this is pure
      * defense-in-depth against a future Eloquent-based write.
      *
-     * @var list<string>
+     * @var array<string>|bool
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('upload_parts');
+        return app(DatabaseOptions::class)->table('upload_parts');
     }
 
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

@@ -137,7 +137,7 @@ final class P36StatelessType implements DocumentType, SupportsCollaboration
 
 function p36Rows(): array
 {
-    return array_map(static fn ($table) => DB::table($table)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions']);
+    return array_map(static fn (string $table) => DB::table($table)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions']);
 }
 
 it('propagates the authorized user or authenticated service actor and correlation to every transition effect', function (bool $service): void {
@@ -145,14 +145,14 @@ it('propagates the authorized user or authenticated service actor and correlatio
     $correlation = $service ? 'authenticated-service-transition' : 'authorized-user-transition';
     if ($service) {
         // The host authenticates its converter service before constructing an internal system context.
-        $authenticate = static function (string $signature) use ($node, $correlation) {
+        $authenticate = static function (string $signature) use ($node, $correlation): DriveContext {
             if (!hash_equals(hash_hmac('sha256', 'convert:'.$node->getKey(), 'fixture-service-secret'), $signature)) {
                 throw new RuntimeException('Unauthenticated converter');
             }
 
             return DriveContext::for($node->storage()->firstOrFail(), Actor::system('authenticated converter'), $correlation);
         };
-        expect(fn () => $authenticate('invalid'))->toThrow(RuntimeException::class);
+        expect(fn (): DriveContext => $authenticate('invalid'))->toThrow(RuntimeException::class);
         $context = $authenticate(hash_hmac('sha256', 'convert:'.$node->getKey(), 'fixture-service-secret'));
     } else {
         $context = DriveContext::for($node->storage()->firstOrFail(), Actor::user(AccessTestHelpers::user(42)), $correlation);
@@ -272,7 +272,7 @@ it('preserves Acme stateless null state through checkpoint transition restore an
     $before = p36Rows();
     expect(fn () => $prepare(null))->toThrow(CollaborationUnavailableException::class);
     expect(p36Rows())->toBe($before);
-    $converted = $prepare(static fn (array $content) => OpaqueContent::fromArray($content));
+    $converted = $prepare(static fn (array $content): OpaqueContent => OpaqueContent::fromArray($content));
     app(VaulterDatabase::class)->transaction(function () use ($node, $prepared, $converted): void {
         $state = app(CollaborativeState::class);
         $lock = $state->lock($node->getKey());
@@ -319,7 +319,7 @@ it('returns unpublished without rows or events when a prepared checkpoint loses 
     $registry->freeze();
     app()->instance(DocumentTypeRegistry::class, $registry);
     $node = GrantedDocuments::document(level: null);
-    $publication = app(VaulterDatabase::class)->transaction(function () use ($node) {
+    $publication = app(VaulterDatabase::class)->transaction(function () use ($node): CheckpointPublication {
         $locked = app(CollaborativeState::class)->lock($node->getKey());
 
         return new CheckpointPublication($locked->binding, $locked->stateVersion, 1, 'old-bytes', $locked->content);

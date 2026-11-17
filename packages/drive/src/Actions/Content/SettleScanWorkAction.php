@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\TenancyConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\TenancyOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanSnapshot;
@@ -26,11 +26,11 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 #[Internal]
 final readonly class SettleScanWorkAction
 {
-    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private TenancyOptions $tenancy, private TenancyBoundary $boundary, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function execute(ScanAttempt $attempt, ScanResult $result): bool
     {
-        if ($this->tenancy->enabled()) {
+        if ($this->tenancy->enabled) {
             $this->boundary->assertJobDrive($attempt->driveId, $attempt->tenantId);
         }
 

@@ -6,12 +6,9 @@ namespace Vaulter\Events;
 
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
-use Vaulter\CoreModule;
 use Vaulter\Kernel;
-use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\PluginModuleBridge;
 
 /**
  * Where the event catalogue takes its enums from: the sealed declarations of the active modules, or the
@@ -39,17 +36,11 @@ final readonly class EventSources
      */
     public static function offered(Container $app): array
     {
+        $catalog = ModuleCatalog::of($app);
         $sources = [];
-        foreach (ModuleCatalog::of($app)->offered() as $manifest) {
-            if (is_a($manifest, CoreModule::class, true)) {
-                $module = new CoreModule;
-                $builder = new ModuleBuilder(new ModuleId('core'));
-                $module->declareModule($builder);
-            } elseif (is_a($manifest, VaulterModule::class, true)) {
-                $module = new $manifest;
-                $builder = new ModuleBuilder($module->id());
-                $module->register($builder);
-            } else {
+        foreach ($catalog->offered() as $manifest) {
+            $builder = PluginModuleBridge::buildOffered($manifest, $catalog->pluginSpec($manifest));
+            if ($builder === null) {
                 continue;
             }
             if ($builder->eventSources() !== []) {

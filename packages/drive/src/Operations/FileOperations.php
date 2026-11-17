@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Closure;
+use DateTimeInterface;
 use InvalidArgumentException;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
@@ -225,7 +226,7 @@ final readonly class FileOperations implements Contract
      * The content is staged and inspected before the write, so a repeated attempt never
      * reads the bytes again; only the commit runs as the operation.
      */
-    private function ingestSource(string $verb, UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?\DateTimeInterface $clientModifiedAt = null): IngestReceipt
+    private function ingestSource(string $verb, UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?DateTimeInterface $clientModifiedAt = null): IngestReceipt
     {
         $reader = $source->openForReading();
         $prepared = null;

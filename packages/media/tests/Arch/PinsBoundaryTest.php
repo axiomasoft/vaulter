@@ -54,6 +54,7 @@ it('lets only BlobPinStore write the pins table', function (): void {
     $allowed = [
         'src/Cas/BlobPinStore.php', // the only writer
         'src/Schema/MediaSchema.php', // creates and drops the table
+        'src/MediaModule.php', // schema noun declaration (WithSchema::tableNouns)
     ];
     $users = [];
     foreach (pinsBoundaryFiles('src', 'database') as $path => $contents) {

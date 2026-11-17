@@ -121,7 +121,7 @@ it('evaluates override, role and subjects once per drive in the batch', function
 
         return Identity::stringify($scope->driveId) === Identity::stringify($storageB->id) ? Effect::Deny : null;
     });
-    $driver->shouldReceive('resolve')->andReturnUsing(function () use (&$roles) {
+    $driver->shouldReceive('resolve')->andReturnUsing(function () use (&$roles): Decision {
         $roles++;
 
         return new Decision(role: (new RoleRegistry)->latest(RoleRegistry::READER));
@@ -149,7 +149,7 @@ it('preserves deciding grants and boundaries above the 64th ancestor', function 
     AccessTestHelpers::grant($root, RoleRegistry::READER);
     $parent = $root;
     for ($i = 0; $i < 66; $i++) {
-        $parent = AccessTestHelpers::folder($storage, $parent, 'deep-'.$i, inheritGrants: !($boundary && $i === 0));
+        $parent = AccessTestHelpers::folder($storage, $parent, 'deep-'.$i, inheritGrants: !$boundary || $i !== 0);
     }
     $driver = new RoleStubDriver;
     app()->instance(PermissionDriver::class, $driver);

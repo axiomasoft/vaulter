@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Policies;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Profiles\Profile;
 
@@ -13,16 +13,16 @@ use Vaulter\Drive\Profiles\Profile;
 #[Internal]
 final readonly class UploadPolicy
 {
-    public function __construct(private DriveConfig $config) {}
+    public function __construct(private DriveOptions $config) {}
 
     public function maxFileSize(Profile $profile): int
     {
-        return min($this->config->maxFileSize(), $profile->getDrivePolicy()->maxFileBytes ?? PHP_INT_MAX);
+        return min($this->config->uploads->maxFileSize, $profile->getDrivePolicy()->maxFileBytes ?? PHP_INT_MAX);
     }
 
     public function mimeAllowed(Profile $profile, string $mime): bool
     {
-        return $this->matches($this->config->allowedMimeTypes(), $mime)
+        return $this->matches($this->config->uploads->allowedMimeTypes, $mime)
             && $this->matches($profile->getUploadPolicy()->allowedMimeTypes, $mime);
     }
 
@@ -31,7 +31,7 @@ final readonly class UploadPolicy
     {
         return array_values(array_unique(array_map(
             static fn (string $extension): string => strtolower(ltrim($extension, '.')),
-            [...$this->config->blockedExtensions(), ...$profile->getUploadPolicy()->blockedExtensions],
+            [...$this->config->uploads->blockedExtensions, ...$profile->getUploadPolicy()->blockedExtensions],
         )));
     }
 
@@ -50,13 +50,8 @@ final readonly class UploadPolicy
         if ($patterns === []) {
             return true;
         }
-        foreach ($patterns as $pattern) {
-            if (strtolower($pattern) === strtolower($mime)
-                || (str_ends_with($pattern, '/*') && str_starts_with(strtolower($mime), strtolower(substr($pattern, 0, -1))))) {
-                return true;
-            }
-        }
 
-        return false;
+        return array_any($patterns, fn ($pattern): bool => strtolower($pattern) === strtolower($mime)
+            || (str_ends_with($pattern, '/*') && str_starts_with(strtolower($mime), strtolower(substr($pattern, 0, -1)))));
     }
 }

@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Profiles;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\Container as ContainerContract;
 use LogicException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Drive\Exceptions\Profiles\UnknownProfileException;
 
@@ -84,6 +84,8 @@ final class ProfileRegistry
 
     public function default(): Profile
     {
-        return reset($this->profiles) ?: throw new InvalidProfileException('The default profile is missing.');
+        $first = reset($this->profiles);
+
+        return $first !== false ? $first : throw new InvalidProfileException('The default profile is missing.');
     }
 }

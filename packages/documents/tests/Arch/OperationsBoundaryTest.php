@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use PhpParser\Node;
+use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitorAbstract;
@@ -28,11 +31,11 @@ function documentsBoundaryOffenders(string $source): array
         public function enterNode(Node $node): null
         {
             $names = [];
-            if ($node instanceof Node\Name) {
+            if ($node instanceof Name) {
                 $names[] = $node->toString();
-            } elseif ($node instanceof Node\Scalar\String_) {
+            } elseif ($node instanceof String_) {
                 $names[] = ltrim($node->value, '\\');
-            } elseif ($node instanceof Node\Stmt\GroupUse) {
+            } elseif ($node instanceof GroupUse) {
                 foreach ($node->uses as $use) {
                     $names[] = $node->prefix->toString().'\\'.$use->name->toString();
                 }
@@ -46,8 +49,8 @@ function documentsBoundaryOffenders(string $source): array
             return null;
         }
     };
-    $resolved = (new NodeTraverser(new NameResolver))->traverse($ast ?? []);
-    (new NodeTraverser($collector))->traverse($resolved);
+    $resolved = new NodeTraverser(new NameResolver)->traverse($ast ?? []);
+    new NodeTraverser($collector)->traverse($resolved);
 
     return array_values(array_unique($collector->offenders));
 }

@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Cursor;
-use Vaulter\Attributes\Internal;
+use JsonException;
+use LogicException;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\ValueObjects\GrantSet;
-use Vaulter\Drive\Configuration\ListingConfig;
+use Vaulter\Drive\Configuration\ListingOptions;
 use Vaulter\Drive\Data\NodePage;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Nodes\InvalidCursorException;
@@ -34,7 +36,7 @@ final readonly class ExactListing
     private WeakMap $grants;
 
     public function __construct(
-        private readonly ListingConfig $listingConfig,
+        private ListingOptions $listingConfig,
         private AccessResolver $access, private VaulterDatabase $database, private Encrypter $encrypter,
     ) {
         $this->grants = new WeakMap;
@@ -60,12 +62,12 @@ final readonly class ExactListing
             return new NodePage(items: [], nextCursor: null, scanned: 0);
         }
         if ($candidates->getConnection() !== $this->database->connection()) {
-            throw new \LogicException('Listing candidates must use the Vaulter connection.');
+            throw new LogicException('Listing candidates must use the Vaulter connection.');
         }
         $last = $cursor === null ? null : $this->decode($cursor, $context, $order);
         $visible = [];
         $scanned = 0;
-        $budget = $this->listingConfig->scanBudget();
+        $budget = $this->listingConfig->scanBudget;
         while (count($visible) < $perPage && $scanned < $budget) {
             $query = (clone $candidates)->reorder();
             foreach ($order as $sort) {
@@ -99,7 +101,7 @@ final readonly class ExactListing
             foreach ($batch as $node) {
                 $scanned++;
                 $last = array_map(static fn (array $sort) => $node->getRawOriginal($sort['column']), $order);
-                $set = $operation?->actor->isSystem() ? GrantSet::superAllowed() : $sets[Identity::stringify($node->id)];
+                $set = $operation?->actor->isSystem() === true ? GrantSet::superAllowed() : $sets[Identity::stringify($node->id)];
                 if ($allowed === null ? $set->allows(Ability::View) : isset($allowed[(string) $node->id])) {
                     $visible[] = $node;
                     $this->grants[$node] = $set;
@@ -126,7 +128,7 @@ final readonly class ExactListing
         $json = json_encode(['v' => 1, 'p' => $purpose, 'b' => $this->binding($purpose, $scope), 'k' => $position], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $cursor = $this->encrypter->encrypt($json, false);
         if (strlen($cursor) > self::MAX_CURSOR_BYTES) {
-            throw new \LogicException('Listing cursor exceeds the wire size limit.');
+            throw new LogicException('Listing cursor exceeds the wire size limit.');
         }
 
         return $cursor;
@@ -152,7 +154,7 @@ final readonly class ExactListing
         try {
             $json = $this->encrypter->decrypt($cursor, false);
             $data = is_string($json) ? json_decode($json, true, 8, JSON_THROW_ON_ERROR) : null;
-        } catch (DecryptException|\JsonException) {
+        } catch (DecryptException|JsonException) {
             throw InvalidCursorException::invalid();
         }
         if (!is_array($data) || ($data['v'] ?? null) !== 1 || ($data['p'] ?? null) !== $purpose || !is_string($data['b'] ?? null) || !hash_equals($this->binding($purpose, $scope), $data['b']) || !isset($data['k']) || !is_array($data['k'])) {

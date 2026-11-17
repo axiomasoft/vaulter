@@ -8,9 +8,10 @@ use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Cas\BlobStore;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
@@ -75,10 +76,10 @@ it('rollback не оставляет висящей строки blob', function
         lock: app(BlobLock::class),
         blobs: app(BlobStoreRepository::class),
         database: app(VaulterDatabase::class),
-        mediaConfig: app(MediaConfig::class),
+        mediaConfig: app(MediaOptions::class),
     );
 
-    expect(fn () => $store->commit(stringStream('boom bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')))
+    expect(fn (): BlobSnapshot => $store->commit(stringStream('boom bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')))
         ->toThrow(RuntimeException::class, 'promote boom');
 
     // The transaction rolled back: zero rows, zero objects.

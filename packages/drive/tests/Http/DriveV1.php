@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Tests\Http;
 
 use Illuminate\Testing\TestResponse;
 use Orchestra\Testbench\TestCase;
+use RuntimeException;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Testing\Http\V1;
 
@@ -17,7 +18,7 @@ final class DriveV1
     {
         $etag = $test->getJson(V1::url('nodes/'.$nodeId))->assertOk()->headers->get('ETag');
 
-        return is_string($etag) ? $etag : throw new \RuntimeException('No ETag on nodes.show');
+        return is_string($etag) ? $etag : throw new RuntimeException('No ETag on nodes.show');
     }
 
     /** The caller's tag of a trashed node, as the trash listing shows it. */
@@ -29,7 +30,7 @@ final class DriveV1
             }
         }
 
-        throw new \RuntimeException('Node '.$nodeId.' is not a visible trash root');
+        throw new RuntimeException('Node '.$nodeId.' is not a visible trash root');
     }
 
     public static function tagFor(DriveHandle $drive, string $nodeId): string

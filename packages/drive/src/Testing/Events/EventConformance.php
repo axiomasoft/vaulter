@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Testing\Events;
 
+use Packman\Attributes\Internal;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Events\Outbox\Models\OutboxEvent;

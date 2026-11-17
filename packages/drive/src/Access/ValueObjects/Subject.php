@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * A grant subject — the (type, id) pair a v_node_grants row is addressed to

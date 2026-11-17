@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;

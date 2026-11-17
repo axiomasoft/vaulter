@@ -27,7 +27,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             // Core owns the schema (v_nodes/v_drives/v_files/... + v_upload_*),
-            // the Node/Storage models, Access/Sharing/Activity and Configuration\DriveConfig.
+            // the Node/Storage models, Access/Sharing/Activity and Configuration\DriveOptions.
             VaulterServiceProvider::class,
             // Media binds the concrete CAS engine behind the Contracts\Cas seam —
             // Drive upload/download/versioning commit through it.

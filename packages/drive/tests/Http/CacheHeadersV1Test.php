@@ -27,7 +27,7 @@ beforeEach(function (): void {
 
 function cacheDirectives(TestResponse $response): array
 {
-    return array_map('trim', explode(',', (string) $response->headers->get('Cache-Control')));
+    return array_map(trim(...), explode(',', (string) $response->headers->get('Cache-Control')));
 }
 
 it('revalidates a single node with its tag and never shares it', function (): void {
@@ -48,7 +48,7 @@ it('never stores lists, mutations, secrets, errors or 428', function (): void {
         '428' => $this->patchJson(NodeProbeRoutes::path($node->id), ['name' => 'x'])->assertStatus(428),
     ];
 
-    foreach ($responses as $case => $response) {
+    foreach ($responses as $response) {
         expect(cacheDirectives($response))->toContain('no-store')->not->toContain('public')->not->toContain('max-age=0')
             ->and($response->headers->has('ETag'))->toBeFalse();
     }

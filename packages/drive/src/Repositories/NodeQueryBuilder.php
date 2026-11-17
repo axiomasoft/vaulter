@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Packman\Attributes\Internal;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\Builder;
 use Staudenmeir\LaravelAdjacencyList\Query\Grammars\ExpressionGrammar;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Node;
 
 /**

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Controllers\Revisions;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\UpdateDocumentRevisionRequest;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;

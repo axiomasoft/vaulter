@@ -7,7 +7,8 @@ namespace Vaulter\Drive\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\Drive;
 
 /**
@@ -37,7 +38,7 @@ final class DriveFactory extends VaulterFactory
      * @param  string|null          $relationship
      * @return static
      */
-    #[\Override]
+    #[Override]
     public function for($factory, $relationship = null)
     {
         if ($factory instanceof Model) {
@@ -53,7 +54,7 @@ final class DriveFactory extends VaulterFactory
         return $this->withVaulter(['profile' => $profile]);
     }
 
-    #[\Override]
+    #[Override]
     protected function persist(Model $draft): Model
     {
         $owner = $this->stateObject('owner', Model::class) ?? throw new LogicException('A drive needs its owner: Drive::factory()->for($owner)->create().');

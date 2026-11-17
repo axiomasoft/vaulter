@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Content;
 
-use Vaulter\Attributes\Api;
+use InvalidArgumentException;
+use Packman\Attributes\Api;
 
 #[Api]
 final readonly class ImmutableContentIdentity
@@ -12,7 +13,7 @@ final readonly class ImmutableContentIdentity
     public function __construct(public int|string $blobId, public string $scopeKey, public string $disk, public string $storageKey, public ?string $storageVersion, public string $sha256, public int $size)
     {
         if ($size < 0 || preg_match('/^[a-f0-9]{64}$/D', $sha256) !== 1 || $scopeKey === '' || $storageKey === '') {
-            throw new \InvalidArgumentException('Invalid immutable content identity.');
+            throw new InvalidArgumentException('Invalid immutable content identity.');
         }
     }
 

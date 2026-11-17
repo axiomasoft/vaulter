@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Idempotency;
 
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Idempotency\ReceiptCodec;
 use Vaulter\Idempotency\ResourceRef;
@@ -22,7 +22,7 @@ final class UploadSessionCodec implements ReceiptCodec
 {
     public const string KIND = 'drive.upload-session';
 
-    public function __construct(private readonly DriveConfig $config) {}
+    public function __construct(private readonly DriveOptions $config) {}
 
     public function kind(): string
     {

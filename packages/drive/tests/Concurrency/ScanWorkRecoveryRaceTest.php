@@ -12,7 +12,7 @@ use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
@@ -26,6 +26,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);
@@ -51,7 +52,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
     ]);
     expect($outcomes[0]->ok)->toBeTrue($outcomes[0]->message ?? '')
         ->and($outcomes[1]->ok)->toBeTrue($outcomes[1]->message ?? '')
-        ->and(array_filter(array_map(fn ($o) => $o->value, $outcomes)))->toHaveCount(1);
+        ->and(array_filter(array_map(fn (RaceOutcome $o): mixed => $o->value, $outcomes)))->toHaveCount(1);
     $work->refresh();
     $work->forceFill(['state' => 'retry_wait', 'lease_token' => null, 'lease_expires_at' => null, 'available_at' => now()])->save();
     $old = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
@@ -82,7 +83,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $outcomes = ForkRace::run([function () use ($drive, $context): void {
         app(VaulterDatabase::class)->transaction(function () use ($drive, $context): void {
-            app(VaulterDatabase::class)->afterCommit(fn () => posix_kill(getmypid(), SIGKILL));
+            app(VaulterDatabase::class)->afterCommit(fn (): bool => posix_kill(getmypid(), SIGKILL));
             $stream = UploadTestHelpers::streamFor('killed publisher');
             try {
                 app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'killed.txt', 'text/plain'));
@@ -92,7 +93,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
         });
     }]);
     expect($outcomes[0]->ok)->toBeFalse();
-    $workClass = app(DriveConfig::class)->model('scan_obligation');
+    $workClass = app(DriveOptions::class)->model('scan_obligation');
     $row = $workClass::query()->where('drive_id', $drive->id)->firstOrFail();
     expect($row->state)->toBe('pending')->and($row->attempt)->toBe(0);
     $recovered = ForkRace::run([function () use ($row): bool {
@@ -144,18 +145,16 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
     unlink($ready);
     try {
         $outcomes = ForkRace::run([
-            function () use ($drive, $context, $ready): int {
-                return app(VaulterDatabase::class)->transaction(function () use ($drive, $context, $ready): int {
-                    app(VaulterDatabase::class)->lockAggregateShared('drives', $drive->id);
-                    $stream = UploadTestHelpers::streamFor('before activation');
-                    $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'before.txt', 'text/plain'));
-                    fclose($stream);
-                    file_put_contents($ready, 'admitted');
-                    usleep(150_000);
+            fn (): int => app(VaulterDatabase::class)->transaction(function () use ($drive, $context, $ready): int {
+                app(VaulterDatabase::class)->lockAggregateShared('drives', $drive->id);
+                $stream = UploadTestHelpers::streamFor('before activation');
+                $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'before.txt', 'text/plain'));
+                fclose($stream);
+                file_put_contents($ready, 'admitted');
+                usleep(150_000);
 
-                    return $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scan_admission_sequence;
-                });
-            },
+                return $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scan_admission_sequence;
+            }),
             function () use ($drive, $context, $ready): int {
                 $deadline = microtime(true) + 5;
                 while (!file_exists($ready)) {
@@ -169,7 +168,7 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
                 config()->set('vaulter-drive.scan.scanner_key', 'fixture');
                 config()->set('vaulter-drive.scan.scanner_version', '1');
                 app(ScanPolicyResolver::class)->initialize($drive, $context);
-                $class = app(DriveConfig::class)->model('scan_policy_state');
+                $class = app(DriveOptions::class)->model('scan_policy_state');
 
                 return $class::query()->where('drive_id', $drive->id)->where('predicate_key', 'global')->firstOrFail()->boundary_sequence;
             },

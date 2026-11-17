@@ -35,18 +35,19 @@ use Vaulter\Modules\Activation;
 use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\PluginModuleBridge;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Modules\VaulterModule;
 
 /** What the module kernel does with the documents module's config declaration. */
 function applyDocumentsConfig(Application $app, bool $normalize = true): void
 {
-    $builder = new ModuleBuilder(new ModuleId('documents'));
-    (new DocumentsModule)->register($builder);
+    $module = PluginModuleBridge::buildOffered(DocumentsModule::class, app(ModuleCatalog::class)->pluginSpec(DocumentsModule::class));
     $applier = new ModuleApplier($app);
-    foreach ($builder->configs() as $root => $file) {
+    foreach ($module->configs() as $root => $file) {
         $applier->config($root, $file);
     }
     if ($normalize) {
@@ -158,7 +159,7 @@ it('refuses a graph in which two modules contribute the same document type or ex
         }
     };
 
-    $graph = (new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule, new DocumentsModule, $rival], []);
+    $graph = (new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule, new DocumentsModule, $rival], app(ModuleCatalog::class)->pluginSpecs());
 
     expect($graph)->toBeInstanceOf(InvalidModuleGraph::class)
         ->and($graph->reasons)->toContain(sprintf('slot %s has the key "%s" more than once', $slot, $key));

@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
@@ -43,7 +43,7 @@ final class S3MultipartProtocolController
         private readonly HttpResourceResolver $resolver,
         private readonly HttpOperationContextFactory $contexts,
         private readonly NodeResponses $nodes,
-        private readonly DriveConfig $driveConfig,
+        private readonly DriveOptions $driveConfig,
     ) {}
 
     public function create(CreateUploadSessionRequest $request, DriveHandle $drive, ?int $staleSequence = null): JsonResponse
@@ -54,7 +54,7 @@ final class S3MultipartProtocolController
             totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig), expectedSequence: $staleSequence,
         ));
 
-        return (new UploadSessionResource($session))->response()->setStatusCode(201);
+        return new UploadSessionResource($session)->response()->setStatusCode(201);
     }
 
     /**
@@ -133,7 +133,7 @@ final class S3MultipartProtocolController
      */
     private function assertContentLengthWithinLimit(Request $request): void
     {
-        $max = $this->driveConfig->maxChunkSize();
+        $max = $this->driveConfig->uploads->resumable->maxChunkSize;
         $declared = $request->server('CONTENT_LENGTH');
 
         if ($max <= 0 || !is_numeric($declared) || (int) $declared <= $max) {

@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Actions\Files;
 
 use Closure;
 use LogicException;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Attributes\Internal;
+use Throwable;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
@@ -42,7 +43,7 @@ use Vaulter\Drive\Uploads\Inspection\UploadInspection;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
@@ -82,7 +83,7 @@ final readonly class IngestFileAction
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private TreeGuard $tree,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
         private DrivePolicyEnforcer $policy,
         private UploadInspection $inspection,
         private StagedUpload $staging,
@@ -125,7 +126,7 @@ final readonly class IngestFileAction
             $this->inspection->inspect($prepared->facts, $context);
 
             return $prepared;
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $prepared->discard();
             throw $exception;
         }

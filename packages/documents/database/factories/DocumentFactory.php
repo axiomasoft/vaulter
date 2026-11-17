@@ -6,7 +6,8 @@ namespace Vaulter\Documents\Database\Factories;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -63,7 +64,7 @@ final class DocumentFactory extends VaulterFactory
         return $this->withVaulter(['container' => $container]);
     }
 
-    #[\Override]
+    #[Override]
     protected function persist(Model $draft): Model
     {
         $container = $this->stateObject('container', Model::class) ?? throw new LogicException('A document needs a place: Document::factory()->in($drive|$folder)->create().');

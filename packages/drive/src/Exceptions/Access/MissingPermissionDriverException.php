@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Access;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -36,6 +40,15 @@ final class MissingPermissionDriverException extends VaulterException
             .'Fix: register it under config(vaulter-drive.access.permission_drivers) with an FQCN implementing '
             .'\Vaulter\Drive\Contracts\Access\PermissionDriver, or pick a known key in config(vaulter-drive.access.permission_driver). '
             .'Docs: '.self::docs('missing-host-role-driver'),
+        );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::MissingPermissionDriver,
+            category: ErrorCategory::Internal,
         );
     }
 }

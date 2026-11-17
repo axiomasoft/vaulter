@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Idempotency;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Idempotency\ReceiptCodec;

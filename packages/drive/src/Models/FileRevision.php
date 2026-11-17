@@ -11,14 +11,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Database\Factories\FileRevisionFactory;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanUtcDateTime;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -87,10 +89,10 @@ class FileRevision extends Model
         return FileRevisionFactory::new();
     }
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('file_revisions');
+        return app(DatabaseOptions::class)->table('file_revisions');
     }
 
     /**
@@ -98,7 +100,7 @@ class FileRevision extends Model
      */
     public function file(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('file'), 'file_id');
+        return $this->belongsTo(app(DriveOptions::class)->model('file'), 'file_id');
     }
 
     /**
@@ -108,7 +110,7 @@ class FileRevision extends Model
      */
     public function blob(): BelongsTo
     {
-        return $this->belongsTo(app(DriveConfig::class)->model('blob'), 'blob_id');
+        return $this->belongsTo(app(MediaOptions::class)->blobModel, 'blob_id');
     }
 
     /**
@@ -119,31 +121,31 @@ class FileRevision extends Model
     public function blobs(): BelongsToMany
     {
         return $this->belongsToMany(
-            related: app(DriveConfig::class)->model('blob'),
-            table: app(DatabaseConfig::class)->table('file_revision_blobs'),
+            related: app(MediaOptions::class)->blobModel,
+            table: app(DatabaseOptions::class)->table('file_revision_blobs'),
             foreignPivotKey: 'file_revision_id',
             relatedPivotKey: 'blob_id',
         )
-            ->using(app(DriveConfig::class)->model('file_revision_blob'))
+            ->using(app(DriveOptions::class)->model('file_revision_blob'))
             ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);
     }
 
     /** @return HasMany<ScanEvidenceRecord, $this> */
     public function scanEvidence(): HasMany
     {
-        return $this->hasMany(app(DriveConfig::class)->model('scan_evidence'), 'revision_id');
+        return $this->hasMany(app(DriveOptions::class)->model('scan_evidence'), 'revision_id');
     }
 
     /** @return HasMany<ScanObligation, $this> */
     public function scanObligations(): HasMany
     {
-        return $this->hasMany(app(DriveConfig::class)->model('scan_obligation'), 'revision_id');
+        return $this->hasMany(app(DriveOptions::class)->model('scan_obligation'), 'revision_id');
     }
 
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

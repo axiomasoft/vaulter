@@ -13,6 +13,7 @@ use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Kernel;
 use Vaulter\Media\MediaModule;
 use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\SlotContribution;
 
@@ -59,7 +60,7 @@ function contributorInputHoldsModel(mixed $value): bool
 
 beforeEach(function (): void {
     RecordingSnapshotContributor::$pages = [];
-    $compiled = (new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule], []);
+    $compiled = (new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule], [], app(ModuleCatalog::class)->pluginSpecs());
     expect($compiled)->toBeInstanceOf(CompiledModules::class);
     $arguments = get_object_vars($compiled);
     $arguments['contributions'][NodeSnapshotContributor::class][] = new SlotContribution(NodeSnapshotContributor::class, 'test.recording', 'drive', RecordingSnapshotContributor::class, 0, 'document');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use DateTimeImmutable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 #[Internal]
 final readonly class ScanAttempt

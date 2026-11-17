@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Http\Requests\Nodes\CopyNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;

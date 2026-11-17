@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Repositories\Uploads;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -23,7 +23,7 @@ use Vaulter\Support\Identity;
 final class UploadSessionReadRepository
 {
     public function __construct(
-        private readonly DriveConfig $driveConfig,
+        private readonly DriveOptions $driveConfig,
     ) {}
 
     public function find(int|string $id): ?UploadSession

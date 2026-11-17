@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
 use Vaulter\Support\Identity;

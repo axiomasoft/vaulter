@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Page;
 use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Nodes\InvalidPropertiesException;
@@ -46,17 +48,17 @@ it('lists the newest star first, pages by cursor and hides trashed nodes', funct
     $drive->nodes()->trash($second);
 
     $page = $alice->nodes()->starred(new ListOptions(perPage: 1));
-    $next = $alice->nodes()->starred((new ListOptions(perPage: 1))->cursor($page->nextCursor));
+    $next = $alice->nodes()->starred(new ListOptions(perPage: 1)->cursor($page->nextCursor));
 
     expect($page->items[0]->id)->toBe($third->id)
         ->and($next->items[0]->id)->toBe($first->id)
-        ->and(fn () => $alice->nodes()->starred(ListOptions::make()->descending(true)))->toThrow(InvalidArgumentException::class);
+        ->and(fn (): Page => $alice->nodes()->starred(ListOptions::make()->descending(true)))->toThrow(InvalidArgumentException::class);
 });
 
 it('refuses a star from the system actor, which has no person behind it', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    expect(fn () => $drive->nodes()->star($drive->folders()->create('x')))->toThrow(InvalidArgumentException::class)
+    expect(fn (): NodeSnapshot => $drive->nodes()->star($drive->folders()->create('x')))->toThrow(InvalidArgumentException::class)
         ->and($drive->nodes()->starred()->items)->toBe([]);
 });
 
@@ -74,7 +76,7 @@ it('patches one properties namespace atomically and bumps the sequence only on a
 
     $user->nodes()->setProperties($file, 'acme.crm', [], ['deal', 'stage'], expectedSequence: 1);
     expect($user->nodes()->properties($file))->toBe([])
-        ->and(fn () => $user->nodes()->setProperties($file, 'acme', ['k' => 'v'], [], expectedSequence: 1))->toThrow(StaleNodeException::class);
+        ->and(fn (): NodeSnapshot => $user->nodes()->setProperties($file, 'acme', ['k' => 'v'], [], expectedSequence: 1))->toThrow(StaleNodeException::class);
 });
 
 it('reserves the vaulter namespaces for the system', function (): void {
@@ -82,7 +84,7 @@ it('reserves the vaulter namespaces for the system', function (): void {
     $user = $drive->actingAs(DriveTestHelpers::actor($drive, 7));
     $folder = $drive->folders()->create('x');
 
-    expect(fn () => $user->nodes()->setProperties($folder, 'vaulter.sync', ['k' => 'v']))->toThrow(InvalidPropertiesException::class)
+    expect(fn (): NodeSnapshot => $user->nodes()->setProperties($folder, 'vaulter.sync', ['k' => 'v']))->toThrow(InvalidPropertiesException::class)
         ->and($drive->nodes()->setProperties($folder, 'vaulter.sync', ['k' => 'v'])->properties)->toBe(['vaulter.sync' => ['k' => 'v']]);
 });
 

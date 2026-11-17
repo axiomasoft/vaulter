@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Http\Requests\Sharing\UpdateShareLinkRequest;
 use Vaulter\Drive\Http\Resources\AggregatePreconditions;
 use Vaulter\Drive\Http\Resources\Sharing\ShareResource;

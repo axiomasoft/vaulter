@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Access;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * How access()->restrictInheritance() closes a node to grants from above.

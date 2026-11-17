@@ -10,7 +10,7 @@ use Illuminate\Database\DatabaseTransactionRecord;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
@@ -276,7 +276,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         }
 
         return array_values(array_filter(array_map(
-            static fn (Document $document): ?PendingMarker => PendingStateGuard::markerOf($document),
+            PendingStateGuard::markerOf(...),
             $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq', 'pending_protocol', 'pending_state_format', 'pending_schema_version'])->all(),
         )));
     }

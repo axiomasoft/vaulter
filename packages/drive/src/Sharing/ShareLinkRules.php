@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;

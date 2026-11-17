@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Jobs;
 
 use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,11 +13,11 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\RevisionPinnedException;
@@ -61,13 +62,13 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
         return 'vaulter-revisions-prune:'.Identity::stringify($this->driveId);
     }
 
-    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): void
+    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseOptions $tables, DriveOptions $config): void
     {
         $database->write(fn (): array => $this->run($delete, $profiles, $database, $tables, $config));
     }
 
     /** @return array{candidates: int, deleted: int, skipped: int, freed_bytes: int} */
-    public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): array
+    public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseOptions $tables, DriveOptions $config): array
     {
         return Tenancy::without(function () use ($delete, $profiles, $database, $tables, $config): array {
             $report = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];
@@ -141,7 +142,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
      * @param  list<array{id: int|string, node_id: int|string, head: int|string|null}> $files
      * @return list<array{id: int|string, node_id: int|string, size_bytes: int}>
      */
-    private function candidates(VaulterDatabase $database, DatabaseConfig $tables, array $files, RevisionRetentionPolicy $policy, CarbonImmutable $now): array
+    private function candidates(VaulterDatabase $database, DatabaseOptions $tables, array $files, RevisionRetentionPolicy $policy, CarbonImmutable $now): array
     {
         $heads = [];
         $nodes = [];
@@ -169,7 +170,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
 
             // The newest unpinned non-current revisions come first; pinned ones do not count.
             $position = $rank[$fileId] = ($rank[$fileId] ?? -1) + 1;
-            if (!is_string($row->superseded_at) && !$row->superseded_at instanceof \DateTimeInterface) {
+            if (!is_string($row->superseded_at) && !$row->superseded_at instanceof DateTimeInterface) {
                 continue;
             }
 

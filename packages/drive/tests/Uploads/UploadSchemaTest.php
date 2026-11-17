@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
@@ -19,7 +19,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
  * (status, expires_at) sweeper index is present.
  */
 it('creates v_upload_sessions with every §2.8 column', function (): void {
-    $table = app(DatabaseConfig::class)->table('upload_sessions');
+    $table = app(DatabaseOptions::class)->table('upload_sessions');
 
     expect(Schema::hasColumns($table, [
         'id', 'tenant_id', 'drive_id', 'upload_id', 'target_node_id', 'result_node_id', 'result_revision_id', 'target_parent_id',
@@ -30,7 +30,7 @@ it('creates v_upload_sessions with every §2.8 column', function (): void {
 });
 
 it('creates v_upload_parts with every §2.8 column', function (): void {
-    $table = app(DatabaseConfig::class)->table('upload_parts');
+    $table = app(DatabaseOptions::class)->table('upload_parts');
 
     expect(Schema::hasColumns($table, [
         'upload_session_id', 'part_no', 'byte_offset', 'size_bytes', 'part_sha256',
@@ -40,7 +40,7 @@ it('creates v_upload_parts with every §2.8 column', function (): void {
 
 it('rejects a duplicate upload_id (UNIQUE)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $model = app(DriveConfig::class)->model('upload_session');
+    $model = app(DriveOptions::class)->model('upload_session');
 
     $base = [
         'drive_id' => $storage->getKey(),
@@ -74,7 +74,7 @@ it('a part re-upload REPLACES on the (session, part_no) composite primary key', 
     $repo->record(session: $session, partNo: 1, byteOffset: 0, sizeBytes: 10, etag: '"first"');
     $repo->record(session: $session, partNo: 1, byteOffset: 0, sizeBytes: 20, etag: '"second"');
 
-    $rows = app(DriveConfig::class)->model('upload_part')::query()->where('upload_session_id', $session->getKey())->get();
+    $rows = app(DriveOptions::class)->model('upload_part')::query()->where('upload_session_id', $session->getKey())->get();
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->size_bytes)->toBe(20)
@@ -87,7 +87,7 @@ it('casts the session enums and json columns', function (): void {
 
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['metadata' => ['filename' => 'report.pdf']])->save());
 
-    $fresh = app(DriveConfig::class)->model('upload_session')::query()->find($session->getKey());
+    $fresh = app(DriveOptions::class)->model('upload_session')::query()->find($session->getKey());
 
     expect($fresh->protocol)->toBe(UploadProtocol::S3Multipart)
         ->and($fresh->status)->toBeInstanceOf(UploadStatus::class)
@@ -98,7 +98,7 @@ it('declares the upload_session_id foreign key on v_upload_parts', function (): 
     // The cascadeOnDelete is enforced on Postgres/MySQL (the golden-migration suite
     // runs there); on the sqlite base suite we assert the FK is DECLARED on the table
     // so the structural guarantee is pinned without depending on PRAGMA enforcement.
-    $foreignKeys = Schema::getForeignKeys(app(DatabaseConfig::class)->table('upload_parts'));
+    $foreignKeys = Schema::getForeignKeys(app(DatabaseOptions::class)->table('upload_parts'));
 
     $columns = collect($foreignKeys)
         ->flatMap(static fn (array $fk): array => $fk['columns'])

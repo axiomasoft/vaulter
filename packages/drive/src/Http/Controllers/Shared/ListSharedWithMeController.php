@@ -6,10 +6,11 @@ namespace Vaulter\Drive\Http\Controllers\Shared;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;
@@ -34,7 +35,7 @@ final readonly class ListSharedWithMeController
         private HttpOperationContextFactory $contexts,
         private SharedWithActorQuery $shared,
         private NodeSnapshotMapper $mapper,
-        private DriveConfig $config,
+        private DriveOptions $config,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -46,6 +47,7 @@ final readonly class ListSharedWithMeController
         $user = $this->contexts->user($request);
         $page = $this->mapper->page($this->shared->execute(actor: $user, options: $options), Actor::user($user)->ref());
 
+        /** @var array<int|string, list<NodeSnapshot>> $byDrive */
         $byDrive = [];
         foreach ($page->items as $node) {
             $byDrive[$node->driveId][] = $node;

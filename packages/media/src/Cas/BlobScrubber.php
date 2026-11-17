@@ -7,12 +7,12 @@ namespace Vaulter\Media\Cas;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Packman\Attributes\Internal;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
@@ -45,7 +45,7 @@ final readonly class BlobScrubber
         private BlobStoreRepository $blobs,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private MediaConfig $mediaConfig,
+        private MediaOptions $mediaConfig,
     ) {}
 
     /**

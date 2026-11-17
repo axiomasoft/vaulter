@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Export;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
@@ -69,7 +69,7 @@ final readonly class ExportDocumentAction
                 }
                 $revision = $data->revision;
                 $source = $revision ?? $document;
-                $typeKey = $revision === null ? $document->type : $revision->type;
+                $typeKey = $revision->type ?? $document->type;
                 $type = $this->decoder->writable($typeKey);
                 $exporter = $this->exporters->for($type->key(), $data->format);
                 $read = $this->decoder->read($typeKey, $source->content, $source->schema_version);
@@ -82,7 +82,7 @@ final readonly class ExportDocumentAction
                     format: $exporter->format(),
                     // Checkpoints carry no epoch of their own: this is the document's epoch at export time (see DocumentExport).
                     sourceEpoch: $document->collab_epoch,
-                    sourceStateVersion: $revision === null ? $document->state_version : $revision->state_version,
+                    sourceStateVersion: $revision->state_version ?? $document->state_version,
                     sourceRevisionId: $revision === null ? null : Identity::stringify($revision->getKey()),
                     lossy: !$read->lossless,
                 );

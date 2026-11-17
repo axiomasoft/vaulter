@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Files;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -32,5 +36,15 @@ final class UploadRejectedException extends VaulterException implements ProblemE
     public function problemDetails(): array
     {
         return ['reason' => $this->reason];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::UploadRejected,
+            category: ErrorCategory::Validation,
+            details: ['reason' => $this->reason],
+        );
     }
 }

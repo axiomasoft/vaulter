@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Registry;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -29,5 +33,14 @@ final class DuplicateNodeContentLifecycleException extends VaulterException impl
     public function httpStatus(): int
     {
         return 500;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::DuplicateRegistration,
+            category: ErrorCategory::Internal,
+        );
     }
 }

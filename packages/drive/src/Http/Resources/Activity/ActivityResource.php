@@ -6,8 +6,9 @@ namespace Vaulter\Drive\Http\Resources\Activity;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Override;
+use Packman\Attributes\Internal;
 use stdClass;
-use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
 
@@ -30,7 +31,7 @@ final class ActivityResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         /** @var ActivityEntrySnapshot $activity */

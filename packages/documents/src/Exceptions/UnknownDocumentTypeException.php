@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Documents\Errors\DocumentsErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -42,5 +46,14 @@ final class UnknownDocumentTypeException extends VaulterException implements Pro
     public function httpStatus(): int
     {
         return self::HTTP_STATUS;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DocumentsErrorCode::UnknownDocumentType,
+            category: ErrorCategory::Validation,
+        );
     }
 }

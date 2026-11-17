@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Changes;
 
 use JsonException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
 
 /**
@@ -66,9 +66,9 @@ final readonly class ChangeCursor
             throw InvalidCursorException::malformed();
         }
         if (!is_array($data) || ($data['v'] ?? null) !== self::VERSION
-            || !array_key_exists('t', $data) || !(is_string($data['t']) || $data['t'] === null) || $data['t'] === ''
+            || !array_key_exists('t', $data) || !is_string($data['t']) && $data['t'] !== null || $data['t'] === ''
             || !is_string($data['d'] ?? null) || $data['d'] === ''
-            || !array_key_exists('pt', $data) || !(is_string($data['pt']) || $data['pt'] === null) || $data['pt'] === ''
+            || !array_key_exists('pt', $data) || !is_string($data['pt']) && $data['pt'] !== null || $data['pt'] === ''
             || !is_string($data['pi'] ?? null) || !is_string($data['pr'] ?? null)
             || !is_int($data['g'] ?? null) || $data['g'] < 1
             || !is_int($data['e'] ?? null) || $data['e'] < 1

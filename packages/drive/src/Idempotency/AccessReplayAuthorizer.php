@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Idempotency;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
 use Vaulter\Drive\Data\Snapshots\MintedShareLink;

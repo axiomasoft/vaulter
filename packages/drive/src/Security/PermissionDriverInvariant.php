@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Security;
 
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Kernel;
@@ -17,7 +17,7 @@ use Vaulter\Kernel;
 #[Internal]
 final readonly class PermissionDriverInvariant implements ProductionInvariant
 {
-    public function __construct(private DriveConfig $config, private Application $app) {}
+    public function __construct(private DriveOptions $options, private Application $app) {}
 
     public function id(): string
     {
@@ -26,12 +26,12 @@ final readonly class PermissionDriverInvariant implements ProductionInvariant
 
     public function violation(): ?string
     {
-        $access = $this->config->access();
-        $drivers = (new PermissionDriverCatalog($access, $this->app->make(Kernel::class)))->classes();
-        $keys = [$access->permissionDriver() => true];
+        $access = $this->options->access;
+        $drivers = new PermissionDriverCatalog($access, $this->app->make(Kernel::class))->classes();
+        $keys = [$access->permissionDriver => true];
         if ($this->app->resolved(ProfileRegistry::class)) {
             foreach ($this->app->make(ProfileRegistry::class)->all() as $profile) {
-                $keys[$profile->getPermissionDriver() ?? $access->permissionDriver()] = true;
+                $keys[$profile->getPermissionDriver() ?? $access->permissionDriver] = true;
             }
         }
         ksort($keys);

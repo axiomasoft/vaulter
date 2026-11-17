@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * @template TItem of object

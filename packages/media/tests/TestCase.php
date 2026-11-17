@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests;
 
 use Illuminate\Foundation\Application;
-
-use function Orchestra\Testbench\load_migration_paths;
-
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
 use Vaulter\Testing\Concerns\UsesSuiteDatabase;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
+
+use function Orchestra\Testbench\load_migration_paths;
 
 abstract class TestCase extends OrchestraTestCase
 {

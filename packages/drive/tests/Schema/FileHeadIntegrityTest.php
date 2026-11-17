@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Drive;
@@ -39,7 +39,7 @@ function headFixture(string $name): array
 
 it('gives file revisions their provenance column and the head FK target', function (): void {
     $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-    $revisions = app(DatabaseConfig::class)->table('file_revisions');
+    $revisions = app(DatabaseOptions::class)->table('file_revisions');
     $indexes = array_column($schema->getIndexes($revisions), null, 'name');
     // SQLite reports foreign keys without names, so match the provenance FK by column.
     $provenance = array_values(array_filter($schema->getForeignKeys($revisions), static fn (array $key): bool => $key['columns'] === ['restored_from_revision_id']));
@@ -54,7 +54,7 @@ it('gives file revisions their provenance column and the head FK target', functi
 
 it('enforces the file head FK where the driver supports it', function (): void {
     $db = app(VaulterDatabase::class)->connection();
-    $files = app(DatabaseConfig::class)->table('files');
+    $files = app(DatabaseOptions::class)->table('files');
     $keys = array_column($db->getSchemaBuilder()->getForeignKeys($files), null, 'name');
 
     if ($db->getDriverName() === 'sqlite') {

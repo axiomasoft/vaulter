@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Drive\Errors\DriveErrorCode;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -17,6 +21,7 @@ final class RestoreDestinationRequiredException extends VaulterException impleme
 {
     use ProvidesProblemDetails;
 
+    /** @internal */
     #[Internal]
     public static function forNode(Node $node): self
     {
@@ -36,5 +41,14 @@ final class RestoreDestinationRequiredException extends VaulterException impleme
     public function httpStatus(): int
     {
         return 409;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(
+            code: DriveErrorCode::RestoreDestinationRequired,
+            category: ErrorCategory::Conflict,
+        );
     }
 }

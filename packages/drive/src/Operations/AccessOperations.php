@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Operations;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\ExactListing;
@@ -17,7 +17,7 @@ use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Drive\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Drive\Actions\Access\SetNodeInheritanceAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\AccessOperations as Contract;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
@@ -45,7 +45,7 @@ use Vaulter\Operations\OperationSpec;
 final readonly class AccessOperations implements Contract
 {
     #[Internal]
-    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private DriveConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner, private ExactListing $cursors) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private DriveOptions $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner, private ExactListing $cursors) {}
 
     /** @return list<GrantSnapshot> */
     public function grants(NodeSnapshot|string|int $node): array
@@ -172,7 +172,7 @@ final readonly class AccessOperations implements Contract
         $page = $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage, cursor: $position);
 
         return new Page(
-            items: array_values(array_map(fn (NodeGrant $grant): GrantSnapshot => $this->grantMapper->grant($grant), $page->items())),
+            items: array_values(array_map($this->grantMapper->grant(...), $page->items())),
             nextCursor: $this->cursors->sealCursor($page->nextCursor(), 'grants-list', $scope),
         );
     }

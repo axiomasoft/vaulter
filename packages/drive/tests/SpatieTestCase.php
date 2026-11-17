@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Spatie\Permission\PermissionServiceProvider;
 
 /**
@@ -23,7 +24,7 @@ class SpatieTestCase extends TestCase
      * @param  Application              $app
      * @return array<int, class-string>
      */
-    #[\Override]
+    #[Override]
     protected function getPackageProviders($app): array
     {
         return [
@@ -35,7 +36,7 @@ class SpatieTestCase extends TestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);
@@ -61,7 +62,7 @@ class SpatieTestCase extends TestCase
         $app['config']->set('permission.cache.store', 'array');
     }
 
-    #[\Override]
+    #[Override]
     protected function defineDatabaseMigrations(): void
     {
         parent::defineDatabaseMigrations();

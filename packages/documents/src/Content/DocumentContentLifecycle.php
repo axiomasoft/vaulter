@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\State\PendingStateGuard;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -35,8 +35,8 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
     public function __construct(
         private DocumentStoreRepository $documents,
         private DocumentStateWriter $writer,
-        private DocumentsConfig $documentsConfig,
-        private DriveConfig $drives,
+        private DocumentsOptions $documentsConfig,
+        private DriveOptions $drives,
         private PendingStateGuard $pending,
     ) {}
 
@@ -75,13 +75,13 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Copy,
             content: is_array($original->content) ? OpaqueContent::fromArray($original->content) : null,
-            collabState: $original->collab_state,
             schemaVersion: $original->schema_version,
+            collabState: $original->collab_state,
+            actorId: $actorId,
+            forceCheckpoint: true,
             documentType: $original->type,
             protocol: $original->collab_protocol,
             stateFormat: $original->collab_state_format,
-            actorId: $actorId,
-            forceCheckpoint: true,
         ));
 
         // Inline content is not part of the drive quota.

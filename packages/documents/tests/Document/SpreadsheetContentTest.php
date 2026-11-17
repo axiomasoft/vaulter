@@ -8,7 +8,7 @@ use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\Types\SpreadsheetDocumentType;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -64,7 +64,7 @@ it('creates a spreadsheet document from its type key', function (): void {
     $nodeId = $created->json('data.id');
 
     // A document is presented by its type, so its node carries the document mime.
-    $node = app(DriveConfig::class)->model('node')::query()->findOrFail($nodeId);
+    $node = app(DriveOptions::class)->model('node')::query()->findOrFail($nodeId);
     expect($node->mime_type)->toBe(CreateDocumentInput::NODE_MIME);
 
     // Its v1 head content round-trips the workbook verbatim (the opaque path, not TipTap).

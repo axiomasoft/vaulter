@@ -63,7 +63,7 @@ it('ships the D43 defaults', function (): void {
 });
 
 it('builds a profile drive policy fluently and freezes it with the profile', function (): void {
-    $profile = (new Profile)->key('p')->drivePolicy(fn (DrivePolicyBuilder $p) => $p
+    $profile = (new Profile)->key('p')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p
         ->namePolicy(PermissiveNamePolicy::KEY)->maxFolderDepth(5)->maxFolderChildren(3)
         ->maxFileBytes(1024)->maxPropertiesBytes(200)->maxPropertyCount(2)->maxShareLinkTtlDays(7));
     $registry = drivePolicyRegistry($profile);
@@ -72,30 +72,30 @@ it('builds a profile drive policy fluently and freezes it with the profile', fun
     expect($policy->names())->toBeInstanceOf(PermissiveNamePolicy::class)
         ->and([$policy->maxFolderDepth, $policy->maxFolderChildren, $policy->maxFileBytes, $policy->maxPropertiesBytes, $policy->maxPropertyCount, $policy->maxShareLinkTtlDays])
         ->toBe([5, 3, 1024, 200, 2, 7])
-        ->and(fn () => $registry->get('p')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFolderDepth(1)))->toThrow(LogicException::class);
+        ->and(fn (): Profile => $registry->get('p')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFolderDepth(1)))->toThrow(LogicException::class);
 });
 
 it('carries a legacy profile upload size into maxFileBytes unless the drive policy sets one', function (): void {
     $legacy = (new Profile)->key('a')->uploads(new UploadPolicy(maxFileSize: 500));
-    $explicit = (new Profile)->key('b')->uploads(new UploadPolicy(maxFileSize: 500))->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFileBytes(100));
+    $explicit = (new Profile)->key('b')->uploads(new UploadPolicy(maxFileSize: 500))->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFileBytes(100));
 
     expect($legacy->getDrivePolicy()->maxFileBytes)->toBe(500)
         ->and($explicit->getDrivePolicy()->maxFileBytes)->toBe(100);
 });
 
 it('rejects an invalid drive policy', function (callable $build): void {
-    expect(fn () => (new Profile)->key('p')->drivePolicy($build))->toThrow(InvalidProfileException::class);
+    expect(fn (): Profile => (new Profile)->key('p')->drivePolicy($build))->toThrow(InvalidProfileException::class);
 })->with([
-    'unknown name policy' => [fn (DrivePolicyBuilder $p) => $p->namePolicy('windows-v9')],
-    'zero depth' => [fn (DrivePolicyBuilder $p) => $p->maxFolderDepth(0)],
-    'zero children' => [fn (DrivePolicyBuilder $p) => $p->maxFolderChildren(0)],
-    'negative file size' => [fn (DrivePolicyBuilder $p) => $p->maxFileBytes(-1)],
-    'zero property count' => [fn (DrivePolicyBuilder $p) => $p->maxPropertyCount(0)],
-    'zero ttl' => [fn (DrivePolicyBuilder $p) => $p->maxShareLinkTtlDays(0)],
+    'unknown name policy' => [fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->namePolicy('windows-v9')],
+    'zero depth' => [fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFolderDepth(0)],
+    'zero children' => [fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFolderChildren(0)],
+    'negative file size' => [fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFileBytes(-1)],
+    'zero property count' => [fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxPropertyCount(0)],
+    'zero ttl' => [fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxShareLinkTtlDays(0)],
 ]);
 
 it('counts trashed children against maxFolderChildren', function (): void {
-    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFolderChildren(2)));
+    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFolderChildren(2)));
     $drive = drivePolicyDrive('default');
     $root = drivePolicyChain($drive, 0);
     $enforcer = app(DrivePolicyEnforcer::class);
@@ -109,7 +109,7 @@ it('counts trashed children against maxFolderChildren', function (): void {
 });
 
 it('refuses only a deeper placement once the depth limit is reached', function (): void {
-    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFolderDepth(3)));
+    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFolderDepth(3)));
     $drive = drivePolicyDrive('default');
     $enforcer = app(DrivePolicyEnforcer::class);
     $atTwo = drivePolicyChain($drive, 2);
@@ -121,7 +121,7 @@ it('refuses only a deeper placement once the depth limit is reached', function (
 });
 
 it('checks a file size against maxFileBytes', function (): void {
-    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFileBytes(10)));
+    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxFileBytes(10)));
     $drive = drivePolicyDrive('default');
     $enforcer = app(DrivePolicyEnforcer::class);
 
@@ -130,7 +130,7 @@ it('checks a file size against maxFileBytes', function (): void {
 });
 
 it('patches one namespace and enforces the D41 property contract', function (): void {
-    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxPropertyCount(3)->maxPropertiesBytes(120)));
+    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxPropertyCount(3)->maxPropertiesBytes(120)));
     $drive = drivePolicyDrive('default');
     $enforcer = app(DrivePolicyEnforcer::class);
     $reason = static function (callable $patch): ?string {
@@ -157,7 +157,7 @@ it('patches one namespace and enforces the D41 property contract', function (): 
 });
 
 it('lets a node already over a lowered properties limit shrink', function (): void {
-    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxPropertyCount(1)));
+    drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxPropertyCount(1)));
     $drive = drivePolicyDrive('default');
     $over = ['acme' => ['a' => '1', 'b' => '2', 'c' => '3']];
 

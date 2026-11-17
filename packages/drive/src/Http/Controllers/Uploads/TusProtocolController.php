@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\RoutesOptions;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\UploadSessionSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
@@ -56,8 +56,8 @@ final class TusProtocolController
         private readonly HttpResourceResolver $resolver,
         private readonly HttpOperationContextFactory $contexts,
         private readonly NodeResponses $nodes,
-        private readonly DriveConfig $driveConfig,
-        private readonly RoutesConfig $routesConfig,
+        private readonly DriveOptions $driveConfig,
+        private readonly RoutesOptions $routesConfig,
     ) {}
 
     /** Create a session (tus Creation): 201 with the tus Location of the session. */
@@ -69,7 +69,7 @@ final class TusProtocolController
             totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig, $this->decodeUploadMetadata($request)), expectedSequence: $staleSequence,
         ));
 
-        return (new UploadSessionResource($session))
+        return new UploadSessionResource($session)
             ->response()
             ->setStatusCode(201)
             ->withHeaders([
@@ -149,7 +149,7 @@ final class TusProtocolController
             'Tus-Version' => self::TUS_VERSION,
             'Tus-Extension' => 'creation,termination',
         ];
-        $maxBytes = $this->driveConfig->maxFileSize();
+        $maxBytes = $this->driveConfig->uploads->maxFileSize;
         if ($maxBytes > 0) {
             $headers['Tus-Max-Size'] = (string) $maxBytes;
         }
@@ -216,7 +216,7 @@ final class TusProtocolController
      */
     private function assertContentLengthWithinLimit(Request $request): void
     {
-        $max = $this->driveConfig->maxChunkSize();
+        $max = $this->driveConfig->uploads->resumable->maxChunkSize;
         $declared = $request->server('CONTENT_LENGTH');
 
         if ($max <= 0 || !is_numeric($declared) || (int) $declared <= $max) {
@@ -252,7 +252,8 @@ final class TusProtocolController
                 continue;
             }
 
-            $metadata[$key] = isset($segments[1]) ? base64_decode($segments[1], strict: false) : '';
+            $decoded = isset($segments[1]) ? base64_decode($segments[1], strict: true) : '';
+            $metadata[$key] = is_string($decoded) ? $decoded : '';
         }
 
         return $metadata;
@@ -264,7 +265,7 @@ final class TusProtocolController
      */
     private function assertResumable(): void
     {
-        if (!$this->driveConfig->resumableEnabled()) {
+        if (!$this->driveConfig->uploads->resumable->enabled) {
             throw ProfileRestrictionException::forOperation('resumable_upload');
         }
     }
@@ -299,7 +300,7 @@ final class TusProtocolController
      */
     private function assertOffsetOctetStreamContentType(Request $request): void
     {
-        $contentType = (string) $request->header('Content-Type', '');
+        $contentType = $request->header('Content-Type', '');
 
         if (str_starts_with($contentType, 'application/offset+octet-stream')) {
             return;

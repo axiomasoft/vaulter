@@ -8,6 +8,7 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
+use Vaulter\Drive\Access\ValueObjects\AccessSource;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -283,7 +284,7 @@ it('applies a subtree grant below a boundary to everything under it', function (
 });
 
 it('AccessResolver docblocks no longer claim an un-overridable wall, F-P1.1-01', function (): void {
-    $file = (new ReflectionClass(AccessResolver::class))->getFileName();
+    $file = new ReflectionClass(AccessResolver::class)->getFileName();
     $source = file_get_contents($file);
 
     expect($source)->not->toContain('un-overridable wall')
@@ -335,7 +336,7 @@ it('explain() reports a granted ability with reason=allow and names the host rol
     expect($explanation->allowed)->toBeTrue()
         ->and($explanation->reason)->toBe(AccessExplanation::REASON_ALLOW)
         ->and($explanation->boundaryNodeId)->toBeNull()
-        ->and(array_map(static fn ($source): string => $source->role, $explanation->sources))->toBe([RoleRegistry::READER, RoleRegistry::WRITER])
+        ->and(array_map(static fn (AccessSource $source): string => $source->role, $explanation->sources))->toBe([RoleRegistry::READER, RoleRegistry::WRITER])
         ->and($explanation->sources[1]->grantId)->toBeNull();
 });
 

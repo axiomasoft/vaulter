@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
@@ -32,7 +33,7 @@ final readonly class ContentDecoder
 {
     public function __construct(
         private DocumentTypeRegistry $types,
-        private DocumentsConfig $config,
+        private Container $container,
     ) {}
 
     /** The registered type, or the read-only stand-in for a type that is gone. */
@@ -62,7 +63,7 @@ final readonly class ContentDecoder
     public function decode(DocumentType $type, ?array $raw, ?int $schemaVersion = null): DocumentContent
     {
         $content = $raw === null ? $type->defaultContent() : $type->codec()->decode($raw, $schemaVersion ?? $type->schemaVersion());
-        $limit = $type->codec()->maxSizeBytes() ?? $this->config->maxContentSizeKb() * 1024;
+        $limit = $type->codec()->maxSizeBytes() ?? $this->container->make(DocumentsOptions::class)->content->maxSizeKb * 1024;
 
         if ($limit > 0 && $content->sizeInBytes() > $limit) {
             throw InvalidDocumentContentException::tooLargeBytes($content->sizeInBytes(), $limit);

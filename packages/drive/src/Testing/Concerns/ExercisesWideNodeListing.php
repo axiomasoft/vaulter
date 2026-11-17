@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Concerns;
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\IdsConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -91,7 +91,7 @@ trait ExercisesWideNodeListing
 
     private function wideNodeKey(int $offset): int|string
     {
-        return app(IdsConfig::class)->usesUlids()
+        return app(IdsOptions::class)->usesUlids()
             ? '01ARZ3NDEK'.str_pad((string) $offset, 16, '0', STR_PAD_LEFT)
             : 9_007_199_254_740_992 + $offset;
     }

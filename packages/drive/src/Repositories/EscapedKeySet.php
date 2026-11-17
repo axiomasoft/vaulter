@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Grammar;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * An IN predicate with driver-escaped values and no bind parameters.

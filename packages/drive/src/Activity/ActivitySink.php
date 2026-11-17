@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Activity;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\SinkResult;
@@ -20,7 +20,7 @@ use Vaulter\Events\SinkWriter;
 final readonly class ActivitySink implements EventSink
 {
     public function __construct(
-        private DriveConfig $config,
+        private DriveOptions $config,
         private Container $container,
     ) {}
 

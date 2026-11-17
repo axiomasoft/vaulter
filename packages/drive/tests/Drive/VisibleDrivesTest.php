@@ -10,6 +10,7 @@ use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\NodeSort;
 use Vaulter\Drive\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
@@ -111,7 +112,7 @@ it('refuses a malformed cursor and options a drive list does not support', funct
 });
 
 it('keeps the cost of a further listed drive bounded', function (): void {
-    $grantNew = static fn () => AccessTestHelpers::grant(AccessTestHelpers::storage()->rootNode()->firstOrFail(), RoleRegistry::READER, scope: GrantScope::Item);
+    $grantNew = static fn (): NodeGrant => AccessTestHelpers::grant(AccessTestHelpers::storage()->rootNode()->firstOrFail(), RoleRegistry::READER, scope: GrantScope::Item);
     $queries = function (): int {
         DB::flushQueryLog();
         DB::enableQueryLog();

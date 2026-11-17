@@ -26,7 +26,7 @@ it('writes any date in UTC and keeps null', function (): void {
 });
 
 it('refuses a value that is neither a string nor a date', function (): void {
-    expect(fn () => (new UtcDateTimeCast)->get(new Blob, 'quarantined_at', 12, []))
+    expect(fn (): ?CarbonImmutable => (new UtcDateTimeCast)->get(new Blob, 'quarantined_at', 12, []))
         ->toThrow(InvalidArgumentException::class, 'UTC date');
 });
 

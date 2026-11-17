@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Access;
 
 use Illuminate\Support\Facades\Log;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\Subject;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
 use Vaulter\Drive\Data\Snapshots\Mapping\AccessSnapshotMapper;
@@ -42,7 +42,7 @@ use Vaulter\Events\EventRecorder;
 final readonly class GrantNodeAccessAction
 {
     public function __construct(
-        private readonly AccessConfig $accessConfig,
+        private AccessOptions $accessConfig,
         private GrantStoreRepository $grants,
         private PermissionDriverManager $drivers,
         private VaulterDatabase $database,
@@ -123,7 +123,7 @@ final readonly class GrantNodeAccessAction
     {
         return in_array(
             $subject->type,
-            [$this->accessConfig->spatieRoleSubjectType(), $this->accessConfig->spatieTeamSubjectType()],
+            [$this->accessConfig->spatieRoleSubjectType, $this->accessConfig->spatieTeamSubjectType],
             strict: true,
         );
     }

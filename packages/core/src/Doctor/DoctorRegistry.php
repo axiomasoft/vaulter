@@ -33,10 +33,7 @@ final readonly class DoctorRegistry
         foreach ($this->contributed() as $check) {
             $checks[$check->key()] = $check;
         }
-        foreach ($this->container->tagged(self::TAG) as $check) {
-            if (!$check instanceof DoctorCheck) {
-                throw new LogicException(sprintf('Service tagged "%s" must implement %s; got %s.', self::TAG, DoctorCheck::class, get_debug_type($check)));
-            }
+        foreach ($this->tagged() as $check) {
             if (isset($checks[$check->key()])) {
                 throw new LogicException(sprintf('Doctor check key "%s" is registered twice.', $check->key()));
             }
@@ -53,12 +50,25 @@ final readonly class DoctorRegistry
      */
     public function matching(array $prefixes): array
     {
-        $checks = $this->all();
         if ($prefixes === []) {
-            return $checks;
+            return $this->all();
         }
 
-        return array_values(array_filter($checks, static fn (DoctorCheck $check): bool => array_any($prefixes, fn ($prefix): bool => self::matches($check->key(), $prefix))));
+        $checks = [];
+        foreach ($this->contributed($prefixes) as $check) {
+            $checks[$check->key()] = $check;
+        }
+        foreach ($this->tagged() as $check) {
+            if (array_any($prefixes, fn ($prefix): bool => self::matches($check->key(), $prefix))) {
+                if (isset($checks[$check->key()])) {
+                    throw new LogicException(sprintf('Doctor check key "%s" is registered twice.', $check->key()));
+                }
+                $checks[$check->key()] = $check;
+            }
+        }
+        ksort($checks, SORT_STRING);
+
+        return array_values($checks);
     }
 
     /**
@@ -73,23 +83,42 @@ final readonly class DoctorRegistry
     }
 
     /**
+     * @param list<string>|null $prefixes
+     *
      * @throws LogicException when a contribution is not a check or reports another key than it is declared under
      *
      * @return list<DoctorCheck>
      */
-    private function contributed(): array
+    private function contributed(?array $prefixes = null): array
     {
         if ($this->kernel === null || !$this->kernel->isValid()) {
             return [];
         }
         $checks = [];
         foreach ($this->kernel->extensions()->contributions(DoctorCheck::class) as $contribution) {
+            if ($prefixes !== null && $contribution->key !== null && !array_any($prefixes, fn (string $prefix): bool => self::matches($contribution->key, $prefix))) {
+                continue;
+            }
             $check = $this->container->make($contribution->implementation);
             if (!$check instanceof DoctorCheck) {
                 throw new LogicException(sprintf('Doctor check "%s" of module "%s" must implement %s; got %s.', $contribution->id, $contribution->module, DoctorCheck::class, get_debug_type($check)));
             }
             if ($check->key() !== $contribution->key) {
                 throw new LogicException(sprintf('Doctor check %s is declared under the key "%s" but reports "%s".', $contribution->implementation, (string) $contribution->key, $check->key()));
+            }
+            $checks[] = $check;
+        }
+
+        return $checks;
+    }
+
+    /** @return list<DoctorCheck> */
+    private function tagged(): array
+    {
+        $checks = [];
+        foreach ($this->container->tagged(self::TAG) as $check) {
+            if (!$check instanceof DoctorCheck) {
+                throw new LogicException(sprintf('Service tagged "%s" must implement %s; got %s.', self::TAG, DoctorCheck::class, get_debug_type($check)));
             }
             $checks[] = $check;
         }

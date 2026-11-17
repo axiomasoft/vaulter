@@ -33,7 +33,7 @@ it('keeps withoutTenancy out of the drive entry point, it is the core Tenancy::w
 
 it('declares the Vaulter alias in the drive composer manifest only', function (): void {
     $drive = json_decode((string) file_get_contents(dirname(__DIR__, 2).'/composer.json'), true, flags: JSON_THROW_ON_ERROR);
-    $core = json_decode((string) file_get_contents(InstalledVersions::getInstallPath('axioma-studio/vaulter-core').'/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+    $core = json_decode((string) file_get_contents(InstalledVersions::getInstallPath('axiomasoft/vaulter-core').'/composer.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($drive['extra']['laravel']['aliases']['Vaulter'] ?? null)->toBe(VaulterFacade::class)
         ->and($core['extra']['laravel']['aliases'] ?? [])->not->toHaveKey('Vaulter');

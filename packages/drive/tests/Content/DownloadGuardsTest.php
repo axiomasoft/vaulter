@@ -18,6 +18,7 @@ use Vaulter\Drive\Tests\Content\Fixtures\FirstDownloadGuard;
 use Vaulter\Drive\Tests\Content\Fixtures\RecordingDownloadGuard;
 use Vaulter\Drive\Tests\Content\Fixtures\SecondDownloadGuard;
 use Vaulter\Kernel;
+use Vaulter\Modules\SlotContribution;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 function downloadGuards(): DownloadGuards
@@ -46,7 +47,7 @@ function checkDownload(DownloadGuards $guards): void
 it('contributes the drive content availability check as the built-in download guard', function (): void {
     $contributions = app(Kernel::class)->extensions()->contributions(DownloadGuard::class);
 
-    expect(array_map(static fn ($c): string => $c->id, $contributions))->toBe(['drive.content-availability'])
+    expect(array_map(static fn (SlotContribution $c): string => $c->id, $contributions))->toBe(['drive.content-availability'])
         ->and($contributions[0]->implementation)->toBe(ContentAvailabilityGuard::class);
 });
 

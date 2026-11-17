@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Documents;
 
-use Vaulter\Attributes\Internal;
+use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
@@ -46,7 +47,7 @@ final readonly class UpdateDocumentContentAction
     public function __construct(
         private DocumentStateWriter $writer,
         private VaulterDatabase $database,
-        private DocumentsConfig $documentsConfig,
+        private Container $container,
         private ContentDecoder $decoder,
         private EventRecorder $recorder,
         private PendingStateGuard $pending,
@@ -68,7 +69,7 @@ final readonly class UpdateDocumentContentAction
         // time — check it before the transaction, not just at the UI layer. Callers
         // that decode through the type already applied its own limit.
         if ($data->content instanceof TipTapContent) {
-            $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
+            $data->content->ensureWithin($this->container->make(DocumentsOptions::class)->content->maxSizeKb);
         }
 
         return $this->database->transaction(function () use ($context, $node, $data): DocumentStateResult {

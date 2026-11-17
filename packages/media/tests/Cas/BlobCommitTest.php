@@ -96,7 +96,7 @@ it('answers a commit with an immutable snapshot of the committed row: its id, ne
         ->and($again->id)->toBe($first->id)
         ->and([$first->sha256, $first->sizeBytes, $first->scopeKey, $first->storageKey, $first->disk])->toBe([hash('sha256', 'snapshot bytes'), 14, $row->scope_key, $row->storage_key, $row->disk])
         ->and([$first->status, $first->intact, $first->chunked])->toBe([BlobStatus::Committed, true, false])
-        ->and(fn () => $first->status = BlobStatus::Deleted)->toThrow(Error::class);
+        ->and(fn (): BlobStatus => $first->status = BlobStatus::Deleted)->toThrow(Error::class);
 
     // The snapshot is a point in time: a later change of the row does not reach it, and read() follows the row by id.
     $row->forceFill(['status' => BlobStatus::Tombstoned])->save();

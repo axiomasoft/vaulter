@@ -6,18 +6,20 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Media\Content\ScanInput;
@@ -32,6 +34,9 @@ beforeEach(fn () => DriveTestHelpers::insideOperation());
 /** @return list<DoctorFinding> */
 function scanFindings(string $key, bool $production = false, int $sample = 1000): array
 {
+    app()->forgetInstance(DriveOptions::class);
+    app()->forgetInstance(ScanOptions::class);
+    app()->forgetInstance(ProfilePolicy::class);
     $report = app(DoctorRunner::class)->run(new DoctorContext(production: $production, probeStorage: false, sampleLimit: $sample, now: CarbonImmutable::now('UTC')), [$key]);
 
     return $report->checks[0]->findings;
@@ -67,6 +72,9 @@ function scanFixture(): array
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');
+    app()->forgetInstance(DriveOptions::class);
+    app()->forgetInstance(ScanOptions::class);
+    app()->forgetInstance(ProfilePolicy::class);
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -74,20 +82,20 @@ function scanFixture(): array
     app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'a.txt', 'text/plain'));
     fclose($stream);
     app(ScanBackfillReconciler::class)->expand(10);
-    $work = app(DriveConfig::class)->model('scan_obligation')::query()->firstOrFail();
+    $work = app(DriveOptions::class)->model('scan_obligation')::query()->firstOrFail();
 
     return [$drive, $work];
 }
 
 function scanTable(string $entity): string
 {
-    return app(DatabaseConfig::class)->table($entity);
+    return app(DatabaseOptions::class)->table($entity);
 }
 
 it('needs no scanner while every scan policy is off', function (): void {
     $finding = scanFindings('drive.scan.scanner')[0];
 
-    expect($finding->code)->toBe('drive.scan.scanner_not_required')->and($finding->severity)->toBe(DoctorSeverity::Ok);
+    expect($finding->code)->toBe('drive.scan.scanner_not_required')->and($finding->severity)->toBe(Severity::Info);
 });
 
 it('reports an enabled scan policy without a bound scanner as an error in both modes', function (): void {
@@ -96,8 +104,8 @@ it('reports an enabled scan policy without a bound scanner as an error in both m
     config()->set('vaulter-drive.scan.scanner_version', '1');
 
     expect(array_map(static fn (DoctorFinding $finding): string => $finding->code, scanFindings('drive.scan.scanner')))->toBe(['drive.scan.scanner_missing'])
-        ->and(scanFindings('drive.scan.scanner')[0]->severity)->toBe(DoctorSeverity::Error)
-        ->and(scanFindings('drive.scan.scanner', production: true)[0]->severity)->toBe(DoctorSeverity::Error);
+        ->and(scanFindings('drive.scan.scanner')[0]->severity)->toBe(Severity::Error)
+        ->and(scanFindings('drive.scan.scanner', production: true)[0]->severity)->toBe(Severity::Error);
 });
 
 it('accepts a bound scanner whose identity is the configured one', function (): void {
@@ -117,8 +125,8 @@ it('reports a scanner identity the policy does not name', function (): void {
 
     expect(scanFindings('drive.scan.scanner')[0]->code)->toBe('drive.scan.identity_mismatch');
 
-    config()->set('vaulter-drive.scan.scanner_key', null);
-    config()->set('vaulter-drive.scan.scanner_version', null);
+    config()->set('vaulter-drive.scan.scanner_key');
+    config()->set('vaulter-drive.scan.scanner_version');
     expect(array_unique(array_map(static fn (DoctorFinding $finding): string => $finding->code, scanFindings('drive.scan.scanner'))))->toBe(['drive.scan.identity_missing']);
 });
 
@@ -142,9 +150,9 @@ it('finds a drive whose policy cutover is pending, an error in production', func
     $finding = scanFindings('drive.scan.policy')[0];
 
     expect($finding->code)->toBe('drive.scan.policy_cutover_pending')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and($finding->hint)->toContain('vaulter:scan:rescan --activate-policy')
-        ->and(scanFindings('drive.scan.policy', production: true)[0]->severity)->toBe(DoctorSeverity::Error);
+        ->and($finding->severity)->toBe(Severity::Warning)
+        ->and($finding->remediation)->toContain('vaulter:scan:rescan --activate-policy')
+        ->and(scanFindings('drive.scan.policy', production: true)[0]->severity)->toBe(Severity::Error);
 
     DB::table(scanTable('scan_policy_states'))->where('drive_id', $drive->getKey())->delete();
     expect(scanFindings('drive.scan.policy')[0]->code)->toBe('drive.scan.policy_cutover_pending');
@@ -180,9 +188,9 @@ it('finds an expired lease and overdue work as stuck, errors in production', fun
     ]);
     $finding = scanFindings('drive.scan.obligations')[0];
     expect($finding->code)->toBe('drive.scan.obligations_stuck')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
+        ->and($finding->severity)->toBe(Severity::Warning)
         ->and($finding->evidence)->toBe(['expired_leases' => 1, 'overdue' => 0])
-        ->and(scanFindings('drive.scan.obligations', production: true)[0]->severity)->toBe(DoctorSeverity::Error);
+        ->and(scanFindings('drive.scan.obligations', production: true)[0]->severity)->toBe(Severity::Error);
 
     DB::table(scanTable('scan_obligations'))->where('id', $work->getKey())->update([
         'state' => 'retry_wait', 'lease_token' => null, 'lease_expires_at' => null, 'available_at' => now('UTC')->subHour(),
@@ -200,9 +208,9 @@ it('counts work that settled without a verdict per reason, as a warning also in 
     $finding = scanFindings('drive.scan.obligations', production: true)[0];
 
     expect($finding->code)->toBe('drive.scan.obligations_unscanned')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
+        ->and($finding->severity)->toBe(Severity::Warning)
         ->and($finding->evidence)->toBe(['too_large' => 1])
-        ->and($finding->hint)->toContain('vaulter:scan:reconcile --all-tenants --dry-run');
+        ->and($finding->remediation)->toContain('vaulter:scan:reconcile --all-tenants --dry-run');
 
     DB::table(scanTable('scan_obligations'))->where('id', $work->getKey())->update(['outcome' => 'clean', 'reason' => null]);
     expect(scanFindings('drive.scan.obligations')[0]->code)->toBe('drive.scan.obligations_ok');
@@ -217,10 +225,10 @@ it('finds scan rows whose drive is missing or belongs to another tenant', functi
     $finding = scanFindings('drive.scan.scope')[0];
 
     expect($finding->code)->toBe('drive.scan.scope_invalid')
-        ->and($finding->severity)->toBe(DoctorSeverity::Error)
+        ->and($finding->severity)->toBe(Severity::Error)
         ->and($finding->evidence)->toHaveKey('obligations_without_drive_scope', 1)
         ->and($finding->evidence)->toHaveKey('backfill_runs_without_drive_scope', 1)
-        ->and(scanFindings('drive.scan.scope', production: true)[0]->severity)->toBe(DoctorSeverity::Error);
+        ->and(scanFindings('drive.scan.scope', production: true)[0]->severity)->toBe(Severity::Error);
 });
 
 it('finds an unavailable content scope under a policy that scans everything', function (): void {

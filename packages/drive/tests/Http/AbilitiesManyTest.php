@@ -42,8 +42,8 @@ it('costs the same number of queries for 5 and for 50 nodes', function (): void 
     }
     $nodes = $drive->actingAs(V1::user(1))->nodes();
 
-    $small = abilityQueries(fn () => $nodes->abilitiesMany(array_slice($ids, 0, 5)));
-    $large = abilityQueries(fn () => $nodes->abilitiesMany($ids));
+    $small = abilityQueries(fn (): array => $nodes->abilitiesMany(array_slice($ids, 0, 5)));
+    $large = abilityQueries(fn (): array => $nodes->abilitiesMany($ids));
 
     expect($large)->toBe($small)->toBeLessThan(15);
 });
@@ -59,8 +59,8 @@ it('stays one batch under strict tenancy', function (): void {
     }
     $nodes = $drive->actingAs(V1::user(1))->nodes();
 
-    $small = abilityQueries(fn () => $nodes->abilitiesMany(array_slice($ids, 0, 2)));
-    $large = abilityQueries(fn () => $nodes->abilitiesMany($ids));
+    $small = abilityQueries(fn (): array => $nodes->abilitiesMany(array_slice($ids, 0, 2)));
+    $large = abilityQueries(fn (): array => $nodes->abilitiesMany($ids));
 
     expect($large)->toBe($small)
         ->and($nodes->abilitiesMany($ids))->toHaveCount(20);
@@ -100,7 +100,7 @@ it('matches abilities() per node and leaves out nodes the actor cannot view', fu
     $many = $nodes->abilitiesMany([$visible, $editable->id, $hidden->id, 'no-such-node']);
 
     // Numeric ids become integer array keys in PHP; lookups by the string id still work.
-    expect(array_map('strval', array_keys($many)))->toBe([$visible->id, $editable->id])
+    expect(array_map(strval(...), array_keys($many)))->toBe([$visible->id, $editable->id])
         ->and($many[$visible->id]->toArray())->toBe($nodes->abilities($visible->id)->toArray())
         ->and($many[$editable->id]->toArray())->toBe($nodes->abilities($editable->id)->toArray())
         ->and($many[$visible->id]->toArray()['edit'])->toBeFalse()

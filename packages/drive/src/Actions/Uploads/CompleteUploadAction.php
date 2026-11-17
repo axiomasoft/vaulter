@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Uploads;
 
 use InvalidArgumentException;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
@@ -209,7 +209,9 @@ final readonly class CompleteUploadAction
     {
         // Only the actual outer commit may release protocol bytes. The durable
         // pending flag survives crashes and a failed callback cannot undo success.
-        $this->database->afterCommit(fn () => $this->cleanup->cleanup($session));
+        $this->database->afterCommit(function () use ($session): void {
+            $this->cleanup->cleanup($session);
+        });
     }
 
     private function expectation(UploadSession $session): ?int
@@ -251,8 +253,8 @@ final readonly class CompleteUploadAction
 
         return new IngestFileInput(storage: $context->drive, stream: $stream,
             originalName: $session->target_name ?? $target->name ?? 'upload.bin',
-            mimeType: $session->mime_type, declaredMimeType: $session->mime_type,
+            mimeType: $session->mime_type,
             into: $parent, name: $session->target_name, targetNode: $target,
-            expectedSequence: $this->expectation($session), prepared: $prepared);
+            expectedSequence: $this->expectation($session), prepared: $prepared, declaredMimeType: $session->mime_type);
     }
 }

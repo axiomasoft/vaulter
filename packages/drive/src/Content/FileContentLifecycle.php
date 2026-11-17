@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -29,7 +29,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         private CopyDestinationAdmission $admission,
         private ScanAdmission $scans,
         private ContentAvailabilityGuard $availability,
-        private DriveConfig $config,
+        private DriveOptions $config,
     ) {}
 
     public function kind(): NodeKind

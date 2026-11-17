@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Content;
 
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanEvidence;
 use Vaulter\Drive\Content\ScanPolicySpec;

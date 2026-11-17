@@ -42,7 +42,7 @@ it('gives drive v1 controllers no public method besides the constructor and __in
             continue;
         }
         $class = 'Vaulter\\Drive\\Http\\Controllers\\'.str_replace(['/', '.php'], ['\\', ''], $relative);
-        foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+        foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
                 $offenders[] = $class.'::'.$method->getName();
             }

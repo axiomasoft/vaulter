@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads\Inspection;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
@@ -31,7 +31,7 @@ final readonly class MimeConsistencyInspector implements UploadInspector
         if ($policy->allowedMimeTypes !== [] && ($detected === null || !array_any($policy->allowedMimeTypes, static fn (string $allowed): bool => $allowed === $detected || (str_ends_with($allowed, '/*') && str_starts_with($detected, substr($allowed, 0, -1)))))) {
             throw new UploadRejectedException('mime_not_allowed');
         }
-        if (!app(DriveConfig::class)->rejectMimeMismatch() || $detected === null) {
+        if (!app(DriveOptions::class)->uploads->rejectMimeMismatch || $detected === null) {
             return;
         }
         $declared = strtolower(trim(explode(';', $facts->declaredMimeType ?? '')[0]));

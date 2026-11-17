@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Illuminate\Support\Str;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Profiles\ProfileRegistry;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 
 /**
@@ -21,7 +22,7 @@ use Vaulter\Media\Contracts\Cas\StorageDriver;
 #[Internal]
 final readonly class DiskProbeCheck implements DoctorCheck
 {
-    public function __construct(private MediaConfig $config, private ProfileRegistry $profiles, private StorageDriver $storage) {}
+    public function __construct(private MediaOptions $options, private ProfileRegistry $profiles, private StorageDriver $storage) {}
 
     public function key(): string
     {
@@ -35,7 +36,7 @@ final readonly class DiskProbeCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $disks = DiskSet::of($this->config, $this->profiles);
+        $disks = DiskSet::of($this->options, $this->profiles);
 
         if (!$context->mayProbeStorage()) {
             return [DoctorFinding::ok(
@@ -62,7 +63,7 @@ final readonly class DiskProbeCheck implements DoctorCheck
             return DoctorFinding::error(
                 code: 'media.disk.probe_delete_failed',
                 message: 'Disk "'.$disk.'" accepted a test object but refused to delete it.',
-                hint: 'grant delete permission on the disk and remove the object named in the evidence',
+                remediation: 'grant delete permission on the disk and remove the object named in the evidence',
                 evidence: ['disk' => $disk, 'object' => $key],
             );
         }
@@ -77,7 +78,7 @@ final readonly class DiskProbeCheck implements DoctorCheck
         try {
             $stream = fopen('php://temp', 'r+');
             if ($stream === false) {
-                throw new \RuntimeException('No temporary stream.');
+                throw new RuntimeException('No temporary stream.');
             }
             fwrite($stream, 'vaulter-doctor');
             rewind($stream);
@@ -91,13 +92,18 @@ final readonly class DiskProbeCheck implements DoctorCheck
                 fclose($read);
             }
             if ($content !== 'vaulter-doctor') {
-                return DoctorFinding::error(code: 'media.disk.probe_mismatch', message: 'Disk "'.$disk.'" returned other bytes than were written.', hint: 'check the disk configuration', evidence: ['disk' => $disk]);
+                return DoctorFinding::error(
+                    code: 'media.disk.probe_mismatch',
+                    message: 'Disk "'.$disk.'" returned other bytes than were written.',
+                    remediation: 'check the disk configuration',
+                    evidence: ['disk' => $disk],
+                );
             }
         } catch (Throwable $exception) {
             return DoctorFinding::error(
                 code: 'media.disk.probe_failed',
                 message: 'Disk "'.$disk.'" failed to '.$stage.' a test object.',
-                hint: 'check the disk credentials, permissions and bucket policy',
+                remediation: 'check the disk credentials, permissions and bucket policy',
                 evidence: ['disk' => $disk, 'stage' => $stage, 'exception' => $exception::class],
             );
         }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Enums;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Attributes\EventSpec;
 use Vaulter\Attributes\Label;
 use Vaulter\Events\Concerns\DescribesEvent;

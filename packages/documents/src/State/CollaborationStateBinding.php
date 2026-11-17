@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\State;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /** Immutable identity of one persisted generation. */
 #[Api]

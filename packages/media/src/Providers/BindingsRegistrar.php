@@ -5,35 +5,38 @@ declare(strict_types=1);
 namespace Vaulter\Media\Providers;
 
 use Closure;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ScheduleConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\BlobPinStore;
-use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Modules\ModuleBindings;
 
 /**
- * The container wiring of the media module: the configured CAS engine (ContentStore, BlobStore; the
- * StorageDriver is a capability of the manifest), the pins (BlobPins, — not configurable: the GC reads the
- * same store) and the config validation, failing at boot on a bad class or value.
+ * The container wiring of the media module: the configured CAS engine, pins, and boot configuration validation.
  */
 #[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
-        $app->singleton(MediaConfig::class, static fn (Container $app): MediaConfig => new MediaConfig($app->make('config')));
-        $app->bind('vaulter.dedup_scope', static fn (Container $app): string => $app->make(MediaConfig::class)->dedupScope()->value);
+        $app->bind(MediaOptions::class, static fn (Container $app): MediaOptions => CompiledOptionsCache::resolve(
+            $app,
+            'vaulter-media',
+            static fn (array $raw): MediaOptions => MediaOptions::fromArray($raw, 'vaulter-media'),
+        ));
+        $app->bind('vaulter.dedup_scope', static fn (Container $app): string => $app->make(MediaOptions::class)->dedupScope->value);
 
         // The StorageDriver is the media module's capability, read from `vaulter-media.storage_driver` (MediaModule).
         $app->singleton(ContentStore::class, static function (Container $app): ContentStore {
-            $service = $app->make($app->make(MediaConfig::class)->contentStore());
+            $service = $app->make($app->make(MediaOptions::class)->contentStore);
             if (!$service instanceof ContentStore) {
                 throw new InvalidConfigurationException('[Vaulter] Configured contentStore binding must implement ContentStore.');
             }
@@ -41,7 +44,7 @@ final class BindingsRegistrar implements ModuleBindings
             return $service;
         });
         $app->bind(BlobStore::class, static function (Container $app): BlobStore {
-            $service = $app->make($app->make(MediaConfig::class)->blobStore());
+            $service = $app->make($app->make(MediaOptions::class)->blobStore);
             if (!$service instanceof BlobStore) {
                 throw new InvalidConfigurationException('[Vaulter] Configured blobStore binding must implement BlobStore.');
             }
@@ -52,23 +55,20 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(BlobPins::class, BlobPinStore::class);
 
         $app->bind('vaulter.config_validator.media', static fn (Container $app): Closure => static function () use ($app): void {
-            $config = $app->make(MediaConfig::class);
-            $config->dedupScope();
-            $config->contentStore();
-            $config->storageDriver();
-            $config->blobStore();
+            self::buildOptions($app);
         });
         $app->tag('vaulter.config_validator.media', ConfigValidCheck::TAG);
     }
 
     public function boot(Application $app): void
     {
-        $config = $app->make(MediaConfig::class);
-        $config->dedupScope();
-        $config->contentStore();
-        $config->storageDriver();
-        $config->blobStore();
-        // Fail at boot on a bad value; the tasks themselves read the config when the scheduler resolves.
-        (new ScheduleConfig($app->make('config')))->frequencies('vaulter-media', SchedulingRegistrar::KEYS);
+        self::buildOptions($app);
+    }
+
+    private static function buildOptions(Container $app): MediaOptions
+    {
+        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter-media', []) : [];
+
+        return MediaOptions::fromArray(is_array($raw) ? $raw : ['__invalid_root' => $raw], 'vaulter-media');
     }
 }

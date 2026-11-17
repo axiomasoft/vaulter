@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Kernel;
@@ -47,22 +47,42 @@ final readonly class ScanScannerCheck implements DoctorCheck
         }
 
         if (!$this->container->make(Kernel::class)->capabilities()->has(ContentScanner::class)) {
-            return [DoctorFinding::error(code: 'drive.scan.scanner_missing', message: 'A scan policy is enabled but no ContentScanner is configured.', hint: 'set vaulter-drive.scan.scanner to a ContentScanner class', evidence: ['policies' => count($enabled)])];
+            return [DoctorFinding::error(
+                code: 'drive.scan.scanner_missing',
+                message: 'A scan policy is enabled but no ContentScanner is configured.',
+                remediation: 'set vaulter-drive.scan.scanner to a ContentScanner class',
+                evidence: ['policies' => count($enabled)],
+            )];
         }
         try {
             $scanner = $this->container->make(ContentScanner::class);
             $identity = [$scanner->key(), $scanner->version()];
         } catch (Throwable $exception) {
-            return [DoctorFinding::error(code: 'drive.scan.scanner_unresolvable', message: 'The bound ContentScanner cannot be built.', hint: 'check the scanner binding and its dependencies', evidence: ['exception' => $exception::class])];
+            return [DoctorFinding::error(
+                code: 'drive.scan.scanner_unresolvable',
+                message: 'The bound ContentScanner cannot be built.',
+                remediation: 'check the scanner binding and its dependencies',
+                evidence: ['exception' => $exception::class],
+            )];
         }
 
         $findings = [];
         foreach ($enabled as $spec) {
             $evidence = ['predicate' => $spec->predicateKey, 'scanner_key' => $spec->scannerKey, 'scanner_version' => $spec->scannerVersion, 'policy_version' => $spec->policyVersion];
             if ($spec->scannerKey === 'none' || $spec->scannerVersion === 'none') {
-                $findings[] = DoctorFinding::error(code: 'drive.scan.identity_missing', message: 'The scan policy "'.$spec->predicateKey.'" has no scanner_key or scanner_version.', hint: 'set vaulter-drive.scan.scanner_key and vaulter-drive.scan.scanner_version to the scanner\'s own identity', evidence: $evidence);
+                $findings[] = DoctorFinding::error(
+                    code: 'drive.scan.identity_missing',
+                    message: 'The scan policy "'.$spec->predicateKey.'" has no scanner_key or scanner_version.',
+                    remediation: 'set vaulter-drive.scan.scanner_key and vaulter-drive.scan.scanner_version to the scanner\'s own identity',
+                    evidence: $evidence,
+                );
             } elseif ($identity !== [$spec->scannerKey, $spec->scannerVersion]) {
-                $findings[] = DoctorFinding::error(code: 'drive.scan.identity_mismatch', message: 'The bound scanner answers to another key or version than the scan policy "'.$spec->predicateKey.'" names.', hint: 'align vaulter-drive.scan.scanner_key / scanner_version with the scanner', evidence: $evidence + ['bound_key' => $identity[0], 'bound_version' => $identity[1]]);
+                $findings[] = DoctorFinding::error(
+                    code: 'drive.scan.identity_mismatch',
+                    message: 'The bound scanner answers to another key or version than the scan policy "'.$spec->predicateKey.'" names.',
+                    remediation: 'align vaulter-drive.scan.scanner_key / scanner_version with the scanner',
+                    evidence: $evidence + ['bound_key' => $identity[0], 'bound_version' => $identity[1]],
+                );
             }
         }
 

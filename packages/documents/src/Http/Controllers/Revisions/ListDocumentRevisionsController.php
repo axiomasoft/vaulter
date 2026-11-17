@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Http\Controllers\Revisions;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;

@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Operations;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Support\Int64Counter;

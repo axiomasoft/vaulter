@@ -14,7 +14,7 @@ it('selects the host scope without coercing identifiers and never builds global'
     expect(BlobScope::forUpload('tenant', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('drive', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('tenant', '001', 'drive')->key())->toBe('tenant:001')
-        ->and(fn () => BlobScope::forUpload('global', 'tenant', 'drive'))->toThrow(InvalidArgumentException::class);
+        ->and(fn (): BlobScope => BlobScope::forUpload('global', 'tenant', 'drive'))->toThrow(InvalidArgumentException::class);
 });
 
 it('gives every upload its own scope when deduplication is off', function (): void {
@@ -40,5 +40,5 @@ it('selects the drive scope for the drive dedup setting', function (): void {
 });
 
 it('rejects invalid and noncanonical scope segments', function (string $segment): void {
-    expect(fn () => BlobScope::fromSegment($segment))->toThrow(InvalidArgumentException::class);
+    expect(fn (): BlobScope => BlobScope::fromSegment($segment))->toThrow(InvalidArgumentException::class);
 })->with(['', '../g', 'd-', 'd-~', 'd-~YQ', 't-~bad=', 'unknown', 'g', 'global', 's001', 't12', 'snull', 'tnull']);

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\State;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * Brings a document's working state up to its collaboration log: the realtime transport compacts the log of the

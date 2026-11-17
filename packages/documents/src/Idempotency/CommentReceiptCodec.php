@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Idempotency;
 
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Drive\Idempotency\ReceiptFields;
 use Vaulter\Idempotency\ReceiptCodec;

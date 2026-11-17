@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -29,29 +29,29 @@ function uploadConfigStorage(): string
 }
 
 it('maxFileSize falls back to the drive default independently of document limits', function (): void {
-    config()->set('vaulter-drive.uploads.max_file_size', null);
+    config()->set('vaulter-drive.uploads.max_file_size');
     config()->set('vaulter-documents.content.max_size_kb', 1234);
 
-    expect(app(DriveConfig::class)->maxFileSize())->toBe(5_368_709_120);
+    expect(app(DriveOptions::class)->uploads->maxFileSize)->toBe(5_368_709_120);
 });
 
 it('maxFileSize uses the configured byte ceiling independently of document limits', function (): void {
     config()->set('vaulter-documents.content.max_size_kb', 5120);
     config()->set('vaulter-drive.uploads.max_file_size', 64 * 1024);
 
-    expect(app(DriveConfig::class)->maxFileSize())->toBe(64 * 1024);
+    expect(app(DriveOptions::class)->uploads->maxFileSize)->toBe(64 * 1024);
 });
 
 it('allowedUploadMimes is empty (permissive) by default and lists configured mimes', function (): void {
     config()->set('vaulter-drive.uploads.allowed_mime_types', []);
-    expect(app(DriveConfig::class)->allowedMimeTypes())->toBe([]);
+    expect(app(DriveOptions::class)->uploads->allowedMimeTypes)->toBe([]);
 
     config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf', 'image/png']);
-    expect(app(DriveConfig::class)->allowedMimeTypes())->toBe(['application/pdf', 'image/png']);
+    expect(app(DriveOptions::class)->uploads->allowedMimeTypes)->toBe(['application/pdf', 'image/png']);
 });
 
 it('rejects an upload above the dedicated uploads.max_file_size ceiling', function (): void {
-    config()->set('vaulter-drive.uploads.max_file_size', 1 * 1024); // 1 KB ceiling
+    config()->set('vaulter-drive.uploads.max_file_size', 1024); // 1 KB ceiling
 
     $base = 'api/vaulter/v1/drives/'.uploadConfigStorage();
 

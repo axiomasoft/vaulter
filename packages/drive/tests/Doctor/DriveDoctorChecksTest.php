@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -20,6 +20,7 @@ beforeEach(fn () => DriveTestHelpers::insideOperation());
 /** @return list<DoctorFinding> */
 function driveFindings(string $key, bool $production = false, int $sample = 1000): array
 {
+    app()->forgetInstance(DriveOptions::class);
     $report = app(DoctorRunner::class)->run(new DoctorContext(production: $production, probeStorage: false, sampleLimit: $sample, now: CarbonImmutable::now('UTC')), [$key]);
 
     return $report->checks[0]->findings;
@@ -27,7 +28,7 @@ function driveFindings(string $key, bool $production = false, int $sample = 1000
 
 function driveTable(string $entity): string
 {
-    return app(DatabaseConfig::class)->table($entity);
+    return app(DatabaseOptions::class)->table($entity);
 }
 
 it('accepts a writable temp directory with more free space than the largest file', function (): void {
@@ -46,15 +47,15 @@ it('reports a temp directory smaller than the largest accepted file as an error'
     $finding = driveFindings('drive.uploads.tmp')[0];
 
     expect($finding->code)->toBe('drive.uploads.tmp_too_small')
-        ->and($finding->severity)->toBe(DoctorSeverity::Error)
-        ->and(driveFindings('drive.uploads.tmp', production: true)[0]->severity)->toBe(DoctorSeverity::Error);
+        ->and($finding->severity)->toBe(Severity::Error)
+        ->and(driveFindings('drive.uploads.tmp', production: true)[0]->severity)->toBe(Severity::Error);
 });
 
 it('reports the intl extension', function (): void {
     $finding = driveFindings('drive.intl')[0];
 
     expect($finding->code)->toBe(extension_loaded('intl') ? 'drive.intl_ok' : 'drive.intl_missing')
-        ->and($finding->severity)->toBe(extension_loaded('intl') ? DoctorSeverity::Ok : DoctorSeverity::Warning);
+        ->and($finding->severity)->toBe(extension_loaded('intl') ? Severity::Info : Severity::Warning);
 });
 
 it('finds drives stuck in deleting for more than a day', function (): void {
@@ -67,10 +68,10 @@ it('finds drives stuck in deleting for more than a day', function (): void {
     $finding = driveFindings('drive.drives.deleting')[0];
 
     expect($finding->code)->toBe('drive.drives.deleting_stuck')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
+        ->and($finding->severity)->toBe(Severity::Warning)
         ->and($finding->evidence['drives'])->toBe(1)
-        ->and($finding->hint)->toContain('vaulter:drives:purge --dry-run')
-        ->and(driveFindings('drive.drives.deleting', production: true)[0]->severity)->toBe(DoctorSeverity::Warning);
+        ->and($finding->remediation)->toContain('vaulter:drives:purge --dry-run')
+        ->and(driveFindings('drive.drives.deleting', production: true)[0]->severity)->toBe(Severity::Warning);
 });
 
 it('finds the drift of used_bytes with the quota calculator and writes nothing', function (): void {
@@ -88,9 +89,9 @@ it('finds the drift of used_bytes with the quota calculator and writes nothing',
     $finding = driveFindings('drive.drives.usage')[0];
 
     expect($finding->code)->toBe('drive.drives.usage_drift')
-        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
+        ->and($finding->severity)->toBe(Severity::Warning)
         ->and($finding->evidence)->toBe(['drifted' => 1, 'checked' => 1, 'largest_drift_bytes' => 100])
-        ->and($finding->hint)->toContain('vaulter:drives:recount --dry-run')
+        ->and($finding->remediation)->toContain('vaulter:drives:recount --dry-run')
         ->and(DB::table(driveTable('drives'))->where('id', $id)->value('used_bytes'))->toBe(105)
         ->and(array_filter($statements, static fn (string $sql): bool => preg_match('/^\s*(insert|update|delete)\b|for update/i', $sql) === 1))->toBe([]);
 });
@@ -119,7 +120,6 @@ it('validates the drive configuration as one of the config validators', function
 
     $finding = driveFindings('core.config.valid')[0];
 
-    expect($finding->severity)->toBe(DoctorSeverity::Error)
-        ->and($finding->evidence['validator'])->toBe(BindingsRegistrar::class)
-        ->and(app(DriveConfig::class))->toBeInstanceOf(DriveConfig::class);
+    expect($finding->severity)->toBe(Severity::Error)
+        ->and($finding->evidence['validator'])->toBe(BindingsRegistrar::class);
 });

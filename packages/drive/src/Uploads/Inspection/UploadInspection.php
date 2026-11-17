@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads\Inspection;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Configuration\DriveConfig;
+use LogicException;
+use Packman\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Drive\Operations\DriveContext;
@@ -17,11 +18,11 @@ use Vaulter\Kernel;
 #[Internal]
 final readonly class UploadInspection
 {
-    public function __construct(private DriveConfig $config, private ProfileRegistry $profiles) {}
+    public function __construct(private DriveOptions $config, private ProfileRegistry $profiles) {}
 
     public function maximum(DriveContext $context): ?int
     {
-        $global = $this->config->maxFileSize();
+        $global = $this->config->uploads->maxFileSize;
         $profile = $this->profiles->get($context->drive->profile)->getDrivePolicy()->maxFileBytes;
         $limits = array_filter([$global > 0 ? $global : null, $profile], static fn (?int $limit): bool => $limit !== null);
 
@@ -34,12 +35,16 @@ final readonly class UploadInspection
         $keys = [];
         foreach ($inspectors as $inspector) {
             if ($inspector->key() === '' || isset($keys[$inspector->key()])) {
-                throw new \LogicException('Upload inspectors must have distinct nonempty keys.');
+                throw new LogicException('Upload inspectors must have distinct nonempty keys.');
             }
             $keys[$inspector->key()] = true;
         }
-        usort($inspectors, static fn (UploadInspector $a, UploadInspector $b): int => ($b->priority() <=> $a->priority()) ?: strcmp($a->key(), $b->key()));
-        $global = new UploadPolicy(maxFileSize: $this->config->maxFileSize() ?: null, allowedMimeTypes: $this->config->allowedMimeTypes(), blockedExtensions: $this->config->blockedExtensions());
+        usort($inspectors, static function (UploadInspector $a, UploadInspector $b): int {
+            $cmp = $b->priority() <=> $a->priority();
+
+            return $cmp !== 0 ? $cmp : strcmp($a->key(), $b->key());
+        });
+        $global = new UploadPolicy(maxFileSize: $this->config->uploads->maxFileSize !== 0 ? $this->config->uploads->maxFileSize : null, allowedMimeTypes: $this->config->uploads->allowedMimeTypes, blockedExtensions: $this->config->uploads->blockedExtensions);
         $profile = $this->profiles->get($context->drive->profile);
         $uploads = $profile->getUploadPolicy();
         // The profile's file size limit lives in its drive policy.
