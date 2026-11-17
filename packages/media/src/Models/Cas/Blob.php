@@ -8,9 +8,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Support\UtcDateTimeCast;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -74,7 +74,7 @@ class Blob extends Model
     #[\Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('blobs');
+        return app(DatabaseOptions::class)->table('blobs');
     }
 
     /**

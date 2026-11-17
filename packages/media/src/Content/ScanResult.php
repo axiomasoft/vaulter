@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Content;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 #[Api]

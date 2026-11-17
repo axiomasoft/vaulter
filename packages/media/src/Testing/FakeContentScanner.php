@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Testing;
 
+use Packman\Attributes\Api;
 use Throwable;
-use Vaulter\Attributes\Api;
 use Vaulter\Media\Content\ScanInput;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;

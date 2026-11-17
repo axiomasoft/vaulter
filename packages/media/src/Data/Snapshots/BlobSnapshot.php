@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Data\Snapshots;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Enums\Cas;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 #[Api]
 enum ScanMode: string

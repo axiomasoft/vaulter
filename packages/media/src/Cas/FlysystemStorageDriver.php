@@ -10,7 +10,7 @@ use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\UnableToRetrieveMetadata;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Media\Contracts\Cas\StorageDriver;

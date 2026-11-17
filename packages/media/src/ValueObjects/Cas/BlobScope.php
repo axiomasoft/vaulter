@@ -6,7 +6,7 @@ namespace Vaulter\Media\ValueObjects\Cas;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The deduplication scope of a CAS blob: identical bytes share one blob only inside

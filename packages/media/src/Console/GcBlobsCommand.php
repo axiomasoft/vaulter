@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Configuration\MediaConfig;

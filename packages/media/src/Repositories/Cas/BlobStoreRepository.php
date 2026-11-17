@@ -6,7 +6,7 @@ namespace Vaulter\Media\Repositories\Cas;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Enums\Cas\BlobStatus;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Exceptions\Cas;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;

@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Media\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ConfigValidator;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
@@ -111,7 +110,7 @@ final readonly class MediaConfig
             throw new InvalidConfigurationException('[Vaulter] vaulter-media.content_store must be a class name.');
         }
 
-        ConfigValidator::assertImplements(key: 'vaulter-media.content_store', class: $class, base: ContentStore::class);
+        self::assertImplements(key: 'vaulter-media.content_store', class: $class, base: ContentStore::class);
 
         return $class;
     }
@@ -125,7 +124,7 @@ final readonly class MediaConfig
             throw new InvalidConfigurationException('[Vaulter] vaulter-media.storage_driver must be a class name.');
         }
 
-        ConfigValidator::assertImplements(key: 'vaulter-media.storage_driver', class: $class, base: StorageDriver::class);
+        self::assertImplements(key: 'vaulter-media.storage_driver', class: $class, base: StorageDriver::class);
 
         return $class;
     }
@@ -139,7 +138,7 @@ final readonly class MediaConfig
             throw new InvalidConfigurationException('[Vaulter] vaulter-media.blob_store must be a class name.');
         }
 
-        ConfigValidator::assertImplements(key: 'vaulter-media.blob_store', class: $class, base: BlobStore::class);
+        self::assertImplements(key: 'vaulter-media.blob_store', class: $class, base: BlobStore::class);
 
         return $class;
     }
@@ -158,8 +157,22 @@ final readonly class MediaConfig
             throw new InvalidConfigurationException('[Vaulter] vaulter-media.models.blob must be a class name.');
         }
 
-        ConfigValidator::assertModel(key: 'vaulter-media.models.blob', class: $class, base: Blob::class);
+        self::assertImplements(key: 'vaulter-media.models.blob', class: $class, base: Blob::class);
 
         return $class;
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $base
+     *
+     * @phpstan-assert class-string<T> $class
+     */
+    private static function assertImplements(string $key, string $class, string $base): void
+    {
+        if (!class_exists($class) || !is_a($class, $base, true)) {
+            throw new InvalidConfigurationException('[Vaulter] '.$key.' must name a class implementing or extending '.$base.'.');
+        }
     }
 }

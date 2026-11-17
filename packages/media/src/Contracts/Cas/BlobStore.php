@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Contracts\Cas;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Media\Data\Snapshots\BlobSnapshot;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 

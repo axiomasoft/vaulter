@@ -8,8 +8,8 @@ use Closure;
 use Illuminate\Database\Query\Builder;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Contracts\Cas\BlobPins;
@@ -51,7 +51,7 @@ final readonly class BlobPinStore implements BlobPins
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
         private ContentStore $content,
-        private DatabaseConfig $databaseConfig,
+        private DatabaseOptions $databaseConfig,
         private IdStrategyResolver $ids,
         private MediaConfig $mediaConfig,
     ) {}

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Contracts\Cas;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The result of staging an upload to a LOCAL, seekable temp file: the

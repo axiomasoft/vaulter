@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity as DoctorSeverity;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -54,7 +54,7 @@ it('prints the pins per owner type and warns only about an owner whose module is
         ->and($findings[1]->severity)->toBe(DoctorSeverity::Warning)
         ->and($findings[1]->code)->toBe('media.blobs.pins_inactive_owner')
         ->and($findings[1]->evidence)->toBe(['owner_type' => 'drive.revision_blob', 'module' => 'drive', 'state' => 'not installed', 'pins' => 2])
-        ->and($findings[1]->hint)->toContain('own purge or rollback');
+        ->and($findings[1]->remediation)->toContain('own purge or rollback');
 });
 
 it('changes nothing it reports on', function (): void {

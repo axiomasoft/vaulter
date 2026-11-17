@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
 use Vaulter\Media\Cas\BlobPinReferences;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Console\GcBlobsCommand;

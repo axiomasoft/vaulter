@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Doctor;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Support\Identity;
 
@@ -48,7 +48,7 @@ final readonly class BlobIntegrityCheck implements DoctorCheck
         return [DoctorFinding::warning(
             code: 'media.blobs.integrity',
             message: sprintf('%d blob(s) failed the integrity scrub (missing object, wrong size or wrong sha256); their content is not handed out.', $count),
-            hint: 'upload the same bytes again into the same scope: the ingest rewrites the object and lifts the mark',
+            remediation: 'upload the same bytes again into the same scope: the ingest rewrites the object and lifts the mark',
             evidence: ['failed' => $count, 'blobs' => implode(',', $ids)],
         )];
     }

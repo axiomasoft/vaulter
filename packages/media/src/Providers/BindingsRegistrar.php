@@ -7,8 +7,7 @@ namespace Vaulter\Media\Providers;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ScheduleConfig;
+use Packman\Attributes\Internal;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\BlobPinStore;
@@ -69,6 +68,6 @@ final class BindingsRegistrar implements ModuleBindings
         $config->storageDriver();
         $config->blobStore();
         // Fail at boot on a bad value; the tasks themselves read the config when the scheduler resolves.
-        (new ScheduleConfig($app->make('config')))->frequencies('vaulter-media', SchedulingRegistrar::KEYS);
+        SchedulingRegistrar::frequencies($app->make('config'));
     }
 }

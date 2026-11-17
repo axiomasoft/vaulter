@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity as DoctorSeverity;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Media\Cas\BlobScrubber;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Models\Cas\Blob;
@@ -59,7 +59,7 @@ it('warns about the marked blobs and names the way to heal them', function (): v
         ->and($findings[0]->code)->toBe('media.blobs.integrity')
         ->and($findings[0]->evidence['failed'])->toBe(2)
         ->and($findings[0]->evidence['blobs'])->toContain((string) $first->getKey())->toContain((string) $second->getKey())
-        ->and($findings[0]->hint)->toContain('upload the same bytes again');
+        ->and($findings[0]->remediation)->toContain('upload the same bytes again');
 });
 
 it('lists no more blobs than the sample limit', function (): void {

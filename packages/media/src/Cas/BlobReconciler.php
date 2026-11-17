@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Configuration\MediaConfig;

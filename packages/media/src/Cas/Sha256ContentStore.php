@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\ListableContentStore;
 use Vaulter\Media\Contracts\Cas\ListableStorageDriver;

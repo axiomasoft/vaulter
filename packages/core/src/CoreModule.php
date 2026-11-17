@@ -110,27 +110,12 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
         return new PluginManifest(
             id: 'vaulter.core',
             version: '1.0.0',
-            resourceRoot: __DIR__.'/../resources',
+            resourceRoot: realpath(dirname(__DIR__).'/resources') ?: throw new \LogicException('Vaulter resource root is unavailable.'),
         );
     }
 
     #[Override]
-    public function register(PluginRegistrar $registrar): void
-    {
-        $registrar
-            ->defineSlot(DoctorCheck::class, PluginSlotKind::Handler, PluginCardinality::Many)
-            ->defineSlot(OperationMiddleware::class, PluginSlotKind::OperationMiddleware, PluginCardinality::Many)
-            ->defineSlot(EventSink::class, PluginSlotKind::EventSink, PluginCardinality::Many)
-            ->defineSlot(OutboxConsumer::class, PluginSlotKind::OutboxConsumer, PluginCardinality::Many)
-            ->defineSlot(RouteLabelSource::class, PluginSlotKind::Contributor, PluginCardinality::Many)
-            ->defineSlot(ProductionInvariant::class, PluginSlotKind::Handler, PluginCardinality::Many)
-            ->contributeSlot(ProductionInvariant::class, 'core.tenancy', TenancyInvariant::class, 0, 'core.tenancy')
-            ->contributeSlot(OperationMiddleware::class, 'core.telemetry', TelemetryMiddleware::class);
-
-        foreach (self::DOCTOR_CHECKS as $key => $check) {
-            $registrar->contributeSlot(DoctorCheck::class, $key, $check, 0, $key);
-        }
-    }
+    public function register(PluginRegistrar $registrar): void {}
 
     #[Override]
     public function configRoot(): string

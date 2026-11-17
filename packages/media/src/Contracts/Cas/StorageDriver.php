@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Media\Contracts\Cas;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * A thin abstraction over a Flysystem disk: the byte plane under the CAS.

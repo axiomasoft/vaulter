@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Media\Testing\Contracts;
 
 use DateTimeImmutable;
+use Packman\Attributes\Api;
 use PHPUnit\Framework\Assert;
-use Vaulter\Attributes\Api;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 
 /**
