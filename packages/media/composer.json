@@ -86,10 +86,10 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman": "0.1.x-dev",
-                    "axiomasoft/packman-plugins": "0.1.x-dev",
-                    "axiomasoft/packman-schema": "0.1.x-dev",
-                    "axiomasoft/packman-testkit": "0.1.x-dev"
+                    "axiomasoft/packman": "0.1.0",
+                    "axiomasoft/packman-plugins": "0.1.0",
+                    "axiomasoft/packman-schema": "0.1.0",
+                    "axiomasoft/packman-testkit": "0.1.0"
                 }
             }
         },
