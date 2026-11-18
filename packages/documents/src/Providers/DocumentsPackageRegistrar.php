@@ -10,16 +10,8 @@ use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Vaulter\Documents\Console\MakeDocumentTypeCommand;
-use Vaulter\Documents\Console\MakeExporterCommand;
 use Vaulter\Documents\DocumentsModule;
-use Vaulter\Documents\Enums\DocumentEventType;
-use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
-use Vaulter\Documents\Operations\DocumentsOperationPolicies;
-use Vaulter\Modules\Activation;
-use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleSpec;
-use Vaulter\Modules\VaulterExtensionFacets;
+use Vaulter\Laravel\VaulterPluginRegistrar;
 
 /**
  * Registers Packman plugin/extension facets and Vaulter module runtime metadata for {@see DocumentsModule}.
@@ -47,7 +39,7 @@ final class DocumentsPackageRegistrar implements PackageRegistrar
             }
         }
 
-        VaulterExtensionFacets::register($app, DocumentsModule::class, dirname(__DIR__, 2).'/composer.json');
+        VaulterPluginRegistrar::register($app, DocumentsModule::class, dirname(__DIR__, 2).'/composer.json');
 
         if ($config instanceof Repository) {
             foreach ($preservedMaps as $key => $value) {
@@ -55,22 +47,6 @@ final class DocumentsPackageRegistrar implements PackageRegistrar
             }
         }
 
-        $root = dirname(__DIR__, 2);
-
-        ModuleCatalog::of($app)->offerPlugin(new PluginModuleSpec(
-            plugin: DocumentsModule::class,
-            activation: Activation::Auto,
-            protocolVersion: '1.0',
-            routes: [$root.'/routes/documents.php'],
-            commands: [
-                MakeDocumentTypeCommand::class,
-                MakeExporterCommand::class,
-            ],
-            bindings: [BindingsRegistrar::class],
-            events: [DocumentEventType::class],
-            problems: [DocumentsProblemCodes::class],
-            operations: [DocumentsOperationPolicies::class],
-        ));
     }
 
     #[Override]

@@ -22,7 +22,7 @@ it('keeps the committed surface manifest of core equal to the attributes of its 
         ->and($manifest)->toContain('Vaulter\Kernel api since 1.0')
         ->and($manifest)->not->toContain('\Facades\Vaulter api')
         ->and($manifest)->not->toContain('\VaulterManager api')
-        ->and($manifest)->toContain('Vaulter\Attributes\Api api since 1.0');
+        ->and($manifest)->toContain('Vaulter\Attributes\Label api since 1.0');
 });
 
 it('marks every type of core with exactly one surface attribute', function (): void {

@@ -7,7 +7,7 @@ namespace Vaulter\Filament\Support;
 use BackedEnum;
 use DateTimeInterface;
 use Illuminate\Pagination\Paginator;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The sort and page step every panel table shares: the rows come from authorized drive

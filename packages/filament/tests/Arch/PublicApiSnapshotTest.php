@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Filament\Configuration\FilamentConfig;
+use Vaulter\Filament\Configuration\FilamentOptions;
 
 /** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
 test('vaulter-filament configuration API matches the frozen golden (P2.5)', function (): void {
-    $reflection = new ReflectionClass(FilamentConfig::class);
+    $reflection = new ReflectionClass(FilamentOptions::class);
     $methods = [];
 
     foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -32,7 +32,7 @@ test('vaulter-filament configuration API matches the frozen golden (P2.5)', func
     }
 
     sort($methods);
-    $manifest = FilamentConfig::class."\n".implode("\n", $methods)."\n";
+    $manifest = FilamentOptions::class."\n".implode("\n", $methods)."\n";
     $golden = __DIR__.'/__snapshots__/public-api.txt';
 
     if (getenv('UPDATE_SNAPSHOT') === '1') {

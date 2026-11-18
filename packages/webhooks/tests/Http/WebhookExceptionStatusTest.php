@@ -33,7 +33,7 @@ it('renders each webhook exception with its stable code and HTTP status', functi
     expect($problem->json())->not->toHaveKey('message')
         ->and($problem->getContent())->not->toContain('[Vaulter]')
         ->and(app(ProblemCatalog::class)->all())->toHaveKey($code)
-        ->and($problem->json('meta'))->toBe(array_diff_key($extras, ['errors' => true]) ?: []);
+        ->and($problem->json('meta'))->toBe(array_diff_key($extras, ['errors' => true]));
 })->with([
     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
     'blocked outbound address' => [$blockedAddress = BlockedOutboundUrlException::blockedAddress('evil.test', '127.0.0.1'), 'validation_failed', 422, ['errors' => ['url' => [$blockedAddress->getMessage()]]]],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Resources;
 
 use BackedEnum;
+use DateTimeInterface;
 use Filament\Actions\Action;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\TextInput;
@@ -17,8 +18,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Override;
+use Packman\Attributes\Internal;
+use Packman\Filament\Concerns\Authorization\AuthorizesResource;
 use UnitEnum;
-use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
@@ -37,7 +39,10 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class ActivityResource extends Resource
 {
+    use AuthorizesResource;
     use ConfiguresNavigationGroup;
+
+    protected static string $packmanKey = 'vaulter.activity';
 
     protected static ?string $model = PanelRecord::class;
 
@@ -179,7 +184,7 @@ final class ActivityResource extends Resource
         $value = $record[$key] ?? null;
 
         return match (true) {
-            $value instanceof \DateTimeInterface => $value->format('d.m.Y H:i:s'),
+            $value instanceof DateTimeInterface => $value->format('d.m.Y H:i:s'),
             is_scalar($value) => (string) $value,
             default => '',
         };
@@ -195,7 +200,7 @@ final class ActivityResource extends Resource
         $pairs = [];
 
         foreach (is_array($context) ? $context : [] as $key => $value) {
-            $pairs[(string) $key] = is_scalar($value) ? (string) $value : (json_encode($value) ?: '');
+            $pairs[(string) $key] = is_scalar($value) ? (string) $value : json_encode($value, JSON_THROW_ON_ERROR);
         }
 
         return $pairs;

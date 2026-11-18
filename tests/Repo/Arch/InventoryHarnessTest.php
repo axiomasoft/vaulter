@@ -68,8 +68,8 @@ function inv_temp_repo(array $fixture): Repo
     mkdir($root.'/packages/alpha', 0775, true);
     mkdir($root.'/packages/beta', 0775, true);
     mkdir($root.'/tests/Repo/Arch/Fixtures', 0775, true);
-    file_put_contents($root.'/packages/alpha/composer.json', json_encode(['name' => 'axioma-studio/vaulter-alpha', 'autoload' => ['psr-4' => ['Vaulter\\Alpha\\' => 'src/']]]));
-    file_put_contents($root.'/packages/beta/composer.json', json_encode(['name' => 'axioma-studio/vaulter-beta', 'autoload' => ['psr-4' => ['Vaulter\\Beta\\' => 'src/']], 'require' => ['axioma-studio/vaulter-alpha' => 'self.version', 'php' => '^8.4']]));
+    file_put_contents($root.'/packages/alpha/composer.json', json_encode(['name' => 'axiomasoft/vaulter-alpha', 'autoload' => ['psr-4' => ['Vaulter\\Alpha\\' => 'src/']]]));
+    file_put_contents($root.'/packages/beta/composer.json', json_encode(['name' => 'axiomasoft/vaulter-beta', 'autoload' => ['psr-4' => ['Vaulter\\Beta\\' => 'src/']], 'require' => ['axiomasoft/vaulter-alpha' => 'self.version', 'php' => '^8.4']]));
     file_put_contents($root.'/'.Repo::PACKAGES_FIXTURE, json_encode($fixture, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
     return Repo::at($root);
@@ -757,7 +757,7 @@ it('detects a drift of the packages fixture, rewrites only the verified fields a
         $generator = inv_generator();
         $check = $generator->check($repo);
         expect($check['code'])->toBe(1)
-            ->and(implode("\n", $check['lines']))->toContain('-            "composer": "stale/name"')->toContain('+            "composer": "axioma-studio/vaulter-alpha"')->toContain('--write');
+            ->and(implode("\n", $check['lines']))->toContain('-            "composer": "stale/name"')->toContain('+            "composer": "axiomasoft/vaulter-alpha"')->toContain('--write');
 
         expect($generator->write($repo))->toBe([Repo::PACKAGES_FIXTURE]);
         $packages = $repo->packages();

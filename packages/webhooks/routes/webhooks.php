@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Webhooks\Http\Controllers\Webhooks\DeactivateWebhookEndpointController;
 use Vaulter\Webhooks\Http\Controllers\Webhooks\DeleteWebhookEndpointController;
@@ -24,7 +24,7 @@ use Vaulter\Webhooks\Http\Controllers\Webhooks\UpdateWebhookEndpointController;
 | middleware answers 404 for a cached route of an inactive module.
 */
 
-$routes = app(RoutesConfig::class);
+$routes = app(RoutesOptions::class);
 $id = '[A-Za-z0-9_-]+';
 
 Route::prefix($routes->versionedPrefix())

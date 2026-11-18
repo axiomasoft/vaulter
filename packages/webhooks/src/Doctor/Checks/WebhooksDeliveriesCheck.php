@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Doctor\Checks;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 #[Internal]
 final readonly class WebhooksDeliveriesCheck implements DoctorCheck
 {
-    public function __construct(private WebhooksConfig $config) {}
+    public function __construct(private WebhooksOptions $config) {}
 
     public function key(): string
     {
@@ -43,7 +43,7 @@ final readonly class WebhooksDeliveriesCheck implements DoctorCheck
         return [DoctorFinding::warning(
             code: 'core.webhooks.deliveries_failing',
             message: $disabled.' endpoint(s) were disabled after failing and '.$dead.' delivery(ies) used up their retries.',
-            hint: 'fix the receiver, re-enable the endpoint and run vaulter:webhooks:redeliver',
+            remediation: 'fix the receiver, re-enable the endpoint and run vaulter:webhooks:redeliver',
             evidence: ['disabled_endpoints' => $disabled, 'dead_deliveries' => $dead],
         )];
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Activity\Activity;
@@ -34,7 +34,7 @@ beforeEach(function (): void {
 
 it('rolls a rename back on PostgreSQL when its outbox write fails, leaving the connection usable', function (): void {
     $outcomes = ForkRace::run([function (): array {
-        $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+        $table = app(DatabaseOptions::class)->table(OutboxStore::EVENTS);
         DB::connection()->beforeExecuting(static function (string $query) use ($table): void {
             if (str_starts_with($query, 'insert into "'.$table.'"')) {
                 // A real failed statement, so PostgreSQL marks the transaction aborted.

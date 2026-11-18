@@ -13,7 +13,7 @@ The package set is right, but its declared dependencies are not honest:
 - `vaulter-documents` cannot create a drive without `vaulter-drive` (its tests boot
   `VaulterDriveServiceProvider`), while the README claims the opposite (audit finding N15).
 - `vaulter-filament` calls the drive facade but `composer.json` requires only core (N14).
-- AzGuard-specific code (`AzGuardGuard`, the AzGuard permission driver, `AzGuardConfig`, `azguard.*`
+- AzGuard-specific code (`AzGuardGuard`, the AzGuard permission driver, `AzGuardOptions`, `azguard.*`
   keys) lives in core, and the bridge requires `azguard-core: dev-main` (N21).
 
 An installation of "core without drive" does not exist: without `DriveProvisioner` no drive can be

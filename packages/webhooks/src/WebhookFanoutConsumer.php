@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -21,7 +21,7 @@ use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenantIdentityPredicate;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -47,7 +47,7 @@ final readonly class WebhookFanoutConsumer implements OutboxConsumer
     public const string ID = 'webhooks.fanout';
 
     public function __construct(
-        private WebhooksConfig $webhooksConfig,
+        private WebhooksOptions $webhooksConfig,
         private MetricsRecorder $metrics,
         private TraceRecorder $tracer,
         private VaulterDatabase $database,

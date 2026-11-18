@@ -38,6 +38,16 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__.'/packages/documents/src',
         __DIR__.'/packages/documents/database',
         __DIR__.'/packages/documents/tests',
+        __DIR__.'/packages/collaboration/src',
+        __DIR__.'/packages/collaboration/database',
+        __DIR__.'/packages/collaboration/tests',
+        __DIR__.'/packages/webhooks/src',
+        __DIR__.'/packages/webhooks/database',
+        __DIR__.'/packages/webhooks/tests',
+        __DIR__.'/packages/azguard/src',
+        __DIR__.'/packages/azguard/tests',
+        __DIR__.'/packages/filament/src',
+        __DIR__.'/packages/filament/tests',
     ]);
     $rectorConfig->importNames(importDocBlockNames: false);
     $rectorConfig->removeUnusedImports();

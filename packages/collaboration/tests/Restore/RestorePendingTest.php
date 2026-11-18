@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Sleep;
+use Vaulter\Collaboration\Persistence\AppendResult;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
@@ -49,8 +50,8 @@ it('provides the drainer of the documents while the module is active', function 
 
 it('drains the saved edits through the hub, keeps them in a revision and closes the generation on a restore', function (): void {
     FakeHub::install();
-    $receipts = array_map(fn (string $payload) => Compaction::append($this->node, $payload), ['u1', 'u2', 'u3']);
-    $through = max(array_map(static fn ($receipt): int => $receipt->seq, $receipts));
+    $receipts = array_map(fn (string $payload): AppendResult => Compaction::append($this->node, $payload), ['u1', 'u2', 'u3']);
+    $through = max(array_map(static fn (AppendResult $receipt): int => $receipt->seq, $receipts));
 
     $this->documents->restore($this->id, $this->first);
 

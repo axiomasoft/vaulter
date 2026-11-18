@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Exceptions;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Webhooks\Errors\WebhooksErrorCode;
 
 /**
  * A webhook delivery (or endpoint registration) targeted a URL the outbound guard
@@ -83,5 +87,11 @@ final class BlockedOutboundUrlException extends VaulterException implements Prob
     public function problemDetails(): array
     {
         return ['errors' => ['url' => [$this->getMessage()]]];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: WebhooksErrorCode::BlockedOutboundUrl, category: ErrorCategory::Internal);
     }
 }

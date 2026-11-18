@@ -6,8 +6,8 @@ namespace Vaulter\Collaboration\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Persistence\RetiredGenerations;
 
 /**
@@ -28,12 +28,12 @@ final class PruneGenerationsCommand extends Command
 
     protected $description = 'Delete the log and receipts of closed collaboration generations past their grace.';
 
-    public function handle(RetiredGenerations $generations, CollaborationConfig $config): int
+    public function handle(RetiredGenerations $generations, CollaborationOptions $config): int
     {
         $now = Carbon::now();
         $cutoff = $now->copy()->subSeconds($config->retiredGenerationGraceSeconds());
 
-        if ((bool) $this->option('dry-run')) {
+        if ($this->option('dry-run')) {
             $due = $generations->countDue($cutoff);
             $this->components->info(sprintf('Would prune %d closed generation%s retired before %s.', $due, $due === 1 ? '' : 's', $cutoff->toDateTimeString()));
 

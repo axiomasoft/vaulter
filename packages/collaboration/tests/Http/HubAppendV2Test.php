@@ -16,7 +16,7 @@ use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\PermissionVersion;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -84,7 +84,7 @@ it('loads an empty log of a document nobody appended to, without creating its he
         ->assertJsonPath('head_seq', 0)
         ->assertJsonPath('tail', []);
 
-    expect(DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->count())->toBe(0);
+    expect(DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))->count())->toBe(0);
 });
 
 it('refuses a protocol 2 load of a document the subject cannot see with the 404 of a missing one', function (): void {
@@ -110,7 +110,7 @@ it('seeds a load from the content of the locked row, together with its state ver
     // A REST PUT commits between open() and the locked read of the log.
     $opened = Hub::aggregate($this->node)->content;
     $version = Hub::aggregate($this->node)->state_version + 1;
-    DB::table(app(DatabaseConfig::class)->table('documents'))
+    DB::table(app(DatabaseOptions::class)->table('documents'))
         ->where('node_id', $this->node->getKey())
         ->update(['content' => json_encode(Hub::tiptap('Changed')), 'state_version' => $version]);
 

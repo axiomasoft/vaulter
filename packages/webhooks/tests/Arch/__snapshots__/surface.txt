@@ -1,7 +1,7 @@
 # Surface manifest of the package `webhooks` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
-Vaulter\Webhooks\Configuration\WebhooksConfig api since 1.0 final readonly class
+Vaulter\Webhooks\Configuration\WebhooksOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
   public const array DEFAULT_BLOCKED_IP_RANGES = [ '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.168.0.0/16', '224.0.0.0/4', '240.0.0.0/4', '::/128', '::1/128', 'fc00::/7', 'fe80::/10', 'ff00::/8', // Not public destinations: IETF protocol assignments, TEST-NET-1/2/3, benchmarking. '192.0.0.0/24', '192.0.2.0/24', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24', // Forms that embed an IPv4 address and may route to an internal one: IPv4-compatible, // NAT64 (RFC 6052 / 8215), 6to4 and Teredo; plus documentation and discard prefixes. '::/96', '64:ff9b::/96', '64:ff9b:1::/48', '2002::/16', '2001::/32', '2001:db8::/32', '100::/64', ]
   public const array REMOVED_KEYS = ['max_attempts' => 'vaulter-webhooks.retry_schedule (attempts = entries + 1)', 'backoff' => 'vaulter-webhooks.retry_schedule', 'disable_after_failures' => 'vaulter-webhooks.disable_after_days', 'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'event_header' => 'the event type, which is the "type" field of the delivery body', 'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease)']
   public function allowedIpRanges(): array
@@ -10,6 +10,7 @@ Vaulter\Webhooks\Configuration\WebhooksConfig api since 1.0 final readonly class
   public function blockedIpRanges(): array
   public function connectTimeout(): int
   public function disableAfterDays(): int
+  public static function fromArray(array $config, string $path = 'vaulter-webhooks'): self
   public function manageAbility(): ?string
   public function maxResponseBytes(): int
   public function relayFanoutChunk(): int
@@ -29,11 +30,30 @@ Vaulter\Webhooks\Contracts\OutboundUrlGuard spi:implement since 1.0 interface
   public function isAllowed(string $url): void
   public function pin(string $url): Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint
 
+Vaulter\Webhooks\Errors\WebhooksErrorCode api since 1.0 enum: string implements Packman\Errors\Contracts\ErrorCode
+  case BlockedOutboundUrl = 'webhooks.blocked_outbound_url'
+  case InvalidWebhookSignature = 'webhooks.invalid_webhook_signature'
+  case WebhookDeliveryNotFound = 'webhooks.webhook_delivery_not_found'
+  case WebhookDeliveryNotRedeliverable = 'webhooks.webhook_delivery_not_redeliverable'
+  case WebhookEndpointNotFound = 'webhooks.webhook_endpoint_not_found'
+  case WebhookResponseTooLarge = 'webhooks.webhook_response_too_large'
+  public function value(): string
+
+Vaulter\Webhooks\Errors\WebhooksProblemDefinitions spi:call since 1.0 final class implements Packman\Errors\Contracts\ProblemDefinitionProvider
+  public function definitions(): iterable
+
 Vaulter\Webhooks\Events\WebhookEndpointDisabled api since 1.0 final readonly class
   public int|string $endpointId
   public ?Illuminate\Support\Carbon $failingSince
   public string $reason
   public function __construct(int|string $endpointId, string $reason, ?Illuminate\Support\Carbon $failingSince)
+
+Vaulter\Webhooks\Providers\WebhooksPackageRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Webhooks\Schema\WebhooksSchemaSets spi:call since 1.0 final class implements Packman\Schema\Contracts\Migration\SchemaSetProvider
+  public function sets(): array
 
 Vaulter\Webhooks\StandardWebhookVerifier api since 1.0 final class
   public function __construct()
@@ -47,6 +67,23 @@ Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint api since 1.0 final readonl
   public function __construct(string $scheme, string $host, string $ip, int $port)
   public function curlResolveEntry(): string
 
-Vaulter\Webhooks\VaulterWebhooksServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
-  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
-  public function packageRegistered(): void
+Vaulter\Webhooks\VaulterWebhooksServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+  protected const array REGISTRARS = [\Vaulter\Webhooks\Providers\WebhooksPackageRegistrar::class]
+  public function boot(): void
+  public function register(): void
+
+Vaulter\Webhooks\WebhooksModule api since 1.0 final class implements Packman\Extensions\Contracts\Composition\WithSlots, Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Extensions\Contracts\Persistence\WithSchema, Packman\Extensions\Contracts\Runtime\WithDiagnostics, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Composition\ContributesToSlots, Packman\Extensions\Concerns\Configuration\Configurable, Packman\Extensions\Concerns\Persistence\OwnsSchema, Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function healthChecks(): array
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function migrationPath(): string
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function problemProviders(): array
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
+  public function schemaComponents(): array
+  public function schemaSetProviders(): array
+  public function slotContributions(): array
+  public function tableNouns(): array
+  public function tablePrefix(): string

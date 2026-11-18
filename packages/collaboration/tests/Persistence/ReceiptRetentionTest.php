@@ -5,13 +5,14 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Collaboration\Persistence\AppendResult;
 use Vaulter\Collaboration\Persistence\RetiredGenerations;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -40,12 +41,12 @@ function retentionCompact(Node $node): void
 /** @return array{generations: int, updates: int, receipts: int} */
 function retentionPrune(): array
 {
-    return app(RetiredGenerations::class)->prune(Carbon::now()->subSeconds(app(CollaborationConfig::class)->retiredGenerationGraceSeconds()));
+    return app(RetiredGenerations::class)->prune(Carbon::now()->subSeconds(app(CollaborationOptions::class)->retiredGenerationGraceSeconds()));
 }
 
 function retentionRows(string $entity, int $generation): int
 {
-    return DB::table(app(DatabaseConfig::class)->table($entity))->where('generation', $generation)->count();
+    return DB::table(app(DatabaseOptions::class)->table($entity))->where('generation', $generation)->count();
 }
 
 beforeEach(function (): void {
@@ -79,11 +80,11 @@ it('closes the generation a restore leaves and refuses its late retry the same b
         ->and($closed?->retiredAt)->not->toBeNull()
         ->and(retentionRows('collaboration_receipts', 0))->toBe(1);
 
-    $late = fn () => Compaction::append($this->node, 'u1', generation: 0, updateId: $this->id);
+    $late = fn (): AppendResult => Compaction::append($this->node, 'u1', generation: 0, updateId: $this->id);
     expect($late)->toThrow(CollaborationEpochMismatchException::class);
 
     // Within the grace the receipts stay.
-    $this->travel(app(CollaborationConfig::class)->retiredGenerationGraceSeconds() - 5)->seconds();
+    $this->travel(app(CollaborationOptions::class)->retiredGenerationGraceSeconds() - 5)->seconds();
     expect(retentionPrune())->toBe(['generations' => 0, 'updates' => 0, 'receipts' => 0])
         ->and(retentionRows('collaboration_receipts', 0))->toBe(1)
         ->and($late)->toThrow(CollaborationEpochMismatchException::class);
@@ -100,7 +101,7 @@ it('waits token_ttl, the retry horizon and the retention days before a closed ge
     config()->set('vaulter-collaboration.hub.token_ttl', 240);
     config()->set('vaulter-collaboration.retention.retired_generation_days', 2);
 
-    expect(app(CollaborationConfig::class)->retiredGenerationGraceSeconds())->toBe(240 + 10 + 2 * 86400);
+    expect(app(CollaborationOptions::class)->retiredGenerationGraceSeconds())->toBe(240 + 10 + 2 * 86400);
 });
 
 it('keeps the receipts of the current generation however old they are', function (): void {
@@ -114,7 +115,7 @@ it('keeps the receipts of the current generation however old they are', function
 
 it('never prunes the document\'s current generation, even one marked retired', function (): void {
     Compaction::append($this->node, 'u1');
-    DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->update(['retired_at' => now()->subYears(2)]);
+    DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))->update(['retired_at' => now()->subYears(2)]);
 
     expect(retentionPrune())->toBe(['generations' => 0, 'updates' => 0, 'receipts' => 0])
         ->and(retentionRows('collaboration_updates', 0))->toBe(1)
@@ -126,7 +127,7 @@ it('prunes the updates a closed generation still held with it', function (): voi
     // Closed with its payload still in the log (the marker was cleared without a compaction).
     Hub::aggregate($this->node)->forceFill(['pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
     retentionRestore($this->node);
-    $this->travel(app(CollaborationConfig::class)->retiredGenerationGraceSeconds() + 1)->seconds();
+    $this->travel(app(CollaborationOptions::class)->retiredGenerationGraceSeconds() + 1)->seconds();
 
     expect(retentionPrune())->toBe(['generations' => 1, 'updates' => 1, 'receipts' => 1])
         ->and(Compaction::rows('collaboration_updates'))->toBe(0);

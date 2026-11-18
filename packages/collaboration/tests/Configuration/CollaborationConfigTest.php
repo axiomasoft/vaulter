@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Data\RoomRef;
-use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 
 /** @param array<string, mixed> $values the `vaulter-collaboration` root, plus `documents` for the `vaulter-documents` root */
-function config_of(array $values = [], array $documents = []): CollaborationConfig
+function config_of(array $values = [], array $documents = []): CollaborationOptions
 {
     $repository = new Repository(['vaulter-collaboration' => $values, 'vaulter-documents' => $documents]);
 
-    return new CollaborationConfig($repository, new DocumentsConfig($repository));
+    return CollaborationOptions::fromArray(($repository)->get('vaulter-collaboration', []))->withContext(DocumentsOptions::fromArray(($repository)->get('vaulter-documents', [])), ($repository)->get('app.url'));
 }
 
 it('reads the shipped defaults of the vaulter-collaboration root', function (): void {
@@ -47,7 +47,7 @@ it('reads the key set, the active kid, the issuer and the webhook secret of the 
 
 it('takes the issuer from app.url unless hub.issuer is set, and never from empty values', function (): void {
     $repository = new Repository(['app' => ['url' => 'https://app.test'], 'vaulter-collaboration' => ['hub' => ['issuer' => ' ']], 'vaulter-documents' => []]);
-    $config = new CollaborationConfig($repository, new DocumentsConfig($repository));
+    $config = CollaborationOptions::fromArray(($repository)->get('vaulter-collaboration', []))->withContext(DocumentsOptions::fromArray(($repository)->get('vaulter-documents', [])), ($repository)->get('app.url'));
 
     expect($config->hubIssuer())->toBe('https://app.test')
         ->and(config_of()->hubIssuer())->toBeNull();
@@ -59,7 +59,7 @@ it('structurally validates the clock skew to 0..30 seconds with default 30 and n
         ->and(config_of()->hubClockSkew())->toBe(30);
 
     foreach ([31, 60, -1] as $skew) {
-        expect(fn () => config_of(['hub' => ['clock_skew' => $skew]])->hubClockSkew())->toThrow(InvalidConfigurationException::class, 'between 0 and 30');
+        expect(fn (): int => config_of(['hub' => ['clock_skew' => $skew]])->hubClockSkew())->toThrow(InvalidConfiguration::class, 'between 0 and 30');
     }
 });
 
@@ -86,10 +86,10 @@ it('parses only room names it issues', function (string $room): void {
 ]);
 
 it('refuses the removed reverb driver and a token ttl above five minutes', function (): void {
-    $ttl = static fn (int $seconds): CollaborationConfig => config_of(['hub' => ['token_ttl' => $seconds]]);
+    $ttl = static fn (int $seconds): CollaborationOptions => config_of(['hub' => ['token_ttl' => $seconds]]);
 
-    expect(fn () => $ttl(301)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
-        ->and(fn () => $ttl(0)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
+    expect(fn (): int => $ttl(301)->hubTokenTtl())->toThrow(InvalidConfiguration::class)
+        ->and(fn (): int => $ttl(0)->hubTokenTtl())->toThrow(InvalidConfiguration::class)
         ->and($ttl(300)->hubTokenTtl())->toBe(300)
         ->and(config_of()->maxStateBytes())->toBe(16777216)
         ->and(config_of(['max_state_bytes' => 0])->maxStateBytes())->toBe(16777216)

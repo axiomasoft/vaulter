@@ -23,7 +23,7 @@ final readonly class VaulterPluginActivationGate implements PluginActivationGate
     public function isEnabled(string $pluginId): bool
     {
         $kernel = $this->app->make(Kernel::class);
-        $moduleId = PluginModuleBridge::moduleId($pluginId);
+        $moduleId = ModuleDeclarations::moduleId($pluginId);
 
         if ($kernel->isSealed()) {
             return $kernel->isValid() && $kernel->isActive($moduleId);

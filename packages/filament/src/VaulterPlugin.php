@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament;
 
-use Filament\Contracts\Plugin;
 use Filament\Panel;
+use LogicException;
 use Override;
-use Vaulter\Attributes\Api;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Filament\Configuration\FilamentConfig;
+use Packman\Attributes\Api;
+use Packman\Filament\Contracts\FilamentPanelPlugin;
+use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Filament\Configuration\FilamentOptions;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
@@ -25,14 +26,14 @@ use Vaulter\Filament\Resources\NodeShareResource;
  *
  * It registers the Drive/permissions resources (Drive, Node, NodeGrant,
  * NodeShare, Activity), each toggleable through
- * FilamentConfig.
+ * FilamentOptions.
  *
  * Resources show snapshots read through the drive entry point and the authorized drive
  * handles (`Vaulter::drives()`, the handle's node, access, share and activity operations), so
  * what a panel admin sees and does is decided by the drive, whichever models the host swapped.
  */
 #[Api]
-final class VaulterPlugin implements Plugin
+final class VaulterPlugin implements FilamentPanelPlugin
 {
     public static function make(): static
     {
@@ -47,10 +48,31 @@ final class VaulterPlugin implements Plugin
      */
     public static function current(Panel $panel): self
     {
-        /** @var self $plugin */
         $plugin = $panel->getPlugin('vaulter');
 
-        return $plugin;
+        return $plugin instanceof self ? $plugin : throw new LogicException('The vaulter panel plugin must be a VaulterPlugin.');
+    }
+
+    public function getGuardPanel(): ?string
+    {
+        return null;
+    }
+
+    public function isEnforced(): bool
+    {
+        return true;
+    }
+
+    /** @return array{resources: list<string>, pages: list<string>, widgets: list<string>} */
+    public function getExclude(): array
+    {
+        return ['resources' => [], 'pages' => [], 'widgets' => []];
+    }
+
+    /** @return list<string> */
+    public function getAbilities(): array
+    {
+        return ['view_any', 'view', 'create', 'update', 'delete', 'restore', 'force_delete', 'rename', 'move', 'trash', 'revoke', 'rotate'];
     }
 
     #[Override]
@@ -112,9 +134,9 @@ final class VaulterPlugin implements Plugin
 
     /**
      * Whether a resource is enabled: its OWN config toggle
-     * (FilamentConfig::resourceEnabled, default true) AND — when the
+     * (FilamentOptions::resourceEnabled, default true) AND — when the
      * resource's schema is behind a core feature flag — that flag
-     * (`app(DriveConfig::class)->featureEnabled()`). Without the AND-condition, a host that disabled
+     * (`app(DriveOptions::class)->featureEnabled()`). Without the AND-condition, a host that disabled
      * the `activity` subsystem but left `ActivityResource`'s own default-on toggle
      * untouched would keep the resource registered against a subsystem it turned
      * off, turning a legitimate "subsystem off" configuration into a broken
@@ -123,12 +145,12 @@ final class VaulterPlugin implements Plugin
      */
     private function resourceEnabled(string $key, ?string $feature): bool
     {
-        $toggledOn = app(FilamentConfig::class)->resourceEnabled($key);
+        $toggledOn = app(FilamentOptions::class)->resourceEnabled($key);
 
         if (!$toggledOn) {
             return false;
         }
 
-        return $feature === null || app(DriveConfig::class)->featureEnabled($feature);
+        return $feature === null || app(DriveOptions::class)->featureEnabled($feature);
     }
 }

@@ -5,25 +5,37 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 use Packman\Attributes\Api;
-use Vaulter\Modules\OffersModules;
+use Packman\Foundation\Concerns\RegistersPackageRegistrars;
+use Packman\Foundation\Contracts\PackageRegistrar;
+use Vaulter\Webhooks\Providers\WebhooksPackageRegistrar;
 
 /**
- * The webhooks package only offers {@see WebhooksModule}; the core module kernel registers what the module
- * declares, so a host that leaves the opt-in module off (`vaulter.modules.webhooks`) gets none of it.
+ * Vaulter Webhooks — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see WebhooksModule}.
  */
-#[Api]
+#[Api(since: '1.0')]
 final class VaulterWebhooksServiceProvider extends ServiceProvider
 {
-    use OffersModules;
+    use RegistersPackageRegistrars {
+        RegistersPackageRegistrars::register as protected registerRegistrars;
+        RegistersPackageRegistrars::boot as protected bootRegistrars;
+    }
 
+    /** @var list<class-string<PackageRegistrar>> */
+    protected const array REGISTRARS = [
+        WebhooksPackageRegistrar::class,
+    ];
+
+    #[Override]
     public function register(): void
     {
-        $this->offerModule(WebhooksModule::class);
+        $this->registerRegistrars();
     }
 
     public function boot(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-webhooks');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
+        $this->bootRegistrars();
     }
 }

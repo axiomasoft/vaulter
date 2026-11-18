@@ -8,8 +8,8 @@ use Firebase\JWT\JWT;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationConfigException;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Support\Identity;
@@ -28,7 +28,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 final readonly class RoomTokens
 {
     public function __construct(
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
         private PermissionVersions $versions,
     ) {}
 
@@ -60,10 +60,10 @@ final readonly class RoomTokens
         $token = JWT::encode(
             payload: [
                 'iss' => $issuer,
-                'aud' => CollaborationConfig::JWT_AUDIENCE,
+                'aud' => CollaborationOptions::JWT_AUDIENCE,
                 'sub' => Identity::stringify($principal->id),
                 'sub_type' => $principal->type,
-                'protocol' => CollaborationConfig::JWT_PROTOCOL,
+                'protocol' => CollaborationOptions::JWT_PROTOCOL,
                 'state_format' => $stateFormat,
                 'document_id' => $documentId,
                 'drive_id' => $driveId,

@@ -2,33 +2,33 @@
   {
     "name": "transitive and external",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {},
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -40,35 +40,35 @@
   {
     "name": "reverse",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {},
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-documents": "*"
+          "axiomasoft/vaulter-documents": "*"
         }
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -80,35 +80,35 @@
   {
     "name": "cycle",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {
-          "axioma-studio/vaulter-documents": "*"
+          "axiomasoft/vaulter-documents": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -120,35 +120,35 @@
   {
     "name": "unknown",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {
-          "axioma-studio/vaulter-missing": "*"
+          "axiomasoft/vaulter-missing": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -160,33 +160,33 @@
   {
     "name": "stale",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {},
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -195,8 +195,8 @@
     },
     "allowlist": [
       {
-        "from": "axioma-studio/vaulter-media",
-        "to": "axioma-studio/vaulter-documents",
+        "from": "axiomasoft/vaulter-media",
+        "to": "axiomasoft/vaulter-documents",
         "reason": "fixture only",
         "decision": "PLAN4-D7"
       }
@@ -206,35 +206,35 @@
   {
     "name": "exact exception",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {},
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-documents": "*"
+          "axiomasoft/vaulter-documents": "*"
         }
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -243,8 +243,8 @@
     },
     "allowlist": [
       {
-        "from": "axioma-studio/vaulter-media",
-        "to": "axioma-studio/vaulter-documents",
+        "from": "axiomasoft/vaulter-media",
+        "to": "axiomasoft/vaulter-documents",
         "reason": "fixture only",
         "decision": "PLAN4-D7"
       }
@@ -254,35 +254,35 @@
   {
     "name": "empty reason",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {},
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-documents": "*"
+          "axiomasoft/vaulter-documents": "*"
         }
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
@@ -291,8 +291,8 @@
     },
     "allowlist": [
       {
-        "from": "axioma-studio/vaulter-media",
-        "to": "axioma-studio/vaulter-documents",
+        "from": "axiomasoft/vaulter-media",
+        "to": "axiomasoft/vaulter-documents",
         "reason": "",
         "decision": "PLAN4-D7"
       }
@@ -302,42 +302,42 @@
   {
     "name": "metapackage only",
     "manifests": {
-      "axioma-studio/vaulter-core": {
+      "axiomasoft/vaulter-core": {
         "require": {},
         "require-dev": {}
       },
-      "axioma-studio/vaulter-media": {
+      "axiomasoft/vaulter-media": {
         "require": {
-          "axioma-studio/vaulter-core": "*"
+          "axiomasoft/vaulter-core": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-drive": {
+      "axiomasoft/vaulter-drive": {
         "require": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         },
         "require-dev": {}
       },
-      "axioma-studio/vaulter-documents": {
+      "axiomasoft/vaulter-documents": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
-          "axioma-studio/vaulter-media": "*"
+          "axiomasoft/vaulter-media": "*"
         }
       },
-      "axioma-studio/vaulter-azguard": {
+      "axiomasoft/vaulter-azguard": {
         "require": {
-          "axioma-studio/vaulter-drive": "*"
+          "axiomasoft/vaulter-drive": "*"
         },
         "require-dev": {
           "axioma/azguard": "*"
         }
       },
-      "axioma-studio/vaulter": {
+      "axiomasoft/vaulter": {
         "require": {},
         "require-dev": {
-          "axioma-studio/vaulter-documents": "*"
+          "axiomasoft/vaulter-documents": "*"
         }
       }
     },

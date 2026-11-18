@@ -7,7 +7,7 @@ namespace Vaulter\AzGuard;
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
 

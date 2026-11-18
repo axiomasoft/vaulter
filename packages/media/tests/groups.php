@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 return [
     'database' => [
+        'Feature/PackmanConsumerBootTest.php',
         'Cas/BlobCommandsTest.php',
         'Cas/BlobCommitAtomicityTest.php',
         'Cas/BlobCommitTest.php',

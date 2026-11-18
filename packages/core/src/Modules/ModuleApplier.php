@@ -94,6 +94,9 @@ final class ModuleApplier
 
         foreach ($modules->translations as $namespace => $dir) {
             $this->translations($dir, $namespace);
+            if ($this->app->runningInConsole()) {
+                $publishes([$dir => $this->app->langPath('vendor/'.$namespace)], $namespace.'-translations');
+            }
         }
 
         if ($this->app->runningInConsole()) {

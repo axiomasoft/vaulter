@@ -91,7 +91,7 @@ $storage = $this->store->create([
     'owner_type'   => $owner->getMorphClass(),
     'owner_id'     => $owner->getKey(),
     'name'         => $this->defaultName($owner),
-    'disk'         => app(\Vaulter\Media\Configuration\MediaConfig::class)->disk(),
+    'disk'         => app(\Vaulter\Media\Configuration\MediaOptions::class)->disk(),
     'storage_type' => $this->storageType($panel),
     'used_bytes'   => 0,
 ]);
@@ -253,7 +253,7 @@ AzGuard **не зависит** — и задаёт вопросы в облас
    ключей ваших моделей.
 
 ::: info Установите мост AzGuard
-`composer require axioma-studio/vaulter-azguard` устанавливает драйвер, реальный
+`composer require axiomasoft/vaulter-azguard` устанавливает драйвер, реальный
 адаптер и `Vaulter\AzGuard\Testing\FakeAzGuardGuard`. Provider сам регистрирует
 драйвер; guard выбирается ключом конфига `vaulter-azguard.guard`; модель пользователя должна реализовать
 `Vaulter\AzGuard\Contracts\AzGuardBackedUser`. Для тестов с фейком нужны установленные

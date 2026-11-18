@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -19,7 +19,7 @@ function webhooksRepository(): Repository
 }
 
 it('validates the configuration defaults the package ships', function (): void {
-    (new WebhooksConfig(webhooksRepository()))->validate();
+    (WebhooksOptions::fromArray((webhooksRepository())->get('vaulter-webhooks', [])))->validate();
 
     expect(true)->toBeTrue();
 });
@@ -28,7 +28,7 @@ it('fails boot for a malformed webhook configuration', function (string $key, mi
     $repository = webhooksRepository();
     $repository->set($key, $value);
 
-    (new WebhooksConfig($repository))->validate();
+    (WebhooksOptions::fromArray(($repository)->get('vaulter-webhooks', [])))->validate();
 })->with([
     ['vaulter-webhooks.delivery.url_guard', stdClass::class],
     ['vaulter-webhooks.relay.fanout_chunk', 0],
@@ -42,14 +42,14 @@ it('fails boot for a malformed webhook configuration', function (string $key, mi
     ['vaulter-webhooks.models.webhook_endpoint', stdClass::class],
     ['vaulter-webhooks.models.webhook_delivery', 42],
     ['vaulter-webhooks.schedule.webhooks_retry', 'sometimes'],
-])->throws(InvalidConfigurationException::class);
+])->throws(InvalidConfiguration::class);
 
 it('refuses a removed pre-1.0 webhook delivery key and names its replacement', function (string $key, string $replacement): void {
     $repository = webhooksRepository();
     $repository->set('vaulter-webhooks.'.$key, 5);
 
-    expect(fn () => (new WebhooksConfig($repository))->validate())
-        ->toThrow(InvalidConfigurationException::class, "vaulter-webhooks.{$key} was removed: use {$replacement}");
+    expect(fn () => (WebhooksOptions::fromArray(($repository)->get('vaulter-webhooks', [])))->validate())
+        ->toThrow(InvalidConfiguration::class, "vaulter-webhooks.{$key} was removed: use {$replacement}");
 })->with([
     ['max_attempts', 'vaulter-webhooks.retry_schedule'],
     ['backoff', 'vaulter-webhooks.retry_schedule'],
@@ -61,7 +61,7 @@ it('refuses a removed pre-1.0 webhook delivery key and names its replacement', f
 
 it('ships the 1.0 webhook delivery defaults', function (): void {
     $repository = webhooksRepository();
-    $webhooks = new WebhooksConfig($repository);
+    $webhooks = WebhooksOptions::fromArray(($repository)->get('vaulter-webhooks', []));
 
     expect($webhooks->timeout())->toBe(15)
         ->and($webhooks->retrySchedule())->toBe([5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400])
@@ -80,26 +80,24 @@ it('ships the 1.0 webhook delivery defaults', function (): void {
 it('caps the secret rotation overlap at seven days', function (): void {
     $repository = new Repository(['vaulter-webhooks' => ['secret_rotation_overlap' => 9_999_999]]);
 
-    expect((new WebhooksConfig($repository))->secretRotationOverlap())->toBe(604800);
+    expect((WebhooksOptions::fromArray(($repository)->get('vaulter-webhooks', [])))->secretRotationOverlap())->toBe(604800);
 });
 
 it('resolves the model keys from vaulter-webhooks.models and refuses a class that does not extend the shipped model', function (): void {
     $repository = new Repository(['vaulter-webhooks' => ['models' => ['webhook_endpoint' => stdClass::class]]]);
-    $config = new WebhooksConfig($repository);
-
-    expect(fn () => $config->model('webhook_endpoint'))->toThrow(InvalidConfigurationException::class, 'vaulter-webhooks.models.webhook_endpoint')
-        ->and($config->model('webhook_delivery'))->toBe(WebhookDelivery::class)
-        ->and(fn () => $config->model('nope'))->toThrow(InvalidConfigurationException::class, 'Unknown webhooks model key');
-
+    expect(fn (): WebhooksOptions => WebhooksOptions::fromArray($repository->get('vaulter-webhooks', [])))
+        ->toThrow(InvalidConfiguration::class, 'vaulter-webhooks.models.webhook_endpoint');
     $repository->set('vaulter-webhooks.models.webhook_endpoint', WebhookEndpoint::class);
-
-    expect($config->model('webhook_endpoint'))->toBe(WebhookEndpoint::class);
+    $config = WebhooksOptions::fromArray($repository->get('vaulter-webhooks', []));
+    expect($config->model('webhook_endpoint'))->toBe(WebhookEndpoint::class)
+        ->and($config->model('webhook_delivery'))->toBe(WebhookDelivery::class)
+        ->and(fn (): string => $config->model('nope'))->toThrow(InvalidConfiguration::class, 'Unknown webhooks model key');
 });
 
 it('treats a blank manage ability as the shipped ability and null as allow-all', function (): void {
-    $blank = new WebhooksConfig(new Repository(['vaulter-webhooks' => ['manage_ability' => '']]));
-    $open = new WebhooksConfig(new Repository(['vaulter-webhooks' => ['manage_ability' => null]]));
-    $named = new WebhooksConfig(new Repository(['vaulter-webhooks' => ['manage_ability' => 'app.hooks']]));
+    $blank = WebhooksOptions::fromArray(new Repository(['vaulter-webhooks' => ['manage_ability' => '']])->get('vaulter-webhooks', []));
+    $open = WebhooksOptions::fromArray(new Repository(['vaulter-webhooks' => ['manage_ability' => null]])->get('vaulter-webhooks', []));
+    $named = WebhooksOptions::fromArray(new Repository(['vaulter-webhooks' => ['manage_ability' => 'app.hooks']])->get('vaulter-webhooks', []));
 
     expect($blank->manageAbility())->toBe('vaulter.webhooks.manage')
         ->and($open->manageAbility())->toBeNull()
@@ -111,8 +109,13 @@ it('keeps no webhook key under the kernel root: vaulter.webhooks is not read', f
         'vaulter' => ['webhooks' => ['timeout' => 99, 'retry_jitter' => 0.4]],
         'vaulter-webhooks' => ['timeout' => 7],
     ]);
-    $config = new WebhooksConfig($repository);
+    $config = WebhooksOptions::fromArray(($repository)->get('vaulter-webhooks', []));
 
     expect($config->timeout())->toBe(7)
         ->and($config->retryJitter())->toBe(0.1);
+});
+
+it('rejects unknown configuration keys before runtime wiring', function (): void {
+    expect(fn (): WebhooksOptions => WebhooksOptions::fromArray(['delivery' => ['unexpected' => true]]))
+        ->toThrow(InvalidConfiguration::class);
 });

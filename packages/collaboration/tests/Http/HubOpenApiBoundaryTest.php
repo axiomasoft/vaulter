@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\Yaml\Yaml;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Operations\OperationsReference;
 use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
@@ -112,8 +112,8 @@ it('detects a private response mutation in a temp contract report', function ():
         $mutated = OpenApiContract::fromFile($dir.'/hub.yaml');
         $headers = ['content-type' => 'application/json', 'x-vaulter-api-version' => '1', 'x-request-id' => 'fixture', 'cache-control' => 'no-store, private', 'x-vaulter-collab-protocol' => '2'];
         $body = json_encode(['allowed' => true, 'mode' => 'rw', 'userId' => '42', 'epoch' => 1], JSON_THROW_ON_ERROR);
-        expect((new OpenApiResponseValidator($private))->validate('collaboration.hub.authenticate', 200, $headers, $body))->toBe([])
-            ->and((new OpenApiResponseValidator($mutated))->validate('collaboration.hub.authenticate', 200, $headers, $body))->not->toBe([])
+        expect(new OpenApiResponseValidator($private)->validate('collaboration.hub.authenticate', 200, $headers, $body))->toBe([])
+            ->and(new OpenApiResponseValidator($mutated)->validate('collaboration.hub.authenticate', 200, $headers, $body))->not->toBe([])
             ->and(ReleaseOpenApi::report($mutated))->not->toBe(ReleaseOpenApi::report($private));
     } finally {
         foreach (glob($dir.'/*') as $path) {
@@ -124,7 +124,7 @@ it('detects a private response mutation in a temp contract report', function ():
 })->skip(!class_exists(ReleaseOpenApi::class), 'needs the release manifest of the monorepo');
 
 it('validates an actual unsigned hub refusal against its private owner contract', function (): void {
-    $this->postJson('/'.app(RoutesConfig::class)->versionedPrefix().'/collaboration/hub/authenticate', [], ['X-Vaulter-Collab-Protocol' => '2'])
+    $this->postJson('/'.app(RoutesOptions::class)->versionedPrefix().'/collaboration/hub/authenticate', [], ['X-Vaulter-Collab-Protocol' => '2'])
         ->assertStatus(401)
         ->assertJsonPath('code', 'actor_required');
 });

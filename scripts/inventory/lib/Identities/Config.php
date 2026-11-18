@@ -173,12 +173,17 @@ final class Config
      *
      * @return array<string, string> root => file
      */
+    private static function nativeConfigRoot(Node $node, string $symbol): ?string
+    {
+        return str_ends_with($symbol, 'Module::configRoot') && $node instanceof Node\Stmt\Return_ && $node->expr instanceof Scalar\String_ ? $node->expr->value : null;
+    }
+
     private static function registeredRoots(Repo $repo): array
     {
         $roots = [];
         foreach (self::srcFiles($repo) as $file) {
             AstFiles::walk(AstFiles::parse($repo, $file), static function (Node $node, string $symbol) use (&$roots, $file): void {
-                $root = self::manifestCall($node, $symbol, 'config');
+                $root = self::nativeConfigRoot($node, $symbol) ?? self::manifestCall($node, $symbol, 'config');
                 if ($root !== null) {
                     $roots[$root] = $file;
 
@@ -314,7 +319,10 @@ final class Config
      */
     private static function envCall(Node $node, Standard $printer, ?array &$envs = null): ?array
     {
-        if (!$node instanceof Expr\FuncCall || !$node->name instanceof Node\Name || $node->name->toString() !== 'env') {
+        $function = $node instanceof Expr\FuncCall && $node->name instanceof Node\Name && $node->name->toString() === 'env';
+        $environment = $node instanceof Expr\StaticCall && $node->name instanceof Node\Identifier && $node->class instanceof Node\Name
+            && (($node->class->toString() === 'Illuminate\\Support\\Env' && $node->name->toString() === 'get') || ($node->class->toString() === 'self' && $node->name->toString() === 'envString'));
+        if (!$function && !$environment) {
             return null;
         }
         $first = $node->args[0] ?? null;
@@ -350,7 +358,18 @@ final class Config
             $stmts = AstFiles::parse($repo, $file);
             $moduleIds = self::moduleIds($stmts);
             AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$tags, $file): void {
-                $root = self::manifestCall($node, $symbol, 'config');
+                if ($node instanceof Expr\New_ && $node->class instanceof Node\Name && $node->class->getLast() === 'PluginModuleSpec') {
+                    foreach ($node->args as $arg) {
+                        if ($arg instanceof Node\Arg && $arg->name?->toString() === 'translations' && $arg->value instanceof Expr\Array_) {
+                            foreach ($arg->value->items as $item) {
+                                if ($item->key instanceof Scalar\String_) {
+                                    $tags[$item->key->value.'-translations'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:translations'];
+                                }
+                            }
+                        }
+                    }
+                }
+                $root = self::nativeConfigRoot($node, $symbol) ?? self::manifestCall($node, $symbol, 'config');
                 if ($root !== null) {
                     $tags[$root.'-config'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:config'];
 
@@ -360,6 +379,12 @@ final class Config
                     return;
                 }
                 $method = $node->name->toString();
+                if ($method === 'loadTranslationsFrom') {
+                    $namespace = $node->args[1] ?? null;
+                    if ($namespace instanceof Node\Arg && $namespace->value instanceof Scalar\String_) {
+                        $tags[$namespace->value->value.'-translations'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:translations'];
+                    }
+                }
                 if ($method === 'publishes') {
                     $tag = $node->args[1] ?? null;
                     if ($tag instanceof Node\Arg && $tag->value instanceof Scalar\String_) {

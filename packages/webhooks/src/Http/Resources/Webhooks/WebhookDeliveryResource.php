@@ -6,7 +6,8 @@ namespace Vaulter\Webhooks\Http\Resources\Webhooks;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 
@@ -22,7 +23,7 @@ final class WebhookDeliveryResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
+    #[Override]
     public function toArray(Request $request): array
     {
         /** @var WebhookDelivery $delivery */

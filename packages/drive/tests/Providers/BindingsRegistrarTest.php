@@ -18,12 +18,12 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\ModuleDeclarations;
 
 /** What the module kernel does with the drive module's config declaration. */
 function applyDriveConfig(Application $app): void
 {
-    $module = PluginModuleBridge::buildOffered(DriveModule::class, app(ModuleCatalog::class)->pluginSpec(DriveModule::class));
+    $module = ModuleDeclarations::buildOffered(DriveModule::class, app(ModuleCatalog::class)->pluginSpec(DriveModule::class));
     $applier = new ModuleApplier($app);
     foreach ($module->configs() as $root => $file) {
         $applier->config($root, $file);

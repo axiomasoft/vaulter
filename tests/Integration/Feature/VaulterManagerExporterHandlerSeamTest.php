@@ -54,7 +54,7 @@ it('drive() fails loud with an install hint when no active module provides the d
     $manager = new Vaulter(FreshApplication::boot(['vaulter.modules' => ['drive' => false]]));
 
     expect(fn () => $manager->drive(new Node, 'default'))
-        ->toThrow(MissingPackageException::class, 'axioma-studio/vaulter-drive');
+        ->toThrow(MissingPackageException::class, 'axiomasoft/vaulter-drive');
 });
 
 /*

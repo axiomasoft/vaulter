@@ -25,9 +25,12 @@
         "axioma-studio/vaulter-webhooks": "self.version"
     },
     "require": {
-        "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1",
         "axiomasoft/vaulter-core": "self.version",
-        "axiomasoft/vaulter-drive": "self.version"
+        "axiomasoft/vaulter-drive": "self.version",
+        "php": ">=8.4 <8.6"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
@@ -57,6 +60,34 @@
         },
         "branch-alias": {
             "dev-main": "1.0.x-dev"
+        },
+        "packman": {
+            "schema-version": 1,
+            "package-type": "addon",
+            "stability": "stable",
+            "owns": [
+                "Actions",
+                "Configuration",
+                "Console",
+                "Contracts",
+                "Data",
+                "Doctor",
+                "Errors",
+                "Events",
+                "Exceptions",
+                "Http",
+                "Idempotency",
+                "Jobs",
+                "Models",
+                "Policies",
+                "Providers",
+                "Repositories",
+                "Schema",
+                "Security",
+                "Testing",
+                "ValueObjects"
+            ],
+            "error-prefix": "webhooks"
         }
     },
     "repositories": [

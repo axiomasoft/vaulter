@@ -6,6 +6,7 @@ namespace Vaulter\Configuration;
 
 use Override;
 use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Laravel\ConfigurationValidator;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
@@ -17,7 +18,9 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 final readonly class ModelsOptions implements OptionsFactory
 {
     /** @param class-string<OutboxEvent> $outbox */
+    #[Internal]
     public function __construct(
+        #[Internal]
         public string $outbox = OutboxEvent::class,
     ) {}
 

@@ -33,7 +33,7 @@ it('gives the v1 webhook controllers no public method besides the constructor an
     $offenders = [];
     foreach ((new Finder)->files()->in($root)->name('*.php') as $file) {
         $class = WEBHOOK_V1_CONTROLLERS.'\\'.$file->getBasename('.php');
-        foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+        foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
                 $offenders[] = $class.'::'.$method->getName();
             }
@@ -55,7 +55,7 @@ it('runs the webhook endpoint management writes as operations', function (): voi
 
 it('lists every v1 webhook controller that writes', function (): void {
     $writers = array_map(
-        static fn (string $class): string => (new ReflectionClass($class))->getShortName(),
+        static fn (string $class): string => new ReflectionClass($class)->getShortName(),
         WEBHOOK_ENDPOINT_WRITES,
     );
     $readers = ['ListWebhookDeliveriesController', 'ListWebhookEndpointsController', 'ShowWebhookEndpointController'];
@@ -87,7 +87,7 @@ it('binds no route model in the package', function (): void {
 });
 
 it('is not named by the kernel: no file of the core source references Vaulter\Webhooks', function (): void {
-    $core = InstalledVersions::getInstallPath('axioma-studio/vaulter-core').'/src';
+    $core = InstalledVersions::getInstallPath('axiomasoft/vaulter-core').'/src';
     $offenders = [];
     foreach ((new Finder)->files()->in($core)->name('*.php') as $file) {
         $code = '';

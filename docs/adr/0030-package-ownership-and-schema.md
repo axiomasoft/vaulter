@@ -73,8 +73,8 @@ idempotency, schedule, observability, outbox model), `vaulter-media`, `vaulter-d
 sharing, downloads, scan, uploads, trash, changes, handlers, drive models), `vaulter-documents`, `vaulter-webhooks`,
 `vaulter-azguard`, `vaulter-filament`. A key moved with its concept without an alias: `vaulter.access.*` is
 `vaulter-drive.access.*`, `vaulter.webhooks.*` is `vaulter-webhooks.*`, `vaulter.models.blob` is
-`vaulter-media.models.blob`. Typed readers sit with the keys they read (`Vaulter\Drive\Configuration\DriveConfig`,
-`Vaulter\Media\Configuration\MediaConfig`, `Vaulter\Webhooks\Configuration\WebhooksConfig`); the kernel validates
+`vaulter-media.models.blob`. Typed readers sit with the keys they read (`Vaulter\Drive\Configuration\DriveOptions`,
+`Vaulter\Media\Configuration\MediaOptions`, `Vaulter\Webhooks\Configuration\WebhooksOptions`); the kernel validates
 only its own root. Each package publishes its config under its own tag (`vaulter-config`, `vaulter-drive-config`,
 `vaulter-webhooks-config`, …).
 

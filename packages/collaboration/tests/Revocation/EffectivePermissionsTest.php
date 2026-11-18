@@ -9,7 +9,7 @@ use Vaulter\Collaboration\Revocation\SessionChecks;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\Revocation;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Access\AccessInvalidation;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
@@ -83,7 +83,7 @@ it('refuses the revoked writer\'s append when the control message is lost (trans
     $this->drive->access()->revoke($this->folder->id, $this->grant);
     Revocation::relayControl();
 
-    expect(DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', ControlConsumer::ID)->where('state', 'done')->count())->toBeGreaterThan(0);
+    expect(DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', ControlConsumer::ID)->where('state', 'done')->count())->toBeGreaterThan(0);
     Hub::call('append', Hub::seedBody($this->node, 'u1'), $token)->assertNotFound();
     expect(Compaction::seqs($this->node))->toBe([]);
 });
@@ -94,7 +94,7 @@ it('answers a batch recheck connection by connection, in order', function (): vo
     $lostToken = Hub::token($lost);
     $lostDrive->access()->revoke($lostFolder->id, $lostGrant);
     $moved = Hub::token($this->node);
-    DB::table(app(DatabaseConfig::class)->table('documents'))->where('node_id', $this->node->getKey())->increment('collab_epoch');
+    DB::table(app(DatabaseOptions::class)->table('documents'))->where('node_id', $this->node->getKey())->increment('collab_epoch');
 
     $response = revocationRecheck([
         ['id' => 'reader', 'token' => Hub::token($readable)],

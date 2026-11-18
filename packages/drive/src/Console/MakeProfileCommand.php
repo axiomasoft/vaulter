@@ -42,14 +42,14 @@ final class MakeProfileCommand extends Command
         $provider = $this->writeProvider(
             studly: $studly,
             id: $id,
-            force: (bool) $this->option('force'),
+            force: $this->option('force'),
         );
 
         if ($provider === null) {
             return self::FAILURE;
         }
 
-        $this->writeTest(studly: $studly, id: $id, force: (bool) $this->option('force'));
+        $this->writeTest(studly: $studly, id: $id, force: $this->option('force'));
 
         $this->printNextSteps(studly: $studly, id: $id);
 
@@ -125,7 +125,7 @@ final class MakeProfileCommand extends Command
 
     private function renderGrants(): string
     {
-        return (bool) $this->option('no-grants')
+        return $this->option('no-grants')
             ? PHP_EOL.'            ->grants(false)'
             : '';
     }

@@ -100,7 +100,7 @@ it('keeps ordinary JSON editing after the adapter is disabled and never drops pe
         $before = Hub::aggregate($settled);
     }
     $tables = ['v_documents', 'v_document_revisions', 'v_collaboration_updates', 'v_collaboration_receipts', 'v_collaboration_heads'];
-    $rows = static fn () => array_map(static fn ($table) => DB::table($table)->get()->toJson(), $tables);
+    $rows = static fn (): array => array_map(static fn (string $table) => DB::table($table)->get()->toJson(), $tables);
     $unchanged = $rows();
     $pendingDocuments = Documents::in(Vaulter::drive($pending->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1)));
     expect(fn () => $pendingDocuments->update($pending->getKey(), Hub::tiptap('Lose pending edits')))->toThrow(DocumentStatePendingException::class);

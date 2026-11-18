@@ -15,7 +15,7 @@ Vaulter — это строго типизированный слоистый La
 - **Всё, чем владеет Vaulter, — `final` и типизировано**: движок эффективных прав, Drive Actions,
   жизненный цикл CAS, реестр панелей. Это не контракты — это гарантии пакета.
 
-В итоге один пакет ложится и в обычное Laravel-приложение, *и* в мультитенантный CoreX SaaS без
+В итоге один пакет ложится и в обычное Laravel-приложение, *и* в мультитенантный Laravel SaaS без
 форка — см. [ADR-0003](/adr/0003-embeddability-data-model) и его преемников
 [ADR-0009](/adr/0009-storage-panels) / [ADR-0011](/adr/0011-id-strategy).
 
@@ -58,7 +58,7 @@ Vaulter — это строго типизированный слоистый La
 
 Эргономичная точка входа `Vaulter::drive($owner)` возвращает
 [`DriveHandle`](#drive-хэндл) (`Vaulter\Drive\DriveHandle` из пакета
-`axioma-studio/vaulter-drive`), который оборачивает ровно этот конвейер для программного
+`axiomasoft/vaulter-drive`), который оборачивает ровно этот конвейер для программного
 использования.
 
 ## Слои
@@ -79,12 +79,12 @@ Action-у и сериализуют результат через Resource, ко
 
 Один use case на каждый, `final readonly`. Action открывает транзакцию, применяет бизнес-правила,
 вызывает репозитории/CAS и диспатчит доменное событие **после коммита**. Набор Drive на запись
-(`Vaulter\Drive\Actions\*`, требует `axioma-studio/vaulter-drive`):
+(`Vaulter\Drive\Actions\*`, требует `axiomasoft/vaulter-drive`):
 `CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, `RenameNodeAction`,
 `CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `PurgeNodeAction`. Actions
 документных узлов живут в `Vaulter\Documents\Actions\*` (требует
-`axioma-studio/vaulter-documents`); Actions эндпоинтов вебхуков живут в `Vaulter\Webhooks\Actions\*`
-(`axioma-studio/vaulter-webhooks`). В ядре Actions нет: оно только запускает операции.
+`axiomasoft/vaulter-documents`); Actions эндпоинтов вебхуков живут в `Vaulter\Webhooks\Actions\*`
+(`axiomasoft/vaulter-webhooks`). В ядре Actions нет: оно только запускает операции.
 
 ::: info Размещение авторизации
 Actions **не** выполняют никаких проверок доступа. Авторизация применяется один раз, на HTTP-границе
@@ -102,8 +102,8 @@ store-репозитории (`NodeStoreRepository`, `DriveStoreRepository`, …
 ### Models — сменяемые, резолвятся через `Config`
 
 Vaulter никогда не ссылается на конкретный класс модели напрямую в доменном коде; каждый пакет резолвит свои
-модели через собственный типизированный читатель конфига (`Vaulter\Drive\Configuration\DriveConfig`,
-`Vaulter\Media\Configuration\MediaConfig`, `Vaulter\Webhooks\Configuration\WebhooksConfig`) по
+модели через собственный типизированный читатель конфига (`Vaulter\Drive\Configuration\DriveOptions`,
+`Vaulter\Media\Configuration\MediaOptions`, `Vaulter\Webhooks\Configuration\WebhooksOptions`) по
 `config('vaulter-drive.models.*')`, `config('vaulter-media.models.*')`, `config('vaulter-webhooks.models.*')`. Хост наследует модель, чтобы добавить
 поведение ULID, тенант-скоуп или аудит. Модели — единственная часть пакета, которая **не** `final`
 (их должно быть можно расширять); всё остальное — `final`.
@@ -121,7 +121,7 @@ Vaulter никогда не ссылается на конкретный кла�
 Владение следует графу Composer (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azguard` и
 `filament` строятся поверх `drive`) и зафиксировано в [ADR-0030](/adr/0030-package-ownership-and-schema) и
 [ADR-0031](/adr/0031-collaboration-package-and-durability).
-**`axioma-studio/vaulter-core`** (namespace `Vaulter\`) — только ядро: в нём нет доменных таблиц, моделей и
+**`axiomasoft/vaulter-core`** (namespace `Vaulter\`) — только ядро: в нём нет доменных таблиц, моделей и
 сервисов модулей.
 
 | Директория (core) | Ответственность |
@@ -138,15 +138,15 @@ Vaulter никогда не ссылается на конкретный кла�
 
 | Пакет | Namespace | Владеет |
 |---|---|---|
-| `axioma-studio/vaulter-media` | `Vaulter\Media\` | `v_blobs` и `v_blob_references` (пины), контракты и движок CAS (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` и `vaulter:blobs:reconcile`. |
-| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | Точка входа `Vaulter\Drive\Vaulter` (фасад `Vaulter\Drive\Facades\Vaulter`, алиас `Vaulter`), `DriveHandle`, Actions и события, доступ (`AccessResolver`, драйверы прав), sharing, активность, журнал изменений, квоты, загрузки, состояние сканирования, профили, обработчики файлов, а также таблицы, маршруты, команды и doctor-проверки drive. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/события/модели документных узлов, реестр типов документов (`Types\*`), презентер документов, экспорт, контракты коллаборации (`CollaborationDriver`, `SupportsCollaboration`) и нейтральный контракт состояния `State\CollaborativeState` с pending-маркером, формы контента (`Content\OpaqueContent`, `Content\TipTap\*`). |
-| `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Исходящие вебхуки: эндпоинты, `WebhookFanoutConsumer` (outbox-потребитель `webhooks.fanout`), `WebhookSigner`, URL-guard, повторы, админский HTTP и команды `vaulter:webhooks:*`. Opt-in. |
-| `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Admin-плагин Filament 5 поверх авторизованных Operations drive. |
-| `axioma-studio/vaulter-azguard` | `Vaulter\AzGuard\` | Драйвер прав AzGuard, контракт guard, карта прав, реальный адаптер и тестовый fake. |
+| `axiomasoft/vaulter-media` | `Vaulter\Media\` | `v_blobs` и `v_blob_references` (пины), контракты и движок CAS (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` и `vaulter:blobs:reconcile`. |
+| `axiomasoft/vaulter-drive` | `Vaulter\Drive\` | Точка входа `Vaulter\Drive\Vaulter` (фасад `Vaulter\Drive\Facades\Vaulter`, алиас `Vaulter`), `DriveHandle`, Actions и события, доступ (`AccessResolver`, драйверы прав), sharing, активность, журнал изменений, квоты, загрузки, состояние сканирования, профили, обработчики файлов, а также таблицы, маршруты, команды и doctor-проверки drive. |
+| `axiomasoft/vaulter-documents` | `Vaulter\Documents\` | Actions/события/модели документных узлов, реестр типов документов (`Types\*`), презентер документов, экспорт, контракты коллаборации (`CollaborationDriver`, `SupportsCollaboration`) и нейтральный контракт состояния `State\CollaborativeState` с pending-маркером, формы контента (`Content\OpaqueContent`, `Content\TipTap\*`). |
+| `axiomasoft/vaulter-webhooks` | `Vaulter\Webhooks\` | Исходящие вебхуки: эндпоинты, `WebhookFanoutConsumer` (outbox-потребитель `webhooks.fanout`), `WebhookSigner`, URL-guard, повторы, админский HTTP и команды `vaulter:webhooks:*`. Opt-in. |
+| `axiomasoft/vaulter-filament` | `Vaulter\Filament\` | Admin-плагин Filament 5 поверх авторизованных Operations drive. |
+| `axiomasoft/vaulter-azguard` | `Vaulter\AzGuard\` | Драйвер прав AzGuard, контракт guard, карта прав, реальный адаптер и тестовый fake. |
 | `@vaulter/vue` | — | UI Drive + composables (npm). `src/api` не импортирует Vue, редактор и realtime-пакеты и ничего из `src/` вне `src/api` (arch-тест `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
-Метапакет `axioma-studio/vaulter` ставит core, media, drive и documents; webhooks, collaboration, azguard и filament
+Метапакет `axiomasoft/vaulter` ставит core, media, drive и documents; webhooks, collaboration, azguard и filament
 ставятся отдельно (см. [Установку](/ru/getting-started/installation)). Каждый пакет поставляет свои миграции
 (не публикуются), свой файл конфига (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
 `vaulter-webhooks`, `vaulter-azguard`, `vaulter-filament`) и свой тестовый кит.
@@ -374,7 +374,7 @@ webhooks, azguard и filament зависят от drive. Core владеет о�
 эти границы проверяют существующие boundary и surface guards.
 
 Vaulter-пакеты в `require-dev` должны входить в транзитивное замыкание runtime `require` пакета.
-Исключён только точный метапакет `axioma-studio/vaulter`. Внешний `axioma/azguard` не является sibling Vaulter.
+Исключён только точный метапакет `axiomasoft/vaulter`. Внешний `axioma/azguard` не является sibling Vaulter.
 Неизвестные runtime siblings и циклы запрещены. Исключение dev-графа содержит точные `from`, `to`,
 непустые `reason` и `decision`; устаревшие записи также приводят к ошибке. Сейчас allowlist пуст.
 

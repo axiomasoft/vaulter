@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Doctor\Data\DoctorContext;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Doctor\Checks\OutboxConsumerGapCheck;
-use Vaulter\Doctor\DoctorContext;
 use Vaulter\Events\Outbox\ConsumeResult;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxConsumer;
@@ -89,7 +89,7 @@ function rowOf(OutboxEvent $event, string $consumer = ScriptedConsumer::ID): ?ar
 
 function setReconciled(string $id, int $seq): void
 {
-    app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::CONSUMERS))
+    app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::CONSUMERS))
         ->where('consumer_id', $id)->update(['reconciled_through_seq' => $seq, 'activation_seq' => $seq]);
 }
 

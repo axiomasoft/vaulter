@@ -335,7 +335,7 @@ and exercise Vaulter without wiring a real role system. A missing or `null` driv
 **never** silently open a production install — it fails loud at resolve time.
 :::
 
-The `azguard` key requires `composer require axioma-studio/vaulter-azguard`.
+The `azguard` key requires `composer require axiomasoft/vaulter-azguard`.
 Its provider registers the driver and real guard adapter; bridge settings live under
 `vaulter-azguard.*`, and the user model must implement `AzGuardBackedUser`.
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\DownloadGuards;
 use Vaulter\Drive\Contracts\DownloadGuard;
@@ -27,7 +28,11 @@ function downloadGuards(): DownloadGuards
     RecordingDownloadGuard::$inputs = [];
     RecordingDownloadGuard::$failure = null;
 
-    return FreshApplication::boot(after: [DownloadGuardProvider::class])->make(DownloadGuards::class);
+    $outerResolver = Model::getConnectionResolver();
+    $guards = FreshApplication::boot(after: [DownloadGuardProvider::class])->make(DownloadGuards::class);
+    Model::setConnectionResolver($outerResolver);
+
+    return $guards;
 }
 
 function checkDownload(DownloadGuards $guards): void
@@ -54,8 +59,8 @@ it('contributes the drive content availability check as the built-in download gu
 it('runs every active guard in the order of the slot, the fixtures ahead of the built-in availability guard', function (): void {
     $guards = downloadGuards();
 
-    // The built-in guard (priority 0) runs last and denies the dummy node: no file behind it.
-    expect(fn () => checkDownload($guards))->toThrow(ContentUnavailableException::class)
+    // The built-in guard (priority 0) runs last and denies the dummy node: it does not exist in the database.
+    expect(fn () => checkDownload($guards))->toThrow(NodeNotFoundException::class)
         ->and(RecordingDownloadGuard::$calls)->toBe([FirstDownloadGuard::class, SecondDownloadGuard::class])
         // Every guard sees the same model-free facts: the caller's context and the snapshot ids, never a row.
         ->and(RecordingDownloadGuard::$inputs)->toBe([[DriveContext::class, '901', '902'], [DriveContext::class, '901', '902']]);

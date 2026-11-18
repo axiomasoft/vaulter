@@ -49,8 +49,8 @@ final class ModuleCompiler
         $reasons = [];
         $modules = [];
         foreach (array_values(array_unique($manifests)) as $class) {
-            if (!is_a($class, VaulterModule::class, true) && !is_a($class, ExtensionPlugin::class, true)) {
-                $reasons[] = sprintf('%s is offered as a module but does not implement %s', $class, VaulterModule::class);
+            if (!is_a($class, ExtensionPlugin::class, true)) {
+                $reasons[] = sprintf('%s is offered as a module but does not implement %s', $class, ExtensionPlugin::class);
 
                 continue;
             }
@@ -75,7 +75,7 @@ final class ModuleCompiler
     }
 
     /**
-     * @param list<VaulterModule|ExtensionPlugin>                    $modules
+     * @param list<ExtensionPlugin>                                  $modules
      * @param array<mixed>                                           $overrides   `vaulter.modules`: module id => bool
      * @param array<class-string<ExtensionPlugin>, PluginModuleSpec> $pluginSpecs
      */
@@ -84,7 +84,7 @@ final class ModuleCompiler
         $reasons = [];
 
         // 1. Identity, formats, overrides.
-        /** @var array<string, array{manifest: VaulterModule|ExtensionPlugin, version: string, activation: Activation, requires: array<string, string>}> $known */
+        /** @var array<string, array{manifest: ExtensionPlugin, version: string, activation: Activation, requires: array<string, string>}> $known */
         $known = [];
         foreach ($modules as $manifest) {
             $read = $this->readManifest($manifest, $reasons, $pluginSpecs[$manifest::class] ?? null);
@@ -122,17 +122,7 @@ final class ModuleCompiler
         foreach ($known as $id => $module) {
             $builders[$id] = $builder = new ModuleBuilder(new ModuleId($id));
             try {
-                if ($module['manifest'] instanceof CoreModule) {
-                    $module['manifest']->declareModule($builder);
-                } elseif ($module['manifest'] instanceof VaulterModule) {
-                    $module['manifest']->register($builder);
-                } elseif ($module['manifest'] instanceof ExtensionPlugin) {
-                    PluginModuleBridge::populateFromPlugin(
-                        $builder,
-                        $module['manifest'],
-                        $pluginSpecs[$module['manifest']::class] ?? null,
-                    );
-                }
+                ModuleDeclarations::populateFromPlugin($builder, $module['manifest'], $pluginSpecs[$module['manifest']::class] ?? null);
             } catch (Throwable $e) {
                 $reasons[] = sprintf('module "%s" failed to declare itself: %s', $id, $e->getMessage());
             }
@@ -404,24 +394,18 @@ final class ModuleCompiler
      * @param  list<string>                                                                                     $reasons
      * @return array{id: string, version: string, activation: Activation, requires: array<string, string>}|null
      */
-    private function readManifest(VaulterModule|ExtensionPlugin $manifest, array &$reasons, ?PluginModuleSpec $spec = null): ?array
+    private function readManifest(ExtensionPlugin $manifest, array &$reasons, ?PluginModuleSpec $spec = null): ?array
     {
         if ($manifest instanceof CoreModule) {
             return ['id' => 'core', 'version' => '1.0', 'activation' => Activation::Auto, 'requires' => []];
         }
         $class = $manifest::class;
         try {
-            if ($manifest instanceof VaulterModule) {
-                $id = $manifest->id()->value;
-                $version = $manifest->version();
-                $activation = $manifest->activation();
-                $requires = $manifest->requires();
-            } else {
-                $id = PluginModuleBridge::moduleId($manifest->manifest()->id);
-                $version = $spec->protocolVersion ?? PluginModuleBridge::protocolVersion($manifest->manifest()->version);
-                $activation = $spec->activation ?? Activation::Auto;
-                $requires = PluginModuleBridge::requires($manifest);
-            }
+            $spec ??= $manifest instanceof WithModuleRuntime ? $manifest->moduleRuntime() : null;
+            $id = ModuleDeclarations::moduleId($manifest->manifest()->id);
+            $version = $spec->protocolVersion ?? ModuleDeclarations::protocolVersion($manifest->manifest()->version);
+            $activation = $spec->activation ?? Activation::Auto;
+            $requires = $spec->requires ?? ModuleDeclarations::requires($manifest);
         } catch (Throwable $e) {
             $reasons[] = sprintf('%s has an invalid manifest: %s', $class, $e->getMessage());
 

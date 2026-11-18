@@ -31,6 +31,18 @@ use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Drive\Activity\ActivitySink;
 use Vaulter\Drive\Changes\ChangeJournalSink;
 use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Console\MakeFileHandlerCommand;
+use Vaulter\Drive\Console\MakePermissionDriverCommand;
+use Vaulter\Drive\Console\MakeProfileCommand;
+use Vaulter\Drive\Console\PruneChangesCommand;
+use Vaulter\Drive\Console\PruneRevisionsCommand;
+use Vaulter\Drive\Console\PurgeDrivesCommand;
+use Vaulter\Drive\Console\PurgeTrashCommand;
+use Vaulter\Drive\Console\ReconcileScanWorkCommand;
+use Vaulter\Drive\Console\RecountDrivesCommand;
+use Vaulter\Drive\Console\RescanFileRevisionsCommand;
+use Vaulter\Drive\Console\ResetChangesCommand;
+use Vaulter\Drive\Console\SweepUploadsCommand;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
@@ -58,13 +70,21 @@ use Vaulter\Drive\Doctor\ScanPolicyCheck;
 use Vaulter\Drive\Doctor\ScanScannerCheck;
 use Vaulter\Drive\Doctor\ScanScopeCheck;
 use Vaulter\Drive\Doctor\UploadsTmpCheck;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Errors\DriveProblemDefinitions;
 use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Handlers\NodePresenter as CoreNodePresenter;
+use Vaulter\Drive\Http\Problems\DriveProblemCodes;
+use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Drive\Http\Support\DriveRouteLabels;
+use Vaulter\Drive\Operations\DriveOperationPolicies;
+use Vaulter\Drive\Providers\AccessRegistrar;
+use Vaulter\Drive\Providers\BindingsRegistrar;
+use Vaulter\Drive\Providers\DriveSliceRegistrar;
+use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Drive\Schema\DriveSchema;
 use Vaulter\Drive\Schema\DriveSchemaSets;
 use Vaulter\Drive\Security\PermissionDriverInvariant;
@@ -75,13 +95,16 @@ use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Events\EventSink;
+use Vaulter\Modules\Activation;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 
 /**
  * The drive extension plugin (`vaulter.drive`): tree/file/upload/access/share/change-feed domain,
  * schema, error catalog, capabilities, extension slots, and diagnostic checks.
  */
 #[Api(since: '1.0')]
-final class DriveModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
+final class DriveModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithModuleRuntime, WithSchema, WithSlots
 {
     use Configurable;
     use ContributesToSlots;
@@ -275,5 +298,43 @@ final class DriveModule implements ExtensionPlugin, WithCapabilities, WithConfig
     public function problemProviders(): array
     {
         return [DriveProblemDefinitions::class];
+    }
+
+    public function moduleRuntime(): PluginModuleSpec
+    {
+        $root = dirname(__DIR__);
+
+        return new PluginModuleSpec(
+            plugin: DriveModule::class,
+            activation: Activation::Auto,
+            protocolVersion: '1.0',
+            routes: [$root.'/routes/drive.php'],
+            commands: [
+                PurgeTrashCommand::class,
+                PurgeDrivesCommand::class,
+                RecountDrivesCommand::class,
+                PruneRevisionsCommand::class,
+                SweepUploadsCommand::class,
+                ReconcileScanWorkCommand::class,
+                RescanFileRevisionsCommand::class,
+                PruneChangesCommand::class,
+                ResetChangesCommand::class,
+                MakeProfileCommand::class,
+                MakeFileHandlerCommand::class,
+                MakePermissionDriverCommand::class,
+            ],
+            schedules: [SchedulingRegistrar::class],
+            bindings: [
+                DriveSliceRegistrar::class,
+                AccessRegistrar::class,
+                BindingsRegistrar::class,
+            ],
+            events: [DriveEventType::class],
+            problems: [
+                DriveProblemCodes::class,
+                DriveSliceProblemCodes::class,
+            ],
+            operations: [DriveOperationPolicies::class],
+        );
     }
 }

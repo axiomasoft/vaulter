@@ -42,7 +42,7 @@ it('never announces an auto-disable whose commit failed, even after a later comm
         ->and($heard)->toBe([]);
 
     // A later, unrelated successful commit must not flush the abandoned notice.
-    $database->transaction(static fn () => null);
+    $database->transaction(static fn (): null => null);
     expect($heard)->toBe([]);
 
     // Once the delivery lease expires, a real disabling commit announces it once.

@@ -33,9 +33,9 @@ final class PurgeDrivesCommand extends Command
 
     public function handle(DriveOptions $config, PurgeDriveStepAction $step): int
     {
-        $dryRun = (bool) $this->option('dry-run');
-        $sync = (bool) $this->option('sync');
-        $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
+        $dryRun = $this->option('dry-run');
+        $sync = $this->option('sync');
+        $only = array_values(array_filter(array_map(Identity::stringify(...), $this->option('drive')), static fn (string $id): bool => $id !== ''));
         $failed = false;
         $done = 0;
 

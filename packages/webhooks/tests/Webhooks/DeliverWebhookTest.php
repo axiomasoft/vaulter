@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Webhooks\Actions\RotateWebhookSecretAction;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -36,8 +36,8 @@ use Vaulter\Webhooks\WebhookSigner;
  */
 function runDeliver(WebhookDelivery $delivery): void
 {
-    (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+    new DeliverWebhook(deliveryId: (string) $delivery->getKey())
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
 }
 
 // ─────────────── 2xx — delivered, signed, endpoint touched ───────────────
@@ -235,8 +235,8 @@ it('is a no-op when re-run on an already-delivered delivery', function (): void 
 it('is a no-op when the delivery row no longer exists', function (): void {
     Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
 
-    (new DeliverWebhook(deliveryId: '999999999'))
-        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+    new DeliverWebhook(deliveryId: '999999999')
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
 
     Http::assertNothingSent();
 });

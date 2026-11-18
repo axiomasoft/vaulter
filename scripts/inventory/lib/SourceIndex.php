@@ -350,7 +350,7 @@ final class IndexVisitor extends NodeVisitorAbstract
         foreach ($node->attrGroups as $group) {
             foreach ($group->attrs as $attribute) {
                 $attributes[] = $attribute->name->toString();
-                if ($attribute->name->toString() === 'Vaulter\Attributes\Spi') {
+                if ($attribute->name->toString() === 'Packman\Attributes\Spi') {
                     $spiKind = self::spiKind($attribute);
                 }
             }
@@ -396,7 +396,7 @@ final class IndexVisitor extends NodeVisitorAbstract
             if (($argument->name === null && $i === 0) || $argument->name?->toString() === 'kind') {
                 $value = $argument->value;
 
-                return $value instanceof Expr\ClassConstFetch && $value->name instanceof Node\Identifier && $value->class instanceof Name && $value->class->toString() === 'Vaulter\\Attributes\\SpiKind'
+                return $value instanceof Expr\ClassConstFetch && $value->name instanceof Node\Identifier && $value->class instanceof Name && $value->class->toString() === 'Packman\\Attributes\\SpiKind'
                     ? $value->name->toString()
                     : null;
             }

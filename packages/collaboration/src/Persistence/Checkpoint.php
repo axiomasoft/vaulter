@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Contracts\Observability\MetricsRecorder;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\Webhooks\Exceptions\InvalidWebhookSignatureException;
 
 /**
@@ -44,7 +44,7 @@ final class StandardWebhookVerifier
         foreach ($headers as $name => $value) {
             $values = array_values(array_filter(is_array($value) ? $value : [$value], is_string(...)));
             if ($values !== []) {
-                $lists[strtolower((string) $name)] = array_merge($lists[strtolower((string) $name)] ?? [], $values);
+                $lists[strtolower($name)] = array_merge($lists[strtolower($name)] ?? [], $values);
             }
         }
         foreach (['webhook-id', 'webhook-timestamp'] as $name) {
@@ -74,7 +74,7 @@ final class StandardWebhookVerifier
         }
 
         $received = [];
-        foreach (preg_split('/\s+/', trim($signatures)) ?: [] as $candidate) {
+        foreach (explode(' ', preg_replace('/\s+/', ' ', trim($signatures)) ?? '') as $candidate) {
             if (str_starts_with($candidate, 'v1,')) {
                 $received[] = $candidate;
             }

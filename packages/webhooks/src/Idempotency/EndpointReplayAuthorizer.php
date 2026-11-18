@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Idempotency;
 
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Idempotency\ReplayAuthorizer;
 use Vaulter\Idempotency\ResourceRef;
@@ -54,6 +54,6 @@ final readonly class EndpointReplayAuthorizer implements ReplayAuthorizer
 
     private function currentTenant(): ?string
     {
-        return $this->tenancy->enforced() ? (string) $this->tenancy->current() : null;
+        return $this->tenancy->enforced() ? $this->tenancy->current() : null;
     }
 }

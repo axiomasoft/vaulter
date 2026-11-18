@@ -67,7 +67,7 @@ it('generates whsec_ secrets whose key is 32 random bytes', function (): void {
 });
 
 it('refuses a secret that is not whsec_ plus 24 to 64 base64 key bytes without echoing it', function (string $secret): void {
-    expect(fn () => WebhookSecret::keyBytes($secret))
+    expect(fn (): string => WebhookSecret::keyBytes($secret))
         ->toThrow(InvalidArgumentException::class, 'whsec_');
 
     try {

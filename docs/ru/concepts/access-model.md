@@ -228,7 +228,7 @@ if (is_a($class, NullPermissionDriver::class, allow_string: true) && $this->isPr
 резолвинга.
 :::
 
-Драйвер `azguard` требует `composer require axioma-studio/vaulter-azguard`.
+Драйвер `azguard` требует `composer require axiomasoft/vaulter-azguard`.
 Provider моста сам регистрирует драйвер и реальный адаптер guard; настройки находятся
 в `vaulter-azguard.*`, а модель пользователя должна реализовать `AzGuardBackedUser`.
 

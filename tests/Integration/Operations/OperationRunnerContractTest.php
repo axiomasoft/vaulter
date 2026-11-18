@@ -6,7 +6,7 @@ use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
@@ -71,7 +71,7 @@ function runnerContractRunner(array $middleware, CompiledModules|InvalidModuleGr
     }
     $kernel->seal($state);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), app(VaulterDatabase::class), new NoOperationClaim, new OperationCatalog(static fn (): array => OperationSources::active($kernel)));
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseOptions::class), new ModuleSchemas($kernel, app())), app(VaulterDatabase::class), new NoOperationClaim, new OperationCatalog(static fn (): array => OperationSources::active($kernel)));
 }
 
 function runnerContractSpec(string $name = 'drive.folders.create', string $module = 'drive'): OperationSpec
@@ -90,7 +90,7 @@ function runnerContractFolder(DriveContext $context, string $name): Node
 function runnerContractCounts(string $name): array
 {
     $database = app(VaulterDatabase::class);
-    $tables = app(DatabaseConfig::class);
+    $tables = app(DatabaseOptions::class);
 
     return [
         'nodes' => Node::query()->where('name', $name)->count(),
@@ -330,7 +330,7 @@ it('contributes the telemetry middleware to the container runner', function (): 
 
 it('refuses a mutating operation outside the catalogue before the middleware, the claim and the transaction (D47)', function (): void {
     $context = DriveContext::system(AccessTestHelpers::storage(), 'runner contract');
-    $keys = app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY);
+    $keys = app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY);
     $before = app(VaulterDatabase::class)->connection()->table($keys)->count();
     $transactions = 0;
     Event::listen(TransactionBeginning::class, static function () use (&$transactions): void {

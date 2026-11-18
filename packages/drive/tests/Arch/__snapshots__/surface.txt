@@ -99,74 +99,173 @@ Vaulter\Drive\Concerns\HasDrives api since 1.0 trait
   public static function bootHasDrives(): void
   public function drive(?string $profile = null): Vaulter\Drive\Contracts\DriveHandle
 
-Vaulter\Drive\Configuration\AccessConfig api since 1.0 final readonly class
+Vaulter\Drive\Configuration\AccessOptions api since 1.0 final readonly class
   public const string PERMISSION_DRIVERS_KEY = 'vaulter-drive.access.permission_drivers'
   public const string PERMISSION_DRIVER_KEY = 'vaulter-drive.access.permission_driver'
-  public function gateAbilityMap(): array
-  public function gateCreateAbility(): string
-  public function gateSuperAbility(): string
-  public function permissionDriver(): string
-  public function permissionDrivers(): array
-  public function spatieCreatePermission(): string
-  public function spatiePermissionMap(): array
-  public function spatieRoleSubjectType(): string
-  public function spatieSuperPermission(): string
-  public function spatieTeamSubjectType(): string
-  public function spatieTeamsEnabled(): bool
+  public array $gateAbilities
+  public string $gateCreateAbility
+  public string $gateSuperAbility
+  public string $permissionDriver
+  public array $permissionDrivers
+  public string $spatieCreatePermission
+  public array $spatiePermissions
+  public string $spatieRoleSubjectType
+  public string $spatieSuperPermission
+  public string $spatieTeamSubjectType
+  public bool $spatieTeams
+  public function __construct(string $permissionDriver = 'database', array $permissionDrivers = self::DEFAULT_PERMISSION_DRIVERS, array $gateAbilities = self::DEFAULT_ROLE_ABILITIES, string $gateSuperAbility = 'vaulter.super', string $gateCreateAbility = 'vaulter.create', array $spatiePermissions = self::DEFAULT_ROLE_ABILITIES, string $spatieSuperPermission = 'vaulter.super', string $spatieCreatePermission = 'vaulter.create', bool $spatieTeams = false, string $spatieRoleSubjectType = 'role', string $spatieTeamSubjectType = 'team')
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
-Vaulter\Drive\Configuration\ChangesConfig api since 1.0 final readonly class
-  public function cursorMaxAgeSeconds(): int
-  public function keyGeneration(): int
-  public function maxPageSize(): int
-  public function retentionDays(): int
+Vaulter\Drive\Configuration\ChangesOptions api since 1.0 final readonly class
+  public int $cursorMaxAgeSeconds
+  public int $keyGeneration
+  public int $maxPageSize
+  public int $retentionDays
+  public function __construct(int $retentionDays = self::DEFAULT_RETENTION_DAYS, int $maxPageSize = self::DEFAULT_MAX_PAGE_SIZE, int $keyGeneration = self::DEFAULT_KEY_GENERATION, int $cursorMaxAgeSeconds = self::DEFAULT_CURSOR_MAX_AGE_SECONDS)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
-Vaulter\Drive\Configuration\DownloadsConfig api since 1.0 final readonly class
-  public function deliveryMode(): string
-  public function directTtlSeconds(): int
-  public function inlineMimeTypes(): array
+Vaulter\Drive\Configuration\DownloadsOptions api since 1.0 final readonly class
+  public string $deliveryMode
+  public int $directTtlSeconds
+  public array $inlineMimeTypes
+  public function __construct(string $deliveryMode = 'strict', int $directTtlSeconds = 60, array $inlineMimeTypes = self::DEFAULT_INLINE_MIME_WHITELIST)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
-Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Content\ScanWorkSettings
-  public function access(): Vaulter\Drive\Configuration\AccessConfig
-  public function allowedMimeTypes(): array
-  public function blockedExtensions(): array
-  public function changes(): Vaulter\Drive\Configuration\ChangesConfig
-  public function chunkSize(): int
-  public function completeTimeoutSeconds(): int
-  public function defaultQuota(): ?int
-  public function downloads(): Vaulter\Drive\Configuration\DownloadsConfig
-  public function featureEnabled(string $feature, ?string $profile = null): bool
-  public function leaseSeconds(): int
-  public function listing(): Vaulter\Drive\Configuration\ListingConfig
-  public function maxActiveSessionsPerActor(): int
-  public function maxAttempts(): int
-  public function maxChunkSize(): int
-  public function maxFileSize(): int
-  public function metadataAllowedKeys(): array
-  public function metadataMaxValueLength(): int
-  public function resumableEnabled(): bool
-  public function scan(): Vaulter\Drive\Configuration\ScanConfig
-  public function scanQueue(): string
-  public function scanWork(string $key): int
-  public function scannerTimeoutSeconds(): int
-  public function sessionTtlHours(): int
-  public function sharing(): Vaulter\Drive\Configuration\SharingConfig
-  public function trashRetentionDays(): int
-  public function validateScanWork(bool $requireBroker = false): void
+Vaulter\Drive\Configuration\DriveFeaturesOptions api since 1.0 final readonly class
+  public bool $activity
+  public bool $changes
+  public bool $grants
+  public bool $publicListing
+  public bool $shareLinks
+  public function __construct(bool $grants = true, bool $activity = true, bool $changes = true, bool $shareLinks = false, bool $publicListing = false)
+  public function flag(string $feature): bool
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
-Vaulter\Drive\Configuration\ListingConfig api since 1.0 final readonly class
-  public function scanBudget(): int
+Vaulter\Drive\Configuration\DriveModelsOptions api since 1.0 final readonly class
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
-Vaulter\Drive\Configuration\ScanConfig api since 1.0 final readonly class
+Vaulter\Drive\Configuration\DriveOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public Vaulter\Drive\Configuration\AccessOptions $access
+  public Vaulter\Drive\Configuration\ChangesOptions $changes
+  public Vaulter\Drive\Configuration\DownloadsOptions $downloads
+  public Vaulter\Drive\Configuration\DrivesOptions $drives
+  public Vaulter\Drive\Configuration\DriveFeaturesOptions $features
+  public array $handlers
+  public Vaulter\Drive\Configuration\ListingOptions $listing
+  public Vaulter\Drive\Configuration\DriveModelsOptions $models
+  public Vaulter\Drive\Configuration\ProfilesOptions $profiles
+  public Vaulter\Drive\Configuration\QuotaOptions $quota
+  public Vaulter\Drive\Configuration\ScanOptions $scan
+  public Vaulter\Drive\Configuration\DriveScheduleOptions $schedule
+  public Vaulter\Drive\Configuration\SharingOptions $sharing
+  public Vaulter\Drive\Configuration\TrashOptions $trash
+  public Vaulter\Drive\Configuration\UploadsOptions $uploads
+  public function __construct(Vaulter\Drive\Configuration\ProfilesOptions $profiles = new \Vaulter\Drive\Configuration\ProfilesOptions(), Vaulter\Drive\Configuration\ScanOptions $scan = new \Vaulter\Drive\Configuration\ScanOptions(), Vaulter\Drive\Configuration\DriveFeaturesOptions $features = new \Vaulter\Drive\Configuration\DriveFeaturesOptions(), Vaulter\Drive\Configuration\DrivesOptions $drives = new \Vaulter\Drive\Configuration\DrivesOptions(), Vaulter\Drive\Configuration\AccessOptions $access = new \Vaulter\Drive\Configuration\AccessOptions(), Vaulter\Drive\Configuration\ListingOptions $listing = new \Vaulter\Drive\Configuration\ListingOptions(), Vaulter\Drive\Configuration\SharingOptions $sharing = new \Vaulter\Drive\Configuration\SharingOptions(), Vaulter\Drive\Configuration\DownloadsOptions $downloads = new \Vaulter\Drive\Configuration\DownloadsOptions(), Vaulter\Drive\Configuration\ChangesOptions $changes = new \Vaulter\Drive\Configuration\ChangesOptions(), array $handlers = [], Vaulter\Drive\Configuration\UploadsOptions $uploads = new \Vaulter\Drive\Configuration\UploadsOptions(), Vaulter\Drive\Configuration\TrashOptions $trash = new \Vaulter\Drive\Configuration\TrashOptions(), Vaulter\Drive\Configuration\QuotaOptions $quota = new \Vaulter\Drive\Configuration\QuotaOptions(), Vaulter\Drive\Configuration\DriveScheduleOptions $schedule = new \Vaulter\Drive\Configuration\DriveScheduleOptions(), Vaulter\Drive\Configuration\DriveModelsOptions $models = new \Vaulter\Drive\Configuration\DriveModelsOptions())
+  public function featureEnabled(string $feature): bool
+  public static function fromArray(array $config, string $path = 'vaulter-drive'): self
+
+Vaulter\Drive\Configuration\DriveScheduleOptions api since 1.0 final readonly class
+  public ?string $changesPrune
+  public ?string $drivesPurge
+  public ?string $drivesRecount
+  public ?string $revisionsPrune
+  public ?string $scanReconcile
+  public ?string $trashPurge
+  public ?string $uploadsSweep
+  public function __construct(?string $changesPrune = 'dailyAt:03:20', ?string $uploadsSweep = 'hourlyAt:15', ?string $trashPurge = 'dailyAt:03:30', ?string $drivesPurge = 'hourlyAt:25', ?string $revisionsPrune = 'dailyAt:03:40', ?string $scanReconcile = 'everyFiveMinutes', ?string $drivesRecount = null)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\DrivesOptions api since 1.0 final readonly class
+  public bool $deleteWithOwner
+  public function __construct(bool $deleteWithOwner = false)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\ListingOptions api since 1.0 final readonly class
+  public int $scanBudget
+  public function __construct(int $scanBudget = 1000)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\ProfilesOptions api since 1.0 final readonly class
+  public string $default
+  public array $providers
+  public function __construct(string $default = \Vaulter\Drive\Profiles\DefaultProfile::class, array $providers = [])
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\QuotaOptions api since 1.0 final readonly class
+  public ?int $defaultBytes
+  public function __construct(?int $defaultBytes = null)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\ResumableMetadataOptions api since 1.0 final readonly class
+  public array $allowedKeys
+  public int $maxValueLength
+  public function __construct(array $allowedKeys = self::DEFAULT_ALLOWED_KEYS, int $maxValueLength = 512)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\ResumableUploadsOptions api since 1.0 final readonly class
+  public int $chunkSize
+  public int $completeTimeoutSeconds
+  public bool $enabled
+  public int $maxActiveSessionsPerActor
+  public int $maxChunkSize
+  public Vaulter\Drive\Configuration\ResumableMetadataOptions $metadata
+  public int $sessionTtlHours
+  public function __construct(bool $enabled = true, int $chunkSize = 8388608, int $maxChunkSize = 67108864, int $sessionTtlHours = 24, int $completeTimeoutSeconds = 60, int $maxActiveSessionsPerActor = 20, Vaulter\Drive\Configuration\ResumableMetadataOptions $metadata = new \Vaulter\Drive\Configuration\ResumableMetadataOptions())
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\ScanOptions api since 1.0 final readonly class
+  public Vaulter\Media\Enums\Cas\ScanMode $mode
+  public ?string $policyVersion
+  public ?string $rolloutKey
+  public ?string $scanner
+  public ?string $scannerKey
+  public ?string $scannerVersion
+  public function __construct(Vaulter\Media\Enums\Cas\ScanMode $mode = \Vaulter\Media\Enums\Cas\ScanMode::Off, ?string $scanner = null, ?string $scannerKey = null, ?string $scannerVersion = null, ?string $policyVersion = null, ?string $rolloutKey = null)
+  public static function fromSections(mixed $raw, Vaulter\Drive\Configuration\UploadsScanOptions $alias, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
   public function globalSpec(): Vaulter\Drive\Content\ScanPolicySpec
-  public function mode(): Vaulter\Media\Enums\Cas\ScanMode
-  public function scanner(): ?string
 
-Vaulter\Drive\Configuration\SharingConfig api since 1.0 final readonly class
-  public function defaultTtlHours(): int
-  public function maxTtlHours(): int
-  public function prefixLength(): int
-  public function tokenGenerator(): string
-  public function urlBase(): string
+Vaulter\Drive\Configuration\SharingOptions api since 1.0 final readonly class
+  public int $defaultTtlHours
+  public int $maxTtlHours
+  public int $prefixLength
+  public string $tokenGenerator
+  public string $urlBase
+  public function __construct(string $tokenGenerator = \Vaulter\Drive\Support\RandomShareTokenGenerator::class, string $urlBase = '/share', int $prefixLength = 8, int $defaultTtlHours = 72, int $maxTtlHours = 720)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\TrashOptions api since 1.0 final readonly class
+  public int $retentionDays
+  public function __construct(int $retentionDays = 30)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\UploadsOptions api since 1.0 final readonly class
+  public array $allowedMimeTypes
+  public array $blockedExtensions
+  public int $maxFileSize
+  public bool $rejectMimeMismatch
+  public Vaulter\Drive\Configuration\ResumableUploadsOptions $resumable
+  public Vaulter\Drive\Configuration\UploadsScanOptions $scan
+  public function __construct(Vaulter\Drive\Configuration\UploadsScanOptions $scan = new \Vaulter\Drive\Configuration\UploadsScanOptions(), int $maxFileSize = 5368709120, array $allowedMimeTypes = [], array $blockedExtensions = [], bool $rejectMimeMismatch = true, Vaulter\Drive\Configuration\ResumableUploadsOptions $resumable = new \Vaulter\Drive\Configuration\ResumableUploadsOptions())
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Drive\Configuration\UploadsScanOptions api since 1.0 final readonly class
+  public int $cleanupBatch
+  public int $leaseSeconds
+  public int $maxAttempts
+  public ?Vaulter\Media\Enums\Cas\ScanMode $mode
+  public ?string $policyVersion
+  public int $publishCooldownSeconds
+  public string $queue
+  public int $recoveryBatch
+  public ?bool $required
+  public ?string $rolloutKey
+  public ?string $scanner
+  public ?string $scannerKey
+  public int $scannerTimeoutSeconds
+  public ?string $scannerVersion
+  public function __construct(?bool $required = null, ?Vaulter\Media\Enums\Cas\ScanMode $mode = null, ?string $scanner = null, ?string $scannerKey = null, ?string $scannerVersion = null, ?string $policyVersion = null, ?string $rolloutKey = null, string $queue = 'default', int $leaseSeconds = 120, int $scannerTimeoutSeconds = 60, int $maxAttempts = 5, int $publishCooldownSeconds = 30, int $recoveryBatch = 100, int $cleanupBatch = 100)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+  public function workValue(string $key): int
 
 Vaulter\Drive\Content\ScanPolicySpec api since 1.0 final readonly class
   public Vaulter\Media\Enums\Cas\ScanMode $mode
@@ -659,6 +758,25 @@ Vaulter\Drive\DriveHandle api since 1.0 final readonly class implements Vaulter\
   public function withCorrelationId(string $correlationId): static
   public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
 
+Vaulter\Drive\DriveModule api since 1.0 final class implements Packman\Extensions\Contracts\Composition\WithCapabilities, Packman\Extensions\Contracts\Composition\WithSlots, Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Extensions\Contracts\Persistence\WithSchema, Packman\Extensions\Contracts\Runtime\WithDiagnostics, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Composition\ContributesToSlots, Packman\Extensions\Concerns\Composition\ProvidesCapabilities, Packman\Extensions\Concerns\Configuration\Configurable, Packman\Extensions\Concerns\Persistence\OwnsSchema, Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function definedCapabilities(): array
+  public function definedSlots(): array
+  public function healthChecks(): array
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function migrationPath(): string
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function problemProviders(): array
+  public function providedCapabilities(): array
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
+  public function schemaComponents(): array
+  public function schemaSetProviders(): array
+  public function slotContributions(): array
+  public function tableNouns(): array
+  public function tablePrefix(): string
+
 Vaulter\Drive\Enums\Access\Ability api since 1.0 enum: string
   case Comment = 'comment'
   case Copy = 'copy'
@@ -825,6 +943,58 @@ Vaulter\Drive\Enums\Uploads\UploadStatus api since 1.0 enum: string uses Vaulter
   public function canTransitionTo(self $target): bool
   public function isOpen(): bool
   public static function values(): array
+
+Vaulter\Drive\Errors\DriveErrorCode api since 1.0 enum: string implements Packman\Errors\Contracts\ErrorCode
+  case CannotDeleteHeadRevision = 'drive.cannot_delete_head_revision'
+  case ContentUnavailable = 'drive.content_unavailable'
+  case CrossDriveOperation = 'drive.cross_drive_operation'
+  case CursorExpired = 'drive.cursor_expired'
+  case DriveArchived = 'drive.drive_archived'
+  case DriveNotFound = 'drive.drive_not_found'
+  case DuplicateRegistration = 'drive.duplicate_registration'
+  case FileSizeLimitExceeded = 'drive.file_size_limit_exceeded'
+  case FolderChildrenLimitExceeded = 'drive.folder_children_limit_exceeded'
+  case GrantNotFound = 'drive.grant_not_found'
+  case InvalidCursor = 'drive.invalid_cursor'
+  case InvalidDestination = 'drive.invalid_destination'
+  case InvalidDriveState = 'drive.invalid_drive_state'
+  case InvalidNodeName = 'drive.invalid_node_name'
+  case InvalidProfile = 'drive.invalid_profile'
+  case InvalidProperties = 'drive.invalid_properties'
+  case MissingPermissionDriver = 'drive.missing_permission_driver'
+  case NodeMoveCycle = 'drive.node_move_cycle'
+  case NodeNameConflict = 'drive.node_name_conflict'
+  case NodeNotFound = 'drive.node_not_found'
+  case NodeNotTrashed = 'drive.node_not_trashed'
+  case NodeSequenceExhausted = 'drive.node_sequence_exhausted'
+  case NodeSequenceMismatch = 'drive.node_sequence_mismatch'
+  case NodeTrashedByAncestor = 'drive.node_trashed_by_ancestor'
+  case NotAFile = 'drive.not_a_file'
+  case PermissionDenied = 'drive.permission_denied'
+  case ProfileRestriction = 'drive.profile_restriction'
+  case QuotaExceeded = 'drive.quota_exceeded'
+  case RestoreDestinationChanged = 'drive.restore_destination_changed'
+  case RestoreDestinationRequired = 'drive.restore_destination_required'
+  case RevisionNotFound = 'drive.revision_not_found'
+  case RevisionPinned = 'drive.revision_pinned'
+  case ShareLinkTtlExceeded = 'drive.share_link_ttl_exceeded'
+  case ShareNotFound = 'drive.share_not_found'
+  case SharePasswordRequired = 'drive.share_password_required'
+  case ShareRoleNotAllowed = 'drive.share_role_not_allowed'
+  case TreeDepthLimitExceeded = 'drive.tree_depth_limit_exceeded'
+  case TreeTraversalIncomplete = 'drive.tree_traversal_incomplete'
+  case UnknownProfile = 'drive.unknown_profile'
+  case UnknownRole = 'drive.unknown_role'
+  case UnsupportedNodeKind = 'drive.unsupported_node_kind'
+  case UploadConflict = 'drive.upload_conflict'
+  case UploadNotFound = 'drive.upload_not_found'
+  case UploadOffsetMismatch = 'drive.upload_offset_mismatch'
+  case UploadRejected = 'drive.upload_rejected'
+  case ValidationFailed = 'drive.validation_failed'
+  public function value(): string
+
+Vaulter\Drive\Errors\DriveProblemDefinitions spi:call since 1.0 final class implements Packman\Errors\Contracts\ProblemDefinitionProvider
+  public function definitions(): iterable
 
 Vaulter\Drive\Events\Access\EffectivePermissionsChanged api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public const string REASON_PATTERN = '/^[a-z][a-z0-9_.:-]{0,63}$/'
@@ -1112,38 +1282,45 @@ Vaulter\Drive\Events\Uploads\UploadInitiated api since 1.0 final readonly class 
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
 Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function nullDriverInProduction(string $key): self
   public static function unknownDriver(string $key, array $known): self
 
 Vaulter\Drive\Exceptions\Access\PermissionDeniedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forAbility(string $ability): self
   public static function forAction(string $action): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function for(Vaulter\Drive\Access\ValueObjects\Subject $subject, string $driverClass): self
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Access\UnknownRoleException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function for(string $key, ?int $version = null): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forRevision(int|string $revisionId): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Changes\CursorExpiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public static function pruned(): self
   public static function reset(): self
 
 Vaulter\Drive\Exceptions\Changes\InvalidCursorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function malformed(): self
   public static function otherDrive(): self
@@ -1151,43 +1328,51 @@ Vaulter\Drive\Exceptions\Changes\InvalidCursorException api since 1.0 final clas
 
 Vaulter\Drive\Exceptions\Content\ContentQuarantinedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\DriveArchivedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forDrive(int|string $driveId): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Files\ContentUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Files\UploadRejectedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly string $reason
   public function __construct(string $reason)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\InvalidDriveStateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function for(int|string $driveId, string $operation, Vaulter\Drive\Enums\DriveStatus|string $status): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function between(int|string $fromStorageId, int|string $toStorageId): self
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\InvalidCursorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function invalid(): self
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
@@ -1202,6 +1387,7 @@ Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException api since 1.0 final clas
   public const string TOO_LONG = 'too_long'
   public const string TRAILING_DOT_OR_SPACE = 'trailing_dot_or_space'
   public readonly string $reason
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forName(string $name, string $reason): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -1216,31 +1402,37 @@ Vaulter\Drive\Exceptions\Nodes\InvalidPropertiesException api since 1.0 final cl
   public const string VALUE_TOO_LONG = 'value_too_long'
   public readonly string $reason
   public static function because(string $reason, string $subject = ''): self
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Nodes\NodeCycleException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forMove(int|string $nodeId, int|string $intoId): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forName(string $name, int|null|string $parentId): self
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forId(int|string $id): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\NodeTrashedByAncestorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
@@ -1248,43 +1440,51 @@ Vaulter\Drive\Exceptions\Nodes\NodeTrashedByAncestorException api since 1.0 fina
 
 Vaulter\Drive\Exceptions\Nodes\NotAFileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\RestoreDestinationChangedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\RestoreDestinationRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\StaleNodeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct(?string $nodeId = null)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forNode(int|string $nodeId): self
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forId(int|string $id): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\TreeTraversalIncompleteException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forBound(int $bound): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forKind(Vaulter\Drive\Enums\NodeKind $kind): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly int $limit
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forLimit(int $limit): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -1292,6 +1492,7 @@ Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException api since 1.0 fin
 
 Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly int $limit
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forParent(int|string $parentId, int $limit): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -1299,27 +1500,32 @@ Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException api since 1
 
 Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly int $limit
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forDepth(int $depth, int $limit): self
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Profiles\InvalidProfileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function idStrategyWithoutOwnTables(string $panel): self
   public static function missingClass(string $panel, string $kind, string $fqcn): self
   public static function notInstanceOf(string $panel, string $kind, string $fqcn, string $contract): self
 
 Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forOperation(string $operation): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Profiles\UnknownProfileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forName(string $name, array $known): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\QuotaExceededException api since 1.0 class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forStorage(int|string $storageId, int $quotaBytes, int $usedBytes, int $incomingBytes): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -1328,44 +1534,52 @@ Vaulter\Drive\Exceptions\Quota\QuotaExceededException api since 1.0 final class 
   public static function forStorage(int|string $storageId, int $quotaBytes, int $usedBytes, int $incomingBytes): self
 
 Vaulter\Drive\Exceptions\RevisionPinnedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forRevision(int|string $revisionId): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Sharing\ShareLinkTtlExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly int $limitDays
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forLimit(int $limitDays): self
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function opaque(): self
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Sharing\SharePasswordRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function challenge(): self
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function for(string $role, Vaulter\Drive\Enums\Sharing\ShareAudience $audience): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct(int $serverOffset)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemHeaders(): array
 
 Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forSession(string $uploadId, int $offset): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Uploads\UploadConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forClosedSession(string $uploadId): self
   public static function forCompletionDeadline(string $uploadId, int $seconds): self
   public static function forSession(string $uploadId): self
@@ -1374,6 +1588,7 @@ Vaulter\Drive\Exceptions\Uploads\UploadConflictException api since 1.0 final cla
   public function problemCode(): string
 
 Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forSession(string $uploadId, string $declaredMime): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -1558,6 +1773,13 @@ Vaulter\Drive\Profiles\UploadPolicy api since 1.0 final readonly class
   public ?string $scanPolicyVersion
   public function __construct(?int $maxFileSize = null, array $allowedMimeTypes = [], array $blockedExtensions = [], ?bool $requireScan = null, ?Vaulter\Media\Enums\Cas\ScanMode $scanMode = null, ?string $scanPolicyVersion = null)
 
+Vaulter\Drive\Providers\DrivePackageRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Drive\Schema\DriveSchemaSets spi:call since 1.0 final class implements Packman\Schema\Contracts\Migration\SchemaSetProvider
+  public function sets(): array
+
 Vaulter\Drive\Testing\Contracts\FileHandlerContractTests api since 1.0 final class
   public function assertFileHandlerContract(Vaulter\Drive\Contracts\Handlers\FileHandler $handler, ?Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $claimed = null): void
 
@@ -1644,6 +1866,7 @@ Vaulter\Drive\Vaulter api since 1.0 final readonly class
   public function permissions(): Vaulter\Drive\Access\PermissionDriverManager
   public function profiles(): Vaulter\Drive\Profiles\ProfileRegistry
 
-Vaulter\Drive\VaulterDriveServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
-  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
-  public function packageRegistered(): void
+Vaulter\Drive\VaulterDriveServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+  protected const array REGISTRARS = [\Vaulter\Drive\Providers\DrivePackageRegistrar::class]
+  public function boot(): void
+  public function register(): void

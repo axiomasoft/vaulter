@@ -186,7 +186,7 @@ Per-tenant dedup is already the default, so a global dedup namespace can't leak 
 
 ```php
 // config/vaulter.php
-'ids' => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
+'ids' => ['strategy' => 'ulid'], // ULID aligns with AzGuard morph keys (ADR-0011)
 ```
 
 ::: warning Tenant scope is the host's responsibility
@@ -299,7 +299,7 @@ Register it as a named driver and select it:
 For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom class — set
 `vaulter-drive.access.permission_driver` to `gate` / `spatie` / `azguard` and fill the matching config block
 (`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azguard.*`). For AzGuard install
-`composer require axioma-studio/vaulter-azguard`: its provider registers the driver
+`composer require axiomasoft/vaulter-azguard`: its provider registers the driver
 and adapter automatically. The user model must implement `AzGuardBackedUser` — see
 [Permission drivers](/extending/permission-drivers).
 :::

@@ -20,8 +20,8 @@ final class VaulterServiceProvider extends ServiceProvider
 {
     use OffersModules;
     use RegistersPackageRegistrars {
-        register as protected registerRegistrars;
-        boot as protected bootRegistrars;
+        RegistersPackageRegistrars::register as protected registerRegistrars;
+        RegistersPackageRegistrars::boot as protected bootRegistrars;
     }
 
     /** @var list<class-string<PackageRegistrar>> */

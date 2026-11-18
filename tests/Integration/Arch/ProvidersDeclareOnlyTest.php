@@ -9,7 +9,7 @@ use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 
 /*
- * ADR-0027: a package service provider only offers its module manifest; everything else — config,
+ * ADR-0027: a package service provider delegates to Packman registrars and offers its native plugin; everything else — config,
  * bindings, routes, commands, tags, schedules — is declared by the manifest and registered by the core module
  * kernel. Statically checked on every packages/<pkg>/src/*ServiceProvider.php: the bodies of register(), boot(),
  * packageRegistered() and packageBooted() hold only the calls named here, and configurePackage() only names the
@@ -18,9 +18,9 @@ use PhpParser\ParserFactory;
 
 /** Calls allowed in the lifecycle methods, per method; the core provider also runs the module kernel. */
 const PROVIDER_ALLOWED_CALLS = [
-    'register' => ['offerModule'],
+    'register' => ['offerModule', 'registerRegistrars'],
     'packageRegistered' => ['offerModule'],
-    'boot' => [],
+    'boot' => ['bootRegistrars', 'loadTranslationsFrom'],
     'packageBooted' => [],
 ];
 
@@ -89,6 +89,12 @@ function providerDeclareOnlyViolations(string $file): array
                 && $call->var instanceof Expr\Variable && $call->var->name === 'this'
                 && $call->name instanceof Node\Identifier && in_array($call->name->toString(), $allowed, true)
                 && $finder->find($call->args, static fn (Node $n): bool => $n instanceof Expr\CallLike) === [];
+            // Core delegates publish maps to its registrar; the callback may only publish them.
+            if (!$ok && $isCore && $name === 'boot' && $call instanceof Expr\MethodCall
+                && $call->name instanceof Node\Identifier && $call->name->toString() === 'bootWithPublisher') {
+                $nested = $finder->find($call, static fn (Node $n): bool => $n instanceof Expr\CallLike);
+                $ok = count($nested) === 3 && array_map(static fn ($n): ?string => $n instanceof Expr\MethodCall && $n->name instanceof Node\Identifier ? $n->name->toString() : null, $nested) === ['bootWithPublisher', 'make', 'publishes'];
+            }
             if (!$ok) {
                 $violations[] = sprintf('%s::%s() line %d: only $this->%s() is allowed', basename($file), $name, $stmt->getStartLine(), implode('() / $this->', $allowed ?: ['<nothing>']));
             }

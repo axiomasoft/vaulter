@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard\Tests\RealAzGuardIsolated\Stubs;
 
+use AzGuard\Context\AssignmentScopeDeclaration;
+use AzGuard\Context\AssignmentScopeMode;
 use AzGuard\Panels\PanelBuilder;
 use AzGuard\Panels\PanelProvider;
 use AzGuard\Roles\SuperAdminRole;
-use AzGuard\Scopes\AssignmentScopePolicy;
 use AzGuard\Sources\Database\DatabaseSource;
 use Vaulter\AzGuard\Tests\RealAzGuard\Stubs\AzGuardUser;
 use Vaulter\AzGuard\Tests\RealAzGuard\Stubs\DocumentsPermission;
@@ -30,7 +31,7 @@ final class IsolatedDocumentsPanel extends PanelProvider
         return $panel->for(AzGuardUser::class, guard: 'web')
             ->permissions([DocumentsPermission::class, DatabaseSource::make()])
             ->roles([SuperAdminRole::class, ProjectAdminRole::class])
-            ->scopes(AssignmentScopePolicy::isolated(new ProjectScope))
+            ->assignmentScopes(new AssignmentScopeDeclaration(AssignmentScopeMode::Isolated, [new ProjectScope]))
             ->restrictions([new LockedAccountRestriction]);
     }
 }

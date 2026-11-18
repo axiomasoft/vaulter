@@ -14,17 +14,17 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\ResponseInterface;
 use stdClass;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Events\WebhookEndpointDisabled;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -67,7 +67,7 @@ final class DeliverWebhook implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    private WebhooksConfig $webhooksConfig;
+    private WebhooksOptions $webhooksConfig;
 
     private VaulterDatabase $database;
 
@@ -75,13 +75,13 @@ final class DeliverWebhook implements ShouldQueue
         private readonly string $deliveryId,
     ) {}
 
-    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhooksConfig $webhooksConfig, VaulterDatabase $database): void
+    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhooksOptions $webhooksConfig, VaulterDatabase $database): void
     {
         $this->database = $database;
         $database->write(fn () => $this->deliver($signer, $urlGuard, $webhooksConfig));
     }
 
-    private function deliver(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhooksConfig $webhooksConfig): void
+    private function deliver(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhooksOptions $webhooksConfig): void
     {
         $this->webhooksConfig = $webhooksConfig;
         $metrics = app(MetricsRecorder::class);
@@ -390,7 +390,7 @@ final class DeliverWebhook implements ShouldQueue
         $endpoint->forceFill(['is_active' => false, 'disabled_at' => now(), 'disabled_reason' => 'failing'])->save();
         // A system switch-off changes the endpoint as a manual one does: its version rises under the row lock
         // held here, so an If-Match read while it was active is stale and cannot quietly switch it back on.
-        (new AggregateVersion($this->database))->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
+        new AggregateVersion($this->database)->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
 
         // Same outcome as WebhookDeliveryStoreRepository::killOpenForEndpoint(): nothing may be
         // sent afterwards, and dropping the claims fences the jobs still in flight. Written

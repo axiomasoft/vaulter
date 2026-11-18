@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
@@ -56,13 +56,13 @@ beforeEach(fn () => config()->set('vaulter-drive.access.permission_driver', 'dat
 
 function idemRows(): int
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count();
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count();
 }
 
 function idemRow(): ?stdClass
 {
     /** @var stdClass|null $row */
-    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->first();
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->first();
 
     return $row;
 }
@@ -81,7 +81,7 @@ function idemDenied(Closure $write): bool
 
 function idemActivity(): int
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('activity'))->count();
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('activity'))->count();
 }
 
 /** A drive whose user 1 may write below the root. @return array{Drive, Node} */
@@ -267,7 +267,7 @@ it('scopes a system actor and a drive without tenant by tagged values, not nulls
     // A user with the same key is another scope: the operation runs.
     expect(fn () => idemHandle($drive, 'sys-1')->folders()->create('Imported'))->toThrow(NodeNameConflictException::class);
 
-    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->where('actor_kind', 'system')->first();
+    $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->where('actor_kind', 'system')->first();
     expect(idemRows())->toBe(2)
         ->and($row->actor_kind)->toBe('system')
         ->and($row->actor_id)->toBeNull()
@@ -295,7 +295,7 @@ it('treats an expired receipt as absent and prunes only expired receipts', funct
 it('refuses an unknown codec version instead of guessing', function (): void {
     [$drive] = idemDrive();
     idemHandle($drive, 'versioned')->folders()->create('Versioned');
-    app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->update(['codec_version' => 2]);
+    app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->update(['codec_version' => 2]);
 
     expect(fn () => idemHandle($drive, 'versioned')->folders()->create('Versioned'))->toThrow(LogicException::class, 'does not know version 2');
     expect(fn () => (new NodeSnapshotCodec)->decode([], 3))->toThrow(LogicException::class);

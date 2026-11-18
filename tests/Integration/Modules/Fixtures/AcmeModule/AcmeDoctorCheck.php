@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule;
 
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 
 /** The module's readiness is its own: an active Acme without an endpoint is misconfigured, and says so. */
 final readonly class AcmeDoctorCheck implements DoctorCheck

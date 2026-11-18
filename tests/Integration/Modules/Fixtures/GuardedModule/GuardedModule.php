@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace Vaulter\Integration\Tests\Modules\Fixtures\GuardedModule;
 
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
+use Vaulter\Tests\Modules\Fixtures\NativeDeclarations;
 
 /** A module that owns one table and guards its own removal ({@see GuardedRemovalGuard}): the subject of the uninstall guard tests. */
-final class GuardedModule implements GuardsRemoval, VaulterModule
+final class GuardedModule implements ExtensionPlugin, GuardsRemoval, WithCapabilities, WithConfiguration, WithModuleRuntime, WithSchema, WithSlots
 {
+    use NativeDeclarations;
+
     public static function removalGuard(): string
     {
         return GuardedRemovalGuard::class;
@@ -38,7 +46,7 @@ final class GuardedModule implements GuardsRemoval, VaulterModule
         return ['core' => '^1.0'];
     }
 
-    public function register(ModuleBuilder $module): void
+    public function declare(ModuleBuilder $module): void
     {
         $module->schema(__DIR__.'/migrations');
     }

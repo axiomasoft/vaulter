@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Models\Node;
 
 /*
@@ -22,7 +22,7 @@ use Vaulter\Drive\Models\Node;
 function pruneClosed(Node $node): void
 {
     Compaction::append($node, 'u1');
-    DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))
+    DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))
         ->where('document_id', Hub::aggregate($node)->getKey())
         ->update(['retired_at' => now()]);
     Hub::aggregate($node)->forceFill(['collab_epoch' => 1, 'pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
@@ -30,7 +30,7 @@ function pruneClosed(Node $node): void
 
 function pruneGrace(): int
 {
-    return app(CollaborationConfig::class)->retiredGenerationGraceSeconds();
+    return app(CollaborationOptions::class)->retiredGenerationGraceSeconds();
 }
 
 /** @return array<string, Event> */

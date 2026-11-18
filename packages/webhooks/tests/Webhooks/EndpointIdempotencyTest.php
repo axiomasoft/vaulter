@@ -30,7 +30,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
  * authorized again by the `manage` ability. A redelivery is a receipt operation too: a keyed retry sends nothing again.
  */
 beforeEach(function (): void {
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs(V1::user(1));
 });
 

@@ -56,7 +56,7 @@ test('AST configuration guard permits comments and translation data without file
 <?php
 // use Vaulter\Support\Config; config('vaulter.models');
 /** @see \Vaulter\Support\GateConfig */
-$translations = ['Vaulter\Support\Config' => 'Vaulter\Configuration\VaulterConfig'];
+$translations = ['Vaulter\Support\Config' => 'Vaulter\Configuration\VaulterOptions'];
 $description = 'app("Vaulter\\Support\\Config")';
 return ['Vaulter\Support\SpatieConfig', 'Vaulter\Documents\DocumentsModels'];
 PHP;

@@ -18,7 +18,7 @@ use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 #[Spi(SpiKind::Implement)]
 trait OffersModules
 {
-    /** @param class-string<VaulterModule|ExtensionPlugin> $manifest */
+    /** @param class-string<ExtensionPlugin> $manifest */
     protected function offerModule(string $manifest): void
     {
         ModuleCatalog::of($this->app)->offer($manifest);

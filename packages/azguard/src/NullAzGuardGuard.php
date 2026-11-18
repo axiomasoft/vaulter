@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\AzGuard;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
 
 /**

@@ -259,14 +259,14 @@ SpatiePermissionDriver::forgetCachedPermissions($actor);
 ## AzGuard — шов на уровне ресурса
 
 `Vaulter\AzGuard\AzGuardPermissionDriver` находится в отдельном пакете
-`axioma-studio/vaulter-azguard`; ядро не зависит от AzGuard. Мост требует AzGuard v1
+`axiomasoft/vaulter-azguard`; ядро не зависит от AzGuard. Мост требует AzGuard v1
 (`axiomasoft/azguard`). Тегированного релиза AzGuard нет, поэтому мост закреплён на коммите:
 `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (полный sha — в `packages/azguard/composer.json`).
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-azguard
+composer require axiomasoft/vaulter-azguard
 ```
 
 Обнаруживаемый Laravel provider предлагает модуль `azguard`, который регистрирует ключ `azguard` в
@@ -476,7 +476,7 @@ on: AssignmentScopeRef::of('team', $teamId))` и `actingAsSuperAdmin($user)` с�
 
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
-| Дополнительная зависимость | нет | нет (встроенный) | опциональная `spatie/laravel-permission` | `axioma-studio/vaulter-azguard` + его зависимости |
+| Дополнительная зависимость | нет | нет (встроенный) | опциональная `spatie/laravel-permission` | `axiomasoft/vaulter-azguard` + его зависимости |
 | Карта с ключами по | — | ключ роли | ключ роли | `Ability` |
 | Перечисляет субъектов-роли/команды | через наследование | нет | да | нет |
 | Обход для супер-админа | нет | право `vaulter.super` | супер-разрешение | нет — super-admin AzGuard → роль owner через решения |

@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Doctor\Contracts\DoctorCheck;
 use Vaulter\CoreModule;
 use Vaulter\Doctor\Checks\ProductionInvariantsCheck;
 use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
-use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Webhooks\WebhooksModule;
@@ -51,8 +51,7 @@ it('shows the slots a module defines and the contributions it makes', function (
         ->and($slots[DoctorCheck::class]['contributions'])->toBe(15);
 
     $module = new CoreModule;
-    $builder = new ModuleBuilder($module->id());
-    $module->register($builder);
+    $builder = ModuleDeclarations::buildOffered($module::class);
     $invariants = array_values(array_filter($builder->contributions(), static fn (SlotContribution $contribution): bool => $contribution->slot === DoctorCheck::class && $contribution->key === 'core.production_invariants'));
     expect($invariants)->toHaveCount(1)
         ->and($invariants[0]->implementation)->toBe(ProductionInvariantsCheck::class);

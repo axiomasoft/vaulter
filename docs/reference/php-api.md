@@ -8,7 +8,7 @@ outline: deep
 
 `Vaulter\Drive\Facades\Vaulter` is the drive's public entry point. It is a thin Laravel
 facade over `Vaulter\Drive\Vaulter`, registered as a container singleton (aliased `'vaulter'`) by
-`vaulter-drive`, which also declares the `Vaulter` class alias for hosts. The facade needs `axioma-studio/vaulter-drive`;
+`vaulter-drive`, which also declares the `Vaulter` class alias for hosts. The facade needs `axiomasoft/vaulter-drive`;
 without it `Vaulter::drive()` throws a `MissingPackageException` naming the package. Every method below is a real
 method of `Vaulter\Drive\Vaulter`.
 
@@ -208,12 +208,12 @@ interface AzGuardGuard
 }
 ```
 
-The contract ships in `axioma-studio/vaulter-azguard`, alongside the real
+The contract ships in `axiomasoft/vaulter-azguard`, alongside the real
 `AzGuardGuardAdapter` and `Vaulter\AzGuard\Testing\FakeAzGuardGuard` test double.
 Its provider registers the driver and adapter automatically; select a custom guard with `vaulter-azguard.guard`.
 
 **Use when** `config('vaulter-drive.access.permission_driver') = 'azguard'`: install with
-`composer require axioma-studio/vaulter-azguard`, add
+`composer require axiomasoft/vaulter-azguard`, add
 `Vaulter\AzGuard\Contracts\AzGuardBackedUser` to your user model, register morph aliases for
 the user and workspace models and declare the workspace aliases as assignment scope types
 of the AzGuard panel.
@@ -689,7 +689,7 @@ interface IdStrategy
   users table).
 
 ::: info Default is `ulid`
-ULID is the default so morph keys line up with the Corex/AzGuard ecosystem; `uuid7`
+ULID is the default so morph keys line up with the AzGuard ecosystem; `uuid7`
 maps onto native Postgres `uuid` columns; `bigint` is the legacy auto-increment path.
 See [Auth → Multi-tenancy](/concepts/tenancy) for morph alignment.
 :::
@@ -734,7 +734,7 @@ drive handle, declared in the `drive` slot under the operations' FQCN and resolv
 ## The supported surface
 
 What Vaulter promises to keep is marked in the code, not listed by hand. Every type of `packages/*/src` carries
-exactly one attribute from `Vaulter\Attributes`:
+exactly one attribute from `Packman\Attributes`:
 
 | Attribute | Meaning |
 |---|---|
@@ -755,7 +755,7 @@ boundary scan (`scan-i13`, report mode until the 1.0 freeze).
 `NodeSnapshot::$syncKey` is `?string`, projected for the current reader; retain it with
 the local node tree. `NodeChange` exposes `operation`, `syncKey`, `nodeId`, `subtree`,
 `node`, `nodeSequence`; the remove projection has no raw id, reason or snapshot.
-`ChangesConfig::keyGeneration()` and `cursorMaxAgeSeconds()` expose validated config.
+`ChangesOptions::keyGeneration()` and `cursorMaxAgeSeconds()` expose validated config.
 `ChangeOperations::startCursor()` must run before the initial listing and outside a host
 transaction; `list()` retains existing in-transaction reads. The internal derivation is
 `ReaderSyncIdentity::cursorSubkey()`; no public `cursorKey` generation API is introduced.

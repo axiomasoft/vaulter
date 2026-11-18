@@ -35,7 +35,7 @@ beforeEach(function (): void {
 });
 
 it('omits a destination without Create from the folder options', function (): void {
-    $options = (new ReflectionMethod(NodeResource::class, 'folderOptions'))->invoke(null, DriveBuilder::row($this->moveSource));
+    $options = new ReflectionMethod(NodeResource::class, 'folderOptions')->invoke(null, DriveBuilder::row($this->moveSource));
     expect($options)->not->toHaveKey($this->moveTarget->getKey());
 });
 
@@ -45,7 +45,7 @@ it('rejects a forged move into a folder without Create and notifies the actor', 
     // Admit the forged ID at form validation only, so this proves the action's
     // authorization even if an option was cached before access changed.
     Select::configureUsing(
-        modifyUsing: fn (Select $select) => $select->in([$this->moveTarget->getKey()]),
+        modifyUsing: fn (Select $select): Select => $select->in([$this->moveTarget->getKey()]),
         during: fn () => Livewire::test(ListNodes::class)->callTableAction('move', (string) $this->moveSource->getKey(), ['parent_id' => $this->moveTarget->getKey()]),
         isImportant: true,
     );

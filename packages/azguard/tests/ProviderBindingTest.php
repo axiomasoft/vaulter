@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\AzGuard\AzGuardPermissionDriver;
-use Vaulter\AzGuard\Configuration\AzGuardConfig;
+use Vaulter\AzGuard\Configuration\AzGuardOptions;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
 use Vaulter\AzGuard\Providers\BindingsRegistrar;
 use Vaulter\AzGuard\Testing\FakeAzGuardGuard;
@@ -12,7 +13,6 @@ use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Modules\MissingExtensionException;
 
@@ -38,12 +38,12 @@ it('provides the configured guard class as the capability', function (): void {
 it('refuses a guard class that does not implement the seam', function (): void {
     config()->set('vaulter-azguard.guard', stdClass::class);
 
-    expect(fn () => app(AzGuardConfig::class)->guard())->toThrow(InvalidConfigurationException::class, 'vaulter-azguard.guard')
-        ->and(fn () => (new BindingsRegistrar)->boot(app()))->toThrow(InvalidConfigurationException::class);
+    expect(fn () => app(AzGuardOptions::class)->guard())->toThrow(InvalidConfiguration::class, 'vaulter-azguard.guard')
+        ->and(fn () => (new BindingsRegistrar)->boot(app()))->toThrow(InvalidConfiguration::class);
 
     config()->set('vaulter-azguard.guard', 'No\\Such\\Guard');
 
-    expect(fn () => app(AzGuardConfig::class)->guard())->toThrow(InvalidConfigurationException::class);
+    expect(fn () => app(AzGuardOptions::class)->guard())->toThrow(InvalidConfiguration::class);
 });
 
 it('contributes its permission driver to the drive slot and lets the host map override the key', function (): void {
@@ -54,7 +54,9 @@ it('contributes its permission driver to the drive slot and lets the host map ov
 
     config()->set('vaulter-drive.access.permission_drivers.azguard', DatabasePermissionDriver::class);
 
-    expect($catalog->class('azguard'))->toBe(DatabasePermissionDriver::class);
+    expect($catalog->class('azguard'))->toBe(AzGuardPermissionDriver::class);
+    app()->forgetInstance(PermissionDriverCatalog::class);
+    expect(app(PermissionDriverCatalog::class)->class('azguard'))->toBe(DatabasePermissionDriver::class);
 });
 
 it('keeps its actor-only driver non-enumerating through the core manager', function (): void {

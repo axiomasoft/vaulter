@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Exceptions;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Webhooks\Errors\WebhooksErrorCode;
 
 /**
  * A received webhook failed Standard Webhooks verification (StandardWebhookVerifier).
@@ -57,5 +61,11 @@ final class InvalidWebhookSignatureException extends VaulterException implements
     public function httpStatus(): int
     {
         return 400;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: WebhooksErrorCode::InvalidWebhookSignature, category: ErrorCategory::Validation);
     }
 }

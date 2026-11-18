@@ -5,17 +5,24 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Modules\Fixtures;
 
 use Closure;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
 
 /**
  * A manifest assembled by a test: identity, policy, requirements and the declarations to make.
  * The closure belongs to the fixture only; the builder itself never takes one.
  */
-final class FixtureModule implements VaulterModule
+final class FixtureModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithModuleRuntime, WithSchema, WithSlots
 {
+    use NativeDeclarations;
+
     public ?ModuleBuilder $builder = null;
 
     /**
@@ -50,7 +57,7 @@ final class FixtureModule implements VaulterModule
         return $this->requires;
     }
 
-    public function register(ModuleBuilder $module): void
+    public function declare(ModuleBuilder $module): void
     {
         $this->builder = $module;
         if ($this->declare !== null) {

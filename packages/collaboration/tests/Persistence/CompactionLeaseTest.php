@@ -5,11 +5,12 @@ declare(strict_types=1);
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCompactionLeaseController;
+use Vaulter\Collaboration\Persistence\CompactionLease;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Collaboration\Persistence\LogTables;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Drive\Models\Node;
 
@@ -23,7 +24,7 @@ use Vaulter\Drive\Models\Node;
 /** @return list<string> the node ids one lease call hands out, in order */
 function leasedNodes(string $hub = Compaction::HUB, int $max = 10): array
 {
-    return array_map(static fn ($lease): string => $lease->nodeId, Compaction::lease($hub, $max));
+    return array_map(static fn (CompactionLease $lease): string => $lease->nodeId, Compaction::lease($hub, $max));
 }
 
 function requestDrain(Node $node): bool
@@ -179,7 +180,7 @@ it('reads the checkpoint, the tail and the checkpoint version with the lease', f
 it('never leases a retired generation or one its document left', function (string $how): void {
     config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
     Compaction::append($this->node, 'u1');
-    $heads = DB::table(app(DatabaseConfig::class)->table('collaboration_heads'));
+    $heads = DB::table(app(DatabaseOptions::class)->table('collaboration_heads'));
     if ($how === 'retired') {
         $heads->update(['retired_at' => now()]);
     } else {

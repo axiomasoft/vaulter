@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Revocation;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventSink;

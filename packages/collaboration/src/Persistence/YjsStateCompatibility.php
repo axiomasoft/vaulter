@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Persistence;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;

@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\Actions\DeleteWebhookEndpointAction;

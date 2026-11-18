@@ -45,13 +45,13 @@ final class Surface
 
     public const INVARIANT = 'I13';
 
-    private const API = 'Vaulter\Attributes\Api';
+    private const API = 'Packman\Attributes\Api';
 
-    private const SPI = 'Vaulter\Attributes\Spi';
+    private const SPI = 'Packman\Attributes\Spi';
 
-    private const INTERNAL = 'Vaulter\Attributes\Internal';
+    private const INTERNAL = 'Packman\Attributes\Internal';
 
-    private const SPI_KIND = 'Vaulter\Attributes\SpiKind';
+    private const SPI_KIND = 'Packman\Attributes\SpiKind';
 
     /** The native ORM factory root: a supported type built on it hands the host the models it makes. */
     private const ORM_FACTORY = 'Illuminate\Database\Eloquent\Factories\Factory';

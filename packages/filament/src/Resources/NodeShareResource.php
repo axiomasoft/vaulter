@@ -21,10 +21,11 @@ use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
 use InvalidArgumentException;
 use Override;
+use Packman\Attributes\Internal;
+use Packman\Filament\Concerns\Authorization\AuthorizesResource;
 use UnitEnum;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Contracts\Sharing\ShareOperations;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -42,6 +43,7 @@ use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Support\PanelRecords;
 use Vaulter\Filament\Support\PanelShares;
+use Vaulter\Support\Identity;
 
 /**
  * The bearer share-link admin surface: list, create and revoke the public share-links on a
@@ -61,7 +63,10 @@ use Vaulter\Filament\Support\PanelShares;
 #[Internal]
 final class NodeShareResource extends Resource
 {
+    use AuthorizesResource;
     use ConfiguresNavigationGroup;
+
+    protected static string $packmanKey = 'vaulter.share';
 
     protected static ?string $model = PanelRecord::class;
 
@@ -213,7 +218,7 @@ final class NodeShareResource extends Resource
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
                 ->placeholder('Never')
-                ->rules(fn (SharingConfig $sharing): array => PanelExpiry::shareRules($sharing->maxTtlHours())),
+                ->rules(fn (SharingOptions $sharing): array => PanelExpiry::shareRules($sharing->maxTtlHours)),
         ];
     }
 
@@ -225,7 +230,7 @@ final class NodeShareResource extends Resource
      *
      * @param array<string, mixed> $data
      */
-    public static function createFromData(array $data, SharingConfig $sharing): void
+    public static function createFromData(array $data, SharingOptions $sharing): void
     {
         $nodeId = $data['node_id'] ?? null;
         $found = is_int($nodeId) || is_string($nodeId) ? PanelNodes::find($nodeId) : null;
@@ -247,19 +252,19 @@ final class NodeShareResource extends Resource
         /** @var string $password */
         $password = $data['password'] ?? '';
         $maxUses = $data['max_uses'] ?? null;
-        $expiresAt = PanelExpiry::forShare($data['expires_at'] ?? null, $sharing->maxTtlHours());
+        $expiresAt = PanelExpiry::forShare($data['expires_at'] ?? null, $sharing->maxTtlHours);
 
         try {
             $minted = $handle->shares()->create(
                 node: $node->id,
                 input: new ShareLinkInput(
                     // Filament validation already supplies enum/string values with these types.
-                    role: (string) ($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
-                    audience: ShareAudience::from((string) ($data['audience'] ?? ShareAudience::Anyone->value)), // @pest-mutate-ignore: RemoveStringCast
-                    scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
+                    role: Identity::stringify($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
+                    audience: ShareAudience::from(Identity::stringify($data['audience'] ?? ShareAudience::Anyone->value)), // @pest-mutate-ignore: RemoveStringCast
+                    scope: GrantScope::from(Identity::stringify($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
                     expiresAt: $expiresAt,
                     password: $password === '' ? null : $password,
-                    maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
+                    maxUses: is_numeric($maxUses) ? (int) $maxUses : null,
                 ),
             );
         } catch (InvalidArgumentException|ShareRoleNotAllowedException|ShareLinkTtlExceededException $exception) {
@@ -321,7 +326,7 @@ final class NodeShareResource extends Resource
     {
         Notification::make()
             ->title($title)
-            ->body('Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/'.$token)
+            ->body('Copy it now — it is shown only once: '.app(SharingOptions::class)->urlBase.'/'.$token)
             ->persistent()
             ->success()
             ->send();

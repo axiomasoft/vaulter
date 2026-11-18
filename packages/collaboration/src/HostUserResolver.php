@@ -7,7 +7,7 @@ namespace Vaulter\Collaboration;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 

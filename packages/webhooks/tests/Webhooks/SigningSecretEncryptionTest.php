@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Webhooks\SigningSecretEncryptor;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookSecret;
@@ -18,7 +18,7 @@ use Vaulter\Webhooks\WebhookSecret;
 it('stores the signing_secret as ciphertext and reads it back as plaintext, F-P1.7-02', function (): void {
     $endpoint = WebhookTestHelpers::endpoint(['signing_secret' => 'super-secret-key']);
 
-    $raw = DB::table(app(DatabaseConfig::class)->table('webhook_endpoints'))
+    $raw = DB::table(app(DatabaseOptions::class)->table('webhook_endpoints'))
         ->where('id', $endpoint->getKey())
         ->value('signing_secret');
 
@@ -32,7 +32,7 @@ it('stores the signing_secret as ciphertext and reads it back as plaintext, F-P1
 });
 
 it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', function (): void {
-    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    $table = app(DatabaseOptions::class)->table('webhook_endpoints');
 
     // Seed a legacy plaintext row through the query builder (bypassing the cast).
     DB::table($table)->insert([
@@ -61,7 +61,7 @@ it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', funct
 });
 
 it('converts a pre-1.0 secret to whsec_ keeping the key bytes, idempotently and reversibly', function (): void {
-    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    $table = app(DatabaseOptions::class)->table('webhook_endpoints');
     $legacy = 'legacy-secret-with-24-or-more-bytes';
     $native = WebhookSecret::generate();
     foreach (['https://legacy.test/a' => $legacy, 'https://native.test/b' => $native] as $url => $secret) {
@@ -88,7 +88,7 @@ it('converts a pre-1.0 secret to whsec_ keeping the key bytes, idempotently and 
 });
 
 it('stops the conversion on a legacy secret that cannot be a Standard Webhooks key', function (): void {
-    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    $table = app(DatabaseOptions::class)->table('webhook_endpoints');
     DB::table($table)->insert([
         'url' => 'https://short.test/a', 'events' => json_encode(['folder.created']), 'signing_secret' => Crypt::encryptString('too-short'),
         'is_active' => true, 'failure_count' => 0, 'created_at' => now(), 'updated_at' => now(),
@@ -99,7 +99,7 @@ it('stops the conversion on a legacy secret that cannot be a Standard Webhooks k
 });
 
 it('stops the whole conversion when a secret cannot be decrypted', function (): void {
-    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    $table = app(DatabaseOptions::class)->table('webhook_endpoints');
     $good = 'legacy-secret-with-24-or-more-bytes';
     foreach ([['https://good.test/a', Crypt::encryptString($good)], ['https://bad.test/b', 'not-encrypted-with-this-key']] as [$url, $value]) {
         DB::table($table)->insert([

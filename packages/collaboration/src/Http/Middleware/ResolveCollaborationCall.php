@@ -7,8 +7,8 @@ namespace Vaulter\Collaboration\Http\Middleware;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationCallResolver;
 
@@ -36,6 +36,7 @@ final class ResolveCollaborationCall
         private readonly CollaborationCallResolver $resolver,
     ) {}
 
+    /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
         $call = $this->resolver->resolve(

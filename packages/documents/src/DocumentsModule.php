@@ -24,22 +24,28 @@ use Packman\Plugins\Enums\Contributions\SlotKind;
 use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\Configuration\DocumentsOptions;
+use Vaulter\Documents\Console\MakeDocumentTypeCommand;
+use Vaulter\Documents\Console\MakeExporterCommand;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Doctor\DocumentTypesCheck;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Errors\DocumentsProblemDefinitions;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
+use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Http\Support\DocumentsRouteLabels;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\Operations\DocumentsOperationPolicies;
 use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Profiles\AllowedDocumentTypesProfileOption;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
+use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Schema\DocumentsSchema;
 use Vaulter\Documents\Schema\DocumentsSchemaSets;
 use Vaulter\Documents\State\PendingPurgeDrain;
@@ -53,6 +59,9 @@ use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Modules\Activation;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 use Vaulter\Operations\OperationMiddleware;
 
 /**
@@ -60,7 +69,7 @@ use Vaulter\Operations\OperationMiddleware;
  * revisions, threaded comments, export capabilities, error catalog, schema sets, and diagnostics.
  */
 #[Api(since: '1.0')]
-final class DocumentsModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
+final class DocumentsModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithModuleRuntime, WithSchema, WithSlots
 {
     use Configurable;
     use ContributesToSlots;
@@ -199,5 +208,25 @@ final class DocumentsModule implements ExtensionPlugin, WithCapabilities, WithCo
     public function problemProviders(): array
     {
         return [DocumentsProblemDefinitions::class];
+    }
+
+    public function moduleRuntime(): PluginModuleSpec
+    {
+        $root = dirname(__DIR__);
+
+        return new PluginModuleSpec(
+            plugin: DocumentsModule::class,
+            activation: Activation::Auto,
+            protocolVersion: '1.0',
+            routes: [$root.'/routes/documents.php'],
+            commands: [
+                MakeDocumentTypeCommand::class,
+                MakeExporterCommand::class,
+            ],
+            bindings: [BindingsRegistrar::class],
+            events: [DocumentEventType::class],
+            problems: [DocumentsProblemCodes::class],
+            operations: [DocumentsOperationPolicies::class],
+        );
     }
 }

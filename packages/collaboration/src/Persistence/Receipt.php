@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Persistence;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** The committed receipt row of one update id of a generation. */
 #[Internal]

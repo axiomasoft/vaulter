@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\Snapshots\DriveSnapshot;

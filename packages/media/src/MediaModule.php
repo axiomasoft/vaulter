@@ -21,22 +21,32 @@ use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Data\Plugin\PluginManifest;
 use Packman\Plugins\Enums\Contributions\Cardinality;
 use Packman\Plugins\Laravel\PluginRegistrar;
+use Vaulter\Media\Cas\BlobPinReferences;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Configuration\MediaOptions;
+use Vaulter\Media\Console\GcBlobsCommand;
+use Vaulter\Media\Console\ReconcileBlobsCommand;
+use Vaulter\Media\Console\ScrubBlobsCommand;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Doctor\BlobIntegrityCheck;
 use Vaulter\Media\Doctor\BlobPinsCheck;
 use Vaulter\Media\Errors\MediaProblemDefinitions;
+use Vaulter\Media\Http\Problems\MediaProblemCodes;
+use Vaulter\Media\Providers\BindingsRegistrar;
+use Vaulter\Media\Providers\SchedulingRegistrar;
 use Vaulter\Media\Schema\MediaSchema;
 use Vaulter\Media\Schema\MediaSchemaSets;
+use Vaulter\Modules\Activation;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 
 /**
  * The media extension plugin (`vaulter.media`): CAS store engine, blob pins,
  * storage driver and optional content scanner capabilities, error catalog, and diagnostics.
  */
 #[Api(since: '1.0')]
-final class MediaModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
+final class MediaModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithModuleRuntime, WithSchema, WithSlots
 {
     use Configurable;
     use ContributesToSlots;
@@ -154,5 +164,23 @@ final class MediaModule implements ExtensionPlugin, WithCapabilities, WithConfig
     public function problemProviders(): array
     {
         return [MediaProblemDefinitions::class];
+    }
+
+    public function moduleRuntime(): PluginModuleSpec
+    {
+        return new PluginModuleSpec(
+            plugin: MediaModule::class,
+            activation: Activation::Auto,
+            protocolVersion: '1.0',
+            commands: [
+                GcBlobsCommand::class,
+                ReconcileBlobsCommand::class,
+                ScrubBlobsCommand::class,
+            ],
+            schedules: [SchedulingRegistrar::class],
+            bindings: [BindingsRegistrar::class],
+            problems: [MediaProblemCodes::class],
+            heldReferences: BlobPinReferences::class,
+        );
     }
 }

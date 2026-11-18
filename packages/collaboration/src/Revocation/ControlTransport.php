@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Revocation;
 
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
 
 /**
  * How {@see ControlConsumer} hands a control message to the hubs (`vaulter-collaboration.control.transport`): Redis

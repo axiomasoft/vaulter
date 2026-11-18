@@ -74,7 +74,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azguard
    provider сам регистрирует драйвер `azguard` и реальный адаптер:
 
    ```bash
-   composer require axioma-studio/vaulter-azguard
+   composer require axiomasoft/vaulter-azguard
    ```
 
    Модель пользователя `implements Vaulter\AzGuard\Contracts\AzGuardBackedUser` и использует

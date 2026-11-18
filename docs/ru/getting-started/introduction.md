@@ -13,16 +13,16 @@ Drive, редактор документов на TipTap с историей в�
 
 Vaulter поставляется набором пакетов — подключайте те, что нужны вашему приложению:
 
-- **`axioma-studio/vaulter-core`** — общее ядро (авторизация, контракты CAS, sharing, панели,
+- **`axiomasoft/vaulter-core`** — общее ядро (авторизация, контракты CAS, sharing, панели,
   Artisan-команды). Требуется для любого другого backend-пакета.
-- **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::drive()` / `DriveHandle`.
-  Автоматически подтягивает `axioma-studio/vaulter-media` (движок CAS).
-- **`axioma-studio/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
+- **`axiomasoft/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::drive()` / `DriveHandle`.
+  Автоматически подтягивает `axiomasoft/vaulter-media` (движок CAS).
+- **`axiomasoft/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
 - Совместное редактирование доступно как коммерческое дополнение.
 - **`@vaulter/vue`** — компоненты Vue 3 + TypeScript, composable-функции и API-клиент.
 - **`@vaulter/vue-collaboration`** — браузерная часть редактирования в реальном времени (очередь обновлений, статус сохранения).
 
-Админ-плагин для Filament 5 (`axioma-studio/vaulter-filament`) поставляется отдельно. Точные
+Админ-плагин для Filament 5 (`axiomasoft/vaulter-filament`) поставляется отдельно. Точные
 команды `composer require` под нужный набор функций — в [Установке](/ru/getting-started/installation).
 
 ## Подойдёт ли мне?

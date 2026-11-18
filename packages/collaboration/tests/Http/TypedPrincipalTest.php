@@ -7,7 +7,7 @@ use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Factory;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Collaboration\CollaborationCallResolver;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\HostUserResolver;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Database\VaulterDatabase;
@@ -58,7 +58,7 @@ it('keeps invalid room references hidden even when the actor has no View', funct
     if ($case === 'drive' || $case === 'missing') {
         $driveId = $case === 'drive' ? (string) Hub::document()->drive_id : (string) $node->drive_id;
         $nodeId = $case === 'missing' ? '999999' : (string) $node->getKey();
-        $room = app(CollaborationConfig::class)->room($driveId, $nodeId, 0);
+        $room = app(CollaborationOptions::class)->room($driveId, $nodeId, 0);
         $claims = ['drive_id' => $driveId, 'document_id' => $nodeId, 'room' => $room];
     }
     if ($case === 'trash') {

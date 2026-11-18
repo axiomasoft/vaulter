@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Migrations\Migration;
 use Vaulter\Collaboration\Schema\CollaborationSchema;
+use Vaulter\Schema\VaulterMigration;
 
-return new class extends Migration
+return new class extends VaulterMigration
 {
     public function up(): void
     {

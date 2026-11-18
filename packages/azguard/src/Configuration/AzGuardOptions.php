@@ -4,22 +4,36 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard\Configuration;
 
-use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Illuminate\Support\Arr;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Config\Contracts\OptionsFactory;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Config\Laravel\ConfigurationValidator;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
-use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 #[Api]
-final readonly class AzGuardConfig
+final readonly class AzGuardOptions implements OptionsFactory
 {
-    #[Internal]
-    public function __construct(private Repository $config) {}
+    /** @param array<array-key, mixed> $values */
+    private function __construct(private array $values) {}
+
+    /** @param array<array-key, mixed> $config */
+    #[Override]
+    public static function fromArray(array $config, string $path = 'vaulter-azguard'): self
+    {
+        $validator = new ConfigurationValidator;
+        $validator->rejectUnknownKeys($config, ['panel_id', 'guard', 'permissions', 'create_permission'], $path);
+        $validator->failIfAny();
+        $options = new self($config);
+        $options->guard();
+
+        return $options;
+    }
 
     public function panelId(): ?string
     {
-        $value = $this->config->get('vaulter-azguard.panel_id');
+        $value = $this->value('vaulter-azguard.panel_id');
 
         return is_string($value) && $value !== '' ? $value : null;
     }
@@ -31,14 +45,16 @@ final readonly class AzGuardConfig
      */
     public function guard(): ?string
     {
-        $value = $this->config->get('vaulter-azguard.guard');
+        $value = $this->value('vaulter-azguard.guard');
         if ($value === null || $value === '') {
             return null;
         }
         if (!is_string($value)) {
-            throw new InvalidConfigurationException('[Vaulter] Config key "vaulter-azguard.guard" must be a class-string or null.');
+            throw InvalidConfiguration::forMessage('[Vaulter] Config key "vaulter-azguard.guard" must be a class-string or null.');
         }
-        ConfigValidator::assertImplements('vaulter-azguard.guard', $value, AzGuardGuard::class);
+        if (!is_a($value, AzGuardGuard::class, true)) {
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-azguard.guard must implement '.AzGuardGuard::class);
+        }
 
         return $value;
     }
@@ -46,7 +62,7 @@ final readonly class AzGuardConfig
     /** @return array<string, string> */
     public function permissions(): array
     {
-        $value = $this->config->get('vaulter-azguard.permissions', self::DEFAULT_PERMISSIONS);
+        $value = $this->value('vaulter-azguard.permissions', self::DEFAULT_PERMISSIONS);
 
         if (!is_array($value)) {
             return self::DEFAULT_PERMISSIONS;
@@ -65,7 +81,7 @@ final readonly class AzGuardConfig
 
     public function createPermission(): string
     {
-        $value = $this->config->get('vaulter-azguard.create_permission', 'documents.create');
+        $value = $this->value('vaulter-azguard.create_permission', 'documents.create');
 
         return is_string($value) && $value !== '' ? $value : 'documents.create';
     }
@@ -85,4 +101,9 @@ final readonly class AzGuardConfig
         'share' => 'documents.manage',
         'manage' => 'documents.manage',
     ];
+
+    private function value(string $key, mixed $default = null): mixed
+    {
+        return Arr::get($this->values, substr($key, strlen('vaulter-azguard.')), $default);
+    }
 }

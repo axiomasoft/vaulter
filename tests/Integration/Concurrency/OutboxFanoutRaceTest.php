@@ -6,7 +6,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Events\Outbox\OutboxStore;
@@ -48,14 +48,14 @@ function drainRelay(): array
 /** @return list<string> the states of the webhooks.fanout delivery rows */
 function fanoutStates(): array
 {
-    return DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', WebhookFanoutConsumer::ID)->pluck('state')->all();
+    return DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', WebhookFanoutConsumer::ID)->pluck('state')->all();
 }
 
 it('materializes every pair exactly once when two relays drain the same outbox', function (): void {
     for ($index = 0; $index < 7; $index++) {
         WebhookTestHelpers::endpoint(['url' => 'https://hooks.test/'.$index]);
     }
-    DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->delete();
+    DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->delete();
     OutboxEvent::query()->delete();
     for ($index = 0; $index < 50; $index++) {
         WebhookTestHelpers::outbox(['event_id' => 'race-'.$index]);
@@ -78,7 +78,7 @@ it('resumes a delivery after its relay is killed in the middle of a chunk', func
     for ($index = 0; $index < 7; $index++) {
         WebhookTestHelpers::endpoint(['url' => 'https://hooks.test/'.$index]);
     }
-    DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->delete();
+    DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->delete();
     OutboxEvent::query()->delete();
     $message = WebhookTestHelpers::outbox(['event_id' => 'killed']);
     $deliveries = (new WebhookDelivery)->getTable();

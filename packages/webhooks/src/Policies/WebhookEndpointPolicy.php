@@ -6,8 +6,8 @@ namespace Vaulter\Webhooks\Policies;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /**
  * Authorizes the webhook-endpoint MANAGEMENT surface
@@ -25,7 +25,7 @@ use Vaulter\Webhooks\Configuration\WebhooksConfig;
 final class WebhookEndpointPolicy
 {
     public function __construct(
-        private readonly WebhooksConfig $webhooksConfig,
+        private readonly WebhooksOptions $webhooksConfig,
     ) {}
 
     public function viewAny(Authenticatable $user): bool

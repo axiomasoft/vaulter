@@ -7,7 +7,7 @@ namespace Vaulter\Webhooks\Idempotency;
 use Illuminate\Contracts\Encryption\StringEncrypter;
 use InvalidArgumentException;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Idempotency\ReceiptFields;
 use Vaulter\Idempotency\ReceiptCodec;
 use Vaulter\Idempotency\ResourceRef;

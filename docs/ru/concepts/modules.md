@@ -40,7 +40,7 @@ drive (`'drive' => false`) убирает его целиком — маршру
 который его требует, тоже нужно выключить. Команда `php artisan vaulter:modules` показывает каждый модуль, его
 политику, активен ли он и почему. Вебхуки переключаются только ключом `vaulter.modules.webhooks`
 (`vaulter.features.webhooks` не существует; конфиг хоста, который его задаёт, падает при загрузке с указанием на
-ключ модуля). Пакет нужно установить заранее: `composer require axioma-studio/vaulter-webhooks`. Коллаборация
+ключ модуля). Пакет нужно установить заранее: `composer require axiomasoft/vaulter-webhooks`. Коллаборация
 переключается только ключом `vaulter.modules.collaboration`; активный opt-in модуль без обязательной конфигурации (URL
 хаба и два секрета) — ошибка загрузки, а не тихий no-op ([Совместное редактирование](/ru/guides/collaboration)).
 

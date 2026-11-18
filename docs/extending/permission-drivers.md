@@ -256,7 +256,7 @@ This is a no-op when Spatie is not installed.
 ## AzGuard — the per-resource seam
 
 `Vaulter\AzGuard\AzGuardPermissionDriver` lives in the separate
-`axioma-studio/vaulter-azguard` package; core does not depend on AzGuard. The bridge
+`axiomasoft/vaulter-azguard` package; core does not depend on AzGuard. The bridge
 requires AzGuard v1 (`axiomasoft/azguard`). AzGuard publishes no tagged release, so the
 bridge pins one commit: `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (the full sha is in
 `packages/azguard/composer.json`).
@@ -264,7 +264,7 @@ bridge pins one commit: `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (the full 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-azguard
+composer require axiomasoft/vaulter-azguard
 ```
 
 Its Laravel-discovered provider offers the `azguard` module, which registers `azguard` in
@@ -476,7 +476,7 @@ grants through AzGuard's change pipeline.
 
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
-| Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | `axioma-studio/vaulter-azguard` + its dependencies |
+| Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | `axiomasoft/vaulter-azguard` + its dependencies |
 | Map keyed by | — | role key | role key | `Ability` |
 | Enumerates role/team subjects | subclass | no | yes | no |
 | Super-admin override | no | `vaulter.super` ability | super permission | no — AzGuard super-admin → owner role by decisions |

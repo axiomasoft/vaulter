@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Override;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
@@ -28,7 +29,7 @@ abstract class TestCase extends OrchestraTestCase
     use UsesSuiteDatabase;
     use ValidatesOpenApiResponses;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();

@@ -5,20 +5,37 @@ declare(strict_types=1);
 namespace Vaulter\Filament;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 use Packman\Attributes\Api;
-use Vaulter\Modules\OffersModules;
+use Packman\Foundation\Concerns\RegistersPackageRegistrars;
+use Packman\Foundation\Contracts\PackageRegistrar;
+use Vaulter\Filament\Providers\FilamentPackageRegistrar;
 
 /**
- * The Filament package only offers {@see FilamentModule}; the panel plugin {@see VaulterPlugin} stays an
- * explicit host registration on its panel.
+ * Vaulter Filament — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see FilamentModule}.
  */
-#[Api]
+#[Api(since: '1.0')]
 final class VaulterFilamentServiceProvider extends ServiceProvider
 {
-    use OffersModules;
+    use RegistersPackageRegistrars {
+        RegistersPackageRegistrars::register as protected registerRegistrars;
+        RegistersPackageRegistrars::boot as protected bootRegistrars;
+    }
 
+    /** @var list<class-string<PackageRegistrar>> */
+    protected const array REGISTRARS = [
+        FilamentPackageRegistrar::class,
+    ];
+
+    #[Override]
     public function register(): void
     {
-        $this->offerModule(FilamentModule::class);
+        $this->registerRegistrars();
+    }
+
+    public function boot(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
+        $this->bootRegistrars();
     }
 }

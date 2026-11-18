@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Tests\Collaboration;
 
 use Illuminate\Foundation\Application;
+use Override;
 use Vaulter\Collaboration\Tests\TestCase;
 
 /**
@@ -17,7 +18,7 @@ abstract class CollaborationEnabledTestCase extends TestCase
     /**
      * @param Application $app
      */
-    #[\Override]
+    #[Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

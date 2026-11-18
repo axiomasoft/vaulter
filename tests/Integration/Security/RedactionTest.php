@@ -29,7 +29,7 @@ use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\SignedContentUrl;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -210,7 +210,7 @@ it('issues and rotates webhook secrets then inspects a real transport failure pe
         $calls++;
         throw new ConnectionException('transport Bearer '.$secret.'?previous='.rawurlencode($old).'&payload='.rawurlencode($content));
     });
-    (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+    (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
     expect($calls)->toBe(1)->and($delivery->fresh()->status)->toBe('failed')->and($delivery->fresh()->attempts)->toBe(1);
     $this->collector->capture($delivery->fresh()->last_error);
     $this->collector->assertAbsent([$old, $secret, $content]);

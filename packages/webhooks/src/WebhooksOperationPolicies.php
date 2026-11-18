@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Operations\ConcurrencyPolicy;
 use Vaulter\Operations\IdempotencyPolicy;
 use Vaulter\Operations\OperationPolicy;

@@ -22,7 +22,7 @@ Split the contract into two lanes (master plan §H.2):
   `canCreateInWorkspace(...)`. Drivers shipped: `database` (default, standalone),
   `spatie` (v8, with the team-switch dance encapsulated), `gate`, and the non-prod
   `null` (open). An `azguard` lane is reserved in the config map but deferred until
-  the Corex/AzGuard morph alignment lands.
+  the AzGuard morph alignment lands.
 - **`AccessResolver` — Vaulter-owned, NOT swappable.** A concrete `final` class
   that runs the effective-permission algorithm over `v_node_grants` + the driver.
 

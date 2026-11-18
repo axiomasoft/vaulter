@@ -7,9 +7,6 @@ namespace Vaulter\AzGuard\Tests\RealAzGuard;
 use AzGuard\AzGuardServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Application;
-
-use function Orchestra\Testbench\load_migration_paths;
-
 use Orchestra\Testbench\TestCase as Orchestra;
 use Vaulter\AzGuard\Tests\RealAzGuard\Stubs\AzGuardUser;
 use Vaulter\AzGuard\Tests\RealAzGuard\Stubs\DocumentsPanel;
@@ -18,6 +15,8 @@ use Vaulter\AzGuard\VaulterAzGuardServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
+
+use function Orchestra\Testbench\load_migration_paths;
 
 /**
  * The REAL-ecosystem case: boots AzGuard v1 (its storage migration, the engine and the

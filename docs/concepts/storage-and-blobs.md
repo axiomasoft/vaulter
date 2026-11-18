@@ -16,7 +16,7 @@ deduplication, a clear separation between *bytes on disk* and *rows in the
 database*, and a garbage collector that is safe to run while uploads are in flight.
 
 ::: info Where this lives
-The CAS belongs to the package `axioma-studio/vaulter-media`: the implementation is in `Vaulter\Media\Cas\*`
+The CAS belongs to the package `axiomasoft/vaulter-media`: the implementation is in `Vaulter\Media\Cas\*`
 (including `BlobLock`), the contracts in `Vaulter\Media\Contracts\Cas\*`, the row model is
 `Vaulter\Media\Models\Cas\Blob`, the lifecycle enum is `Vaulter\Media\Enums\Cas\BlobStatus`, the tables are
 `v_blobs` and `v_blob_references` (the pins), and configuration sits under `config/vaulter-media.php`
@@ -383,7 +383,7 @@ The command prints a per-phase tally — `Tombstoned X, swept Y, skipped Z (grac
 ::: warning The grace window must outlast your slowest upload
 A tombstoned blob can be resurrected by an in-flight upload of the same `sha256`. The
 grace must be **≥ the worst-case multipart-commit latency** so an upload can
-resurrect first. It is floored at 1h by `MediaConfig::gcGraceHours()` regardless of
+resurrect first. It is floored at 1h by `MediaOptions::gcGraceHours()` regardless of
 config — never set it to zero expecting an immediate purge.
 :::
 

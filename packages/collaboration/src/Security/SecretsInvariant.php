@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Security;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Contracts\Security\ProductionInvariant;
 
 /** A usable JWT key set (nonempty, active kid, keys of at least 32 bytes) different from the webhook secret; the values are never part of the message. */
 #[Internal]
 final readonly class SecretsInvariant implements ProductionInvariant
 {
-    public function __construct(private CollaborationConfig $config) {}
+    public function __construct(private CollaborationOptions $config) {}
 
     public function id(): string
     {

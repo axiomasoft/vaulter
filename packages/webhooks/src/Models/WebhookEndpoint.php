@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /**
  * A subscriber endpoint receiving signed webhook deliveries for the events it is
@@ -80,10 +81,10 @@ class WebhookEndpoint extends Model
      */
     protected $hidden = ['signing_secret', 'previous_signing_secret'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('webhook_endpoints');
+        return app(DatabaseOptions::class)->table('webhook_endpoints');
     }
 
     /**
@@ -94,7 +95,7 @@ class WebhookEndpoint extends Model
     public function deliveries(): HasMany
     {
         /** @var class-string<WebhookDelivery> $related */
-        $related = app(WebhooksConfig::class)->model('webhook_delivery');
+        $related = app(WebhooksOptions::class)->model('webhook_delivery');
 
         return $this->hasMany(related: $related, foreignKey: 'endpoint_id');
     }
@@ -133,7 +134,7 @@ class WebhookEndpoint extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

@@ -1,11 +1,11 @@
 # Vaulter · Collaboration
 
-`axioma-studio/vaulter-collaboration` is the realtime layer of Vaulter documents. It is one of three pieces that are
+`axiomasoft/vaulter-collaboration` is the realtime layer of Vaulter documents. It is one of three pieces that are
 installed together:
 
 | Piece | What it is |
 |---|---|
-| `axioma-studio/vaulter-collaboration` (this package) | the Laravel module: session endpoint, room token (HS256 JWT), hub protocol 2, the update log, drain and prune commands |
+| `axiomasoft/vaulter-collaboration` (this package) | the Laravel module: session endpoint, room token (HS256 JWT), hub protocol 2, the update log, drain and prune commands |
 | [`@vaulter/collaboration-hub`](./hub/README.md) | the Node hub (Hocuspocus + Yjs), shipped as the image `ghcr.io/axiomasoft/vaulter-collaboration-hub` |
 | [`@vaulter/vue-collaboration`](../vue-collaboration/README.md) | the browser side: update envelopes, the retry queue and the save status |
 
@@ -14,15 +14,15 @@ through this package and acknowledges it only after the commit. The hub folds th
 Yjs). Decisions and reasons: [ADR-0031](../../docs/adr/0031-collaboration-package-and-durability.md); the guide is
 [Realtime Collaboration](../../docs/guides/collaboration.md).
 
-It depends on `axioma-studio/vaulter-core`, `axioma-studio/vaulter-drive` and `axioma-studio/vaulter-documents`
-(`firebase/php-jwt` signs the tokens), is not part of the `axioma-studio/vaulter` metapackage, and is **opt-in**: it opens
+It depends on `axiomasoft/vaulter-core`, `axiomasoft/vaulter-drive` and `axiomasoft/vaulter-documents`
+(`firebase/php-jwt` signs the tokens), is not part of the `axiomasoft/vaulter` metapackage, and is **opt-in**: it opens
 a network channel and needs secrets, so the module is active only after `vaulter.modules.collaboration` is set to
 `true`. Without it, documents are edited one at a time through the ordinary content endpoints.
 
 ## Install
 
 ```bash
-composer require axioma-studio/vaulter-collaboration
+composer require axiomasoft/vaulter-collaboration
 php artisan migrate        # creates the four v_collaboration_* tables, active or not
 ```
 
@@ -74,7 +74,7 @@ saved edits that are not in a checkpoint — drain first).
 
 ## Development in the monorepo
 
-The package lives in `packages/collaboration` and is split to the `axioma-studio/vaulter-collaboration` repository by
+The package lives in `packages/collaboration` and is split to the `axiomasoft/vaulter-collaboration` repository by
 `.github/workflows/monorepo-split.yml` (listed in `release/packages.json`). Its tests run on its own `TestCase`:
 
 ```bash

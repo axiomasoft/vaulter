@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
+use Vaulter\Webhooks\Models\WebhookDelivery;
+use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
@@ -22,12 +24,12 @@ function webhookFixture(Closure $create): mixed
 }
 
 beforeEach(function (): void {
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs(V1::user(1));
 });
 
 it('shows an endpoint without its secret and 404s an unknown one', function (): void {
-    $endpoint = webhookFixture(static fn () => WebhookTestHelpers::endpoint(['url' => 'https://show.test/hook']));
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint(['url' => 'https://show.test/hook']));
 
     $this->getJson(V1::url('webhook-endpoints/'.$endpoint->getKey()))
         ->assertOk()
@@ -38,7 +40,7 @@ it('shows an endpoint without its secret and 404s an unknown one', function (): 
 });
 
 it('rotates the signing secret and returns the new one once', function (): void {
-    $endpoint = webhookFixture(static fn () => WebhookTestHelpers::endpoint());
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
     $old = $endpoint->signing_secret;
 
     $rotated = $this->postJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/rotate-secret'), ['overlap_seconds' => 600], ['If-Match' => webhookTag($endpoint->getKey())])
@@ -53,12 +55,12 @@ it('rotates the signing secret and returns the new one once', function (): void 
 });
 
 it('pages the deliveries of one endpoint only', function (): void {
-    $endpoint = webhookFixture(static fn () => WebhookTestHelpers::endpoint());
-    $other = webhookFixture(static fn () => WebhookTestHelpers::endpoint(['url' => 'https://other.test/hook']));
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $other = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint(['url' => 'https://other.test/hook']));
     foreach (range(1, 3) as $i) {
-        webhookFixture(static fn () => WebhookTestHelpers::delivery($endpoint, ['status' => 'failed', 'last_error' => 'HTTP 503', 'attempts' => $i]));
+        webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint, ['status' => 'failed', 'last_error' => 'HTTP 503', 'attempts' => $i]));
     }
-    webhookFixture(static fn () => WebhookTestHelpers::delivery($other));
+    webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($other));
 
     $page = $this->getJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries?per_page=2'))->assertOk();
 
@@ -73,11 +75,11 @@ it('pages the deliveries of one endpoint only', function (): void {
 
 it('redelivers a dead delivery (202), refuses a pending one (409) and one of another endpoint (404)', function (): void {
     Bus::fake([DeliverWebhook::class]);
-    $endpoint = webhookFixture(static fn () => WebhookTestHelpers::endpoint());
-    $other = webhookFixture(static fn () => WebhookTestHelpers::endpoint(['url' => 'https://other.test/hook']));
-    $dead = webhookFixture(static fn () => WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'last_error' => 'connection refused']));
-    $pending = webhookFixture(static fn () => WebhookTestHelpers::delivery($endpoint));
-    $foreign = webhookFixture(static fn () => WebhookTestHelpers::delivery($other, ['status' => 'dead']));
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $other = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint(['url' => 'https://other.test/hook']));
+    $dead = webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'last_error' => 'connection refused']));
+    $pending = webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint));
+    $foreign = webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($other, ['status' => 'dead']));
     $base = V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries/');
 
     $this->postJson($base.$dead->getKey().'/redeliver')
@@ -92,8 +94,8 @@ it('redelivers a dead delivery (202), refuses a pending one (409) and one of ano
 it('gates every action, reads included, behind the manage ability', function (): void {
     config()->set('vaulter-webhooks.manage_ability', 'vaulter.webhooks.manage');
     Gate::define('vaulter.webhooks.manage', static fn (): bool => false);
-    $endpoint = webhookFixture(static fn () => WebhookTestHelpers::endpoint());
-    $delivery = webhookFixture(static fn () => WebhookTestHelpers::delivery($endpoint, ['status' => 'dead']));
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $delivery = webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint, ['status' => 'dead']));
     $id = $endpoint->getKey();
 
     foreach ([

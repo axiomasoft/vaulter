@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 use Filament\Facades\Filament;
 use Filament\Panel;
+use Illuminate\Support\Facades\Gate;
+use Packman\Filament\Contracts\FilamentPanelPlugin;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
+use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Filament\VaulterPlugin;
 
 it('identifies the plugin', function (): void {
@@ -112,4 +115,20 @@ it('respects the canonical drive resource toggle', function (): void {
 
     expect($panel->getResources())->not->toContain(DriveResource::class)
         ->and($panel->getResources())->toContain(NodeResource::class);
+});
+
+it('enforces shared Packman resource authorization and preserves host gate decisions', function (): void {
+    $panel = Filament::getPanel('admin');
+    Filament::setCurrentPanel($panel);
+    expect(VaulterPlugin::current($panel))->toBeInstanceOf(FilamentPanelPlugin::class)
+        ->and(DriveResource::canViewAny())->toBeFalse();
+
+    $this->actingAs(DriveBuilder::user(901));
+    expect(DriveResource::canViewAny())->toBeTrue();
+
+    Gate::define('vaulter.drive.view_any', static fn (): bool => false);
+    expect(DriveResource::canViewAny())->toBeFalse();
+
+    Gate::define('vaulter.drive.view_any', static fn (): bool => true);
+    expect(DriveResource::canViewAny())->toBeTrue();
 });

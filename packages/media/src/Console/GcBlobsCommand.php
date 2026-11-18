@@ -45,7 +45,7 @@ final class GcBlobsCommand extends Command
             '(grace '.$mediaConfig->gcGraceHours($grace).'h).',
         );
 
-        if ((bool) $this->option('pending')) {
+        if ($this->option('pending')) {
             $pending = $collector->sweepPending(graceHours: $grace);
 
             $this->components->info("Pending sweep: swept {$pending['swept']}, skipped {$pending['skipped']}.");

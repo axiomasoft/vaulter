@@ -31,16 +31,16 @@ final class ReconcileScanWorkCommand extends Command
     protected $description = 'Recover bounded scan intents, backfill discovery and committed upload cleanup.';
 
     public function handle(ScanWorkReconciler $work, ScanBackfillReconciler $backfill, UploadCleanupReconciler $cleanup,
-        DriveOptions $config): int
+        DriveOptions $config, DriveOptionsValidator $validator): int
     {
         $started = microtime(true);
         try {
             $scope = RescanFileRevisionsCommand::scope($this);
-            app(DriveOptionsValidator::class)->validateScanWork($config, requireBroker: app(Kernel::class)->capabilities()->has(ContentScanner::class));
+            $validator->validateScanWork($config, requireBroker: app(Kernel::class)->capabilities()->has(ContentScanner::class));
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    return Tenancy::without(fn (): int => $this->handle($work, $backfill, $cleanup, $config));
+                    return Tenancy::without(fn (): int => $this->handle($work, $backfill, $cleanup, $config, $validator));
                 } finally {
                     $this->withinMaintenanceScope = false;
                 }
@@ -50,7 +50,7 @@ final class ReconcileScanWorkCommand extends Command
                 throw new InvalidArgumentException('Invalid time bound.');
             }
             $ids = RescanFileRevisionsCommand::drives($scope)->select('id')->reorder();
-            $dryRun = (bool) $this->option('dry-run');
+            $dryRun = $this->option('dry-run');
             $out = RescanFileRevisionsCommand::summary('vaulter:scan:reconcile', $dryRun);
             $result = $backfill->expand($scope['limit'], $seconds, $dryRun, $ids);
             $stalled = $result['stalled_configuration'];

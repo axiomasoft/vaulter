@@ -73,7 +73,7 @@ beforeEach(function (): void {
 });
 
 it('does not offer a destination folder without Create', function (): void {
-    $options = (new ReflectionMethod(NodeResource::class, 'folderOptions'))->invoke(null, DriveBuilder::row($this->v27Source));
+    $options = new ReflectionMethod(NodeResource::class, 'folderOptions')->invoke(null, DriveBuilder::row($this->v27Source));
 
     expect($options)->not->toHaveKey((string) $this->v27Target->getKey());
 });
@@ -84,7 +84,7 @@ it('refuses a forged move into it with permission_denied through the handle', fu
     // The select would reject an unlisted id at form validation; admit it so the refusal
     // under test is the operation's own.
     Select::configureUsing(
-        modifyUsing: fn (Select $select) => $select->in([(string) $this->v27Target->getKey()]),
+        modifyUsing: fn (Select $select): Select => $select->in([(string) $this->v27Target->getKey()]),
         during: fn () => Livewire::test(ListNodes::class)->callTableAction('move', (string) $this->v27Source->getKey(), ['parent_id' => (string) $this->v27Target->getKey()]),
         isImportant: true,
     );

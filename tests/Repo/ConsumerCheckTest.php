@@ -164,7 +164,7 @@ it('lists exactly the declared siblings for webhooks and no other package', func
 
     expect($code)->toBe(0, $out.$err);
     preg_match('/^  repositories: (.*)$/m', $out, $match);
-    expect($match[1] ?? '')->toBe('axioma-studio/vaulter-core axioma-studio/vaulter-drive axioma-studio/vaulter-media')
+    expect($match[1] ?? '')->toBe('axiomasoft/vaulter-core axiomasoft/vaulter-drive axiomasoft/vaulter-media')
         ->and($out)->not->toContain('vaulter-documents')
         ->and($out)->not->toContain('vaulter-filament');
 });
@@ -174,7 +174,7 @@ it('lists exactly the declared siblings for collaboration, its dev sibling inclu
 
     expect($code)->toBe(0, $out.$err);
     preg_match('/^  repositories: (.*)$/m', $out, $match);
-    expect($match[1] ?? '')->toBe('axioma-studio/vaulter-core axioma-studio/vaulter-documents axioma-studio/vaulter-drive axioma-studio/vaulter-media')
+    expect($match[1] ?? '')->toBe('axiomasoft/vaulter-core axiomasoft/vaulter-documents axiomasoft/vaulter-drive axiomasoft/vaulter-media')
         ->and($out)->not->toContain('vaulter-webhooks')
         ->and($out)->not->toContain('vaulter-filament');
 });

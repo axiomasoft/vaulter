@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Webhooks\Actions\RotateWebhookSecretAction;
 use Vaulter\Webhooks\Data\MintedEndpointSecret;
 use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
@@ -33,7 +33,7 @@ final readonly class RotateWebhookSecretController
             return new MintedEndpointSecret(endpoint: WebhookEndpointSnapshot::of($model->refresh()), secret: $rotated->secret);
         }, ['endpoint' => $endpoint, 'overlap_seconds' => $overlap, 'expected_version' => $expected]);
 
-        $resource = (new WebhookEndpointResource($minted->endpoint))->withSecret($minted->secret);
+        $resource = new WebhookEndpointResource($minted->endpoint)->withSecret($minted->secret);
 
         return $resource->response()->setEtag($resource->etag());
     }

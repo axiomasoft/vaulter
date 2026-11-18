@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Testing\Fixtures;
 
 use Illuminate\Foundation\Auth\User;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** The test user this addon ships with its Testing helpers; it owns its fixture instead of importing a core one. */
 #[Internal]

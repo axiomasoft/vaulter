@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Events;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * Operational Laravel event, dispatched after the commit that disabled an endpoint

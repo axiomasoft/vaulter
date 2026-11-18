@@ -7,11 +7,11 @@ namespace Vaulter\Collaboration\Tests\Support;
 use Closure;
 use Illuminate\Http\Request;
 use LogicException;
+use Packman\Attributes\Internal;
 use PHPUnit\Framework\AssertionFailedError;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Attributes\Internal;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
 use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
 
@@ -61,7 +61,7 @@ final class ValidateReleaseOpenApiResponses
 
         $streamed = $response instanceof StreamedResponse || $response instanceof BinaryFileResponse;
         $private = str_starts_with($request->route()?->getActionName() ?? '', 'Vaulter\\Collaboration\\');
-        $violations = (new OpenApiResponseValidator($private ? self::hubContract() : OpenApiContract::shared()))->validate(
+        $violations = new OpenApiResponseValidator($private ? self::hubContract() : OpenApiContract::shared())->validate(
             substr($name, strlen(self::PREFIX)),
             $response->getStatusCode(),
             $headers,

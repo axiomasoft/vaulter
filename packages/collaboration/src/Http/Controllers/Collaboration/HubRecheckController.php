@@ -7,7 +7,7 @@ namespace Vaulter\Collaboration\Http\Controllers\Collaboration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\SessionChecks;
 

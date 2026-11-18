@@ -10,14 +10,13 @@ use Packman\Extensions\Contracts\Composition\WithSlots;
 use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 use Packman\Extensions\Contracts\Persistence\WithSchema;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
-use Vaulter\CoreModule;
 
 /**
  * Translates {@see ExtensionPlugin} declarations and optional {@see PluginModuleSpec} metadata into {@see ModuleBuilder}
- * declarations while Slice B2 packages remain on {@see VaulterModule}.
+ * declarations for the Vaulter domain kernel. Only native Packman code plugins are accepted.
  */
 #[Internal]
-final class PluginModuleBridge
+final class ModuleDeclarations
 {
     public static function moduleId(string $pluginId): string
     {
@@ -36,6 +35,10 @@ final class PluginModuleBridge
     /** @return array<string, string> module id => constraint */
     public static function requires(ExtensionPlugin $plugin): array
     {
+        $runtime = $plugin instanceof WithModuleRuntime ? $plugin->moduleRuntime() : null;
+        if ($runtime?->requires !== null) {
+            return $runtime->requires;
+        }
         $requires = [];
         foreach ($plugin->manifest()->requires as $dependency) {
             $requires[self::moduleId($dependency)] = '^1.0';
@@ -46,22 +49,6 @@ final class PluginModuleBridge
 
     public static function buildOffered(string $manifest, ?PluginModuleSpec $spec = null): ?ModuleBuilder
     {
-        if (is_a($manifest, CoreModule::class, true)) {
-            $module = new CoreModule;
-            $builder = new ModuleBuilder(new ModuleId('core'));
-            $module->declareModule($builder);
-
-            return $builder;
-        }
-
-        if (is_a($manifest, VaulterModule::class, true)) {
-            $module = new $manifest;
-            $builder = new ModuleBuilder($module->id());
-            $module->register($builder);
-
-            return $builder;
-        }
-
         if (is_a($manifest, ExtensionPlugin::class, true)) {
             $plugin = new $manifest;
             $builder = new ModuleBuilder(new ModuleId(self::moduleId($plugin->manifest()->id)));
@@ -75,6 +62,8 @@ final class PluginModuleBridge
 
     public static function populateFromPlugin(ModuleBuilder $builder, ExtensionPlugin $plugin, ?PluginModuleSpec $spec = null): void
     {
+        $spec ??= $plugin instanceof WithModuleRuntime ? $plugin->moduleRuntime() : null;
+
         if ($plugin instanceof WithConfiguration) {
             $root = $plugin->configRoot();
             $defaultPath = $plugin->defaultConfigPath();

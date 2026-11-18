@@ -6,9 +6,9 @@ namespace Vaulter\AzGuard;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\AzGuard\Configuration\AzGuardConfig;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Vaulter\AzGuard\Configuration\AzGuardOptions;
 use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
 use Vaulter\Drive\Access\Roles\Role;
@@ -18,17 +18,16 @@ use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
-use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Kernel;
 
 /**
  * The AzGuard host-role driver (docs/adr/0007-pluggable-authorization.md, docs/adr/0025-access-model-v1.md). It bridges a
  * host running AzGuard's per-resource, scoped permission model into Vaulter's
- * composite ACL — WITHOUT vaulter-core depending on azguard/corex. Every AzGuard
+ * composite ACL — WITHOUT vaulter-core depending on azguard. Every AzGuard
  * touch goes through the narrow Vaulter-owned {@see AzGuardGuard} seam, so PHPStan
  * stays green with the package absent and the driver references NO concrete
- * AzGuard\* / CoreX\* class.
+ * AzGuard\* class.
  *
  * THE COMPOSITE RESOLUTION ORDER (node-ACL → workspace-scoped role
  * → global), and which lane this driver owns:
@@ -82,7 +81,7 @@ final class AzGuardPermissionDriver implements NonEnumeratingPermissionDriver, P
     #[Internal]
     public function __construct(
         private readonly Kernel $kernel,
-        private readonly AzGuardConfig $config,
+        private readonly AzGuardOptions $config,
         private readonly AzGuardPermissionMap $permissions,
         private readonly RoleRegistry $roles,
     ) {}

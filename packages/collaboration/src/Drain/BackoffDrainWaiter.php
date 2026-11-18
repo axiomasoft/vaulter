@@ -7,7 +7,7 @@ namespace Vaulter\Collaboration\Drain;
 use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Sleep;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\State\PendingMarker;
 
 /**

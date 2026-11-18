@@ -7,12 +7,12 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity as DoctorSeverity;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Providers\BindingsRegistrar as DriveBindingsRegistrar;
@@ -57,7 +57,7 @@ function coreCodes(string $key, bool $production = false): array
 
 function coreTable(string $entity): string
 {
-    return app(DatabaseConfig::class)->table($entity);
+    return app(DatabaseOptions::class)->table($entity);
 }
 
 it('reports the sqlite test database as a warning, an error in production', function (): void {
@@ -121,7 +121,7 @@ it('skips the key types where the driver cannot report them', function (): void 
     $finding = coreFindings('core.schema.key_types')[0];
 
     expect($finding->code)->toBe('core.schema.key_types_skipped')
-        ->and($finding->severity)->toBe(DoctorSeverity::Ok)
+        ->and($finding->severity)->toBe(DoctorSeverity::Info)
         ->and($finding->evidence['skipped'])->toBeTrue();
 })->skip(fn (): bool => DB::connection()->getDriverName() !== 'sqlite', 'SQLite-only: a server driver reports its key types (key_types_match)');
 
@@ -360,7 +360,7 @@ it('counts disabled endpoints and dead deliveries', function (): void {
     $finding = coreFindings('core.webhooks.deliveries')[0];
     expect($finding->code)->toBe('core.webhooks.deliveries_failing')
         ->and($finding->evidence)->toBe(['disabled_endpoints' => 1, 'dead_deliveries' => 1])
-        ->and($finding->hint)->toContain('vaulter:webhooks:redeliver');
+        ->and($finding->remediation)->toContain('vaulter:webhooks:redeliver');
 });
 
 /**

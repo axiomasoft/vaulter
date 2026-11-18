@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Collaboration\Errors\CollaborationErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -48,5 +52,11 @@ final class CollaborationEpochMismatchException extends VaulterException impleme
     public function problemDetails(): array
     {
         return ['context' => ['expected' => $this->expected, 'actual' => $this->actual]];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: CollaborationErrorCode::EpochMismatch, category: ErrorCategory::Conflict, retryable: true);
     }
 }

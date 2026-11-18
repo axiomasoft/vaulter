@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Collaboration\Schema\CollaborationSchema;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Schema\DocumentsSchema;
 use Vaulter\Integration\Tests\Support\Schema\SchemaPresets;
@@ -31,7 +31,7 @@ it('installs exactly the expected schema of the current preset', function (): vo
     // collaboration tables reference v_documents, so documents first).
     foreach ([app(DocumentsSchema::class), app(CollaborationSchema::class)] as $schema) {
         foreach ($schema->entities() as $entity) {
-            if (!$connection->getSchemaBuilder()->hasTable(app(DatabaseConfig::class)->table($entity))) {
+            if (!$connection->getSchemaBuilder()->hasTable(app(DatabaseOptions::class)->table($entity))) {
                 $schema->create($entity);
             }
         }

@@ -10,7 +10,7 @@ use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Concurrency\RaceFixtures;
 use Vaulter\Collaboration\Tests\Support\Compaction;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Testing\Concurrency\ForkRace;
 
@@ -45,7 +45,7 @@ it('keeps an update appended while H is published, its payload and the marker pa
     $document = Hub::aggregate($node);
     expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])
         ->and(Compaction::seqs($node))->toBe([3])
-        ->and(DB::table(app(DatabaseConfig::class)->table('collaboration_receipts'))->count())->toBe(3)
+        ->and(DB::table(app(DatabaseOptions::class)->table('collaboration_receipts'))->count())->toBe(3)
         ->and([$document->pending_generation, $document->pending_through_seq])->toBe([0, 3])
         ->and(Compaction::head($node)?->checkpointSeq)->toBe(2);
 });

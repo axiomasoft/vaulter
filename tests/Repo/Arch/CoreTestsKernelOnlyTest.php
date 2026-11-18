@@ -13,7 +13,7 @@ function kernelTestDependencies(string $source): array
     $found = [];
     foreach ((new NodeFinder)->find($nodes, static fn (Node $node): bool => $node instanceof Node\Name || $node instanceof Node\Scalar\String_ || $node instanceof Node\Scalar\EncapsedStringPart) as $node) {
         $value = $node instanceof Node\Name ? $node->toString() : $node->value;
-        if (preg_match('~Vaulter\\\\(?:Media|Drive|Documents|Webhooks|Collaboration|AzGuard|Filament|Integration|Load)(?:\\\\|$)|axioma-studio/vaulter-(?:media|drive|documents|webhooks|collaboration|azguard|filament)|(?:^|[/\\s])scripts/|tests/Integration|packages/[^/]+/tests|(?:\.\./)+(?:media|drive|documents|webhooks|collaboration|azguard|filament)/~', $value) === 1) {
+        if (preg_match('~Vaulter\\\\(?:Media|Drive|Documents|Webhooks|Collaboration|AzGuard|Filament|Integration|Load)(?:\\\\|$)|axiomasoft/vaulter-(?:media|drive|documents|webhooks|collaboration|azguard|filament)|(?:^|[/\\s])scripts/|tests/Integration|packages/[^/]+/tests|(?:\.\./)+(?:media|drive|documents|webhooks|collaboration|azguard|filament)/~', $value) === 1) {
             $found[] = $value;
         }
     }

@@ -6,8 +6,8 @@ namespace Vaulter\Webhooks;
 
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use GuzzleHttp\Psr7\Utils;
+use Packman\Attributes\Internal;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Attributes\Internal;
 use Vaulter\Webhooks\Exceptions\WebhookResponseTooLargeException;
 
 /**

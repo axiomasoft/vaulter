@@ -3,23 +3,23 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Security\HubUrlInvariant;
 use Vaulter\Collaboration\Security\SecretsInvariant;
-use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 
 const SECRETS_KEY_A = 'key-a-0123456789-0123456789-0123456789';
 const SECRETS_KEY_B = 'key-b-0123456789-0123456789-0123456789';
 
 /** @param array<string, mixed> $keys the PHP array form; `$env` is the environment string form and wins */
-function collaborationConfig(array $keys, ?string $active, ?string $webhook, ?string $env = null): CollaborationConfig
+function collaborationConfig(array $keys, ?string $active, ?string $webhook, ?string $env = null): CollaborationOptions
 {
     $repository = new Repository(['vaulter-collaboration' => [
         'hub' => ['jwt_keys' => $env ?? $keys, 'jwt_active_kid' => $active, 'webhook_secret' => $webhook],
     ]]);
 
-    return new CollaborationConfig($repository, new DocumentsConfig($repository));
+    return CollaborationOptions::fromArray(($repository)->get('vaulter-collaboration', []))->withContext(DocumentsOptions::fromArray(($repository)->get('vaulter-documents', [])), ($repository)->get('app.url'));
 }
 
 it('reports a missing, short, reused or unanchored JWT key set as the collaboration.secrets invariant', function (array $keys, ?string $active, ?string $webhook): void {
@@ -43,19 +43,19 @@ it('reports a missing, short, reused or unanchored JWT key set as the collaborat
 ]);
 
 it('is silent for an overlapping key set with an active kid, all keys distinct from the webhook secret', function (): void {
-    expect((new SecretsInvariant(collaborationConfig(['a' => SECRETS_KEY_A, 'b' => SECRETS_KEY_B], 'b', 'webhook')))->violation())->toBeNull();
+    expect(new SecretsInvariant(collaborationConfig(['a' => SECRETS_KEY_A, 'b' => SECRETS_KEY_B], 'b', 'webhook'))->violation())->toBeNull();
 });
 
 it('requires a configured hub url to be wss and treats an empty url as no violation', function (?string $url, bool $secure): void {
     $repository = new Repository(['vaulter-collaboration' => ['hub' => ['url' => $url]]]);
-    $invariant = new HubUrlInvariant(new CollaborationConfig($repository, new DocumentsConfig($repository)));
+    $invariant = new HubUrlInvariant(CollaborationOptions::fromArray(($repository)->get('vaulter-collaboration', []))->withContext(DocumentsOptions::fromArray(($repository)->get('vaulter-documents', [])), ($repository)->get('app.url')));
 
     expect($invariant->id())->toBe('collaboration.hub-url')
         ->and($invariant->violation() === null)->toBe($secure);
 })->with([[null, true], ['', true], ['   ', true], ['ws://hub', false], ['http://hub', false], ['https://hub.example', false], ['wss://hub.example', true]]);
 
 it('refuses an unusable JWT key set at boot in every environment, the old keys included', function (array $keys, ?string $active, ?string $webhook): void {
-    expect(fn () => collaborationConfig($keys, $active, $webhook)->assertDistinctHubSecrets())->toThrow(InvalidConfigurationException::class, 'unusable');
+    expect(fn () => collaborationConfig($keys, $active, $webhook)->assertDistinctHubSecrets())->toThrow(InvalidConfiguration::class, 'unusable');
 })->with([
     'webhook reuse' => [['a' => SECRETS_KEY_A], 'a', SECRETS_KEY_A],
     'old key reuses webhook' => [['a' => SECRETS_KEY_A, 'old' => SECRETS_KEY_B], 'a', SECRETS_KEY_B],
@@ -66,7 +66,7 @@ it('refuses an unusable JWT key set at boot in every environment, the old keys i
 ]);
 
 it('reads the environment string of kid:secret pairs and refuses a malformed or repeated pair', function (): void {
-    $parse = static fn (string $value): CollaborationConfig => collaborationConfig([], 'b', 'webhook', $value);
+    $parse = static fn (string $value): CollaborationOptions => collaborationConfig([], 'b', 'webhook', $value);
 
     expect($parse('a:'.SECRETS_KEY_A.',b:'.SECRETS_KEY_B)->hubJwtKeys())->toBe(['a' => SECRETS_KEY_A, 'b' => SECRETS_KEY_B])
         ->and($parse('a:'.SECRETS_KEY_A.',b:'.SECRETS_KEY_B.',')->hubJwtKeysViolation())->toBeNull();

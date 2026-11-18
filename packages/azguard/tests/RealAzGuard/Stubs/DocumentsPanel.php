@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard\Tests\RealAzGuard\Stubs;
 
+use AzGuard\Context\AssignmentScopeDeclaration;
+use AzGuard\Context\AssignmentScopeMode;
 use AzGuard\Panels\PanelBuilder;
 use AzGuard\Panels\PanelProvider;
 use AzGuard\Roles\SuperAdminRole;
-use AzGuard\Scopes\AssignmentScopePolicy;
 use AzGuard\Sources\Database\DatabaseSource;
 
 /**
@@ -27,6 +28,6 @@ final class DocumentsPanel extends PanelProvider
         return $panel->for(AzGuardUser::class, guard: 'web')
             ->permissions([DocumentsPermission::class, DatabaseSource::make()])
             ->roles([SuperAdminRole::class])
-            ->scopes(AssignmentScopePolicy::inherit(new ProjectScope));
+            ->assignmentScopes(new AssignmentScopeDeclaration(AssignmentScopeMode::Inherit, [new ProjectScope]));
     }
 }

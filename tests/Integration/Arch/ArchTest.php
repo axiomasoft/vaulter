@@ -202,7 +202,7 @@ arch('repositories never depend on the HTTP request')
  *
  * The model set is the concrete v_* models; the scan strips comments/docblocks so
  * the rule fires on real code, and anchors on `Model::<verb>(` so unrelated static
- * calls (DatabaseConfig::table(), NodeKind::File, …) never trip it.
+ * calls (DatabaseOptions::table(), NodeKind::File, …) never trip it.
  */
 test('no HTTP controller statically queries an Eloquent model (M1c-http)', function (): void {
     $controllers = __DIR__.'/../../../packages/core/src/Http/Controllers';
@@ -694,7 +694,7 @@ arch('the FileHandler contract seam is kind-neutral and never depends on vaulter
 arch('DB facade only in Database and Schema (AD25)')
     ->expect('Illuminate\Support\Facades\DB')
     ->toOnlyBeUsedIn(['Vaulter\Database', 'Vaulter\Schema'])
-    ->ignoring(['Vaulter\Tests', 'Vaulter\Testing', 'Vaulter\Load']);
+    ->ignoring(['Vaulter\Tests', 'Vaulter\Integration\Tests', 'Vaulter\Media\Tests', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Collaboration\Tests', 'Vaulter\Webhooks\Tests', 'Vaulter\AzGuard\Tests', 'Vaulter\Filament\Tests', 'Vaulter\Testing', 'Vaulter\Load']);
 
 arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Exceptions')

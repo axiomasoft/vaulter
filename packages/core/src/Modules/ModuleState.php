@@ -18,12 +18,12 @@ final readonly class ModuleState
     public const string REASON_OVERRIDE = 'override';
 
     /**
-     * @param class-string<VaulterModule|ExtensionPlugin> $manifest
-     * @param list<string>                                $schemaPaths
+     * @param class-string<ExtensionPlugin> $manifest
+     * @param list<string>                  $schemaPaths
      */
     public function __construct(
         public ModuleId $id,
-        /** @var class-string<VaulterModule|ExtensionPlugin> */
+        /** @var class-string<ExtensionPlugin> */
         public string $manifest,
         public string $version,
         public Activation $activation,

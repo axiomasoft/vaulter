@@ -7,6 +7,7 @@ namespace Vaulter\Testing\Contracts;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\App;
 use Packman\Attributes\Api;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use PHPUnit\Framework\Assert;
 use Vaulter\CoreModule;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
@@ -17,9 +18,11 @@ use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCompiler;
+use Vaulter\Modules\ModuleDeclarations;
+use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
@@ -39,34 +42,33 @@ use Vaulter\Operations\OperationPolicySource;
 final class ModuleContractTests
 {
     /**
-     * @param list<VaulterModule> $requires the manifests the module requires, other than the core module
+     * @param list<ExtensionPlugin> $requires the manifests the module requires, other than the core module
      */
-    public function assertModuleContract(VaulterModule $module, array $requires = []): void
+    public function assertModuleContract(ExtensionPlugin $module, array $requires = []): void
     {
-        $id = $module->id()->value;
+        $id = ModuleDeclarations::moduleId($module->manifest()->id);
 
-        $this->assertIdentity($module);
         $this->assertDeclarationsOnly($module);
+        $this->assertIdentity($module);
         $this->assertCompiles($module, $requires);
         $this->assertSealed($module);
 
-        Assert::assertSame($id, $module->id()->value, 'The module id changed between calls.');
+        Assert::assertSame($id, ModuleDeclarations::moduleId($module->manifest()->id), 'The module id changed between calls.');
     }
 
-    private function assertIdentity(VaulterModule $module): void
+    private function assertIdentity(ExtensionPlugin $module): void
     {
-        $id = $module->id()->value;
+        $id = ModuleDeclarations::moduleId($module->manifest()->id);
 
-        Assert::assertMatchesRegularExpression('/^\d+\.\d+$/', $module->version(), sprintf('Module "%s" version must be MAJOR.MINOR.', $id));
-        foreach ($module->requires() as $dependency => $constraint) {
+        Assert::assertMatchesRegularExpression('/^\d+\.\d+$/', ($module instanceof WithModuleRuntime ? $module->moduleRuntime()->protocolVersion : null) ?? ModuleDeclarations::protocolVersion($module->manifest()->version), sprintf('Module "%s" version must be MAJOR.MINOR.', $id));
+        foreach (ModuleDeclarations::requires($module) as $dependency => $constraint) {
             Assert::assertMatchesRegularExpression('/^\^\d+\.\d+$/', $constraint, sprintf('Module "%s" must require "%s" as ^MAJOR.MINOR.', $id, $dependency));
         }
-        Assert::assertSame($module->version(), $module->version(), 'The module version must not change between calls.');
-        Assert::assertSame($module->activation(), $module->activation(), 'The module activation must not change between calls.');
-        Assert::assertSame($module->requires(), $module->requires(), 'The module requirements must not change between calls.');
+        Assert::assertSame(ModuleDeclarations::protocolVersion($module->manifest()->version), ModuleDeclarations::protocolVersion($module->manifest()->version), 'The module version must not change between calls.');
+        Assert::assertSame(ModuleDeclarations::requires($module), ModuleDeclarations::requires($module), 'The module requirements must not change between calls.');
     }
 
-    private function assertDeclarationsOnly(VaulterModule $module): void
+    private function assertDeclarationsOnly(ExtensionPlugin $module): void
     {
         $watch = new class
         {
@@ -88,18 +90,18 @@ final class ModuleContractTests
         $before = $this->footprint();
 
         try {
-            $first = new ModuleBuilder($module->id());
-            $module->register($first);
-            $second = new ModuleBuilder($module->id());
-            $module->register($second);
+            $first = new ModuleBuilder(new ModuleId(ModuleDeclarations::moduleId($module->manifest()->id)));
+            ModuleDeclarations::populateFromPlugin($first, $module);
+            $second = new ModuleBuilder(new ModuleId(ModuleDeclarations::moduleId($module->manifest()->id)));
+            ModuleDeclarations::populateFromPlugin($second, $module);
         } finally {
             $watch->on = false;
         }
 
-        Assert::assertSame(0, $watch->queries, sprintf('Module "%s" ran %d query/queries while declaring itself.', $module->id()->value, $watch->queries));
-        Assert::assertSame([], $watch->resolved, sprintf('Module "%s" resolved %s from the container while declaring itself.', $module->id()->value, implode(', ', $watch->resolved)));
-        Assert::assertSame($before, $this->footprint(), sprintf('Module "%s" bound, listened or configured something while declaring itself.', $module->id()->value));
-        Assert::assertEquals($this->declarations($first), $this->declarations($second), sprintf('Module "%s" makes different declarations on each register().', $module->id()->value));
+        Assert::assertSame(0, $watch->queries, sprintf('Module "%s" ran %d query/queries while declaring itself.', ModuleDeclarations::moduleId($module->manifest()->id), $watch->queries));
+        Assert::assertSame([], $watch->resolved, sprintf('Module "%s" resolved %s from the container while declaring itself.', ModuleDeclarations::moduleId($module->manifest()->id), implode(', ', $watch->resolved)));
+        Assert::assertSame($before, $this->footprint(), sprintf('Module "%s" bound, listened or configured something while declaring itself.', ModuleDeclarations::moduleId($module->manifest()->id)));
+        Assert::assertEquals($this->declarations($first), $this->declarations($second), sprintf('Module "%s" makes different declarations on each register().', ModuleDeclarations::moduleId($module->manifest()->id)));
     }
 
     /**
@@ -120,10 +122,10 @@ final class ModuleContractTests
         return ['bindings' => $bindings, 'listeners' => $listeners, 'config' => serialize(App::make('config')->all())];
     }
 
-    /** @param list<VaulterModule> $requires */
-    private function assertCompiles(VaulterModule $module, array $requires): void
+    /** @param list<ExtensionPlugin> $requires */
+    private function assertCompiles(ExtensionPlugin $module, array $requires): void
     {
-        $id = $module->id()->value;
+        $id = ModuleDeclarations::moduleId($module->manifest()->id);
         $manifests = [new CoreModule, ...$requires, $module];
 
         $active = (new ModuleCompiler)->compile($manifests, [$id => true]);
@@ -144,10 +146,10 @@ final class ModuleContractTests
         Assert::assertNotSame($active->fingerprint, $inactive->fingerprint, sprintf('Module "%s" does not change the graph fingerprint.', $id));
     }
 
-    private function assertSealed(VaulterModule $module): void
+    private function assertSealed(ExtensionPlugin $module): void
     {
-        $builder = new ModuleBuilder($module->id());
-        $module->register($builder);
+        $builder = new ModuleBuilder(new ModuleId(ModuleDeclarations::moduleId($module->manifest()->id)));
+        ModuleDeclarations::populateFromPlugin($builder, $module);
         $builder->seal();
 
         $late = [
@@ -172,7 +174,7 @@ final class ModuleContractTests
         foreach ($late as $declaration => $declare) {
             try {
                 $declare($builder);
-                Assert::fail(sprintf('Module "%s" can still declare "%s" after the builder was sealed.', $module->id()->value, $declaration));
+                Assert::fail(sprintf('Module "%s" can still declare "%s" after the builder was sealed.', ModuleDeclarations::moduleId($module->manifest()->id), $declaration));
             } catch (RegistryFrozenException) {
                 // A late declaration is refused.
             }

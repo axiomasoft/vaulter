@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Revocation\Transports;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Revocation\ControlTransport;
 
 /** `control.transport = none`: nothing is sent; the hubs learn of a change on the next append or renewal. */

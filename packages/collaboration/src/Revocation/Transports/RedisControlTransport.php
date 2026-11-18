@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Revocation\Transports;
 
 use Illuminate\Contracts\Redis\Factory;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Revocation\ControlTransport;
 
 /** `control.transport = redis`: PUBLISH on `vaulter:collab:control` of `control.redis.connection`; every hub subscribes. */
@@ -17,7 +17,7 @@ final readonly class RedisControlTransport implements ControlTransport
 
     public function __construct(
         private Factory $redis,
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
     ) {}
 
     public function name(): string

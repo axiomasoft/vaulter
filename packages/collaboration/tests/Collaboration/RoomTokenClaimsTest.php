@@ -6,7 +6,7 @@ use Firebase\JWT\JWT;
 use Illuminate\Support\Carbon;
 use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationCallResolver;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationConfigException;
 use Vaulter\Collaboration\RoomTokens;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
@@ -28,13 +28,13 @@ function claimsToken(object $test, array $claims = [], string $key = Hub::JWT_SE
 {
     $now = now()->getTimestamp();
     $base = [
-        'iss' => Hub::ISSUER, 'aud' => CollaborationConfig::JWT_AUDIENCE, 'sub' => '1', 'sub_type' => (new TestUser)->getMorphClass(),
-        'protocol' => CollaborationConfig::JWT_PROTOCOL, 'state_format' => 'yjs-update-v1',
+        'iss' => Hub::ISSUER, 'aud' => CollaborationOptions::JWT_AUDIENCE, 'sub' => '1', 'sub_type' => (new TestUser)->getMorphClass(),
+        'protocol' => CollaborationOptions::JWT_PROTOCOL, 'state_format' => 'yjs-update-v1',
         'document_id' => (string) $test->node->getKey(), 'drive_id' => (string) $test->node->drive_id, 'tenant' => null,
         'generation' => $epoch, 'schema_version' => 1, 'scope' => 'write', 'permissions_version' => ['drive' => 0, 'global' => 0],
         'room' => Hub::room($test->node, $epoch), 'iat' => $now, 'nbf' => $now, 'exp' => $now + 300, 'jti' => 'jti-claims',
     ];
-    $payload = array_filter([...$base, ...$claims], static fn (mixed $value, string $name): bool => $value !== null || in_array($name, ['tenant'], true), ARRAY_FILTER_USE_BOTH);
+    $payload = array_filter([...$base, ...$claims], static fn (mixed $value, string $name): bool => $value !== null || $name === 'tenant', ARRAY_FILTER_USE_BOTH);
     foreach ($claims as $name => $value) {
         if ($value === null && $name !== 'tenant') {
             unset($payload[$name]);
@@ -48,7 +48,7 @@ function claimsToken(object $test, array $claims = [], string $key = Hub::JWT_SE
 function forgedToken(string $token, string $alg): string
 {
     $parts = explode('.', $token);
-    $header = json_decode((string) base64_decode(strtr($parts[0], '-_', '+/')), true);
+    $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
     $parts[0] = rtrim(strtr(base64_encode((string) json_encode([...$header, 'alg' => $alg])), '+/', '-_'), '=');
     $hash = $alg === 'HS512' ? 'sha512' : 'sha384';
 
@@ -64,7 +64,7 @@ function withTwoKeys(string $active = 'b', array $keys = ['a' => CLAIMS_KEY_A, '
 it('mints iss, aud, nbf = iat, protocol yjs/2 and a kid header with the existing claims untouched', function (): void {
     $minted = app(RoomTokens::class)->mint(new ActorRef(type: (new TestUser)->getMorphClass(), id: '1'), (string) $this->node->getKey(), (string) $this->node->drive_id, null, 0, 1, true, 'yjs', 'yjs-update-v1', now()->getTimestamp() + 300);
     $claims = Revocation::claims($minted['token']);
-    $header = json_decode((string) base64_decode(strtr(explode('.', $minted['token'])[0], '-_', '+/')), true);
+    $header = json_decode(base64_decode(strtr(explode('.', $minted['token'])[0], '-_', '+/')), true);
 
     expect($header)->toMatchArray(['alg' => 'HS256', 'kid' => Hub::JWT_KID])
         ->and($claims)->toMatchArray(['iss' => Hub::ISSUER, 'aud' => 'vaulter-collaboration-hub', 'protocol' => 'yjs/2', 'state_format' => 'yjs-update-v1', 'sub_type' => (new TestUser)->getMorphClass()])
@@ -118,7 +118,7 @@ it('accepts a valid token and refuses every wrong header, signature, issuer or a
 
 it('refuses a token carrying a key reference header', function (string $header): void {
     $parts = explode('.', claimsToken($this));
-    $decoded = json_decode((string) base64_decode(strtr($parts[0], '-_', '+/')), true);
+    $decoded = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
     $parts[0] = rtrim(strtr(base64_encode((string) json_encode([...$decoded, $header => 'https://evil.test/keys'])), '+/', '-_'), '=');
     // Re-sign so that only the reference header differs.
     $signature = rtrim(strtr(base64_encode(hash_hmac('sha256', $parts[0].'.'.$parts[1], Hub::JWT_SECRET, true)), '+/', '-_'), '=');
@@ -155,7 +155,7 @@ it('refuses a missing tenant claim and wrong or malformed values', function (): 
     }
 
     $parts = explode('.', claimsToken($this));
-    $payload = json_decode((string) base64_decode(strtr($parts[1], '-_', '+/')), true);
+    $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
     unset($payload['tenant']);
 
     expect(($this->verify)(JWT::encode($payload, Hub::JWT_SECRET, 'HS256', Hub::JWT_KID)))->toBeNull();
@@ -200,7 +200,7 @@ it('overlaps keys on rotation: the old kid verifies, a renewal signs with the ne
         ->and(($this->verify)(claimsToken($this, key: CLAIMS_KEY_B, kid: 'b')))->toBeInstanceOf(CollaborationCall::class);
 
     $renewed = Hub::call('renew', ['room' => Hub::room($this->node)], $old)->assertOk()->json('token');
-    $header = json_decode((string) base64_decode(strtr(explode('.', $renewed)[0], '-_', '+/')), true);
+    $header = json_decode(base64_decode(strtr(explode('.', $renewed)[0], '-_', '+/')), true);
 
     expect($header['kid'])->toBe('b');
 
@@ -240,7 +240,7 @@ it('keeps the P3.7 binding: a wrong or missing state_format is denied even with 
 
 it('reads the issuer from the server configuration, never from the request host', function (): void {
     $token = claimsToken($this);
-    config()->set('vaulter-collaboration.hub.issuer', null);
+    config()->set('vaulter-collaboration.hub.issuer');
     config()->set('app.url', 'https://other.test');
 
     expect(($this->verify)($token))->toBeNull();

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenantIdentityPredicate;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
@@ -24,8 +24,8 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 final readonly class WebhookEndpointReadRepository
 {
     public function __construct(
-        private readonly WebhooksConfig $webhooksConfig,
-        private readonly TenancyBoundary $tenancy,
+        private WebhooksOptions $webhooksConfig,
+        private TenancyBoundary $tenancy,
     ) {}
 
     /**

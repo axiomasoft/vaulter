@@ -19,7 +19,7 @@ use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\ModuleDeclarations;
 
 it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity): void {
     config()->set('vaulter-drive.features.activity', $activity);
@@ -38,7 +38,7 @@ it('declares the v1 routes and commands, registered whatever the feature flags s
     config()->set('vaulter-drive.uploads.resumable.enabled', $uploads);
     config()->set('vaulter-drive.features.grants', $grants);
     $spec = app(ModuleCatalog::class)->pluginSpec(DriveModule::class);
-    $module = PluginModuleBridge::buildOffered(DriveModule::class, $spec);
+    $module = ModuleDeclarations::buildOffered(DriveModule::class, $spec);
     $driveRoutes = realpath(__DIR__.'/../../routes/drive.php');
 
     expect($module)->not->toBeNull();

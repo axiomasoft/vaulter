@@ -13,7 +13,7 @@ use Vaulter\Collaboration\Http\Controllers\Collaboration\HubRenewController;
 use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Http\Middleware\VerifyHubSignature;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +28,7 @@ use Vaulter\Configuration\RoutesConfig;
 | live on their own stack — never on the authenticated one.
 */
 
-$routes = app(RoutesConfig::class);
+$routes = app(RoutesOptions::class);
 Route::prefix($routes->versionedPrefix())
     ->name('vaulter.v1.')
     ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])

@@ -38,14 +38,14 @@ final class PruneChangesCommand extends Command
     public function handle(ChangeHeadRepository $heads, ChangeEntryRepository $entries, VaulterDatabase $database, ChangesOptions $config): int
     {
         $override = $this->option('days');
-        if ($override !== null && (!is_string($override) || preg_match('/^\d+$/', $override) !== 1 || (int) $override < 1)) {
+        if ($override !== null && (preg_match('/^\d+$/', $override) !== 1 || (int) $override < 1)) {
             $this->components->error('--days must be a positive integer.');
 
             return self::INVALID;
         }
         $days = $override === null ? $config->retentionDays : (int) $override;
         $threshold = Carbon::now()->subDays($days);
-        $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
+        $only = array_values(array_filter(array_map(static fn (mixed $id): string => $id ?? '', $this->option('drive')), static fn (string $id): bool => $id !== ''));
 
         $deleted = 0;
         $drives = 0;

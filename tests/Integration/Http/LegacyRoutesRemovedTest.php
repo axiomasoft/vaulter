@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Exceptions\VaulterException;
 
@@ -16,7 +16,7 @@ use Vaulter\Exceptions\VaulterException;
 uses(RefreshDatabase::class);
 
 it('registers no route under the prefix without a vaulter.v1.* name', function (): void {
-    $prefix = trim(app(RoutesConfig::class)->prefix(), '/');
+    $prefix = trim(app(RoutesOptions::class)->prefix, '/');
     $routes = array_filter(
         iterator_to_array(app('router')->getRoutes()),
         static fn (Route $route): bool => $route->uri() === $prefix || str_starts_with($route->uri(), $prefix.'/'),

@@ -5,14 +5,25 @@ declare(strict_types=1);
 namespace Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\Broken;
 
 use Illuminate\Support\Facades\DB;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 
 /** A manifest with one flaw a test picks; the contract tests of the module kit must refuse each of them. */
-final class BrokenModule implements VaulterModule
+final class BrokenModule implements ExtensionPlugin, WithModuleRuntime
 {
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest(id: 'vaulter.broken', version: '1.0.0');
+    }
+
+    public function register(PluginRegistrar $registrar): void {}
+
     public const string QUERIES = 'queries';
 
     public const string RESOLVES = 'resolves';
@@ -59,8 +70,9 @@ final class BrokenModule implements VaulterModule
         };
     }
 
-    public function register(ModuleBuilder $module): void
+    public function moduleRuntime(): PluginModuleSpec
     {
+        $module = new ModuleBuilder($this->id());
         match ($this->flaw) {
             self::QUERIES => DB::select('select 1'),
             self::RESOLVES => app()->make(\stdClass::class),
@@ -70,5 +82,7 @@ final class BrokenModule implements VaulterModule
             self::FLAKY => $module->commands(...(self::$registered++ % 2 === 0 ? ['A'] : ['B'])),
             default => null,
         };
+
+        return new PluginModuleSpec(plugin: self::class, activation: $this->activation(), protocolVersion: $this->version(), requires: $this->requires(), commands: $module->commandClasses());
     }
 }

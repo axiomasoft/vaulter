@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Repositories;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 final readonly class WebhookEndpointStoreRepository
 {
     public function __construct(
-        private readonly WebhooksConfig $webhooksConfig,
+        private WebhooksOptions $webhooksConfig,
     ) {}
 
     /**

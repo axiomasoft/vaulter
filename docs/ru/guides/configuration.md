@@ -18,13 +18,13 @@ php artisan vendor:publish --tag=vaulter-documents-config
 
 | Пакет | Файл | Тег публикации | Класс конфигурации |
 |---|---|---|---|
-| Core (ядро) | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
-| Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaConfig` |
-| Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
-| Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
-| Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksConfig` |
-| AzGuard | `config/vaulter-azguard.php` | `vaulter-azguard-config` | `Vaulter\AzGuard\Configuration\AzGuardConfig` |
-| Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
+| Core (ядро) | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterOptions` |
+| Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaOptions` |
+| Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveOptions` |
+| Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsOptions` |
+| Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksOptions` |
+| AzGuard | `config/vaulter-azguard.php` | `vaulter-azguard-config` | `Vaulter\AzGuard\Configuration\AzGuardOptions` |
+| Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentOptions` |
 
 Привязки задаются строками FQCN. Замыкания отклоняются при boot, поэтому
 `php artisan config:cache` безопасен. Значения по умолчанию — в [справочнике ключей](/ru/reference/config).
@@ -34,7 +34,7 @@ php artisan vendor:publish --tag=vaulter-documents-config
 Только core владеет настройками схемы: `database.connection`, `database.table_prefix`,
 `ids.strategy`, `ids.host_keys` и `tenancy.enabled`. Соединение `null` использует соединение
 Laravel по умолчанию. Имя таблицы состоит из префикса и канонического имени сущности:
-`DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`. Остальные корни принадлежат пакету,
+`DatabaseOptions::table('drives')` по умолчанию возвращает `v_drives`. Остальные корни принадлежат пакету,
 чьё понятие они настраивают (см. таблицу выше и [ADR-0030](/adr/0030-package-ownership-and-schema)): ключ никогда
 не живёт в двух файлах.
 
@@ -156,7 +156,7 @@ preview/download и обработчики установленного Document
 
 ## Вебхуки {#webhooks}
 
-Вебхуки — отдельный пакет (`composer require axioma-studio/vaulter-webhooks`) и opt-in модуль:
+Вебхуки — отдельный пакет (`composer require axiomasoft/vaulter-webhooks`) и opt-in модуль:
 `vaulter.modules.webhooks` (по умолчанию `false`) подключает их маршруты, команды, расписания и проверки doctor
 (см. [Модули](/ru/concepts/modules)). Настройки доставки лежат в `config/vaulter-webhooks.php` (тег публикации
 `vaulter-webhooks-config`): URL guard, таймауты, расписание повторов и сроки хранения. См.
@@ -255,47 +255,43 @@ CAS-бакет должен быть без версионирования: уд
 
 ## Типизированный доступ
 
-Классы конфигурации — `final readonly` singleton поверх
-`Illuminate\Contracts\Config\Repository`. В сервисах используйте конструкторную
-инъекцию; в моделях, миграциях и статических контекстах — `app(...)`.
+Классы конфигурации — неизменяемые `final readonly` снимки с контрактом Packman `OptionsFactory`.
+В сервисах используйте конструкторную инъекцию. После изменения Laravel config получите новый
+снимок через `app(...)`: ранее полученный объект сохраняет свои значения.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Configuration\VaulterOptions;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 
 final readonly class ExportPolicy
 {
     public function __construct(
-        private VaulterConfig $config,
-        private DocumentsConfig $documents,
+        private VaulterOptions $config,
+        private DocumentsOptions $documents,
     ) {}
 
     public function revisionLimit(): int
     {
-        return $this->documents->revisionLimit();
+        return $this->documents->revisions->limit;
     }
 }
 
-$database = app(VaulterConfig::class)->database();
+$database = app(VaulterOptions::class)->database;
 $table = $database->table('drives');
-$connection = $database->connection();
+$connection = $database->connection;
 ```
 
-`VaulterConfig` (ядро) даёт секции `database()`, `ids()`, `tenancy()`, `routes()`, `outbox()`,
-`observability()`. Остальное читает класс владельца: `DriveConfig` — `access()`, `sharing()`,
-`listing()`, `downloads()`, `changes()`, `scan()`, `model(string)`, `featureEnabled(string)`,
-`profileProviders()`, `defaultProfile()`, `handlers()`; `MediaConfig` — диск, дедупликацию и GC;
-`WebhooksConfig` — таймауты, повторы и URL guard; `DocumentsConfig` — документы.
-Каждый вызов заново читает репозиторий: `config()->set()` в тестах сразу меняет результат.
-Код пакетов читает ключи Vaulter только в `Configuration`; границу проверяют arch-тесты.
-
-Ключи настройки моделей в опубликованных config-файлах остаются действующими. ORM-геттеры `VaulterConfig::outboxModel()`, `DriveConfig::model()`, `MediaConfig::blobModel()`, `DocumentsConfig::model()` и `WebhooksConfig::model()` помечены `#[Internal]`: их вызывает инфраструктура пакетов. Хост настраивает ключи, а данные читает через Operations и snapshots.
+`VaulterOptions` предоставляет типизированные свойства `database`, `ids`, `tenancy`, `routes`,
+`outbox`, `observability`. Drive и Documents также предоставляют вложенные options.
+Media, Webhooks, Collaboration, AzGuard и Filament сохраняют документированные методы доступа.
+Компиляция кешируется по значениям конфигурации; объекты options не хранят изменяемый репозиторий.
+Хост работает с данными через Operations и snapshots, а не ORM-геттеры.
 
 ## Ключи, которых нет
 
-Vaulter читает только ключи опубликованных файлов `config/vaulter*.php`; неизвестный ключ игнорируется.
+Vaulter читает только ключи опубликованных файлов `config/vaulter*.php`; неизвестный ключ вызывает ошибку валидации конфигурации.
 Умолчания пакета по-прежнему заполняют недостающие вложенные ключи частично опубликованного файла, а заданная
 хостом карта или список (`ids.strategies`, `handlers`, `vaulter-documents.types`, драйверы доступа) заменяет
 умолчание, а не сливается с ним.

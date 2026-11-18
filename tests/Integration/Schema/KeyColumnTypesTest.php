@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\IdsConfig;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\KeyColumnInspector;
 use Vaulter\Schema\ModuleSchemas;
@@ -24,7 +24,7 @@ it('uses the configured types for every key column on a fresh schema', function 
         'uuid7' => 'v',
     }, $hostKeys === 'bigint' ? 'b' : 's');
     config()->set('vaulter.database.table_prefix', $prefix);
-    foreach ([DatabaseConfig::class, IdsConfig::class, DriveConfig::class, VaulterDatabase::class, IdStrategyResolver::class] as $binding) {
+    foreach ([DatabaseOptions::class, IdsOptions::class, DriveOptions::class, VaulterDatabase::class, IdStrategyResolver::class] as $binding) {
         $this->app->forgetInstance($binding);
     }
 
@@ -34,8 +34,8 @@ it('uses the configured types for every key column on a fresh schema', function 
         $builder->createAll();
         $inspector = new KeyColumnInspector(
             app(VaulterDatabase::class),
-            app(DatabaseConfig::class),
-            app(IdsConfig::class),
+            app(DatabaseOptions::class),
+            app(IdsOptions::class),
             app(ModuleSchemas::class),
         );
         $expected = $inspector->expected();
@@ -56,7 +56,7 @@ it('uses the configured types for every key column on a fresh schema', function 
             ->and($inspector->mismatches())->toBe([]);
 
         if (app(VaulterDatabase::class)->driver() === 'mysql' && $strategy === 'bigint' && $hostKeys === 'string') {
-            $database = app(DatabaseConfig::class);
+            $database = app(DatabaseOptions::class);
             $connection = app(VaulterDatabase::class)->connection();
             $schema = $connection->getSchemaBuilder();
             $drives = $database->table('drives');
@@ -107,8 +107,8 @@ it('collects the key columns from the schema of every offered module, each on a 
 
     $inspector = new KeyColumnInspector(
         app(VaulterDatabase::class),
-        app(DatabaseConfig::class),
-        app(IdsConfig::class),
+        app(DatabaseOptions::class),
+        app(IdsOptions::class),
         app(ModuleSchemas::class),
     );
 

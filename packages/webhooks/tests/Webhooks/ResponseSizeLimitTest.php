@@ -40,7 +40,7 @@ it('aborts a chunked or falsely-declared body mid-stream past the limit', functi
     $sink->write('12345');
     $sink->write('67890');
 
-    expect(fn () => $sink->write('x'))->toThrow(WebhookResponseTooLargeException::class);
+    expect(fn (): int => $sink->write('x'))->toThrow(WebhookResponseTooLargeException::class);
 });
 
 it('accepts a body exactly at the limit and a single oversized chunk is refused unbuffered', function (): void {
@@ -49,5 +49,5 @@ it('accepts a body exactly at the limit and a single oversized chunk is refused 
     $sink->rewind();
 
     expect($sink->getContents())->toBe('abcd')
-        ->and(fn () => ResponseSizeLimit::boundedSink(4)->write('abcde'))->toThrow(WebhookResponseTooLargeException::class);
+        ->and(fn (): int => ResponseSizeLimit::boundedSink(4)->write('abcde'))->toThrow(WebhookResponseTooLargeException::class);
 });

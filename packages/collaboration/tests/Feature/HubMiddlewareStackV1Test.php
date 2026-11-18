@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\SanctumServiceProvider;
 use Vaulter\Collaboration\CollaborationCallResolver;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
@@ -29,7 +29,6 @@ class HubMiddlewareStackTestCase extends CollaborationEnabledTestCase
     {
         parent::defineEnvironment($app);
         $app['config']->set('vaulter.routes.middleware.authenticated', ['api', 'auth:sanctum']);
-        $app['config']->set('vaulter-collaboration.driver', 'hocuspocus');
         $app['config']->set('vaulter-collaboration.hub.webhook_secret', 'middleware-stack-webhook-secret');
         $app['config']->set('vaulter-collaboration.hub.jwt_keys', ['k1' => 'middleware-stack-jwt-secret-at-least-32-bytes']);
         $app['config']->set('vaulter-collaboration.hub.jwt_active_kid', 'k1');
@@ -58,11 +57,11 @@ it('requires Sanctum on the session route and the hub credentials, not Sanctum, 
 
 it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $drive = DocumentTestHelpers::drive();
-    app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver(userType: (new TestUser)->getMorphClass()));
+    app()->bind(HostUserResolver::class, fn (): FakeHostUserResolver => new FakeHostUserResolver(userType: (new TestUser)->getMorphClass()));
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: DriveTestHelpers::model($drive->root()),
     ));
-    $room = app(CollaborationConfig::class)->room($node->drive_id, $node->getKey(), 0);
+    $room = app(CollaborationOptions::class)->room($node->drive_id, $node->getKey(), 0);
     $body = ['room' => $room];
     $timestamp = time();
     $jwt = JWT::encode([

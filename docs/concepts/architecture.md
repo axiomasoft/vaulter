@@ -16,7 +16,7 @@ application. The guiding rule is a clean split of ownership:
   Drive Actions, the CAS lifecycle, the panel registry. These are not contracts: they are
   the package's guarantees.
 
-The result is one package that drops into a plain Laravel app *and* a multi-tenant CoreX SaaS
+The result is one package that drops into a plain Laravel app *and* a multi-tenant Laravel SaaS
 without a fork — see [ADR-0003](/adr/0003-embeddability-data-model) and its successors
 [ADR-0009](/adr/0009-storage-panels) / [ADR-0011](/adr/0011-id-strategy).
 
@@ -58,7 +58,7 @@ A typical write — say `POST v1/drives/{drive}/files` — flows top to bottom:
 
 The ergonomic entry point `Vaulter::drive($owner)` returns a
 [`DriveHandle`](#the-drive-handle) (`Vaulter\Drive\DriveHandle`, shipped by
-`axioma-studio/vaulter-drive`) that wraps exactly this pipeline for programmatic use.
+`axiomasoft/vaulter-drive`) that wraps exactly this pipeline for programmatic use.
 
 ## Layers
 
@@ -78,11 +78,11 @@ resolution keeps working.
 
 One use case each, `final readonly`. An Action opens the transaction, enforces business rules,
 calls repositories/CAS, and dispatches a domain event **after commit**. The Drive write set
-(`Vaulter\Drive\Actions\*`, requires `axioma-studio/vaulter-drive`):
+(`Vaulter\Drive\Actions\*`, requires `axiomasoft/vaulter-drive`):
 `CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, `RenameNodeAction`,
 `CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `PurgeNodeAction`. Document-node
-Actions live under `Vaulter\Documents\Actions\*` (requires `axioma-studio/vaulter-documents`); the webhook
-endpoint Actions live in `Vaulter\Webhooks\Actions\*` (`axioma-studio/vaulter-webhooks`). The kernel has none: it
+Actions live under `Vaulter\Documents\Actions\*` (requires `axiomasoft/vaulter-documents`); the webhook
+endpoint Actions live in `Vaulter\Webhooks\Actions\*` (`axiomasoft/vaulter-webhooks`). The kernel has none: it
 only runs operations.
 
 ::: info Authorization placement
@@ -101,8 +101,8 @@ transactions or dispatch events — the Action owns that. The tree-descent reads
 ### Models — swappable, resolved through `Config`
 
 Vaulter never references a concrete model class directly in domain code; each package resolves its models through
-its own typed config reader (`Vaulter\Drive\Configuration\DriveConfig`, `Vaulter\Media\Configuration\MediaConfig`,
-`Vaulter\Webhooks\Configuration\WebhooksConfig`) against `config('vaulter-drive.models.*')`,
+its own typed config reader (`Vaulter\Drive\Configuration\DriveOptions`, `Vaulter\Media\Configuration\MediaOptions`,
+`Vaulter\Webhooks\Configuration\WebhooksOptions`) against `config('vaulter-drive.models.*')`,
 `config('vaulter-media.models.*')`, `config('vaulter-webhooks.models.*')`. A host subclasses a model to add
 ULID behaviour, tenant scoping, or audit. Models are the one part of the package that is **not**
 `final` (they must be extendable); everything else is.
@@ -119,7 +119,7 @@ any handler's content (`TipTapContent` and friends live in `vaulter-documents`).
 
 Ownership follows the Composer graph (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azguard` and
 `filament` build on `drive`) and is recorded in [ADR-0030](/adr/0030-package-ownership-and-schema) and
-[ADR-0031](/adr/0031-collaboration-package-and-durability). **`axioma-studio/vaulter-core`**
+[ADR-0031](/adr/0031-collaboration-package-and-durability). **`axiomasoft/vaulter-core`**
 (namespace `Vaulter\`) is the kernel only: it contains no domain table, model or service of a module.
 
 | Directory (core) | Responsibility |
@@ -136,15 +136,15 @@ Ownership follows the Composer graph (`core <- media <- drive <- documents <- co
 
 | Package | Namespace | Owns |
 |---|---|---|
-| `axioma-studio/vaulter-media` | `Vaulter\Media\` | `v_blobs` and `v_blob_references` (the pins), the CAS contracts and engine (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` and `vaulter:blobs:reconcile`. |
-| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | The entry point `Vaulter\Drive\Vaulter` (facade `Vaulter\Drive\Facades\Vaulter`, alias `Vaulter`), `DriveHandle`, the Actions and Events, access (`AccessResolver`, the permission drivers), sharing, activity, change journal, quotas, uploads, scan state, profiles, file handlers and the drive tables, routes, commands and doctor checks. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`), the document presenter, export, the collaboration contracts (`CollaborationDriver`, `SupportsCollaboration`) and the neutral state contract `State\CollaborativeState` with the pending marker, the content shapes (`Content\OpaqueContent`, `Content\TipTap\*`). |
-| `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Outbound webhooks: endpoints, `WebhookFanoutConsumer` (the `webhooks.fanout` outbox consumer), `WebhookSigner`, the URL guard, retries, the admin HTTP and `vaulter:webhooks:*` commands. Opt-in. |
-| `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin, built on the drive's authorized Operations. |
-| `axioma-studio/vaulter-azguard` | `Vaulter\AzGuard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
+| `axiomasoft/vaulter-media` | `Vaulter\Media\` | `v_blobs` and `v_blob_references` (the pins), the CAS contracts and engine (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` and `vaulter:blobs:reconcile`. |
+| `axiomasoft/vaulter-drive` | `Vaulter\Drive\` | The entry point `Vaulter\Drive\Vaulter` (facade `Vaulter\Drive\Facades\Vaulter`, alias `Vaulter`), `DriveHandle`, the Actions and Events, access (`AccessResolver`, the permission drivers), sharing, activity, change journal, quotas, uploads, scan state, profiles, file handlers and the drive tables, routes, commands and doctor checks. |
+| `axiomasoft/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`), the document presenter, export, the collaboration contracts (`CollaborationDriver`, `SupportsCollaboration`) and the neutral state contract `State\CollaborativeState` with the pending marker, the content shapes (`Content\OpaqueContent`, `Content\TipTap\*`). |
+| `axiomasoft/vaulter-webhooks` | `Vaulter\Webhooks\` | Outbound webhooks: endpoints, `WebhookFanoutConsumer` (the `webhooks.fanout` outbox consumer), `WebhookSigner`, the URL guard, retries, the admin HTTP and `vaulter:webhooks:*` commands. Opt-in. |
+| `axiomasoft/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin, built on the drive's authorized Operations. |
+| `axiomasoft/vaulter-azguard` | `Vaulter\AzGuard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). `src/api` imports no Vue, editor or realtime packages and nothing from `src/` outside `src/api` (arch test `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
-The metapackage `axioma-studio/vaulter` installs core, media, drive and documents; webhooks, collaboration, azguard and
+The metapackage `axiomasoft/vaulter` installs core, media, drive and documents; webhooks, collaboration, azguard and
 filament are installed separately (see [Installation](/getting-started/installation)). Each package ships its own migrations
 (not published), its own config file (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
 `vaulter-webhooks`, `vaulter-azguard`, `vaulter-filament`) and its own test kit.
@@ -366,7 +366,7 @@ A domain table, HTTP endpoint or implicit `class_exists` activation does not bel
 The existing boundary and surface guards enforce these ownership rules.
 
 A package's Vaulter `require-dev` siblings must occur in the transitive closure of its runtime `require`.
-Only the exact metapackage `axioma-studio/vaulter` is exempt. External `axioma/azguard` is not a Vaulter sibling.
+Only the exact metapackage `axiomasoft/vaulter` is exempt. External `axioma/azguard` is not a Vaulter sibling.
 Unknown runtime siblings and cycles fail. The dev-graph allowlist records exact `from`, `to`, nonempty `reason`
 and `decision`; unused entries fail too. It is currently empty.
 

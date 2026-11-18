@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Configuration;
 
-use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Configuration\ScheduleConfig;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Illuminate\Support\Arr;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Config\Contracts\OptionsFactory;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Config\Laravel\ConfigurationValidator;
+use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -22,7 +24,7 @@ use Vaulter\Webhooks\WebhooksSchedule;
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
 #[Api]
-final readonly class WebhooksConfig
+final readonly class WebhooksOptions implements OptionsFactory
 {
     /** @internal Floor of the webhooks.blocked-ranges production invariant. */
     public const array DEFAULT_BLOCKED_IP_RANGES = [
@@ -74,14 +76,52 @@ final readonly class WebhooksConfig
         'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease)',
     ];
 
-    #[Internal]
-    public function __construct(private Repository $config) {}
+    /** @param array<array-key, mixed> $values */
+    private function __construct(private array $values) {}
+
+    /** @param array<array-key, mixed> $config */
+    #[Override]
+    public static function fromArray(array $config, string $path = 'vaulter-webhooks'): self
+    {
+        new self($config)->assertNoRemovedKeys();
+        $validator = new ConfigurationValidator;
+        $validator->rejectUnknownKeys($config, ['timeout', 'retry_schedule', 'retry_jitter', 'disable_after_days', 'secret_rotation_overlap', 'retention_days', 'retry_claim_seconds', 'relay', 'manage_ability', 'delivery', 'schedule', 'models'], $path);
+        $section = Arr::get($config, 'relay', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.relay', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['fanout_chunk'], $path.'.relay');
+        }
+        $section = Arr::get($config, 'delivery', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.delivery', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['url_guard', 'allowed_schemes', 'blocked_ip_ranges', 'allowed_ip_ranges', 'connect_timeout', 'max_response_bytes'], $path.'.delivery');
+        }
+        $section = Arr::get($config, 'schedule', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.schedule', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['webhooks_retry', 'webhooks_prune'], $path.'.schedule');
+        }
+        $section = Arr::get($config, 'models', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.models', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['webhook_endpoint', 'webhook_delivery'], $path.'.models');
+        }
+        $validator->failIfAny();
+        $options = new self($config);
+        $options->validate();
+
+        return $options;
+    }
 
     /**
      * The model class behind `webhook_endpoint` / `webhook_delivery`: the configured one (a subclass of the shipped model) or the shipped one.
      *
      *
-     * @throws InvalidConfigurationException when the key is unknown or the configured class does not extend the shipped model
+     * @throws InvalidConfiguration when the key is unknown or the configured class does not extend the shipped model
      *
      * @return ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : class-string<WebhookDelivery>)
      */
@@ -91,7 +131,7 @@ final readonly class WebhooksConfig
         return match ($key) {
             'webhook_endpoint' => $this->configuredModel($key, WebhookEndpoint::class),
             'webhook_delivery' => $this->configuredModel($key, WebhookDelivery::class),
-            default => throw new InvalidConfigurationException('[Vaulter] Unknown webhooks model key "'.$key.'".'),
+            default => throw InvalidConfiguration::forMessage('[Vaulter] Unknown webhooks model key "'.$key.'".'),
         };
     }
 
@@ -104,12 +144,14 @@ final readonly class WebhooksConfig
     private function configuredModel(string $key, string $default): string
     {
         $path = 'vaulter-webhooks.models.'.$key;
-        $class = $this->config->get($path, $default);
+        $class = $this->value($path, $default);
         if (!is_string($class)) {
-            throw new InvalidConfigurationException('[Vaulter] Invalid model class for '.$path.'.');
+            throw InvalidConfiguration::forMessage('[Vaulter] Invalid model class for '.$path.'.');
         }
 
-        ConfigValidator::assertModel($path, $class, $default);
+        if (!is_a($class, $default, true)) {
+            throw InvalidConfiguration::forMessage('[Vaulter] '.$path.' must extend '.$default.'.');
+        }
 
         return $class;
     }
@@ -117,7 +159,7 @@ final readonly class WebhooksConfig
     /**
      * Reads every validated accessor once, so a malformed `vaulter-webhooks.*` value fails at boot of the active module.
      *
-     * @throws InvalidConfigurationException
+     * @throws InvalidConfiguration
      */
     public function validate(): void
     {
@@ -130,15 +172,15 @@ final readonly class WebhooksConfig
         $this->relayFanoutChunk();
         $this->model('webhook_endpoint');
         $this->model('webhook_delivery');
-        (new ScheduleConfig($this->config))->frequencies('vaulter-webhooks', WebhooksSchedule::KEYS);
+        ScheduleFrequency::fromMap('vaulter-webhooks.schedule', $this->value('vaulter-webhooks.schedule', []), WebhooksSchedule::KEYS);
     }
 
-    /** @throws InvalidConfigurationException when a pre-1.0 delivery key is still set */
+    /** @throws InvalidConfiguration when a pre-1.0 delivery key is still set */
     public function assertNoRemovedKeys(): void
     {
         foreach (self::REMOVED_KEYS as $key => $replacement) {
-            if ($this->config->has('vaulter-webhooks.'.$key)) {
-                throw new InvalidConfigurationException(
+            if ($this->has('vaulter-webhooks.'.$key)) {
+                throw InvalidConfiguration::forMessage(
                     "[Vaulter] vaulter-webhooks.{$key} was removed: use {$replacement}. "
                     .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/reference/config.md',
                 );
@@ -148,7 +190,7 @@ final readonly class WebhooksConfig
 
     public function timeout(): int
     {
-        $value = $this->config->get('vaulter-webhooks.timeout', 15);
+        $value = $this->value('vaulter-webhooks.timeout', 15);
 
         $seconds = is_numeric($value) ? (int) $value : 15;
 
@@ -164,7 +206,7 @@ final readonly class WebhooksConfig
      */
     public function retrySchedule(): array
     {
-        $schedule = $this->config->get('vaulter-webhooks.retry_schedule', self::DEFAULT_RETRY_SCHEDULE);
+        $schedule = $this->value('vaulter-webhooks.retry_schedule', self::DEFAULT_RETRY_SCHEDULE);
 
         if (!is_array($schedule)) {
             return self::DEFAULT_RETRY_SCHEDULE;
@@ -173,7 +215,7 @@ final readonly class WebhooksConfig
         $values = [];
         foreach ($schedule as $seconds) {
             if (!is_numeric($seconds) || (int) $seconds < 0) {
-                throw new InvalidConfigurationException('[Vaulter] vaulter-webhooks.retry_schedule must be a list of non-negative seconds.');
+                throw InvalidConfiguration::forMessage('[Vaulter] vaulter-webhooks.retry_schedule must be a list of non-negative seconds.');
             }
             $values[] = (int) $seconds;
         }
@@ -184,10 +226,10 @@ final readonly class WebhooksConfig
     /** Fraction (0..0.5) of a retry delay randomly added or removed so retries do not align. */
     public function retryJitter(): float
     {
-        $value = $this->config->get('vaulter-webhooks.retry_jitter', 0.1);
+        $value = $this->value('vaulter-webhooks.retry_jitter', 0.1);
 
         if (!is_numeric($value) || (float) $value < 0.0 || (float) $value > 0.5) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-webhooks.retry_jitter must be a number between 0 and 0.5.');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-webhooks.retry_jitter must be a number between 0 and 0.5.');
         }
 
         return (float) $value;
@@ -196,7 +238,7 @@ final readonly class WebhooksConfig
     /** Days of uninterrupted failure after which an endpoint is disabled; 0 never disables. */
     public function disableAfterDays(): int
     {
-        $value = $this->config->get('vaulter-webhooks.disable_after_days', 5);
+        $value = $this->value('vaulter-webhooks.disable_after_days', 5);
 
         $days = is_numeric($value) ? (int) $value : 5;
 
@@ -206,7 +248,7 @@ final readonly class WebhooksConfig
     /** Seconds the previous secret keeps signing after a rotation (capped at seven days). */
     public function secretRotationOverlap(): int
     {
-        $value = $this->config->get('vaulter-webhooks.secret_rotation_overlap', self::DEFAULT_ROTATION_OVERLAP);
+        $value = $this->value('vaulter-webhooks.secret_rotation_overlap', self::DEFAULT_ROTATION_OVERLAP);
 
         $seconds = is_numeric($value) ? (int) $value : self::DEFAULT_ROTATION_OVERLAP;
 
@@ -215,7 +257,7 @@ final readonly class WebhooksConfig
 
     public function retentionDays(): int
     {
-        $value = $this->config->get('vaulter-webhooks.retention_days', 30);
+        $value = $this->value('vaulter-webhooks.retention_days', 30);
 
         $days = is_numeric($value) ? (int) $value : 30;
 
@@ -224,7 +266,7 @@ final readonly class WebhooksConfig
 
     public function manageAbility(): ?string
     {
-        $value = $this->config->get('vaulter-webhooks.manage_ability');
+        $value = $this->value('vaulter-webhooks.manage_ability');
 
         // Explicit null is the allow-all switch. A blank string is what env() returns
         // when VAULTER_WEBHOOKS_MANAGE_ABILITY is set but empty, and that must not
@@ -239,9 +281,9 @@ final readonly class WebhooksConfig
     /** @return class-string<OutboundUrlGuard> */
     public function urlGuard(): string
     {
-        $class = $this->config->get('vaulter-webhooks.delivery.url_guard', DefaultOutboundUrlGuard::class);
+        $class = $this->value('vaulter-webhooks.delivery.url_guard', DefaultOutboundUrlGuard::class);
         if (!is_string($class) || !is_a($class, OutboundUrlGuard::class, true)) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-webhooks.delivery.url_guard must be a FQCN.');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-webhooks.delivery.url_guard must be a FQCN.');
         }
 
         return $class;
@@ -250,7 +292,7 @@ final readonly class WebhooksConfig
     /** @return list<string> */
     public function allowedSchemes(): array
     {
-        $value = $this->config->get('vaulter-webhooks.delivery.allowed_schemes', ['http', 'https']);
+        $value = $this->value('vaulter-webhooks.delivery.allowed_schemes', ['http', 'https']);
 
         if (!is_array($value)) {
             return ['http', 'https'];
@@ -281,7 +323,7 @@ final readonly class WebhooksConfig
 
     public function connectTimeout(): int
     {
-        $value = $this->config->get('vaulter-webhooks.delivery.connect_timeout', 2);
+        $value = $this->value('vaulter-webhooks.delivery.connect_timeout', 2);
 
         $seconds = is_numeric($value) ? (int) $value : 2;
 
@@ -290,7 +332,7 @@ final readonly class WebhooksConfig
 
     public function maxResponseBytes(): int
     {
-        $value = $this->config->get('vaulter-webhooks.delivery.max_response_bytes', 65536);
+        $value = $this->value('vaulter-webhooks.delivery.max_response_bytes', 65536);
 
         $bytes = is_numeric($value) ? (int) $value : 65536;
 
@@ -299,7 +341,7 @@ final readonly class WebhooksConfig
 
     public function retryClaimSeconds(): int
     {
-        $value = $this->config->get('vaulter-webhooks.retry_claim_seconds', 60);
+        $value = $this->value('vaulter-webhooks.retry_claim_seconds', 60);
 
         $seconds = is_numeric($value) ? (int) $value : 60;
 
@@ -313,13 +355,13 @@ final readonly class WebhooksConfig
      */
     public function relayFanoutChunk(): int
     {
-        $value = $this->config->get('vaulter-webhooks.relay.fanout_chunk', 100);
+        $value = $this->value('vaulter-webhooks.relay.fanout_chunk', 100);
 
         $chunk = is_int($value) || is_string($value)
             ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 1000]])
             : false;
         if ($chunk === false) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-webhooks.relay.fanout_chunk must be an integer between 1 and 1000.');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-webhooks.relay.fanout_chunk must be an integer between 1 and 1000.');
         }
 
         return $chunk;
@@ -331,7 +373,7 @@ final readonly class WebhooksConfig
      */
     private function ipRanges(string $key, array $default): array
     {
-        $value = $this->config->get($key, $default);
+        $value = $this->value($key, $default);
 
         if (!is_array($value)) {
             return $default;
@@ -341,12 +383,22 @@ final readonly class WebhooksConfig
 
         foreach ($value as $range) {
             if (!is_string($range) || CidrRange::parse($range) === null) {
-                throw new InvalidConfigurationException('[Vaulter] '.$key.' must contain only valid IP or CIDR strings.');
+                throw InvalidConfiguration::forMessage('[Vaulter] '.$key.' must contain only valid IP or CIDR strings.');
             }
 
             $ranges[] = $range;
         }
 
         return $ranges;
+    }
+
+    private function value(string $key, mixed $default = null): mixed
+    {
+        return Arr::get($this->values, substr($key, strlen('vaulter-webhooks.')), $default);
+    }
+
+    private function has(string $key): bool
+    {
+        return Arr::has($this->values, substr($key, strlen('vaulter-webhooks.')));
     }
 }

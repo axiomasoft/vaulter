@@ -28,8 +28,11 @@ final readonly class DocumentsModelsOptions
      * @param class-string<DocumentRevision> $documentRevision
      * @param class-string<NodeComment>      $nodeComment
      */
+    #[Internal]
     public function __construct(
+        #[Internal]
         public string $documentRevision = DocumentRevision::class,
+        #[Internal]
         public string $nodeComment = NodeComment::class,
     ) {}
 

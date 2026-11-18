@@ -7,7 +7,7 @@ namespace Vaulter\Load\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 use Vaulter\Support\LoadTier;
@@ -18,7 +18,7 @@ use Vaulter\Support\LoadTier;
 final readonly class RecordRequestPeakMemory
 {
     public function __construct(
-        private RoutesConfig $routesConfig,
+        private RoutesOptions $routesConfig,
         private MetricsRecorder $metrics,
     ) {}
 
@@ -50,7 +50,7 @@ final readonly class RecordRequestPeakMemory
 
     private function operationFor(Request $request): ?string
     {
-        $prefix = trim($this->routesConfig->prefix(), '/');
+        $prefix = trim($this->routesConfig->prefix, '/');
         $path = trim($request->path(), '/');
 
         if ($prefix !== '' && str_starts_with($path, $prefix)) {

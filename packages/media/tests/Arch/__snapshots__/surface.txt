@@ -11,11 +11,24 @@ Vaulter\Media\Configuration\DedupScope api since 1.0 enum: string
   case Off = 'off'
   case Tenant = 'tenant'
 
-Vaulter\Media\Configuration\MediaConfig api since 1.0 final readonly class
+Vaulter\Media\Configuration\MediaOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public string $blobStore
+  public string $contentStore
+  public Vaulter\Media\Configuration\DedupScope $dedupScope
+  public string $disk
+  public int $gcGraceHours
+  public int $orphanGraceHours
+  public ?string $scheduleBlobsGc
+  public ?string $scheduleBlobsReconcile
+  public int $scrubLimit
+  public ?int $scrubMaxBytes
+  public ?int $scrubMaxSeconds
+  public string $storageDriver
   public function blobStore(): string
   public function contentStore(): string
   public function dedupScope(): Vaulter\Media\Configuration\DedupScope
   public function disk(): string
+  public static function fromArray(array $config, string $path = 'vaulter-media'): self
   public function gcGraceHours(int $override = 0): int
   public function orphanGraceHours(int $override = 0): int
   public function storageDriver(): string
@@ -144,10 +157,43 @@ Vaulter\Media\Enums\Cas\ScanVerdict api since 1.0 enum: string
   case Failed = 'failed'
   case Infected = 'infected'
 
+Vaulter\Media\Errors\MediaErrorCode api since 1.0 enum: string implements Packman\Errors\Contracts\ErrorCode
+  case BlobUnavailable = 'media.blob_unavailable'
+  public function value(): string
+
+Vaulter\Media\Errors\MediaProblemDefinitions spi:call since 1.0 final class implements Packman\Errors\Contracts\ProblemDefinitionProvider
+  public function definitions(): iterable
+
 Vaulter\Media\Exceptions\Cas\BlobUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forBlob(int|string $blobId, Vaulter\Media\Enums\Cas\BlobStatus $status): self
   public function httpStatus(): int
   public function problemCode(): string
+
+Vaulter\Media\MediaModule api since 1.0 final class implements Packman\Extensions\Contracts\Composition\WithCapabilities, Packman\Extensions\Contracts\Composition\WithSlots, Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Extensions\Contracts\Persistence\WithSchema, Packman\Extensions\Contracts\Runtime\WithDiagnostics, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Composition\ContributesToSlots, Packman\Extensions\Concerns\Composition\ProvidesCapabilities, Packman\Extensions\Concerns\Configuration\Configurable, Packman\Extensions\Concerns\Persistence\OwnsSchema, Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function definedCapabilities(): array
+  public function healthChecks(): array
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function migrationPath(): string
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function problemProviders(): array
+  public function providedCapabilities(): array
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
+  public function schemaComponents(): array
+  public function schemaSetProviders(): array
+  public function slotContributions(): array
+  public function tableNouns(): array
+  public function tablePrefix(): string
+
+Vaulter\Media\Providers\MediaPackageRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Media\Schema\MediaSchemaSets spi:call since 1.0 final class implements Packman\Schema\Contracts\Migration\SchemaSetProvider
+  public function sets(): array
 
 Vaulter\Media\Testing\Contracts\ContentScannerContractTests api since 1.0 final class
   public function assertContentScannerContract(Vaulter\Media\Contracts\Cas\ContentScanner $scanner, array $samples): void
@@ -177,6 +223,7 @@ Vaulter\Media\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
   public function tenantId(): ?string
   public static function unshared(): self
 
-Vaulter\Media\VaulterMediaServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
-  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
-  public function packageRegistered(): void
+Vaulter\Media\VaulterMediaServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+  protected const array REGISTRARS = [\Vaulter\Media\Providers\MediaPackageRegistrar::class]
+  public function boot(): void
+  public function register(): void

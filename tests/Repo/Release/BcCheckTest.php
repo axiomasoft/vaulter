@@ -42,7 +42,7 @@ function bc_root(): string
  */
 function bc_src(string $code): array
 {
-    return ['packages/core/src/Fixture.php' => "<?php\nnamespace Vaulter;\nuse Vaulter\\Attributes\\Api;\nuse Vaulter\\Attributes\\Spi;\nuse Vaulter\\Attributes\\SpiKind;\nuse Vaulter\\Attributes\\Internal;\n".$code];
+    return ['packages/core/src/Fixture.php' => "<?php\nnamespace Vaulter;\nuse Packman\\Attributes\\Api;\nuse Packman\\Attributes\\Spi;\nuse Packman\\Attributes\\SpiKind;\nuse Packman\\Attributes\\Internal;\n".$code];
 }
 
 /**
@@ -876,8 +876,8 @@ it('review_release: a malformed or missing npm report or components snapshot, an
 
 it('review_release: a byte-identical private collaboration line has zero ancestor-unresolved noise because the PHP graph spans every line, while a removed core method is still a BREAK on its own line', function (): void {
     $sources = static fn (string $coreBody): array => [
-        'packages/core/src/Base.php' => "<?php\nnamespace Vaulter;\nuse Vaulter\\Attributes\\Api;\n#[Api] abstract class Base { {$coreBody} }",
-        'packages/collaboration/src/Child.php' => "<?php\nnamespace Vaulter\\Collaboration;\nuse Vaulter\\Attributes\\Api;\nuse Vaulter\\Base;\n#[Api] final class Child extends Base {}",
+        'packages/core/src/Base.php' => "<?php\nnamespace Vaulter;\nuse Packman\\Attributes\\Api;\n#[Api] abstract class Base { {$coreBody} }",
+        'packages/collaboration/src/Child.php' => "<?php\nnamespace Vaulter\\Collaboration;\nuse Packman\\Attributes\\Api;\nuse Vaulter\\Base;\n#[Api] final class Child extends Base {}",
     ];
     $lines = ['php-public' => ['owners' => ['core']], 'php-collaboration' => ['owners' => ['collaboration']]];
     $php = static fn (string $package, string $line): array => ['id' => "php:{$package}", 'adapter' => 'php-surface', 'schema_version' => 1, 'owner' => $package, 'release_line' => $line, 'inputs' => ["packages/{$package}/surface.json"], 'required' => true];

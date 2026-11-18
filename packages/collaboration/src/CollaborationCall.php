@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Data\RoomRef;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Revocation\PermissionVersion;

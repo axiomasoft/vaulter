@@ -8,9 +8,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationHub;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
@@ -31,7 +31,7 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 #[Internal]
 final readonly class HubAppendController
 {
-    public function __construct(private CollaborationHub $hub, private CollaborationConfig $config) {}
+    public function __construct(private CollaborationHub $hub, private CollaborationOptions $config) {}
 
     public function __invoke(Request $request): JsonResponse
     {

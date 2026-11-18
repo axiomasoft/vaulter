@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Events\DomainEvent;
@@ -26,7 +26,7 @@ use Vaulter\Events\SinkWriter;
 #[Internal]
 final readonly class GenerationCloser implements EventSink
 {
-    public function __construct(private DatabaseConfig $tables) {}
+    public function __construct(private DatabaseOptions $tables) {}
 
     public function record(DomainEvent $event, SinkWriter $writer): SinkResult
     {

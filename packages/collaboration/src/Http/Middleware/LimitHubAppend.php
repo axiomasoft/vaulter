@@ -6,9 +6,9 @@ namespace Vaulter\Collaboration\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 
 /**
@@ -33,8 +33,9 @@ final readonly class LimitHubAppend
     /** The header the hub marks the append of a seed with. */
     public const string SEED_HEADER = 'X-Vaulter-Collab-Seed';
 
-    public function __construct(private CollaborationConfig $config) {}
+    public function __construct(private CollaborationOptions $config) {}
 
+    /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next, ?string $body = null): Response
     {
         $state = $body === self::CHECKPOINT || ($body === self::APPEND && self::declaresSeed($request));

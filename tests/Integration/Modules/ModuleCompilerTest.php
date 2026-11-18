@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Container\Container;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
 use Vaulter\Integration\Tests\Modules\Fixtures\FixtureProblemCodes;
@@ -18,7 +19,6 @@ use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
 use Vaulter\Tests\Modules\Fixtures\FirstStep;
 use Vaulter\Tests\Modules\Fixtures\FixtureModule;
 use Vaulter\Tests\Modules\Fixtures\Greeter;
@@ -34,13 +34,13 @@ use Vaulter\Tests\Modules\Fixtures\ThirdStep;
 // The module registry compiles deterministically; duplicates, missing capabilities, cycles and
 // unknown slots fail the whole graph at compilation (ADR-0027).
 
-/** @param list<VaulterModule> $modules */
+/** @param list<ExtensionPlugin> $modules */
 function compileModules(array $modules, array $overrides = []): CompiledModules|InvalidModuleGraph
 {
     return (new ModuleCompiler)->compile($modules, $overrides);
 }
 
-/** @param list<VaulterModule> $modules */
+/** @param list<ExtensionPlugin> $modules */
 function invalidReasons(array $modules, array $overrides = []): array
 {
     $result = compileModules($modules, $overrides);
@@ -130,7 +130,7 @@ it('rejects an offered class that is not a manifest', function (): void {
     $result = (new ModuleCompiler)->compileOffered([PlainGreeter::class], []);
 
     expect($result)->toBeInstanceOf(InvalidModuleGraph::class)
-        ->and($result->reasons[0])->toContain('does not implement '.VaulterModule::class);
+        ->and($result->reasons[0])->toContain('does not implement '.ExtensionPlugin::class);
 });
 
 it('activates by policy and lets an override win either way', function (?bool $override, Activation $activation, bool $active, string $reason): void {
@@ -322,7 +322,7 @@ it('rejects a name owned by two modules', function (): void {
 it('reports a manifest that fails while declaring', function (): void {
     $broken = new FixtureModule('broken', declare: static fn (ModuleBuilder $m) => $m->routes(''));
 
-    expect(invalidReasons([$broken]))->toBe(['module "broken" failed to declare itself: [Vaulter] Module broken declares an empty routes file.']);
+    expect(invalidReasons([$broken]))->toBe(['Vaulter\\Tests\\Modules\\Fixtures\\FixtureModule has an invalid manifest: [Vaulter] Module broken declares an empty routes file.']);
 });
 
 it('collects every reason and activates nothing', function (): void {

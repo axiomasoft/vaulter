@@ -47,9 +47,9 @@ enum'а, ключ конфигурации или событие — **MINOR**.
 ## Пакеты и версии
 
 Все PHP-пакеты выходят с одной версией и одним тегом, и каждый split-репозиторий
-(`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-webhooks`, `-filament` и метапакет
-`axioma-studio/vaulter`) получает один и тот же тег. Пакеты требуют друг друга как `self.version`,
-поэтому смешать версии нельзя. `axioma-studio/vaulter-azguard` выходит только после тега самого AzGuard;
+(`axiomasoft/vaulter-core`, `-media`, `-drive`, `-documents`, `-webhooks`, `-filament` и метапакет
+`axiomasoft/vaulter`) получает один и тот же тег. Пакеты требуют друг друга как `self.version`,
+поэтому смешать версии нельзя. `axiomasoft/vaulter-azguard` выходит только после тега самого AzGuard;
 до тех пор он исключён из релиза. У `@vaulter/vue` своя semver-линия, а поддерживаемую линию REST API
 он объявляет в `package.json` (`"vaulter": { "api": "1" }`). Состав релиза — в `release/packages.json`.
 
@@ -166,7 +166,7 @@ Vaulter на Postgres.
 
 | Стратегия | Колонка | Примечания |
 |---|---|---|
-| `ulid` (по умолчанию) | `char(26)` | Сортируется лексикографически; совпадает с morph-ключами Corex/AzGuard. |
+| `ulid` (по умолчанию) | `char(26)` | Сортируется лексикографически; совпадает с morph-ключами AzGuard. |
 | `bigint` | `bigserial` / auto-increment | Классические целочисленные ключи. |
 | `uuid7` | нативный `uuid` на Postgres | Упорядоченные по времени UUID; использует нативный тип `uuid` в Postgres. |
 

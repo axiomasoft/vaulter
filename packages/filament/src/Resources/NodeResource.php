@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\PageRegistration;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
@@ -24,8 +25,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 use Override;
+use Packman\Attributes\Internal;
+use Packman\Filament\Concerns\Authorization\AuthorizesResource;
 use UnitEnum;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeKind;
@@ -38,6 +40,7 @@ use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Support\PanelRecords;
+use Vaulter\Support\Identity;
 
 /**
  * The Drive-node admin surface — the heart of the panel. It lists the unified
@@ -55,7 +58,10 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class NodeResource extends Resource
 {
+    use AuthorizesResource;
     use ConfiguresNavigationGroup;
+
+    protected static string $packmanKey = 'vaulter.node';
 
     protected static ?string $model = PanelRecord::class;
 
@@ -153,7 +159,7 @@ final class NodeResource extends Resource
     }
 
     /**
-     * @return array<int, class-string>
+     * @return array<class-string<RelationManager>>
      */
     #[Override]
     public static function getRelations(): array
@@ -392,7 +398,7 @@ final class NodeResource extends Resource
      */
     private static function folderOptions(array $record): array
     {
-        return PanelNodes::destinations(driveId: (string) $record['drive_id'], exceptId: self::nodeId($record));
+        return PanelNodes::destinations(driveId: Identity::stringify($record['drive_id']), exceptId: self::nodeId($record));
     }
 
     /**
@@ -403,7 +409,7 @@ final class NodeResource extends Resource
      */
     private static function driveFor(array $record): DriveHandle
     {
-        return PanelDrives::handle((string) $record['drive_id']) ?? throw NodeNotFoundException::forId(self::nodeId($record));
+        return PanelDrives::handle(Identity::stringify($record['drive_id'])) ?? throw NodeNotFoundException::forId(self::nodeId($record));
     }
 
     /** @return array<int|string, string> */

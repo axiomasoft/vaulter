@@ -442,20 +442,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Attributes/Api.php",
-            "fqcn": "Vaulter\\Attributes\\Api",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Attributes\\Api",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Attributes\\Api"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/core/src/Attributes/EventSpec.php",
             "fqcn": "Vaulter\\Attributes\\EventSpec",
             "kind": "final-class",
@@ -484,20 +470,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Attributes/Internal.php",
-            "fqcn": "Vaulter\\Attributes\\Internal",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Attributes\\Internal",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Attributes\\Internal"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/core/src/Attributes/Label.php",
             "fqcn": "Vaulter\\Attributes\\Label",
             "kind": "final-class",
@@ -508,34 +480,6 @@
             "rule": "core-kernel:fqcn:Vaulter\\Attributes\\Label",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Attributes\\Label"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Attributes/Spi.php",
-            "fqcn": "Vaulter\\Attributes\\Spi",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Attributes\\Spi",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Attributes\\Spi"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Attributes/SpiKind.php",
-            "fqcn": "Vaulter\\Attributes\\SpiKind",
-            "kind": "enum",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Attributes\\SpiKind",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Attributes\\SpiKind"
         },
         {
             "action": "keep",
@@ -562,7 +506,7 @@
             "package": "azguard",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\AzGuard\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\AzGuard\\AzGuardModule"
         },
         {
@@ -596,8 +540,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/azguard/src/Configuration/AzGuardConfig.php",
-            "fqcn": "Vaulter\\AzGuard\\Configuration\\AzGuardConfig",
+            "file": "packages/azguard/src/Configuration/AzGuardOptions.php",
+            "fqcn": "Vaulter\\AzGuard\\Configuration\\AzGuardOptions",
             "kind": "final-class",
             "note": null,
             "owner": "azguard",
@@ -605,7 +549,7 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\AzGuard\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\AzGuard\\Configuration\\AzGuardConfig"
+            "target_fqcn": "Vaulter\\AzGuard\\Configuration\\AzGuardOptions"
         },
         {
             "action": "keep",
@@ -662,6 +606,20 @@
             "rule": "other-packages:prefix:Vaulter\\AzGuard\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\AzGuard\\NullAzGuardGuard"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/azguard/src/Providers/AzGuardPackageRegistrar.php",
+            "fqcn": "Vaulter\\AzGuard\\Providers\\AzGuardPackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "azguard",
+            "package": "azguard",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\AzGuard\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\AzGuard\\Providers\\AzGuardPackageRegistrar"
         },
         {
             "action": "keep",
@@ -758,7 +716,7 @@
             "package": "collaboration",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Collaboration\\CollaborationModule"
         },
         {
@@ -792,8 +750,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/Configuration/CollaborationConfig.php",
-            "fqcn": "Vaulter\\Collaboration\\Configuration\\CollaborationConfig",
+            "file": "packages/collaboration/src/Configuration/CollaborationOptions.php",
+            "fqcn": "Vaulter\\Collaboration\\Configuration\\CollaborationOptions",
             "kind": "final-class",
             "note": null,
             "owner": "collaboration",
@@ -801,7 +759,7 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Collaboration\\Configuration\\CollaborationConfig"
+            "target_fqcn": "Vaulter\\Collaboration\\Configuration\\CollaborationOptions"
         },
         {
             "action": "keep",
@@ -956,6 +914,34 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Drain\\PendingRemovalGuard"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/collaboration/src/Errors/CollaborationErrorCode.php",
+            "fqcn": "Vaulter\\Collaboration\\Errors\\CollaborationErrorCode",
+            "kind": "enum",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Collaboration\\Errors\\CollaborationErrorCode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/collaboration/src/Errors/CollaborationProblemDefinitions.php",
+            "fqcn": "Vaulter\\Collaboration\\Errors\\CollaborationProblemDefinitions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Collaboration\\Errors\\CollaborationProblemDefinitions"
         },
         {
             "action": "keep",
@@ -1520,6 +1506,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/collaboration/src/Providers/CollaborationPackageRegistrar.php",
+            "fqcn": "Vaulter\\Collaboration\\Providers\\CollaborationPackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Collaboration\\Providers\\CollaborationPackageRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/collaboration/src/Providers/CollaborationRegistrar.php",
             "fqcn": "Vaulter\\Collaboration\\Providers\\CollaborationRegistrar",
             "kind": "final-class",
@@ -1688,6 +1688,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/collaboration/src/Schema/CollaborationSchemaSets.php",
+            "fqcn": "Vaulter\\Collaboration\\Schema\\CollaborationSchemaSets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Collaboration\\Schema\\CollaborationSchemaSets"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/collaboration/src/Security/HubUrlInvariant.php",
             "fqcn": "Vaulter\\Collaboration\\Security\\HubUrlInvariant",
             "kind": "final-class",
@@ -1758,6 +1772,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Configuration/CompiledOptionsCache.php",
+            "fqcn": "Vaulter\\Configuration\\CompiledOptionsCache",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\CompiledOptionsCache",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Configuration\\CompiledOptionsCache"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Configuration/ConfigNormalizer.php",
             "fqcn": "Vaulter\\Configuration\\ConfigNormalizer",
             "kind": "final-class",
@@ -1772,100 +1800,128 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
-            "fqcn": "Vaulter\\Configuration\\ConfigValidator",
-            "kind": "final-class",
-            "note": "class-string validation stays (I4 config-validation); the ProfileRegistry resolved() probe is host lifecycle",
-            "owner": "core",
-            "package": "core",
-            "phase": "P3",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\ConfigValidator",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\ConfigValidator"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Configuration/DatabaseConfig.php",
-            "fqcn": "Vaulter\\Configuration\\DatabaseConfig",
+            "file": "packages/core/src/Configuration/DatabaseOptions.php",
+            "fqcn": "Vaulter\\Configuration\\DatabaseOptions",
             "kind": "final-class",
             "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\DatabaseConfig",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\DatabaseOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\DatabaseConfig"
+            "target_fqcn": "Vaulter\\Configuration\\DatabaseOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/IdsConfig.php",
-            "fqcn": "Vaulter\\Configuration\\IdsConfig",
+            "file": "packages/core/src/Configuration/IdempotencyOptions.php",
+            "fqcn": "Vaulter\\Configuration\\IdempotencyOptions",
             "kind": "final-class",
             "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\IdsConfig",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\IdempotencyOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\IdsConfig"
+            "target_fqcn": "Vaulter\\Configuration\\IdempotencyOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/ObservabilityConfig.php",
-            "fqcn": "Vaulter\\Configuration\\ObservabilityConfig",
+            "file": "packages/core/src/Configuration/IdsOptions.php",
+            "fqcn": "Vaulter\\Configuration\\IdsOptions",
             "kind": "final-class",
             "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\ObservabilityConfig",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\IdsOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\ObservabilityConfig"
+            "target_fqcn": "Vaulter\\Configuration\\IdsOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/OutboxConfig.php",
-            "fqcn": "Vaulter\\Configuration\\OutboxConfig",
-            "kind": "final-class",
-            "note": "returned by the public VaulterConfig::outbox(); hosts read the outbox settings through it, not construct it",
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\OutboxConfig",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\OutboxConfig"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Configuration/RoutesConfig.php",
-            "fqcn": "Vaulter\\Configuration\\RoutesConfig",
+            "file": "packages/core/src/Configuration/ModelsOptions.php",
+            "fqcn": "Vaulter\\Configuration\\ModelsOptions",
             "kind": "final-class",
             "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\RoutesConfig",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\ModelsOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\RoutesConfig"
+            "target_fqcn": "Vaulter\\Configuration\\ModelsOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/ScheduleConfig.php",
-            "fqcn": "Vaulter\\Configuration\\ScheduleConfig",
+            "file": "packages/core/src/Configuration/ObservabilityOptions.php",
+            "fqcn": "Vaulter\\Configuration\\ObservabilityOptions",
             "kind": "final-class",
-            "note": "open: the keys of each module move to their owner with the section split (P4)",
+            "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\ScheduleConfig",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\ObservabilityOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\ScheduleConfig"
+            "target_fqcn": "Vaulter\\Configuration\\ObservabilityOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Configuration/OutboxOptions.php",
+            "fqcn": "Vaulter\\Configuration\\OutboxOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\OutboxOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\OutboxOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Configuration/RouteMiddlewareOptions.php",
+            "fqcn": "Vaulter\\Configuration\\RouteMiddlewareOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\RouteMiddlewareOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\RouteMiddlewareOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Configuration/RouteRateLimitsOptions.php",
+            "fqcn": "Vaulter\\Configuration\\RouteRateLimitsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\RouteRateLimitsOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\RouteRateLimitsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Configuration/RoutesOptions.php",
+            "fqcn": "Vaulter\\Configuration\\RoutesOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\RoutesOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\RoutesOptions"
         },
         {
             "action": "keep",
@@ -1884,6 +1940,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Configuration/ScheduleOptions.php",
+            "fqcn": "Vaulter\\Configuration\\ScheduleOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\ScheduleOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\ScheduleOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Configuration/SecurityOptions.php",
+            "fqcn": "Vaulter\\Configuration\\SecurityOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\SecurityOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\SecurityOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Configuration/StringList.php",
             "fqcn": "Vaulter\\Configuration\\StringList",
             "kind": "final-class",
@@ -1898,30 +1982,44 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/TenancyConfig.php",
-            "fqcn": "Vaulter\\Configuration\\TenancyConfig",
+            "file": "packages/core/src/Configuration/TenancyOptions.php",
+            "fqcn": "Vaulter\\Configuration\\TenancyOptions",
             "kind": "final-class",
             "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\TenancyConfig",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\TenancyOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\TenancyConfig"
+            "target_fqcn": "Vaulter\\Configuration\\TenancyOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "fqcn": "Vaulter\\Configuration\\VaulterConfig",
+            "file": "packages/core/src/Configuration/TracingOptions.php",
+            "fqcn": "Vaulter\\Configuration\\TracingOptions",
             "kind": "final-class",
             "note": null,
             "owner": "core",
             "package": "core",
-            "phase": "P3",
-            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\VaulterConfig",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\TracingOptions",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Configuration\\VaulterConfig"
+            "target_fqcn": "Vaulter\\Configuration\\TracingOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Configuration/VaulterOptions.php",
+            "fqcn": "Vaulter\\Configuration\\VaulterOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Configuration\\VaulterOptions",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Configuration\\VaulterOptions"
         },
         {
             "action": "keep",
@@ -2122,20 +2220,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Contracts/Doctor/DoctorCheck.php",
-            "fqcn": "Vaulter\\Contracts\\Doctor\\DoctorCheck",
-            "kind": "interface",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "P3",
-            "rule": "core-kernel:fqcn:Vaulter\\Contracts\\Doctor\\DoctorCheck",
-            "surface": "Spi:Implement",
-            "target_fqcn": "Vaulter\\Contracts\\Doctor\\DoctorCheck"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/core/src/Contracts/IdStrategy.php",
             "fqcn": "Vaulter\\Contracts\\IdStrategy",
             "kind": "interface",
@@ -2242,7 +2326,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\CoreModule",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\CoreModule"
         },
         {
@@ -2584,34 +2668,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Doctor/DoctorContext.php",
-            "fqcn": "Vaulter\\Doctor\\DoctorContext",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\DoctorContext",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Doctor\\DoctorContext"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Doctor/DoctorFinding.php",
-            "fqcn": "Vaulter\\Doctor\\DoctorFinding",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\DoctorFinding",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Doctor\\DoctorFinding"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/core/src/Doctor/DoctorRegistry.php",
             "fqcn": "Vaulter\\Doctor\\DoctorRegistry",
             "kind": "final-class",
@@ -2650,20 +2706,6 @@
             "rule": "core-kernel:fqcn:Vaulter\\Doctor\\DoctorRunner",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Doctor\\DoctorRunner"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Doctor/DoctorSeverity.php",
-            "fqcn": "Vaulter\\Doctor\\DoctorSeverity",
-            "kind": "enum",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\DoctorSeverity",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Doctor\\DoctorSeverity"
         },
         {
             "action": "keep",
@@ -2836,8 +2878,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/documents/src/Configuration/DocumentsConfig.php",
-            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsConfig",
+            "file": "packages/documents/src/Configuration/DocumentsBroadcastOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsBroadcastOptions",
             "kind": "final-class",
             "note": null,
             "owner": "documents",
@@ -2845,7 +2887,105 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsConfig"
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsBroadcastOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/DocumentsCollaborationOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsCollaborationOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsCollaborationOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/DocumentsCommentsOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsCommentsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsCommentsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/DocumentsContentOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsContentOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsContentOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/DocumentsModelsOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsModelsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsModelsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/DocumentsOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/DocumentsRevisionsOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\DocumentsRevisionsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\DocumentsRevisionsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Configuration/TipTapOptions.php",
+            "fqcn": "Vaulter\\Documents\\Configuration\\TipTapOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Configuration\\TipTapOptions"
         },
         {
             "action": "keep",
@@ -3502,7 +3642,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\DocumentsModule"
         },
         {
@@ -3532,6 +3672,34 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Enums\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Enums\\Documents\\StateWriteCause"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Errors/DocumentsErrorCode.php",
+            "fqcn": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "kind": "enum",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Errors\\DocumentsErrorCode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Errors/DocumentsProblemDefinitions.php",
+            "fqcn": "Vaulter\\Documents\\Errors\\DocumentsProblemDefinitions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Documents\\Errors\\DocumentsProblemDefinitions"
         },
         {
             "action": "keep",
@@ -4544,6 +4712,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Providers/DocumentsPackageRegistrar.php",
+            "fqcn": "Vaulter\\Documents\\Providers\\DocumentsPackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Documents\\Providers\\DocumentsPackageRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Queries/DocumentQuery.php",
             "fqcn": "Vaulter\\Documents\\Queries\\DocumentQuery",
             "kind": "final-class",
@@ -4680,6 +4862,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Schema/DocumentsSchemaSets.php",
+            "fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchemaSets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchemaSets"
         },
         {
             "action": "keep",
@@ -5902,8 +6098,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/drive/src/Configuration/AccessConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\AccessConfig",
+            "file": "packages/drive/src/Configuration/AccessOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\AccessOptions",
             "kind": "final-class",
             "note": null,
             "owner": "drive",
@@ -5911,13 +6107,13 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\AccessConfig"
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\AccessOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/drive/src/Configuration/ChangesConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\ChangesConfig",
+            "file": "packages/drive/src/Configuration/ChangesOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ChangesOptions",
             "kind": "final-class",
             "note": null,
             "owner": "drive",
@@ -5925,41 +6121,13 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\ChangesConfig"
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ChangesOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/drive/src/Configuration/DownloadsConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\DownloadsConfig",
-            "kind": "final-class",
-            "note": null,
-            "owner": "drive",
-            "package": "drive",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\DownloadsConfig"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/drive/src/Configuration/DriveConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\DriveConfig",
-            "kind": "final-class",
-            "note": null,
-            "owner": "drive",
-            "package": "drive",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveConfig"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/drive/src/Configuration/DriveConfigValidator.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\DriveConfigValidator",
+            "file": "packages/drive/src/Configuration/ConfiguredScanWorkSettings.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ConfiguredScanWorkSettings",
             "kind": "final-class",
             "note": null,
             "owner": "drive",
@@ -5967,13 +6135,13 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Internal",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveConfigValidator"
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ConfiguredScanWorkSettings"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/drive/src/Configuration/ListingConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\ListingConfig",
+            "file": "packages/drive/src/Configuration/DownloadsOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DownloadsOptions",
             "kind": "final-class",
             "note": null,
             "owner": "drive",
@@ -5981,13 +6149,13 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\ListingConfig"
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DownloadsOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/drive/src/Configuration/ScanConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\ScanConfig",
+            "file": "packages/drive/src/Configuration/DriveFeaturesOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DriveFeaturesOptions",
             "kind": "final-class",
             "note": null,
             "owner": "drive",
@@ -5995,13 +6163,13 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\ScanConfig"
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveFeaturesOptions"
         },
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/drive/src/Configuration/SharingConfig.php",
-            "fqcn": "Vaulter\\Drive\\Configuration\\SharingConfig",
+            "file": "packages/drive/src/Configuration/DriveModelsOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DriveModelsOptions",
             "kind": "final-class",
             "note": null,
             "owner": "drive",
@@ -6009,7 +6177,203 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Configuration\\SharingConfig"
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveModelsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/DriveOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DriveOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/DriveOptionsValidator.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DriveOptionsValidator",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveOptionsValidator"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/DriveScheduleOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DriveScheduleOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveScheduleOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/DrivesOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DrivesOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DrivesOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/ListingOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ListingOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ListingOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/ProfilesOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ProfilesOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ProfilesOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/QuotaOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\QuotaOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\QuotaOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/ResumableMetadataOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ResumableMetadataOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ResumableMetadataOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/ResumableUploadsOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ResumableUploadsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ResumableUploadsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/ScanOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\ScanOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\ScanOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/SharingOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\SharingOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\SharingOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/TrashOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\TrashOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\TrashOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/UploadsOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\UploadsOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\UploadsOptions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/UploadsScanOptions.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\UploadsScanOptions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\UploadsScanOptions"
         },
         {
             "action": "keep",
@@ -7982,7 +8346,7 @@
             "package": "drive",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\DriveModule"
         },
         {
@@ -8278,6 +8642,34 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\Enums\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Enums\\Uploads\\UploadStatus"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Errors/DriveErrorCode.php",
+            "fqcn": "Vaulter\\Drive\\Errors\\DriveErrorCode",
+            "kind": "enum",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Errors\\DriveErrorCode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Errors/DriveProblemDefinitions.php",
+            "fqcn": "Vaulter\\Drive\\Errors\\DriveProblemDefinitions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Drive\\Errors\\DriveProblemDefinitions"
         },
         {
             "action": "keep",
@@ -11600,6 +11992,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Providers/DrivePackageRegistrar.php",
+            "fqcn": "Vaulter\\Drive\\Providers\\DrivePackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Drive\\Providers\\DrivePackageRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
             "fqcn": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar",
             "kind": "final-class",
@@ -12170,6 +12576,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Schema\\DriveSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Schema/DriveSchemaSets.php",
+            "fqcn": "Vaulter\\Drive\\Schema\\DriveSchemaSets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Drive\\Schema\\DriveSchemaSets"
         },
         {
             "action": "keep",
@@ -13084,6 +13504,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Errors/VaulterErrorCode.php",
+            "fqcn": "Vaulter\\Errors\\VaulterErrorCode",
+            "kind": "enum",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Errors\\VaulterErrorCode",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Errors\\VaulterErrorCode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Errors/VaulterProblemDefinitions.php",
+            "fqcn": "Vaulter\\Errors\\VaulterProblemDefinitions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Errors\\VaulterProblemDefinitions",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Errors\\VaulterProblemDefinitions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Events/Concerns/DescribesEvent.php",
             "fqcn": "Vaulter\\Events\\Concerns\\DescribesEvent",
             "kind": "trait",
@@ -13700,8 +14148,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/filament/src/Configuration/FilamentConfig.php",
-            "fqcn": "Vaulter\\Filament\\Configuration\\FilamentConfig",
+            "file": "packages/filament/src/Configuration/FilamentOptions.php",
+            "fqcn": "Vaulter\\Filament\\Configuration\\FilamentOptions",
             "kind": "final-class",
             "note": null,
             "owner": "filament",
@@ -13709,7 +14157,7 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Filament\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Filament\\Configuration\\FilamentConfig"
+            "target_fqcn": "Vaulter\\Filament\\Configuration\\FilamentOptions"
         },
         {
             "action": "keep",
@@ -13722,7 +14170,7 @@
             "package": "filament",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Filament\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Filament\\FilamentModule"
         },
         {
@@ -13738,6 +14186,20 @@
             "rule": "other-packages:prefix:Vaulter\\Filament\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Filament\\Providers\\BindingsRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/Providers/FilamentPackageRegistrar.php",
+            "fqcn": "Vaulter\\Filament\\Providers\\FilamentPackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Filament\\Providers\\FilamentPackageRegistrar"
         },
         {
             "action": "keep",
@@ -14582,6 +15044,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Laravel/VaulterPluginRegistrar.php",
+            "fqcn": "Vaulter\\Laravel\\VaulterPluginRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Laravel\\VaulterPluginRegistrar",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Laravel\\VaulterPluginRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Cas/BlobGarbageCollector.php",
             "fqcn": "Vaulter\\Media\\Cas\\BlobGarbageCollector",
             "kind": "final-class",
@@ -14736,8 +15212,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/media/src/Configuration/MediaConfig.php",
-            "fqcn": "Vaulter\\Media\\Configuration\\MediaConfig",
+            "file": "packages/media/src/Configuration/MediaOptions.php",
+            "fqcn": "Vaulter\\Media\\Configuration\\MediaOptions",
             "kind": "final-class",
             "note": null,
             "owner": "media",
@@ -14745,7 +15221,7 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Media\\Configuration\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Media\\Configuration\\MediaConfig"
+            "target_fqcn": "Vaulter\\Media\\Configuration\\MediaOptions"
         },
         {
             "action": "keep",
@@ -15058,6 +15534,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Errors/MediaErrorCode.php",
+            "fqcn": "Vaulter\\Media\\Errors\\MediaErrorCode",
+            "kind": "enum",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Media\\Errors\\MediaErrorCode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Errors/MediaProblemDefinitions.php",
+            "fqcn": "Vaulter\\Media\\Errors\\MediaProblemDefinitions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Media\\Errors\\MediaProblemDefinitions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Exceptions/Cas/BlobUnavailableException.php",
             "fqcn": "Vaulter\\Media\\Exceptions\\Cas\\BlobUnavailableException",
             "kind": "final-class",
@@ -15094,7 +15598,7 @@
             "package": "media",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Media\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Media\\MediaModule"
         },
         {
@@ -15124,6 +15628,20 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Media\\Providers\\BindingsRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Providers/MediaPackageRegistrar.php",
+            "fqcn": "Vaulter\\Media\\Providers\\MediaPackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Media\\Providers\\MediaPackageRegistrar"
         },
         {
             "action": "keep",
@@ -15166,6 +15684,20 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Media\\Schema\\MediaSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Schema/MediaSchemaSets.php",
+            "fqcn": "Vaulter\\Media\\Schema\\MediaSchemaSets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Media\\Schema\\MediaSchemaSets"
         },
         {
             "action": "keep",
@@ -15534,6 +16066,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Modules/ModuleDeclarations.php",
+            "fqcn": "Vaulter\\Modules\\ModuleDeclarations",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\ModuleDeclarations",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\ModuleDeclarations"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Modules/ModuleGraphException.php",
             "fqcn": "Vaulter\\Modules\\ModuleGraphException",
             "kind": "final-class",
@@ -15570,7 +16116,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\ModuleReferences",
-            "surface": "Internal",
+            "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Modules\\ModuleReferences"
         },
         {
@@ -15632,6 +16178,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Modules/PluginModuleSpec.php",
+            "fqcn": "Vaulter\\Modules\\PluginModuleSpec",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\PluginModuleSpec",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Modules\\PluginModuleSpec"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Modules/RemovalGuard.php",
             "fqcn": "Vaulter\\Modules\\RemovalGuard",
             "kind": "interface",
@@ -15688,16 +16248,44 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Modules/VaulterModule.php",
-            "fqcn": "Vaulter\\Modules\\VaulterModule",
+            "file": "packages/core/src/Modules/VaulterExtensionFacets.php",
+            "fqcn": "Vaulter\\Modules\\VaulterExtensionFacets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\VaulterExtensionFacets",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\VaulterExtensionFacets"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/VaulterPluginActivationGate.php",
+            "fqcn": "Vaulter\\Modules\\VaulterPluginActivationGate",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\VaulterPluginActivationGate",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\VaulterPluginActivationGate"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/WithModuleRuntime.php",
+            "fqcn": "Vaulter\\Modules\\WithModuleRuntime",
             "kind": "interface",
             "note": null,
             "owner": "core",
             "package": "core",
             "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Modules\\VaulterModule",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\WithModuleRuntime",
             "surface": "Spi:Implement",
-            "target_fqcn": "Vaulter\\Modules\\VaulterModule"
+            "target_fqcn": "Vaulter\\Modules\\WithModuleRuntime"
         },
         {
             "action": "keep",
@@ -16010,6 +16598,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
+            "fqcn": "Vaulter\\Providers\\CoreKernelRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Providers\\CoreKernelRegistrar",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Providers\\CoreKernelRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Providers/EventsRegistrar.php",
             "fqcn": "Vaulter\\Providers\\EventsRegistrar",
             "kind": "final-class",
@@ -16062,6 +16664,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Schema\\AutoIncrementIds",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Schema\\AutoIncrementIds"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Schema/CoreSchemaSets.php",
+            "fqcn": "Vaulter\\Schema\\CoreSchemaSets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Schema\\CoreSchemaSets",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Schema\\CoreSchemaSets"
         },
         {
             "action": "keep",
@@ -16216,6 +16832,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Schema\\ValueObjects\\KeyColumnMismatch",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Schema\\ValueObjects\\KeyColumnMismatch"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Schema/VaulterMigration.php",
+            "fqcn": "Vaulter\\Schema\\VaulterMigration",
+            "kind": "abstract-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Schema\\VaulterMigration",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Schema\\VaulterMigration"
         },
         {
             "action": "keep",
@@ -16990,8 +17620,8 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/webhooks/src/Configuration/WebhooksConfig.php",
-            "fqcn": "Vaulter\\Webhooks\\Configuration\\WebhooksConfig",
+            "file": "packages/webhooks/src/Configuration/WebhooksOptions.php",
+            "fqcn": "Vaulter\\Webhooks\\Configuration\\WebhooksOptions",
             "kind": "final-class",
             "note": null,
             "owner": "webhooks",
@@ -16999,7 +17629,7 @@
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Webhooks\\Configuration\\WebhooksConfig"
+            "target_fqcn": "Vaulter\\Webhooks\\Configuration\\WebhooksOptions"
         },
         {
             "action": "keep",
@@ -17182,6 +17812,34 @@
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\Doctor\\Checks\\WebhooksDeliveriesCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Errors/WebhooksErrorCode.php",
+            "fqcn": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "kind": "enum",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Errors/WebhooksProblemDefinitions.php",
+            "fqcn": "Vaulter\\Webhooks\\Errors\\WebhooksProblemDefinitions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Webhooks\\Errors\\WebhooksProblemDefinitions"
         },
         {
             "action": "keep",
@@ -17606,6 +18264,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/webhooks/src/Providers/WebhooksPackageRegistrar.php",
+            "fqcn": "Vaulter\\Webhooks\\Providers\\WebhooksPackageRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Webhooks\\Providers\\WebhooksPackageRegistrar"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/webhooks/src/Repositories/WebhookDeliveryStoreRepository.php",
             "fqcn": "Vaulter\\Webhooks\\Repositories\\WebhookDeliveryStoreRepository",
             "kind": "final-class",
@@ -17672,6 +18344,20 @@
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\Schema\\WebhooksSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Schema/WebhooksSchemaSets.php",
+            "fqcn": "Vaulter\\Webhooks\\Schema\\WebhooksSchemaSets",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Webhooks\\Schema\\WebhooksSchemaSets"
         },
         {
             "action": "keep",
@@ -17908,7 +18594,7 @@
             "package": "webhooks",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Webhooks\\WebhooksModule"
         },
         {

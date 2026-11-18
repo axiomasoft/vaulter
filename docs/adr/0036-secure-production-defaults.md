@@ -29,6 +29,6 @@ Invariants shipped: `core.tenancy`, `drive.permission-driver`, `collaboration.se
 
 ## Consequences
 
-The former production throws in `DriveConfigValidator` and `CollaborationConfig::assertSecrets()` are
+The former production throws in `DriveOptionsValidator` and `CollaborationOptions::assertSecrets()` are
 removed; the latter's non-production warning is replaced by the doctor report. Hub JWT key rotation (`kid` keyring) and
 the webhook blocked/allowed ranges are implemented; a malformed range is rejected, never coerced.

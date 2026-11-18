@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Collaboration\Persistence\CheckpointResult;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
@@ -104,7 +105,7 @@ it('refuses the second publication of the same (C, H) and leaves HS − H update
     Compaction::publish($lease);
     $after = casState($this->node);
 
-    expect(fn () => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)
+    expect(fn (): CheckpointResult => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)
         ->and(casState($this->node))->toEqual($after)
         ->and(count(Compaction::seqs($this->node)))->toBe(3 - 2);
 });
@@ -120,7 +121,7 @@ it('lets only one of two hubs publish (C, H) when the first lease expired under 
     $after = casState($this->node);
 
     expect([$slow->log->checkpointSeq, $slow->log->headSeq])->toBe([$fast->log->checkpointSeq, $fast->log->headSeq])
-        ->and(fn () => Compaction::publish($slow))->toThrow(CollaborationCheckpointConflictException::class)
+        ->and(fn (): CheckpointResult => Compaction::publish($slow))->toThrow(CollaborationCheckpointConflictException::class)
         ->and(casState($this->node))->toEqual($after)
         ->and(Compaction::marker($this->node))->toBe([null, null]);
 });
@@ -155,7 +156,7 @@ it('refuses a publication under an expired lease', function (): void {
     $before = casState($this->node);
     $this->travel(61)->seconds();
 
-    expect(fn () => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)
+    expect(fn (): CheckpointResult => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)
         ->and(Compaction::seqs($this->node))->toBe([1])
         ->and(Compaction::marker($this->node))->toBe($before['marker']);
 });
@@ -166,7 +167,7 @@ it('refuses a publication whose checkpoint version no longer is the document\'s 
     // A write of the working state outside the log (the protocol 1 store) moved the state version.
     Hub::aggregate($this->node)->forceFill(['state_version' => Hub::aggregate($this->node)->state_version + 1])->save();
 
-    expect(fn () => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)
+    expect(fn (): CheckpointResult => Compaction::publish($lease))->toThrow(CollaborationCheckpointConflictException::class)
         ->and(Compaction::seqs($this->node))->toBe([1]);
 });
 
@@ -174,7 +175,7 @@ it('refuses a publication of another generation than the document\'s with the ep
     Compaction::append($this->node, 'u1', seed: true);
     $lease = Compaction::leaseOf($this->node);
 
-    expect(fn () => Compaction::publish($lease, overrides: ['generation' => 1]))->toThrow(CollaborationEpochMismatchException::class)
+    expect(fn (): CheckpointResult => Compaction::publish($lease, overrides: ['generation' => 1]))->toThrow(CollaborationEpochMismatchException::class)
         ->and(Compaction::seqs($this->node))->toBe([1]);
 });
 
@@ -239,9 +240,9 @@ it('binds publication to every leased binding component and preserves complete r
     $values = ['protocol' => $old->protocol, 'stateFormat' => $old->stateFormat, 'schemaVersion' => $old->schemaVersion, 'generation' => $old->generation];
     $values[$field] = $value;
     $foreign = new CollaborationStateBinding(...$values);
-    $snapshot = static fn () => array_map(static fn ($table) => DB::table($table)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions', 'v_collaboration_heads', 'v_collaboration_updates', 'v_collaboration_receipts']);
+    $snapshot = static fn (): array => array_map(static fn (string $table) => DB::table($table)->get()->toJson(), ['v_nodes', 'v_documents', 'v_document_revisions', 'v_collaboration_heads', 'v_collaboration_updates', 'v_collaboration_receipts']);
     $before = $snapshot();
-    expect(fn () => Compaction::publish($lease, overrides: ['binding' => $foreign]))->toThrow(CollaborationCheckpointConflictException::class);
+    expect(fn (): CheckpointResult => Compaction::publish($lease, overrides: ['binding' => $foreign]))->toThrow(CollaborationCheckpointConflictException::class);
     expect($snapshot())->toBe($before)->and($events)->toBe([]);
 })->with(['protocol' => ['protocol', 'acme-ot'], 'format' => ['stateFormat', 'other-format'], 'schema' => ['schemaVersion', 2], 'generation' => ['generation', 9]]);
 
@@ -250,6 +251,6 @@ it('rejects re-labelling the leased document type even when a caller repeats the
     $lease = Compaction::leaseOf($this->node);
     app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill(['type' => 'vaulter/markdown'])->save());
     $before = casState($this->node);
-    expect(fn () => Compaction::publish($lease, overrides: ['documentType' => 'vaulter/markdown']))->toThrow(CollaborationCheckpointConflictException::class);
+    expect(fn (): CheckpointResult => Compaction::publish($lease, overrides: ['documentType' => 'vaulter/markdown']))->toThrow(CollaborationCheckpointConflictException::class);
     expect(casState($this->node))->toEqual($before);
 });

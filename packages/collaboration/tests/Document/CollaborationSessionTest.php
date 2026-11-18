@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -28,7 +28,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  */
 function roomOf(Node $node, int $epoch = 0): string
 {
-    return app(CollaborationConfig::class)->room((string) $node->drive_id, (string) $node->getKey(), $epoch);
+    return app(CollaborationOptions::class)->room((string) $node->drive_id, (string) $node->getKey(), $epoch);
 }
 
 function documentNode(): Node

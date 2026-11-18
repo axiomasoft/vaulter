@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Testing\TestResponse;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
+use Vaulter\Collaboration\Persistence\CheckpointResult;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\AcmeKanbanV2Type;
 use Vaulter\Collaboration\Tests\Support\Compaction;
@@ -314,7 +315,7 @@ it('decodes a checkpoint projection with the document type\'s own schema', funct
         ['type' => 'table', 'content' => [['type' => 'tableRow', 'content' => [['type' => 'tableCell']]]]],
     ]];
 
-    expect(fn () => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => $table]))
+    expect(fn (): CheckpointResult => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => $table]))
         ->toThrow(InvalidDocumentContentException::class);
 
     $state = Hub::aggregate($node);

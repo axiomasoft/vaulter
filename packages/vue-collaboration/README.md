@@ -3,7 +3,7 @@
 The browser side of Vaulter's realtime document editing: a Yjs session over Hocuspocus, **update envelopes** with a bounded
 retry queue, and a save status that tells the truth. It plugs into [`@vaulter/vue`](../vue) through the `collaboration`
 adapter; `@vaulter/vue` itself contains no `yjs` or `@hocuspocus/*`. The backend is the Laravel module
-[`axioma-studio/vaulter-collaboration`](../collaboration/README.md) and the Node
+[`axiomasoft/vaulter-collaboration`](../collaboration/README.md) and the Node
 [collaboration hub](../collaboration/hub/README.md); the guide is
 [Realtime Collaboration](../../docs/guides/collaboration.md#frontend-wiring-vaulter-vue-collaboration) and the decisions
 are in [ADR-0031](../../docs/adr/0031-collaboration-package-and-durability.md).

@@ -6,14 +6,14 @@ title: Webhooks
 
 ## Install and switch on
 
-Webhooks are the separate package `axioma-studio/vaulter-webhooks`. It requires `vaulter-core` and
-`vaulter-drive` (endpoints are scoped to drives) and is not part of the `axioma-studio/vaulter` metapackage,
+Webhooks are the separate package `axiomasoft/vaulter-webhooks`. It requires `vaulter-core` and
+`vaulter-drive` (endpoints are scoped to drives) and is not part of the `axiomasoft/vaulter` metapackage,
 because it opens outbound network traffic:
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-webhooks
+composer require axiomasoft/vaulter-webhooks
 ```
 
 The module is **opt-in**: installing the package creates its tables (`v_webhook_endpoints`,

@@ -4207,7 +4207,7 @@
         {
             "config_keys": [],
             "defaults": [
-                ""
+                null
             ],
             "id": "env:DB_PASSWORD",
             "owner": "core",
@@ -4244,7 +4244,7 @@
         {
             "config_keys": [],
             "defaults": [
-                ""
+                null
             ],
             "id": "env:TEST_TOKEN",
             "owner": "core",
@@ -4998,7 +4998,7 @@
             "owner": "azguard",
             "source": {
                 "file": "packages/azguard/src/AzGuardModule.php",
-                "symbol": "Vaulter\\AzGuard\\AzGuardModule::register"
+                "symbol": "Vaulter\\AzGuard\\AzGuardModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5007,7 +5007,7 @@
             "owner": "collaboration",
             "source": {
                 "file": "packages/collaboration/src/CollaborationModule.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationModule::register"
+                "symbol": "Vaulter\\Collaboration\\CollaborationModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5015,17 +5015,17 @@
             "id": "publish:vaulter-collaboration-translations",
             "owner": "collaboration",
             "source": {
-                "file": "packages/collaboration/src/VaulterCollaborationServiceProvider.php",
-                "symbol": "Vaulter\\Collaboration\\VaulterCollaborationServiceProvider::configurePackage"
+                "file": "packages/collaboration/src/CollaborationModule.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationModule::moduleRuntime"
             },
-            "via": "spatie:hasTranslations"
+            "via": "module:translations"
         },
         {
             "id": "publish:vaulter-config",
             "owner": "core",
             "source": {
                 "file": "packages/core/src/CoreModule.php",
-                "symbol": "Vaulter\\CoreModule::register"
+                "symbol": "Vaulter\\CoreModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5034,7 +5034,7 @@
             "owner": "documents",
             "source": {
                 "file": "packages/documents/src/DocumentsModule.php",
-                "symbol": "Vaulter\\Documents\\DocumentsModule::register"
+                "symbol": "Vaulter\\Documents\\DocumentsModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5043,16 +5043,16 @@
             "owner": "documents",
             "source": {
                 "file": "packages/documents/src/VaulterDocumentsServiceProvider.php",
-                "symbol": "Vaulter\\Documents\\VaulterDocumentsServiceProvider::configurePackage"
+                "symbol": "Vaulter\\Documents\\VaulterDocumentsServiceProvider::boot"
             },
-            "via": "spatie:hasTranslations"
+            "via": "module:translations"
         },
         {
             "id": "publish:vaulter-drive-config",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/DriveModule.php",
-                "symbol": "Vaulter\\Drive\\DriveModule::register"
+                "symbol": "Vaulter\\Drive\\DriveModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5061,16 +5061,16 @@
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/VaulterDriveServiceProvider.php",
-                "symbol": "Vaulter\\Drive\\VaulterDriveServiceProvider::configurePackage"
+                "symbol": "Vaulter\\Drive\\VaulterDriveServiceProvider::boot"
             },
-            "via": "spatie:hasTranslations"
+            "via": "module:translations"
         },
         {
             "id": "publish:vaulter-filament-config",
             "owner": "filament",
             "source": {
                 "file": "packages/filament/src/FilamentModule.php",
-                "symbol": "Vaulter\\Filament\\FilamentModule::register"
+                "symbol": "Vaulter\\Filament\\FilamentModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5079,7 +5079,7 @@
             "owner": "media",
             "source": {
                 "file": "packages/media/src/MediaModule.php",
-                "symbol": "Vaulter\\Media\\MediaModule::register"
+                "symbol": "Vaulter\\Media\\MediaModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5087,26 +5087,26 @@
             "id": "publish:vaulter-media-translations",
             "owner": "media",
             "source": {
-                "file": "packages/media/src/VaulterMediaServiceProvider.php",
-                "symbol": "Vaulter\\Media\\VaulterMediaServiceProvider::configurePackage"
+                "file": "packages/azguard/src/VaulterAzGuardServiceProvider.php",
+                "symbol": "Vaulter\\AzGuard\\VaulterAzGuardServiceProvider::boot"
             },
-            "via": "spatie:hasTranslations"
+            "via": "module:translations"
         },
         {
             "id": "publish:vaulter-translations",
             "owner": "core",
             "source": {
-                "file": "packages/core/src/VaulterServiceProvider.php",
-                "symbol": "Vaulter\\VaulterServiceProvider::configurePackage"
+                "file": "packages/core/src/CoreModule.php",
+                "symbol": "Vaulter\\CoreModule::moduleRuntime"
             },
-            "via": "spatie:hasTranslations"
+            "via": "module:translations"
         },
         {
             "id": "publish:vaulter-webhooks-config",
             "owner": "webhooks",
             "source": {
                 "file": "packages/webhooks/src/WebhooksModule.php",
-                "symbol": "Vaulter\\Webhooks\\WebhooksModule::register"
+                "symbol": "Vaulter\\Webhooks\\WebhooksModule::configRoot"
             },
             "via": "module:config"
         },
@@ -5114,10 +5114,10 @@
             "id": "publish:vaulter-webhooks-translations",
             "owner": "webhooks",
             "source": {
-                "file": "packages/webhooks/src/VaulterWebhooksServiceProvider.php",
-                "symbol": "Vaulter\\Webhooks\\VaulterWebhooksServiceProvider::configurePackage"
+                "file": "packages/webhooks/src/WebhooksModule.php",
+                "symbol": "Vaulter\\Webhooks\\WebhooksModule::moduleRuntime"
             },
-            "via": "spatie:hasTranslations"
+            "via": "module:translations"
         }
     ],
     "kind": "config",

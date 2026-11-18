@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Models\Node;
 
 it('creates every table with the configured prefix', function (): void {
@@ -17,6 +17,6 @@ it('creates every table with the configured prefix', function (): void {
 });
 
 it('resolves config and model tables through the prefix', function (): void {
-    expect(app(DatabaseConfig::class)->table('nodes'))->toBe('custom_nodes')
+    expect(app(DatabaseOptions::class)->table('nodes'))->toBe('custom_nodes')
         ->and((new Node)->getTable())->toBe('custom_nodes');
 });

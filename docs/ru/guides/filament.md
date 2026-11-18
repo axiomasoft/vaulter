@@ -6,8 +6,8 @@ outline: deep
 
 # Админ-плагин для Filament
 
-`axioma-studio/vaulter-filament` — это опциональный плагин для **Filament 5**, который добавляет
-управление Vaulter в существующую панель Filament. Он требует `axioma-studio/vaulter-drive` (а через него core и
+`axiomasoft/vaulter-filament` — это опциональный плагин для **Filament 5**, который добавляет
+управление Vaulter в существующую панель Filament. Он требует `axiomasoft/vaulter-drive` (а через него core и
 media) и регистрирует одно семейство ресурсов — домен **Drive / права**: `Drive`, `Node`, `NodeGrant`, `NodeShare`,
 `Activity`.
 
@@ -26,7 +26,7 @@ Drive-UI для конечных пользователей живёт в [па�
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-filament
+composer require axiomasoft/vaulter-filament
 ```
 
 Плагин поставляет свой провайдер через Laravel package discovery
@@ -246,7 +246,7 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 ));
 
 // Показывается ровно один раз — потом из строки уже не восстановить:
-//   app(\Vaulter\Drive\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
+//   app(\Vaulter\Drive\Configuration\SharingOptions::class)->urlBase() . '/' . $minted->token
 ```
 
 - **Строки**: публичные ссылки, которые операции `shares()` хэндла перечисляют по каждому узлу, которым админ

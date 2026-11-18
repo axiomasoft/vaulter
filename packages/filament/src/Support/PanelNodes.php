@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -215,7 +215,7 @@ final class PanelNodes
 
         $abilities = [];
         foreach ($byDrive as $driveId => $ids) {
-            $handle = PanelDrives::handle((string) $driveId);
+            $handle = PanelDrives::handle($driveId);
             if ($handle === null) {
                 continue;
             }

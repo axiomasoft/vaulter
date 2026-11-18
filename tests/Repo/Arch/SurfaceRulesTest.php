@@ -35,12 +35,12 @@ function sr_found(array $sources): array
 function sr_sources(): array
 {
     return [
-        'packages/core/src/Row.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Internal; #[Internal] final class Row {}',
-        'packages/core/src/Model.php' => '<?php namespace Vaulter; use Illuminate\Database\Eloquent\Model as Base; use Vaulter\Attributes\Api; #[Api] class Note extends Base {}',
-        'packages/core/src/Port.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Api] final class Port {'
+        'packages/core/src/Row.php' => '<?php namespace Vaulter; use Packman\Attributes\Internal; #[Internal] final class Row {}',
+        'packages/core/src/Model.php' => '<?php namespace Vaulter; use Illuminate\Database\Eloquent\Model as Base; use Packman\Attributes\Api; #[Api] class Note extends Base {}',
+        'packages/core/src/Port.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; use Packman\Attributes\Internal; #[Api] final class Port {'
             .' public Row $row; public function take(Row $row, ?Row $again, int $n): void {} public function give(): Row|null { return null; } public function note(Note $note): void {}'
             .' #[Internal] public function hook(Row $row): Row { return $row; } public function clean(string $a): self { return $this; } private function secret(Row $row): void {} }',
-        'packages/core/src/Quiet.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Internal; #[Internal] final class Quiet { public function take(Row $row): Row { return $row; } }',
+        'packages/core/src/Quiet.php' => '<?php namespace Vaulter; use Packman\Attributes\Internal; #[Internal] final class Quiet { public function take(Row $row): Row { return $row; } }',
     ];
 }
 
@@ -67,8 +67,8 @@ it('rules: an Internal member, a private member and an Internal type are not che
 it('rules: a type without a surface attribute is unclassified, and so is a type with two', function (): void {
     $found = sr_found([
         'packages/core/src/Bare.php' => '<?php namespace Vaulter; final class Bare {}',
-        'packages/core/src/Both.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Api] #[Internal] final class Both {}',
-        'packages/core/src/Fine.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final class Fine {}',
+        'packages/core/src/Both.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; use Packman\Attributes\Internal; #[Api] #[Internal] final class Both {}',
+        'packages/core/src/Fine.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final class Fine {}',
     ]);
 
     expect(array_column($found, 'symbol'))->toBe(['Vaulter\Bare', 'Vaulter\Both'])
@@ -82,7 +82,7 @@ it('rules: an exact allowlist is green, an extra finding is new and a gone one i
 
     expect(ScanGenerator::evaluate('I13', $found, $allowlist))->toBe(['code' => 0, 'lines' => []]);
 
-    $grown = sr_found([...sr_sources(), 'packages/core/src/Extra.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final class Extra { public function row(): Row { return new Row; } }']);
+    $grown = sr_found([...sr_sources(), 'packages/core/src/Extra.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final class Extra { public function row(): Row { return new Row; } }']);
     $new = ScanGenerator::evaluate('I13', $grown, $allowlist);
     expect($new['code'])->toBe(1)->and($new['lines'][0])->toStartWith('new   signature|packages/core/src/Extra.php');
 
@@ -123,17 +123,17 @@ function sr_extended(array $sources): array
 function sr_base(): array
 {
     return [
-        'packages/core/src/Row.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Internal; #[Internal] final class Row {}',
-        'packages/core/src/Model.php' => '<?php namespace Vaulter; use Illuminate\Database\Eloquent\Model as Base; use Vaulter\Attributes\Internal; #[Internal] class Note extends Base {}',
-        'packages/core/src/Card.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final readonly class Card { public function __construct(public string $title) {} }',
+        'packages/core/src/Row.php' => '<?php namespace Vaulter; use Packman\Attributes\Internal; #[Internal] final class Row {}',
+        'packages/core/src/Model.php' => '<?php namespace Vaulter; use Illuminate\Database\Eloquent\Model as Base; use Packman\Attributes\Internal; #[Internal] class Note extends Base {}',
+        'packages/core/src/Card.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final readonly class Card { public function __construct(public string $title) {} }',
     ];
 }
 
 it('rules: a technical (Internal or private) constructor hides its parameters, not a public promoted property naming a domain model', function (): void {
     $found = sr_found([...sr_base(),
-        'packages/core/src/Wired.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Api] final class Wired { #[Internal] public function __construct(public readonly Note $note, private Row $row, Row $plain) {} }',
-        'packages/core/src/Shut.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final class Shut { private function __construct(protected Row $row) {} }',
-        'packages/core/src/Open.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final class Open { public function __construct(Row $row, #[\Vaulter\Attributes\Internal] public Row $trace) {} }',
+        'packages/core/src/Wired.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; use Packman\Attributes\Internal; #[Api] final class Wired { #[Internal] public function __construct(public readonly Note $note, private Row $row, Row $plain) {} }',
+        'packages/core/src/Shut.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final class Shut { private function __construct(protected Row $row) {} }',
+        'packages/core/src/Open.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final class Open { public function __construct(Row $row, #[\Packman\Attributes\Internal] public Row $trace) {} }',
     ]);
 
     expect(array_map(static fn (array $v): string => $v['symbol'].' '.$v['kind'].' '.$v['target'].' '.$v['category'], $found))->toBe([
@@ -145,7 +145,7 @@ it('rules: a technical (Internal or private) constructor hides its parameters, n
 
 it('rules: an ordinary protected member of an extensible supported type stays surfaced; only an Internal technical member is not', function (): void {
     $found = sr_found([...sr_base(),
-        'packages/core/src/Base.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Spi; use Vaulter\Attributes\Internal; #[Spi] abstract class Base {'
+        'packages/core/src/Base.php' => '<?php namespace Vaulter; use Packman\Attributes\Spi; use Packman\Attributes\Internal; #[Spi] abstract class Base {'
             .' protected Row $row; protected function hook(Note $note): Row { return new Row; } abstract protected function make(): Card;'
             .' #[Internal] protected function wire(Row $row): void {} }',
     ]);
@@ -162,7 +162,7 @@ it('rules: a facade @method naming an Internal type or a domain model is a class
         'packages/core/src/Facade.php' => <<<'PHP'
             <?php
             namespace Vaulter;
-            use Vaulter\Attributes\Api;
+            use Packman\Attributes\Api;
             use Vaulter\Row as Line;
             /**
              * @method static Line row(int $id)
@@ -188,8 +188,8 @@ it('rules: a generic docblock output or input names its types; templates, shapes
             <?php
             namespace Vaulter;
             use Illuminate\Support\Collection;
-            use Vaulter\Attributes\Api;
-            use Vaulter\Attributes\Internal;
+            use Packman\Attributes\Api;
+            use Packman\Attributes\Internal;
             /** @template TKey of array-key */
             #[Api]
             final class Lists
@@ -223,7 +223,7 @@ it('rules: a generic docblock output or input names its types; templates, shapes
 });
 
 it('rules: a supported factory on the native ORM Factory with a domain model is a finding; an Internal factory root is not', function (): void {
-    $factory = 'use Illuminate\Database\Eloquent\Factories\Factory; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal;';
+    $factory = 'use Illuminate\Database\Eloquent\Factories\Factory; use Packman\Attributes\Api; use Packman\Attributes\Internal;';
     $extended = sr_extended([...sr_base(),
         'packages/core/database/factories/RootFactory.php' => '<?php namespace Vaulter\Factories; '.$factory.' /** @template TModel of \Illuminate\Database\Eloquent\Model @extends Factory<TModel> */ #[Internal] abstract class RootFactory extends Factory { public function made(): \Vaulter\Row { return new \Vaulter\Row; } }',
         'packages/core/database/factories/NoteFactory.php' => '<?php namespace Vaulter\Factories; '.$factory.' use Vaulter\Note; /** @extends RootFactory<Note> */ #[Api] final class NoteFactory extends RootFactory {}',
@@ -242,11 +242,11 @@ it('rules: a supported factory on the native ORM Factory with a domain model is 
 
 it('rules: an Internal ancestor or trait does not hide the signatures a supported child inherits; an unknown Vaulter ancestor is review', function (): void {
     $extended = sr_extended([...sr_base(),
-        'packages/core/src/Kernel.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Internal; #[Internal] abstract class Kernel { public function row(): Row { return new Row; } /** @return list<Note> */ public function notes(): array { return []; } #[Internal] public function wire(Row $row): void {} private function secret(Row $row): void {} }',
-        'packages/core/src/Mixin.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Internal; #[Internal] trait Mixin { protected Note $note; }',
-        'packages/core/src/Child.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] class Child extends Kernel { use Mixin; }',
-        'packages/core/src/Orphan.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] class Orphan extends Gone {}',
-        'packages/core/src/Quiet.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Internal; #[Internal] class Quiet extends Kernel {}',
+        'packages/core/src/Kernel.php' => '<?php namespace Vaulter; use Packman\Attributes\Internal; #[Internal] abstract class Kernel { public function row(): Row { return new Row; } /** @return list<Note> */ public function notes(): array { return []; } #[Internal] public function wire(Row $row): void {} private function secret(Row $row): void {} }',
+        'packages/core/src/Mixin.php' => '<?php namespace Vaulter; use Packman\Attributes\Internal; #[Internal] trait Mixin { protected Note $note; }',
+        'packages/core/src/Child.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] class Child extends Kernel { use Mixin; }',
+        'packages/core/src/Orphan.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] class Orphan extends Gone {}',
+        'packages/core/src/Quiet.php' => '<?php namespace Vaulter; use Packman\Attributes\Internal; #[Internal] class Quiet extends Kernel {}',
     ]);
 
     expect($extended)->toBe([
@@ -259,8 +259,8 @@ it('rules: an Internal ancestor or trait does not hide the signatures a supporte
 
 it('rules: a public descriptor or host input DTO is checked like any supported type, and the classifier grants no host-input or Eloquent exception', function (): void {
     $sources = [...sr_base(),
-        'packages/core/src/Descriptor.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final readonly class Descriptor { public function __construct(public Card $card, public Row $row, public ?Note $note = null) {} }',
-        'packages/core/src/Input.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; #[Api] final readonly class Input { /** @param list<Note> $notes */ public function __construct(public array $notes) {} }',
+        'packages/core/src/Descriptor.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final readonly class Descriptor { public function __construct(public Card $card, public Row $row, public ?Note $note = null) {} }',
+        'packages/core/src/Input.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; #[Api] final readonly class Input { /** @param list<Note> $notes */ public function __construct(public array $notes) {} }',
     ];
     $classified = Surface::classify(Surface::fromSources($sources), SourceIndex::fromSources($sources, SR_PSR4, []));
     $categories = [...array_column($classified['signature'], 'category'), ...array_column($classified['extended'], 'category')];

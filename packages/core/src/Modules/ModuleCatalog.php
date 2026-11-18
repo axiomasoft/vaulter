@@ -33,7 +33,7 @@ final class ModuleCatalog
         return $app->make(self::class);
     }
 
-    /** @param class-string<VaulterModule|ExtensionPlugin> $manifest */
+    /** @param class-string<ExtensionPlugin> $manifest */
     public function offer(string $manifest): void
     {
         if ($this->sealed) {
@@ -41,6 +41,9 @@ final class ModuleCatalog
         }
         if (!in_array($manifest, $this->offered, true)) {
             $this->offered[] = $manifest;
+            if (is_a($manifest, WithModuleRuntime::class, true)) {
+                $this->pluginSpecs[$manifest] = (new $manifest)->moduleRuntime();
+            }
         }
     }
 

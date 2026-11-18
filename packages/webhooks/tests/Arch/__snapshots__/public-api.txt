@@ -1,11 +1,11 @@
-Vaulter\Webhooks\Configuration\WebhooksConfig
-  __construct(\Illuminate\Contracts\Config\Repository $config)
+Vaulter\Webhooks\Configuration\WebhooksOptions
   allowedIpRanges(): array
   allowedSchemes(): array
   assertNoRemovedKeys(): void
   blockedIpRanges(): array
   connectTimeout(): int
   disableAfterDays(): int
+  fromArray(array $config, string $path = 'vaulter-webhooks'): self
   manageAbility(): ?string
   maxResponseBytes(): int
   model(string $key): string

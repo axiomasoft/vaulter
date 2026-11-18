@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Doctor\Enums\Severity as DoctorSeverity;
 use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Providers\CollaborationRegistrar;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRunner;
-use Vaulter\Doctor\DoctorSeverity;
 
 /** @return list<DoctorFinding> */
 function collaborationFindings(bool $production = false): array
@@ -71,7 +71,7 @@ it('warns while the draining flag refuses the appends', function (): void {
 
     expect($finding->code)->toBe('collaboration.draining')
         ->and($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and($finding->hint)->toContain('vaulter:collaboration:drain --release');
+        ->and($finding->remediation)->toContain('vaulter:collaboration:drain --release');
 });
 
 it('reports missing, short, unanchored and reused keys, a missing issuer and a wide clock skew as errors', function (): void {

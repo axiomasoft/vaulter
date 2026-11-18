@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
@@ -15,7 +16,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
  * 412 stale_write; a caller who may not manage endpoints is answered 403 before any precondition.
  */
 beforeEach(function (): void {
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs(V1::user(1));
 });
 
@@ -114,7 +115,7 @@ it('raises the version when the worker switches a failing endpoint off, so a tag
     Http::fake(['https://hooks.test/*' => Http::response('', 500)]);
     $endpoint = app(VaulterDatabase::class)->write(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
     $id = $endpoint->getKey();
-    $delivery = app(VaulterDatabase::class)->write(static fn () => WebhookTestHelpers::delivery($endpoint));
+    $delivery = app(VaulterDatabase::class)->write(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint));
 
     $shown = $this->getJson(V1::url('webhook-endpoints/'.$id))->assertOk()->assertHeader('ETag', webhookTag($id, 0));
     WebhookTestHelpers::deliver($delivery);

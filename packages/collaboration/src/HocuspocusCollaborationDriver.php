@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
@@ -14,7 +14,7 @@ use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 #[Internal]
 final readonly class HocuspocusCollaborationDriver implements CollaborationProtocolDriver
 {
-    public function __construct(private CollaborationConfig $config, private RoomTokens $tokens) {}
+    public function __construct(private CollaborationOptions $config, private RoomTokens $tokens) {}
 
     public function protocol(): string
     {

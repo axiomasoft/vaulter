@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks\Http\Resources\Webhooks;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Support\Preconditions;

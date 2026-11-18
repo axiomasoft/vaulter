@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks\Http\Requests\Webhooks;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;

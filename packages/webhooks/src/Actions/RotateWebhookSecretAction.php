@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Actions;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Data\RotatedWebhookSecret;
 use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -32,7 +32,7 @@ final readonly class RotateWebhookSecretAction
     public function __construct(
         private WebhookEndpointStoreRepository $endpoints,
         private VaulterDatabase $database,
-        private WebhooksConfig $config,
+        private WebhooksOptions $config,
         private AggregateVersion $versions,
         private TenancyBoundary $tenancy,
     ) {}

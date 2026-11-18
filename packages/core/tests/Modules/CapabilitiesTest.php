@@ -84,9 +84,15 @@ it('reads a config-chosen provider when resolved, falling back to its default', 
 });
 
 it('resolves every provider of a many capability and refuses require()', function (): void {
-    $capabilities = capabilitiesOf(Cardinality::Many, static function (ModuleBuilder $m): void {
-        $m->provides(Greeter::class, PlainGreeter::class)->provides(Greeter::class, LoudGreeter::class);
-    });
+    $compiled = (new ModuleCompiler)->compile([
+        new FixtureModule('host', declare: static fn (ModuleBuilder $m): ModuleBuilder => $m->defineCapability(Greeter::class, Cardinality::Many)),
+        new FixtureModule('first', requires: ['host' => '^1.0'], declare: static fn (ModuleBuilder $m): ModuleBuilder => $m->provides(Greeter::class, PlainGreeter::class)),
+        new FixtureModule('second', requires: ['host' => '^1.0'], declare: static fn (ModuleBuilder $m): ModuleBuilder => $m->provides(Greeter::class, LoudGreeter::class)),
+    ], []);
+    expect($compiled)->toBeInstanceOf(CompiledModules::class);
+    $container = new Container;
+    $container->instance(RepositoryContract::class, new Repository);
+    $capabilities = new Capabilities($compiled, $container);
 
     expect(array_map(static fn (Greeter $g): string => $g->greet(), $capabilities->all(Greeter::class)))->toBe(['hello', 'HELLO'])
         ->and(fn (): object => $capabilities->require(Greeter::class))->toThrow(MissingExtensionException::class, 'takes many providers');

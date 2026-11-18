@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\CoreModule;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\Operations\DriveOperationPolicies;
@@ -15,7 +16,6 @@ use Vaulter\Modules\CompiledModules;
 use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCompiler;
-use Vaulter\Modules\VaulterModule;
 use Vaulter\Operations\ConcurrencyPolicy;
 use Vaulter\Operations\IdempotencyPolicy;
 use Vaulter\Operations\OperationCatalog;
@@ -32,7 +32,7 @@ uses(TestCase::class, WithoutDatabaseSchema::class);
 // The operation catalogue — the policy of every mutating operation, declared by the active modules with
 // ModuleBuilder::operations(); a name has one owner.
 
-/** @param list<VaulterModule> $modules */
+/** @param list<ExtensionPlugin> $modules */
 function operationCatalogOf(array $modules, array $overrides = []): OperationCatalog
 {
     $compiled = (new ModuleCompiler)->compile($modules, $overrides);

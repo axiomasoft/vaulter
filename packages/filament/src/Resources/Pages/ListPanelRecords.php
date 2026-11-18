@@ -6,7 +6,7 @@ namespace Vaulter\Filament\Resources\Pages;
 
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Table;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The list page of a panel resource: its table is fed by the resource's custom records (the

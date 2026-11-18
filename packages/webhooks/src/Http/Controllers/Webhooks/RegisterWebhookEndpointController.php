@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Webhooks\Actions\RegisterWebhookEndpointAction;
 use Vaulter\Webhooks\Data\MintedEndpointSecret;
 use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
@@ -28,7 +28,7 @@ final readonly class RegisterWebhookEndpointController
             return new MintedEndpointSecret(endpoint: WebhookEndpointSnapshot::of($registered->endpoint), secret: $registered->signingSecret);
         }, ['url' => $data->url, 'events' => $data->events, 'is_active' => $data->isActive, 'drive_id' => $data->driveId]);
 
-        $resource = (new WebhookEndpointResource($minted->endpoint))->withSecret($minted->secret);
+        $resource = new WebhookEndpointResource($minted->endpoint)->withSecret($minted->secret);
 
         return $resource->response()->setStatusCode(201)->setEtag($resource->etag());
     }

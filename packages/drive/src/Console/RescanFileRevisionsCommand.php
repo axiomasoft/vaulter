@@ -50,7 +50,7 @@ final class RescanFileRevisionsCommand extends Command
     {
         $tenant = self::stringOption($command, 'tenant');
         $drive = self::stringOption($command, 'drive');
-        $all = (bool) $command->option('all-tenants');
+        $all = $command->option('all-tenants');
         $reason = self::stringOption($command, 'reason');
         $limit = filter_var($command->option('limit'), FILTER_VALIDATE_INT);
         if ($limit === false || $limit < 1 || $limit > 1000 || ($all && $tenant !== null)
@@ -63,7 +63,7 @@ final class RescanFileRevisionsCommand extends Command
         if ($reason === null && !$all && $command->getName() === 'vaulter:scan:reconcile') {
             $reason = 'vaulter:scan:reconcile';
         }
-        if (!(bool) $command->option('dry-run') && (!is_string($reason) || trim($reason) === '' || strlen($reason) > 191)) {
+        if (!$command->option('dry-run') && (!is_string($reason) || trim($reason) === '' || strlen($reason) > 191)) {
             throw new InvalidArgumentException('A nonempty maintenance reason is required.');
         }
 
@@ -104,7 +104,7 @@ final class RescanFileRevisionsCommand extends Command
 
     public function handle(VaulterDatabase $database, ScanPolicyResolver $policies, ActivateScanPolicyAction $activate,
         RequestScanWorkAction $requestWork, ScanEvidenceRepository $evidence, ScanSnapshot $snapshots,
-        ScanWorkReconciler $publisher): int
+        ScanWorkReconciler $publisher, DriveOptionsValidator $validator): int
     {
         $started = microtime(true);
         try {
@@ -112,29 +112,29 @@ final class RescanFileRevisionsCommand extends Command
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    return Tenancy::without(fn (): int => $this->handle($database, $policies, $activate, $requestWork, $evidence, $snapshots, $publisher));
+                    return Tenancy::without(fn (): int => $this->handle($database, $policies, $activate, $requestWork, $evidence, $snapshots, $publisher, $validator));
                 } finally {
                     $this->withinMaintenanceScope = false;
                 }
             }
-            $activating = (bool) $this->option('activate-policy');
-            if (((bool) $this->option('rescan') && (bool) $this->option('retry-failed'))
-                || ($activating && ((bool) $this->option('rescan') || (bool) $this->option('retry-failed') || $this->revisionKeys() !== []))) {
+            $activating = $this->option('activate-policy');
+            if (($this->option('rescan') && $this->option('retry-failed'))
+                || ($activating && ($this->option('rescan') || $this->option('retry-failed') || $this->revisionKeys() !== []))) {
                 throw new InvalidArgumentException('Contradictory scan flags.');
             }
             if (!$activating) {
                 if (!app(Kernel::class)->capabilities()->has(ContentScanner::class)) {
                     throw new InvalidArgumentException('Rescan requires a configured scanner.');
                 }
-                app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class), requireBroker: true);
+                $validator->validateScanWork(app(DriveOptions::class), requireBroker: true);
             }
             $request = self::stringOption($this, 'request-id') ?? (string) Str::uuid();
             if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $request) !== 1) {
                 throw new InvalidArgumentException('Request ID must be a UUIDv4.');
             }
             $request = strtolower($request);
-            $base = ['version' => 1, 'request_id' => $request, 'mode' => $activating ? 'activate' : ((bool) $this->option('rescan') ? 'rescan' : ((bool) $this->option('retry-failed') ? 'retry' : 'ensure')),
-                'tenant' => $scope['tenant'], 'drive' => $scope['drive'], 'all_tenants' => $scope['all'], 'filters' => $this->revisionKeys(), 'dry_run' => (bool) $this->option('dry-run'), 'spec_keys' => []];
+            $base = ['version' => 1, 'request_id' => $request, 'mode' => $activating ? 'activate' : ($this->option('rescan') ? 'rescan' : ($this->option('retry-failed') ? 'retry' : 'ensure')),
+                'tenant' => $scope['tenant'], 'drive' => $scope['drive'], 'all_tenants' => $scope['all'], 'filters' => $this->revisionKeys(), 'dry_run' => $this->option('dry-run'), 'spec_keys' => []];
             $drives = self::drives($scope);
             foreach (app(ProfileRegistry::class)->all() as $profile) {
                 $base['spec_keys'][$profile->getKey()] = array_map(fn (ScanPolicySpec $spec): string => $spec->configFingerprint(),
@@ -160,7 +160,7 @@ final class RescanFileRevisionsCommand extends Command
                     throw new InvalidArgumentException('Selected revision is outside the maintenance scope.');
                 }
             }
-            $out = self::summary('vaulter:scan:rescan', (bool) $this->option('dry-run'));
+            $out = self::summary('vaulter:scan:rescan', $this->option('dry-run'));
             $out['request_id'] = $request;
             $last = null;
             foreach ($drives->limit($scope['limit'] + 1)->get() as $drive) {
@@ -199,8 +199,8 @@ final class RescanFileRevisionsCommand extends Command
                     $last = ['last_drive_id' => $drive->id, 'last_revision_id' => $revision->id, 'last_admission_sequence' => $revision->scan_admission_sequence];
                     foreach ($specs as $spec) {
                         $existing = $revision->scanObligations()->where('spec_key', $spec->specKey())->first();
-                        if (!(bool) $this->option('rescan') && ($evidence->compatible($revision, $spec) !== null
-                            || ($existing?->state === 'settled' && !(bool) $this->option('retry-failed')))) {
+                        if (!$this->option('rescan') && ($evidence->compatible($revision, $spec) !== null
+                            || ($existing?->state === 'settled' && !$this->option('retry-failed')))) {
                             $out['skipped']++;
 
                             continue;
@@ -215,7 +215,7 @@ final class RescanFileRevisionsCommand extends Command
                             $snapshot = $snapshots->load($revision, true);
                             $policies->forDrive($snapshot['drive']);
                             $context = DriveContext::system($snapshot['drive'], $scope['reason']);
-                            $result = (bool) $this->option('rescan') || ((bool) $this->option('retry-failed') && $existing?->outcome === 'failed')
+                            $result = $this->option('rescan') || ($this->option('retry-failed') && $existing?->outcome === 'failed')
                                 ? $requestWork->requestRescan($snapshot['revision'], $spec, $request, $context)
                                 : $requestWork->ensure($snapshot['revision'], $spec, $request, $context);
                             if ($result->state !== 'settled') {
@@ -266,7 +266,7 @@ final class RescanFileRevisionsCommand extends Command
     private function revisionKeys(): array
     {
         $keys = $this->option('revision');
-        if (!is_array($keys) || !array_is_list($keys) || !array_all($keys, static fn (mixed $key): bool => is_string($key) && trim($key) !== '')) {
+        if (!array_is_list($keys) || !array_all($keys, static fn (mixed $key): bool => is_string($key) && trim($key) !== '')) {
             throw new InvalidArgumentException('Invalid revision selection.');
         }
         $validated = [];

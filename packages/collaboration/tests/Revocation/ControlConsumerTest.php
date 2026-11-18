@@ -8,8 +8,9 @@ use Illuminate\Redis\Connections\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Collaboration\CollaborationCallResolver;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Revocation\ControlConsumer;
 use Vaulter\Collaboration\Revocation\ControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\HttpControlTransport;
@@ -18,7 +19,7 @@ use Vaulter\Collaboration\Revocation\Transports\RedisControlTransport;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\RecordingControlTransport;
 use Vaulter\Collaboration\Tests\Support\Revocation;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Access\AccessInvalidation;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -27,8 +28,8 @@ use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\DeliveryClass;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Events\Outbox\OutboxStore;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
+use Vaulter\Modules\SlotContribution;
 use Vaulter\Testing\FakeMetricsRecorder;
 
 /**
@@ -50,11 +51,11 @@ beforeEach(function (): void {
 /** @return list<string> the states of the control consumer's delivery rows */
 function controlDeliveryStates(): array
 {
-    return DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', ControlConsumer::ID)->orderBy('outbox_seq')->pluck('state')->all();
+    return DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', ControlConsumer::ID)->orderBy('outbox_seq')->pluck('state')->all();
 }
 
 it('is an ephemeral outbox consumer of the effective-permissions events only', function (): void {
-    $ids = array_map(static fn ($contribution): string => $contribution->id, app(Kernel::class)->extensions()->contributions(OutboxConsumer::class));
+    $ids = array_map(static fn (SlotContribution $contribution): string => $contribution->id, app(Kernel::class)->extensions()->contributions(OutboxConsumer::class));
     $consumer = app(ControlConsumer::class);
 
     expect($ids)->toContain(ControlConsumer::ID)
@@ -110,7 +111,7 @@ it('logs and counts a failed message and finishes its delivery without a retry',
 
 it('drops a change older than the token lifetime: no token it concerns is alive, so it is never replayed late', function (): void {
     $this->drive->archive();
-    $this->travel(app(CollaborationConfig::class)->hubTokenTtl() + app(CollaborationConfig::class)->hubClockSkew() + 1)->seconds();
+    $this->travel(app(CollaborationOptions::class)->hubTokenTtl() + app(CollaborationOptions::class)->hubClockSkew() + 1)->seconds();
     Revocation::relayControl();
 
     expect($this->transport->messages)->toBe([])
@@ -141,7 +142,7 @@ it('selects the transport the configuration names', function (): void {
     expect($transport('redis'))->toBeInstanceOf(RedisControlTransport::class)
         ->and($transport('http'))->toBeInstanceOf(HttpControlTransport::class)
         ->and($transport('none'))->toBeInstanceOf(NoControlTransport::class)
-        ->and(fn () => $transport('kafka'))->toThrow(InvalidConfigurationException::class);
+        ->and(fn (): ControlTransport => $transport('kafka'))->toThrow(InvalidConfiguration::class);
 });
 
 it('publishes on the vaulter:collab:control channel of the configured Redis connection', function (): void {
@@ -151,7 +152,7 @@ it('publishes on the vaulter:collab:control channel of the configured Redis conn
     $redis = Mockery::mock(Factory::class);
     $redis->shouldReceive('connection')->once()->with('control')->andReturn($connection);
 
-    (new RedisControlTransport($redis, app(CollaborationConfig::class)))->publish('{"v":1}');
+    new RedisControlTransport($redis, app(CollaborationOptions::class))->publish('{"v":1}');
 
     expect(RedisControlTransport::CHANNEL)->toBe('vaulter:collab:control');
 });

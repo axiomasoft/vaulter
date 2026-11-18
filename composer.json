@@ -33,16 +33,25 @@
             "type": "path",
             "url": "../packman/packages/*",
             "options": {
-                "symlink": true,
+                "symlink": false,
                 "versions": {
                     "axiomasoft/packman": "0.1.x-dev",
                     "axiomasoft/packman-devtools": "0.1.x-dev",
                     "axiomasoft/packman-filament": "0.1.x-dev",
-                    "axiomasoft/packman-modules": "0.1.x-dev",
                     "axiomasoft/packman-panels": "0.1.x-dev",
                     "axiomasoft/packman-plugins": "0.1.x-dev",
                     "axiomasoft/packman-schema": "0.1.x-dev",
                     "axiomasoft/packman-testkit": "0.1.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../azguard/packages/*",
+            "options": {
+                "symlink": false,
+                "versions": {
+                    "axiomasoft/azguard": "2.0.x-dev"
                 }
             }
         }
@@ -55,18 +64,22 @@
         "axiomasoft/vaulter-core": "@dev",
         "axiomasoft/vaulter-documents": "@dev",
         "axiomasoft/vaulter-drive": "@dev",
-        "axiomasoft/vaulter-media": "@dev"
+        "axiomasoft/vaulter-media": "@dev",
+        "axiomasoft/vaulter": "@dev"
     },
     "require-dev": {
         "axiomasoft/packman-devtools": "^0.1",
         "axiomasoft/packman-testkit": "^0.1",
+        "axiomasoft/vaulter-azguard": "@dev",
         "axiomasoft/vaulter-collaboration": "@dev",
+        "axiomasoft/vaulter-filament": "@dev",
         "axiomasoft/vaulter-webhooks": "@dev",
         "driftingly/rector-laravel": "^2.7",
         "firebase/php-jwt": "^7.0",
         "larastan/larastan": "^3.12",
         "laravel/pao": "^1.1",
         "laravel/pint": "^1.32",
+        "laravel/sanctum": "^4.0",
         "league/flysystem-aws-s3-v3": "^3.0",
         "nikic/php-parser": "^5.7",
         "open-telemetry/api": "^1.1",
@@ -86,7 +99,13 @@
             "Vaulter\\Integration\\Tests\\": "tests/Integration/",
             "Vaulter\\Documents\\Tests\\": "packages/documents/tests/",
             "Vaulter\\Load\\": "load/app/",
-            "Vaulter\\Load\\Tests\\": "load/tests/"
+            "Vaulter\\Load\\Tests\\": "load/tests/",
+            "Vaulter\\Media\\Tests\\": "packages/media/tests/",
+            "Vaulter\\Drive\\Tests\\": "packages/drive/tests/",
+            "Vaulter\\Collaboration\\Tests\\": "packages/collaboration/tests/",
+            "Vaulter\\Webhooks\\Tests\\": "packages/webhooks/tests/",
+            "Vaulter\\AzGuard\\Tests\\": "packages/azguard/tests/",
+            "Vaulter\\Filament\\Tests\\": "packages/filament/tests/"
         }
     },
     "extra": {
@@ -102,7 +121,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
-        "process-timeout": 1200,
+        "process-timeout": 1800,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
@@ -117,8 +136,8 @@
         "analyse": "vendor/bin/phpstan analyse --memory-limit=1G --no-progress",
         "refactor": "vendor/bin/rector process",
         "refactor:check": "vendor/bin/rector process --dry-run",
-        "test": "scripts/t sqlite -p core",
-        "test:pg": "scripts/t pgsql -p core --full",
+        "test": "scripts/t sqlite",
+        "test:pg": "scripts/t pgsql --full",
         "test:all": "scripts/t sqlite",
         "test:changed": "scripts/t --changed --db=pgsql",
         "test:db": "scripts/t pgsql --group=database",

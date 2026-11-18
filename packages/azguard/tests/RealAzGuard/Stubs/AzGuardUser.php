@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard\Tests\RealAzGuard\Stubs;
 
-use AzGuard\Concerns\HasAzGuard;
+use AzGuard\Concerns\Subjects\HasAzGuard;
 use Illuminate\Foundation\Auth\User;
 use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
 

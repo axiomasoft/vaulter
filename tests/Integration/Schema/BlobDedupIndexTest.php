@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Media\Schema\MediaSchema;
 
 /** Every configured scope uses the same NULL-free scope_key index. */
 function dedupIndexColumns(): array
 {
-    $table = app(DatabaseConfig::class)->table('blobs');
+    $table = app(DatabaseOptions::class)->table('blobs');
     $name = $table.'_scope_sha_uniq';
 
     $indexes = array_column(Schema::getIndexes($table), null, 'name');
@@ -19,8 +19,8 @@ function dedupIndexColumns(): array
 
 function rebuildBlobsTable(): void
 {
-    $builder = app(MediaSchema::class);
     config()->set('vaulter.database.table_prefix', 'dedup_test_');
+    $builder = app(MediaSchema::class);
 
     $builder->drop(entity: 'blobs');
     $builder->create(entity: 'blobs');
@@ -28,7 +28,7 @@ function rebuildBlobsTable(): void
 
 function storageKeyIndexColumns(): array
 {
-    $table = app(DatabaseConfig::class)->table('blobs');
+    $table = app(DatabaseOptions::class)->table('blobs');
     $name = $table.'_storage_key_uniq';
 
     $indexes = array_column(Schema::getIndexes($table), null, 'name');

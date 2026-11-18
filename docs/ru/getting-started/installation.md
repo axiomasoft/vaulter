@@ -18,15 +18,15 @@ PHP `^8.4`, Laravel `^13.0` и (для UI) Vue `^3.4` / Node `>=26`. Подде�
 ## 1. Бэкенд — Laravel-пакет
 
 Для полного продукта поставьте метапакет. В нём нет собственного кода: он требует
-`axioma-studio/vaulter-core`, `-media`, `-drive` и `-documents` ровно своей версии:
+`axiomasoft/vaulter-core`, `-media`, `-drive` и `-documents` ровно своей версии:
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter
+composer require axiomasoft/vaulter
 ```
 
-Сам по себе `axioma-studio/vaulter-core` не даёт ни Drive, ни функций редактирования
+Сам по себе `axiomasoft/vaulter-core` не даёт ни Drive, ни функций редактирования
 документов — это ядро (модульная система, операции, события с outbox, идемпотентность, ошибки, каркасы HTTP и
 конфига), и доменных таблиц у него нет. Чтобы взять только часть продукта, подключите именно те пакеты, которые
 нужны вашему приложению:
@@ -34,15 +34,15 @@ composer require axioma-studio/vaulter
 <!-- snippet: shell -->
 
 ```bash
-# Drive (папки/файлы/загрузки) — автоматически подтягивает axioma-studio/vaulter-media (CAS)
-composer require axioma-studio/vaulter-drive
+# Drive (папки/файлы/загрузки) — автоматически подтягивает axiomasoft/vaulter-media (CAS)
+composer require axiomasoft/vaulter-drive
 
 # Документные узлы (редактирование TipTap/Yjs, версии, комментарии) — требует vaulter-drive
-composer require axioma-studio/vaulter-documents
+composer require axiomasoft/vaulter-documents
 ```
 
-Любая из команд также подтянет `axioma-studio/vaulter-core` как зависимость, поэтому
-установка одного `axioma-studio/vaulter-core` имеет смысл только если вы строите собственные модули
+Любая из команд также подтянет `axiomasoft/vaulter-core` как зависимость, поэтому
+установка одного `axiomasoft/vaulter-core` имеет смысл только если вы строите собственные модули
 поверх ядра.
 
 Три пакета не входят в метапакет и ставятся по необходимости. Каждый требует `vaulter-drive`:
@@ -51,13 +51,13 @@ composer require axioma-studio/vaulter-documents
 
 ```bash
 # Исходящие вебхуки (opt-in модуль, см. ниже)
-composer require axioma-studio/vaulter-webhooks
+composer require axiomasoft/vaulter-webhooks
 
 # Админ-панель для Filament 5
-composer require axioma-studio/vaulter-filament
+composer require axiomasoft/vaulter-filament
 
 # Драйвер прав AzGuard
-composer require axioma-studio/vaulter-azguard
+composer require axiomasoft/vaulter-azguard
 ```
 
 `vaulter-webhooks` открывает исходящий сетевой трафик, поэтому его модуль выключен, пока вы не включите его в

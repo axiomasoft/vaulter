@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Artisan;
 use Packman\Attributes\Internal;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\ModuleDeclarations;
 
 /**
  * Regenerates the command table of the reference docs from the registered vaulter:*
@@ -77,7 +77,7 @@ final class CommandsReferenceCommand extends Command
         $catalog = ModuleCatalog::of($container);
         $classes = [];
         foreach ($catalog->offered() as $manifest) {
-            $builder = PluginModuleBridge::buildOffered($manifest, $catalog->pluginSpec($manifest));
+            $builder = ModuleDeclarations::buildOffered($manifest, $catalog->pluginSpec($manifest));
             if ($builder !== null) {
                 array_push($classes, ...$builder->commandClasses());
             }
@@ -106,13 +106,13 @@ final class CommandsReferenceCommand extends Command
 
     public function handle(): int
     {
-        $paths = array_values(array_filter((array) $this->option('path'), is_string(...)));
+        $paths = array_values(array_filter($this->option('path'), is_string(...)));
         if ($paths === []) {
             // The pages live in the monorepo, not in the host application.
             $root = dirname(__DIR__, 4);
             $paths = [$root.'/docs/reference/commands.md', $root.'/docs/ru/reference/commands.md'];
         }
-        $check = (bool) $this->option('check');
+        $check = $this->option('check');
         $stale = false;
 
         foreach ($paths as $path) {

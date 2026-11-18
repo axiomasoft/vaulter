@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Livewire\Mechanisms\DataStore;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
-use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Configuration\SharingOptions;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
@@ -49,7 +49,7 @@ it('creates a share link through the core CreateShareLinkAction', function (): v
         'password' => '',
         'max_uses' => null,
         'expires_at' => '',
-    ], app(SharingConfig::class));
+    ], app(SharingOptions::class));
 
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
@@ -77,7 +77,7 @@ it('preserves the validated share form contract and one-time token notification'
         'password' => 'top-secret',
         'expires_at' => $expires->toDateTimeString(),
         'max_uses' => '7',
-    ], app(SharingConfig::class));
+    ], app(SharingOptions::class));
 
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
@@ -91,7 +91,7 @@ it('preserves the validated share form contract and one-time token notification'
         ->and((string) $share->granted_by)->toBe('51');
 
     $notification = pullSentNotifications()[0] ?? null;
-    $prefix = 'Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/';
+    $prefix = 'Copy it now — it is shown only once: '.app(SharingOptions::class)->urlBase.'/';
 
     expect($notification)->toBeArray()
         ->and($notification['title'])->toBe('Share link created')
@@ -122,7 +122,7 @@ it('applies safe share defaults to omitted and blank optional values', function 
             'password' => '',
             'expires_at' => '',
             'max_uses' => '',
-        ], app(SharingConfig::class));
+        ], app(SharingOptions::class));
 
         $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
@@ -131,7 +131,7 @@ it('applies safe share defaults to omitted and blank optional values', function 
             ->and($share->audience)->toBe(ShareAudience::Anyone)
             ->and($share->scope)->toBe(GrantScope::Item)
             ->and($share->password_hash)->toBeNull()
-            ->and($share->expires_at?->equalTo(now()->addHours(app(SharingConfig::class)->defaultTtlHours())))->toBeTrue()
+            ->and($share->expires_at?->equalTo(now()->addHours(app(SharingOptions::class)->defaultTtlHours)))->toBeTrue()
             ->and($share->max_uses)->toBeNull()
             ->and((string) $share->granted_by)->toBe('52');
     } finally {
@@ -142,7 +142,7 @@ it('applies safe share defaults to omitted and blank optional values', function 
 it('rejects a missing share node with the declared warning', function (): void {
     pullSentNotifications();
 
-    NodeShareResource::createFromData([], app(SharingConfig::class));
+    NodeShareResource::createFromData([], app(SharingOptions::class));
 
     $notification = pullSentNotifications()[0] ?? null;
 
@@ -181,7 +181,7 @@ it('injects live sharing configuration into the create form and action and enfor
 
     $tooLate = [...$data, 'expires_at' => now()->addHours(3)->toDateTimeString()];
     $panel->callAction('create', data: $tooLate)->assertHasActionErrors(['expires_at' => 'before_or_equal']);
-    expect(fn () => NodeShareResource::createFromData($tooLate, app(SharingConfig::class)))
+    expect(fn () => NodeShareResource::createFromData($tooLate, app(SharingOptions::class)))
         ->toThrow(ValidationException::class);
     expect(NodeShare::query()->count())->toBe(1);
 });
@@ -203,7 +203,7 @@ it('never persists the raw token — only its hash and prefix', function (): voi
         'password' => '',
         'max_uses' => null,
         'expires_at' => '',
-    ], app(SharingConfig::class));
+    ], app(SharingOptions::class));
 
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
@@ -231,7 +231,7 @@ it('reveals the token prefix but never the full hash in the prefix column', func
         'password' => '',
         'max_uses' => null,
         'expires_at' => '',
-    ], app(SharingConfig::class));
+    ], app(SharingOptions::class));
 
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
@@ -257,7 +257,7 @@ it('revokes a share link through the core RevokeShareLinkAction', function (): v
         'password' => '',
         'max_uses' => null,
         'expires_at' => '',
-    ], app(SharingConfig::class));
+    ], app(SharingOptions::class));
 
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
     expect($share->isRevoked())->toBeFalse();
@@ -286,7 +286,7 @@ it('does not create a share when the admin may not share the node', function ():
         'password' => '',
         'max_uses' => null,
         'expires_at' => '',
-    ], app(SharingConfig::class));
+    ], app(SharingOptions::class));
 
     $notification = pullSentNotifications()[0] ?? null;
 
@@ -305,9 +305,9 @@ it('answers a node the admin cannot see exactly like a missing node', function (
 
     pullSentNotifications();
 
-    NodeShareResource::createFromData(['node_id' => $folder->getKey()], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $folder->getKey()], app(SharingOptions::class));
     $hidden = pullSentNotifications()[0] ?? null;
-    NodeShareResource::createFromData(['node_id' => 987654], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => 987654], app(SharingOptions::class));
     $missing = pullSentNotifications()[0] ?? null;
 
     expect(app(NodeShareReadRepository::class)->forNode($folder)->count())->toBe(0)
@@ -323,7 +323,7 @@ it('does not mint or list shares when the feature is disabled', function (): voi
     $node = DriveBuilder::folder($drive);
     DriveBuilder::grant($node, $owner);
     config()->set('vaulter-drive.features.share_links', false);
-    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingOptions::class));
     expect(NodeShare::query()->count())->toBe(0)
         ->and(PanelShares::rows())->toBe([]);
 });
@@ -335,7 +335,7 @@ it('rechecks the reader ability inside the actual revoke mutation', function ():
     DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     $grant = DriveBuilder::grant($node, $owner);
-    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingOptions::class));
     $share = NodeShare::query()->sole();
     $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
     expect(fn () => NodeShareResource::revokeRecord(DriveBuilder::shareRow($share)))->toThrow(PermissionDeniedException::class)
@@ -350,7 +350,7 @@ it('rotates a link through the core Action and rechecks Share inside the mutatio
     DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     $grant = DriveBuilder::grant($node, $owner);
-    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingOptions::class));
     $share = NodeShare::query()->sole();
     $before = $share->token_hash;
 
@@ -361,12 +361,12 @@ it('rotates a link through the core Action and rechecks Share inside the mutatio
         ->and($share->fresh()->token_generation)->toBe(2);
 
     $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
-    expect(fn () => NodeShareResource::rotateRecord(DriveBuilder::shareRow($share)))->toThrow(PermissionDeniedException::class)
+    expect(fn (): string => NodeShareResource::rotateRecord(DriveBuilder::shareRow($share)))->toThrow(PermissionDeniedException::class)
         ->and($share->fresh()->token_generation)->toBe(2);
 });
 
 it('offers organizer and owner roles to nobody', function (): void {
-    $options = (new ReflectionClass(NodeShareResource::class))->getMethod('roleOptions')->invoke(null);
+    $options = new ReflectionClass(NodeShareResource::class)->getMethod('roleOptions')->invoke(null);
 
     expect(array_keys($options))->toBe([RoleRegistry::PREVIEWER, RoleRegistry::READER, RoleRegistry::COMMENTER, RoleRegistry::WRITER]);
 });
@@ -380,10 +380,10 @@ it('shows the refusal instead of failing when the role does not fit the audience
     DriveBuilder::grant($node, $owner);
     pullSentNotifications();
 
-    NodeShareResource::createFromData(['node_id' => $node->id, 'role' => RoleRegistry::WRITER, 'audience' => ShareAudience::Anyone->value], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id, 'role' => RoleRegistry::WRITER, 'audience' => ShareAudience::Anyone->value], app(SharingOptions::class));
     $writer = pullSentNotifications()[0] ?? null;
     pullSentNotifications();
-    NodeShareResource::createFromData(['node_id' => $node->id, 'audience' => ShareAudience::Tenant->value], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id, 'audience' => ShareAudience::Tenant->value], app(SharingOptions::class));
     $tenant = pullSentNotifications()[0] ?? null;
 
     expect(NodeShare::query()->count())->toBe(0)
@@ -401,8 +401,8 @@ it('renders the share table from the share listings, filters revoked links and r
     DriveBuilder::openDrive($storage, $owner);
     $node = DriveBuilder::folder($storage, 'Shared');
     DriveBuilder::grant($node, $owner);
-    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingConfig::class));
-    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingOptions::class));
+    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingOptions::class));
     [$live, $revoked] = NodeShare::query()->orderBy('id')->get()->all();
     NodeShareResource::revokeRecord(DriveBuilder::shareRow($revoked));
 
@@ -431,7 +431,7 @@ it('shows the status of a share row without ever carrying its token', function (
     DriveBuilder::openDrive($storage, $owner);
     $node = DriveBuilder::folder($storage, 'Statuses');
     DriveBuilder::grant($node, $owner);
-    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingConfig::class));
+    NodeShareResource::createFromData(['node_id' => $node->id], app(SharingOptions::class));
     $share = NodeShare::query()->sole();
 
     $row = PanelShares::rows()[0];

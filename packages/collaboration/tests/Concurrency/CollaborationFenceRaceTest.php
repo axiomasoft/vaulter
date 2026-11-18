@@ -43,7 +43,7 @@ it('serializes an append of the old room against a restore: never a record of th
 
     // The room's first record of an empty generation is its seed; the log takes no client update before it.
     $results = RaceFixtures::race([
-        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'late-room-seed', $version)),
+        static fn (): array => RaceFixtures::attempt(static fn (): mixed => fenceRaceAppend($node, 'late-room-seed', $version)),
         static fn (): array => RaceFixtures::attempt(static fn () => app(RestoreDocumentRevisionAction::class)->execute(
             DocumentTestHelpers::context($node, actorId: 1), new RestoreDocumentRevisionInput(node: $node, revision: $first),
         )),
@@ -69,8 +69,8 @@ it('lets exactly one of two concurrent seeds of an empty generation through', fu
     $version = DocumentTestHelpers::document($node)->state_version;
 
     $results = RaceFixtures::race([
-        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'seed-a', $version)),
-        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'seed-b', $version)),
+        static fn (): array => RaceFixtures::attempt(static fn (): mixed => fenceRaceAppend($node, 'seed-a', $version)),
+        static fn (): array => RaceFixtures::attempt(static fn (): mixed => fenceRaceAppend($node, 'seed-b', $version)),
     ]);
     $kinds = array_column($results, 'kind');
     sort($kinds);

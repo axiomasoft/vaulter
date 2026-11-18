@@ -4,6 +4,7 @@ includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
+    level: max
     tmpDir: build/phpstan
     paths:
         - packages/core/src
@@ -14,6 +15,12 @@ parameters:
         - packages/drive/database
         - packages/documents/src
         - packages/documents/database
+        - packages/collaboration/src
+        - packages/collaboration/database
+        - packages/webhooks/src
+        - packages/webhooks/database
+        - packages/azguard/src
+        - packages/filament/src
 
     inferPrivatePropertyTypeFromConstructor: true
 
@@ -52,4 +59,4 @@ parameters:
         # Larastan marks forwarded Eloquent/Container/Auth magic reflections as isStatic(): true, colliding with phpstan-strict-rules.
         -
             identifier: staticMethod.dynamicCall
-            message: '#^Dynamic call to static method (Illuminate\\Database\\Eloquent\\(Builder|Model)|Vaulter\\Drive\\Repositories\\NodeQueryBuilder|Illuminate\\Container\\Container|Illuminate\\Contracts\\Auth\\(Guard|Authenticatable))#'
+            message: '#^Dynamic call to static method (Illuminate\\Database\\Eloquent\\(Builder|Model)|Vaulter\\Drive\\Repositories\\NodeQueryBuilder|Illuminate\\Container\\Container|Illuminate\\Contracts\\Auth\\(Guard|Authenticatable)|Illuminate\\Auth\\SessionGuard|Illuminate\\Http\\Client\\PendingRequest)#'

@@ -31,6 +31,7 @@ final readonly class MediaOptions implements OptionsFactory
      * @param class-string<BlobStore>     $blobStore
      * @param class-string<Blob>          $blobModel
      */
+    #[Internal]
     public function __construct(
         public string $disk = 'local',
         public DedupScope $dedupScope = DedupScope::Tenant,
@@ -44,6 +45,7 @@ final readonly class MediaOptions implements OptionsFactory
         public string $contentStore = Sha256ContentStore::class,
         public string $storageDriver = FlysystemStorageDriver::class,
         public string $blobStore = DefaultBlobStore::class,
+        #[Internal]
         public string $blobModel = Blob::class,
     ) {}
 

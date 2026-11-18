@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard\Contracts;
 
-use AzGuard\Contracts\AzGuardSubject;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use AzGuard\Contracts\Subjects\AzGuardSubject;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The host user the {@see AzGuardGuardAdapter} bridges into
@@ -17,7 +17,7 @@ use Vaulter\Attributes\SpiKind;
  * A host User satisfies it with NO extra method bodies — AzGuard's trait already
  * implements every method:
  *
- *   use AzGuard\Concerns\HasAzGuard;
+ *   use AzGuard\Concerns\Subjects\HasAzGuard;
  *   use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
  *
  *   class User extends Authenticatable implements AzGuardBackedUser

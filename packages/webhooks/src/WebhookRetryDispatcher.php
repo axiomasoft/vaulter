@@ -6,14 +6,14 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Identity;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 
@@ -42,7 +42,7 @@ final class WebhookRetryDispatcher
     private const int MAX_CLAIM_ROWS = 1000;
 
     public function __construct(
-        private readonly WebhooksConfig $webhooksConfig,
+        private readonly WebhooksOptions $webhooksConfig,
         private readonly MetricsRecorder $metrics,
         private readonly TraceRecorder $tracer,
         private readonly VaulterDatabase $database,

@@ -33,8 +33,8 @@ final class RecountDrivesCommand extends Command
 
     public function handle(RecountDriveQuotaAction $recount, DriveOptions $config): int
     {
-        $dryRun = (bool) $this->option('dry-run');
-        $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
+        $dryRun = $this->option('dry-run');
+        $only = array_values(array_filter(array_map(Identity::stringify(...), $this->option('drive')), static fn (string $id): bool => $id !== ''));
         $failed = false;
         $checked = 0;
         $drifted = 0;

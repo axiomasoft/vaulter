@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Security;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Security\ProductionInvariant;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /** The blocked ranges may be extended but never narrowed below the built-in private/loopback/link-local defaults. */
 #[Internal]
 final readonly class BlockedRangesInvariant implements ProductionInvariant
 {
-    public function __construct(private WebhooksConfig $config) {}
+    public function __construct(private WebhooksOptions $config) {}
 
     public function id(): string
     {
@@ -25,7 +25,7 @@ final readonly class BlockedRangesInvariant implements ProductionInvariant
         $configured = $this->config->blockedIpRanges();
         $missing = [];
 
-        foreach (WebhooksConfig::DEFAULT_BLOCKED_IP_RANGES as $default) {
+        foreach (WebhooksOptions::DEFAULT_BLOCKED_IP_RANGES as $default) {
             if (!$this->covered($default, $configured)) {
                 $missing[] = $default;
             }

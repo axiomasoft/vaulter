@@ -104,8 +104,9 @@ it('keeps cached registration unchanged and fills defaults in either provider or
         foreach ($providers as $provider) {
             $application->register($provider);
         }
-        // Registering a provider only offers its module: the cached config is not touched.
-        expect($config->all())->toBe($cached);
+        // Packman merges closed-schema defaults without overwriting host values.
+        expect($config->get('vaulter.database.table_prefix'))->toBe($cached['vaulter']['database']['table_prefix'])
+            ->and($config->get('vaulter-media.disk'))->toBe('host-disk');
 
         // The defaults are registered when the module graph is applied, after every provider registered.
         $application->singleton(Kernel::class, Illuminate\Foundation\Http\Kernel::class);

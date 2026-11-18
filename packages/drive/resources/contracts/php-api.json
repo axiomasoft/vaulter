@@ -10169,6 +10169,7 @@
                 "Packman\\Extensions\\Contracts\\Composition\\WithCapabilities",
                 "Packman\\Extensions\\Contracts\\Configuration\\WithConfiguration",
                 "Packman\\Extensions\\Contracts\\Runtime\\WithDiagnostics",
+                "Vaulter\\Modules\\WithModuleRuntime",
                 "Packman\\Extensions\\Contracts\\Persistence\\WithSchema",
                 "Packman\\Extensions\\Contracts\\Composition\\WithSlots"
             ],
@@ -10249,6 +10250,16 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "string",
+                    "doc": []
+                },
+                "moduleRuntime": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
                     "doc": []
                 },
                 "optionsClass": {

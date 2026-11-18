@@ -1,10 +1,6 @@
 # Surface manifest of the package `core` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
-Vaulter\Attributes\Api api since 1.0 final readonly class
-  public string $since
-  public function __construct(string $since = '1.0')
-
 Vaulter\Attributes\EventSpec api since 1.0 final readonly class
   public bool $activity
   public array $data
@@ -20,97 +16,133 @@ Vaulter\Attributes\Icon api since 1.0 final readonly class
   public string $value
   public function __construct(string $value)
 
-Vaulter\Attributes\Internal api since 1.0 final readonly class
-  public ?string $reason
-  public function __construct(?string $reason = null)
-
 Vaulter\Attributes\Label api since 1.0 final readonly class
   public string $value
   public function __construct(string $value)
 
-Vaulter\Attributes\Spi api since 1.0 final readonly class
-  public Vaulter\Attributes\SpiKind $kind
-  public string $since
-  public function __construct(Vaulter\Attributes\SpiKind $kind, string $since = '1.0')
-
-Vaulter\Attributes\SpiKind api since 1.0 enum: string
-  case Call = 'call'
-  case Implement = 'implement'
+Vaulter\Configuration\CompiledOptionsCache spi:call since 1.0 final class
+  public static function resolve(Illuminate\Contracts\Container\Container $app, string $configKey, Closure $compile): object
 
 Vaulter\Configuration\ConfigNormalizer api since 1.0 final class
   public function normalize(Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
   public function packageDefaults(): array
   public function registerDefaults(string $root, string $path): void
 
-Vaulter\Configuration\ConfigValidator api since 1.0 final readonly class
-  public static function assertImplements(string $key, string $class, string $base): void
-  public static function assertModel(string $key, string $class, string $base): void
-  public function validate(Vaulter\Configuration\VaulterConfig $config, Illuminate\Contracts\Foundation\Application $app): void
-
-Vaulter\Configuration\DatabaseConfig api since 1.0 final readonly class
-  public function connection(): ?string
+Vaulter\Configuration\DatabaseOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public ?string $connection
+  public string $tablePrefix
+  public bool $writeGuard
+  public function __construct(?string $connection = null, string $tablePrefix = 'v_', bool $writeGuard = true)
+  public static function fromArray(array $config, string $path = 'vaulter.database'): self
   public function table(string $name): string
-  public function tablePrefix(): string
-  public function writeGuard(): bool
 
-Vaulter\Configuration\IdsConfig api since 1.0 final readonly class
-  public function hostKeys(): string
-  public function strategies(): array
-  public function strategy(): string
+Vaulter\Configuration\IdempotencyOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public int $ttlSeconds
+  public function __construct(int $ttlSeconds = \Vaulter\Idempotency\IdempotencyClaim::DEFAULT_TTL_SECONDS)
+  public static function fromArray(array $config, string $path = 'vaulter.idempotency'): self
+
+Vaulter\Configuration\IdsOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public string $hostKeys
+  public array $strategies
+  public string $strategy
+  public function __construct(string $strategy = 'ulid', string $hostKeys = 'string', array $strategies = ['bigint' => \Vaulter\Schema\AutoIncrementIds::class, 'ulid' => \Vaulter\Schema\UlidIds::class, 'uuid7' => \Vaulter\Schema\Uuid7Ids::class])
+  public static function fromArray(array $config, string $path = 'vaulter.ids'): self
   public function usesUlids(): bool
 
-Vaulter\Configuration\ObservabilityConfig api since 1.0 final readonly class
-  public function enabled(): bool
-  public function recorder(): ?string
-  public function tracingEnabled(): bool
-  public function tracingRecorder(): ?string
+Vaulter\Configuration\ModelsOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public static function fromArray(array $config, string $path = 'vaulter.models'): self
 
-Vaulter\Configuration\OutboxConfig api since 1.0 final readonly class
-  public function backoffBaseSeconds(): int
-  public function backoffCapSeconds(): int
-  public function batch(): int
-  public function deadRetentionSeconds(): int
-  public function leaseSeconds(): int
-  public function maxAttempts(): int
-  public function maxConsumerHoldSeconds(): int
-  public function retentionSeconds(): int
-  public function settleWindowSeconds(): int
-  public function validate(): void
+Vaulter\Configuration\ObservabilityOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public bool $enabled
+  public ?string $recorder
+  public Vaulter\Configuration\TracingOptions $tracing
+  public function __construct(bool $enabled = false, ?string $recorder = null, Vaulter\Configuration\TracingOptions $tracing = new \Vaulter\Configuration\TracingOptions())
+  public static function fromArray(array $config, string $path = 'vaulter.observability'): self
 
-Vaulter\Configuration\RoutesConfig api since 1.0 final readonly class
+Vaulter\Configuration\OutboxOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public int $backoffBaseSeconds
+  public int $backoffCapSeconds
+  public int $batch
+  public int $deadRetentionSeconds
+  public int $leaseSeconds
+  public int $maxAttempts
+  public int $maxConsumerHoldSeconds
+  public int $retentionSeconds
+  public int $settleWindowSeconds
+  public function __construct(int $settleWindowSeconds = 300, int $retentionSeconds = 604800, int $maxConsumerHoldSeconds = 604800, int $deadRetentionSeconds = 2592000, int $leaseSeconds = 60, int $batch = 100, int $maxAttempts = 10, int $backoffBaseSeconds = 2, int $backoffCapSeconds = 3600)
+  public static function fromArray(array $config, string $path = 'vaulter.outbox'): self
+
+Vaulter\Configuration\RouteMiddlewareOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public array $authenticated
+  public array $hub
+  public array $public
+  public function __construct(array $authenticated = ['api', 'auth:sanctum'], array $public = ['api'], array $hub = ['api'])
+  public static function fromArray(array $config, string $path = 'vaulter.routes.middleware'): self
+
+Vaulter\Configuration\RouteRateLimitsOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public int $public
+  public int $uploads
+  public function __construct(int $public = 60, int $uploads = 120)
+  public static function fromArray(array $config, string $path = 'vaulter.routes.rate_limits'): self
+
+Vaulter\Configuration\RoutesOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public Vaulter\Configuration\RouteMiddlewareOptions $middleware
+  public string $prefix
+  public Vaulter\Configuration\RouteRateLimitsOptions $rateLimits
+  public function __construct(string $prefix = 'api/vaulter', Vaulter\Configuration\RouteMiddlewareOptions $middleware = new \Vaulter\Configuration\RouteMiddlewareOptions(), Vaulter\Configuration\RouteRateLimitsOptions $rateLimits = new \Vaulter\Configuration\RouteRateLimitsOptions())
   public function authenticatedMiddleware(): array
+  public static function fromArray(array $config, string $path = 'vaulter.routes'): self
   public function hubMiddleware(): array
-  public function prefix(): string
   public function publicMiddleware(): array
-  public function publicRateLimit(): int
-  public function uploadsRateLimit(): int
   public function versionedPrefix(): string
-
-Vaulter\Configuration\ScheduleConfig api since 1.0 final readonly class
-  public function enabled(): bool
-  public function frequencies(string $root, array $keys): array
 
 Vaulter\Configuration\ScheduleFrequency api since 1.0 final readonly class
   public function applyTo(Illuminate\Console\Scheduling\Event $event): Illuminate\Console\Scheduling\Event
+  public static function fromMap(string $path, mixed $values, array $keys): array
   public static function parse(string $key, mixed $value): ?self
 
-Vaulter\Configuration\TenancyConfig api since 1.0 final readonly class
+Vaulter\Configuration\ScheduleOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public bool $enabled
+  public ?string $idempotencyPrune
+  public ?string $outboxPrune
+  public ?string $outboxRelay
+  public function __construct(bool $enabled = true, ?string $outboxRelay = 'everyMinute', ?string $outboxPrune = 'hourly', ?string $idempotencyPrune = 'dailyAt:03:30')
+  public function frequency(string $key): ?Vaulter\Configuration\ScheduleFrequency
+  public static function fromArray(array $config, string $path = 'vaulter.schedule'): self
+
+Vaulter\Configuration\SecurityOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public array $acceptedRisks
+  public function __construct(array $acceptedRisks = [])
+  public static function fromArray(array $config, string $path = 'vaulter.security'): self
+
+Vaulter\Configuration\TenancyOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
   public const string COLUMN = 'tenant_id'
-  public function enabled(): bool
-  public function resolver(): string
+  public bool $enabled
+  public ?string $resolver
+  public function __construct(bool $enabled = false, ?string $resolver = null)
+  public static function fromArray(array $config, string $path = 'vaulter.tenancy'): self
+  public function requireResolver(): string
 
-Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
-  public function database(): Vaulter\Configuration\DatabaseConfig
-  public function ids(): Vaulter\Configuration\IdsConfig
-  public function observability(): Vaulter\Configuration\ObservabilityConfig
-  public function outbox(): Vaulter\Configuration\OutboxConfig
-  public function routes(): Vaulter\Configuration\RoutesConfig
-  public function tenancy(): Vaulter\Configuration\TenancyConfig
+Vaulter\Configuration\TracingOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public bool $enabled
+  public ?string $recorder
+  public function __construct(bool $enabled = false, ?string $recorder = null)
+  public static function fromArray(array $config, string $path = 'vaulter.observability.tracing'): self
 
-Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
-  public function key(): string
-  public function run(Vaulter\Doctor\DoctorContext $context): array
-  public function title(): string
+Vaulter\Configuration\VaulterOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public Vaulter\Configuration\DatabaseOptions $database
+  public Vaulter\Configuration\IdempotencyOptions $idempotency
+  public Vaulter\Configuration\IdsOptions $ids
+  public Vaulter\Configuration\ModelsOptions $models
+  public array $modules
+  public Vaulter\Configuration\ObservabilityOptions $observability
+  public Vaulter\Configuration\OutboxOptions $outbox
+  public Vaulter\Configuration\RoutesOptions $routes
+  public Vaulter\Configuration\ScheduleOptions $schedule
+  public Vaulter\Configuration\SecurityOptions $security
+  public Vaulter\Configuration\TenancyOptions $tenancy
+  public function __construct(Vaulter\Configuration\DatabaseOptions $database = new \Vaulter\Configuration\DatabaseOptions(), Vaulter\Configuration\IdsOptions $ids = new \Vaulter\Configuration\IdsOptions(), Vaulter\Configuration\TenancyOptions $tenancy = new \Vaulter\Configuration\TenancyOptions(), Vaulter\Configuration\SecurityOptions $security = new \Vaulter\Configuration\SecurityOptions(), array $modules = [], Vaulter\Configuration\RoutesOptions $routes = new \Vaulter\Configuration\RoutesOptions(), Vaulter\Configuration\OutboxOptions $outbox = new \Vaulter\Configuration\OutboxOptions(), Vaulter\Configuration\IdempotencyOptions $idempotency = new \Vaulter\Configuration\IdempotencyOptions(), Vaulter\Configuration\ScheduleOptions $schedule = new \Vaulter\Configuration\ScheduleOptions(), Vaulter\Configuration\ObservabilityOptions $observability = new \Vaulter\Configuration\ObservabilityOptions(), Vaulter\Configuration\ModelsOptions $models = new \Vaulter\Configuration\ModelsOptions())
+  public static function fromArray(array $config, string $path = 'vaulter'): self
 
 Vaulter\Contracts\IdStrategy spi:implement since 1.0 interface
   public function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
@@ -144,6 +176,23 @@ Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
 Vaulter\Contracts\Tenancy\TenantResolver spi:implement since 1.0 interface
   public function current(): int|null|string
 
+Vaulter\CoreModule api since 1.0 final class implements Packman\Extensions\Contracts\Composition\WithCapabilities, Packman\Extensions\Contracts\Composition\WithSlots, Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Extensions\Contracts\Persistence\WithSchema, Packman\Extensions\Contracts\Runtime\WithDiagnostics, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Composition\ContributesToSlots, Packman\Extensions\Concerns\Composition\ProvidesCapabilities, Packman\Extensions\Concerns\Configuration\Configurable, Packman\Extensions\Concerns\Persistence\OwnsSchema, Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function definedSlots(): array
+  public function healthChecks(): array
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function migrationPath(): string
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function problemProviders(): array
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
+  public function schemaComponents(): array
+  public function schemaSetProviders(): array
+  public function slotContributions(): array
+  public function tableNouns(): array
+  public function tablePrefix(): string
+
 Vaulter\Data\Page api since 1.0 final readonly class implements Countable, IteratorAggregate
   public array $items
   public ?string $nextCursor
@@ -168,31 +217,41 @@ Vaulter\Doctor\DoctorCheckResult api since 1.0 final readonly class
   public string $title
   public function __construct(string $key, string $title, array $findings, ?string $detail = null)
 
-Vaulter\Doctor\DoctorContext api since 1.0 final readonly class
-  public DateTimeImmutable $now
-  public bool $probeStorage
-  public bool $production
-  public int $sampleLimit
-  public function __construct(bool $production, bool $probeStorage, int $sampleLimit, DateTimeImmutable $now)
-  public function mayProbeStorage(): bool
-  public function strictSeverity(): Vaulter\Doctor\DoctorSeverity
+Vaulter\Errors\VaulterErrorCode api since 1.0 enum: string implements Packman\Errors\Contracts\ErrorCode
+  case ActorRequired = 'vaulter.actor_required'
+  case ConcurrentUpdate = 'vaulter.concurrent_update'
+  case DependencyUnavailable = 'vaulter.dependency_unavailable'
+  case DuplicateRegistration = 'vaulter.duplicate_registration'
+  case ExtensionFailed = 'vaulter.extension_failed'
+  case IdempotencyKeyReused = 'vaulter.idempotency_key_reused'
+  case InsecureProductionConfiguration = 'vaulter.insecure_production_configuration'
+  case InternalError = 'vaulter.internal_error'
+  case InvalidConfiguration = 'vaulter.invalid_configuration'
+  case LeaseLost = 'vaulter.lease_lost'
+  case MethodNotAllowed = 'vaulter.method_not_allowed'
+  case MissingExtension = 'vaulter.missing_extension'
+  case MissingPackage = 'vaulter.missing_package'
+  case ModuleGraphInvalid = 'vaulter.module_graph_invalid'
+  case ModuleNotReady = 'vaulter.module_not_ready'
+  case NodeSequenceExhausted = 'vaulter.node_sequence_exhausted'
+  case OperationInProgress = 'vaulter.operation_in_progress'
+  case PayloadTooLarge = 'vaulter.payload_too_large'
+  case PermissionDenied = 'vaulter.permission_denied'
+  case PreconditionRequired = 'vaulter.precondition_required'
+  case RateLimited = 'vaulter.rate_limited'
+  case RegistryFrozen = 'vaulter.registry_frozen'
+  case ReplayedProblem = 'vaulter.replayed_problem'
+  case RouteNotFound = 'vaulter.route_not_found'
+  case StaleWrite = 'vaulter.stale_write'
+  case TenancyMisconfigured = 'vaulter.tenancy_misconfigured'
+  case UnknownIdStrategy = 'vaulter.unknown_id_strategy'
+  case UnknownOperation = 'vaulter.unknown_operation'
+  case ValidationFailed = 'vaulter.validation_failed'
+  case WriteOutsideOperation = 'vaulter.write_outside_operation'
+  public function value(): string
 
-Vaulter\Doctor\DoctorFinding api since 1.0 final readonly class
-  public string $code
-  public array $evidence
-  public ?string $hint
-  public string $message
-  public Vaulter\Doctor\DoctorSeverity $severity
-  public function __construct(Vaulter\Doctor\DoctorSeverity $severity, string $code, string $message, ?string $hint = null, array $evidence = [])
-  public static function at(Vaulter\Doctor\DoctorSeverity $severity, string $code, string $message, ?string $hint = null, array $evidence = []): self
-  public static function error(string $code, string $message, ?string $hint = null, array $evidence = []): self
-  public static function ok(string $code, string $message, array $evidence = []): self
-  public static function warning(string $code, string $message, ?string $hint = null, array $evidence = []): self
-
-Vaulter\Doctor\DoctorSeverity api since 1.0 enum: string
-  case Error = 'error'
-  case Ok = 'ok'
-  case Warning = 'warning'
+Vaulter\Errors\VaulterProblemDefinitions spi:call since 1.0 final class implements Packman\Errors\Contracts\ProblemDefinitionProvider
+  public function definitions(): iterable
 
 Vaulter\Events\Concerns\DescribesEvent spi:implement since 1.0 trait uses Vaulter\Support\Concerns\HasLabel
   public function spec(): Vaulter\Attributes\EventSpec
@@ -251,7 +310,7 @@ Vaulter\Events\Outbox\DeliveryControl spi:call since 1.0 final class
   public readonly string $consumerId
   public readonly string $eventId
   public readonly int $generation
-  public function __construct(Vaulter\Database\VaulterDatabase $database, Vaulter\Configuration\DatabaseConfig $tables, string $eventId, string $consumerId, int $generation, ?string $continuation)
+  public function __construct(Vaulter\Database\VaulterDatabase $database, Vaulter\Configuration\DatabaseOptions $tables, string $eventId, string $consumerId, int $generation, ?string $continuation)
   public function continuation(): ?string
   public function isCurrent(): bool
   public function saveContinuation(string $cursor): bool
@@ -295,6 +354,7 @@ Vaulter\Events\SinkWriter spi:call since 1.0 final class
   public function shared(string $key): int|null|string
 
 Vaulter\Exceptions\Access\MissingActorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public static function required(): self
@@ -304,15 +364,18 @@ Vaulter\Exceptions\Concerns\ProvidesProblemDetails api since 1.0 trait
   public function problemHeaders(): array
 
 Vaulter\Exceptions\Concurrency\StaleWriteException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function of(string $aggregate, int|string $id): self
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Exceptions\Configuration\InsecureProductionConfiguration api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function problemCode(): string
 
 Vaulter\Exceptions\Configuration\InvalidConfigurationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function problemCode(): string
 
 Vaulter\Exceptions\Contracts\ProblemException api since 1.0 interface
@@ -322,16 +385,19 @@ Vaulter\Exceptions\Contracts\ProblemException api since 1.0 interface
 
 Vaulter\Exceptions\Database\ConcurrentUpdateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct(?Throwable $previous = null)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemHeaders(): array
 
 Vaulter\Exceptions\Database\WriteOutsideOperationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct(string $target, ?string $caller = null)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Exceptions\Http\PreconditionRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function missing(string $header): self
   public function problemCode(): string
@@ -339,17 +405,20 @@ Vaulter\Exceptions\Http\PreconditionRequiredException api since 1.0 final class 
   public static function wildcard(): self
 
 Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forOperation(string $operation): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Exceptions\Idempotency\OperationInProgressException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct(int $retryAfter = 1, ?Throwable $previous = null)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemHeaders(): array
 
 Vaulter\Exceptions\Modules\ModuleNotReadyException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function inactive(string $module): self
   public static function missingTables(string $module, array $missing): self
@@ -357,23 +426,28 @@ Vaulter\Exceptions\Modules\ModuleNotReadyException api since 1.0 final class ext
 
 Vaulter\Exceptions\Nodes\SequenceOverflowException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
-Vaulter\Exceptions\Operations\UnknownOperationException api since 1.0 final class extends LogicException
+Vaulter\Exceptions\Operations\UnknownOperationException api since 1.0 final class extends LogicException implements Packman\Errors\Contracts\DescribesError
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function foreign(string $operation, string $module, string $owner): self
   public static function undeclared(string $operation, string $module): self
 
 Vaulter\Exceptions\Registry\RegistryFrozenException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forRegistry(string $registry): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Exceptions\Schema\UnknownIdStrategyException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forKey(string $key, array $available): self
 
 Vaulter\Exceptions\Support\InvalidExtensionResult api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function duplicateKey(string $slot, string $key): self
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function foreignOperation(string $middleware, string $operation): self
   public function httpStatus(): int
   public static function invalidFragment(string $slot, string $key, string $expected): self
@@ -383,12 +457,15 @@ Vaulter\Exceptions\Support\InvalidExtensionResult api since 1.0 final class exte
   public static function reservedKey(string $slot, string $key): self
 
 Vaulter\Exceptions\Support\MissingPackageException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forContract(string $contract, string $package): self
 
 Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
 
-Vaulter\Exceptions\VaulterException api since 1.0 class extends RuntimeException
+Vaulter\Exceptions\VaulterException api since 1.0 class extends Packman\Errors\Exceptions\CodedException
   protected static function docs(string $anchor): string
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
 
 Vaulter\Http\Controllers\Controller api since 1.0 abstract class uses Illuminate\Foundation\Auth\Access\AuthorizesRequests
   protected function actorId(Illuminate\Http\Request $request): int|null|string
@@ -449,6 +526,7 @@ Vaulter\Idempotency\ReplayAuthorizer spi:implement since 1.0 interface
 
 Vaulter\Idempotency\ReplayedProblemException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException
   public function __construct(string $problem, int $status, array $details = [], array $headers = [])
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
@@ -470,6 +548,9 @@ Vaulter\Kernel api since 1.0 final class
   public function isValid(): bool
   public function modules(): array
   public function reasons(): array
+
+Vaulter\Laravel\VaulterPluginRegistrar spi:call since 1.0 final class
+  public static function register(Illuminate\Contracts\Foundation\Application $app, string $plugin, ?string $composerManifest = null): void
 
 Vaulter\Models\Concerns\GuardsWrites api since 1.0 trait
   protected function newBaseQueryBuilder(): Illuminate\Database\Query\Builder
@@ -509,6 +590,7 @@ Vaulter\Modules\GuardsRemoval spi:implement since 1.0 interface
 
 Vaulter\Modules\MissingExtensionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
   public static function capability(string $contract): self
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function handler(string $slot, string $key): self
   public static function notSingle(string $contract): self
 
@@ -551,6 +633,7 @@ Vaulter\Modules\ModuleBuilder api since 1.0 final class
   public function translations(string $dir, string $namespace): self
 
 Vaulter\Modules\ModuleGraphException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function invalid(array $reasons): self
   public static function notCompiled(): self
@@ -563,6 +646,11 @@ Vaulter\Modules\ModuleId api since 1.0 final readonly class implements Stringabl
   public function __toString(): string
   public function equals(self $other): bool
   public static function isValid(string $value): bool
+
+Vaulter\Modules\ModuleReferences spi:implement since 1.0 interface
+  public function keptBy(string $module): array
+  public function keptOn(string $module): array
+  public function releaseKeptBy(string $module): int
 
 Vaulter\Modules\ModuleSchedule spi:implement since 1.0 interface
   public function define(Illuminate\Console\Scheduling\Schedule $schedule, Illuminate\Contracts\Config\Repository $config): void
@@ -585,6 +673,25 @@ Vaulter\Modules\OffersModules spi:implement since 1.0 trait
 Vaulter\Modules\OwnsSchema spi:implement since 1.0 interface
   public static function ownedSchema(): string
 
+Vaulter\Modules\PluginModuleSpec api since 1.0 final readonly class
+  public Vaulter\Modules\Activation $activation
+  public array $bindings
+  public array $commands
+  public array $events
+  public ?string $heldReferences
+  public array $listeners
+  public array $operations
+  public string $plugin
+  public array $problems
+  public ?string $protocolVersion
+  public ?string $removalGuard
+  public ?array $requires
+  public array $routeMiddleware
+  public array $routes
+  public array $schedules
+  public array $translations
+  public function __construct(string $plugin, Vaulter\Modules\Activation $activation = \Vaulter\Modules\Activation::Auto, ?string $protocolVersion = null, ?array $requires = null, array $routes = [], array $translations = [], array $commands = [], array $listeners = [], array $schedules = [], array $routeMiddleware = [], array $bindings = [], array $events = [], array $problems = [], array $operations = [], ?string $heldReferences = null, ?string $removalGuard = null)
+
 Vaulter\Modules\RemovalGuard spi:implement since 1.0 interface
   public function blockers(string $module): array
 
@@ -606,12 +713,8 @@ Vaulter\Modules\SlotKind api since 1.0 enum: string
   case OutboxConsumer = 'outbox-consumer'
   case Restriction = 'restriction'
 
-Vaulter\Modules\VaulterModule spi:implement since 1.0 interface
-  public function activation(): Vaulter\Modules\Activation
-  public function id(): Vaulter\Modules\ModuleId
-  public function register(Vaulter\Modules\ModuleBuilder $module): void
-  public function requires(): array
-  public function version(): string
+Vaulter\Modules\WithModuleRuntime spi:implement since 1.0 interface
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
 
 Vaulter\Operations\ConcurrencyPolicy api since 1.0 enum: string
   case Append = 'append'
@@ -678,10 +781,18 @@ Vaulter\Operations\OperationSpec api since 1.0 final readonly class
   public string $name
   public function __construct(string $name, Vaulter\Modules\ModuleId $module, bool $mutating = true)
 
+Vaulter\Providers\CoreKernelRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function bootWithPublisher(Illuminate\Contracts\Foundation\Application $app, Closure $publishes): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
 Vaulter\Providers\SchedulingRegistrar spi:call since 1.0 final class
   public const int DEFAULT_EXPIRY = 120
   public const int RECOVERY_EXPIRY = 10
   public static function task(Illuminate\Console\Scheduling\Schedule $schedule, string $command, Vaulter\Configuration\ScheduleFrequency $frequency, int $expiry, array $arguments = []): Illuminate\Console\Scheduling\Event
+
+Vaulter\Schema\CoreSchemaSets spi:call since 1.0 final class implements Packman\Schema\Contracts\Migration\SchemaSetProvider
+  public function sets(): array
 
 Vaulter\Schema\HostKeyColumns api since 1.0 final class
   public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
@@ -717,6 +828,10 @@ Vaulter\Schema\ValueObjects\KeyColumnExpectation api since 1.0 final readonly cl
   public string $table
   public function __construct(string $table, string $column, string $kind, ?int $length = null)
 
+Vaulter\Schema\VaulterMigration spi:implement since 1.0 abstract class extends Packman\Schema\Laravel\PackmanMigration
+  public function getConnection(): ?string
+  protected function table(string $logical): string
+
 Vaulter\Schema\VaulterSchema api since 1.0 final class
   public static function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
   public static function bits(Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
@@ -749,7 +864,7 @@ Vaulter\Tenancy\Tenancy api since 1.0 final class
   public static function without(Closure $callback): mixed
 
 Vaulter\Testing\Contracts\ModuleContractTests api since 1.0 final class
-  public function assertModuleContract(Vaulter\Modules\VaulterModule $module, array $requires = []): void
+  public function assertModuleContract(Packman\Plugins\Contracts\Registry\ExtensionPlugin $module, array $requires = []): void
 
 Vaulter\Testing\FakeMetricsRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\MetricsRecorder
   public function assertCounter(string $name, ?array $labels = null): void
@@ -818,7 +933,7 @@ Vaulter\ValueObjects\Operations\TenantRef api since 1.0 final readonly class
   public static function none(): self
   public static function of(mixed $key): self
 
-Vaulter\VaulterServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
-  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
-  public function packageBooted(): void
-  public function packageRegistered(): void
+Vaulter\VaulterServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
+  protected const array REGISTRARS = [\Vaulter\Providers\CoreKernelRegistrar::class]
+  public function boot(): void
+  public function register(): void

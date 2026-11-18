@@ -1,7 +1,7 @@
 {
     "packages": {
         "azguard": {
-            "composer": "axioma-studio/vaulter-azguard",
+            "composer": "axiomasoft/vaulter-azguard",
             "current_require": [
                 "core",
                 "drive"
@@ -17,7 +17,7 @@
             ]
         },
         "collaboration": {
-            "composer": "axioma-studio/vaulter-collaboration",
+            "composer": "axiomasoft/vaulter-collaboration",
             "current_require": [
                 "core",
                 "documents",
@@ -35,7 +35,7 @@
             ]
         },
         "core": {
-            "composer": "axioma-studio/vaulter-core",
+            "composer": "axiomasoft/vaulter-core",
             "current_require": [],
             "dir": "packages/core",
             "exists": true,
@@ -45,7 +45,7 @@
             "target_require": []
         },
         "documents": {
-            "composer": "axioma-studio/vaulter-documents",
+            "composer": "axiomasoft/vaulter-documents",
             "current_require": [
                 "core",
                 "drive"
@@ -62,7 +62,7 @@
             ]
         },
         "drive": {
-            "composer": "axioma-studio/vaulter-drive",
+            "composer": "axiomasoft/vaulter-drive",
             "current_require": [
                 "core",
                 "media"
@@ -79,7 +79,7 @@
             ]
         },
         "filament": {
-            "composer": "axioma-studio/vaulter-filament",
+            "composer": "axiomasoft/vaulter-filament",
             "current_require": [
                 "core",
                 "drive"
@@ -95,7 +95,7 @@
             ]
         },
         "media": {
-            "composer": "axioma-studio/vaulter-media",
+            "composer": "axiomasoft/vaulter-media",
             "current_require": [
                 "core"
             ],
@@ -109,7 +109,7 @@
             ]
         },
         "webhooks": {
-            "composer": "axioma-studio/vaulter-webhooks",
+            "composer": "axiomasoft/vaulter-webhooks",
             "current_require": [
                 "core",
                 "drive"

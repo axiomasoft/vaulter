@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\ValueObjects;
 
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 
 /**
  * The result of validating an outbound webhook URL: the scheme,

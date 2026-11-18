@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Illuminate\Support\Facades\Facade;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 
 /**

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\AzGuard\Configuration\AzGuardConfig;
+use Packman\Attributes\Internal;
+use Vaulter\AzGuard\Configuration\AzGuardOptions;
 use Vaulter\Drive\Enums\Access\Ability;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Drive\Enums\Access\Ability;
 #[Internal]
 final readonly class AzGuardPermissionMap
 {
-    public function __construct(private AzGuardConfig $config) {}
+    public function __construct(private AzGuardOptions $config) {}
 
     /** @return array<string, string> */
     public function permissionMap(): array

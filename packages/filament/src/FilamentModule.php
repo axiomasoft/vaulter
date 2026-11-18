@@ -4,44 +4,50 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Laravel\PluginRegistrar;
+use Vaulter\Filament\Configuration\FilamentOptions;
 use Vaulter\Filament\Providers\BindingsRegistrar;
 use Vaulter\Modules\Activation;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 
-/**
- * The Filament admin module: its config and config reader. The panel plugin ({@see VaulterPlugin}) is
- * never registered by the manifest — the host adds it to its panel explicitly.
- */
-#[Internal]
-final class FilamentModule implements VaulterModule
+/** Native code plugin for the filament package. */
+#[Api(since: '1.0')]
+final class FilamentModule implements ExtensionPlugin, WithConfiguration, WithModuleRuntime
 {
-    public function id(): ModuleId
+    use Configurable;
+
+    public function manifest(): PluginManifest
     {
-        return new ModuleId('filament');
+        return new PluginManifest(id: 'vaulter.filament', version: '1.0.0', requires: ['vaulter.drive'], resourceRoot: dirname(__DIR__).'/resources');
     }
 
-    public function version(): string
+    public function register(PluginRegistrar $registrar): void {}
+
+    public function configRoot(): string
     {
-        return '1.0';
+        return 'vaulter-filament';
     }
 
-    public function activation(): Activation
+    public function defaultConfigPath(): string
     {
-        return Activation::Auto;
+        return dirname(__DIR__).'/config/vaulter-filament.php';
     }
 
-    public function requires(): array
+    public function optionsClass(): string
     {
-        return ['drive' => '^1.0'];
+        return FilamentOptions::class;
     }
 
-    public function register(ModuleBuilder $module): void
+    public function moduleRuntime(): PluginModuleSpec
     {
-        $module
-            ->config('vaulter-filament', dirname(__DIR__).'/config/vaulter-filament.php')
-            ->bindings(BindingsRegistrar::class);
+        return new PluginModuleSpec(plugin: self::class, activation: Activation::Auto,
+            bindings: [BindingsRegistrar::class],
+        );
     }
 }

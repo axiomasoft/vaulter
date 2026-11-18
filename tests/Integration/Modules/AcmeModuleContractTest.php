@@ -5,13 +5,14 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorFinding;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use PHPUnit\Framework\AssertionFailedError;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\CoreModule;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Content\DownloadGuards;
 use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Drive\Contracts\NodeSnapshotContributor;
@@ -61,9 +62,10 @@ use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\OffersModules;
+use Vaulter\Modules\PluginModuleSpec;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
 use Vaulter\Operations\ConcurrencyPolicy;
 use Vaulter\Operations\IdempotencyPolicy;
 use Vaulter\Operations\ModuleReadiness;
@@ -104,7 +106,7 @@ beforeEach(function (): void {
     AcmeOutboxConsumer::$failing = false;
 });
 
-/** @return list<class-string<VaulterModule>> */
+/** @return list<class-string<ExtensionPlugin>> */
 function acmeManifests(bool $withAcme): array
 {
     return [new CoreModule, new MediaModule, new DriveModule, new WebhooksModule, ...($withAcme ? [new AcmeModule] : [])];
@@ -167,7 +169,7 @@ it('uses only the module surface, the slot contracts and what their signatures n
     $allowed = [
         Kernel::class, Activation::class, Cardinality::class, ModuleBindings::class,
         ModuleBuilder::class, ModuleId::class, OffersModules::class, SlotKind::class,
-        VaulterModule::class,
+        ExtensionPlugin::class, WithModuleRuntime::class, PluginModuleSpec::class,
         // The operation catalogue a module declares its operations into.
         OperationPolicySource::class, OperationPolicy::class, ConcurrencyPolicy::class, IdempotencyPolicy::class,
         // Documented in the contract of the slot: the denial a DownloadGuard throws, the findings a DoctorCheck returns.
@@ -296,7 +298,7 @@ function acmeRunner(Kernel $kernel): OperationRunner
 {
     $database = app(VaulterDatabase::class);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, $database, app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), $database, new NoOperationClaim, new OperationCatalog(static fn (): array => OperationSources::active($kernel)));
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, $database, app(DatabaseOptions::class), new ModuleSchemas($kernel, app())), $database, new NoOperationClaim, new OperationCatalog(static fn (): array => OperationSources::active($kernel)));
 }
 
 function acmeWrite(OperationRunner $runner, Closure $attempt): mixed
@@ -385,7 +387,7 @@ function acmeRecord(Kernel $kernel, Node $folder): void
 
 function acmeActivityCount(): int
 {
-    return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('activity'))->count();
+    return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('activity'))->count();
 }
 
 it('observes the event after the drive sinks inside the transaction, and changes nothing they stored', function (): void {

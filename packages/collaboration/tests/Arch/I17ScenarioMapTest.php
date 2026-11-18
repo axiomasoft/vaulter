@@ -32,10 +32,10 @@ function i17Map(): array
 }
 
 it('maps exactly the scenarios 1 to 20', function (): void {
-    $keys = array_map('strval', array_keys(i17Map()));
+    $keys = array_map(strval(...), array_keys(i17Map()));
     sort($keys, SORT_NUMERIC);
 
-    expect($keys)->toBe(array_map('strval', range(1, 20)));
+    expect($keys)->toBe(array_map(strval(...), range(1, 20)));
 });
 
 it('gives every scenario known lanes and files, each file existing', function (): void {

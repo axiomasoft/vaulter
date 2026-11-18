@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Contracts;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * Resolves a hostname to EVERY IP it maps to — both A (IPv4) and AAAA (IPv6) records

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Security;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Contracts\Security\ProductionInvariant;
 
 /** A configured client hub URL must use wss://; an empty URL is not a violation (the session issues endpoint=null). */
 #[Internal]
 final readonly class HubUrlInvariant implements ProductionInvariant
 {
-    public function __construct(private CollaborationConfig $config) {}
+    public function __construct(private CollaborationOptions $config) {}
 
     public function id(): string
     {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Drain;
 
 use Closure;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\State\PendingMarker;
 
 /**

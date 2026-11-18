@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Actions;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Security;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /** The one strict CIDR parser shared by config validation, the production invariant and the runtime guard. */
 #[Internal]

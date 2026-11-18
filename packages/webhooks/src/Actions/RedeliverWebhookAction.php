@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Actions;
 
 use Illuminate\Support\Facades\Bus;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\Exceptions\WebhookDeliveryNotRedeliverableException;

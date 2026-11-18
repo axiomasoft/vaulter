@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Override;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /**
  * A single delivery attempt of an event to a webhook endpoint, with retry
@@ -53,14 +54,14 @@ class WebhookDelivery extends Model
      * system-computed retry bookkeeping. The relay writes it with forceFill()
      * or a bulk insert, never from request input.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $guarded = ['*'];
 
-    #[\Override]
+    #[Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('webhook_deliveries');
+        return app(DatabaseOptions::class)->table('webhook_deliveries');
     }
 
     /**
@@ -69,7 +70,7 @@ class WebhookDelivery extends Model
     public function endpoint(): BelongsTo
     {
         /** @var class-string<WebhookEndpoint> $related */
-        $related = app(WebhooksConfig::class)->model('webhook_endpoint');
+        $related = app(WebhooksOptions::class)->model('webhook_endpoint');
 
         return $this->belongsTo(related: $related, foreignKey: 'endpoint_id');
     }
@@ -107,7 +108,7 @@ class WebhookDelivery extends Model
     /**
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

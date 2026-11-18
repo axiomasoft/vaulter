@@ -6,7 +6,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -50,7 +50,7 @@ it('excludes a duplicate worker while another process is posting the same delive
 
                 return Http::response('', (int) $outcome);
             });
-            new DeliverWebhook($deliveryId)->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+            new DeliverWebhook($deliveryId)->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
             fwrite($child, "done\n");
             DB::disconnect();
             fclose($child);
@@ -77,7 +77,7 @@ it('excludes a duplicate worker while another process is posting the same delive
         // response is held until the second worker has completed handle().
         expect(fgets($parent))->toBe("posting\n");
         Http::fake(['*' => Http::response('', 200)]);
-        new DeliverWebhook($deliveryId)->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+        new DeliverWebhook($deliveryId)->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
         Http::assertNothingSent();
         expect(WebhookDelivery::query()->findOrFail($deliveryId)->claim_token)->not->toBeNull();
 

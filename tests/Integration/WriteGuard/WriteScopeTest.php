@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Database\WriteScope;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
@@ -17,6 +18,7 @@ beforeEach(function (): void {
     $this->drive = DriveTestHelpers::drive();
     $this->folder = $this->drive->folders()->create('Reports');
     config()->set('vaulter.database.write_guard', true);
+    app()->forgetInstance(WriteScope::class);
 });
 
 it('refuses to update a node through a mass query outside an operation', function (): void {
@@ -92,6 +94,7 @@ it('does not guard reads, raw statements of the host or a disabled guard', funct
     expect((int) Node::query()->whereKey($this->folder->id)->value('size_bytes'))->toBe(3);
 
     config()->set('vaulter.database.write_guard', false);
+    app()->forgetInstance(WriteScope::class);
     Node::query()->whereKey($this->folder->id)->update(['size_bytes' => 4]);
     expect((int) Node::query()->whereKey($this->folder->id)->value('size_bytes'))->toBe(4);
 });

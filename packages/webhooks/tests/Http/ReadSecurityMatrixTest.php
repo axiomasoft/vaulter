@@ -77,15 +77,13 @@ function rsmdrvPath(string $route): string
 }
 
 it('holds the webhooks read security matrix', function (string $route, string $row): void {
-    config()->set('vaulter-webhooks.manage_ability', null);
-    $arrange = static function (?string $tenant = null): WebhookEndpoint {
-        return app(VaulterDatabase::class)->write(static function () use ($tenant): WebhookEndpoint {
-            $endpoint = WebhookTestHelpers::endpoint($tenant === null ? [] : ['tenant_id' => $tenant]);
-            WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'last_error' => 'connection refused']);
+    config()->set('vaulter-webhooks.manage_ability');
+    $arrange = (static fn (?string $tenant = null): WebhookEndpoint => app(VaulterDatabase::class)->write(static function () use ($tenant): WebhookEndpoint {
+        $endpoint = WebhookTestHelpers::endpoint($tenant === null ? [] : ['tenant_id' => $tenant]);
+        WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'last_error' => 'connection refused']);
 
-            return $endpoint;
-        });
-    };
+        return $endpoint;
+    }));
 
     match ($row) {
         'R1' => (function () use ($route, $arrange): void {

@@ -9,7 +9,7 @@ use DateTimeInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Optional expiry typed into the grant and share-link forms.

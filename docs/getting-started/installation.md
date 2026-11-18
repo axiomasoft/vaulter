@@ -18,15 +18,15 @@ PHP `^8.4`, Laravel `^13.0`, and (for the UI) Vue `^3.4` / Node `>=26`. See
 ## 1. Backend — the Laravel package
 
 For the full product install the metapackage. It has no code of its own and requires
-`axioma-studio/vaulter-core`, `-media`, `-drive` and `-documents` at exactly its own version:
+`axiomasoft/vaulter-core`, `-media`, `-drive` and `-documents` at exactly its own version:
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter
+composer require axiomasoft/vaulter
 ```
 
-`axioma-studio/vaulter-core` alone ships no Drive or document-editing features — it is
+`axiomasoft/vaulter-core` alone ships no Drive or document-editing features — it is
 the kernel (module system, operations, events with the outbox, idempotency, errors, HTTP and config
 frameworks) and owns no domain table. To take only part of the product, require the packages your app
 actually needs:
@@ -34,15 +34,15 @@ actually needs:
 <!-- snippet: shell -->
 
 ```bash
-# Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
-composer require axioma-studio/vaulter-drive
+# Drive (folders/files/uploads) — pulls in axiomasoft/vaulter-media (CAS) automatically
+composer require axiomasoft/vaulter-drive
 
 # Document nodes (TipTap/Yjs editing, versions, comments) — requires vaulter-drive
-composer require axioma-studio/vaulter-documents
+composer require axiomasoft/vaulter-documents
 ```
 
-Either command also pulls in `axioma-studio/vaulter-core` as a dependency, so a
-plain `composer require axioma-studio/vaulter-core` alone is only useful if you build your own modules
+Either command also pulls in `axiomasoft/vaulter-core` as a dependency, so a
+plain `composer require axiomasoft/vaulter-core` alone is only useful if you build your own modules
 on the kernel.
 
 Three packages are not in the metapackage and are installed on demand. Each requires `vaulter-drive`:
@@ -51,13 +51,13 @@ Three packages are not in the metapackage and are installed on demand. Each requ
 
 ```bash
 # Outbound webhooks (opt-in module, see below)
-composer require axioma-studio/vaulter-webhooks
+composer require axiomasoft/vaulter-webhooks
 
 # Admin panel for Filament 5
-composer require axioma-studio/vaulter-filament
+composer require axiomasoft/vaulter-filament
 
 # AzGuard permission driver
-composer require axioma-studio/vaulter-azguard
+composer require axiomasoft/vaulter-azguard
 ```
 
 `vaulter-webhooks` opens outbound network traffic, so its module stays off until you switch it on in

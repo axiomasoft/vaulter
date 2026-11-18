@@ -4,56 +4,91 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Concerns\Composition\ProvidesCapabilities;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\Cardinality;
+use Packman\Plugins\Laravel\PluginRegistrar;
+use Vaulter\AzGuard\Configuration\AzGuardOptions;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
 use Vaulter\AzGuard\Doctor\AzGuardDependencyCheck;
 use Vaulter\AzGuard\Providers\BindingsRegistrar;
-use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Modules\Activation;
-use Vaulter\Modules\Cardinality;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 
-/**
- * The AzGuard bridge module: Auto, because it is an adapter the host still selects explicitly in its
- * config (`vaulter-drive.access.permission_driver = 'azguard'`). It extends the drive's access, so it requires the
- * drive module.
- */
-#[Internal]
-final class AzGuardModule implements VaulterModule
+/** Native code plugin for the azguard package. */
+#[Api(since: '1.0')]
+final class AzGuardModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithModuleRuntime, WithSlots
 {
-    public function id(): ModuleId
+    use Configurable;
+    use ContributesToSlots;
+    use ProvidesCapabilities;
+    use ProvidesDiagnostics;
+
+    public function manifest(): PluginManifest
     {
-        return new ModuleId('azguard');
+        return new PluginManifest(id: 'vaulter.azguard', version: '1.0.0', requires: ['vaulter.core', 'vaulter.drive'], resourceRoot: dirname(__DIR__).'/resources');
     }
 
-    public function version(): string
+    public function register(PluginRegistrar $registrar): void {}
+
+    public function configRoot(): string
     {
-        return '1.0';
+        return 'vaulter-azguard';
     }
 
-    public function activation(): Activation
+    public function defaultConfigPath(): string
     {
-        return Activation::Auto;
+        return dirname(__DIR__).'/config/vaulter-azguard.php';
     }
 
-    public function requires(): array
+    public function optionsClass(): string
     {
-        return ['core' => '^1.0', 'drive' => '^1.0'];
+        return AzGuardOptions::class;
     }
 
-    public function register(ModuleBuilder $module): void
+    public function moduleRuntime(): PluginModuleSpec
     {
-        $module
-            ->config('vaulter-azguard', dirname(__DIR__).'/config/vaulter-azguard.php')
-            ->bindings(BindingsRegistrar::class)
-            // The explicit guard the host names in `vaulter-azguard.guard`; none configured means the driver builds its own per actor.
-            ->defineCapability(AzGuardGuard::class, Cardinality::OptionalSingle)
-            ->providesFromConfig(AzGuardGuard::class, 'vaulter-azguard.guard')
-            ->slot(DoctorCheck::class, AzGuardDependencyCheck::class, 'azguard.dependency', key: 'azguard.dependency')
-            // `vaulter-drive.access.permission_driver = 'azguard'` selects it; the host still picks the lane explicitly.
-            ->slot(PermissionDriver::class, AzGuardPermissionDriver::class, 'azguard.permission', key: 'azguard');
+        return new PluginModuleSpec(plugin: self::class, activation: Activation::Auto,
+            bindings: [BindingsRegistrar::class],
+        );
+    }
+
+    /** @return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}> */
+    public function slotContributions(): array
+    {
+        return [
+            ['slot' => DoctorCheck::class, 'id' => 'azguard.dependency', 'implementation' => AzGuardDependencyCheck::class, 'key' => 'azguard.dependency'],
+            ['slot' => PermissionDriver::class, 'id' => 'azguard.permission', 'implementation' => AzGuardPermissionDriver::class, 'key' => 'azguard'],
+        ];
+    }
+
+    /** @return list<class-string> */
+    public function healthChecks(): array
+    {
+        return [AzGuardDependencyCheck::class];
+    }
+
+    /** @return array<class-string, string> */
+    public function definedCapabilities(): array
+    {
+        return [AzGuardGuard::class => Cardinality::OptionalSingle->value];
+    }
+
+    /** @return array<class-string, class-string|array{config: string, default?: class-string|null}> */
+    public function providedCapabilities(): array
+    {
+        return [AzGuardGuard::class => ['config' => 'vaulter-azguard.guard']];
     }
 }

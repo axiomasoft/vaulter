@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The Standard Webhooks signing secret: "whsec_" followed by the base64 of the HMAC key.

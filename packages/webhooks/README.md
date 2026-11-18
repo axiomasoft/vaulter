@@ -1,19 +1,19 @@
 # Vaulter · Webhooks
 
-`axioma-studio/vaulter-webhooks` delivers Vaulter events to external HTTP subscribers: endpoint
+`axiomasoft/vaulter-webhooks` delivers Vaulter events to external HTTP subscribers: endpoint
 management (REST and Artisan), Standard Webhooks signing, SSRF-guarded outbound delivery, retries with
 jitter, auto-disable of failing endpoints and a delivery log.
 
 The package is an **outbox consumer** of the Vaulter kernel (`webhooks.fanout`): the core writes every
 domain event to the transactional outbox, `vaulter:relay` hands it to the consumer, which fans it out to
-the subscribed endpoints. It depends on `axioma-studio/vaulter-core` and `axioma-studio/vaulter-drive`
-(endpoints are scoped to drives), is not part of the `axioma-studio/vaulter` metapackage, and is **opt-in**:
+the subscribed endpoints. It depends on `axiomasoft/vaulter-core` and `axiomasoft/vaulter-drive`
+(endpoints are scoped to drives), is not part of the `axiomasoft/vaulter` metapackage, and is **opt-in**:
 it opens outbound network traffic, so the module is active only after `vaulter.modules.webhooks` is set to `true`.
 
 ## Install
 
 ```bash
-composer require axioma-studio/vaulter-webhooks
+composer require axiomasoft/vaulter-webhooks
 php artisan migrate        # creates v_webhook_endpoints and v_webhook_deliveries, active or not
 ```
 
@@ -46,7 +46,7 @@ Delivery scope is unchanged: an endpoint without a tenant receives only events w
 
 ## Development in the monorepo
 
-The package lives in `packages/webhooks` and is split to the `axioma-studio/vaulter-webhooks` repository by
+The package lives in `packages/webhooks` and is split to the `axiomasoft/vaulter-webhooks` repository by
 `.github/workflows/monorepo-split.yml` (listed in `release/packages.json`; the split repository must exist before
 the first release). Its tests run on its own `TestCase`:
 

@@ -16,7 +16,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 
 /**
@@ -24,7 +24,7 @@ use Vaulter\Http\Middleware\VaulterHttpOperationMap;
  */
 final class QueryTraceRecorder
 {
-    private readonly RoutesConfig $routesConfig;
+    private readonly RoutesOptions $routesConfig;
 
     private bool $registered = false;
 
@@ -39,9 +39,9 @@ final class QueryTraceRecorder
 
     private ?string $invocationId = null;
 
-    public function __construct(?RoutesConfig $routesConfig = null)
+    public function __construct(?RoutesOptions $routesConfig = null)
     {
-        $this->routesConfig = $routesConfig ?? app(RoutesConfig::class);
+        $this->routesConfig = $routesConfig ?? app(RoutesOptions::class);
     }
 
     public function register(): void
@@ -157,7 +157,7 @@ final class QueryTraceRecorder
 
     private function operationFor(Request $request): ?string
     {
-        $prefix = trim($this->routesConfig->prefix(), '/');
+        $prefix = trim($this->routesConfig->prefix, '/');
         $path = trim($request->path(), '/');
 
         if ($prefix !== '' && str_starts_with($path, $prefix)) {

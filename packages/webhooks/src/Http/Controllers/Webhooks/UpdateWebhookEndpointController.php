@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Webhooks\Actions\UpdateWebhookEndpointAction;
 use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
 use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;

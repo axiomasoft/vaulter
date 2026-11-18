@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\AzGuard\Tests\Stubs;
 
-use AzGuard\Concerns\HasAzGuard;
+use AzGuard\Concerns\Subjects\HasAzGuard;
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User;

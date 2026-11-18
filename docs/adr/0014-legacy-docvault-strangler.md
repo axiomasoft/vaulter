@@ -43,7 +43,7 @@ Reconnaissance plus an owner decision establish four load-bearing facts.
    the `vaulter-medialibrary-bridge` (ADR-0008) is an unbuilt, additive **input**
    importer that maps spatie media **into `v_nodes`** — never into `v_documents`.
    Legacy DocVault is not, and never was, that bridge. FlexCRM is an external
-   CoreX-based consumer referenced only in docs.
+   Laravel-based consumer referenced only in docs.
 
 3. **There is no live DocVault data to preserve anywhere** (owner-confirmed). The
    package is pre-1.0 and has never shipped a tagged release (no `version` field,

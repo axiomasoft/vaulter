@@ -13,7 +13,7 @@ use Packman\Attributes\SpiKind;
  * generated) migrations plus the matching model concern, so "ulid vs uuid7 vs
  * bigint" is decided from configuration key vaulter.ids.strategy rather than hard-coded.
  *
- * Vaulter defaults to ulid so morph keys line up with the Corex/host authorization
+ * Vaulter defaults to ulid so morph keys line up with the host authorization
  * ecosystem; uuid7 maps onto native Postgres uuid columns and bigint is the
  * legacy auto-increment path. Implementations live in the Schema namespace.
  */

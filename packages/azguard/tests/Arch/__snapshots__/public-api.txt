@@ -1,5 +1,5 @@
 Vaulter\AzGuard\Contracts\AzGuardBackedUser
-  azguard(): \AzGuard\Concerns\SubjectPanels
+  azguard(): \AzGuard\Concerns\Subjects\SubjectPanels
   azguardDefaultPanel(): ?string
   azguardRef(): \AzGuard\Kernel\Identity\SubjectRef
   grantPermission(\UnitEnum|array|string $permissions, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?\DateTimeInterface $until = null, array $fields = []): \AzGuard\Changes\ChangeResult
@@ -10,7 +10,7 @@ Vaulter\AzGuard\Contracts\AzGuardBackedUser
   hasAnyRole(array $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
   hasPermission(\UnitEnum|string $permission, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
   hasRole(\UnitEnum|array|string $roles, \AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
-  inTenant(\AzGuard\Kernel\Identity\TenantRef|\Illuminate\Database\Eloquent\Model $tenant): \AzGuard\Concerns\SubjectAccess
+  inTenant(\AzGuard\Kernel\Identity\TenantRef|\Illuminate\Database\Eloquent\Model $tenant): \AzGuard\Concerns\Subjects\SubjectAccess
   isSuperAdmin(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): bool
   permissionNames(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): \Illuminate\Support\Collection
   permissionSet(\AzGuard\Kernel\Identity\AssignmentScopeRef|\Illuminate\Database\Eloquent\Model|null $on = null, ?string $guard = null): \AzGuard\Kernel\Permissions\PermissionSet
@@ -24,8 +24,9 @@ Vaulter\AzGuard\Contracts\AzGuardGuard
   hasPermissionIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
   hasScopedPermission(\Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
 
-Vaulter\AzGuard\Configuration\AzGuardConfig
+Vaulter\AzGuard\Configuration\AzGuardOptions
   createPermission(): string
+  fromArray(array $config, string $path = 'vaulter-azguard'): \self
   guard(): ?string
   panelId(): ?string
   permissions(): array

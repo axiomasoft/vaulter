@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament\Resources\ActivityResource\Pages;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\Pages\ListPanelRecords;
 

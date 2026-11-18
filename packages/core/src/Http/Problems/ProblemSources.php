@@ -8,7 +8,7 @@ use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\ModuleDeclarations;
 
 /**
  * Where the problem catalogue takes its sources from: the sealed declarations of the active modules, or, for
@@ -52,7 +52,7 @@ final class ProblemSources
         $catalog = ModuleCatalog::of($app);
         $sources = [];
         foreach ($catalog->offered() as $manifest) {
-            $builder = PluginModuleBridge::buildOffered($manifest, $catalog->pluginSpec($manifest));
+            $builder = ModuleDeclarations::buildOffered($manifest, $catalog->pluginSpec($manifest));
             if ($builder === null) {
                 continue;
             }

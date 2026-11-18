@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\AzGuard\Contracts;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 
 /**
  * The NARROW Vaulter-owned seam the host's AzGuard-backed actor satisfies (master

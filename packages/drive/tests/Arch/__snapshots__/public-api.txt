@@ -158,7 +158,6 @@ Vaulter\Drive\Configuration\DriveFeaturesOptions
   fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
 Vaulter\Drive\Configuration\DriveModelsOptions
-  __construct(string $drive = 'Vaulter\Drive\Models\Drive', string $node = 'Vaulter\Drive\Models\Node', string $file = 'Vaulter\Drive\Models\File', string $scanObligation = 'Vaulter\Drive\Models\Content\ScanObligation', string $scanRequest = 'Vaulter\Drive\Models\Content\ScanRequest', string $scanEvidence = 'Vaulter\Drive\Models\Content\ScanEvidenceRecord', string $scanPolicyState = 'Vaulter\Drive\Models\Content\ScanPolicyState', string $scanBackfillRun = 'Vaulter\Drive\Models\Content\ScanBackfillRun', string $fileRevision = 'Vaulter\Drive\Models\FileRevision', string $fileRevisionBlob = 'Vaulter\Drive\Models\FileRevisionBlob', string $grant = 'Vaulter\Drive\Models\Access\NodeGrant', string $nodeShare = 'Vaulter\Drive\Models\Sharing\NodeShare', string $activity = 'Vaulter\Drive\Models\Activity\Activity', string $uploadSession = 'Vaulter\Drive\Models\Uploads\UploadSession', string $uploadPart = 'Vaulter\Drive\Models\Uploads\UploadPart')
   fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
 Vaulter\Drive\Configuration\DriveOptions

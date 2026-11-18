@@ -10,9 +10,8 @@ use Packman\Extensions\Contracts\Persistence\WithSchema;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\CoreModule;
 use Vaulter\Kernel;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\OwnsSchema;
-use Vaulter\Modules\PluginModuleBridge;
-use Vaulter\Modules\VaulterModule;
 
 /**
  * The schema classes of the offered modules, active or not (the schema of every offered module is installed), in the
@@ -93,7 +92,7 @@ final readonly class ModuleSchemas
         return array_values(array_unique($paths));
     }
 
-    /** @return array<string, class-string<VaulterModule|ExtensionPlugin>> module id => manifest, a module after the ones it requires */
+    /** @return array<string, class-string<ExtensionPlugin>> module id => manifest, a module after the ones it requires */
     private function ordered(): array
     {
         if (!$this->kernel->isValid()) {
@@ -113,12 +112,8 @@ final readonly class ModuleSchemas
             }
             $visited[$module] = true;
 
-            $manifest = $this->container->make($manifests[$module]);
-            $required = $manifest instanceof VaulterModule
-                ? array_keys($manifest->requires())
-                : ($manifest instanceof ExtensionPlugin && $manifests[$module] !== CoreModule::class
-                    ? array_keys(PluginModuleBridge::requires($manifest))
-                    : []);
+            $manifest = new ($manifests[$module]);
+            $required = array_keys(ModuleDeclarations::requires($manifest));
             foreach ($required as $dependency) {
                 $visit($dependency);
             }

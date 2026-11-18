@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Http\Support;
 
 use Illuminate\Http\Request;
+use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException;
 
 /**

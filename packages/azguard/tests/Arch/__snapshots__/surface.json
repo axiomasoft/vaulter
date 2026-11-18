@@ -3,6 +3,219 @@
     "version": 1,
     "package": "azguard",
     "types": {
+        "Vaulter\\AzGuard\\AzGuardModule": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Extensions\\Contracts\\Composition\\WithCapabilities",
+                "Packman\\Extensions\\Contracts\\Composition\\WithSlots",
+                "Packman\\Extensions\\Contracts\\Configuration\\WithConfiguration",
+                "Packman\\Extensions\\Contracts\\Runtime\\WithDiagnostics",
+                "Packman\\Plugins\\Contracts\\Registry\\ExtensionPlugin",
+                "Vaulter\\Modules\\WithModuleRuntime"
+            ],
+            "traits": [
+                "Packman\\Extensions\\Concerns\\Composition\\ContributesToSlots",
+                "Packman\\Extensions\\Concerns\\Composition\\ProvidesCapabilities",
+                "Packman\\Extensions\\Concerns\\Configuration\\Configurable",
+                "Packman\\Extensions\\Concerns\\Runtime\\ProvidesDiagnostics"
+            ],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:configroot": {
+                    "kind": "method",
+                    "name": "configRoot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:defaultconfigpath": {
+                    "kind": "method",
+                    "name": "defaultConfigPath",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:definedcapabilities": {
+                    "kind": "method",
+                    "name": "definedCapabilities",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array<class-string, string>"
+                    ]
+                },
+                "method:healthchecks": {
+                    "kind": "method",
+                    "name": "healthChecks",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:manifest": {
+                    "kind": "method",
+                    "name": "manifest",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Packman\\Plugins\\Data\\Plugin\\PluginManifest",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:moduleruntime": {
+                    "kind": "method",
+                    "name": "moduleRuntime",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:optionsclass": {
+                    "kind": "method",
+                    "name": "optionsClass",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:providedcapabilities": {
+                    "kind": "method",
+                    "name": "providedCapabilities",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array<class-string, class-string|array{config: string, default?: class-string|null}>"
+                    ]
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "registrar",
+                            "type": "Packman\\Plugins\\Laravel\\PluginRegistrar",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:slotcontributions": {
+                    "kind": "method",
+                    "name": "slotContributions",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\AzGuard\\AzGuardPermissionDriver": {
             "kind": "class",
             "surface": "Api",
@@ -21,7 +234,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -177,7 +390,7 @@
                 }
             }
         },
-        "Vaulter\\AzGuard\\Configuration\\AzGuardConfig": {
+        "Vaulter\\AzGuard\\Configuration\\AzGuardOptions": {
             "kind": "class",
             "surface": "Api",
             "since": "1.0",
@@ -188,22 +401,18 @@
             },
             "backing": null,
             "extends": [],
-            "implements": [],
+            "implements": [
+                "Packman\\Config\\Contracts\\OptionsFactory"
+            ],
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
-                "method:__construct": {
-                    "kind": "method",
-                    "name": "__construct",
-                    "visibility": "public",
-                    "internal": true
-                },
                 "method:createpermission": {
                     "kind": "method",
                     "name": "createPermission",
@@ -219,6 +428,45 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
+                },
+                "method:fromarray": {
+                    "kind": "method",
+                    "name": "fromArray",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "config",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "path",
+                            "type": "string",
+                            "default": "'vaulter-azguard'",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\AzGuard\\Configuration\\AzGuardOptions",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<array-key, mixed> $config"
+                    ]
                 },
                 "method:guard": {
                     "kind": "method",
@@ -285,13 +533,13 @@
             },
             "backing": null,
             "extends": [
-                "AzGuard\\Contracts\\AzGuardSubject"
+                "AzGuard\\Contracts\\Subjects\\AzGuardSubject"
             ],
             "implements": [],
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -313,7 +561,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -418,6 +666,83 @@
                 }
             }
         },
+        "Vaulter\\AzGuard\\Providers\\AzGuardPackageRegistrar": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Foundation\\Contracts\\PackageRegistrar"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:boot": {
+                    "kind": "method",
+                    "name": "boot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
         "Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard": {
             "kind": "class",
             "surface": "Api",
@@ -435,7 +760,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -663,16 +988,62 @@
             ],
             "implements": [],
             "traits": [
-                "Vaulter\\Modules\\OffersModules"
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
             ],
-            "adaptations": [],
+            "adaptations": [
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "register",
+                    "alias": "registerRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                },
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "boot",
+                    "alias": "bootRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                }
+            ],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api(since: '1.0')"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
+                "constant:REGISTRARS": {
+                    "kind": "constant",
+                    "name": "REGISTRARS",
+                    "visibility": "protected",
+                    "internal": false,
+                    "final": false,
+                    "type": "array",
+                    "value": "[\\Vaulter\\AzGuard\\Providers\\AzGuardPackageRegistrar::class]",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@var list<class-string<PackageRegistrar>>"
+                    ]
+                },
+                "method:boot": {
+                    "kind": "method",
+                    "name": "boot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:register": {
                     "kind": "method",
                     "name": "register",
@@ -684,7 +1055,9 @@
                     "by_ref": false,
                     "params": [],
                     "return": "void",
-                    "attributes": [],
+                    "attributes": [
+                        "Override"
+                    ],
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []

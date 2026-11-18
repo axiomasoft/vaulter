@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Webhooks\Actions\DeactivateWebhookEndpointAction;
 use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
 use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;

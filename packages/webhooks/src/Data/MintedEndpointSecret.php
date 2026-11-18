@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Data;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The result of a write that mints a signing secret (register, rotate_secret): the endpoint and the raw secret, which

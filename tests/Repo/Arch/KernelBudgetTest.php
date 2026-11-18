@@ -56,7 +56,7 @@ it('enforces the measured kernel budget and exact runtime dependency keys', func
 });
 
 it('rejects budget boundary plus one and independent dependency or reason changes', function (): void {
-    $budget = ['runtime_require' => ['php'], 'forbidden_dev_packages_prefix' => 'axioma-studio/', 'src' => ['php_files' => 100, 'loc' => 1000, 'max_growth_percent' => 10], 'api_types' => 20, 'history' => [['reason' => 'fixture baseline']]];
+    $budget = ['runtime_require' => ['php'], 'forbidden_dev_packages_prefix' => 'axiomasoft/vaulter', 'src' => ['php_files' => 100, 'loc' => 1000, 'max_growth_percent' => 10], 'api_types' => 20, 'history' => [['reason' => 'fixture baseline']]];
     $cases = json_decode(file_get_contents(__DIR__.'/Fixtures/kernel-budget/cases.json'), true, flags: JSON_THROW_ON_ERROR);
     foreach ($cases as $case) {
         $fixture = $budget;

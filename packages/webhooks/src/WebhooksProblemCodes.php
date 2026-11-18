@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
 use Vaulter\Http\Problems\ReceiptPolicy;

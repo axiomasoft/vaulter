@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Packman\Attributes\Internal;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use Vaulter\Database\VaulterDatabase;
 
 /**
@@ -16,7 +17,7 @@ use Vaulter\Database\VaulterDatabase;
  * The reads ({@see keptBy()}, {@see keptOn()}) are repeated inside the transaction of the purge and right before each
  * rollback, so they report the current state, take no lock and cache nothing.
  */
-#[Internal]
+#[Spi(SpiKind::Implement, since: '1.0')]
 interface ModuleReferences
 {
     /**

@@ -220,6 +220,26 @@ final class SchemaSnapshot
             $constraints[$name] = $constraint;
         }
 
+        // PostgreSQL 18 mirrors every attnotnull column into pg_constraint with contype = 'n'; earlier server versions
+        // store column NOT NULL solely on pg_attribute.attnotnull. Project it into the same canonical shape when < 18.
+        $versionRow = (array) $db->selectOne('show server_version_num');
+        if ((int) ($versionRow['server_version_num'] ?? 0) < 180000) {
+            foreach ($columns as $column) {
+                if (($column['not_null'] ?? false) === true) {
+                    $colName = (string) $column['name'];
+                    $conName = $table.'_'.$colName.'_not_null';
+                    $constraints[$conName] ??= [
+                        'type' => 'n',
+                        'definition' => 'NOT NULL '.$colName,
+                        'deferrable' => false,
+                        'deferred' => false,
+                        'validated' => true,
+                    ];
+                }
+            }
+            ksort($constraints);
+        }
+
         return ['columns' => $columns, 'indexes' => $indexes, 'constraints' => $constraints];
     }
 

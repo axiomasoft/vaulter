@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Revocation;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The pair of permission versions a room token was issued under, or the current pair of its drive: the version

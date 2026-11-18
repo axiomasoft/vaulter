@@ -9,7 +9,7 @@ use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Concurrency\RaceFixtures;
 use Vaulter\Collaboration\Tests\Support\Compaction;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Testing\Concurrency\ForkRace;
 
@@ -38,7 +38,7 @@ it('gives two concurrent appends of one generation the seqs after the seed, each
 
     $results = RaceFixtures::race([$append('hub A'), $append('hub B')]);
 
-    $tables = app(DatabaseConfig::class);
+    $tables = app(DatabaseOptions::class);
     $seqs = DB::table($tables->table('collaboration_receipts'))->orderBy('seq')->pluck('seq')->map(static fn (mixed $seq): int => (int) $seq)->all();
     $document = Hub::aggregate($node);
     expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])

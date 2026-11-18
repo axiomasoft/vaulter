@@ -77,10 +77,8 @@ final class PurgeTrashCommand extends Command
                         continue;
                     }
                     $context = DriveContext::system(drive: $drive, reason: 'retention');
-                    $override = $this->option('days');
-                    $days = (is_string($override) || is_int($override)) && is_numeric($override)
-                        ? max((int) $override, 0)
-                        : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $driveOptions->trash->retentionDays);
+                    $override = self::retentionOverride($this->option('days'));
+                    $days = $override ?? $this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $driveOptions->trash->retentionDays;
                     $threshold = Carbon::now()->subDays($days);
                     // Each root is one root operation `drive.trash.purge`: the documents drain runs before its
                     // transaction, and a root that stays refused (document_state_pending) rolls back only itself.
@@ -124,5 +122,11 @@ final class PurgeTrashCommand extends Command
         $this->info(sprintf('Purged %d trashed subtree%s.', $purgedRoots, $purgedRoots === 1 ? '' : 's').($skipped > 0 ? sprintf(' Skipped %d.', $skipped) : ''));
 
         return $failed ? self::FAILURE : self::SUCCESS;
+    }
+
+    /** Artisan::call can supply integer options; CLI input supplies strings. */
+    private static function retentionOverride(mixed $value): ?int
+    {
+        return (is_string($value) || is_int($value)) && is_numeric($value) ? max((int) $value, 0) : null;
     }
 }

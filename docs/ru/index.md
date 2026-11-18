@@ -16,7 +16,7 @@ hero:
       link: /ru/getting-started/introduction
     - theme: alt
       text: GitHub
-      link: https://github.com/axioma-studio/vaulter
+      link: https://github.com/axiomasoft/vaulter
 
 features:
   - title: Storage Panels

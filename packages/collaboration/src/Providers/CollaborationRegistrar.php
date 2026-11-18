@@ -11,9 +11,9 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationSchedule;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Drain\BackoffDrainWaiter;
 use Vaulter\Collaboration\Drain\DrainWaiter;
@@ -22,10 +22,10 @@ use Vaulter\Collaboration\Revocation\ControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\HttpControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\NoControlTransport;
 use Vaulter\Collaboration\Revocation\Transports\RedisControlTransport;
-use Vaulter\Configuration\ScheduleConfig;
+use Vaulter\Configuration\CompiledOptionsCache;
+use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
-use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Modules\ModuleBindings;
 
 /** The container wiring of the collaboration module ({@see CollaborationModule}): its configuration, the host-user seam and the room channel. */
@@ -34,15 +34,15 @@ final class CollaborationRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
-        $app->singleton(CollaborationConfig::class, static fn (Container $app): CollaborationConfig => new CollaborationConfig($app->make('config'), $app->make(DocumentsConfig::class)));
+        $app->bind(CollaborationOptions::class, static fn (Container $app): CollaborationOptions => self::options($app)->withContext($app->make(DocumentsOptions::class), is_string($url = $app->make('config')->get('app.url')) ? $url : null));
         $app->bind('vaulter.config_validator.collaboration', static fn (Container $app): Closure => static function () use ($app): void {
-            $config = $app->make(CollaborationConfig::class);
+            $config = $app->make(CollaborationOptions::class);
             $config->assertDistinctHubSecrets();
             $config->hubTokenTtl();
             $config->hubClockSkew();
             $config->controlTransport();
             $config->mode();
-            $app->make(ScheduleConfig::class)->frequencies('vaulter-collaboration', CollaborationSchedule::KEYS);
+            ScheduleFrequency::fromMap('vaulter-collaboration.schedule', $app->make('config')->get('vaulter-collaboration.schedule', []), CollaborationSchedule::KEYS);
         });
         $app->tag('vaulter.config_validator.collaboration', 'vaulter.config_validators');
 
@@ -56,7 +56,7 @@ final class CollaborationRegistrar implements ModuleBindings
         $app->bind(DrainWaiter::class, BackoffDrainWaiter::class);
 
         // How a control message reaches the hubs (control.transport); a test binds a recording transport here.
-        $app->bind(ControlTransport::class, static fn (Container $app): ControlTransport => match ($app->make(CollaborationConfig::class)->controlTransport()) {
+        $app->bind(ControlTransport::class, static fn (Container $app): ControlTransport => match ($app->make(CollaborationOptions::class)->controlTransport()) {
             'redis' => $app->make(RedisControlTransport::class),
             'http' => $app->make(HttpControlTransport::class),
             default => new NoControlTransport,
@@ -65,11 +65,14 @@ final class CollaborationRegistrar implements ModuleBindings
 
     public function boot(Application $app): void
     {
-        $config = $app->make(CollaborationConfig::class);
+        $config = $app->make(CollaborationOptions::class);
         // Structural validation first, in every environment, before any production-risk classifier runs.
         $config->assertDistinctHubSecrets();
         $config->hubTokenTtl();
         $config->hubClockSkew();
+        $config->controlTransport();
+        $config->mode();
+        ScheduleFrequency::fromMap('vaulter-collaboration.schedule', $app->make('config')->get('vaulter-collaboration.schedule', []), CollaborationSchedule::KEYS);
         if (!$app->environment('production') && ($config->hubJwtKeysViolation() !== null || $config->hubWebhookSecret() === null)) {
             Log::warning('[Vaulter] Collaboration requires a usable JWT key set and a different webhook secret.');
         }
@@ -88,7 +91,7 @@ final class CollaborationRegistrar implements ModuleBindings
     private static function registerBroadcastChannel(): void
     {
         Broadcast::channel(
-            app(CollaborationConfig::class)->channelPrefix().'.{roomId}',
+            app(CollaborationOptions::class)->channelPrefix().'.{roomId}',
             static fn (Authenticatable $user, int|string $roomId): bool => self::authorizeNodeRoom($user, $roomId),
         );
     }
@@ -100,5 +103,10 @@ final class CollaborationRegistrar implements ModuleBindings
     private static function authorizeNodeRoom(Authenticatable $user, int|string $roomId): bool
     {
         return $user instanceof Authorizable && app(CollaborationAccessPolicy::class)->canViewDocumentNode($user, $roomId);
+    }
+
+    private static function options(Container $app): CollaborationOptions
+    {
+        return CompiledOptionsCache::resolve($app, 'vaulter-collaboration', static fn (array $raw): CollaborationOptions => CollaborationOptions::fromArray($raw));
     }
 }

@@ -23,8 +23,8 @@ function sm_sources(): array
         'packages/core/src/Money.php' => <<<'PHP'
             <?php
             namespace Vaulter;
-            use Vaulter\Attributes\Api;
-            use Vaulter\Attributes\Internal;
+            use Packman\Attributes\Api;
+            use Packman\Attributes\Internal;
             /** @method static Money zero() */
             #[Api]
             final readonly class Money implements \Countable
@@ -46,7 +46,7 @@ function sm_sources(): array
         'packages/core/src/Kind.php' => <<<'PHP'
             <?php
             namespace Vaulter;
-            use Vaulter\Attributes\Api;
+            use Packman\Attributes\Api;
             #[Api(since: '1.1')]
             enum Kind: string
             {
@@ -58,8 +58,8 @@ function sm_sources(): array
         'packages/core/src/Handler.php' => <<<'PHP'
             <?php
             namespace Vaulter;
-            use Vaulter\Attributes\Spi;
-            use Vaulter\Attributes\SpiKind;
+            use Packman\Attributes\Spi;
+            use Packman\Attributes\SpiKind;
             #[Spi(SpiKind::Implement)]
             interface Handler extends \Stringable
             {
@@ -69,15 +69,15 @@ function sm_sources(): array
         'packages/core/src/Hidden.php' => <<<'PHP'
             <?php
             namespace Vaulter;
-            use Vaulter\Attributes\Internal;
+            use Packman\Attributes\Internal;
             #[Internal]
             final class Hidden { public function visible(): void {} }
             PHP,
         'packages/drive/src/Folder.php' => <<<'PHP'
             <?php
             namespace Vaulter\Drive;
-            use Vaulter\Attributes\Spi;
-            use Vaulter\Attributes\SpiKind;
+            use Packman\Attributes\Spi;
+            use Packman\Attributes\SpiKind;
             #[Spi(kind: SpiKind::Call, since: '1.2')]
             abstract class Folder { abstract public function open(): void; }
             PHP,
@@ -140,7 +140,7 @@ it('manifest: a changed signature, a dropped Internal or a new member is a visib
 });
 
 it('manifest: an Api type with a technical constructor shows no constructor and still shows its promoted properties', function (): void {
-    $code = '<?php namespace Vaulter; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Api] final class Wired { #[Internal] public function __construct(public readonly string $id, private int $n = 0) {} public function id(): string { return $this->id; } }';
+    $code = '<?php namespace Vaulter; use Packman\Attributes\Api; use Packman\Attributes\Internal; #[Api] final class Wired { #[Internal] public function __construct(public readonly string $id, private int $n = 0) {} public function id(): string { return $this->id; } }';
     $manifest = Surface::manifests(Surface::fromSources(['packages/core/src/Wired.php' => $code]))['core'];
 
     expect($manifest)->toContain("  public readonly string \$id\n  public function id(): string")
@@ -161,7 +161,7 @@ it('manifest: the classifier facts of a type (facade @method, docblock generics,
 });
 
 it('manifest: the structural surface.json is versioned, keyed by FQCN and member key, and keeps an Internal ancestor of a root while dropping an unrelated Internal type', function (): void {
-    $sources = sm_sources() + ['packages/core/src/Base.php' => '<?php namespace Vaulter; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Internal] abstract class Base { public function read(string $key): string { return $key; } } #[Api] final class Child extends Base {}'];
+    $sources = sm_sources() + ['packages/core/src/Base.php' => '<?php namespace Vaulter; use Packman\Attributes\Api; use Packman\Attributes\Internal; #[Internal] abstract class Base { public function read(string $key): string { return $key; } } #[Api] final class Child extends Base {}'];
     $types = Surface::fromSources($sources);
     $json = json_decode(Surface::structures($types, ['core'])['core'], true, 512, JSON_THROW_ON_ERROR);
     $money = $json['types']['Vaulter\\Money'];

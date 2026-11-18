@@ -12,7 +12,7 @@ use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
- * What a module declares from {@see VaulterModule::register()}. Declarations only: values are
+ * What a module declares from {@see WithModuleRuntime::moduleRuntime()}. Declarations only: values are
  * scalars, enums and class-strings (no closures), nothing is resolved or read here, and every call
  * after the kernel sealed the registry throws {@see RegistryFrozenException}.
  *

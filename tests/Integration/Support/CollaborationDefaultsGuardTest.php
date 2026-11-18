@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
@@ -20,7 +20,7 @@ use Vaulter\Testing\Concerns\FreshApplication;
 it('the collaboration configuration accessor falls back to hocuspocus when the config key is entirely absent, F-P3.6-01', function (): void {
     // Replaced the transport selector with the documents-owned protocol slot.
     $app = FreshApplication::boot(['vaulter.modules.collaboration' => true], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
-    $app['config']->offsetUnset('vaulter-collaboration.driver');
+    expect($app['config']->get('vaulter-collaboration'))->not->toHaveKey('driver');
     $extensions = $app->make(Kernel::class)->extensions();
 
     expect($extensions->handlerKeys(CollaborationProtocolDriver::class))->toBe(['yjs'])
@@ -32,7 +32,7 @@ it('the vaulter-collaboration config default transport is hocuspocus (unchanged 
 
     expect($defaults)->not->toHaveKey('driver')
         ->and($defaults)->toHaveKeys(['hub', 'mode', 'limits'])
-        ->and(method_exists(CollaborationConfig::class, 'driver'))->toBeFalse();
+        ->and(method_exists(CollaborationOptions::class, 'driver'))->toBeFalse();
 });
 
 it('README describes canonical feature ownership (P2.5)', function (): void {

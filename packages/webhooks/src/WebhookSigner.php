@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * Signs webhook deliveries as the Standard Webhooks spec defines: HMAC-SHA256 over

@@ -82,6 +82,6 @@ final class Revocation
     /** One relay pass of the control consumer: register, reconcile, deliver. */
     public static function relayControl(): void
     {
-        app(OutboxRelay::class)->pass(ControlConsumer::ID, null);
+        app(OutboxRelay::class)->pass(ControlConsumer::ID);
     }
 }

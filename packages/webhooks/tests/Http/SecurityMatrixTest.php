@@ -119,7 +119,7 @@ function smwhProblem(TestResponse $response): array
 /** The row's own check against the route's request. */
 function smwhCheck(string $row, string $route): void
 {
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     Bus::fake([DeliverWebhook::class]);
 
     match ($row) {

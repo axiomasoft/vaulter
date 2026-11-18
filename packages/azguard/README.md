@@ -1,6 +1,6 @@
 # Vaulter · AzGuard permission bridge
 
-`axioma-studio/vaulter-azguard` wires the [AzGuard](https://github.com/axiomasoft/azguard-private)
+`axiomasoft/vaulter-azguard` wires the [AzGuard](https://github.com/axiomasoft/azguard-private)
 v1 panel authorization (resources and assignment scopes) into Vaulter's
 composite ACL — so a host running AzGuard authorizes Vaulter documents/folders with its
 existing roles and permissions.
@@ -9,7 +9,7 @@ Neither the Vaulter kernel nor the drive carries a dependency on AzGuard. This p
 `Vaulter\AzGuard\AzGuardPermissionDriver`, the narrow
 `Vaulter\AzGuard\Contracts\AzGuardGuard` seam and its real adapter. The drive's
 `AccessResolver` reaches the bridge through the `Vaulter\Drive\Contracts\Access\PermissionDriver` contract; the bridge
-requires `axioma-studio/vaulter-drive` (and, through it, core and media), and the drive stays installable with this
+requires `axiomasoft/vaulter-drive` (and, through it, core and media), and the drive stays installable with this
 package absent.
 
 ## How it works
@@ -29,7 +29,7 @@ Drive AccessResolver ─▶ AzGuardPermissionDriver ─▶ AzGuardGuard (seam)
   Eloquent model) and `hasPermissionIn` → `hasPermission(on: AssignmentScopeRef::of($type, $id))`
   (the workspace lane).
 - **`AzGuardPermissionMap`** maps abilities to permission keys through the live
-  `Configuration\AzGuardConfig` repository.
+  `Configuration\AzGuardOptions` repository.
 - **`VaulterAzGuardServiceProvider`** offers the `azguard` driver while preserving host
   overrides. It creates no request-bound guard. The optional configured guard is a capability;
   without it the driver adapts an AzGuard-backed actor and grants nothing for other actors.
@@ -45,7 +45,7 @@ Drive AccessResolver ─▶ AzGuardPermissionDriver ─▶ AzGuardGuard (seam)
 ## Install
 
 ```bash
-composer require axioma-studio/vaulter-azguard
+composer require axiomasoft/vaulter-azguard
 ```
 
 Select the driver (`vaulter-drive.access.permission_driver`):
@@ -62,7 +62,7 @@ bridge pins one commit: `dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`.
 1. **Mark your User** as AzGuard-backed for Vaulter — free if it already uses AzGuard:
 
    ```php
-   use AzGuard\Concerns\HasAzGuard;
+   use AzGuard\Concerns\Subjects\HasAzGuard;
    use Vaulter\AzGuard\Contracts\AzGuardBackedUser;
 
    class User extends Authenticatable implements AzGuardBackedUser
@@ -71,7 +71,7 @@ bridge pins one commit: `dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`.
    }
    ```
 
-   `AzGuardBackedUser` is AzGuard v1's own `AzGuard\Contracts\AzGuardSubject`, so the
+   `AzGuardBackedUser` is AzGuard v1's own `AzGuard\Contracts\Subjects\AzGuardSubject`, so the
    `HasAzGuard` trait already declares every method: no bodies needed, only the
    `implements` clause.
 

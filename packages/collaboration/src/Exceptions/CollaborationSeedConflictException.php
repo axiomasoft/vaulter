@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Collaboration\Errors\CollaborationErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -62,5 +66,11 @@ final class CollaborationSeedConflictException extends VaulterException implemen
             'expected_state_version' => $this->expectedStateVersion,
             'actual_state_version' => $this->actualStateVersion,
         ], static fn (mixed $value): bool => $value !== null)];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: CollaborationErrorCode::SeedConflict, category: ErrorCategory::Conflict, retryable: true);
     }
 }

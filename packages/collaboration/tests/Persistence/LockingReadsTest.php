@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Node;
 
@@ -88,7 +88,7 @@ function lockingSelects(Closure $run): array
  */
 function lockingSelectsByEntity(array $selects): array
 {
-    $tables = app(DatabaseConfig::class);
+    $tables = app(DatabaseOptions::class);
     $byEntity = [];
     foreach (['documents', 'collaboration_heads', 'collaboration_updates', 'collaboration_receipts'] as $entity) {
         $from = 'from `'.$tables->table($entity).'`';

@@ -36,8 +36,8 @@ final class PruneRevisionsCommand extends Command
 
     public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseOptions $tables, DriveOptions $config): int
     {
-        $dryRun = (bool) $this->option('dry-run');
-        $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
+        $dryRun = $this->option('dry-run');
+        $only = array_values(array_filter(array_map(Identity::stringify(...), $this->option('drive')), static fn (string $id): bool => $id !== ''));
         $totals = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];
         $failed = false;
 

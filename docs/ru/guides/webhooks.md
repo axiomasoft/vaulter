@@ -6,14 +6,14 @@ title: Вебхуки
 
 ## Установка и включение
 
-Вебхуки — отдельный пакет `axioma-studio/vaulter-webhooks`. Он требует `vaulter-core` и `vaulter-drive`
-(эндпоинты привязаны к drive) и не входит в метапакет `axioma-studio/vaulter`, потому что открывает исходящий
+Вебхуки — отдельный пакет `axiomasoft/vaulter-webhooks`. Он требует `vaulter-core` и `vaulter-drive`
+(эндпоинты привязаны к drive) и не входит в метапакет `axiomasoft/vaulter`, потому что открывает исходящий
 сетевой трафик:
 
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-webhooks
+composer require axiomasoft/vaulter-webhooks
 ```
 
 Модуль **opt-in**: установка пакета создаёт его таблицы (`v_webhook_endpoints`, `v_webhook_deliveries`) через

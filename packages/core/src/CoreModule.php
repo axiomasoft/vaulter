@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
+use LogicException;
 use Override;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
@@ -62,8 +63,8 @@ use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Idempotency\IdempotencySchedule;
 use Vaulter\Modules\Cardinality;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\SlotKind;
+use Vaulter\Modules\PluginModuleSpec;
+use Vaulter\Modules\WithModuleRuntime;
 use Vaulter\Observability\TelemetryMiddleware;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Providers\BindingsRegistrar;
@@ -77,7 +78,7 @@ use Vaulter\Security\TenancyInvariant;
  * core outbox/idempotency schema sets, diagnostic checks, error definitions, and extension slots.
  */
 #[Api(since: '1.0')]
-final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithSchema, WithSlots
+final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfiguration, WithDiagnostics, WithModuleRuntime, WithSchema, WithSlots
 {
     use Configurable;
     use ContributesToSlots;
@@ -110,7 +111,7 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
         return new PluginManifest(
             id: 'vaulter.core',
             version: '1.0.0',
-            resourceRoot: dirname(__DIR__).'/resources',
+            resourceRoot: ($root = realpath(dirname(__DIR__).'/resources')) !== false ? $root : throw new LogicException('Vaulter resource root is unavailable.'),
         );
     }
 
@@ -219,47 +220,19 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
         return KernelSchema::class;
     }
 
-    /**
-     * Bridges core declarations into Vaulter's module compiler for domain modules not yet migrated to plugins.
-     */
-    #[Internal]
-    public function declareModule(ModuleBuilder $module): void
+    public function moduleRuntime(): PluginModuleSpec
     {
-        $module
-            ->config('vaulter', __DIR__.'/../config/vaulter.php')
-            ->schema(__DIR__.'/../database/migrations')
-            ->bindings(BindingsRegistrar::class)
-            ->bindings(EventsRegistrar::class)
-            ->problems(CoreProblemCodes::class)
-            ->routeMiddleware(ReadIdempotencyKey::ALIAS, ReadIdempotencyKey::class)
-            ->schedule(IdempotencySchedule::class)
-            ->schedule(OutboxSchedule::class)
-            ->commands(
-                InstallCommand::class,
-                DoctorCommand::class,
-                ModulesCommand::class,
-                ModuleUninstallCommand::class,
-                EventsReferenceCommand::class,
-                ErrorsReferenceCommand::class,
-                OperationsReferenceCommand::class,
-                ConfigReferenceCommand::class,
-                CommandsReferenceCommand::class,
-                PruneIdempotencyKeysCommand::class,
-                RelayCommand::class,
-                RelayReplayCommand::class,
-                PruneOutboxCommand::class,
-            )
-            ->defineSlot(DoctorCheck::class, SlotKind::Handler, Cardinality::Many)
-            ->defineSlot(OperationMiddleware::class, SlotKind::OperationMiddleware, Cardinality::Many)
-            ->defineSlot(EventSink::class, SlotKind::EventSink, Cardinality::Many)
-            ->defineSlot(OutboxConsumer::class, SlotKind::OutboxConsumer, Cardinality::Many)
-            ->defineSlot(RouteLabelSource::class, SlotKind::Contributor, Cardinality::Many)
-            ->defineSlot(ProductionInvariant::class, SlotKind::Handler, Cardinality::Many)
-            ->slot(ProductionInvariant::class, TenancyInvariant::class, 'core.tenancy', key: 'core.tenancy')
-            ->slot(OperationMiddleware::class, TelemetryMiddleware::class, 'core.telemetry');
-
-        foreach (self::DOCTOR_CHECKS as $key => $check) {
-            $module->slot(DoctorCheck::class, $check, $key, key: $key);
-        }
+        return new PluginModuleSpec(
+            plugin: self::class,
+            translations: ['vaulter' => dirname(__DIR__).'/resources/lang'],
+            commands: [InstallCommand::class, DoctorCommand::class, ModulesCommand::class,
+                ModuleUninstallCommand::class, EventsReferenceCommand::class, ErrorsReferenceCommand::class,
+                OperationsReferenceCommand::class, ConfigReferenceCommand::class, CommandsReferenceCommand::class,
+                PruneIdempotencyKeysCommand::class, RelayCommand::class, RelayReplayCommand::class, PruneOutboxCommand::class],
+            schedules: [IdempotencySchedule::class, OutboxSchedule::class],
+            routeMiddleware: [ReadIdempotencyKey::ALIAS => ReadIdempotencyKey::class],
+            bindings: [BindingsRegistrar::class, EventsRegistrar::class],
+            problems: [CoreProblemCodes::class],
+        );
     }
 }

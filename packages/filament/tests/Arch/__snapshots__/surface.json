@@ -3,7 +3,7 @@
     "version": 1,
     "package": "filament",
     "types": {
-        "Vaulter\\Filament\\Configuration\\FilamentConfig": {
+        "Vaulter\\Filament\\Configuration\\FilamentOptions": {
             "kind": "class",
             "surface": "Api",
             "since": "1.0",
@@ -14,21 +14,56 @@
             },
             "backing": null,
             "extends": [],
-            "implements": [],
+            "implements": [
+                "Packman\\Config\\Contracts\\OptionsFactory"
+            ],
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
-                "method:__construct": {
+                "method:fromarray": {
                     "kind": "method",
-                    "name": "__construct",
+                    "name": "fromArray",
                     "visibility": "public",
-                    "internal": true
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "config",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "path",
+                            "type": "string",
+                            "default": "'vaulter-filament'",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Filament\\Configuration\\FilamentOptions",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<array-key, mixed> $config"
+                    ]
                 },
                 "method:navigationgroup": {
                     "kind": "method",
@@ -74,7 +109,7 @@
                 }
             }
         },
-        "Vaulter\\Filament\\VaulterFilamentServiceProvider": {
+        "Vaulter\\Filament\\FilamentModule": {
             "kind": "class",
             "surface": "Api",
             "since": "1.0",
@@ -84,24 +119,106 @@
                 "readonly": false
             },
             "backing": null,
-            "extends": [
-                "Spatie\\LaravelPackageTools\\PackageServiceProvider"
+            "extends": [],
+            "implements": [
+                "Packman\\Extensions\\Contracts\\Configuration\\WithConfiguration",
+                "Packman\\Plugins\\Contracts\\Registry\\ExtensionPlugin",
+                "Vaulter\\Modules\\WithModuleRuntime"
             ],
-            "implements": [],
             "traits": [
-                "Vaulter\\Modules\\OffersModules"
+                "Packman\\Extensions\\Concerns\\Configuration\\Configurable"
             ],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api(since: '1.0')"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
-                "method:configurepackage": {
+                "method:configroot": {
                     "kind": "method",
-                    "name": "configurePackage",
+                    "name": "configRoot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:defaultconfigpath": {
+                    "kind": "method",
+                    "name": "defaultConfigPath",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:manifest": {
+                    "kind": "method",
+                    "name": "manifest",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Packman\\Plugins\\Data\\Plugin\\PluginManifest",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:moduleruntime": {
+                    "kind": "method",
+                    "name": "moduleRuntime",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:optionsclass": {
+                    "kind": "method",
+                    "name": "optionsClass",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
                     "visibility": "public",
                     "internal": false,
                     "static": false,
@@ -110,8 +227,59 @@
                     "by_ref": false,
                     "params": [
                         {
-                            "name": "package",
-                            "type": "Spatie\\LaravelPackageTools\\Package",
+                            "name": "registrar",
+                            "type": "Packman\\Plugins\\Laravel\\PluginRegistrar",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Filament\\Providers\\FilamentPackageRegistrar": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Foundation\\Contracts\\PackageRegistrar"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:boot": {
+                    "kind": "method",
+                    "name": "boot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
                             "default": null,
                             "variadic": false,
                             "by_ref": false,
@@ -125,9 +293,92 @@
                     "doc_internal": false,
                     "doc": []
                 },
-                "method:packageregistered": {
+                "method:register": {
                     "kind": "method",
-                    "name": "packageRegistered",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Filament\\VaulterFilamentServiceProvider": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [
+                "Illuminate\\Support\\ServiceProvider"
+            ],
+            "implements": [],
+            "traits": [
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
+            ],
+            "adaptations": [
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "register",
+                    "alias": "registerRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                },
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "boot",
+                    "alias": "bootRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                }
+            ],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "constant:REGISTRARS": {
+                    "kind": "constant",
+                    "name": "REGISTRARS",
+                    "visibility": "protected",
+                    "internal": false,
+                    "final": false,
+                    "type": "array",
+                    "value": "[\\Vaulter\\Filament\\Providers\\FilamentPackageRegistrar::class]",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@var list<class-string<PackageRegistrar>>"
+                    ]
+                },
+                "method:boot": {
+                    "kind": "method",
+                    "name": "boot",
                     "visibility": "public",
                     "internal": false,
                     "static": false,
@@ -137,6 +388,24 @@
                     "params": [],
                     "return": "void",
                     "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "void",
+                    "attributes": [
+                        "Override"
+                    ],
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
@@ -155,12 +424,12 @@
             "backing": null,
             "extends": [],
             "implements": [
-                "Filament\\Contracts\\Plugin"
+                "Packman\\Filament\\Contracts\\FilamentPanelPlugin"
             ],
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -220,6 +489,58 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:getabilities": {
+                    "kind": "method",
+                    "name": "getAbilities",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<string>"
+                    ]
+                },
+                "method:getexclude": {
+                    "kind": "method",
+                    "name": "getExclude",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array{resources: list<string>, pages: list<string>, widgets: list<string>}"
+                    ]
+                },
+                "method:getguardpanel": {
+                    "kind": "method",
+                    "name": "getGuardPanel",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "null|string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:getid": {
                     "kind": "method",
                     "name": "getId",
@@ -234,6 +555,22 @@
                     "attributes": [
                         "Override"
                     ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:isenforced": {
+                    "kind": "method",
+                    "name": "isEnforced",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "bool",
+                    "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []

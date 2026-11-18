@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
 test('vaulter-webhooks configuration API matches the frozen golden (P4.13)', function (): void {
-    $reflection = new ReflectionClass(WebhooksConfig::class);
+    $reflection = new ReflectionClass(WebhooksOptions::class);
     $methods = [];
 
     foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -32,7 +32,7 @@ test('vaulter-webhooks configuration API matches the frozen golden (P4.13)', fun
     }
 
     sort($methods);
-    $manifest = WebhooksConfig::class."\n".implode("\n", $methods)."\n";
+    $manifest = WebhooksOptions::class."\n".implode("\n", $methods)."\n";
     $golden = __DIR__.'/__snapshots__/public-api.txt';
 
     if (getenv('UPDATE_SNAPSHOT') === '1') {

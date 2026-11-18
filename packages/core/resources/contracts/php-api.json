@@ -181,6 +181,63 @@
             "enum_backing": null,
             "enum_cases": []
         },
+        "Vaulter\\Configuration\\CompiledOptionsCache": {
+            "kind": "class",
+            "layer": "spi",
+            "since": "1.0",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "resolve": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Container\\Container",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "configKey",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "compile",
+                            "type": "Closure",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "object",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "call"
+        },
         "Vaulter\\Configuration\\ConfigNormalizer": {
             "kind": "class",
             "layer": "api",
@@ -2312,6 +2369,7 @@
                 "Packman\\Extensions\\Contracts\\Composition\\WithCapabilities",
                 "Packman\\Extensions\\Contracts\\Configuration\\WithConfiguration",
                 "Packman\\Extensions\\Contracts\\Runtime\\WithDiagnostics",
+                "Vaulter\\Modules\\WithModuleRuntime",
                 "Packman\\Extensions\\Contracts\\Persistence\\WithSchema",
                 "Packman\\Extensions\\Contracts\\Composition\\WithSlots"
             ],
@@ -2332,26 +2390,6 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "string",
-                    "doc": []
-                },
-                "declareModule": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "module",
-                            "type": "Vaulter\\Modules\\ModuleBuilder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "void",
                     "doc": []
                 },
                 "defaultConfigPath": {
@@ -2402,6 +2440,16 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "string",
+                    "doc": []
+                },
+                "moduleRuntime": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
                     "doc": []
                 },
                 "optionsClass": {
@@ -6999,6 +7047,63 @@
             "enum_backing": null,
             "enum_cases": []
         },
+        "Vaulter\\Laravel\\VaulterPluginRegistrar": {
+            "kind": "class",
+            "layer": "spi",
+            "since": "1.0",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "register": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "plugin",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "composerManifest",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "call"
+        },
         "Vaulter\\Models\\Concerns\\GuardsWrites": {
             "kind": "trait",
             "layer": "api",
@@ -8543,6 +8648,85 @@
             "enum_backing": null,
             "enum_cases": []
         },
+        "Vaulter\\Modules\\ModuleReferences": {
+            "kind": "interface",
+            "layer": "spi",
+            "since": "1.0",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "keptBy": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "module",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "array",
+                    "doc": []
+                },
+                "keptOn": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "module",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "array",
+                    "doc": []
+                },
+                "releaseKeptBy": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "module",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "int",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "implement"
+        },
         "Vaulter\\Modules\\ModuleSchedule": {
             "kind": "interface",
             "layer": "spi",
@@ -8764,6 +8948,179 @@
             "enum_cases": [],
             "spi_kind": "implement"
         },
+        "Vaulter\\Modules\\PluginModuleSpec": {
+            "kind": "class",
+            "layer": "api",
+            "since": "1.0",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "__construct": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "plugin",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 1
+                        },
+                        {
+                            "name": "activation",
+                            "type": "Vaulter\\Modules\\Activation",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "\\Vaulter\\Modules\\Activation::Auto",
+                            "flags": 1
+                        },
+                        {
+                            "name": "protocolVersion",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 1
+                        },
+                        {
+                            "name": "requires",
+                            "type": "?array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 1
+                        },
+                        {
+                            "name": "routes",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "translations",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "commands",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "listeners",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "schedules",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "routeMiddleware",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "bindings",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "events",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "problems",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "operations",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
+                        },
+                        {
+                            "name": "heldReferences",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 1
+                        },
+                        {
+                            "name": "removalGuard",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 1
+                        }
+                    ],
+                    "return": null,
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
         "Vaulter\\Modules\\RemovalGuard": {
             "kind": "interface",
             "layer": "spi",
@@ -8932,7 +9289,7 @@
                 }
             ]
         },
-        "Vaulter\\Modules\\VaulterModule": {
+        "Vaulter\\Modules\\WithModuleRuntime": {
             "kind": "interface",
             "layer": "spi",
             "since": "1.0",
@@ -8944,64 +9301,14 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "activation": {
+                "moduleRuntime": {
                     "visibility": "public",
                     "static": false,
                     "final": false,
                     "abstract": false,
                     "by_reference": false,
                     "parameters": [],
-                    "return": "Vaulter\\Modules\\Activation",
-                    "doc": []
-                },
-                "id": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "Vaulter\\Modules\\ModuleId",
-                    "doc": []
-                },
-                "register": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "module",
-                            "type": "Vaulter\\Modules\\ModuleBuilder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "void",
-                    "doc": []
-                },
-                "requires": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "array",
-                    "doc": []
-                },
-                "version": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "string",
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
                     "doc": []
                 }
             },
@@ -11315,7 +11622,7 @@
                     "parameters": [
                         {
                             "name": "module",
-                            "type": "Vaulter\\Modules\\VaulterModule",
+                            "type": "Packman\\Plugins\\Contracts\\Registry\\ExtensionPlugin",
                             "by_reference": false,
                             "variadic": false,
                             "optional": false,

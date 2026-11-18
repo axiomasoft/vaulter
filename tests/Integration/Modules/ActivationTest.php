@@ -10,11 +10,11 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Artisan;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\CoreModule;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Drive\DriveModule;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
@@ -97,7 +97,7 @@ it('boots without a query whatever the activation', function (array $config): vo
 
 it('refuses the removed vaulter.features.webhooks switch at boot', function (): void {
     expect(fn () => FreshApplication::boot(['vaulter.features.webhooks' => true]))
-        ->toThrow(InvalidConfigurationException::class, 'vaulter.modules.webhooks');
+        ->toThrow(InvalidConfiguration::class, 'vaulter.modules.webhooks');
 });
 
 it('answers a module route of an inactive module 404 and of an invalid graph 503, from the sealed kernel only', function (): void {

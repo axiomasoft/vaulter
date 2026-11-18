@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Events\EventCatalog;
@@ -14,8 +16,8 @@ use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\ModuleState;
-use Vaulter\Modules\VaulterModule;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
@@ -69,13 +71,12 @@ function i5Builders(): array
 {
     $builders = [];
     foreach (ModuleCatalog::of(i5App())->offered() as $manifest) {
-        if (!is_a($manifest, VaulterModule::class, true)) {
+        if (!is_a($manifest, ExtensionPlugin::class, true)) {
             continue;
         }
         $module = new $manifest;
-        $builder = new ModuleBuilder($module->id());
-        $module->register($builder);
-        $builders[$module->id()->value] = $builder;
+        $builder = ModuleDeclarations::buildOffered($manifest);
+        $builders[ModuleDeclarations::moduleId($module->manifest()->id)] = $builder;
     }
     ksort($builders);
 
@@ -219,6 +220,8 @@ it('declares every config root once, by the owner of its keys', function (): voi
 it('defines every slot and capability in the module that owns its contract', function (): void {
     $map = json_decode((string) file_get_contents(dirname(__DIR__, 3).'/tests/Repo/Arch/Fixtures/target-map.json'), true, flags: JSON_THROW_ON_ERROR);
     $owners = array_column($map['types'], 'owner', 'fqcn');
+    // Vaulter core owns the local Doctor slot over Packman's shared SPI.
+    $owners[DoctorCheck::class] = 'core';
     $compiled = i5App()->make(Kernel::class)->compiled();
 
     $definitions = [

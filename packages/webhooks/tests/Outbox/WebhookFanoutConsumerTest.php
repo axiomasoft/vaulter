@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
@@ -18,11 +19,9 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\DeliveryControl;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\Events\Outbox\OutboxStore;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -104,9 +103,9 @@ function leaseFanout(OutboxEvent $message): int
 /** Consume $message directly under the lease generation $generation. */
 function consumeWithGeneration(OutboxEvent $message, int $generation): mixed
 {
-    $control = new DeliveryControl(app(VaulterDatabase::class), app(DatabaseConfig::class), $message->event_id, WebhookFanoutConsumer::ID, $generation, fanoutRow($message)['continuation']);
+    $control = new DeliveryControl(app(VaulterDatabase::class), app(DatabaseOptions::class), $message->event_id, WebhookFanoutConsumer::ID, $generation, fanoutRow($message)['continuation']);
 
-    return app(WebhookFanoutConsumer::class)->consume(OutboxEnvelope::fromModel($message), $control);
+    return app(WebhookFanoutConsumer::class)->consume($message->toEnvelope(), $control);
 }
 
 it('sends the same occurrence id on the original delivery and a retry', function (): void {
@@ -123,13 +122,13 @@ it('sends the same occurrence id on the original delivery and a retry', function
     WebhookTestHelpers::relay();
     $delivery = WebhookDelivery::query()->where('event_id', $event->eventId)->sole();
     $job = new DeliverWebhook(deliveryId: (string) $delivery->getKey());
-    $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+    $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
     expect($delivery->refresh()->status)->toBe('failed');
 
     $delivery->forceFill(['next_retry_at' => now()->subSecond()])->save();
     $this->artisan('vaulter:webhooks:retry')->assertSuccessful();
     Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $retry): bool => new ReflectionProperty($retry, 'deliveryId')->getValue($retry) === (string) $delivery->getKey());
-    $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+    $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
 
     expect($delivery->refresh()->status)->toBe('delivered')
         ->and($delivery->attempts)->toBe(2)
@@ -259,7 +258,7 @@ it('resumes from the continuation after the consumer dies between chunks, withou
     // Worker A leases the delivery and dies right after its first chunk committed.
     $generation = leaseFanout($message);
     crashAfterCommit(1);
-    expect(fn () => consumeWithGeneration($message, $generation))->toThrow(RuntimeException::class, 'relay crashed');
+    expect(fn (): mixed => consumeWithGeneration($message, $generation))->toThrow(RuntimeException::class, 'relay crashed');
     stopCrashing();
 
     $row = fanoutRow($message);
@@ -287,7 +286,7 @@ it('discards the chunk of a consumer whose lease was taken over', function (): v
     // Worker A writes its first chunk under generation 1, then stalls past its lease.
     $generation = leaseFanout($message);
     crashAfterCommit(1);
-    expect(fn () => consumeWithGeneration($message, $generation))->toThrow(RuntimeException::class);
+    expect(fn (): mixed => consumeWithGeneration($message, $generation))->toThrow(RuntimeException::class);
     stopCrashing();
 
     // Worker B takes the delivery over (generation 2) and finishes it.
@@ -342,7 +341,7 @@ it('leaves out an endpoint deactivated while the event is being fanned out', fun
 
     $generation = leaseFanout($message);
     crashAfterCommit(1);
-    expect(fn () => consumeWithGeneration($message, $generation))->toThrow(RuntimeException::class);
+    expect(fn (): mixed => consumeWithGeneration($message, $generation))->toThrow(RuntimeException::class);
     stopCrashing();
 
     $endpoints[3]->forceFill(['is_active' => false])->save();
@@ -369,17 +368,20 @@ it('delivers due rows oldest first, honours the limit and skips rows under a liv
         ->and(fanoutRow($future)['state'])->toBe('pending');
 });
 
-it('rejects a fan-out chunk outside 1..1000 and retries the delivery later', function (mixed $chunk): void {
-    config()->set('vaulter-webhooks.relay.fanout_chunk', $chunk);
+it('rejects malformed fan-out options before leasing and delivers after configuration is repaired', function (mixed $chunk): void {
     WebhookTestHelpers::endpoint();
     $message = WebhookTestHelpers::outbox();
+    $before = WebhookTestHelpers::outboxDelivery($message->event_id);
+    config()->set('vaulter-webhooks.relay.fanout_chunk', $chunk);
 
-    expect(fn () => app(WebhooksConfig::class)->relayFanoutChunk())->toThrow(InvalidConfigurationException::class);
+    expect(fn () => app(WebhooksOptions::class)->relayFanoutChunk())->toThrow(InvalidConfiguration::class)
+        ->and(fn (): array => WebhookTestHelpers::relay())->toThrow(InvalidConfiguration::class)
+        ->and(WebhookTestHelpers::outboxDelivery($message->event_id))->toBe($before);
+
+    config()->set('vaulter-webhooks.relay.fanout_chunk', 2);
     WebhookTestHelpers::relay();
-
-    expect(fanoutRow($message)['state'])->toBe('pending')
-        ->and((int) fanoutRow($message)['attempts'])->toBe(1)
-        ->and(fanoutRow($message)['last_error'])->toContain(InvalidConfigurationException::class);
+    expect(fanoutRow($message)['state'])->toBe('done')
+        ->and(deliveredEndpoints($message))->toHaveCount(1);
 })->with([0, 1001, 'many', 2.5]);
 
 it('re-dispatches only due failed webhook deliveries with vaulter:webhooks:retry', function (): void {

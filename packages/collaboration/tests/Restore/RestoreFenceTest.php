@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Collaboration\Persistence\AppendResult;
+use Vaulter\Collaboration\Persistence\CheckpointResult;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
@@ -38,7 +40,7 @@ it('refuses the publication of a lease the restore outlived and changes nothing'
     $restored = Hub::aggregate($this->node);
     $closed = Compaction::head($this->node, 0);
 
-    expect(fn () => Compaction::publish($stale))->toThrow(CollaborationEpochMismatchException::class);
+    expect(fn (): CheckpointResult => Compaction::publish($stale))->toThrow(CollaborationEpochMismatchException::class);
 
     $after = Hub::aggregate($this->node);
     expect($restored->collab_epoch)->toBe(1)
@@ -56,7 +58,7 @@ it('refuses appends, leases and checkpoints of the generation a restore closed',
     $this->documents->restore($this->id, $this->first);
     $closed = Compaction::head($this->node, 0);
 
-    expect(fn () => Compaction::append($this->node, 'late', generation: 0))->toThrow(CollaborationEpochMismatchException::class)
+    expect(fn (): AppendResult => Compaction::append($this->node, 'late', generation: 0))->toThrow(CollaborationEpochMismatchException::class)
         ->and(Compaction::lease())->toBe([]);
     Hub::callV2('checkpoint', [
         'document' => $this->id,
@@ -103,7 +105,7 @@ it('closes the generation a REST replace moves past, with no pending edits to dr
     expect(FakeHub::$drains)->toBe([])
         ->and(Hub::aggregate($this->node)->collab_epoch)->toBe(1)
         ->and(Compaction::head($this->node, 0)?->retiredAt)->not->toBeNull()
-        ->and(fn () => Compaction::append($this->node, 'late', generation: 0))->toThrow(CollaborationEpochMismatchException::class);
+        ->and(fn (): AppendResult => Compaction::append($this->node, 'late', generation: 0))->toThrow(CollaborationEpochMismatchException::class);
 });
 
 it('leaves the current generation open when a checkpoint publication records its content event', function (): void {

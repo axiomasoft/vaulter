@@ -91,7 +91,7 @@ $storage = $this->store->create([
     'owner_type'   => $owner->getMorphClass(),
     'owner_id'     => $owner->getKey(),
     'name'         => $this->defaultName($owner),
-    'disk'         => app(\Vaulter\Media\Configuration\MediaConfig::class)->disk(),
+    'disk'         => app(\Vaulter\Media\Configuration\MediaOptions::class)->disk(),
     'storage_type' => $this->storageType($panel),
     'used_bytes'   => 0,
 ]);
@@ -254,7 +254,7 @@ For those identities to match, the host aligns three things:
    (`azguard.ids.host_keys` / `azguard.storages.*.host_keys`) to your models' key strategy.
 
 ::: info Install the AzGuard bridge
-`composer require axioma-studio/vaulter-azguard` installs the driver, real adapter and
+`composer require axiomasoft/vaulter-azguard` installs the driver, real adapter and
 `Vaulter\AzGuard\Testing\FakeAzGuardGuard`. Its provider registers the driver; the guard
 is selected by the `vaulter-azguard.guard` config key; the user model must implement `Vaulter\AzGuard\Contracts\AzGuardBackedUser`.
 Fake-based tests require the bridge's installed dependencies too. See

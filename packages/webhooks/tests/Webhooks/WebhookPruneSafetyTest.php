@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Events\Outbox\DeliveryClass;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxRelay;
@@ -37,7 +37,7 @@ function agePruneRow(WebhookDelivery $row, Carbon $at): void
 /** Marks the webhooks.fanout delivery of $event done, as a finished fan-out leaves it. */
 function finishFanout(OutboxEvent $event): void
 {
-    DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('event_id', $event->event_id)
+    DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->where('event_id', $event->event_id)
         ->update(['state' => 'done', 'done_at' => Carbon::now()]);
 }
 
@@ -52,7 +52,7 @@ it('never prunes an outbox event with an open delivery, however old, even half f
     $ancient = Carbon::now()->subYears(3);
     $untouched = WebhookTestHelpers::outbox(['created_at' => $ancient]);
     $halfway = WebhookTestHelpers::outbox(['created_at' => $ancient]);
-    DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('event_id', $halfway->event_id)
+    DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->where('event_id', $halfway->event_id)
         ->update(['state' => 'leased', 'continuation' => '7', 'lease_generation' => 3, 'lease_expires_at' => $ancient]);
     $finished = WebhookTestHelpers::outbox(['created_at' => Carbon::now()->subDay()]);
     finishFanout($finished);
@@ -105,7 +105,7 @@ it('keeps an outbox event that a replay reopened between the select and the dele
     DB::beforeExecuting(function (string $sql) use ($row, &$replayed): void {
         if (!$replayed && str_starts_with($sql, 'delete from') && str_contains($sql, $row->getTable())) {
             $replayed = true;
-            DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('event_id', $row->event_id)->update(['state' => 'pending']);
+            DB::table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->where('event_id', $row->event_id)->update(['state' => 'pending']);
         }
     });
 

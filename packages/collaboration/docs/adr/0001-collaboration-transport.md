@@ -6,7 +6,7 @@
 ## Context
 
 The original Vaulter spec assumed a standalone Node **Hocuspocus** server. The first
-consumer (FlexCRM, CoreX-based) instead runs **Yjs + y-websocket over Laravel Reverb** — no
+consumer instead runs **Yjs + y-websocket over Laravel Reverb** — no
 extra service to deploy. Forcing either choice on every host would hurt adoption.
 
 ## Decision

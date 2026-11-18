@@ -13,7 +13,7 @@ Files, folders and collaborative documents for any Laravel app — authorized by
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-drive
+composer require axiomasoft/vaulter-drive
 php artisan vaulter:install   # publishes config, asks to run the migrations
 npm install @vaulter/vue
 ```
@@ -38,15 +38,15 @@ $file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), 
 
 | Package | Purpose |
 | --- | --- |
-| `axioma-studio/vaulter-core` | the kernel: modules, operations, events and outbox, idempotency, errors |
-| `axioma-studio/vaulter-media` | content-addressed storage and the blob pins |
-| `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3), access, sharing, activity; the `Vaulter` entry point |
-| `axioma-studio/vaulter-documents` | editor, versions, comments, export |
-| `axioma-studio/vaulter-collaboration` | commercial realtime editing with committed save receipts (opt-in module); the Node hub lives in `packages/collaboration/hub` |
-| `axioma-studio/vaulter-webhooks` | outbound webhooks (opt-in module) |
-| `axioma-studio/vaulter-azguard` | AzGuard permission resolver |
-| `axioma-studio/vaulter-filament` | Filament admin (optional, Laravel 13) |
-| `axioma-studio/vaulter` | metapackage: core, media, drive and documents |
+| `axiomasoft/vaulter-core` | the kernel: modules, operations, events and outbox, idempotency, errors |
+| `axiomasoft/vaulter-media` | content-addressed storage and the blob pins |
+| `axiomasoft/vaulter-drive` | folders, files, uploads (tus/S3), access, sharing, activity; the `Vaulter` entry point |
+| `axiomasoft/vaulter-documents` | editor, versions, comments, export |
+| `axiomasoft/vaulter-collaboration` | commercial realtime editing with committed save receipts (opt-in module); the Node hub lives in `packages/collaboration/hub` |
+| `axiomasoft/vaulter-webhooks` | outbound webhooks (opt-in module) |
+| `axiomasoft/vaulter-azguard` | AzGuard permission resolver |
+| `axiomasoft/vaulter-filament` | Filament admin (optional, Laravel 13) |
+| `axiomasoft/vaulter` | metapackage: core, media, drive and documents |
 | `@vaulter/vue` | TypeScript / Vue 3 client and components |
 | `@vaulter/vue-collaboration` | commercial browser client for realtime editing: update queue and save status |
 
@@ -58,10 +58,10 @@ filament are installed separately. See [ADR-0030](docs/adr/0030-package-ownershi
 ## Release channels and versions
 
 The public channel contains the MIT-licensed PHP packages listed above except collaboration,
-and `@vaulter/vue`. The `axioma-studio/vaulter` metapackage requires only core, media, drive and
+and `@vaulter/vue`. The `axiomasoft/vaulter` metapackage requires only core, media, drive and
 documents. AzGuard remains excluded from release artifacts until its upstream has a stable tag.
 
-Realtime co-editing is a commercial add-on (`axioma-studio/vaulter-collaboration`). Its PHP
+Realtime co-editing is a commercial add-on (`axiomasoft/vaulter-collaboration`). Its PHP
 package uses a private split and Private Packagist for Vendors; `@vaulter/vue-collaboration`
 uses restricted npm access with provenance disabled. Both the hub and the Vue add-on declare
 `UNLICENSED`; the hub is a private, image-only workspace distributed through private GHCR.
@@ -87,18 +87,18 @@ core, drive and documents at `^1.0` (and media at `^1.0` for development); the V
 ```
 vaulter/
 ├── packages/
-│   ├── core/                  # axioma-studio/vaulter-core — the kernel (Vaulter\)
-│   ├── media/                 # axioma-studio/vaulter-media — content-addressed (CAS) file/blob layer (Vaulter\Media\)
-│   ├── drive/                 # axioma-studio/vaulter-drive — folders/files, uploads, access, sharing (Vaulter\Drive\)
-│   ├── documents/             # axioma-studio/vaulter-documents — TipTap/Yjs documents, versions, comments
-│   ├── collaboration/         # axioma-studio/vaulter-collaboration — realtime editing (Vaulter\Collaboration\)
+│   ├── core/                  # axiomasoft/vaulter-core — the kernel (Vaulter\)
+│   ├── media/                 # axiomasoft/vaulter-media — content-addressed (CAS) file/blob layer (Vaulter\Media\)
+│   ├── drive/                 # axiomasoft/vaulter-drive — folders/files, uploads, access, sharing (Vaulter\Drive\)
+│   ├── documents/             # axiomasoft/vaulter-documents — TipTap/Yjs documents, versions, comments
+│   ├── collaboration/         # axiomasoft/vaulter-collaboration — realtime editing (Vaulter\Collaboration\)
 │   │   └── hub/               # @vaulter/collaboration-hub — the Node Hocuspocus hub (+ Docker)
-│   ├── webhooks/              # axioma-studio/vaulter-webhooks — outbound webhooks (Vaulter\Webhooks\)
-│   ├── azguard/                # axioma-studio/vaulter-azguard — AzGuard permission driver
-│   ├── vaulter/               # axioma-studio/vaulter — metapackage
+│   ├── webhooks/              # axiomasoft/vaulter-webhooks — outbound webhooks (Vaulter\Webhooks\)
+│   ├── azguard/                # axiomasoft/vaulter-azguard — AzGuard permission driver
+│   ├── vaulter/               # axiomasoft/vaulter — metapackage
 │   ├── vue/                   # @vaulter/vue — TypeScript Vue 3 client, composables & components
 │   ├── vue-collaboration/     # @vaulter/vue-collaboration — Yjs transport, update queue, save status
-│   └── filament/              # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
+│   └── filament/              # axiomasoft/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
 ├── docs/                 # VitePress developer documentation
 └── (pint, phpstan, rector, pest, Makefile, CI…)
 ```

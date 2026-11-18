@@ -4,33 +4,106 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Configuration;
 
-use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Illuminate\Support\Arr;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Config\Contracts\OptionsFactory;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Config\Laravel\ConfigurationValidator;
 use Vaulter\Collaboration\Data\RoomRef;
-use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Support\Identity;
 
 /**
  * The typed reader of the `vaulter-collaboration` configuration root: the transport, the hub (URL, JWT key set and issuer, webhook secret,
  * token lifetime and clock skew), the control channel of revocations, the largest Yjs state a store may write, the protocol 2 limits, the compaction triggers and lease,
  * the drain deadline, flag store and append window, and the retention of closed generations. The room channel prefix
- * is the documents package's ({@see DocumentsConfig::channelPrefix()}): the comment events of a document broadcast on
+ * is the documents package's ({@see DocumentsOptions::channelPrefix()}): the comment events of a document broadcast on
  * the same channels.
  */
 #[Api]
-final readonly class CollaborationConfig
+final readonly class CollaborationOptions implements OptionsFactory
 {
     /** The hub's total retry deadline for one call (seconds), network time included: no retry arrives later. */
     public const int RETRY_HORIZON_SECONDS = 10;
 
-    #[Internal]
-    public function __construct(private Repository $config, private DocumentsConfig $documents) {}
+    /** @param array<array-key, mixed> $values */
+    private function __construct(private array $values, private string $roomPrefix = 'vaulter.documents', private ?string $defaultIssuer = null) {}
+
+    /** @param array<array-key, mixed> $config */
+    #[Override]
+    public static function fromArray(array $config, string $path = 'vaulter-collaboration'): self
+    {
+        $validator = new ConfigurationValidator;
+        $validator->rejectUnknownKeys($config, ['hub', 'control', 'max_state_bytes', 'mode', 'limits', 'compaction', 'drain', 'retention', 'schedule'], $path);
+        $section = Arr::get($config, 'hub', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.hub', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['url', 'jwt_keys', 'jwt_active_kid', 'issuer', 'webhook_secret', 'token_ttl', 'clock_skew', 'timestamp_tolerance'], $path.'.hub');
+        }
+        $section = Arr::get($config, 'control', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.control', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['transport', 'redis', 'http'], $path.'.control');
+        }
+        $section = Arr::get($config, 'control.redis', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.control.redis', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['connection'], $path.'.control.redis');
+        }
+        $section = Arr::get($config, 'control.http', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.control.http', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['urls', 'timeout'], $path.'.control.http');
+        }
+        $section = Arr::get($config, 'limits', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.limits', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['update_bytes', 'request_bytes'], $path.'.limits');
+        }
+        $section = Arr::get($config, 'compaction', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.compaction', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['trigger_updates', 'trigger_bytes', 'trigger_age', 'lease_ttl'], $path.'.compaction');
+        }
+        $section = Arr::get($config, 'drain', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.drain', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['restore_deadline', 'cache_store', 'max_append_tx'], $path.'.drain');
+        }
+        $section = Arr::get($config, 'retention', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.retention', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['retired_generation_days'], $path.'.retention');
+        }
+        $section = Arr::get($config, 'schedule', []);
+        if (!is_array($section)) {
+            $validator->add($path.'.schedule', 'must be an array');
+        } else {
+            $validator->rejectUnknownKeys($section, ['collaboration_prune'], $path.'.schedule');
+        }
+        $validator->failIfAny();
+
+        return new self($config);
+    }
+
+    /** Host context is captured as values; this snapshot never retains the config repository. */
+    public function withContext(DocumentsOptions $documents, ?string $appUrl): self
+    {
+        return new self($this->values, $documents->broadcast->channelPrefix, $appUrl);
+    }
 
     public function channelPrefix(): string
     {
-        return $this->documents->channelPrefix();
+        return $this->roomPrefix;
     }
 
     /**
@@ -69,7 +142,7 @@ final readonly class CollaborationConfig
     /** The largest binary Yjs state a collaboration store may write. */
     public function maxStateBytes(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.max_state_bytes', default: 16777216);
+        $value = $this->value(key: 'vaulter-collaboration.max_state_bytes', default: 16777216);
 
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 16777216;
     }
@@ -77,13 +150,13 @@ final readonly class CollaborationConfig
     /**
      * When an edit counts as saved under protocol 2: `buffered` (the default) or `durable`.
      *
-     * @throws InvalidConfigurationException for any other value
+     * @throws InvalidConfiguration for any other value
      */
     public function mode(): string
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.mode', default: 'buffered');
+        $value = $this->value(key: 'vaulter-collaboration.mode', default: 'buffered');
         if (!in_array($value, ['buffered', 'durable'], true)) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.mode must be "buffered" or "durable".');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-collaboration.mode must be "buffered" or "durable".');
         }
 
         return $value;
@@ -92,7 +165,7 @@ final readonly class CollaborationConfig
     /** The largest decoded Yjs update one append may carry. */
     public function updateBytes(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.limits.update_bytes', default: 1048576);
+        $value = $this->value(key: 'vaulter-collaboration.limits.update_bytes', default: 1048576);
 
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 1048576;
     }
@@ -100,7 +173,7 @@ final readonly class CollaborationConfig
     /** The largest append request body, checked by its Content-Length before the body is read. */
     public function requestBytes(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.limits.request_bytes', default: 2097152);
+        $value = $this->value(key: 'vaulter-collaboration.limits.request_bytes', default: 2097152);
 
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 2097152;
     }
@@ -144,7 +217,7 @@ final readonly class CollaborationConfig
     /** The cache store of the draining flag; null for the default store. */
     public function drainCacheStore(): ?string
     {
-        $value = $this->config->get('vaulter-collaboration.drain.cache_store');
+        $value = $this->value('vaulter-collaboration.drain.cache_store');
 
         return is_string($value) && $value !== '' ? $value : null;
     }
@@ -158,7 +231,7 @@ final readonly class CollaborationConfig
     /** Days the rows of a closed generation stay once no token or retry of it can arrive any more. */
     public function retiredGenerationDays(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.retention.retired_generation_days', default: 7);
+        $value = $this->value(key: 'vaulter-collaboration.retention.retired_generation_days', default: 7);
 
         return is_numeric($value) ? max((int) $value, 0) : 7;
     }
@@ -174,7 +247,7 @@ final readonly class CollaborationConfig
 
     public function hubWebhookSecret(): ?string
     {
-        $value = $this->config->get('vaulter-collaboration.hub.webhook_secret');
+        $value = $this->value('vaulter-collaboration.hub.webhook_secret');
 
         return is_string($value) && $value !== '' ? $value : null;
     }
@@ -212,7 +285,7 @@ final readonly class CollaborationConfig
     /** The kid of the key that signs new and renewed room tokens. */
     public function hubJwtActiveKid(): ?string
     {
-        $value = $this->config->get('vaulter-collaboration.hub.jwt_active_kid');
+        $value = $this->value('vaulter-collaboration.hub.jwt_active_kid');
 
         return is_string($value) && $value !== '' ? $value : null;
     }
@@ -229,7 +302,7 @@ final readonly class CollaborationConfig
     public function hubIssuer(): ?string
     {
         foreach (['vaulter-collaboration.hub.issuer', 'app.url'] as $key) {
-            $value = $this->config->get($key);
+            $value = $key === 'app.url' ? $this->defaultIssuer : $this->value($key);
             if (is_string($value) && trim($value) !== '') {
                 return $value;
             }
@@ -246,7 +319,7 @@ final readonly class CollaborationConfig
      */
     private function jwtKeyEntries(): array
     {
-        $value = $this->config->get('vaulter-collaboration.hub.jwt_keys');
+        $value = $this->value('vaulter-collaboration.hub.jwt_keys');
         if (is_array($value)) {
             return $value;
         }
@@ -302,14 +375,14 @@ final readonly class CollaborationConfig
 
     public function hubUrl(): ?string
     {
-        $value = $this->config->get('vaulter-collaboration.hub.url');
+        $value = $this->value('vaulter-collaboration.hub.url');
 
         return is_string($value) && $value !== '' ? $value : null;
     }
 
     public function hubTimestampTolerance(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.hub.timestamp_tolerance', default: 300);
+        $value = $this->value(key: 'vaulter-collaboration.hub.timestamp_tolerance', default: 300);
 
         $seconds = is_numeric($value) ? (int) $value : 300;
 
@@ -326,15 +399,15 @@ final readonly class CollaborationConfig
      * The lifetime of a room token. A hub renews it before it expires, and a renewal checks the rights again, so a
      * token that missed a revocation lives at most this long.
      *
-     * @throws InvalidConfigurationException outside 1..300 seconds
+     * @throws InvalidConfiguration outside 1..300 seconds
      */
     public function hubTokenTtl(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.hub.token_ttl', default: self::MAX_TOKEN_TTL);
+        $value = $this->value(key: 'vaulter-collaboration.hub.token_ttl', default: self::MAX_TOKEN_TTL);
         $seconds = is_numeric($value) ? (int) $value : self::MAX_TOKEN_TTL;
 
         if ($seconds < 1 || $seconds > self::MAX_TOKEN_TTL) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.token_ttl must be between 1 and '.self::MAX_TOKEN_TTL.' seconds.');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-collaboration.hub.token_ttl must be between 1 and '.self::MAX_TOKEN_TTL.' seconds.');
         }
 
         return $seconds;
@@ -343,15 +416,15 @@ final readonly class CollaborationConfig
     /**
      * The clock difference tolerated on the exp of a room token (seconds), by the backend here and by the hub.
      *
-     * @throws InvalidConfigurationException outside 0..30 seconds
+     * @throws InvalidConfiguration outside 0..30 seconds
      */
     public function hubClockSkew(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.hub.clock_skew', default: 30);
+        $value = $this->value(key: 'vaulter-collaboration.hub.clock_skew', default: 30);
         $seconds = is_numeric($value) ? (int) $value : 30;
 
         if ($seconds < 0 || $seconds > self::MAX_CLOCK_SKEW) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.clock_skew must be between 0 and '.self::MAX_CLOCK_SKEW.' seconds.');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-collaboration.hub.clock_skew must be between 0 and '.self::MAX_CLOCK_SKEW.' seconds.');
         }
 
         return $seconds;
@@ -360,13 +433,13 @@ final readonly class CollaborationConfig
     /**
      * How a change of effective permissions reaches the hubs: `redis`, `http` or `none`.
      *
-     * @throws InvalidConfigurationException for any other value
+     * @throws InvalidConfiguration for any other value
      */
     public function controlTransport(): string
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.control.transport', default: 'none');
+        $value = $this->value(key: 'vaulter-collaboration.control.transport', default: 'none');
         if (!is_string($value) || !in_array($value, self::CONTROL_TRANSPORTS, true)) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.control.transport must be "redis", "http" or "none".');
+            throw InvalidConfiguration::forMessage('[Vaulter] vaulter-collaboration.control.transport must be "redis", "http" or "none".');
         }
 
         return $value;
@@ -375,7 +448,7 @@ final readonly class CollaborationConfig
     /** The Redis connection the `redis` control transport publishes on. */
     public function controlRedisConnection(): string
     {
-        $value = $this->config->get('vaulter-collaboration.control.redis.connection');
+        $value = $this->value('vaulter-collaboration.control.redis.connection');
 
         return is_string($value) && $value !== '' ? $value : 'default';
     }
@@ -387,7 +460,7 @@ final readonly class CollaborationConfig
      */
     public function controlHttpUrls(): array
     {
-        $value = $this->config->get('vaulter-collaboration.control.http.urls', []);
+        $value = $this->value('vaulter-collaboration.control.http.urls', []);
         $urls = is_string($value) ? explode(',', $value) : (is_array($value) ? $value : []);
 
         return array_values(array_filter(
@@ -409,14 +482,14 @@ final readonly class CollaborationConfig
      * core's ConfigValidator only warns outside production and a copied dev value tends to reach production unchanged.
      * A module with no key settings at all is left to the doctor and the `collaboration.secrets` invariant.
      *
-     * @throws InvalidConfigurationException when the key set is malformed or reuses the webhook secret
+     * @throws InvalidConfiguration when the key set is malformed or reuses the webhook secret
      */
     public function assertDistinctHubSecrets(): void
     {
         $violation = $this->hasJwtKeySettings() ? $this->hubJwtKeysViolation() : null;
 
         if ($violation !== null) {
-            throw new InvalidConfigurationException(
+            throw InvalidConfiguration::forMessage(
                 '[Vaulter] vaulter-collaboration.hub.jwt_keys is unusable: '.$violation.'. '
                 .'Why: the hub holds the webhook secret, so a key equal to it could sign a room token for any user; a short key is brute-forceable. '
                 .'Fix: set VAULTER_COLLAB_JWT_KEYS ("kid:secret", comma-separated, each secret at least 32 bytes and different from VAULTER_COLLAB_WEBHOOK_SECRET) and VAULTER_COLLAB_JWT_ACTIVE_KID to one of its kids.',
@@ -427,8 +500,13 @@ final readonly class CollaborationConfig
     /** A positive integer setting; anything else reads as the default. */
     private function positive(string $key, int $default): int
     {
-        $value = $this->config->get(key: $key, default: $default);
+        $value = $this->value(key: $key, default: $default);
 
         return is_numeric($value) && (int) $value > 0 ? (int) $value : $default;
+    }
+
+    private function value(string $key, mixed $default = null): mixed
+    {
+        return Arr::get($this->values, substr($key, strlen('vaulter-collaboration.')), $default);
     }
 }

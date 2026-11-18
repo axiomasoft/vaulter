@@ -3,7 +3,13 @@
     "description": "Filament 5 admin panel for Vaulter — manage documents, folders, share links and comments.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "filament", "documents", "admin", "vaulter"],
+    "keywords": [
+        "laravel",
+        "filament",
+        "documents",
+        "admin",
+        "vaulter"
+    ],
     "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
@@ -19,10 +25,14 @@
         "axioma-studio/vaulter-filament": "self.version"
     },
     "require": {
-        "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-filament": "^0.1",
+        "axiomasoft/packman-panels": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
         "axiomasoft/vaulter-core": "self.version",
         "axiomasoft/vaulter-drive": "self.version",
-        "filament/filament": "^5.0"
+        "filament/filament": "^5.0",
+        "php": ">=8.4 <8.6"
     },
     "require-dev": {
         "axiomasoft/vaulter-media": "self.version",
@@ -51,6 +61,18 @@
         },
         "branch-alias": {
             "dev-main": "1.0.x-dev"
+        },
+        "packman": {
+            "schema-version": 1,
+            "package-type": "integration",
+            "stability": "stable",
+            "owns": [
+                "Configuration",
+                "Providers",
+                "Resources",
+                "Support"
+            ],
+            "error-prefix": "filament"
         }
     },
     "repositories": [

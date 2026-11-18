@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Http\Requests\Webhooks;
 
 use Illuminate\Validation\Rule;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Webhooks\Data\UpdateWebhookEndpointInput;

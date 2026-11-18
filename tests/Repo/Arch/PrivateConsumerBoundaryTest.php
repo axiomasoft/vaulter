@@ -736,7 +736,7 @@ it('rejects a private DTO leaked through a stable signature while a published ty
 it('keeps the seven kernel seams allowed while the Internal scheduling callback, tier setter and constructors stay rejected', function (): void {
     $surface = pcbSurface();
     $ok = pcbScan('<?php namespace Vaulter\\Collaboration; use Vaulter\\Providers\\SchedulingRegistrar; use Vaulter\\Support\\LoadTier; use Vaulter\\Modules\\RemovalGuard; function f() { SchedulingRegistrar::task(); LoadTier::label(); }', 'ok', $surface);
-    $bad = pcbScan("<?php namespace Vaulter\\Collaboration; use Vaulter\\Providers\\SchedulingRegistrar; use Vaulter\\Support\\LoadTier; use Vaulter\\Configuration\\ScheduleConfig; function f(\$a, \$c) { SchedulingRegistrar::whenScheduling(\$a, \$c); LoadTier::set('M'); LoadTier::REQUEST_ATTRIBUTE; new ScheduleConfig(\$c); }", 'bad', $surface);
+    $bad = pcbScan("<?php namespace Vaulter\\Collaboration; use Vaulter\\Providers\\SchedulingRegistrar; use Vaulter\\Support\\LoadTier; use Vaulter\\Configuration\\ScheduleOptions; function f(\$a, \$c) { SchedulingRegistrar::whenScheduling(\$a, \$c); LoadTier::set('M'); LoadTier::REQUEST_ATTRIBUTE; new ScheduleOptions(\$c); }", 'bad', $surface);
 
     expect($ok)->toBe([])
         ->and(implode("\n", $bad))->toContain('whenScheduling')->toContain('LoadTier::set')->toContain('REQUEST_ATTRIBUTE');

@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\IdsConfig;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 it('reads the canonical ulid strategy', function (): void {
     expect(config('vaulter.ids.strategy'))->toBe('ulid')
-        ->and(app(IdsConfig::class)->strategy())->toBe('ulid')
-        ->and(app(IdsConfig::class)->usesUlids())->toBeTrue();
+        ->and(app(IdsOptions::class)->strategy)->toBe('ulid')
+        ->and(app(IdsOptions::class)->usesUlids())->toBeTrue();
 });
 
 it('uses ULID keys when configured', function (): void {

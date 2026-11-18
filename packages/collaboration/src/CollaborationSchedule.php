@@ -6,8 +6,8 @@ namespace Vaulter\Collaboration;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ScheduleConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
 
@@ -21,11 +21,9 @@ final class CollaborationSchedule implements ModuleSchedule
         'collaboration_prune' => ['vaulter:collaboration:prune', SchedulingRegistrar::DEFAULT_EXPIRY],
     ];
 
-    public function __construct(private readonly ScheduleConfig $scheduleConfig) {}
-
     public function define(Schedule $schedule, Repository $config): void
     {
-        $frequencies = $this->scheduleConfig->frequencies('vaulter-collaboration', self::KEYS);
+        $frequencies = ScheduleFrequency::fromMap('vaulter-collaboration.schedule', $config->get('vaulter-collaboration.schedule', []), self::KEYS);
         foreach (self::TASKS as $key => [$command, $expiry]) {
             $frequency = $frequencies[$key] ?? null;
             if ($frequency !== null) {

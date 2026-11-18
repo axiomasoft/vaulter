@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Testing\Fixtures\TestUser;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\HostResolver;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
@@ -28,8 +28,8 @@ use Vaulter\Webhooks\WebhookSigner;
  */
 function deliverGuarded(WebhookDelivery $delivery): void
 {
-    (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+    new DeliverWebhook(deliveryId: (string) $delivery->getKey())
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
 }
 
 function fakeResolver(): FakeHostResolver
@@ -139,7 +139,8 @@ it('does not follow a redirect onto a private address, F-P1.7-01', function (): 
  */
 it('устаревший ключ follow_redirects=true НЕ включает редиректы — 302 на metadata не следуется, R-05', function (): void {
     // Хост (или его легаси-конфиг) пытается вернуть старое поведение.
-    config(['vaulter-webhooks.delivery.follow_redirects' => true]);
+    expect(fn (): WebhooksOptions => WebhooksOptions::fromArray(['delivery' => ['follow_redirects' => true]]))
+        ->toThrow(InvalidConfiguration::class, 'vaulter-webhooks.delivery.follow_redirects');
 
     Http::fake([
         'https://hooks.test/*' => Http::response('', 302, ['Location' => 'http://169.254.169.254/latest/meta-data/']),
@@ -226,7 +227,7 @@ it('pins the vetted public IP, host and port for delivery, F-P1.7-01', function 
 // ─────────────── registration early-reject ───────────────
 
 it('rejects registering an endpoint whose host resolves into a private range, F-P1.7-01', function (): void {
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 
     fakeResolver()->set('internal.test', ['10.0.0.5']);
@@ -279,7 +280,7 @@ it('never lets a malformed allowed range open loopback or link-local, and a vali
     fakeResolver()->set('local.test', ['127.0.0.1']);
 
     foreach (['meta.test', 'local.test'] as $host) {
-        expect(fn () => app(OutboundUrlGuard::class)->pin('http://'.$host.'/'))->toThrow(InvalidConfigurationException::class);
+        expect(fn () => app(OutboundUrlGuard::class)->pin('http://'.$host.'/'))->toThrow(InvalidConfiguration::class);
     }
 })->with(['10.0.0.0/nope', '10.0.0.0/-1', '10.0.0.0/', '10.0.0.0/99', '::/nope', '::/']);
 
@@ -296,7 +297,7 @@ it('keeps the guard on a valid allowed IPv6 range and a bare allowed address whi
 
 it('transport options disable every env proxy, redirects and decoding and keep the pin', function (): void {
     $names = ['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'];
-    $saved = array_map(fn (string $n) => getenv($n), array_combine($names, $names));
+    $saved = array_map(fn (string $n): string|false => getenv($n), array_combine($names, $names));
 
     try {
         foreach ($names as $n) {
@@ -306,7 +307,7 @@ it('transport options disable every env proxy, redirects and decoding and keep t
         fakeResolver()->set('pub.test', [FakeHostResolver::PUBLIC_IP]);
         $job = new DeliverWebhook(deliveryId: 'x');
         $config = new ReflectionProperty($job, 'webhooksConfig');
-        $config->setValue($job, app(WebhooksConfig::class));
+        $config->setValue($job, app(WebhooksOptions::class));
         $method = new ReflectionMethod($job, 'transportOptions');
         $options = $method->invoke($job, app(OutboundUrlGuard::class)->pin('https://pub.test/'));
     } finally {

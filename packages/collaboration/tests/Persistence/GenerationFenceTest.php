@@ -11,7 +11,7 @@ use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
@@ -51,7 +51,7 @@ function fenceRestore(Node $node): void
 
 function fenceRows(string $entity): int
 {
-    return DB::table(app(DatabaseConfig::class)->table($entity))->count();
+    return DB::table(app(DatabaseOptions::class)->table($entity))->count();
 }
 
 /** @return array<string, mixed> */
@@ -86,7 +86,7 @@ it('refuses an append of the generation a restore closed between load and append
     $loaded = Hub::aggregate($this->node)->collab_epoch;
     fenceRestore($this->node);
 
-    expect(fn () => fenceAppend($this->node, $loaded))->toThrow(CollaborationEpochMismatchException::class)
+    expect(fn (): mixed => fenceAppend($this->node, $loaded))->toThrow(CollaborationEpochMismatchException::class)
         ->and(Hub::aggregate($this->node)->collab_epoch)->toBe($loaded + 1)
         ->and(fenceRows('collaboration_updates'))->toBe(0)
         ->and(fenceRows('collaboration_receipts'))->toBe(0)
@@ -123,14 +123,14 @@ it('takes appends of the new generation after the restore, numbered from 1 again
 
 it('refuses every append of a retired generation', function (): void {
     fenceAppend($this->node, 0, seed: true);
-    DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->update(['retired_at' => now()]);
+    DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))->update(['retired_at' => now()]);
 
-    expect(fn () => fenceAppend($this->node, 0, 'late'))->toThrow(CollaborationEpochMismatchException::class)
+    expect(fn (): mixed => fenceAppend($this->node, 0, 'late'))->toThrow(CollaborationEpochMismatchException::class)
         ->and(fenceRows('collaboration_updates'))->toBe(1);
 });
 
 it('refuses an append of a generation the document never reached', function (): void {
-    expect(fn () => fenceAppend($this->node, 5))->toThrow(CollaborationEpochMismatchException::class)
+    expect(fn (): mixed => fenceAppend($this->node, 5))->toThrow(CollaborationEpochMismatchException::class)
         ->and(fenceRows('collaboration_heads'))->toBe(0);
 });
 
@@ -154,7 +154,7 @@ it('refuses incompatible stored schema or format on load and lease with or witho
     app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill([$field => $value])->save());
     $before = fenceStoredAttributes($this->node);
     Hub::call('load', ['room' => Hub::room($this->node)], Hub::token($this->node))->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
-    expect(fn () => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
+    expect(fn (): array => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
     expect(fenceStoredAttributes($this->node))->toBe($before)
         ->and(fenceRows('collaboration_updates'))->toBe(1);
 })->with(['pre-seed schema' => [false, 'schema_version', 2], 'checkpoint schema' => [true, 'schema_version', 2], 'pre-seed format' => [false, 'collab_state_format', 'unsupported-v2'], 'checkpoint format' => [true, 'collab_state_format', 'unsupported-v2']]);
@@ -168,7 +168,7 @@ it('never serves or leases old bytes under a newly installed type schema or form
     }
     $registry->freeze();
     app()->instance(DocumentTypeRegistry::class, $registry);
-    $node = Hub::document(type: $type->key(), content: $type->defaultContent());
+    $node = Hub::document(content: $type->defaultContent(), type: $type->key());
     config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
     fenceAppend($node, 0, seed: true);
     if ($checkpoint) {
@@ -198,7 +198,7 @@ it('never serves or leases old bytes under a newly installed type schema or form
         return;
     }
     Hub::call('load', ['room' => Hub::room($node)], $token)->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
-    expect(fn () => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
+    expect(fn (): array => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
     expect(fenceStoredAttributes($node))->toBe($before)->and(Hub::aggregate($node)->schema_version)->toBe(1)->and(Hub::aggregate($node)->collab_state_format)->toBe('yjs-update-v1');
 })->with(['pre-seed schema change' => [false, 'schema'], 'checkpoint schema change' => [true, 'schema'], 'pre-seed format change' => [false, 'format'], 'checkpoint format change' => [true, 'format']]);
 

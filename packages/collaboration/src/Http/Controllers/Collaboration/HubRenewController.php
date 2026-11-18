@@ -6,7 +6,7 @@ namespace Vaulter\Collaboration\Http\Controllers\Collaboration;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\SessionChecks;

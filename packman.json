@@ -157,6 +157,100 @@
                 "Types",
                 "ValueObjects"
             ]
+        },
+        {
+            "name": "axiomasoft/vaulter-collaboration",
+            "path": "packages/collaboration",
+            "namespace": "Vaulter\\Collaboration\\",
+            "profile": "laravel-package",
+            "layer": "L4",
+            "type": "addon",
+            "owns": [
+                "Configuration",
+                "Console",
+                "Contracts",
+                "Data",
+                "Doctor",
+                "Drain",
+                "Errors",
+                "Exceptions",
+                "Http",
+                "Operations",
+                "Persistence",
+                "Providers",
+                "Revocation",
+                "Schema",
+                "Security",
+                "Testing"
+            ]
+        },
+        {
+            "name": "axiomasoft/vaulter-webhooks",
+            "path": "packages/webhooks",
+            "namespace": "Vaulter\\Webhooks\\",
+            "profile": "laravel-package",
+            "layer": "L4",
+            "type": "addon",
+            "owns": [
+                "Actions",
+                "Configuration",
+                "Console",
+                "Contracts",
+                "Data",
+                "Doctor",
+                "Errors",
+                "Events",
+                "Exceptions",
+                "Http",
+                "Idempotency",
+                "Jobs",
+                "Models",
+                "Policies",
+                "Providers",
+                "Repositories",
+                "Schema",
+                "Security",
+                "Testing",
+                "ValueObjects"
+            ]
+        },
+        {
+            "name": "axiomasoft/vaulter-azguard",
+            "path": "packages/azguard",
+            "namespace": "Vaulter\\AzGuard\\",
+            "profile": "laravel-package",
+            "layer": "L4",
+            "type": "integration",
+            "owns": [
+                "Configuration",
+                "Contracts",
+                "Doctor",
+                "Providers",
+                "Testing"
+            ]
+        },
+        {
+            "name": "axiomasoft/vaulter-filament",
+            "path": "packages/filament",
+            "namespace": "Vaulter\\Filament\\",
+            "profile": "laravel-package",
+            "layer": "L4",
+            "type": "integration",
+            "owns": [
+                "Configuration",
+                "Providers",
+                "Resources",
+                "Support"
+            ]
+        },
+        {
+            "name": "axiomasoft/vaulter",
+            "path": "packages/vaulter",
+            "namespace": "",
+            "profile": "metapackage",
+            "layer": "L4",
+            "type": "metapackage",
+            "owns": []
         }
     ],
     "gates": {

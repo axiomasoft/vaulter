@@ -37,7 +37,7 @@ function parityEtag(TestCase $test, string $nodeId): array
 
 function parityAction(string $method): Action
 {
-    return (new ReflectionMethod(NodeResource::class, $method))->invoke(null);
+    return new ReflectionMethod(NodeResource::class, $method)->invoke(null);
 }
 
 it('gives a hidden source the same 404 through PHP HTTP and a forged panel callback', function (): void {

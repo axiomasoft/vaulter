@@ -1,0 +1,44 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-filament configuration",
+    "type": "object",
+    "properties": {
+        "vaulter-filament": {
+            "type": "object",
+            "properties": {
+                "navigation_group": {
+                    "type": "string",
+                    "default": "Vaulter"
+                },
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "activity": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "drive": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "grant": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "node": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "share": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

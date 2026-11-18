@@ -188,7 +188,7 @@ final class Node extends BaseNode
 
 ```php
 // config/vaulter.php
-'ids' => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
+'ids' => ['strategy' => 'ulid'], // ULID aligns with AzGuard morph keys (ADR-0011)
 ```
 
 ::: warning Область тенанта — ответственность хоста
@@ -303,7 +303,7 @@ final class AppRoleDriver implements PermissionDriver
 Для Laravel Gate, Spatie Permission v8 или AzGuard свой класс **не** нужен — выставьте
 `vaulter-drive.access.permission_driver` в `gate` / `spatie` / `azguard` и заполните соответствующий блок конфига
 (`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azguard.*`). Для AzGuard установите
-`composer require axioma-studio/vaulter-azguard`: provider сам регистрирует драйвер
+`composer require axiomasoft/vaulter-azguard`: provider сам регистрирует драйвер
 и адаптер. Модель пользователя должна реализовать `AzGuardBackedUser` — см.
 [Драйверы прав](/ru/extending/permission-drivers).
 :::

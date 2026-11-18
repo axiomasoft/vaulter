@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Exceptions;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Collaboration\Errors\CollaborationErrorCode;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -55,5 +59,11 @@ final class CollaborationUpdateMismatchException extends VaulterException implem
     public function problemDetails(): array
     {
         return ['context' => ['update_id' => $this->updateId, 'reason' => $this->reason]];
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: CollaborationErrorCode::UpdateMismatch, category: ErrorCategory::Validation);
     }
 }

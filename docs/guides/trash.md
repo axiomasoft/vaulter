@@ -115,7 +115,7 @@ How long a trashed node survives before it becomes purge-eligible is controlled 
 - **Default:** 30 days.
 - **Floor:** 0. `0` means a trashed node is eligible for purge immediately.
 
-The value is read through `Vaulter\Drive\Configuration\DriveConfig::trashRetentionDays()`.
+The value is read through `Vaulter\Drive\Configuration\DriveOptions::trashRetentionDays()`.
 
 ## Scheduled purge
 

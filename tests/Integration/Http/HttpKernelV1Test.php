@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
@@ -70,7 +70,7 @@ it('answers an unauthenticated call with 401 actor_required as problem+json', fu
 });
 
 it('leaves a host route sharing the stack without Vaulter headers', function (): void {
-    Route::middleware(app(RoutesConfig::class)->authenticatedMiddleware())->get('host/ping', static fn (): array => ['ok' => true]);
+    Route::middleware(app(RoutesOptions::class)->authenticatedMiddleware())->get('host/ping', static fn (): array => ['ok' => true]);
 
     $response = $this->getJson('host/ping')->assertOk();
 

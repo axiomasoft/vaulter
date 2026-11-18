@@ -51,7 +51,7 @@ final readonly class IdsOptions implements OptionsFactory
             $strategy = $rawStrategy;
         }
 
-        $rawHostKeys = $config['host_keys'] ?? 'string';
+        $rawHostKeys = array_key_exists('host_keys', $config) ? $config['host_keys'] : 'string';
         /** @var 'string'|'bigint'|'uuid'|'ulid' $hostKeys */
         $hostKeys = 'string';
         if (!is_string($rawHostKeys) || !in_array($rawHostKeys, self::HOST_KEY_TYPES, true)) {

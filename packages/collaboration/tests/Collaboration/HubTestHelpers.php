@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationCallResolver;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
@@ -45,7 +45,6 @@ final class HubTestHelpers
     public static function configure(): void
     {
         config()->set('vaulter-drive.access.permission_driver', 'database');
-        config()->set('vaulter-collaboration.driver', 'hocuspocus');
         config()->set('vaulter-collaboration.hub.webhook_secret', self::WEBHOOK_SECRET);
         config()->set('vaulter-collaboration.hub.jwt_keys', [self::JWT_KID => self::JWT_SECRET]);
         config()->set('vaulter-collaboration.hub.jwt_active_kid', self::JWT_KID);
@@ -93,7 +92,7 @@ final class HubTestHelpers
 
     public static function room(Node $node, ?int $epoch = null): string
     {
-        return app(CollaborationConfig::class)->room($node->drive_id, $node->getKey(), $epoch ?? self::aggregate($node)->collab_epoch);
+        return app(CollaborationOptions::class)->room($node->drive_id, $node->getKey(), $epoch ?? self::aggregate($node)->collab_epoch);
     }
 
     /**
@@ -109,10 +108,10 @@ final class HubTestHelpers
         return JWT::encode(
             payload: [
                 'iss' => self::ISSUER,
-                'aud' => CollaborationConfig::JWT_AUDIENCE,
+                'aud' => CollaborationOptions::JWT_AUDIENCE,
                 'sub' => (string) $actorId,
                 'sub_type' => (new TestUser)->getMorphClass(),
-                'protocol' => CollaborationConfig::JWT_PROTOCOL,
+                'protocol' => CollaborationOptions::JWT_PROTOCOL,
                 'state_format' => 'yjs-update-v1',
                 'document_id' => (string) $node->getKey(),
                 'drive_id' => (string) $node->drive_id,

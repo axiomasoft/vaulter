@@ -42,7 +42,7 @@ test('every Vaulter source reference belongs to this bridge or core', function (
 
             $driveFile = dirname(__DIR__, 2).'/drive/src/'.str_replace('\\', '/', substr($name, strlen('Vaulter\\Drive\\'))).'.php';
 
-            if (!is_file($coreFile) && !(str_starts_with($name, 'Vaulter\\Drive\\') && is_file($driveFile))) {
+            if (!is_file($coreFile) && (!str_starts_with($name, 'Vaulter\\Drive\\') || !is_file($driveFile))) {
                 $offenders[] = $file->getPathname().': '.$name;
             }
         }

@@ -67,21 +67,37 @@ final readonly class DriveModelsOptions
      * @param class-string<UploadSession>      $uploadSession
      * @param class-string<UploadPart>         $uploadPart
      */
+    #[Internal]
     public function __construct(
+        #[Internal]
         public string $drive = Drive::class,
+        #[Internal]
         public string $node = Node::class,
+        #[Internal]
         public string $file = File::class,
+        #[Internal]
         public string $scanObligation = ScanObligation::class,
+        #[Internal]
         public string $scanRequest = ScanRequest::class,
+        #[Internal]
         public string $scanEvidence = ScanEvidenceRecord::class,
+        #[Internal]
         public string $scanPolicyState = ScanPolicyState::class,
+        #[Internal]
         public string $scanBackfillRun = ScanBackfillRun::class,
+        #[Internal]
         public string $fileRevision = FileRevision::class,
+        #[Internal]
         public string $fileRevisionBlob = FileRevisionBlob::class,
+        #[Internal]
         public string $grant = NodeGrant::class,
+        #[Internal]
         public string $nodeShare = NodeShare::class,
+        #[Internal]
         public string $activity = Activity::class,
+        #[Internal]
         public string $uploadSession = UploadSession::class,
+        #[Internal]
         public string $uploadPart = UploadPart::class,
     ) {}
 

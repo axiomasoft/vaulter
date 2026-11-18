@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Drain;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\State\CollaborativeState;
@@ -35,7 +35,7 @@ final readonly class HubDrainer implements PendingStateDrainer
         private CollaborativeState $state,
         private CompactionLeases $leases,
         private DrainWaiter $waiter,
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
     ) {}
 
     public function drain(PendingMarker $marker): void

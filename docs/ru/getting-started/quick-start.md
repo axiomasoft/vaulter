@@ -10,7 +10,7 @@ outline: deep
 файл и список, — а затем Vue-UI сверху.
 
 ::: tip Предусловие
-Установлен `axioma-studio/vaulter-drive` (этот разбор использует `Vaulter::drive()`,
+Установлен `axiomasoft/vaulter-drive` (этот разбор использует `Vaulter::drive()`,
 `DriveHandle`, загрузки — всё это функции Drive) и выполнены миграции. Если нет —
 сначала пройдите [Установку](/ru/getting-started/installation) (это две команды).
 :::

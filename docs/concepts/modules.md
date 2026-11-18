@@ -40,7 +40,7 @@ silently. Switching the drive off (`'drive' => false`) removes all of it — its
 doctor checks; every module that requires it must be switched off too. Run `php artisan vaulter:modules` to see every
 module, its policy, whether it is active and why. Webhooks are switched only by `vaulter.modules.webhooks`
 (`vaulter.features.webhooks` does not exist; a host config that still sets it fails at boot with a pointer to the
-module key). The package must be installed first: `composer require axioma-studio/vaulter-webhooks`. Collaboration is
+module key). The package must be installed first: `composer require axiomasoft/vaulter-webhooks`. Collaboration is
 switched only by `vaulter.modules.collaboration`; an active opt-in module without its required configuration (the hub
 URL and the two secrets) is a boot error, not a silent no-op ([Realtime collaboration](/guides/collaboration)).
 

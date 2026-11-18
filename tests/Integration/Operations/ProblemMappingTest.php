@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
@@ -20,7 +20,7 @@ it('preserves existing JSON rendering and maps actor scope ability and profile e
         'ability' => PermissionDeniedException::forAbility('edit'),
         'profile' => ProfileRestrictionException::forOperation('share'),
     };
-    $request = Request::create(uri: app(RoutesConfig::class)->versionedPrefix().'/test', server: ['HTTP_ACCEPT' => 'application/json']);
+    $request = Request::create(uri: app(RoutesOptions::class)->versionedPrefix().'/test', server: ['HTTP_ACCEPT' => 'application/json']);
     $response = app(ProblemRenderer::class)->render($exception, $request);
     expect($response)->not->toBeNull()->and($response->getStatusCode())->toBe($status)
         ->and(json_decode((string) $response->getContent(), true, flags: JSON_THROW_ON_ERROR)['code'])->toBe($code);

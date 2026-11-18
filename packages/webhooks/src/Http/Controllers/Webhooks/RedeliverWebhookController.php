@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\Actions\RedeliverWebhookAction;
 use Vaulter\Webhooks\Exceptions\WebhookDeliveryNotFoundException;
@@ -45,6 +45,6 @@ final readonly class RedeliverWebhookController
             $redelivered = $this->deliveries->findForEndpoint($model, $receipt->id) ?? throw WebhookDeliveryNotFoundException::forId($receipt->id);
         }
 
-        return (new WebhookDeliveryResource($redelivered))->response()->setStatusCode(202);
+        return new WebhookDeliveryResource($redelivered)->response()->setStatusCode(202);
     }
 }

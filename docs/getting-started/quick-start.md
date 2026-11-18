@@ -10,7 +10,7 @@ This is the ≤60-second happy path: from a fresh install to a working drive —
 uploaded file, and a listing — then the Vue UI on top.
 
 ::: tip Prerequisite
-You have installed `axioma-studio/vaulter-drive` (this walkthrough uses `Vaulter::drive()`,
+You have installed `axiomasoft/vaulter-drive` (this walkthrough uses `Vaulter::drive()`,
 `DriveHandle`, uploads — all Drive features) and run the migrations. If not, do
 [Installation](/getting-started/installation) first (it is two commands).
 :::

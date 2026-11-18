@@ -199,8 +199,8 @@ it('states the zone graph as the Composer graph for packages', function (): void
         $composer = z_json(z_root().'/packages/'.$package.'/composer.json');
         $required = [];
         foreach (array_merge($composer['require'] ?? [], $composer['require-dev'] ?? []) as $name => $_) {
-            if (str_starts_with($name, 'axioma-studio/vaulter-')) {
-                $required[] = substr($name, strlen('axioma-studio/vaulter-'));
+            if (str_starts_with($name, 'axiomasoft/vaulter-')) {
+                $required[] = substr($name, strlen('axiomasoft/vaulter-'));
             }
         }
         foreach ($required as $dependency) {

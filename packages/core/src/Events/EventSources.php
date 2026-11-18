@@ -8,7 +8,7 @@ use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\ModuleDeclarations;
 
 /**
  * Where the event catalogue takes its enums from: the sealed declarations of the active modules, or the
@@ -39,7 +39,7 @@ final readonly class EventSources
         $catalog = ModuleCatalog::of($app);
         $sources = [];
         foreach ($catalog->offered() as $manifest) {
-            $builder = PluginModuleBridge::buildOffered($manifest, $catalog->pluginSpec($manifest));
+            $builder = ModuleDeclarations::buildOffered($manifest, $catalog->pluginSpec($manifest));
             if ($builder === null) {
                 continue;
             }

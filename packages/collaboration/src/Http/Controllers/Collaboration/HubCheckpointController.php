@@ -7,8 +7,8 @@ namespace Vaulter\Collaboration\Http\Controllers\Collaboration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\Checkpoint;
@@ -27,7 +27,7 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class HubCheckpointController
 {
-    public function __construct(private Checkpoint $checkpoint, private CollaborationConfig $config) {}
+    public function __construct(private Checkpoint $checkpoint, private CollaborationOptions $config) {}
 
     public function __invoke(Request $request): JsonResponse
     {

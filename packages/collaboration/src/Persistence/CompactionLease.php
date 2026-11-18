@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A compaction lease on one document generation and what the hub merges under it, read in the transaction that

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\Drivers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Packman\Attributes\Internal;
 use Spatie\Permission\PermissionRegistrar;
@@ -52,6 +53,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
     public function __construct(
         private readonly AccessOptions $accessOptions,
         private readonly RoleRegistry $roles,
+        private readonly Container $container,
     ) {}
 
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
@@ -300,7 +302,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
             return true;
         }
 
-        return $this->isAvailable() && app()->bound(PermissionRegistrar::class) && $this->registrar()->teams;
+        return $this->isAvailable() && $this->container->bound(PermissionRegistrar::class) && $this->registrar()->teams;
     }
 
     private function isAvailable(): bool

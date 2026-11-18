@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Migrations\Migration;
+use Vaulter\Schema\VaulterMigration;
 use Vaulter\Webhooks\Schema\WebhooksSchema;
 
-return new class extends Migration
+return new class extends VaulterMigration
 {
     public function up(): void
     {

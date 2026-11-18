@@ -14,38 +14,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Attributes\\Api",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Attributes\\Spi",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Attributes\\SpiKind",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Attributes\\Internal",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Attributes\\Icon",
             "owner": "core",
             "action": "keep",
@@ -121,14 +89,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Configuration\\VaulterConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "why": "architecture#kernel: Конфиг-каркас — the root typed config (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Configuration\\ConfigNormalizer",
             "owner": "core",
             "action": "keep",
@@ -137,69 +97,11 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Configuration\\ConfigValidator",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "note": "class-string validation stays (I4 config-validation); the ProfileRegistry resolved() probe is host lifecycle",
-            "why": "architecture#kernel: Конфиг-каркас — ConfigValidator (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\DatabaseConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Конфиг-каркас — connection/table names section stays (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\IdsConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Конфиг-каркас — id strategy section stays (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\ObservabilityConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Конфиг-каркас — metrics/tracing section stays (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\RoutesConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Конфиг-каркас — route prefix/middleware of the HTTP skeleton section stays (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Configuration\\StringList",
             "owner": "core",
             "action": "keep",
             "phase": "stay",
             "why": "Internal kernel configuration parser shared by package configuration readers; it does not own feature settings."
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\TenancyConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Конфиг-каркас — tenancy section stays (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\ScheduleConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "open: the keys of each module move to their owner with the section split (P4)",
-            "why": "architecture#kernel: Конфиг-каркас — schedule section: generic frequency settings every module reads (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
@@ -264,14 +166,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: Транзакция — opens the core WriteScope for commands of every module"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Contracts\\Doctor\\DoctorCheck",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "why": "architecture#kernel: Диагностика — DoctorCheck SPI implemented by every module (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
@@ -364,30 +258,6 @@
         {
             "match": "fqcn",
             "value": "Vaulter\\Doctor\\DoctorCheckResult",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Doctor\\DoctorContext",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Doctor\\DoctorFinding",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Doctor\\DoctorSeverity",
             "owner": "core",
             "action": "keep",
             "phase": "stay",
@@ -582,15 +452,6 @@
             "action": "keep",
             "phase": "P3",
             "why": "architecture#events: the transaction-bound writer of the EventSink slot"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\OutboxConfig",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "returned by the public VaulterConfig::outbox(); hosts read the outbox settings through it, not construct it",
-            "why": "architecture#kernel + D29: typed accessors of vaulter.outbox.* (P3.14)"
         },
         {
             "match": "fqcn",
@@ -1488,14 +1349,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Modules\\VaulterModule",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Modules\\ModuleSchedule",
             "owner": "core",
             "action": "keep",
@@ -1925,6 +1778,214 @@
             "action": "keep",
             "phase": "stay",
             "why": "D10 (P5.7): production-fatal invariant SPI and internal diagnostics of the kernel — stays in core; no public type promotion and no zone reclassification"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\CompiledOptionsCache",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\DatabaseOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\IdempotencyOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\IdsOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ModelsOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ObservabilityOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\OutboxOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\RouteMiddlewareOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\RouteRateLimitsOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\RoutesOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ScheduleOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\SecurityOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\TenancyOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\TracingOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\VaulterOptions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Errors\\VaulterErrorCode",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Errors\\VaulterProblemDefinitions",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleDeclarations",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\PluginModuleSpec",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\VaulterExtensionFacets",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\VaulterPluginActivationGate",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\WithModuleRuntime",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\CoreKernelRegistrar",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\CoreSchemaSets",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\VaulterMigration",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: Vaulter-owned immutable options and domain runtime wiring."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Laravel\\VaulterPluginRegistrar",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Packman migration: supported plugin registration SPI for independently distributed addons."
         }
     ]
 }

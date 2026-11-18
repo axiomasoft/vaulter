@@ -30,6 +30,7 @@ it('registers the room channel under the channel prefix of the documents and rej
         return $name === 'host.documents.{roomId}';
     });
 
+    (new CollaborationRegistrar)->register($this->app);
     (new CollaborationRegistrar)->boot($this->app);
 
     expect($callback)->toBeInstanceOf(Closure::class)

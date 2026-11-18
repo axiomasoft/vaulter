@@ -6,11 +6,11 @@ namespace Vaulter\Webhooks\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Kernel;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Repositories\WebhookDeliveryStoreRepository;
 
 /**
@@ -111,6 +111,6 @@ final class PruneWebhooksCommand extends Command
             return max((int) $override, 0);
         }
 
-        return app(WebhooksConfig::class)->retentionDays();
+        return app(WebhooksOptions::class)->retentionDays();
     }
 }

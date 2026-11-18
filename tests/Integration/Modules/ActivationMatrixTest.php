@@ -9,6 +9,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Facade;
+use Packman\Config\Contracts\OptionsFactory;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Errors\Contracts\ProblemDefinitionProvider;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
@@ -70,8 +74,19 @@ function matrixSurface(Application $app): array
     $routes = array_map(static fn (Route $route): string => implode('|', $route->methods()).' '.$route->uri(), $app['router']->getRoutes()->getRoutes());
     $commands = array_keys($app->make(ConsoleKernel::class)->all());
     $listeners = array_map('count', $app['events']->getRawListeners());
-    $bindings = array_keys($app->getBindings());
-    $roots = array_values(array_filter(array_keys($app['config']->all()), static fn (string $root): bool => str_starts_with($root, 'vaulter')));
+    // Installed plugins retain declarative config, diagnostics, problem definitions and schema metadata.
+    // These registrations are lazy; the runtime surface below must remain unchanged while inactive.
+    $bindings = array_values(array_filter(array_keys($app->getBindings()), static function (string $binding): bool {
+        foreach ([OptionsFactory::class, DoctorCheck::class, SchemaSetProvider::class] as $metadata) {
+            if (is_a($binding, $metadata, true)) {
+                return false;
+            }
+        }
+        $provider = str_contains($binding, ':') ? substr($binding, strpos($binding, ':') + 1) : '';
+
+        return !is_a($provider, ProblemDefinitionProvider::class, true);
+    }));
+    $roots = array_values(array_filter(array_keys($app['config']->all()), static fn (string $root): bool => $root === 'vaulter' || (str_starts_with($root, 'vaulter-') && $app->make(Kernel::class)->isActive(substr($root, 8)))));
     sort($routes);
     sort($commands);
     sort($bindings);

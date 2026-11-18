@@ -6,7 +6,7 @@
 ## Context
 
 Vaulter targets both plain Laravel apps (auto-increment keys, single tenant) and multi-tenant
-CoreX SaaS (ULID primary keys, `tenant_id`, global tenant scope). A single hard-coded schema
+Laravel SaaS (ULID primary keys, `tenant_id`, global tenant scope). A single hard-coded schema
 cannot serve both.
 
 ## Decision

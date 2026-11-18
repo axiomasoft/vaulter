@@ -3,7 +3,7 @@
     "version": 1,
     "package": "webhooks",
     "types": {
-        "Vaulter\\Webhooks\\Configuration\\WebhooksConfig": {
+        "Vaulter\\Webhooks\\Configuration\\WebhooksOptions": {
             "kind": "class",
             "surface": "Api",
             "since": "1.0",
@@ -14,11 +14,13 @@
             },
             "backing": null,
             "extends": [],
-            "implements": [],
+            "implements": [
+                "Packman\\Config\\Contracts\\OptionsFactory"
+            ],
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -49,12 +51,6 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
-                },
-                "method:__construct": {
-                    "kind": "method",
-                    "name": "__construct",
-                    "visibility": "public",
-                    "internal": true
                 },
                 "method:allowedipranges": {
                     "kind": "method",
@@ -107,7 +103,7 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": [
-                        "@throws InvalidConfigurationException"
+                        "@throws InvalidConfiguration"
                     ]
                 },
                 "method:blockedipranges": {
@@ -159,6 +155,45 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
+                },
+                "method:fromarray": {
+                    "kind": "method",
+                    "name": "fromArray",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "config",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "path",
+                            "type": "string",
+                            "default": "'vaulter-webhooks'",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Webhooks\\Configuration\\WebhooksOptions",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<array-key, mixed> $config"
+                    ]
                 },
                 "method:manageability": {
                     "kind": "method",
@@ -345,7 +380,7 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": [
-                        "@throws InvalidConfigurationException"
+                        "@throws InvalidConfiguration"
                     ]
                 }
             }
@@ -365,7 +400,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -416,7 +451,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -480,6 +515,142 @@
                 }
             }
         },
+        "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode": {
+            "kind": "enum",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": "string",
+            "extends": [],
+            "implements": [
+                "Packman\\Errors\\Contracts\\ErrorCode"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "case:BlockedOutboundUrl": {
+                    "kind": "case",
+                    "name": "BlockedOutboundUrl",
+                    "value": "'webhooks.blocked_outbound_url'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:InvalidWebhookSignature": {
+                    "kind": "case",
+                    "name": "InvalidWebhookSignature",
+                    "value": "'webhooks.invalid_webhook_signature'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:WebhookDeliveryNotFound": {
+                    "kind": "case",
+                    "name": "WebhookDeliveryNotFound",
+                    "value": "'webhooks.webhook_delivery_not_found'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:WebhookDeliveryNotRedeliverable": {
+                    "kind": "case",
+                    "name": "WebhookDeliveryNotRedeliverable",
+                    "value": "'webhooks.webhook_delivery_not_redeliverable'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:WebhookEndpointNotFound": {
+                    "kind": "case",
+                    "name": "WebhookEndpointNotFound",
+                    "value": "'webhooks.webhook_endpoint_not_found'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:WebhookResponseTooLarge": {
+                    "kind": "case",
+                    "name": "WebhookResponseTooLarge",
+                    "value": "'webhooks.webhook_response_too_large'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "method:value": {
+                    "kind": "method",
+                    "name": "value",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Webhooks\\Errors\\WebhooksProblemDefinitions": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Errors\\Contracts\\ProblemDefinitionProvider"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:definitions": {
+                    "kind": "method",
+                    "name": "definitions",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "iterable",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return iterable<ProblemDefinition>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Webhooks\\Events\\WebhookEndpointDisabled": {
             "kind": "class",
             "surface": "Api",
@@ -495,7 +666,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -604,6 +775,128 @@
                 }
             }
         },
+        "Vaulter\\Webhooks\\Providers\\WebhooksPackageRegistrar": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Foundation\\Contracts\\PackageRegistrar"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:boot": {
+                    "kind": "method",
+                    "name": "boot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Webhooks\\Schema\\WebhooksSchemaSets": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Schema\\Contracts\\Migration\\SchemaSetProvider"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:sets": {
+                    "kind": "method",
+                    "name": "sets",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<SchemaSet>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Webhooks\\StandardWebhookVerifier": {
             "kind": "class",
             "surface": "Api",
@@ -619,7 +912,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -725,7 +1018,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -889,23 +1182,254 @@
             },
             "backing": null,
             "extends": [
-                "Spatie\\LaravelPackageTools\\PackageServiceProvider"
+                "Illuminate\\Support\\ServiceProvider"
             ],
             "implements": [],
             "traits": [
-                "Vaulter\\Modules\\OffersModules"
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
             ],
-            "adaptations": [],
+            "adaptations": [
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "register",
+                    "alias": "registerRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                },
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "boot",
+                    "alias": "bootRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                }
+            ],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api(since: '1.0')"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
-                "method:configurepackage": {
+                "constant:REGISTRARS": {
+                    "kind": "constant",
+                    "name": "REGISTRARS",
+                    "visibility": "protected",
+                    "internal": false,
+                    "final": false,
+                    "type": "array",
+                    "value": "[\\Vaulter\\Webhooks\\Providers\\WebhooksPackageRegistrar::class]",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@var list<class-string<PackageRegistrar>>"
+                    ]
+                },
+                "method:boot": {
                     "kind": "method",
-                    "name": "configurePackage",
+                    "name": "boot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "void",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Webhooks\\WebhooksModule": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Extensions\\Contracts\\Composition\\WithSlots",
+                "Packman\\Extensions\\Contracts\\Configuration\\WithConfiguration",
+                "Packman\\Extensions\\Contracts\\Persistence\\WithSchema",
+                "Packman\\Extensions\\Contracts\\Runtime\\WithDiagnostics",
+                "Packman\\Plugins\\Contracts\\Registry\\ExtensionPlugin",
+                "Vaulter\\Modules\\WithModuleRuntime"
+            ],
+            "traits": [
+                "Packman\\Extensions\\Concerns\\Composition\\ContributesToSlots",
+                "Packman\\Extensions\\Concerns\\Configuration\\Configurable",
+                "Packman\\Extensions\\Concerns\\Persistence\\OwnsSchema",
+                "Packman\\Extensions\\Concerns\\Runtime\\ProvidesDiagnostics"
+            ],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:configroot": {
+                    "kind": "method",
+                    "name": "configRoot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:defaultconfigpath": {
+                    "kind": "method",
+                    "name": "defaultConfigPath",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:healthchecks": {
+                    "kind": "method",
+                    "name": "healthChecks",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:manifest": {
+                    "kind": "method",
+                    "name": "manifest",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Packman\\Plugins\\Data\\Plugin\\PluginManifest",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:migrationpath": {
+                    "kind": "method",
+                    "name": "migrationPath",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:moduleruntime": {
+                    "kind": "method",
+                    "name": "moduleRuntime",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:optionsclass": {
+                    "kind": "method",
+                    "name": "optionsClass",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:problemproviders": {
+                    "kind": "method",
+                    "name": "problemProviders",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
                     "visibility": "public",
                     "internal": false,
                     "static": false,
@@ -914,8 +1438,8 @@
                     "by_ref": false,
                     "params": [
                         {
-                            "name": "package",
-                            "type": "Spatie\\LaravelPackageTools\\Package",
+                            "name": "registrar",
+                            "type": "Packman\\Plugins\\Laravel\\PluginRegistrar",
                             "default": null,
                             "variadic": false,
                             "by_ref": false,
@@ -929,9 +1453,9 @@
                     "doc_internal": false,
                     "doc": []
                 },
-                "method:packageregistered": {
+                "method:schemacomponents": {
                     "kind": "method",
-                    "name": "packageRegistered",
+                    "name": "schemaComponents",
                     "visibility": "public",
                     "internal": false,
                     "static": false,
@@ -939,7 +1463,79 @@
                     "final": false,
                     "by_ref": false,
                     "params": [],
-                    "return": "void",
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:schemasetproviders": {
+                    "kind": "method",
+                    "name": "schemaSetProviders",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:slotcontributions": {
+                    "kind": "method",
+                    "name": "slotContributions",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}>"
+                    ]
+                },
+                "method:tablenouns": {
+                    "kind": "method",
+                    "name": "tableNouns",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<string>"
+                    ]
+                },
+                "method:tableprefix": {
+                    "kind": "method",
+                    "name": "tablePrefix",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,

@@ -54,7 +54,7 @@
   {
     "name": "sibling dev",
     "dev": [
-      "axioma-studio/vaulter-drive"
+      "axiomasoft/vaulter-drive"
     ],
     "errors": [
       "require-dev"

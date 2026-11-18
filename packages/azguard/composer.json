@@ -3,7 +3,13 @@
     "description": "AzGuard permission bridge for Vaulter — a real AzGuardGuard adapter delegating to AzGuard v1 panel checks on resources and assignment scopes, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "authorization", "permissions", "azguard", "vaulter"],
+    "keywords": [
+        "laravel",
+        "authorization",
+        "permissions",
+        "azguard",
+        "vaulter"
+    ],
     "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
@@ -19,12 +25,14 @@
         "axioma-studio/vaulter-azguard": "self.version"
     },
     "require": {
-        "php": ">=8.4 <8.6",
+        "axiomasoft/azguard": "^2.0@dev",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
         "axiomasoft/vaulter-core": "self.version",
         "axiomasoft/vaulter-drive": "self.version",
-        "axiomasoft/azguard": "dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba",
         "illuminate/contracts": "^13.0",
-        "illuminate/support": "^13.0"
+        "illuminate/support": "^13.0",
+        "php": ">=8.4 <8.6"
     },
     "require-dev": {
         "axiomasoft/vaulter-media": "self.version",
@@ -51,6 +59,19 @@
         },
         "branch-alias": {
             "dev-main": "1.0.x-dev"
+        },
+        "packman": {
+            "schema-version": 1,
+            "package-type": "integration",
+            "stability": "stable",
+            "owns": [
+                "Configuration",
+                "Contracts",
+                "Doctor",
+                "Providers",
+                "Testing"
+            ],
+            "error-prefix": "azguard"
         }
     },
     "repositories": [

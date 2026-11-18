@@ -20,7 +20,7 @@ outline: deep
 HTML/Markdown — см. [Экспорт](./export.md).
 
 ::: info Документы доступны при установке пакета
-Установите `axioma-studio/vaulter-documents`. Редактирование, ревизии и маршруты
+Установите `axiomasoft/vaulter-documents`. Редактирование, ревизии и маршруты
 документов доступны без флага `document_versions`. Совместное редактирование в реальном времени — отдельный opt-in пакет
 коммерческого дополнения; публичный контракт — [протоколы коллаборации](/ru/extending/collaboration-protocols).
 :::

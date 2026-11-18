@@ -22,11 +22,10 @@ use Vaulter\Kernel;
 use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\HoldsReferences;
 use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\ModuleReferences;
 use Vaulter\Modules\ModuleState;
-use Vaulter\Modules\PluginModuleBridge;
 use Vaulter\Modules\RemovalGuard;
-use Vaulter\Modules\VaulterModule;
 
 /**
  * Plans, and on `--force` performs, the removal of a module's schema: its migrations and tables, the installed
@@ -75,7 +74,7 @@ final class ModuleUninstallCommand extends Command
             return self::FAILURE;
         }
         $rawId = $this->argument('module');
-        $id = is_string($rawId) ? $rawId : '';
+        $id = $rawId;
         $module = $id !== '' ? $kernel->compiled()->module($id) : null;
         if ($module === null) {
             $this->components->error('No installed module is called "'.$id.'".');
@@ -399,9 +398,7 @@ final class ModuleUninstallCommand extends Command
                 continue;
             }
             $manifest = new ($module->manifest);
-            $requires = $manifest instanceof VaulterModule
-                ? array_keys($manifest->requires())
-                : array_keys(PluginModuleBridge::requires($manifest));
+            $requires = array_keys(ModuleDeclarations::requires($manifest));
             if (in_array($id, $requires, true)) {
                 $dependents[] = $module->id->value;
             }
@@ -433,8 +430,8 @@ final class ModuleUninstallCommand extends Command
      * references it may keep or that are kept on its data (a reference, like a foreign key, points along a Composer
      * dependency), and the guards of its removal.
      *
-     * @param  list<ModuleState>                                          $modules
-     * @return array<string, class-string<ExtensionPlugin|VaulterModule>> module id => manifest class
+     * @param  list<ModuleState>                            $modules
+     * @return array<string, class-string<ExtensionPlugin>> module id => manifest class
      */
     private static function requirementClosure(string $id, array $modules): array
     {
@@ -449,11 +446,7 @@ final class ModuleUninstallCommand extends Command
             }
             $closure[$module] = $manifests[$module];
             $manifest = new ($manifests[$module]);
-            $requiredIds = $manifest instanceof VaulterModule
-                ? array_keys($manifest->requires())
-                : ($manifests[$module] === CoreModule::class
-                    ? []
-                    : array_keys(PluginModuleBridge::requires($manifest)));
+            $requiredIds = array_keys(ModuleDeclarations::requires($manifest));
             foreach ($requiredIds as $required) {
                 $visit($required);
             }
@@ -466,7 +459,7 @@ final class ModuleUninstallCommand extends Command
     /**
      * The references of the modules in `$closure` that hold some.
      *
-     * @param  array<string, class-string<ExtensionPlugin|VaulterModule>>          $closure
+     * @param  array<string, class-string<ExtensionPlugin>>                        $closure
      * @return array{0: array<string, ModuleReferences>, 1: array<string, string>} holder id => its references; holder id => why it cannot be read
      */
     private function holders(array $closure): array
@@ -500,7 +493,7 @@ final class ModuleUninstallCommand extends Command
     /**
      * The removal guards of the modules in `$closure` that have one.
      *
-     * @param  array<string, class-string<ExtensionPlugin|VaulterModule>>      $closure
+     * @param  array<string, class-string<ExtensionPlugin>>                    $closure
      * @return array{0: array<string, RemovalGuard>, 1: array<string, string>} module id => its guard; module id => why it cannot be read
      */
     private function guards(array $closure): array

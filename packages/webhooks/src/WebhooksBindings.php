@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
+use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Modules\ModuleBindings;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\HostResolver;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -24,10 +26,10 @@ final class WebhooksBindings implements ModuleBindings
         // Outbound webhook SSRF guard: the host resolver is the injectable DNS seam (A + AAAA), and the
         // guard is host-swappable via the delivery path (DeliverWebhook) and — as an early reject — at
         // registration.
-        $app->singleton(WebhooksConfig::class);
+        $app->bind(WebhooksOptions::class, static fn (Container $app): WebhooksOptions => CompiledOptionsCache::resolve($app, 'vaulter-webhooks', static fn (array $raw): WebhooksOptions => WebhooksOptions::fromArray($raw)));
         $app->bind(HostResolver::class, SystemHostResolver::class);
         $app->bind(OutboundUrlGuard::class, static function (Application $app): OutboundUrlGuard {
-            $guard = $app->make($app->make(WebhooksConfig::class)->urlGuard());
+            $guard = $app->make($app->make(WebhooksOptions::class)->urlGuard());
             if (!$guard instanceof OutboundUrlGuard) {
                 throw new InvalidConfigurationException('[Vaulter] Outbound URL guard binding must return an OutboundUrlGuard.');
             }
@@ -41,7 +43,7 @@ final class WebhooksBindings implements ModuleBindings
         // The webhook-endpoint management surface is a global admin resource, authorized by the
         // WebhookEndpointPolicy (manage ability).
         Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
-        $config = $app->make(WebhooksConfig::class);
+        $config = $app->make(WebhooksOptions::class);
         // A malformed vaulter-webhooks.* value fails the boot of the active module, not the first delivery.
         $config->validate();
         $model = $config->model('webhook_endpoint');

@@ -30,11 +30,11 @@ whether it is active or not; disabling never deletes data.
 
 **3. Four mechanisms, no second framework.**
 
-- **Manifest** — `Vaulter\Modules\VaulterModule`: `id()`, `version()` (the SPI protocol `MAJOR.MINOR`),
-  `activation()`, `requires()` (`id => ^MAJOR.MINOR`), `register(ModuleBuilder)`. The builder only
-  declares: config root, schema path, routes, translations, commands, listeners, schedules, route
-  middleware, capabilities, slots and contributions, event and problem sources. Values are scalars,
-  enums and class-strings; no closures, no I/O, no container lookups, no actor, tenant or clock.
+- **Manifest** — native Packman `ExtensionPlugin` plus composable `WithConfiguration`, `WithSchema`,
+  `WithCapabilities`, `WithSlots` and `WithDiagnostics` contracts. `manifest()` supplies identity and dependencies.
+  Vaulter `WithModuleRuntime::moduleRuntime()` supplies domain activation, bindings, operations, events,
+  routes and schedules through an immutable `PluginModuleSpec`. The temporary Slice B1 manifest bridge
+  was retired once every package became a native code plugin. Declarations perform no I/O or container lookups.
 - **Compilation and seal** — a package provider calls `offerModule()` from `register()` and registers
   nothing itself. The core provider compiles every offered manifest in an application *booting*
   callback (after all `register()`, before any `boot()`), with a pure compiler, and seals the result in

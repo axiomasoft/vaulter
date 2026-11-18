@@ -11,11 +11,13 @@ use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Drain\PendingDocuments;
 use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
+use Vaulter\Collaboration\Persistence\AppendResult;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Collaboration\Tests\Support\FakeHub;
+use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -121,7 +123,7 @@ it('refuses every append while the flag is set, over HTTP and on the service, an
         ->assertStatus(503)
         ->assertJsonPath('code', 'collaboration_draining')
         ->assertJsonPath('retryable', 'with_backoff');
-    expect(fn () => Compaction::append($this->second, 'refused'))->toThrow(CollaborationDrainingException::class)
+    expect(fn (): AppendResult => Compaction::append($this->second, 'refused'))->toThrow(CollaborationDrainingException::class)
         ->and(Compaction::rows('collaboration_updates'))->toBe(0)
         ->and(Compaction::rows('collaboration_heads'))->toBe(0)
         ->and(Compaction::marker($this->first))->toBe([null, null]);
@@ -187,7 +189,7 @@ it('rolls back an append the flag reached inside its transaction: it reads the f
         }
     });
 
-    expect(fn () => Compaction::append($this->first, 'late'))->toThrow(CollaborationDrainingException::class)
+    expect(fn (): AppendResult => Compaction::append($this->first, 'late'))->toThrow(CollaborationDrainingException::class)
         ->and(Compaction::seqs($this->first))->toBe([1])
         ->and(Compaction::rows('collaboration_receipts'))->toBe(1)
         ->and(Compaction::head($this->first)?->headSeq)->toBe(1)
@@ -234,7 +236,7 @@ it('drains and allows Yjs removal while both pending scanners preserve unrelated
     config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
     $before = $acme->getAttributes();
     Hub::callV2('append', Hub::seedBody($this->first, 'saved-yjs'), Hub::token($this->first))->assertOk();
-    expect(array_map(static fn ($m) => $m->nodeId, app(PendingDocuments::class)->all()))->toBe([(string) $this->first->getKey()]);
+    expect(array_map(static fn (PendingMarker $m): string => $m->nodeId, app(PendingDocuments::class)->all()))->toBe([(string) $this->first->getKey()]);
     expect(app(CompactionLeases::class)->pending()['total'])->toBe(1);
     FakeHub::install();
     $this->artisan('vaulter:collaboration:drain')->assertExitCode(0);

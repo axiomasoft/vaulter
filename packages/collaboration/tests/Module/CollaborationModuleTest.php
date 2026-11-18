@@ -5,6 +5,11 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Collaboration\CollaborationModule;
 use Vaulter\Collaboration\CollaborationSchedule;
 use Vaulter\Collaboration\Console\DrainCommand;
@@ -23,12 +28,13 @@ use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\InvalidModuleGraph;
-use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCompiler;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\ModuleState;
+use Vaulter\Modules\PluginModuleSpec;
 use Vaulter\Modules\SlotContribution;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 /**
@@ -53,18 +59,17 @@ function collaborationState(Application $app): ModuleState
 
 it('declares an opt-in manifest that needs the documents module', function (): void {
     $module = new CollaborationModule;
-    $builder = new ModuleBuilder($module->id());
-    $module->register($builder);
+    $builder = ModuleDeclarations::buildOffered(CollaborationModule::class);
 
-    expect($module->id()->value)->toBe('collaboration')
-        ->and($module->activation())->toBe(Activation::OptIn)
-        ->and(array_keys($module->requires()))->toBe(['core', 'drive', 'documents'])
+    expect($module->manifest()->id)->toBe('vaulter.collaboration')
+        ->and($module->moduleRuntime()->activation)->toBe(Activation::OptIn)
+        ->and($module->manifest()->requires)->toBe(['vaulter.core', 'vaulter.drive', 'vaulter.documents'])
         ->and(array_keys($builder->configs()))->toBe(['vaulter-collaboration'])
-        ->and(CollaborationModule::ownedSchema())->toBe(CollaborationSchema::class)
+        ->and($module->schemaComponents()[0])->toBe(CollaborationSchema::class)
         ->and(array_map(realpath(...), $builder->schemaPaths()))->toBe([realpath(__DIR__.'/../../database/migrations')])
         ->and(array_map(realpath(...), $builder->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/collaboration.php')])
         ->and($builder->capabilityProviders())->toBe([])
-        ->and(array_values(array_map(static fn ($c): string => $c->key ?? '', array_filter($builder->contributions(), static fn ($c): bool => in_array($c->slot, [CollaborationProtocolDriver::class, PendingStateDrainer::class], true)))))->toBe(['yjs', 'yjs'])
+        ->and(array_values(array_map(static fn (SlotContribution $c): string => $c->key ?? '', array_filter($builder->contributions(), static fn (SlotContribution $c): bool => in_array($c->slot, [CollaborationProtocolDriver::class, PendingStateDrainer::class], true)))))->toBe(['yjs', 'yjs'])
         ->and($builder->commandClasses())->toBe([PruneGenerationsCommand::class, DrainCommand::class])
         ->and($builder->schedules())->toBe([CollaborationSchedule::class])
         // Read statically by vaulter:module:uninstall, also while the module is off.
@@ -100,7 +105,7 @@ it('stays off by default: no routes, no driver, no operations, and the host stil
         ->and($app['router']->has('vaulter.v1.documents.collaboration.session'))->toBeTrue()
         ->and($kernel->extensions()->handlerKeys(CollaborationProtocolDriver::class) !== [])->toBeFalse()
         ->and($app->bound(CollaborationOperations::class))->toBeFalse()
-        ->and($app['config']->has('vaulter-collaboration'))->toBeFalse()
+        ->and($app['config']->has('vaulter-collaboration'))->toBeTrue() // Installed Packman plugin defaults remain available.
         ->and(FreshApplication::$queries)->toBe(0);
 });
 
@@ -149,9 +154,23 @@ it('keeps the problem codes of the collaboration concept out of the catalogue wh
 });
 
 it('rejects duplicate protocol handler keys before resolving transports', function (): void {
-    $modules = array_map(static fn ($state) => new $state->manifest, FreshApplication::boot(['vaulter.modules.collaboration' => true])->make(Kernel::class)->modules());
-    $modules[] = new class implements VaulterModule
+    $modules = array_map(static fn (ModuleState $state): object => new $state->manifest, FreshApplication::boot(['vaulter.modules.collaboration' => true])->make(Kernel::class)->modules());
+    $modules[] = new class implements ExtensionPlugin, WithModuleRuntime, WithSlots
     {
+        use ContributesToSlots;
+
+        public function manifest(): PluginManifest
+        {
+            return new PluginManifest(id: 'vaulter.'.$this->id()->value, version: '1.0.0', requires: array_map(static fn (string $id): string => 'vaulter.'.$id, array_keys($this->requires())));
+        }
+
+        public function register(PluginRegistrar $registrar): void {}
+
+        public function moduleRuntime(): PluginModuleSpec
+        {
+            return new PluginModuleSpec(plugin: self::class, protocolVersion: $this->version(), requires: $this->requires());
+        }
+
         public function id(): ModuleId
         {
             return new ModuleId('duplicate-yjs');
@@ -172,9 +191,11 @@ it('rejects duplicate protocol handler keys before resolving transports', functi
             return ['documents' => '^1.0'];
         }
 
-        public function register(ModuleBuilder $module): void
+        public function slotContributions(): array
         {
-            $module->slot(CollaborationProtocolDriver::class, HocuspocusCollaborationDriver::class, 'duplicate.protocol.yjs', key: 'yjs');
+            return [
+                ['slot' => CollaborationProtocolDriver::class, 'implementation' => HocuspocusCollaborationDriver::class, 'id' => 'duplicate.protocol.yjs', 'key' => 'yjs'],
+            ];
         }
     };
     $compiled = (new ModuleCompiler)->compile($modules, ['collaboration' => true]);

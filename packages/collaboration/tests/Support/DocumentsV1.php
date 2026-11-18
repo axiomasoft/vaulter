@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Tests\Support;
 
 use Illuminate\Testing\TestResponse;
+use RuntimeException;
 use Vaulter\Drive\Testing\Http\V1;
 
 /** Fixtures of the collaboration REST v1 suite on top of the core V1 helpers; every call runs as the test's acting user. */
@@ -26,7 +27,7 @@ final class DocumentsV1
     {
         $etag = test()->getJson(self::url('documents/'.$nodeId.'/content'))->assertOk()->headers->get('ETag');
 
-        return is_string($etag) ? $etag : throw new \RuntimeException('No ETag on documents.content.show');
+        return is_string($etag) ? $etag : throw new RuntimeException('No ETag on documents.content.show');
     }
 
     /** @return array{If-Match: string} */

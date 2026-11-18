@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Packman\Attributes\Internal;
+use Packman\Attributes\Api;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Operations\OperationPolicySource;
 
 /**
- * Vaulter runtime bridge specification accompanying an {@see ExtensionPlugin} manifest offered through {@see ModuleCatalog}.
+ * Vaulter domain runtime specification accompanying an {@see ExtensionPlugin} manifest offered through {@see ModuleCatalog}.
  */
-#[Internal]
+#[Api(since: '1.0')]
 final readonly class PluginModuleSpec
 {
     /**
+     * @param array<string, string>|null                               $requires        protocol constraints, when a host uses Vaulter protocol versioning
      * @param class-string<ExtensionPlugin>                            $plugin
      * @param list<string>                                             $routes
      * @param array<string, string>                                    $translations    namespace => directory
@@ -34,6 +35,7 @@ final readonly class PluginModuleSpec
         public string $plugin,
         public Activation $activation = Activation::Auto,
         public ?string $protocolVersion = null,
+        public ?array $requires = null,
         public array $routes = [],
         public array $translations = [],
         public array $commands = [],

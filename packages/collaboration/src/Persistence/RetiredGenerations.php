@@ -7,7 +7,7 @@ namespace Vaulter\Collaboration\Persistence;
 use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
@@ -48,7 +48,7 @@ final readonly class RetiredGenerations
                 return $this->log->rows('collaboration_heads', $head->documentId, $head->generation)
                     ->whereNull('retired_at')
                     ->update(['retired_at' => $now, 'updated_at' => $now]);
-            });
+            }) ?? 0;
         }
 
         return $retired;

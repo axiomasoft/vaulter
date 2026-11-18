@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Persistence;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * A published checkpoint: the state version it holds (the next lease's checkpoint version) and whether it cleared the

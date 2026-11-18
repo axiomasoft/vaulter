@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * One head row of the update log (v_collaboration_heads): the last committed sequence of a document generation (HS),

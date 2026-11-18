@@ -5,20 +5,37 @@ declare(strict_types=1);
 namespace Vaulter\AzGuard;
 
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Attributes\Api;
-use Vaulter\Modules\OffersModules;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Foundation\Concerns\RegistersPackageRegistrars;
+use Packman\Foundation\Contracts\PackageRegistrar;
+use Vaulter\AzGuard\Providers\AzGuardPackageRegistrar;
 
 /**
- * The AzGuard bridge only offers {@see AzGuardModule}; the core module kernel registers its config, the
- * AzGuardGuard seam and its doctor check while the module is active.
+ * Vaulter AzGuard — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see AzGuardModule}.
  */
-#[Api]
+#[Api(since: '1.0')]
 final class VaulterAzGuardServiceProvider extends ServiceProvider
 {
-    use OffersModules;
+    use RegistersPackageRegistrars {
+        RegistersPackageRegistrars::register as protected registerRegistrars;
+        RegistersPackageRegistrars::boot as protected bootRegistrars;
+    }
 
+    /** @var list<class-string<PackageRegistrar>> */
+    protected const array REGISTRARS = [
+        AzGuardPackageRegistrar::class,
+    ];
+
+    #[Override]
     public function register(): void
     {
-        $this->offerModule(AzGuardModule::class);
+        $this->registerRegistrars();
+    }
+
+    public function boot(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
+        $this->bootRegistrars();
     }
 }

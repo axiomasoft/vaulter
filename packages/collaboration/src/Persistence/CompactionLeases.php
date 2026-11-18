@@ -8,8 +8,8 @@ use Closure;
 use Generator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\State\CollaborativeState;
@@ -44,7 +44,7 @@ final readonly class CompactionLeases
         private LogTables $log,
         private CollaborativeState $state,
         private UpdateLog $updates,
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
     ) {}
 
     /**
@@ -186,10 +186,10 @@ final readonly class CompactionLeases
             ->where('seq', '>', $head->checkpointSeq)
             ->selectRaw('min(created_at) as oldest, sum(length(payload)) as stored_bytes')
             ->first();
-        $stored = $tail === null ? null : $tail->stored_bytes;
+        $stored = $tail?->stored_bytes;
         // A payload is stored base64: four stored bytes for every three of the update.
         $bytes = is_numeric($stored) ? intdiv((int) $stored * 3, 4) : 0;
-        $oldest = LogTables::time($tail === null ? null : $tail->oldest);
+        $oldest = LogTables::time($tail?->oldest);
 
         return $bytes >= $this->config->compactionTriggerBytes()
             || ($oldest !== null && $oldest->lessThanOrEqualTo($now->copy()->subSeconds($this->config->compactionTriggerAge())));
@@ -262,6 +262,6 @@ final readonly class CompactionLeases
             ->lockForUpdate()
             ->pluck('stored_bytes');
 
-        return $stored->reduce(static fn (int $bytes, mixed $size): int => $bytes + (is_numeric($size) ? (int) $size : 0), is_numeric($checkpoint) ? (int) $checkpoint : 0);
+        return $stored->reduce(static fn (int $bytes, mixed $size): int => $bytes + (is_numeric($size) ? (int) $size : 0), $checkpoint ?? 0);
     }
 }

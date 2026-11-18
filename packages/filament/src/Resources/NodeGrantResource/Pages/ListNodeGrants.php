@@ -6,7 +6,7 @@ namespace Vaulter\Filament\Resources\NodeGrantResource\Pages;
 
 use Filament\Actions\Action;
 use Override;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\Pages\ListPanelRecords;
 

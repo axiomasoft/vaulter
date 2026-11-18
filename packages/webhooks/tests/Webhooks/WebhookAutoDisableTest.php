@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Webhooks\Actions\DeactivateWebhookEndpointAction;
 use Vaulter\Webhooks\Actions\UpdateWebhookEndpointAction;
 use Vaulter\Webhooks\Data\UpdateWebhookEndpointInput;
@@ -129,7 +129,7 @@ it('dispatches WebhookEndpointDisabled once, after the disabling transaction com
     Event::listen(WebhookEndpointDisabled::class, static function (WebhookEndpointDisabled $event) use (&$heard): void {
         $heard[] = [
             'level' => DB::connection()->transactionLevel(),
-            'active' => DB::table(app(DatabaseConfig::class)->table('webhook_endpoints'))->where('id', $event->endpointId)->value('is_active'),
+            'active' => DB::table(app(DatabaseOptions::class)->table('webhook_endpoints'))->where('id', $event->endpointId)->value('is_active'),
             'event' => $event,
         ];
     });
@@ -200,12 +200,12 @@ it('switching an endpoint off through update behaves like deactivating, and back
     $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 2, 'failing_since' => now()->subDay()]);
     $open = WebhookTestHelpers::delivery($endpoint);
 
-    app(UpdateWebhookEndpointAction::class)->execute($endpoint, new UpdateWebhookEndpointInput(url: null, events: null, isActive: false));
+    app(UpdateWebhookEndpointAction::class)->execute($endpoint, new UpdateWebhookEndpointInput(isActive: false));
 
     expect($endpoint->refresh()->disabled_reason)->toBe('manual')
         ->and($open->refresh()->status)->toBe('dead');
 
-    app(UpdateWebhookEndpointAction::class)->execute($endpoint, new UpdateWebhookEndpointInput(url: null, events: null, isActive: true));
+    app(UpdateWebhookEndpointAction::class)->execute($endpoint, new UpdateWebhookEndpointInput(isActive: true));
 
     $endpoint->refresh();
     expect($endpoint->is_active)->toBeTrue()
@@ -226,7 +226,7 @@ it('re-enabling an auto-disabled endpoint clears the failing run and the reason'
     WebhookTestHelpers::deliver($delivery);
     expect($endpoint->refresh()->disabled_reason)->toBe('failing');
 
-    app(UpdateWebhookEndpointAction::class)->execute($endpoint, new UpdateWebhookEndpointInput(url: null, events: null, isActive: true));
+    app(UpdateWebhookEndpointAction::class)->execute($endpoint, new UpdateWebhookEndpointInput(isActive: true));
 
     $endpoint->refresh();
     expect($endpoint->is_active)->toBeTrue()
@@ -240,10 +240,10 @@ it('kills the deliveries created since when a stale inactive copy of the endpoin
     $endpoint = WebhookTestHelpers::endpoint(['is_active' => false, 'disabled_reason' => 'manual', 'disabled_at' => now()]);
     $loadedWhileOff = $endpoint->newQuery()->findOrFail($endpoint->getKey());
 
-    app(UpdateWebhookEndpointAction::class)->execute($endpoint->fresh(), new UpdateWebhookEndpointInput(url: null, events: null, isActive: true));
+    app(UpdateWebhookEndpointAction::class)->execute($endpoint->fresh(), new UpdateWebhookEndpointInput(isActive: true));
     $open = WebhookTestHelpers::delivery($endpoint->fresh());
 
-    app(UpdateWebhookEndpointAction::class)->execute($loadedWhileOff, new UpdateWebhookEndpointInput(url: null, events: null, isActive: false));
+    app(UpdateWebhookEndpointAction::class)->execute($loadedWhileOff, new UpdateWebhookEndpointInput(isActive: false));
 
     expect($endpoint->fresh()->is_active)->toBeFalse()
         ->and($endpoint->fresh()->disabled_reason)->toBe('manual')

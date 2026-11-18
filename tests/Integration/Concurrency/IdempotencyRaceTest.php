@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -35,7 +35,7 @@ it('makes one effect of two concurrent requests with one key; the second replays
     expect(array_map(static fn (RaceOutcome $o): bool => $o->ok, $outcomes))->toBe([true, true], implode('; ', array_map(static fn (RaceOutcome $o): string => (string) $o->message, $outcomes)))
         ->and($outcomes[0]->value)->toBe($outcomes[1]->value)
         ->and(Node::query()->where('name', 'Raced')->count())->toBe(1)
-        ->and(app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY))->count())->toBe(1);
+        ->and(app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count())->toBe(1);
 });
 
 it('answers 409 operation_in_progress when the claim is held past the bounded wait', function (): void {

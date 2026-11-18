@@ -24,11 +24,16 @@ final class SchedulingRegistrar implements ModuleSchedule
 
     public function define(Schedule $schedule, Repository $config): void
     {
-        foreach (self::KEYS as $key) {
-            $frequency = ScheduleFrequency::parse('vaulter-media.schedule.'.$key, $config->get('vaulter-media.schedule.'.$key));
+        foreach (self::frequencies($config) as $key => $frequency) {
             if ($frequency !== null) {
                 CoreSchedulingRegistrar::task($schedule, self::COMMANDS[$key], $frequency, CoreSchedulingRegistrar::DEFAULT_EXPIRY);
             }
         }
+    }
+
+    /** @return array<string, ScheduleFrequency|null> */
+    public static function frequencies(Repository $config): array
+    {
+        return ScheduleFrequency::fromMap('vaulter-media.schedule', $config->get('vaulter-media.schedule', []), self::KEYS);
     }
 }

@@ -664,7 +664,7 @@
     "media": {
       "kind": "pest",
       "cwd": "packages/media",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/media/tests",
       "path_base": "package",
@@ -692,7 +692,8 @@
             "packages/media/tests/Arch/PublicApiSnapshotTest.php",
             "packages/media/tests/Arch/TestingBoundaryTest.php",
             "packages/media/tests/Unit/BlobScopeTest.php",
-            "packages/media/tests/Unit/ContentScannerContractSuiteTest.php"
+            "packages/media/tests/Unit/ContentScannerContractSuiteTest.php",
+            "packages/media/tests/Unit/PackmanModuleCompatibilityTest.php"
           ]
         },
         {
@@ -760,7 +761,8 @@
             "packages/media/tests/Doctor/BlobPinsCheckTest.php",
             "packages/media/tests/Feature/BootTest.php",
             "packages/media/tests/Observability/P85Section53MediaMetricsTest.php",
-            "packages/media/tests/Recipes/MediaRecipeTest.php"
+            "packages/media/tests/Recipes/MediaRecipeTest.php",
+            "packages/media/tests/Feature/PackmanConsumerBootTest.php"
           ]
         },
         {
@@ -806,7 +808,7 @@
     "drive": {
       "kind": "pest",
       "cwd": "packages/drive",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/drive/tests",
       "path_base": "package",
@@ -1260,7 +1262,7 @@
     "webhooks": {
       "kind": "pest",
       "cwd": "packages/webhooks",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/webhooks/tests",
       "path_base": "package",
@@ -1382,7 +1384,7 @@
     "documents": {
       "kind": "pest",
       "cwd": "packages/documents",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/documents/tests",
       "path_base": "package",
@@ -1807,7 +1809,7 @@
     "collaboration": {
       "kind": "pest",
       "cwd": "packages/collaboration",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/collaboration/tests",
       "path_base": "package",
@@ -2025,7 +2027,7 @@
     "azguard": {
       "kind": "pest",
       "cwd": "packages/azguard",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/azguard/tests",
       "path_base": "package",
@@ -2135,7 +2137,7 @@
     "filament": {
       "kind": "pest",
       "cwd": "packages/filament",
-      "vendor": "vendor/bin/pest",
+      "vendor": "../../vendor/bin/pest",
       "config": "phpunit.xml",
       "tests_dir": "packages/filament/tests",
       "path_base": "package",

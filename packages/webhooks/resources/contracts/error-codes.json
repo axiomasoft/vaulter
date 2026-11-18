@@ -1,0 +1,72 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/vaulter-webhooks",
+    "codes": [
+        {
+            "package": "axiomasoft/vaulter-webhooks",
+            "enum": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "case": "BlockedOutboundUrl",
+            "code": "webhooks.blocked_outbound_url",
+            "type": "urn:packman:problem:webhooks.blocked_outbound_url",
+            "status": 500,
+            "title": "Blocked outbound url",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/vaulter-webhooks",
+            "enum": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "case": "InvalidWebhookSignature",
+            "code": "webhooks.invalid_webhook_signature",
+            "type": "urn:packman:problem:webhooks.invalid_webhook_signature",
+            "status": 400,
+            "title": "Invalid webhook signature",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/vaulter-webhooks",
+            "enum": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "case": "WebhookDeliveryNotFound",
+            "code": "webhooks.webhook_delivery_not_found",
+            "type": "urn:packman:problem:webhooks.webhook_delivery_not_found",
+            "status": 404,
+            "title": "Webhook delivery not found",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/vaulter-webhooks",
+            "enum": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "case": "WebhookDeliveryNotRedeliverable",
+            "code": "webhooks.webhook_delivery_not_redeliverable",
+            "type": "urn:packman:problem:webhooks.webhook_delivery_not_redeliverable",
+            "status": 409,
+            "title": "Webhook delivery not redeliverable",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-webhooks",
+            "enum": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "case": "WebhookEndpointNotFound",
+            "code": "webhooks.webhook_endpoint_not_found",
+            "type": "urn:packman:problem:webhooks.webhook_endpoint_not_found",
+            "status": 404,
+            "title": "Webhook endpoint not found",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/vaulter-webhooks",
+            "enum": "Vaulter\\Webhooks\\Errors\\WebhooksErrorCode",
+            "case": "WebhookResponseTooLarge",
+            "code": "webhooks.webhook_response_too_large",
+            "type": "urn:packman:problem:webhooks.webhook_response_too_large",
+            "status": 500,
+            "title": "Webhook response too large",
+            "retryable": false,
+            "category": "internal"
+        }
+    ]
+}

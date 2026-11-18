@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The model class the panel resources declare to Filament. Filament resources need a model

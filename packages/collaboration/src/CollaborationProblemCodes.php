@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;

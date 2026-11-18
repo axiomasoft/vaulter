@@ -16,7 +16,7 @@ Vaulter никогда не копирует байты файлов в собс
 который безопасно запускать даже во время идущих загрузок.
 
 ::: info Где это живёт
-CAS принадлежит пакету `axioma-studio/vaulter-media`: реализация — в `Vaulter\Media\Cas\*` (включая `BlobLock`),
+CAS принадлежит пакету `axiomasoft/vaulter-media`: реализация — в `Vaulter\Media\Cas\*` (включая `BlobLock`),
 контракты — в `Vaulter\Media\Contracts\Cas\*`, модель строки — `Vaulter\Media\Models\Cas\Blob`, enum
 жизненного цикла — `Vaulter\Media\Enums\Cas\BlobStatus`, таблицы — `v_blobs` и `v_blob_references` (пины), а
 конфигурация лежит в `config/vaulter-media.php` (`vaulter-media.models.blob`, `disk`, `dedup`, `gc`). Media не знает ни
@@ -358,7 +358,7 @@ php artisan vaulter:blobs:gc --pending
 ::: warning Grace-окно должно переживать вашу самую медленную загрузку
 Tombstone-блоб может быть воскрешён идущей загрузкой того же `sha256`. Grace должно быть
 **≥ худшей задержки многочастевого коммита**, чтобы загрузка успела воскресить первой. Оно
-ограничено снизу 1h в `MediaConfig::gcGraceHours()` вне зависимости от конфига — никогда не ставьте
+ограничено снизу 1h в `MediaOptions::gcGraceHours()` вне зависимости от конфига — никогда не ставьте
 его в ноль в расчёте на мгновенную очистку.
 :::
 

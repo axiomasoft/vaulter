@@ -9,9 +9,9 @@ use Generator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use LogicException;
+use Packman\Attributes\Internal;
 use stdClass;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Support\Identity;
 
@@ -34,7 +34,7 @@ final readonly class LogTables
 
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
     ) {}
 
     public function table(string $entity): Builder

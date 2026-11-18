@@ -12,59 +12,136 @@
             "view": "current"
         },
         {
-            "category": "explicit-adapter",
             "count": 1,
-            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
+            "file": "packages/core/src/Configuration/CompiledOptionsCache.php",
             "kind": "probe",
-            "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
+            "symbol": "Vaulter\\Configuration\\CompiledOptionsCache::resolve",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Configuration/IdsOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Configuration\\IdsOptions::fromArray",
+            "target": "$class",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Configuration/ModelsOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Configuration\\ModelsOptions::fromArray",
+            "target": "$rawOutbox",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Configuration/TenancyOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Configuration\\TenancyOptions::requireResolver",
+            "target": "$this->resolver",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Database/VaulterDatabase.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Database\\VaulterDatabase::options",
+            "target": "\\Vaulter\\Configuration\\DatabaseOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Modules/Capabilities.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Modules\\Capabilities::configured",
+            "target": "$value",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/core/src/Modules/ModuleApplier.php",
+            "kind": "probe",
+            "reason": "ядро модулей применяет декларации к уже разрешённому сервису хоста (resolved): состояние контейнера, не выбор модуля",
             "removed_in": "never",
-            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::forgetCachedPermissions",
-            "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
+            "symbol": "Vaulter\\Modules\\ModuleApplier::afterResolving",
+            "target": "$abstract",
             "view": "current"
         },
         {
-            "category": "explicit-adapter",
+            "category": "host-lifecycle",
             "count": 1,
-            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
+            "file": "packages/core/src/Modules/ModuleApplier.php",
             "kind": "probe",
-            "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
+            "reason": "resolved Schedule — состояние контейнера хоста при регистрации расписания",
             "removed_in": "never",
-            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::isAvailable",
-            "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
+            "symbol": "Vaulter\\Modules\\ModuleApplier::schedules",
+            "target": "\\Illuminate\\Console\\Scheduling\\Schedule::class",
             "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Modules/ModuleApplier.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Modules\\ModuleApplier::schedules",
+            "target": "\\Vaulter\\Configuration\\ScheduleOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "config-validation",
             "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "file": "packages/core/src/Modules/ModuleCompiler.php",
             "kind": "probe",
-            "reason": "проверка существования сконфигурированного class-string: fail-closed валидация, не удалять",
+            "reason": "the compiler reads the cases of a declared event enum (D38): a constant table of the manifest, checked like the problem sources — no container, no I/O",
             "removed_in": "never",
-            "symbol": "Vaulter\\Configuration\\ConfigValidator::assertImplements",
+            "symbol": "Vaulter\\Modules\\ModuleCompiler::eventTypes",
             "target": "$class",
             "view": "current"
         },
         {
-            "category": "config-validation",
             "count": 1,
-            "file": "packages/core/src/Configuration/TenancyConfig.php",
+            "file": "packages/core/src/Modules/VaulterPluginActivationGate.php",
             "kind": "probe",
-            "reason": "проверка существования сконфигурированного класса резолвера тенанта: fail-closed валидация, не удалять",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Configuration\\TenancyConfig::resolver",
-            "target": "$class",
-            "view": "current"
+            "symbol": "Vaulter\\Modules\\VaulterPluginActivationGate::isEnabled",
+            "target": "$pluginClass",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
         },
         {
-            "category": "config-validation",
             "count": 1,
-            "file": "packages/drive/src/Doctor/Checks/AccessDriverCheck.php",
+            "file": "packages/core/src/Modules/VaulterPluginActivationGate.php",
             "kind": "probe",
-            "reason": "doctor проверяет существование класса выбранного access driver: диагностика, не активация",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Drive\\Doctor\\Checks\\AccessDriverCheck::run",
-            "target": "$class",
-            "view": "current"
+            "symbol": "Vaulter\\Modules\\VaulterPluginActivationGate::isEnabled",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "config-validation",
@@ -78,6 +155,50 @@
             "view": "current"
         },
         {
+            "count": 1,
+            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::bootWithPublisher",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::registerInvalidGraphRoute",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::registerPackmanFacets",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::register",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
             "category": "host-lifecycle",
             "count": 1,
             "file": "packages/core/src/Providers/SchedulingRegistrar.php",
@@ -87,6 +208,28 @@
             "symbol": "Vaulter\\Providers\\SchedulingRegistrar::whenScheduling",
             "target": "\\Illuminate\\Console\\Scheduling\\Schedule::class",
             "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Schema/IdStrategyResolver.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Schema\\IdStrategyResolver::resolve",
+            "target": "\\Vaulter\\Configuration\\IdsOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Schema/VaulterMigration.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Schema\\VaulterMigration::getConnection",
+            "target": "\\Vaulter\\Configuration\\DatabaseOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "host-lifecycle",
@@ -108,17 +251,6 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Support\\LoadTier::set",
             "target": "'request'",
-            "view": "current"
-        },
-        {
-            "category": "host-lifecycle",
-            "count": 1,
-            "file": "packages/drive/src/Support/NodeName.php",
-            "kind": "probe",
-            "reason": "наличие ext-intl Normalizer — окружение рантайма, а не выбор модуля",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Drive\\Support\\NodeName::nfc",
-            "target": "\\Normalizer::class",
             "view": "current"
         },
         {
@@ -155,6 +287,17 @@
             "view": "current"
         },
         {
+            "count": 1,
+            "file": "packages/documents/src/Configuration/DocumentsModelsOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Documents\\Configuration\\DocumentsModelsOptions::fromArray",
+            "target": "$class",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
             "category": "config-validation",
             "count": 1,
             "file": "packages/documents/src/Export/DocumentExporterRegistry.php",
@@ -164,6 +307,39 @@
             "symbol": "Vaulter\\Documents\\Export\\DocumentExporterRegistry::instance",
             "target": "$exporter",
             "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/documents/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Documents\\Providers\\BindingsRegistrar::buildDriveOptions",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/documents/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Documents\\Providers\\BindingsRegistrar::buildOptions",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/documents/src/Providers/DocumentsPackageRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Documents\\Providers\\DocumentsPackageRegistrar::register",
+            "target": "'config'",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "config-validation",
@@ -177,6 +353,149 @@
             "view": "current"
         },
         {
+            "category": "explicit-adapter",
+            "count": 1,
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
+            "kind": "probe",
+            "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::forgetCachedPermissions",
+            "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
+            "view": "current"
+        },
+        {
+            "category": "explicit-adapter",
+            "count": 1,
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
+            "kind": "probe",
+            "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::isAvailable",
+            "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
+            "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::teamsEnabled",
+            "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
+            "view": "current",
+            "category": "explicit-adapter",
+            "reason": "Explicitly selected Spatie adapter checks its optional registrar before reading team configuration; it never activates a module (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Access/PermissionDriverManager.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Access\\PermissionDriverManager::driver",
+            "target": "\\Vaulter\\Drive\\Configuration\\AccessOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "category": "explicit-adapter",
+            "count": 1,
+            "file": "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
+            "kind": "probe",
+            "reason": "$stream — типизированный PSR-обёрточный поток CompletionDeadline::bound над staged-потоком: адаптер ограничения времени чтения, а не container-bound и не feature-probe ресурса; недоступный/неограничиваемый диск отклоняется fail-closed",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Actions\\Uploads\\CompleteUploadAction::execute",
+            "target": "$stream",
+            "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Configuration/DriveModelsOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\DriveModelsOptions::fromArray",
+            "target": "$value",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 2,
+            "file": "packages/drive/src/Configuration/DriveOptionsValidator.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\DriveOptionsValidator::assertImplements",
+            "target": "$class",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Configuration/DriveOptionsValidator.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\DriveOptionsValidator::validate",
+            "target": "\\Vaulter\\Drive\\Configuration\\DriveOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Configuration/DriveOptionsValidator.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\DriveOptionsValidator::validate",
+            "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Configuration/ProfilesOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\ProfilesOptions::fromArray",
+            "target": "$class",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Configuration/ProfilesOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\ProfilesOptions::fromArray",
+            "target": "$defaultRaw",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Configuration/SharingOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Configuration\\SharingOptions::fromArray",
+            "target": "$rawGenerator",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/drive/src/Doctor/Checks/AccessDriverCheck.php",
+            "kind": "probe",
+            "reason": "doctor проверяет существование класса выбранного access driver: диагностика, не активация",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Doctor\\Checks\\AccessDriverCheck::run",
+            "target": "$class",
+            "view": "current"
+        },
+        {
             "category": "host-lifecycle",
             "count": 1,
             "file": "packages/drive/src/Doctor/IntlCheck.php",
@@ -187,6 +506,61 @@
             "symbol": "Vaulter\\Drive\\Doctor\\IntlCheck::run",
             "target": "'intl'",
             "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Providers/AccessRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\AccessRegistrar::boot",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::buildOptions",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::memoizeByOptions",
+            "target": "\\Vaulter\\Configuration\\VaulterOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::memoizeByOptions",
+            "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::memoizeByOptions",
+            "target": "\\Vaulter\\Media\\Configuration\\MediaOptions::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "config-validation",
@@ -211,48 +585,26 @@
             "view": "current"
         },
         {
-            "category": "host-lifecycle",
             "count": 1,
-            "file": "packages/core/src/Modules/ModuleApplier.php",
+            "file": "packages/drive/src/Providers/DrivePackageRegistrar.php",
             "kind": "probe",
-            "reason": "ядро модулей применяет декларации к уже разрешённому сервису хоста (resolved): состояние контейнера, не выбор модуля",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Modules\\ModuleApplier::afterResolving",
-            "target": "$abstract",
-            "view": "current"
+            "symbol": "Vaulter\\Drive\\Providers\\DrivePackageRegistrar::register",
+            "target": "'config'",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
+            "count": 1,
+            "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::bootOptions",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
             "category": "host-lifecycle",
-            "count": 1,
-            "file": "packages/core/src/Modules/ModuleApplier.php",
-            "kind": "probe",
-            "reason": "resolved Schedule — состояние контейнера хоста при регистрации расписания",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Modules\\ModuleApplier::schedules",
-            "target": "\\Illuminate\\Console\\Scheduling\\Schedule::class",
-            "view": "current"
-        },
-        {
-            "category": "host-lifecycle",
-            "count": 1,
-            "file": "packages/drive/src/Configuration/DriveConfigValidator.php",
-            "kind": "probe",
-            "reason": "проверка resolved ProfileRegistry — состояние контейнера хоста, не выбор модуля",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Drive\\Configuration\\DriveConfigValidator::validate",
-            "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
-            "view": "current"
-        },
-        {
-            "category": "config-validation",
-            "count": 1,
-            "file": "packages/core/src/Modules/ModuleCompiler.php",
-            "kind": "probe",
-            "reason": "the compiler reads the cases of a declared event enum (D38): a constant table of the manifest, checked like the problem sources — no container, no I/O",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Modules\\ModuleCompiler::eventTypes",
-            "target": "$class",
-            "view": "current"
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "config-validation",
@@ -266,17 +618,6 @@
             "view": "current"
         },
         {
-            "category": "explicit-adapter",
-            "count": 1,
-            "file": "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
-            "kind": "probe",
-            "reason": "$stream — типизированный PSR-обёрточный поток CompletionDeadline::bound над staged-потоком: адаптер ограничения времени чтения, а не container-bound и не feature-probe ресурса; недоступный/неограничиваемый диск отклоняется fail-closed",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Drive\\Actions\\Uploads\\CompleteUploadAction::execute",
-            "target": "$stream",
-            "view": "current"
-        },
-        {
             "category": "host-lifecycle",
             "count": 1,
             "file": "packages/drive/src/Security/PermissionDriverInvariant.php",
@@ -286,6 +627,50 @@
             "symbol": "Vaulter\\Drive\\Security\\PermissionDriverInvariant::violation",
             "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
             "view": "current"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/drive/src/Support/NodeName.php",
+            "kind": "probe",
+            "reason": "наличие ext-intl Normalizer — окружение рантайма, а не выбор модуля",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Support\\NodeName::nfc",
+            "target": "\\Normalizer::class",
+            "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/media/src/Configuration/MediaOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Media\\Configuration\\MediaOptions::parseModels",
+            "target": "$blob",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/media/src/Configuration/MediaOptions.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Media\\Configuration\\MediaOptions::validateImplementation",
+            "target": "$raw",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/media/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Media\\Providers\\BindingsRegistrar::buildOptions",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         }
     ],
     "invariant": "I4",

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Revocation;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationCallResolver;
 use Vaulter\Collaboration\CollaborationHub;

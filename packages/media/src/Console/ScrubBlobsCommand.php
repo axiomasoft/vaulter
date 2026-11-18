@@ -47,13 +47,13 @@ final class ScrubBlobsCommand extends Command
             return self::INVALID;
         }
 
-        if ($scope !== null && (!is_string($scope) || preg_match('/^(tenant|drive|off):.+$/D', $scope) !== 1)) {
+        if ($scope !== null && (preg_match('/^(tenant|drive|off):.+$/D', $scope) !== 1)) {
             $this->components->error('--scope must be a scope key: tenant:<id>, drive:<id> or off:<id>.');
 
             return self::INVALID;
         }
 
-        $dryRun = (bool) $this->option('dry-run');
+        $dryRun = $this->option('dry-run');
 
         $result = Tenancy::without(static fn (): array => $scrubber->scrub(
             limit: $limit,

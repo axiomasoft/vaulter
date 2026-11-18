@@ -23,10 +23,10 @@ const TM_PSR4 = ['Vaulter\\' => 'core', 'Vaulter\\Media\\' => 'media', 'Vaulter\
 function tm_sources(): array
 {
     return [
-        'packages/core/src/Access/AccessResolver.php' => '<?php namespace Vaulter\Access; #[\Vaulter\Attributes\Internal] final class AccessResolver {}',
+        'packages/core/src/Access/AccessResolver.php' => '<?php namespace Vaulter\Access; #[\Packman\Attributes\Internal] final class AccessResolver {}',
         'packages/core/src/Models/Drive/Node.php' => '<?php namespace Vaulter\Models\Drive; use Illuminate\Database\Eloquent\Model; class Node extends Model {}',
-        'packages/core/src/Contracts/Cas/BlobStore.php' => '<?php namespace Vaulter\Contracts\Cas; use Vaulter\Attributes\Spi; use Vaulter\Attributes\SpiKind; #[Spi(SpiKind::Implement)] interface BlobStore {}',
-        'packages/core/src/ValueObjects/Access/Actor.php' => '<?php namespace Vaulter\ValueObjects\Access; #[\Vaulter\Attributes\Api] final class Actor {}',
+        'packages/core/src/Contracts/Cas/BlobStore.php' => '<?php namespace Vaulter\Contracts\Cas; use Packman\Attributes\Spi; use Packman\Attributes\SpiKind; #[Spi(SpiKind::Implement)] interface BlobStore {}',
+        'packages/core/src/ValueObjects/Access/Actor.php' => '<?php namespace Vaulter\ValueObjects\Access; #[\Packman\Attributes\Api] final class Actor {}',
         'packages/core/src/Schema/SchemaBuilder.php' => '<?php namespace Vaulter\Schema; final class SchemaBuilder { public function createAll(): void {} private function defineNodes(): void {} }',
         'packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php' => '<?php return new class { public function up(): void {} };',
         'packages/filament/src/Resources/NodeResource.php' => '<?php namespace Vaulter\Filament\Resources; use Vaulter\Models\Drive\Node; final class NodeResource { public function model(): string { return Node::class; } }',
@@ -134,10 +134,10 @@ it('rule engine: reads the surface of a type from its own attribute, and an unma
         ->and($types['Vaulter\Schema\SchemaBuilder']['surface'])->toBe('undecided');
 
     $sources = tm_sources();
-    $sources['packages/core/src/Contracts/Cas/BlobStore.php'] = '<?php namespace Vaulter\Contracts\Cas; use Vaulter\Attributes\Spi; use Vaulter\Attributes\SpiKind; #[Spi(kind: SpiKind::Call, since: "1.0")] interface BlobStore {}';
+    $sources['packages/core/src/Contracts/Cas/BlobStore.php'] = '<?php namespace Vaulter\Contracts\Cas; use Packman\Attributes\Spi; use Packman\Attributes\SpiKind; #[Spi(kind: SpiKind::Call, since: "1.0")] interface BlobStore {}';
     expect(tm_types(tm_build($sources, tm_rules()))['Vaulter\Contracts\Cas\BlobStore']['surface'])->toBe('Spi:Call');
 
-    $sources['packages/core/src/Access/AccessResolver.php'] = '<?php namespace Vaulter\Access; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Api] #[Internal] final class AccessResolver {}';
+    $sources['packages/core/src/Access/AccessResolver.php'] = '<?php namespace Vaulter\Access; use Packman\Attributes\Api; use Packman\Attributes\Internal; #[Api] #[Internal] final class AccessResolver {}';
     expect(tm_codes(tm_build($sources, tm_rules())))->toBe(['invalid-field']);
 });
 
@@ -242,7 +242,7 @@ it('rule engine: a type of the current public API snapshot is not Internal witho
     expect(tm_build(tm_sources(), $files, $baseline)['problems'])->toBe([]);
 
     $sources = tm_sources();
-    $sources['packages/core/src/Access/AccessResolver.php'] = '<?php namespace Vaulter\Access; #[\Vaulter\Attributes\Api] final class AccessResolver {}';
+    $sources['packages/core/src/Access/AccessResolver.php'] = '<?php namespace Vaulter\Access; #[\Packman\Attributes\Api] final class AccessResolver {}';
     expect(tm_build($sources, tm_rules(), $baseline)['problems'])->toBe([]);
 });
 

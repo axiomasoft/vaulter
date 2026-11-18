@@ -21,8 +21,9 @@ use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
 use InvalidArgumentException;
 use Override;
+use Packman\Attributes\Internal;
+use Packman\Filament\Concerns\Authorization\AuthorizesResource;
 use UnitEnum;
-use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\Access\AccessOperations;
@@ -41,6 +42,7 @@ use Vaulter\Filament\Support\PanelGrants;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Support\PanelRecords;
+use Vaulter\Support\Identity;
 
 /**
  * The per-node ACL admin surface: list, create and revoke the node grants the drive's
@@ -57,7 +59,10 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class NodeGrantResource extends Resource
 {
+    use AuthorizesResource;
     use ConfiguresNavigationGroup;
+
+    protected static string $packmanKey = 'vaulter.grant';
 
     protected static ?string $model = PanelRecord::class;
 
@@ -192,7 +197,7 @@ final class NodeGrantResource extends Resource
      * and a missing node answer alike. A subject or role the grant refuses is that same
      * warning, and no row is written.
      *
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      */
     public static function grantFromData(array $data): void
     {
@@ -222,11 +227,11 @@ final class NodeGrantResource extends Resource
                 grant: new GrantInput(
                     subject: new Subject(
                         // Filament validation already supplies these enum/string fields with their declared types.
-                        type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast
+                        type: Identity::stringify($data['subject_type']), // @pest-mutate-ignore: RemoveStringCast
                         id: self::scalarId($data['subject_id'] ?? ''),
                     ),
-                    role: (string) $data['role'], // @pest-mutate-ignore: RemoveStringCast
-                    scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
+                    role: Identity::stringify($data['role']), // @pest-mutate-ignore: RemoveStringCast
+                    scope: GrantScope::from(Identity::stringify($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
                     expiresAt: $expiresAt,
                 ),
             );

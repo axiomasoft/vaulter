@@ -18,13 +18,13 @@ php artisan vendor:publish --tag=vaulter-documents-config
 
 | Package | Published file | Publish tag | Configuration class |
 |---|---|---|---|
-| Core (kernel) | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
-| Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaConfig` |
-| Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
-| Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
-| Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksConfig` |
-| AzGuard | `config/vaulter-azguard.php` | `vaulter-azguard-config` | `Vaulter\AzGuard\Configuration\AzGuardConfig` |
-| Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
+| Core (kernel) | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterOptions` |
+| Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaOptions` |
+| Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveOptions` |
+| Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsOptions` |
+| Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksOptions` |
+| AzGuard | `config/vaulter-azguard.php` | `vaulter-azguard-config` | `Vaulter\AzGuard\Configuration\AzGuardOptions` |
+| Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentOptions` |
 
 All bindings use FQCN strings. Closures are rejected at boot, so the files remain safe
 for `php artisan config:cache`. See the [key reference](/reference/config) for defaults.
@@ -34,7 +34,7 @@ for `php artisan config:cache`. See the [key reference](/reference/config) for d
 Only core owns schema settings: `database.connection`, `database.table_prefix`,
 `ids.strategy`, `ids.host_keys` and `tenancy.enabled`. A null connection uses Laravel's
 default connection. Tables use the prefix plus their canonical entity name:
-`DatabaseConfig::table('drives')` returns `v_drives` by default. Every other root is owned by the
+`DatabaseOptions::table('drives')` returns `v_drives` by default. Every other root is owned by the
 package whose concept it configures (see the table above and
 [ADR-0030](/adr/0030-package-ownership-and-schema)): a key never lives in two files.
 
@@ -155,7 +155,7 @@ explicitly. Install Sanctum or replace `auth:sanctum` with your host's guard.
 
 ## Webhooks {#webhooks}
 
-Webhooks are a separate package (`composer require axioma-studio/vaulter-webhooks`) and an opt-in
+Webhooks are a separate package (`composer require axiomasoft/vaulter-webhooks`) and an opt-in
 module: `vaulter.modules.webhooks` (default `false`) mounts their routes, commands, schedules and doctor checks
 (see [Modules](/concepts/modules)). Delivery settings live in `config/vaulter-webhooks.php` (publish tag
 `vaulter-webhooks-config`): the URL guard, timeouts, retry schedule and retention controls. See
@@ -252,48 +252,43 @@ Commercial add-on operations are documented in its private guide.
 
 ## Typed access
 
-Configuration classes are `final readonly` singletons over
-`Illuminate\Contracts\Config\Repository`. Inject them into services. In models,
-migrations and static contexts, resolve them with `app(...)`.
+Configuration classes are `final readonly` snapshots implementing Packman `OptionsFactory`.
+Inject them into services; resolve a fresh snapshot with `app(...)` after changing Laravel configuration.
+Previously resolved instances retain their values. Unknown keys are rejected at each closed schema boundary.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Configuration\VaulterOptions;
+use Vaulter\Documents\Configuration\DocumentsOptions;
 
 final readonly class ExportPolicy
 {
     public function __construct(
-        private VaulterConfig $config,
-        private DocumentsConfig $documents,
+        private VaulterOptions $config,
+        private DocumentsOptions $documents,
     ) {}
 
     public function revisionLimit(): int
     {
-        return $this->documents->revisionLimit();
+        return $this->documents->revisions->limit;
     }
 }
 
-$database = app(VaulterConfig::class)->database();
+$database = app(VaulterOptions::class)->database;
 $table = $database->table('drives');
-$connection = $database->connection();
+$connection = $database->connection;
 ```
 
-`VaulterConfig` (the kernel) exposes `database()`, `ids()`, `tenancy()`, `routes()`, `outbox()`,
-`observability()`. Everything else is read by the class of its owner: `DriveConfig` has
-`access()`, `sharing()`, `listing()`, `downloads()`, `changes()`, `scan()`, `model(string)`,
-`featureEnabled(string)`, `profileProviders()`, `defaultProfile()` and `handlers()`; `MediaConfig` the disk,
-deduplication and GC; `WebhooksConfig` the timeouts, retries and URL guard; `DocumentsConfig` the documents.
-Values are read on every call: changing the repository with `config()->set()` in tests is
-visible immediately. Package code reads Vaulter keys only within `Configuration` classes;
-architecture checks enforce this boundary.
-
-Model configuration keys in the published config files remain valid. The ORM getters `VaulterConfig::outboxModel()`, `DriveConfig::model()`, `MediaConfig::blobModel()`, `DocumentsConfig::model()` and `WebhooksConfig::model()` are `#[Internal]` package plumbing. Hosts configure the keys and read data through Operations and snapshots.
+`VaulterOptions` exposes typed properties such as `database`, `ids`, `tenancy`, `routes`,
+`outbox` and `observability`. Drive and Documents use nested options in the same way.
+Media, Webhooks, Collaboration, AzGuard and Filament expose their documented typed accessors.
+The container caches compilation by configuration value, never a mutable repository inside options.
+ORM model accessors remain package plumbing; hosts use Operations and snapshots for data.
 
 ## Keys that do not exist
 
-Vaulter reads only the keys of the published `config/vaulter*.php` files; an unknown key is ignored.
+Vaulter reads only the keys of the published `config/vaulter*.php` files; an unknown key fails configuration validation.
 Package defaults still fill every missing nested key of a partially published file, and a host-supplied
 map or list (`ids.strategies`, `handlers`, `vaulter-documents.types`, the access drivers) replaces the default
 one instead of being merged with it.

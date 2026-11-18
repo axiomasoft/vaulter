@@ -34,22 +34,22 @@ add behaviour (ULID keys, tenant scoping, audit). Vaulter always resolves models
 
 | Key | Default | Owned by |
 |---|---|---|
-| `vaulter-drive.models.drive` | `Vaulter\Drive\Models\Drive` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.node` | `Vaulter\Drive\Models\Node` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.file` | `Vaulter\Drive\Models\File` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.file_revision` | `Vaulter\Drive\Models\FileRevision` | `axioma-studio/vaulter-drive` |
-| `vaulter-media.models.blob` | `Vaulter\Media\Models\Cas\Blob` | `axioma-studio/vaulter-media` |
-| `vaulter-drive.models.file_revision_blob` | `Vaulter\Drive\Models\FileRevisionBlob` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.grant` | `Vaulter\Drive\Models\Access\NodeGrant` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.node_share` | `Vaulter\Drive\Models\Sharing\NodeShare` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
-| `vaulter-drive.models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
-| `vaulter-documents.models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
-| `vaulter-documents.models.document_revision` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
-| `vaulter-drive.models.activity` | `Vaulter\Drive\Models\Activity\Activity` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.drive` | `Vaulter\Drive\Models\Drive` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.node` | `Vaulter\Drive\Models\Node` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.file` | `Vaulter\Drive\Models\File` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.file_revision` | `Vaulter\Drive\Models\FileRevision` | `axiomasoft/vaulter-drive` |
+| `vaulter-media.models.blob` | `Vaulter\Media\Models\Cas\Blob` | `axiomasoft/vaulter-media` |
+| `vaulter-drive.models.file_revision_blob` | `Vaulter\Drive\Models\FileRevisionBlob` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.grant` | `Vaulter\Drive\Models\Access\NodeGrant` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.node_share` | `Vaulter\Drive\Models\Sharing\NodeShare` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axiomasoft/vaulter-drive` |
+| `vaulter-drive.models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axiomasoft/vaulter-drive` |
+| `vaulter-documents.models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axiomasoft/vaulter-documents` |
+| `vaulter-documents.models.document_revision` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axiomasoft/vaulter-documents` |
+| `vaulter-drive.models.activity` | `Vaulter\Drive\Models\Activity\Activity` | `axiomasoft/vaulter-drive` |
 | `vaulter.models.outbox` | `Vaulter\Events\Outbox\Models\OutboxEvent` | core |
-| `vaulter-webhooks.models.webhook_endpoint` | `Vaulter\Webhooks\Models\WebhookEndpoint` | `axioma-studio/vaulter-webhooks` |
-| `vaulter-webhooks.models.webhook_delivery` | `Vaulter\Webhooks\Models\WebhookDelivery` | `axioma-studio/vaulter-webhooks` |
+| `vaulter-webhooks.models.webhook_endpoint` | `Vaulter\Webhooks\Models\WebhookEndpoint` | `axiomasoft/vaulter-webhooks` |
+| `vaulter-webhooks.models.webhook_delivery` | `Vaulter\Webhooks\Models\WebhookDelivery` | `axiomasoft/vaulter-webhooks` |
 
 Models are configured only under their owner's root (`vaulter-drive.models.*`, `vaulter-media.models.*`, `vaulter-documents.models.*`, `vaulter-webhooks.models.*`); the kernel's map holds only the outbox model.
 
@@ -80,7 +80,7 @@ Both keys accept `ProfileProvider` FQCNs. Profile keys are unique and the defaul
 
 ## Features — `vaulter-drive.features.*`
 
-Global feature toggles, read by `DriveConfig::featureEnabled()`; a panel may override any
+Global feature toggles, read by `DriveOptions::featureEnabled()`; a panel may override any
 of these per-panel.
 
 | Key | Default | Gates |
@@ -101,8 +101,8 @@ presented by their [document type](/extending/document-types).
 
 | Provider-tagged built-ins | Owner |
 |---|---|
-| `Vaulter\Drive\Handlers\Builtin\PreviewHandler` | `axioma-studio/vaulter-drive` |
-| `Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler` | `axioma-studio/vaulter-drive` |
+| `Vaulter\Drive\Handlers\Builtin\PreviewHandler` | `axiomasoft/vaulter-drive` |
+| `Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler` | `axiomasoft/vaulter-drive` |
 
 Add a new file format with one class + an entry here (or `Vaulter::handlers()->register()`).
 
@@ -180,7 +180,7 @@ grant rows are addressed to.
 
 ### AzGuard driver map — `vaulter-azguard.*`
 
-Separate package: `composer require axioma-studio/vaulter-azguard`. The settings below
+Separate package: `composer require axiomasoft/vaulter-azguard`. The settings below
 come from `config/vaulter-azguard.php`, rather than core configuration.
 
 | Key | Default |
@@ -300,7 +300,7 @@ See [Drive · lifecycle](/concepts/nodes-and-revisions#drive-lifecycle).
 
 ## Reliability — webhooks — `vaulter-webhooks.*`
 
-The separate package `axioma-studio/vaulter-webhooks` (opt-in module `webhooks`; config file `config/vaulter-webhooks.php`,
+The separate package `axiomasoft/vaulter-webhooks` (opt-in module `webhooks`; config file `config/vaulter-webhooks.php`,
 tag `vaulter-webhooks-config`).
 
 A transactional outbox + [Standard Webhooks](/guides/webhooks#headers-and-signature) signed delivery

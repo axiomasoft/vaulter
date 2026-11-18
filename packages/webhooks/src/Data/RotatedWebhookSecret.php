@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Data;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * The result of rotating an endpoint's signing secret: the new secret, returned to the

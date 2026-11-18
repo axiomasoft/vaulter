@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Closure;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
+use Packman\Attributes\Internal;
 use RuntimeException;
-use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
 /**
@@ -141,9 +142,9 @@ final class SigningSecretEncryptor
     }
 
     /**
-     * @param \Closure(string): ?string $convert the new plaintext, or null to leave the row alone
+     * @param Closure(string): ?string $convert the new plaintext, or null to leave the row alone
      */
-    private function rewriteSecrets(string $table, \Closure $convert): int
+    private function rewriteSecrets(string $table, Closure $convert): int
     {
         $changed = 0;
 

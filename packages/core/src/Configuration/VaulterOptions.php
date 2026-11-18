@@ -7,6 +7,7 @@ namespace Vaulter\Configuration;
 use Closure;
 use Override;
 use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Config\Laravel\ConfigurationValidator;
@@ -83,6 +84,7 @@ final readonly class VaulterOptions implements OptionsFactory
     }
 
     /** @return class-string<OutboxEvent> */
+    #[Internal]
     public function outboxModel(): string
     {
         return $this->models->outbox;

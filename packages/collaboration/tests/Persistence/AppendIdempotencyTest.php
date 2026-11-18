@@ -10,7 +10,7 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Models\Node;
 
 /*
@@ -37,7 +37,7 @@ function idemAppend(Node $node, string $payload, string $updateId, ?string $sha2
 
 function idemCount(string $entity): int
 {
-    return DB::table(app(DatabaseConfig::class)->table($entity))->count();
+    return DB::table(app(DatabaseOptions::class)->table($entity))->count();
 }
 
 beforeEach(function (): void {
@@ -49,7 +49,7 @@ beforeEach(function (): void {
 it('commits the first append as seq 1 with its receipt, head and pending marker', function (): void {
     $result = idemAppend($this->node, "\x01\x00yjs", $this->id);
     $document = Hub::aggregate($this->node);
-    $update = DB::table(app(DatabaseConfig::class)->table('collaboration_updates'))->first();
+    $update = DB::table(app(DatabaseOptions::class)->table('collaboration_updates'))->first();
     $storedPayload = is_resource($update->payload) ? stream_get_contents($update->payload) : $update->payload;
     if ($storedPayload === false) {
         throw new RuntimeException('Unable to read stored update bytes.');
@@ -59,7 +59,7 @@ it('commits the first append as seq 1 with its receipt, head and pending marker'
         ->and($result->duplicate)->toBeFalse()
         ->and(idemCount('collaboration_updates'))->toBe(1)
         ->and(idemCount('collaboration_receipts'))->toBe(1)
-        ->and(DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->value('head_seq'))->toBe(1)
+        ->and(DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))->value('head_seq'))->toBe(1)
         ->and(base64_decode($storedPayload, true))->toBe("\x01\x00yjs")
         ->and([$document->pending_generation, $document->pending_through_seq])->toBe([0, 1]);
 });
@@ -93,13 +93,13 @@ it('answers a retried update id from its receipt without a second row, an event 
 it('refuses the same update id with another payload and writes nothing', function (): void {
     idemAppend($this->node, 'update-a', $this->id);
 
-    expect(fn () => idemAppend($this->node, 'update-other', $this->id))->toThrow(CollaborationUpdateMismatchException::class)
+    expect(fn (): mixed => idemAppend($this->node, 'update-other', $this->id))->toThrow(CollaborationUpdateMismatchException::class)
         ->and(idemCount('collaboration_updates'))->toBe(1)
         ->and(Hub::aggregate($this->node)->pending_through_seq)->toBe(1);
 });
 
 it('refuses a hash that is not the payload\'s before anything is locked or written', function (): void {
-    expect(fn () => idemAppend($this->node, 'update-a', $this->id, sha256: hash('sha256', 'something else')))->toThrow(CollaborationUpdateMismatchException::class)
+    expect(fn (): mixed => idemAppend($this->node, 'update-a', $this->id, sha256: hash('sha256', 'something else')))->toThrow(CollaborationUpdateMismatchException::class)
         ->and(idemCount('collaboration_updates'))->toBe(0)
         ->and(idemCount('collaboration_receipts'))->toBe(0)
         ->and(idemCount('collaboration_heads'))->toBe(0)
@@ -111,5 +111,5 @@ it('numbers the updates of a generation one after the other and moves the marker
 
     expect($seqs)->toBe([1, 2, 3])
         ->and(Hub::aggregate($this->node)->pending_through_seq)->toBe(3)
-        ->and(DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->value('head_seq'))->toBe(3);
+        ->and(DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))->value('head_seq'))->toBe(3);
 });

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Load\Observability;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -17,7 +17,7 @@ use Vaulter\Kernel;
 final class LoadStateMetrics
 {
     public function __construct(
-        private readonly DatabaseConfig $databaseConfig,
+        private readonly DatabaseOptions $databaseConfig,
         private readonly Kernel $kernel,
         private readonly MetricsRecorder $metrics,
     ) {}

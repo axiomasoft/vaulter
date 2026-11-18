@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\Yaml\Yaml;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Repo\Tests\Support\ReleaseOpenApi;
 use Vaulter\Testing\Support\OpenApi\OpenApiContract;
@@ -34,7 +34,7 @@ it('names an operation for every vaulter.v1 route and a route for every operatio
 });
 
 it('agrees with every route on method and path', function (): void {
-    $prefix = '/'.app(RoutesConfig::class)->versionedPrefix();
+    $prefix = '/'.app(RoutesOptions::class)->versionedPrefix();
     $operations = OpenApiContract::shared()->operations();
 
     foreach (v1Routes() as $name => $route) {
@@ -48,7 +48,7 @@ it('agrees with every route on method and path', function (): void {
 it('mounts the contract under the documented server url', function (): void {
     $server = OpenApiContract::shared()->document->servers[0]->url;
 
-    expect($server)->toBe('/'.app(RoutesConfig::class)->versionedPrefix());
+    expect($server)->toBe('/'.app(RoutesOptions::class)->versionedPrefix());
 });
 
 it('assigns every registered endpoint to exactly its owner spec with closed references', function (): void {

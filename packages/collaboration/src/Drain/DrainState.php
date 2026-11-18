@@ -7,8 +7,8 @@ namespace Vaulter\Collaboration\Drain;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 
 /**
@@ -29,7 +29,7 @@ final readonly class DrainState
 {
     public const string KEY = 'vaulter:collaboration:draining';
 
-    public function __construct(private CacheFactory $cache, private CollaborationConfig $config) {}
+    public function __construct(private CacheFactory $cache, private CollaborationOptions $config) {}
 
     /**
      * Set the flag; a flag set already keeps the moment it was first set. Returns that moment as the store reads it back,

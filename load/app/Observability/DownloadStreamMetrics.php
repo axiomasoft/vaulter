@@ -6,7 +6,7 @@ namespace Vaulter\Load\Observability;
 
 use Illuminate\Support\Facades\Http;
 use Throwable;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 
@@ -18,7 +18,7 @@ final class DownloadStreamMetrics
     private const string STATUS_URL = 'http://127.0.0.1:8081/fpm-status?json&full';
 
     public function __construct(
-        private readonly RoutesConfig $routesConfig,
+        private readonly RoutesOptions $routesConfig,
         private readonly MetricsRecorder $metrics,
     ) {}
 
@@ -102,7 +102,7 @@ final class DownloadStreamMetrics
             $normalized = substr($normalized, strlen('index.php/'));
         }
 
-        $prefix = trim($this->routesConfig->prefix(), '/');
+        $prefix = trim($this->routesConfig->prefix, '/');
 
         if ($prefix !== '' && str_starts_with($normalized, $prefix.'/')) {
             $normalized = substr($normalized, strlen($prefix) + 1);

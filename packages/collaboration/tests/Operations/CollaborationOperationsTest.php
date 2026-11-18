@@ -8,6 +8,7 @@ use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
+use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Facades\Documents;
@@ -48,7 +49,7 @@ it('needs a user for a collaboration session and maps Edit to read-write', funct
     [$handle, $node] = sessionFixture();
     AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
 
-    expect(fn () => sessions($handle)->collaborationSession($node->id))->toThrow(MissingActorException::class)
+    expect(fn (): CollaborationSession => sessions($handle)->collaborationSession($node->id))->toThrow(MissingActorException::class)
         ->and(sessions($handle->actingAs(AccessTestHelpers::user(5)))->collaborationSession($node->id)->mode)->toBe(CollaborationMode::Write);
 });
 
@@ -75,7 +76,7 @@ it('answers collaboration_unavailable when the type cannot collaborate', functio
     $board = HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5, content: OpaqueContent::fromArray(['columns' => []]), type: 'acme/kanban', schemaVersion: 2);
     $handle = Vaulter::drive($board->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(5));
 
-    expect(fn () => sessions($handle)->collaborationSession($board->getKey()))->toThrow(CollaborationUnavailableException::class, 'unsupported_type');
+    expect(fn (): CollaborationSession => sessions($handle)->collaborationSession($board->getKey()))->toThrow(CollaborationUnavailableException::class, 'unsupported_type');
 });
 
 it('gives an editor a read-only session when the room could not write', function (Closure $arrange): void {
@@ -83,7 +84,7 @@ it('gives an editor a read-only session when the room could not write', function
     $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(5));
 
     if ($node->document->type === 'acme/gone') {
-        expect(fn () => sessions($handle)->collaborationSession($node->getKey(), $clientSchemaVersion))->toThrow(CollaborationUnavailableException::class);
+        expect(fn (): CollaborationSession => sessions($handle)->collaborationSession($node->getKey(), $clientSchemaVersion))->toThrow(CollaborationUnavailableException::class);
 
         return;
     }
@@ -123,9 +124,9 @@ it('hides a trashed document and a document of another drive from the session', 
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, subjectId: 5);
     $acting = $handle->actingAs(AccessTestHelpers::user(5));
 
-    expect(fn () => sessions(DocumentTestHelpers::drive()->actingAs(AccessTestHelpers::user(5)))->collaborationSession($node->id))->toThrow(NodeNotFoundException::class);
+    expect(fn (): CollaborationSession => sessions(DocumentTestHelpers::drive()->actingAs(AccessTestHelpers::user(5)))->collaborationSession($node->id))->toThrow(NodeNotFoundException::class);
 
     $acting->nodes()->trash($node->id);
 
-    expect(fn () => sessions($acting)->collaborationSession($node->id))->toThrow(NodeNotFoundException::class);
+    expect(fn (): CollaborationSession => sessions($acting)->collaborationSession($node->id))->toThrow(NodeNotFoundException::class);
 });

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\HostResolver;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
@@ -30,7 +30,7 @@ use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
 {
     public function __construct(
-        private readonly WebhooksConfig $webhooksConfig,
+        private WebhooksOptions $webhooksConfig,
         private HostResolver $resolver,
     ) {}
 
@@ -67,7 +67,7 @@ final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
             }
         }
 
-        $port = isset($parts['port']) ? (int) $parts['port'] : ($scheme === 'https' ? 443 : 80);
+        $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
 
         return new PinnedOutboundEndpoint(scheme: $scheme, host: $host, ip: $ips[0], port: $port);
     }
@@ -91,13 +91,7 @@ final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
             }
         }
 
-        foreach ($this->webhooksConfig->blockedIpRanges() as $range) {
-            if ($this->inRange($ip, $range)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($this->webhooksConfig->blockedIpRanges(), fn (string $range): bool => $this->inRange($ip, $range));
     }
 
     /**
@@ -113,7 +107,7 @@ final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
             return $ip;
         }
 
-        if (substr($bin, 0, 12) !== "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff") {
+        if (!str_starts_with($bin, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff")) {
             return $ip;
         }
 

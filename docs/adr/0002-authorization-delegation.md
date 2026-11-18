@@ -5,7 +5,7 @@
 ## Context
 
 Vaulter must embed in apps with wildly different role systems (Laravel Gate, Spatie
-Permission, AzGuard/CoreX entity-scoped RBAC). Shipping its own permission model would
+Permission, AzGuard/Laravel entity-scoped RBAC). Shipping its own permission model would
 conflict with the host's.
 
 ## Decision

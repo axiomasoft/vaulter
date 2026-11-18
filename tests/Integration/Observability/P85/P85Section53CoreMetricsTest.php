@@ -19,7 +19,7 @@ use Vaulter\Load\Listeners\RecordCommandPeakMemory;
 use Vaulter\Load\Listeners\RecordFailedJob;
 use Vaulter\Load\Observability\LoadStateMetrics;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
@@ -92,7 +92,7 @@ it('records webhook delivery metrics on successful deliver', function (): void {
     $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint());
 
     (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
 
     $recorder = app(MetricsRecorder::class);
     expect(fn () => $recorder->assertHistogram(name: 'vaulter_webhook_queue_wait_seconds', labels: ['outcome' => 'success']))->not->toThrow(Throwable::class);

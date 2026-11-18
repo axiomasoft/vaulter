@@ -12,20 +12,20 @@ trap 'rm -rf "$work"' EXIT
 
 has_artifact() { compgen -G "$artifacts/axioma-studio-$1-$version.zip" >/dev/null; }
 
-core_media_drive="axioma-studio/vaulter-core axioma-studio/vaulter-media axioma-studio/vaulter-drive"
+core_media_drive="axiomasoft/vaulter-core axiomasoft/vaulter-media axiomasoft/vaulter-drive"
 
 # Scenario name -> packages required in the consumer.
 names=("metapackage" "core+media+drive" "+documents" "+filament")
 sets=(
-    "axioma-studio/vaulter"
+    "axiomasoft/vaulter"
     "$core_media_drive"
-    "$core_media_drive axioma-studio/vaulter-documents"
-    "$core_media_drive axioma-studio/vaulter-documents axioma-studio/vaulter-filament"
+    "$core_media_drive axiomasoft/vaulter-documents"
+    "$core_media_drive axiomasoft/vaulter-documents axiomasoft/vaulter-filament"
 )
 # The bridge ships only when its artifact was built, i.e. once its upstream is tagged.
 if has_artifact vaulter-azguard; then
     names+=("+azguard")
-    sets+=("$core_media_drive axioma-studio/vaulter-documents axioma-studio/vaulter-azguard")
+    sets+=("$core_media_drive axiomasoft/vaulter-documents axiomasoft/vaulter-azguard")
 fi
 
 app="$work/app"

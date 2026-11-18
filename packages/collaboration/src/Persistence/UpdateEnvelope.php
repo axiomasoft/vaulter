@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Persistence;
 
 use InvalidArgumentException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 
 /**
  * One Yjs update as protocol 2 carries it: the generation it was made in, the stable id its origin gave it (repeated

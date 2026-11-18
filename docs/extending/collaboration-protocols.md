@@ -3,7 +3,7 @@
 Public documents owns `POST documents/{node}/collaboration/session` and
 `Documents::in($drive)->collaborationSession($node)`. The public client consumes a neutral
 session; a host connector owns protocol transport. Yjs is provided by the commercial add-on
-`axioma-studio/vaulter-collaboration`.
+`axiomasoft/vaulter-collaboration`.
 
 ## Register an adapter
 
@@ -20,7 +20,7 @@ returns the protocol and persisted state format independently.
 ## Grant and verification
 
 This is the fixture's read grant shape; production grants come from `CollaborationAccessPolicy`,
-not caller-supplied authority. `DocumentsConfig::collaborationSessionTtl()` bounds expiry to 1–300 seconds.
+not caller-supplied authority. `DocumentsOptions::collaborationSessionTtl()` bounds expiry to 1–300 seconds.
 
 <!-- snippet: host -->
 
@@ -59,7 +59,7 @@ already ACKed records remains possible after user revocation.
 | Yjs rich text/markdown | `yjs/2` | `yjs-update-v1` | type schema; null only before seed, initialized checkpoint required |
 
 Acme uses `OpaqueJsonCodec(maxSizeBytes: 4096)` in its fixture. General document size comes
-from the codec's `maxSizeBytes()` or `DocumentsConfig::maxContentSizeKb()`. Transport limits
+from the codec's `maxSizeBytes()` or `DocumentsOptions::maxContentSizeKb()`. Transport limits
 are adapter-owned: the Yjs configuration exposes `updateBytes()`, `requestBytes()`,
 `maxStateBytes()` and `checkpointRequestBytes()`; these are not universal Acme frame limits.
 A network adapter must enforce its own frame/update limits before buffering and projection limits

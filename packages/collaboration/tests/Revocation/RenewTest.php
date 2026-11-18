@@ -6,14 +6,14 @@ use Firebase\JWT\JWT;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Revocation;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * POST /v1/collaboration/hub/renew: the hub renews a connection's token before it expires. The rights
@@ -91,7 +91,7 @@ it('answers 404 for a document in the trash', function (): void {
 it('answers 409 when the document moved to another generation', function (): void {
     $token = Hub::token($this->node);
     $room = Hub::room($this->node);
-    DB::table(app(DatabaseConfig::class)->table('documents'))->where('node_id', $this->node->getKey())->increment('collab_epoch');
+    DB::table(app(DatabaseOptions::class)->table('documents'))->where('node_id', $this->node->getKey())->increment('collab_epoch');
 
     revocationRenew($this, $token, $room)->assertStatus(409)->assertJsonPath('code', 'collaboration_epoch_mismatch');
 });
@@ -130,13 +130,13 @@ it('keeps the exact production verifier skew boundary with fixed clocks', functi
 })->with([[30, 990, 200], [30, 971, 200], [30, 970, 401], [30, 969, 401], [0, 1001, 200], [0, 1000, 401], [0, 999, 401], [0, 990, 401]]);
 
 it('tightens the skew configuration bounds to zero through thirty without clamping', function (int $skew, bool $valid): void {
-    expect(app(CollaborationConfig::class)->hubClockSkew())->toBe(30);
+    expect(app(CollaborationOptions::class)->hubClockSkew())->toBe(30);
     config()->set('vaulter-collaboration.hub.clock_skew', $skew);
-    $read = fn () => app(CollaborationConfig::class)->hubClockSkew();
+    $read = fn () => app(CollaborationOptions::class)->hubClockSkew();
     if ($valid) {
         expect($read())->toBe($skew);
     } else {
-        expect($read)->toThrow(InvalidConfigurationException::class);
+        expect($read)->toThrow(InvalidConfiguration::class);
     }
 })->with([[0, true], [30, true], [31, false], [60, false], [-1, false], [61, false]]);
 

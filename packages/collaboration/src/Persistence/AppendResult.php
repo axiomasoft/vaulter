@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Persistence;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 
 /**
  * The committed receipt of an appended update: the generation, the update id, the log sequence it was given and the

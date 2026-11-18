@@ -13,16 +13,16 @@ authorization decision back to your app's own role system.
 
 Vaulter ships as a set of packages — install the ones your app needs:
 
-- **`axioma-studio/vaulter-core`** — the shared kernel (authorization, CAS contracts, sharing,
+- **`axiomasoft/vaulter-core`** — the shared kernel (authorization, CAS contracts, sharing,
   panels, Artisan commands). Required by every other backend package.
-- **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::drive()` / `DriveHandle`.
-  Pulls in `axioma-studio/vaulter-media` (the CAS engine) automatically.
-- **`axioma-studio/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
+- **`axiomasoft/vaulter-drive`** — folders, files, uploads, `Vaulter::drive()` / `DriveHandle`.
+  Pulls in `axiomasoft/vaulter-media` (the CAS engine) automatically.
+- **`axiomasoft/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
 - Realtime editing is available as a commercial add-on.
 - **`@vaulter/vue`** — the Vue 3 + TypeScript components, composables and API client.
 - **`@vaulter/vue-collaboration`** — the browser side of realtime editing (update queue, save status).
 
-A Filament 5 admin plugin (`axioma-studio/vaulter-filament`) is available separately. See
+A Filament 5 admin plugin (`axiomasoft/vaulter-filament`) is available separately. See
 [Installation](/getting-started/installation) for the exact `composer require` per feature set.
 
 ## Is it for me?

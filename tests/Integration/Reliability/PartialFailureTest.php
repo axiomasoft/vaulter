@@ -23,7 +23,7 @@ use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\CompiledModules;
 use Vaulter\Modules\SlotContribution;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
@@ -119,7 +119,7 @@ it('retries an accepted-then-timed-out webhook delivery with the same webhook-id
         return Http::response('', 200);
     });
     $deliver = static fn () => (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
 
     $deliver();
 

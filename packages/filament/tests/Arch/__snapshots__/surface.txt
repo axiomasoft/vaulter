@@ -1,17 +1,35 @@
 # Surface manifest of the package `filament` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
-Vaulter\Filament\Configuration\FilamentConfig api since 1.0 final readonly class
+Vaulter\Filament\Configuration\FilamentOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public static function fromArray(array $config, string $path = 'vaulter-filament'): self
   public function navigationGroup(): string
   public function resourceEnabled(string $key): bool
 
-Vaulter\Filament\VaulterFilamentServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
-  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
-  public function packageRegistered(): void
+Vaulter\Filament\FilamentModule api since 1.0 final class implements Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Configuration\Configurable
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
 
-Vaulter\Filament\VaulterPlugin api since 1.0 final class implements Filament\Contracts\Plugin
+Vaulter\Filament\Providers\FilamentPackageRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Filament\VaulterFilamentServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+  protected const array REGISTRARS = [\Vaulter\Filament\Providers\FilamentPackageRegistrar::class]
+  public function boot(): void
+  public function register(): void
+
+Vaulter\Filament\VaulterPlugin api since 1.0 final class implements Packman\Filament\Contracts\FilamentPanelPlugin
   public function boot(Filament\Panel $panel): void
   public static function current(Filament\Panel $panel): self
+  public function getAbilities(): array
+  public function getExclude(): array
+  public function getGuardPanel(): ?string
   public function getId(): string
+  public function isEnforced(): bool
   public static function make(): static
   public function register(Filament\Panel $panel): void

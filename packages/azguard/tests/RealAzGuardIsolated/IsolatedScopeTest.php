@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use AzGuard\AzGuardManager;
+use AzGuard\AzGuard;
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Vaulter\AzGuard\AzGuardGuardAdapter;
 use Vaulter\AzGuard\AzGuardPermissionDriver;
@@ -30,7 +30,7 @@ function isolatedDriver(): AzGuardPermissionDriver
 function grantSuperAdminIn(AzGuardUser $user, int $project): void
 {
     WorkspaceModel::query()->firstOrCreate(['id' => $project], ['name' => 'Project '.$project]);
-    $manager = app(AzGuardManager::class);
+    $manager = app(AzGuard::class);
     $manager->actingAs('testing', static fn () => $manager->panel('app')->for($user)->grantRole('project-admin', on: AssignmentScopeRef::of('project', $project)));
 }
 

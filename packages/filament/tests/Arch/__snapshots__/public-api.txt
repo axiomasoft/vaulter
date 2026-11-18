@@ -1,4 +1,4 @@
-Vaulter\Filament\Configuration\FilamentConfig
-  __construct(\Illuminate\Contracts\Config\Repository $config)
+Vaulter\Filament\Configuration\FilamentOptions
+  fromArray(array $config, string $path = 'vaulter-filament'): self
   navigationGroup(): string
   resourceEnabled(string $key): bool

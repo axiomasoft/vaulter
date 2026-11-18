@@ -59,7 +59,7 @@ manifest="${RELEASE_MANIFEST:-$root/release/packages.json}"
 
 # --- resolve the package in the manifest ------------------------------------------------------------------------
 
-short="${package#axioma-studio/vaulter-}"
+short="${package#axiomasoft/vaulter-}"
 entry="$(jq -c --arg s "$short" --arg n "$package" \
     '.php[] | select((.path == "packages/" + $s) or (.name == $n)) | select(.metapackage // false | not)' "$manifest" | head -n1)"
 [[ -n "$entry" ]] || die "'${package}' is not a releasable PHP package of ${manifest} (the metapackage has nothing to test)" 2
@@ -292,6 +292,7 @@ jq --argjson repos "$repositories" --arg v "$version" --arg prefix "$prefix" '
     .repositories = $repos
     | .require = ((.require // {}) | pin)
     | .["require-dev"] = ((.["require-dev"] // {}) | pin)
+    | .replace = ((.replace // {}) | pin)
     | (if has("autoload") and (.autoload | has("psr-4")) then .autoload["psr-4"] |= under else . end)
     | (if has("autoload-dev") and (.["autoload-dev"] | has("psr-4")) then .["autoload-dev"]["psr-4"] |= under else . end)
     | .config = ((.config // {}) + {"lock": false})

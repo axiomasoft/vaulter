@@ -7,8 +7,8 @@ namespace Vaulter\Collaboration\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Sleep;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Drain\DrainWaiter;
 use Vaulter\Collaboration\Drain\PendingDocuments;
@@ -40,7 +40,7 @@ final class DrainCommand extends Command
 
     protected $description = 'Refuse new collaboration updates and checkpoint every pending document through the hub before the module is switched off.';
 
-    public function handle(DrainState $state, PendingDocuments $documents, CompactionLeases $leases, DrainWaiter $waiter, CollaborationConfig $config, VaulterDatabase $database): int
+    public function handle(DrainState $state, PendingDocuments $documents, CompactionLeases $leases, DrainWaiter $waiter, CollaborationOptions $config, VaulterDatabase $database): int
     {
         if ($this->option('release') === true) {
             $this->components->info($state->release()

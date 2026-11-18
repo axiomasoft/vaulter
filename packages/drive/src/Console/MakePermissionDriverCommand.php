@@ -43,7 +43,7 @@ final class MakePermissionDriverCommand extends Command
         $namespace = 'App\\Vaulter\\PermissionDrivers';
         $classPath = sprintf('%s/%s.php', app_path('Vaulter/PermissionDrivers'), $class);
         $testPath = sprintf('%s/%sTest.php', base_path('tests/Unit/Vaulter'), $class);
-        $force = (bool) $this->option('force');
+        $force = $this->option('force');
         foreach ([$classPath, $testPath] as $path) {
             if (!$force && $this->files->exists($path)) {
                 $this->components->error(sprintf('[%s] already exists. Pass --force to overwrite.', $path));

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Http\Support;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 
 /** The metric labels of the collaboration routes: the session and the hub calls (the RouteLabelSource contribution of the collaboration module). */

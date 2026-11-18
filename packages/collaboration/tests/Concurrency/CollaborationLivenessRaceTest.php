@@ -47,7 +47,7 @@ it('a hub append racing a trash lands before it or is refused after it, never af
         static fn (): array => RaceFixtures::attempt(static fn () => app(TrashNodeAction::class)->execute(
             DocumentTestHelpers::context(Node::query()->findOrFail($nodeId)), new TrashNodeInput(Node::query()->findOrFail($nodeId)),
         )),
-        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
+        static fn (): array => RaceFixtures::attempt(static fn (): mixed => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
     ]);
 
     $fresh = Node::query()->findOrFail($nodeId);
@@ -70,7 +70,7 @@ it('a hub append racing an archive of its drive lands before it or is refused af
         static fn (): array => RaceFixtures::attempt(static fn () => app(ArchiveDriveAction::class)->execute(
             DocumentTestHelpers::context(Node::query()->findOrFail($nodeId)),
         )),
-        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
+        static fn (): array => RaceFixtures::attempt(static fn (): mixed => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
     ]);
 
     $fresh = Node::query()->findOrFail($nodeId);
@@ -90,7 +90,7 @@ it('a collaboration append racing drive deletion either commits before deletion 
     $before = [DocumentTestHelpers::document($node)->state_version, DocumentTestHelpers::revisions($node)->count()];
     $results = RaceFixtures::race([
         static fn (): array => RaceFixtures::attempt(static fn () => app(DeleteDriveAction::class)->execute(DocumentTestHelpers::context(Node::query()->findOrFail($nodeId)))),
-        static fn (): array => RaceFixtures::attempt(static fn () => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
+        static fn (): array => RaceFixtures::attempt(static fn (): mixed => hubAppend(Node::query()->findOrFail($nodeId), $before[0])),
     ]);
     $fresh = Node::query()->findOrFail($nodeId);
     expect($results[0]['kind'])->toBe('committed')

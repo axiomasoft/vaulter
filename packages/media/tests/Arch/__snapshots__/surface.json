@@ -20,7 +20,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -173,7 +173,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -205,7 +205,7 @@
                 }
             }
         },
-        "Vaulter\\Media\\Configuration\\MediaConfig": {
+        "Vaulter\\Media\\Configuration\\MediaOptions": {
             "kind": "class",
             "surface": "Api",
             "since": "1.0",
@@ -216,11 +216,13 @@
             },
             "backing": null,
             "extends": [],
-            "implements": [],
+            "implements": [
+                "Packman\\Config\\Contracts\\OptionsFactory"
+            ],
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api(since: '1.0')"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -305,6 +307,45 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
+                },
+                "method:fromarray": {
+                    "kind": "method",
+                    "name": "fromArray",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "config",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "path",
+                            "type": "string",
+                            "default": "'vaulter-media'",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Media\\Configuration\\MediaOptions",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<array-key, mixed> $config"
+                    ]
                 },
                 "method:gcgracehours": {
                     "kind": "method",
@@ -393,6 +434,240 @@
                     "doc": [
                         "@return class-string<StorageDriver>"
                     ]
+                },
+                "property:blobModel": {
+                    "kind": "property",
+                    "name": "blobModel",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "property:blobStore": {
+                    "kind": "property",
+                    "name": "blobStore",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:contentStore": {
+                    "kind": "property",
+                    "name": "contentStore",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:dedupScope": {
+                    "kind": "property",
+                    "name": "dedupScope",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "Vaulter\\Media\\Configuration\\DedupScope",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:disk": {
+                    "kind": "property",
+                    "name": "disk",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:gcGraceHours": {
+                    "kind": "property",
+                    "name": "gcGraceHours",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:orphanGraceHours": {
+                    "kind": "property",
+                    "name": "orphanGraceHours",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:scheduleBlobsGc": {
+                    "kind": "property",
+                    "name": "scheduleBlobsGc",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:scheduleBlobsReconcile": {
+                    "kind": "property",
+                    "name": "scheduleBlobsReconcile",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:scrubLimit": {
+                    "kind": "property",
+                    "name": "scrubLimit",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:scrubMaxBytes": {
+                    "kind": "property",
+                    "name": "scrubMaxBytes",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int|null",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:scrubMaxSeconds": {
+                    "kind": "property",
+                    "name": "scrubMaxSeconds",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int|null",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:storageDriver": {
+                    "kind": "property",
+                    "name": "storageDriver",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
                 }
             }
         },
@@ -411,7 +686,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -663,7 +938,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1041,7 +1316,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1178,7 +1453,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1330,7 +1605,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1499,7 +1774,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1640,7 +1915,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1721,7 +1996,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -1958,7 +2233,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2016,7 +2291,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2102,7 +2377,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2188,7 +2463,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2293,7 +2568,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Spi(\\Vaulter\\Attributes\\SpiKind::Implement)"
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2558,7 +2833,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2804,7 +3079,7 @@
             ],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -2955,7 +3230,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -3002,7 +3277,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -3034,6 +3309,102 @@
                 }
             }
         },
+        "Vaulter\\Media\\Errors\\MediaErrorCode": {
+            "kind": "enum",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": "string",
+            "extends": [],
+            "implements": [
+                "Packman\\Errors\\Contracts\\ErrorCode"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "case:BlobUnavailable": {
+                    "kind": "case",
+                    "name": "BlobUnavailable",
+                    "value": "'media.blob_unavailable'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "method:value": {
+                    "kind": "method",
+                    "name": "value",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Media\\Errors\\MediaProblemDefinitions": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Errors\\Contracts\\ProblemDefinitionProvider"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:definitions": {
+                    "kind": "method",
+                    "name": "definitions",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "iterable",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return iterable<ProblemDefinition>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Media\\Exceptions\\Cas\\BlobUnavailableException": {
             "kind": "class",
             "surface": "Api",
@@ -3055,12 +3426,30 @@
             ],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
+                "method:errordescriptor": {
+                    "kind": "method",
+                    "name": "errorDescriptor",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Packman\\Errors\\Data\\ErrorDescriptor",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:forblob": {
                     "kind": "method",
                     "name": "forBlob",
@@ -3130,6 +3519,481 @@
                 }
             }
         },
+        "Vaulter\\Media\\MediaModule": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Extensions\\Contracts\\Composition\\WithCapabilities",
+                "Packman\\Extensions\\Contracts\\Composition\\WithSlots",
+                "Packman\\Extensions\\Contracts\\Configuration\\WithConfiguration",
+                "Packman\\Extensions\\Contracts\\Persistence\\WithSchema",
+                "Packman\\Extensions\\Contracts\\Runtime\\WithDiagnostics",
+                "Packman\\Plugins\\Contracts\\Registry\\ExtensionPlugin",
+                "Vaulter\\Modules\\WithModuleRuntime"
+            ],
+            "traits": [
+                "Packman\\Extensions\\Concerns\\Composition\\ContributesToSlots",
+                "Packman\\Extensions\\Concerns\\Composition\\ProvidesCapabilities",
+                "Packman\\Extensions\\Concerns\\Configuration\\Configurable",
+                "Packman\\Extensions\\Concerns\\Persistence\\OwnsSchema",
+                "Packman\\Extensions\\Concerns\\Runtime\\ProvidesDiagnostics"
+            ],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:configroot": {
+                    "kind": "method",
+                    "name": "configRoot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:defaultconfigpath": {
+                    "kind": "method",
+                    "name": "defaultConfigPath",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:definedcapabilities": {
+                    "kind": "method",
+                    "name": "definedCapabilities",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array<class-string, string>"
+                    ]
+                },
+                "method:healthchecks": {
+                    "kind": "method",
+                    "name": "healthChecks",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:manifest": {
+                    "kind": "method",
+                    "name": "manifest",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Packman\\Plugins\\Data\\Plugin\\PluginManifest",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:migrationpath": {
+                    "kind": "method",
+                    "name": "migrationPath",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:moduleruntime": {
+                    "kind": "method",
+                    "name": "moduleRuntime",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Vaulter\\Modules\\PluginModuleSpec",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:optionsclass": {
+                    "kind": "method",
+                    "name": "optionsClass",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:problemproviders": {
+                    "kind": "method",
+                    "name": "problemProviders",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:providedcapabilities": {
+                    "kind": "method",
+                    "name": "providedCapabilities",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array<class-string, class-string|array{config: string, default?: class-string|null}>"
+                    ]
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "registrar",
+                            "type": "Packman\\Plugins\\Laravel\\PluginRegistrar",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:schemacomponents": {
+                    "kind": "method",
+                    "name": "schemaComponents",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:schemasetproviders": {
+                    "kind": "method",
+                    "name": "schemaSetProviders",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<class-string>"
+                    ]
+                },
+                "method:slotcontributions": {
+                    "kind": "method",
+                    "name": "slotContributions",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}>"
+                    ]
+                },
+                "method:tablenouns": {
+                    "kind": "method",
+                    "name": "tableNouns",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<string>"
+                    ]
+                },
+                "method:tableprefix": {
+                    "kind": "method",
+                    "name": "tablePrefix",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Media\\Providers\\MediaPackageRegistrar": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Foundation\\Contracts\\PackageRegistrar"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:boot": {
+                    "kind": "method",
+                    "name": "boot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "app",
+                            "type": "Illuminate\\Contracts\\Foundation\\Application",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Media\\Schema\\MediaSchemaSets": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Packman\\Schema\\Contracts\\Migration\\SchemaSetProvider"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(kind: \\Packman\\Attributes\\SpiKind::Call, since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:sets": {
+                    "kind": "method",
+                    "name": "sets",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<SchemaSet>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Media\\Testing\\Contracts\\ContentScannerContractTests": {
             "kind": "class",
             "surface": "Api",
@@ -3145,7 +4009,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -3231,7 +4095,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -3291,7 +4155,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -3491,7 +4355,7 @@
             "traits": [],
             "adaptations": [],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api"
             ],
             "deprecated": false,
             "doc_internal": false,
@@ -3728,49 +4592,53 @@
             },
             "backing": null,
             "extends": [
-                "Spatie\\LaravelPackageTools\\PackageServiceProvider"
+                "Illuminate\\Support\\ServiceProvider"
             ],
             "implements": [],
             "traits": [
-                "Vaulter\\Modules\\OffersModules"
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
             ],
-            "adaptations": [],
+            "adaptations": [
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "register",
+                    "alias": "registerRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                },
+                {
+                    "trait": "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                    "method": "boot",
+                    "alias": "bootRegistrars",
+                    "visibility": "protected",
+                    "insteadof": []
+                }
+            ],
             "attributes": [
-                "Vaulter\\Attributes\\Api"
+                "Packman\\Attributes\\Api(since: '1.0')"
             ],
             "deprecated": false,
             "doc_internal": false,
             "doc": [],
             "members": {
-                "method:configurepackage": {
-                    "kind": "method",
-                    "name": "configurePackage",
-                    "visibility": "public",
+                "constant:REGISTRARS": {
+                    "kind": "constant",
+                    "name": "REGISTRARS",
+                    "visibility": "protected",
                     "internal": false,
-                    "static": false,
-                    "abstract": false,
                     "final": false,
-                    "by_ref": false,
-                    "params": [
-                        {
-                            "name": "package",
-                            "type": "Spatie\\LaravelPackageTools\\Package",
-                            "default": null,
-                            "variadic": false,
-                            "by_ref": false,
-                            "promoted": false,
-                            "attributes": []
-                        }
-                    ],
-                    "return": "void",
+                    "type": "array",
+                    "value": "[\\Vaulter\\Media\\Providers\\MediaPackageRegistrar::class]",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
-                    "doc": []
+                    "doc": [
+                        "@var list<class-string<PackageRegistrar>>"
+                    ]
                 },
-                "method:packageregistered": {
+                "method:boot": {
                     "kind": "method",
-                    "name": "packageRegistered",
+                    "name": "boot",
                     "visibility": "public",
                     "internal": false,
                     "static": false,
@@ -3780,6 +4648,24 @@
                     "params": [],
                     "return": "void",
                     "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:register": {
+                    "kind": "method",
+                    "name": "register",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "void",
+                    "attributes": [
+                        "Override"
+                    ],
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []

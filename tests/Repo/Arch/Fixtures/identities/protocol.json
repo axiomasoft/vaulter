@@ -2768,21 +2768,11 @@
         {
             "call": "getMorphClass",
             "calls": 1,
-            "id": "morph:Vaulter\\ValueObjects\\Access\\Actor::authorizable#getMorphClass",
+            "id": "morph:Vaulter\\ValueObjects\\Access\\Actor::modelIdentity#getMorphClass",
             "owner": "core",
             "source": {
                 "file": "packages/core/src/ValueObjects/Access/Actor.php",
-                "symbol": "Vaulter\\ValueObjects\\Access\\Actor::authorizable"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\ValueObjects\\Access\\Actor::user#getMorphClass",
-            "owner": "core",
-            "source": {
-                "file": "packages/core/src/ValueObjects/Access/Actor.php",
-                "symbol": "Vaulter\\ValueObjects\\Access\\Actor::user"
+                "symbol": "Vaulter\\ValueObjects\\Access\\Actor::modelIdentity"
             }
         },
         {

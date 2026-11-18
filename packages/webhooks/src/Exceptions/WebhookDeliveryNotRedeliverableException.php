@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Exceptions;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Webhooks\Errors\WebhooksErrorCode;
 
 /** A manual re-delivery was asked for a delivery that cannot be sent again right now. */
 #[Internal]
@@ -43,5 +47,11 @@ final class WebhookDeliveryNotRedeliverableException extends VaulterException im
     public function httpStatus(): int
     {
         return 409;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: WebhooksErrorCode::WebhookDeliveryNotRedeliverable, category: ErrorCategory::Conflict);
     }
 }

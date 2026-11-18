@@ -18,7 +18,7 @@ use Vaulter\Collaboration\Persistence\LogTables;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Models\Node;
 
 /**
@@ -109,7 +109,7 @@ final class Compaction
 
     public static function rows(string $entity): int
     {
-        return DB::table(app(DatabaseConfig::class)->table($entity))->count();
+        return DB::table(app(DatabaseOptions::class)->table($entity))->count();
     }
 
     /** @return list<int> the seqs of the updates still in the log of the document's generation */

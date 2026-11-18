@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Doctor;
 
 use Illuminate\Contracts\Config\Repository;
+use Packman\Attributes\Internal;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Doctor\Data\DoctorContext;
+use Packman\Doctor\Data\DoctorFinding;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Drain\DrainState;
-use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\DoctorContext;
-use Vaulter\Doctor\DoctorFinding;
 
 /**
  * The settings of an active collaboration module. Evidence names the settings and says whether they are set; the
@@ -26,7 +26,7 @@ final readonly class CollaborationCheck implements DoctorCheck
     /** Cache drivers no other process sees. */
     private const array LOCAL_CACHE_DRIVERS = ['array', 'null'];
 
-    public function __construct(private CollaborationConfig $config, private Repository $settings, private DrainState $draining) {}
+    public function __construct(private CollaborationOptions $config, private Repository $settings, private DrainState $draining) {}
 
     public function key(): string
     {
@@ -107,8 +107,8 @@ final readonly class CollaborationCheck implements DoctorCheck
         }
 
         return [
-            ...array_map(static fn (array $problem): DoctorFinding => DoctorFinding::error(code: $problem[0], message: $problem[1], hint: $problem[2], evidence: $evidence), $problems),
-            ...array_map(static fn (array $warning): DoctorFinding => DoctorFinding::warning(code: $warning[0], message: $warning[1], hint: $warning[2], evidence: $evidence), $warnings),
+            ...array_map(static fn (array $problem): DoctorFinding => DoctorFinding::error(code: $problem[0], message: $problem[1], remediation: $problem[2], evidence: $evidence), $problems),
+            ...array_map(static fn (array $warning): DoctorFinding => DoctorFinding::warning(code: $warning[0], message: $warning[1], remediation: $warning[2], evidence: $evidence), $warnings),
         ];
     }
 

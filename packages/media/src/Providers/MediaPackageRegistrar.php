@@ -9,16 +9,8 @@ use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Vaulter\Media\Cas\BlobPinReferences;
-use Vaulter\Media\Console\GcBlobsCommand;
-use Vaulter\Media\Console\ReconcileBlobsCommand;
-use Vaulter\Media\Console\ScrubBlobsCommand;
-use Vaulter\Media\Http\Problems\MediaProblemCodes;
+use Vaulter\Laravel\VaulterPluginRegistrar;
 use Vaulter\Media\MediaModule;
-use Vaulter\Modules\Activation;
-use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleSpec;
-use Vaulter\Modules\VaulterExtensionFacets;
 
 /**
  * Registers Packman plugin/extension facets and Vaulter module runtime metadata for {@see MediaModule}.
@@ -29,22 +21,8 @@ final class MediaPackageRegistrar implements PackageRegistrar
     #[Override]
     public function register(Application $app): void
     {
-        VaulterExtensionFacets::register($app, MediaModule::class, dirname(__DIR__, 2).'/composer.json');
+        VaulterPluginRegistrar::register($app, MediaModule::class, dirname(__DIR__, 2).'/composer.json');
 
-        ModuleCatalog::of($app)->offerPlugin(new PluginModuleSpec(
-            plugin: MediaModule::class,
-            activation: Activation::Auto,
-            protocolVersion: '1.0',
-            commands: [
-                GcBlobsCommand::class,
-                ReconcileBlobsCommand::class,
-                ScrubBlobsCommand::class,
-            ],
-            schedules: [SchedulingRegistrar::class],
-            bindings: [BindingsRegistrar::class],
-            problems: [MediaProblemCodes::class],
-            heldReferences: BlobPinReferences::class,
-        ));
     }
 
     #[Override]

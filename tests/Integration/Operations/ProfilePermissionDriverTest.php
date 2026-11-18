@@ -10,7 +10,7 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessOptions;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -148,7 +148,7 @@ it('builds node-blind drive tenant owner and morph-alias coordinates', function 
 it('rejects non-production drivers selected by a profile at boot and resolution', function (): void {
     permissionProfiles();
     config()->set('vaulter-drive.access.permission_drivers.positive', NullPermissionDriver::class);
-    $manager = new PermissionDriverManager(app(AccessConfig::class), app(), true);
+    $manager = new PermissionDriverManager(app(AccessOptions::class), app(), true);
     expect(fn () => $manager->forProfile('positive'))->toThrow(MissingPermissionDriverException::class);
     app()->detectEnvironment(static fn (): string => 'production');
     // Evaluates production invariants before serving traffic; structural validation is separate.

@@ -7,10 +7,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Container\Container;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Context;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Collaboration\CollaborationSchedule;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCompactionLeaseController;
 use Vaulter\Collaboration\Providers\CollaborationRegistrar;
-use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Support\LoadTier;
 
 // The wiring the addon owns after the boundary: the validator tag identity, the ScheduleConfig resolved from the
@@ -27,11 +28,8 @@ it('tags the config validator under the documented stable service tag', function
     expect($validators)->toHaveCount(1)->and($validators[0])->toBeInstanceOf(Closure::class);
 });
 
-it('defines the prune task from a ScheduleConfig the container resolves, with overlap and single-server guards', function (): void {
-    expect($this->app->make(ScheduleConfig::class))->toBeInstanceOf(ScheduleConfig::class);
-
+it('defines the prune task from validated schedule values, with overlap and single-server guards', function (): void {
     $config = new Repository(['vaulter-collaboration' => ['schedule' => ['collaboration_prune' => 'dailyAt:03:40']]]);
-    $this->app->instance(ScheduleConfig::class, new ScheduleConfig($config));
 
     $schedule = new Schedule;
     $this->app->make(CollaborationSchedule::class)->define($schedule, $config);
@@ -62,4 +60,9 @@ it('labels the tier through the stable seam: normalized, request first, default 
     expect(LoadTier::label())->toBe('M');
 
     LoadTier::set(null);
+});
+
+it('rejects unknown configuration keys before runtime wiring', function (): void {
+    expect(fn (): CollaborationOptions => CollaborationOptions::fromArray(['hub' => ['unexpected' => true]]))
+        ->toThrow(InvalidConfiguration::class);
 });

@@ -6,9 +6,9 @@ namespace Vaulter\Collaboration\Revocation;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Events\EventTypeContract;
@@ -43,7 +43,7 @@ final readonly class ControlConsumer implements OutboxConsumer
         private PermissionVersions $versions,
         private ControlTransport $transport,
         private MetricsRecorder $metrics,
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
     ) {}
 
     public function id(): string
@@ -75,7 +75,7 @@ final readonly class ControlConsumer implements OutboxConsumer
         $message = $this->message($envelope);
 
         try {
-            $this->transport->publish((string) json_encode($message, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+            $this->transport->publish(json_encode($message, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
             $this->metrics->counter(name: 'vaulter_collab_control_published_total', labels: ['transport' => $transport]);
         } catch (Throwable $failure) {
             Log::warning('[Vaulter] A collaboration control message was not delivered; the hubs re-check the rights on the next append or renewal.', [

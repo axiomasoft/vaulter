@@ -234,8 +234,8 @@ it('refuses a drive filter naming another tenant\'s drive as not found', functio
     $driveA = AccessTestHelpers::storage();
     $resolver->tenant = 'B';
 
-    expect(fn () => registerEndpoint(driveId: (string) $driveA->getKey()))->toThrow(NodeNotFoundException::class)
-        ->and(fn () => registerEndpoint(driveId: 'no-such-drive'))->toThrow(NodeNotFoundException::class)
+    expect(fn (): WebhookEndpoint => registerEndpoint(driveId: (string) $driveA->getKey()))->toThrow(NodeNotFoundException::class)
+        ->and(fn (): WebhookEndpoint => registerEndpoint(driveId: 'no-such-drive'))->toThrow(NodeNotFoundException::class)
         ->and(WebhookEndpoint::query()->count())->toBe(0);
 
     $resolver->tenant = 'A';
@@ -262,7 +262,7 @@ it('keeps an endpoint in its tenant and checks a new drive filter there', functi
 });
 
 it('accepts and returns drive_id over HTTP', function (): void {
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = AccessTestHelpers::storage();
 

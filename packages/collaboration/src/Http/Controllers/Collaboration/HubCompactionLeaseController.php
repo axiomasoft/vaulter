@@ -10,7 +10,7 @@ use DateTimeZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\CompactionLease;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
@@ -54,7 +54,7 @@ final readonly class HubCompactionLeaseController
             throw ValidationException::withMessages(array_map(static fn (string $message): array => [$message], $errors));
         }
 
-        $entries = array_map(fn (CompactionLease $lease): array => $this->entry($lease), $this->leases->grant($hubId, $max));
+        $entries = array_map($this->entry(...), $this->leases->grant($hubId, $max));
         $response = new JsonResponse($entries);
         if ($report === true) {
             $pending = $this->leases->pending();

@@ -9,7 +9,7 @@ use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Models\Node;
 
@@ -23,9 +23,9 @@ use Vaulter\Drive\Models\Node;
 
 function validRows(): int
 {
-    return DB::table(app(DatabaseConfig::class)->table('collaboration_updates'))->count()
-        + DB::table(app(DatabaseConfig::class)->table('collaboration_receipts'))->count()
-        + DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->count();
+    return DB::table(app(DatabaseOptions::class)->table('collaboration_updates'))->count()
+        + DB::table(app(DatabaseOptions::class)->table('collaboration_receipts'))->count()
+        + DB::table(app(DatabaseOptions::class)->table('collaboration_heads'))->count();
 }
 
 /**
@@ -194,7 +194,7 @@ it('answers a hidden document, another tenant and a missing document with the sa
 
 it('requires first seed CAS with no writes then accepts its retry and later ordinary append', function (): void {
     $token = Hub::token($this->node);
-    $snapshot = static fn () => array_map(static fn ($t) => DB::table($t)->get()->toJson(), ['v_documents', 'v_collaboration_heads', 'v_collaboration_updates', 'v_collaboration_receipts']);
+    $snapshot = static fn (): array => array_map(static fn (string $t) => DB::table($t)->get()->toJson(), ['v_documents', 'v_collaboration_heads', 'v_collaboration_updates', 'v_collaboration_receipts']);
     $before = $snapshot();
     Hub::callV2('append', Hub::appendBody($this->node, 'foreign-state'), $token)->assertStatus(409)->assertJsonPath('code', 'collaboration_seed_conflict');
     expect($snapshot())->toBe($before);

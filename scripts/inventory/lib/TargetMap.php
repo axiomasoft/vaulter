@@ -33,11 +33,11 @@ final class TargetMap
 
     public const SURFACES = ['Api', 'Spi:Implement', 'Spi:Call', 'Internal', 'undecided'];
 
-    public const API_ATTRIBUTE = 'Vaulter\\Attributes\\Api';
+    public const API_ATTRIBUTE = 'Packman\\Attributes\\Api';
 
-    public const SPI_ATTRIBUTE = 'Vaulter\\Attributes\\Spi';
+    public const SPI_ATTRIBUTE = 'Packman\\Attributes\\Spi';
 
-    public const INTERNAL_ATTRIBUTE = 'Vaulter\\Attributes\\Internal';
+    public const INTERNAL_ATTRIBUTE = 'Packman\\Attributes\\Internal';
 
     public const SCHEMA_BUILDER = 'Vaulter\\Schema\\SchemaBuilder';
 

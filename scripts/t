@@ -477,7 +477,7 @@ write_config() { # step-json out-file [skeleton] : generated phpunit configurati
                 [[ -z "$base_env" || $php_seen == 1 ]] || printf '    <php>\n%s\n    </php>\n' "$base_env"
                 jq -r '.exclude | if length > 0 then "    <groups>\n        <exclude>\n" + (map("            <group>\(.)</group>") | join("\n")) + "\n        </exclude>\n    </groups>" else empty end' <<<"$step"
             fi
-            line="${line//bootstrap=\"vendor\/autoload.php\"/bootstrap=\"$root/$cwd/vendor/autoload.php\"}"
+            line="${line//bootstrap=\"vendor\/autoload.php\"/bootstrap=\"$root/vendor/autoload.php\"}"
             # the generated configuration has exactly one testsuite: make it the default one
             if [[ "$line" =~ ^(.*)defaultTestSuite=\"[^\"]*\"(.*)$ ]]; then
                 line="${BASH_REMATCH[1]}defaultTestSuite=\"$suite\"${BASH_REMATCH[2]}"
@@ -495,7 +495,7 @@ setup_skeleton() { # dest cwd : a private copy of the Testbench skeleton (config
     local dest="$1" cwd="${2:-$root}" src="${T_SKELETON_SRC:-}"
     if [[ -z "$src" ]]; then
         # the skeleton of the package under test: every package installs its own, and they differ (.env, cached providers)
-        src="$cwd/vendor/orchestra/testbench-core/laravel"
+        src="$root/vendor/orchestra/testbench-core/laravel"
         [[ -d "$src" ]] || src="$root/vendor/orchestra/testbench-core/laravel"
         [[ -d "$src" ]] || src="$(cd "$root" && find packages -maxdepth 6 -type d -path '*orchestra/testbench-core/laravel' 2>/dev/null | head -n 1)"
     fi
@@ -545,7 +545,9 @@ exec_step() { # step-json
     local -a args=(php -d memory_limit=1G -d variables_order=EGPCS "$(jq -r .vendor <<<"$step")")
     # shellcheck disable=SC2206
     args+=(${PEST_FLAGS:---ci})
-    args+=("--configuration=$cfg")
+    local test_directory="tests"
+    [[ "$cwd" == "$root" ]] || test_directory="${cwd#"$root"/}/tests"
+    args+=("--configuration=$cfg" "--test-directory=$test_directory")
     (( processes > 1 )) && args+=(--parallel "--processes=$processes")
     [[ "$(jq -r .group <<<"$step")" == "" ]] || args+=("--group=$(jq -r .group <<<"$step")")
     local junit

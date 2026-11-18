@@ -26,11 +26,14 @@
         "axioma-studio/vaulter-collaboration": "self.version"
     },
     "require": {
-        "php": ">=8.4 <8.6",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1",
         "axiomasoft/vaulter-core": "^1.0",
-        "axiomasoft/vaulter-drive": "^1.0",
         "axiomasoft/vaulter-documents": "^1.0",
-        "firebase/php-jwt": "^7.0"
+        "axiomasoft/vaulter-drive": "^1.0",
+        "firebase/php-jwt": "^7.0",
+        "php": ">=8.4 <8.6"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
@@ -61,6 +64,30 @@
         },
         "branch-alias": {
             "dev-main": "1.0.x-dev"
+        },
+        "packman": {
+            "schema-version": 1,
+            "package-type": "addon",
+            "stability": "stable",
+            "owns": [
+                "Configuration",
+                "Console",
+                "Contracts",
+                "Data",
+                "Doctor",
+                "Drain",
+                "Errors",
+                "Exceptions",
+                "Http",
+                "Operations",
+                "Persistence",
+                "Providers",
+                "Revocation",
+                "Schema",
+                "Security",
+                "Testing"
+            ],
+            "error-prefix": "collaboration"
         }
     },
     "repositories": [

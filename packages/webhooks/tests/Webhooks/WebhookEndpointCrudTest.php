@@ -23,7 +23,7 @@ use Vaulter\Webhooks\WebhookSecret;
 beforeEach(function (): void {
     // No host manage ability defined in the base suite → an authenticated user passes
     // the policy (the route still requires auth).
-    config()->set('vaulter-webhooks.manage_ability', null);
+    config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 

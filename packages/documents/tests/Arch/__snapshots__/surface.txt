@@ -7,20 +7,56 @@ Vaulter\Documents\Access\CollaborationAccessPolicy api since 1.0 final readonly 
   public function evaluateAuthenticationReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): ?Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
   public function evaluateReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
 
-Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly class
-  public function channelPrefix(): string
-  public function checkpointIntervalSeconds(): int
-  public function collaborationSessionTtl(): int
-  public function commentsEnabled(): bool
-  public function defaultType(): string
-  public function exporters(): array
-  public function maxContentSizeKb(): int
-  public function revisionLimit(): int
-  public function tiptapExtraAttributes(): array
-  public function tiptapExtraMarks(): array
-  public function tiptapExtraNodes(): array
-  public function tiptapUrlAttributes(): array
-  public function types(): array
+Vaulter\Documents\Configuration\DocumentsBroadcastOptions api since 1.0 final readonly class
+  public string $channelPrefix
+  public function __construct(string $channelPrefix = 'vaulter.documents')
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Documents\Configuration\DocumentsCollaborationOptions api since 1.0 final readonly class
+  public int $sessionTtl
+  public function __construct(int $sessionTtl = 300)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Documents\Configuration\DocumentsCommentsOptions api since 1.0 final readonly class
+  public bool $enabled
+  public function __construct(bool $enabled = true)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Documents\Configuration\DocumentsContentOptions api since 1.0 final readonly class
+  public int $maxSizeKb
+  public function __construct(int $maxSizeKb = 5120)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Documents\Configuration\DocumentsModelsOptions api since 1.0 final readonly class
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Documents\Configuration\DocumentsOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
+  public Vaulter\Documents\Configuration\DocumentsBroadcastOptions $broadcast
+  public Vaulter\Documents\Configuration\DocumentsCollaborationOptions $collaboration
+  public Vaulter\Documents\Configuration\DocumentsCommentsOptions $comments
+  public Vaulter\Documents\Configuration\DocumentsContentOptions $content
+  public string $defaultType
+  public array $exporters
+  public Vaulter\Documents\Configuration\DocumentsModelsOptions $models
+  public Vaulter\Documents\Configuration\DocumentsRevisionsOptions $revisions
+  public Vaulter\Documents\Configuration\TipTapOptions $tiptap
+  public array $types
+  public function __construct(array $types = [\Vaulter\Documents\Types\RichTextDocumentType::class, \Vaulter\Documents\Types\MarkdownDocumentType::class], string $defaultType = 'vaulter/rich-text', Vaulter\Documents\Configuration\DocumentsCollaborationOptions $collaboration = new \Vaulter\Documents\Configuration\DocumentsCollaborationOptions(), Vaulter\Documents\Configuration\DocumentsContentOptions $content = new \Vaulter\Documents\Configuration\DocumentsContentOptions(), Vaulter\Documents\Configuration\DocumentsRevisionsOptions $revisions = new \Vaulter\Documents\Configuration\DocumentsRevisionsOptions(), Vaulter\Documents\Configuration\DocumentsCommentsOptions $comments = new \Vaulter\Documents\Configuration\DocumentsCommentsOptions(), array $exporters = [\Vaulter\Documents\Export\HtmlExporter::class, \Vaulter\Documents\Export\MarkdownExporter::class], Vaulter\Documents\Configuration\TipTapOptions $tiptap = new \Vaulter\Documents\Configuration\TipTapOptions(), Vaulter\Documents\Configuration\DocumentsBroadcastOptions $broadcast = new \Vaulter\Documents\Configuration\DocumentsBroadcastOptions(), Vaulter\Documents\Configuration\DocumentsModelsOptions $models = new \Vaulter\Documents\Configuration\DocumentsModelsOptions())
+  public static function fromArray(array $config, string $path = 'vaulter-documents'): self
+
+Vaulter\Documents\Configuration\DocumentsRevisionsOptions api since 1.0 final readonly class
+  public int $checkpointIntervalSeconds
+  public int $limit
+  public function __construct(int $limit = 50, int $checkpointIntervalSeconds = 300)
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
+
+Vaulter\Documents\Configuration\TipTapOptions api since 1.0 final readonly class
+  public array $extraAttributes
+  public array $extraMarks
+  public array $extraNodes
+  public array $urlAttributes
+  public function __construct(array $extraNodes = [], array $extraMarks = [], array $extraAttributes = [], array $urlAttributes = [])
+  public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
 Vaulter\Documents\Content\ContentHasher api since 1.0 final class
   public static function hash(array $content): string
@@ -247,6 +283,25 @@ Vaulter\Documents\DocumentsManager api since 1.0 final readonly class
   public function in(Vaulter\Drive\Contracts\DriveHandle $drive): Vaulter\Documents\Operations\DocumentOperations
   public function types(): Vaulter\Documents\Types\DocumentTypeRegistry
 
+Vaulter\Documents\DocumentsModule api since 1.0 final class implements Packman\Extensions\Contracts\Composition\WithCapabilities, Packman\Extensions\Contracts\Composition\WithSlots, Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Extensions\Contracts\Persistence\WithSchema, Packman\Extensions\Contracts\Runtime\WithDiagnostics, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Composition\ContributesToSlots, Packman\Extensions\Concerns\Composition\ProvidesCapabilities, Packman\Extensions\Concerns\Configuration\Configurable, Packman\Extensions\Concerns\Persistence\OwnsSchema, Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function definedCapabilities(): array
+  public function definedSlots(): array
+  public function healthChecks(): array
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function migrationPath(): string
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function problemProviders(): array
+  public function providedCapabilities(): array
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
+  public function schemaComponents(): array
+  public function schemaSetProviders(): array
+  public function slotContributions(): array
+  public function tableNouns(): array
+  public function tablePrefix(): string
+
 Vaulter\Documents\Enums\DocumentEventType api since 1.0 enum: string implements Vaulter\Events\EventTypeContract uses Vaulter\Events\Concerns\DescribesEvent
   case CommentAdded = 'comment.added'
   case CommentDeleted = 'comment.deleted'
@@ -255,6 +310,26 @@ Vaulter\Documents\Enums\DocumentEventType api since 1.0 enum: string implements 
   case DocumentRestored = 'document.restored'
   case DocumentRevisionCreated = 'document.revision_created'
   case DocumentUpdated = 'document.updated'
+
+Vaulter\Documents\Errors\DocumentsErrorCode api since 1.0 enum: string implements Packman\Errors\Contracts\ErrorCode
+  case CollaborationProtocolContract = 'documents.collaboration_protocol_contract'
+  case CollaborationUnavailable = 'documents.collaboration_unavailable'
+  case CommentNotFound = 'documents.comment_not_found'
+  case DocumentContentDegraded = 'documents.document_content_degraded'
+  case DocumentRevisionNotFound = 'documents.document_revision_not_found'
+  case DocumentStateMismatch = 'documents.document_state_mismatch'
+  case DocumentStatePending = 'documents.document_state_pending'
+  case DocumentStateTooLarge = 'documents.document_state_too_large'
+  case DocumentTypeUnavailable = 'documents.document_type_unavailable'
+  case DuplicateRegistration = 'documents.duplicate_registration'
+  case InvalidDocumentContent = 'documents.invalid_document_content'
+  case NotADocument = 'documents.not_a_document'
+  case UnknownDocumentType = 'documents.unknown_document_type'
+  case UnknownExportFormat = 'documents.unknown_export_format'
+  public function value(): string
+
+Vaulter\Documents\Errors\DocumentsProblemDefinitions spi:call since 1.0 final class implements Packman\Errors\Contracts\ProblemDefinitionProvider
+  public function definitions(): iterable
 
 Vaulter\Documents\Events\Comments\CommentAdded api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent implements Illuminate\Contracts\Broadcasting\ShouldBroadcast
   public Vaulter\Documents\Data\Snapshots\CommentSnapshot $comment
@@ -348,6 +423,7 @@ Vaulter\Documents\Events\Revisions\DocumentRevisionCreated api since 1.0 final r
 
 Vaulter\Documents\Exceptions\CollaborationProtocolContractException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
 
@@ -355,12 +431,14 @@ Vaulter\Documents\Exceptions\CollaborationUnavailableException api since 1.0 fin
   public readonly string $reason
   public readonly ?string $type
   public function __construct(string $reason, ?string $type = null)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
   public static function unsupportedType(string $type): self
 
 Vaulter\Documents\Exceptions\CommentNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forNode(mixed $nodeId, mixed $commentId): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -368,17 +446,20 @@ Vaulter\Documents\Exceptions\CommentNotFoundException api since 1.0 final class 
 Vaulter\Documents\Exceptions\DocumentContentDegradedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly string $type
   public function __construct(string $type)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forNode(mixed $nodeId, mixed $versionId): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Documents\Exceptions\DocumentStatePendingException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly Vaulter\Documents\State\PendingMarker $marker
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
@@ -387,6 +468,7 @@ Vaulter\Documents\Exceptions\DocumentStateTooLargeException api since 1.0 final 
   public readonly int $maxBytes
   public readonly int $sizeBytes
   public function __construct(int $sizeBytes, int $maxBytes)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
@@ -394,17 +476,20 @@ Vaulter\Documents\Exceptions\DocumentStateTooLargeException api since 1.0 final 
 Vaulter\Documents\Exceptions\DocumentTypeUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly string $type
   public function __construct(string $type)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Documents\Exceptions\DuplicateDocumentExporterException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forKey(string $key): self
   public static function forPair(string $type, string $format, string $existing, string $incoming): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Documents\Exceptions\DuplicateDocumentTypeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forKey(string $key): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -412,6 +497,7 @@ Vaulter\Documents\Exceptions\DuplicateDocumentTypeException api since 1.0 final 
 Vaulter\Documents\Exceptions\InvalidDocumentContentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function disallowedAttribute(string $nodeType, string $attribute): self
   public static function disallowedUrlScheme(string $href): self
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function malformedNode(string $nodeType, string $field): self
   public static function missingDocNode(): self
@@ -425,6 +511,7 @@ Vaulter\Documents\Exceptions\InvalidDocumentContentException api since 1.0 final
   public static function unknownNodeType(string $type): self
 
 Vaulter\Documents\Exceptions\NotADocumentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forNode(mixed $nodeId): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -433,22 +520,26 @@ Vaulter\Documents\Exceptions\StaleDocumentStateException api since 1.0 final cla
   public readonly int $actual
   public readonly int $expected
   public function __construct(int $expected, int $actual, ?string $nodeId = null)
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Documents\Exceptions\UnknownDocumentTypeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forType(string $type, array $allowed): self
   public function httpStatus(): int
   public function problemCode(): string
 
 Vaulter\Documents\Exceptions\UnknownExportFormatException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forFormat(string $format, array $allowed): self
   public function httpStatus(): int
   public function problemCode(): string
   public function problemDetails(): array
 
 Vaulter\Documents\Exceptions\UnsupportedDocumentContentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public static function forExporter(string $exporterFormat, string $expected, string $actual): self
   public function httpStatus(): int
   public function problemCode(): string
@@ -509,6 +600,13 @@ Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly cla
 Vaulter\Documents\Presentation\DocumentPresenter api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Presentation\KindPresenter
   public function kind(): Vaulter\Drive\Enums\NodeKind
   public function present(Vaulter\Drive\Data\Snapshots\NodeSnapshot $node): Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Documents\Providers\DocumentsPackageRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Documents\Schema\DocumentsSchemaSets spi:call since 1.0 final class implements Packman\Schema\Contracts\Migration\SchemaSetProvider
+  public function sets(): array
 
 Vaulter\Documents\State\CheckpointOutcome api since 1.0 final readonly class
   public bool $changed
@@ -649,6 +747,7 @@ Vaulter\Documents\ValueObjects\DocumentExport api since 1.0 final readonly class
   public int $sourceStateVersion
   public function __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId, bool $lossy = false)
 
-Vaulter\Documents\VaulterDocumentsServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
-  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
-  public function packageRegistered(): void
+Vaulter\Documents\VaulterDocumentsServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+  protected const array REGISTRARS = [\Vaulter\Documents\Providers\DocumentsPackageRegistrar::class]
+  public function boot(): void
+  public function register(): void

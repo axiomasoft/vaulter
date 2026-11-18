@@ -6,7 +6,7 @@ namespace Vaulter\Integration\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -147,7 +147,7 @@ final class E2eServiceProvider extends ServiceProvider
                 'first_revision_id' => $document->current_revision_id,
                 'writer_user' => 1,
                 'viewer_user' => 2,
-                'room' => app(CollaborationConfig::class)->room($node->drive_id, $node->getKey(), $document->collab_epoch),
+                'room' => app(CollaborationOptions::class)->room($node->drive_id, $node->getKey(), $document->collab_epoch),
             ]);
         });
 

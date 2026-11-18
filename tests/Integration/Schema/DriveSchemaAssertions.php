@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Shared column/index assertions for the six Drive tables, so each id
  * strategy can prove the base migrations apply and emit the same surface. The
- * tables are resolved through app(\Vaulter\Configuration\DatabaseConfig::class)->table() so the prefix/rename map is honoured.
+ * tables are resolved through app(\Vaulter\Configuration\DatabaseOptions::class)->table() so the prefix/rename map is honoured.
  */
 final class DriveSchemaAssertions
 {

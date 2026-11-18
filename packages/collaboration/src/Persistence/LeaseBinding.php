@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Persistence;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\State\CollaborationStateBinding;
 
 /** An opaque 64-hex lease capability also commits to the exact descriptor it leased. */

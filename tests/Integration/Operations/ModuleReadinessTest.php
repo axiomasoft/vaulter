@@ -38,8 +38,9 @@ it('queries nothing until the first write, once for it and never again for a rea
 });
 
 it('refuses a module whose tables are missing and checks it again on the next write', function (): void {
-    $readiness = app()->make(ModuleReadiness::class);
     config()->set('vaulter.database.table_prefix', 'absent_');
+    app()->forgetInstance(ModuleReadiness::class);
+    $readiness = app()->make(ModuleReadiness::class);
 
     try {
         $readiness->assertReady(new ModuleId('drive'));
@@ -50,8 +51,10 @@ it('refuses a module whose tables are missing and checks it again on the next wr
             ->and($refused->getMessage())->toContain('absent_outbox');
     }
 
-    config()->set('vaulter.database.table_prefix', 'v_');
+    app(ModuleSchemas::class)->createAll();
     expect(readinessQueries(static fn () => $readiness->assertReady(new ModuleId('drive'))))->toBe(1);
+    app(ModuleSchemas::class)->dropAll();
+    config()->set('vaulter.database.table_prefix', 'v_');
 });
 
 it('refuses a module that is not active', function (): void {

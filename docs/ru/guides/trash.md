@@ -110,7 +110,7 @@ $drive->trash()->purge($node);          // безвозвратно — дисп
 - **По умолчанию:** 30 дней.
 - **Нижняя граница:** 0. `0` означает, что узел в корзине становится кандидатом на чистку немедленно.
 
-Значение читается через `Vaulter\Drive\Configuration\DriveConfig::trashRetentionDays()`.
+Значение читается через `Vaulter\Drive\Configuration\DriveOptions::trashRetentionDays()`.
 
 ## Плановая чистка
 

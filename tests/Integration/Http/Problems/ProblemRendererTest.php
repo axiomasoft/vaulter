@@ -7,7 +7,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
@@ -135,7 +135,7 @@ it('answers a wrong method with 405 and the Allow header', function (): void {
 });
 
 it('answers an unknown path under the versioned prefix with route_not_found', function (): void {
-    $prefix = app(RoutesConfig::class)->versionedPrefix();
+    $prefix = app(RoutesOptions::class)->versionedPrefix();
 
     $this->getJson($prefix.'/x')
         ->assertStatus(404)

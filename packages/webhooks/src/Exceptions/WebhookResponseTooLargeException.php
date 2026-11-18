@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Exceptions;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Webhooks\Errors\WebhooksErrorCode;
 
 /**
  * A webhook receiver announced (or streamed) a response body larger than the
@@ -34,5 +38,11 @@ final class WebhookResponseTooLargeException extends VaulterException
             .'Fix: have the receiver return a small (or empty) body, or raise vaulter-webhooks.delivery.max_response_bytes. '
             .'Docs: '.self::docs('webhook-response-too-large'),
         );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: WebhooksErrorCode::WebhookResponseTooLarge, category: ErrorCategory::Internal);
     }
 }

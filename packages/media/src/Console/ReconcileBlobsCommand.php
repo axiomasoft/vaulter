@@ -69,11 +69,11 @@ final class ReconcileBlobsCommand extends Command
             $this->components->info('No dangling rows detected.');
         }
 
-        if ((bool) $this->option('orphans')) {
+        if ($this->option('orphans')) {
             return $this->walkOrphans(reconciler: $reconciler, mediaConfig: $mediaConfig, exit: $exit);
         }
 
-        if ((bool) $this->option('prune')) {
+        if ($this->option('prune')) {
             $this->components->warn('--prune has no effect without --orphans; nothing pruned.');
         }
 
@@ -84,7 +84,7 @@ final class ReconcileBlobsCommand extends Command
     {
         $disk = $this->diskOption();
         $grace = $this->orphanGraceOption();
-        $prune = (bool) $this->option('prune');
+        $prune = $this->option('prune');
 
         $result = $reconciler->sweepOrphans(disk: $disk, graceHours: $grace, prune: $prune);
 

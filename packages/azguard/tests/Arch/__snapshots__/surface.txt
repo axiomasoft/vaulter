@@ -1,23 +1,40 @@
 # Surface manifest of the package `azguard` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
+Vaulter\AzGuard\AzGuardModule api since 1.0 final class implements Packman\Extensions\Contracts\Composition\WithCapabilities, Packman\Extensions\Contracts\Composition\WithSlots, Packman\Extensions\Contracts\Configuration\WithConfiguration, Packman\Extensions\Contracts\Runtime\WithDiagnostics, Packman\Plugins\Contracts\Registry\ExtensionPlugin, Vaulter\Modules\WithModuleRuntime uses Packman\Extensions\Concerns\Composition\ContributesToSlots, Packman\Extensions\Concerns\Composition\ProvidesCapabilities, Packman\Extensions\Concerns\Configuration\Configurable, Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics
+  public function configRoot(): string
+  public function defaultConfigPath(): string
+  public function definedCapabilities(): array
+  public function healthChecks(): array
+  public function manifest(): Packman\Plugins\Data\Plugin\PluginManifest
+  public function moduleRuntime(): Vaulter\Modules\PluginModuleSpec
+  public function optionsClass(): string
+  public function providedCapabilities(): array
+  public function register(Packman\Plugins\Laravel\PluginRegistrar $registrar): void
+  public function slotContributions(): array
+
 Vaulter\AzGuard\AzGuardPermissionDriver api since 1.0 final class implements Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver, Vaulter\Drive\Contracts\Access\PermissionDriver
   public function canCreateIn(Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Drive\Access\ValueObjects\AccessScope $scope): bool
   public function override(Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?Vaulter\Drive\Enums\Access\Effect
   public function resolve(Vaulter\Drive\Access\ValueObjects\Subject $subject, Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?Vaulter\Drive\Access\ValueObjects\Decision
   public function subjectsFor(Illuminate\Contracts\Auth\Access\Authorizable $actor): array
 
-Vaulter\AzGuard\Configuration\AzGuardConfig api since 1.0 final readonly class
+Vaulter\AzGuard\Configuration\AzGuardOptions api since 1.0 final readonly class implements Packman\Config\Contracts\OptionsFactory
   public function createPermission(): string
+  public static function fromArray(array $config, string $path = 'vaulter-azguard'): self
   public function guard(): ?string
   public function panelId(): ?string
   public function permissions(): array
 
-Vaulter\AzGuard\Contracts\AzGuardBackedUser spi:implement since 1.0 interface extends AzGuard\Contracts\AzGuardSubject
+Vaulter\AzGuard\Contracts\AzGuardBackedUser spi:implement since 1.0 interface extends AzGuard\Contracts\Subjects\AzGuardSubject
 
 Vaulter\AzGuard\Contracts\AzGuardGuard spi:implement since 1.0 interface
   public function hasPermissionIn(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $contextType, int|string $contextId, string $permission): bool
   public function hasScopedPermission(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
+
+Vaulter\AzGuard\Providers\AzGuardPackageRegistrar spi:call since 1.0 final class implements Packman\Foundation\Contracts\PackageRegistrar
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
 
 Vaulter\AzGuard\Testing\FakeAzGuardGuard api since 1.0 final class implements Vaulter\AzGuard\Contracts\AzGuardGuard
   public function __construct(bool $superAdmin = false, array $scopedGrants = [], array $workspaceGrants = [])
@@ -26,5 +43,7 @@ Vaulter\AzGuard\Testing\FakeAzGuardGuard api since 1.0 final class implements Va
   public function hasScopedPermission(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
   public static function superAdmin(): self
 
-Vaulter\AzGuard\VaulterAzGuardServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Vaulter\Modules\OffersModules
+Vaulter\AzGuard\VaulterAzGuardServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+  protected const array REGISTRARS = [\Vaulter\AzGuard\Providers\AzGuardPackageRegistrar::class]
+  public function boot(): void
   public function register(): void

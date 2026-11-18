@@ -7,14 +7,15 @@ namespace Vaulter\Configuration;
 use Closure;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
-use Packman\Attributes\Internal;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
 use WeakMap;
 
 /**
  * Container-scoped cache for compiled options DTOs that automatically recompiles
  * when the underlying configuration subtree changes (e.g. between tests or hooks).
  */
-#[Internal]
+#[Spi(SpiKind::Call, since: '1.0')]
 final class CompiledOptionsCache
 {
     /** @var WeakMap<Container, array<string, array{0: mixed, 1: object}>>|null */

@@ -1,12 +1,12 @@
 # Vaulter metapackage
 
-`axioma-studio/vaulter` is the MIT-licensed public metapackage for an embeddable Laravel
+`axiomasoft/vaulter` is the MIT-licensed public metapackage for an embeddable Laravel
 file drive and documents. It requires these public OSS modules at `self.version`:
 
-- `axioma-studio/vaulter-core` — kernel, operations, events and outbox.
-- `axioma-studio/vaulter-media` — content-addressed storage.
-- `axioma-studio/vaulter-drive` — files, folders, uploads and access.
-- `axioma-studio/vaulter-documents` — documents, versions, comments and export.
+- `axiomasoft/vaulter-core` — kernel, operations, events and outbox.
+- `axiomasoft/vaulter-media` — content-addressed storage.
+- `axiomasoft/vaulter-drive` — files, folders, uploads and access.
+- `axiomasoft/vaulter-documents` — documents, versions, comments and export.
 
 Public PHP packages share a version line; their `dev-main` aliases are `1.0.x-dev`.
 Webhooks, AzGuard and Filament are optional public packages installed separately;

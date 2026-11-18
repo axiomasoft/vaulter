@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
+use Vaulter\Collaboration\Persistence\CheckpointResult;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
@@ -338,7 +339,7 @@ it('refuses a checkpoint projection above the content limit', function (): void 
     $node = Hub::document();
     Hub::call('append', Hub::seedBody($node, 'seed'), Hub::token($node))->assertOk();
 
-    expect(fn () => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => Hub::tiptap(str_repeat('x', 2048))]))
+    expect(fn (): CheckpointResult => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => Hub::tiptap(str_repeat('x', 2048))]))
         ->toThrow(InvalidDocumentContentException::class);
     expect(Hub::aggregate($node)->collab_state)->toBeNull()
         ->and(Compaction::marker($node))->toBe([0, 1]);

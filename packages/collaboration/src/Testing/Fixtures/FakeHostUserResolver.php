@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Testing\Fixtures;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -26,7 +26,7 @@ final class FakeHostUserResolver implements HostUserResolver
     public function find(ActorRef $principal): ?Authorizable
     {
         $id = $principal->id;
-        if ($principal->type !== ($this->userType ?? (new CollaborationTestUser)->getMorphClass()) || $id === null || in_array($id, $this->unknownIds, strict: false)) {
+        if ($principal->type !== ($this->userType ?? (new CollaborationTestUser)->getMorphClass()) || $id === null || in_array((string) $id, array_map(strval(...), $this->unknownIds), strict: true)) {
             return null;
         }
 

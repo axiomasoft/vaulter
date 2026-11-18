@@ -73,7 +73,7 @@ host's AzGuard panel must know the user, the workspace and the permissions Vault
    its provider registers the `azguard` driver and the real adapter automatically:
 
    ```bash
-   composer require axioma-studio/vaulter-azguard
+   composer require axiomasoft/vaulter-azguard
    ```
 
    The user model `implements Vaulter\AzGuard\Contracts\AzGuardBackedUser` and uses

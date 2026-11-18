@@ -7,8 +7,8 @@ namespace Vaulter\Webhooks\Repositories;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Vaulter\Attributes\Internal;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Attributes\Internal;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
@@ -25,7 +25,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 final readonly class WebhookDeliveryStoreRepository
 {
     public function __construct(
-        private readonly WebhooksConfig $webhooksConfig,
+        private WebhooksOptions $webhooksConfig,
     ) {}
 
     /**

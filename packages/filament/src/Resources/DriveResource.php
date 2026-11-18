@@ -14,8 +14,9 @@ use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Pagination\Paginator;
 use Override;
+use Packman\Attributes\Internal;
+use Packman\Filament\Concerns\Authorization\AuthorizesResource;
 use UnitEnum;
-use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Resources\Concerns\ConfiguresNavigationGroup;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
 use Vaulter\Filament\Support\PanelDrives;
@@ -36,7 +37,10 @@ use Vaulter\Filament\Support\PanelRecords;
 #[Internal]
 final class DriveResource extends Resource
 {
+    use AuthorizesResource;
     use ConfiguresNavigationGroup;
+
+    protected static string $packmanKey = 'vaulter.drive';
 
     protected static ?string $model = PanelRecord::class;
 

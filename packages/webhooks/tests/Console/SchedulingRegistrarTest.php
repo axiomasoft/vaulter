@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Configuration\VaulterOptions;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /**
  * The webhooks tasks on the host scheduler (moved from the kernel suite with the module): the keys live in
@@ -52,7 +53,8 @@ it('treats a null frequency as a disabled task', function (): void {
 });
 
 it('reads the frequencies from the vaulter-webhooks root, not from the kernel schedule', function (): void {
-    config(['vaulter.schedule.webhooks_retry' => 'hourly']);
+    expect(fn (): VaulterOptions => VaulterOptions::fromArray(['schedule' => ['webhooks_retry' => 'hourly']]))
+        ->toThrow(InvalidConfiguration::class, 'vaulter.schedule.webhooks_retry');
 
     expect(webhookTasks()['vaulter:webhooks:retry']->expression)->toBe('* * * * *');
 });
@@ -60,5 +62,5 @@ it('reads the frequencies from the vaulter-webhooks root, not from the kernel sc
 it('fails boot validation on an invalid frequency', function (): void {
     config(['vaulter-webhooks.schedule.webhooks_prune' => 'sometimes']);
 
-    app(WebhooksConfig::class)->validate();
-})->throws(InvalidConfigurationException::class, 'vaulter-webhooks.schedule.webhooks_prune');
+    app(WebhooksOptions::class)->validate();
+})->throws(InvalidConfiguration::class, 'vaulter-webhooks.schedule.webhooks_prune');

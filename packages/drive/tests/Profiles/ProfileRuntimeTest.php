@@ -117,7 +117,7 @@ it('prunes by the profile revision limit while preserving head, pinned revisions
     $file->versions()->where('number', 1)->update(['keep_forever' => true]);
     $used = $handle->model()->refresh()->used_bytes;
 
-    $this->artisan('vaulter:revisions:prune')->assertSuccessful();
+    $this->artisan('vaulter:revisions:prune', ['--drive' => [$handle->model()->getKey()]])->assertSuccessful();
 
     // Revision 2 ('two', 3 bytes) goes and its bytes leave the quota.
     expect($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 3, 4])

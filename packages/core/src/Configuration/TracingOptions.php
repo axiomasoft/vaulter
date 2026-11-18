@@ -10,7 +10,7 @@ use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Laravel\ConfigurationValidator;
 
 /**
- * Immutable OpenTelemetry tracing configuration (`vaulter.observability.tracing`).
+ * Immutable telemetry tracing configuration (`vaulter.observability.tracing`).
  */
 #[Api(since: '1.0')]
 final readonly class TracingOptions implements OptionsFactory

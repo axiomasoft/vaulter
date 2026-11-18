@@ -6,6 +6,11 @@ use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Foundation\Application;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\CoreModule;
@@ -34,18 +39,18 @@ use Vaulter\Media\MediaModule;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleApplier;
-use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\PluginModuleSpec;
 use Vaulter\Modules\SlotContribution;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
 
 /** What the module kernel does with the documents module's config declaration. */
 function applyDocumentsConfig(Application $app, bool $normalize = true): void
 {
-    $module = PluginModuleBridge::buildOffered(DocumentsModule::class, app(ModuleCatalog::class)->pluginSpec(DocumentsModule::class));
+    $module = ModuleDeclarations::buildOffered(DocumentsModule::class, app(ModuleCatalog::class)->pluginSpec(DocumentsModule::class));
     $applier = new ModuleApplier($app);
     foreach ($module->configs() as $root => $file) {
         $applier->config($root, $file);
@@ -129,8 +134,22 @@ it('fills the type and exporter registries from the module contributions, once',
 });
 
 it('refuses a graph in which two modules contribute the same document type or exporter key', function (string $slot, string $key): void {
-    $rival = new class($slot, $key) implements VaulterModule
+    $rival = new class($slot, $key) implements ExtensionPlugin, WithModuleRuntime, WithSlots
     {
+        use ContributesToSlots;
+
+        public function manifest(): PluginManifest
+        {
+            return new PluginManifest(id: 'vaulter.'.$this->id()->value, version: '1.0.0', requires: array_map(static fn (string $id): string => 'vaulter.'.$id, array_keys($this->requires())));
+        }
+
+        public function register(PluginRegistrar $registrar): void {}
+
+        public function moduleRuntime(): PluginModuleSpec
+        {
+            return new PluginModuleSpec(plugin: self::class, protocolVersion: $this->version(), requires: $this->requires());
+        }
+
         public function __construct(private readonly string $slot, private readonly string $key) {}
 
         public function id(): ModuleId
@@ -153,9 +172,11 @@ it('refuses a graph in which two modules contribute the same document type or ex
             return ['documents' => '^1.0'];
         }
 
-        public function register(ModuleBuilder $module): void
+        public function slotContributions(): array
         {
-            $module->slot($this->slot, $this->slot === DocumentType::class ? RichTextDocumentType::class : HtmlExporter::class, 'rival.contribution', key: $this->key);
+            return [
+                ['slot' => $this->slot, 'implementation' => $this->slot === DocumentType::class ? RichTextDocumentType::class : HtmlExporter::class, 'id' => 'rival.contribution', 'key' => $this->key],
+            ];
         }
     };
 

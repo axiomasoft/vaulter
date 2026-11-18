@@ -9,10 +9,10 @@ use Vaulter\Documents\DocumentsModule;
 use Vaulter\Documents\Http\Controllers\Documents\CreateCollaborationSessionController;
 use Vaulter\Documents\Http\Controllers\Documents\UpdateDocumentContentController;
 use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\PluginModuleBridge;
+use Vaulter\Modules\ModuleDeclarations;
 
 it('declares the existing route file during package configuration and mounts installed document routes', function (): void {
-    $module = PluginModuleBridge::buildOffered(DocumentsModule::class, app(ModuleCatalog::class)->pluginSpec(DocumentsModule::class));
+    $module = ModuleDeclarations::buildOffered(DocumentsModule::class, app(ModuleCatalog::class)->pluginSpec(DocumentsModule::class));
     expect(array_map(realpath(...), $module->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/documents.php')]);
 
     config()->set('vaulter.routes.prefix', 'host/documents');

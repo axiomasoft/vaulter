@@ -7,7 +7,7 @@ function dg_errors(array $manifests, array $allowlist): array
 {
     $errors = [];
     $used = [];
-    $sibling = static fn (string $name): bool => str_starts_with($name, 'axioma-studio/vaulter-') || $name === 'axioma-studio/vaulter';
+    $sibling = static fn (string $name): bool => str_starts_with($name, 'axiomasoft/vaulter-') || $name === 'axiomasoft/vaulter';
     $closure = function (string $name, array $active = []) use (&$closure, $manifests, $sibling): array {
         if (isset($active[$name])) {
             throw new RuntimeException('runtime cycle: '.implode(' -> ', [...array_keys($active), $name]));
@@ -36,7 +36,7 @@ function dg_errors(array $manifests, array $allowlist): array
 
             continue;
         }
-        if ($name === 'axioma-studio/vaulter') {
+        if ($name === 'axiomasoft/vaulter') {
             continue;
         }
         foreach (array_keys($manifest['require-dev'] ?? []) as $to) {

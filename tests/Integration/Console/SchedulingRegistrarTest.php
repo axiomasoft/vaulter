@@ -5,10 +5,9 @@ declare(strict_types=1);
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
-use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Configuration\VaulterConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Drive\Providers\SchedulingRegistrar as DriveSchedulingRegistrar;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /** @return array<string, Event> keyed by the task name */
 function vaulterCoreTasks(Application $app): array
@@ -64,12 +63,12 @@ it('treats a null frequency as a disabled task', function (): void {
 it('fails boot validation on an invalid frequency', function (): void {
     config(['vaulter.schedule.outbox_prune' => 'sometimes']);
 
-    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
-})->throws(InvalidConfigurationException::class);
+    app(VaulterOptions::class);
+})->throws(InvalidConfiguration::class);
 
 it('fails registration on an invalid frequency', function (): void {
     config(['vaulter-drive.schedule.changes_prune' => 'sometimes']);
 
     // The change-journal prune is a drive task: the drive's registrar validates its key.
     (new DriveSchedulingRegistrar)->define(app(Schedule::class), app('config'));
-})->throws(InvalidConfigurationException::class);
+})->throws(InvalidConfiguration::class);

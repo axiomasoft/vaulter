@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Exceptions;
 
-use Vaulter\Attributes\Internal;
+use Override;
+use Packman\Attributes\Internal;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Webhooks\Errors\WebhooksErrorCode;
 
 #[Internal]
 final class WebhookDeliveryNotFoundException extends VaulterException implements ProblemException
@@ -32,5 +36,11 @@ final class WebhookDeliveryNotFoundException extends VaulterException implements
     public function httpStatus(): int
     {
         return 404;
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: WebhooksErrorCode::WebhookDeliveryNotFound, category: ErrorCategory::NotFound);
     }
 }

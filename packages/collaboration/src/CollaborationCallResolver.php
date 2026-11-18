@@ -8,9 +8,9 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Packman\Attributes\Internal;
 use Throwable;
-use Vaulter\Attributes\Internal;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Revocation\PermissionVersion;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -50,7 +50,7 @@ final readonly class CollaborationCallResolver
     private const string NONCE_CACHE_PREFIX = 'vaulter:collaboration:webhook-nonce:';
 
     public function __construct(
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
     ) {}
 
     /**
@@ -137,13 +137,9 @@ final readonly class CollaborationCallResolver
         // stretches that to 2 × tolerance from now), so the nonce must live that long.
         $remaining = max(1, $timestamp + $tolerance - time() + 1);
 
-        if (Cache::add(self::NONCE_CACHE_PREFIX.$presentedSignature, true, $remaining) === false) {
-            // The exact same (now verified-valid) signature was already accepted
-            // while it was still within its tolerance window — a replayed request.
-            return false;
-        }
-
-        return true;
+        // The exact same (now verified-valid) signature was already accepted
+        // while it was still within its tolerance window — a replayed request.
+        return Cache::add(self::NONCE_CACHE_PREFIX.$presentedSignature, true, $remaining) !== false;
     }
 
     /**
@@ -186,8 +182,8 @@ final readonly class CollaborationCallResolver
         $nbf = $claims['nbf'] ?? null;
         $expiry = $claims['exp'] ?? null;
 
-        if (($claims['iss'] ?? null) !== $issuer || ($claims['aud'] ?? null) !== CollaborationConfig::JWT_AUDIENCE
-            || ($claims['protocol'] ?? null) !== CollaborationConfig::JWT_PROTOCOL
+        if (($claims['iss'] ?? null) !== $issuer || ($claims['aud'] ?? null) !== CollaborationOptions::JWT_AUDIENCE
+            || ($claims['protocol'] ?? null) !== CollaborationOptions::JWT_PROTOCOL
             || !is_int($iat) || !is_int($nbf) || !is_int($expiry) || $iat > $nbf || $nbf >= $expiry) {
             return null;
         }
@@ -260,12 +256,6 @@ final readonly class CollaborationCallResolver
             return false;
         }
 
-        foreach (['jku', 'x5u', 'x5c', 'jwk', 'crit'] as $reference) {
-            if (property_exists($header, $reference)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all(['jku', 'x5u', 'x5c', 'jwk', 'crit'], fn (string $reference): bool => !property_exists($header, $reference));
     }
 }

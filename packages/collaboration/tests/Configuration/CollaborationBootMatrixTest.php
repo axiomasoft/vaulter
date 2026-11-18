@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Collaboration\Providers\CollaborationRegistrar;
 use Vaulter\Collaboration\Tests\TestCase;
 use Vaulter\Exceptions\Configuration\InsecureProductionConfiguration;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 function bootJwt(): string
 {
@@ -25,11 +25,12 @@ function bootCollaboration(string $environment, mixed $ttl, ?string $jwt, ?strin
     $app['config']->set('vaulter-collaboration.hub.issuer', 'https://vaulter.test');
     $app['config']->set('vaulter-collaboration.hub.webhook_secret', $webhook);
     $app['config']->set('vaulter.security.accepted_risks', $risks);
+    (new CollaborationRegistrar)->register($app);
     (new CollaborationRegistrar)->boot($app);
 }
 
 it('rejects a structural token ttl outside 1..300 before any production-risk step, in every environment and under any risk reason', function (string $environment, int $ttl, array $risks): void {
-    expect(fn () => bootCollaboration($environment, $ttl, bootJwt(), 'webhook-secret', $risks))->toThrow(InvalidConfigurationException::class, 'token_ttl');
+    expect(fn () => bootCollaboration($environment, $ttl, bootJwt(), 'webhook-secret', $risks))->toThrow(InvalidConfiguration::class, 'token_ttl');
 })->with(['production', 'testing'])->with([0, 301])->with([
     'no risk' => [[]],
     'accepted ttl id' => [['collaboration.token-ttl' => 'we know']],
@@ -45,7 +46,7 @@ it('allows missing secrets with a valid ttl at boot and always rejects equal non
     bootCollaboration($environment, 300, null, null);
     bootCollaboration($environment, 300, bootJwt(), null);
 
-    expect(fn () => bootCollaboration($environment, 300, bootJwt(), bootJwt(), ['collaboration.secrets' => 'accepted']))->toThrow(InvalidConfigurationException::class, 'unusable');
+    expect(fn () => bootCollaboration($environment, 300, bootJwt(), bootJwt(), ['collaboration.secrets' => 'accepted']))->toThrow(InvalidConfiguration::class, 'unusable');
 })->with(['production', 'testing']);
 
 it('keeps the nonproduction missing-secret warning', function (): void {
@@ -113,9 +114,9 @@ afterEach(function (): void {
 });
 
 it('refuses a guarded production command for missing collaboration secrets before handle() unless a reasoned risk is accepted', function (): void {
-    expect(fn () => wholeAppCommand([]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
+    expect(fn (): int => wholeAppCommand([]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
         ->and(CollaborationFakeHandler::$handled)->toBe(0)
-        ->and(fn () => wholeAppCommand(['risks' => ['collaboration.secrets' => ' ']]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
+        ->and(fn (): int => wholeAppCommand(['risks' => ['collaboration.secrets' => ' ']]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
         ->and(CollaborationFakeHandler::$handled)->toBe(0)
         ->and(wholeAppCommand(['risks' => ['collaboration.secrets' => 'managed by the platform']]))->toBe(0)
         ->and(CollaborationFakeHandler::$handled)->toBe(1);
@@ -134,7 +135,7 @@ it('requires no collaboration secret when the module is disabled', function (): 
 });
 
 it('fails the whole application build on a structural ttl before any guard or risk exemption, even for an accepted risk', function (int $ttl, array $risks): void {
-    expect(fn () => wholeAppCommand(['ttl' => $ttl, 'jwt' => bootJwt(), 'webhook' => 'webhook-secret', 'risks' => $risks]))->toThrow(InvalidConfigurationException::class, 'token_ttl')
+    expect(fn (): int => wholeAppCommand(['ttl' => $ttl, 'jwt' => bootJwt(), 'webhook' => 'webhook-secret', 'risks' => $risks]))->toThrow(InvalidConfiguration::class, 'token_ttl')
         ->and(CollaborationFakeHandler::$handled)->toBe(0);
 })->with([0, 301])->with([
     'no risk' => [[]],
@@ -156,9 +157,9 @@ function wholeAppHttp(array $settings): bool
 }
 
 it('refuses the HTTP production bootstrap for missing collaboration secrets unless a reasoned risk is accepted', function (): void {
-    expect(fn () => wholeAppHttp([]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
-        ->and(fn () => wholeAppHttp(['jwt' => bootJwt()]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
-        ->and(fn () => wholeAppHttp(['risks' => ['collaboration.secrets' => ' ']]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
+    expect(fn (): bool => wholeAppHttp([]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
+        ->and(fn (): bool => wholeAppHttp(['jwt' => bootJwt()]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
+        ->and(fn (): bool => wholeAppHttp(['risks' => ['collaboration.secrets' => ' ']]))->toThrow(InsecureProductionConfiguration::class, 'collaboration.secrets')
         ->and(wholeAppHttp(['risks' => ['collaboration.secrets' => 'managed by the platform']]))->toBeTrue();
 });
 
@@ -169,8 +170,8 @@ it('boots HTTP with distinct secrets at ttl 1 and 300 in production, and without
 })->with([1, 300]);
 
 it('fails the HTTP bootstrap on a structural ttl or equal secrets before the production guard, in production and testing', function (string $environment, int $ttl, array $risks): void {
-    expect(fn () => wholeAppHttp(['env' => $environment, 'ttl' => $ttl, 'jwt' => bootJwt(), 'webhook' => 'webhook-secret', 'risks' => $risks]))->toThrow(InvalidConfigurationException::class, 'token_ttl')
-        ->and(fn () => wholeAppHttp(['env' => $environment, 'jwt' => bootJwt(), 'webhook' => bootJwt(), 'risks' => ['collaboration.secrets' => 'accepted']]))->toThrow(InvalidConfigurationException::class, 'unusable');
+    expect(fn (): bool => wholeAppHttp(['env' => $environment, 'ttl' => $ttl, 'jwt' => bootJwt(), 'webhook' => 'webhook-secret', 'risks' => $risks]))->toThrow(InvalidConfiguration::class, 'token_ttl')
+        ->and(fn (): bool => wholeAppHttp(['env' => $environment, 'jwt' => bootJwt(), 'webhook' => bootJwt(), 'risks' => ['collaboration.secrets' => 'accepted']]))->toThrow(InvalidConfiguration::class, 'unusable');
 })->with(['production', 'testing'])->with([0, 301])->with([
     'no risk' => [[]],
     'accepted ttl id' => [['collaboration.token-ttl' => 'we know']],

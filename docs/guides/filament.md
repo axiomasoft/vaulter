@@ -6,8 +6,8 @@ outline: deep
 
 # Filament admin plugin
 
-`axioma-studio/vaulter-filament` is an optional **Filament 5** plugin that adds Vaulter management
-to an existing Filament panel. It requires `axioma-studio/vaulter-drive` (and, through it, core and media) and
+`axiomasoft/vaulter-filament` is an optional **Filament 5** plugin that adds Vaulter management
+to an existing Filament panel. It requires `axiomasoft/vaulter-drive` (and, through it, core and media) and
 registers one family of resources, the **Drive / permissions** domain — `Drive`, `Node`, `NodeGrant`, `NodeShare`,
 `Activity`.
 
@@ -26,7 +26,7 @@ resources respect is covered under [Authorization](/concepts/access-model).
 <!-- snippet: shell -->
 
 ```bash
-composer require axioma-studio/vaulter-filament
+composer require axiomasoft/vaulter-filament
 ```
 
 The plugin ships its provider via Laravel package discovery
@@ -246,7 +246,7 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 ));
 
 // Shown exactly once — never recoverable from the row afterward:
-//   app(\Vaulter\Drive\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
+//   app(\Vaulter\Drive\Configuration\SharingOptions::class)->urlBase() . '/' . $minted->token
 ```
 
 - **Rows**: the share links the handle's `shares()` operations list for every node the admin may manage.

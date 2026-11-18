@@ -3,7 +3,7 @@
 Публичный пакет documents обслуживает `POST documents/{node}/collaboration/session` и
 `Documents::in($drive)->collaborationSession($node)`. Клиент получает нейтральную сессию;
 транспорт протокола реализует коннектор приложения. Yjs предоставляет коммерческое дополнение
-`axioma-studio/vaulter-collaboration`.
+`axiomasoft/vaulter-collaboration`.
 
 ## Регистрация адаптера
 
@@ -20,7 +20,7 @@
 ## Grant и проверка
 
 Ниже форма read grant из фикстуры. В production grants выдаёт `CollaborationAccessPolicy`,
-а не вызывающий код. `DocumentsConfig::collaborationSessionTtl()` ограничивает TTL диапазоном 1–300 секунд.
+а не вызывающий код. `DocumentsOptions::collaborationSessionTtl()` ограничивает TTL диапазоном 1–300 секунд.
 
 <!-- snippet: host -->
 
@@ -59,7 +59,7 @@ Production backend также повторно вызывает `CollaborationAc
 | Yjs rich text/markdown | `yjs/2` | `yjs-update-v1` | схема типа; null только до seed, затем checkpoint обязателен |
 
 Фикстура Acme использует `OpaqueJsonCodec(maxSizeBytes: 4096)`. Общий размер документа задаёт
-`maxSizeBytes()` кодека или `DocumentsConfig::maxContentSizeKb()`. Транспортные лимиты принадлежат
+`maxSizeBytes()` кодека или `DocumentsOptions::maxContentSizeKb()`. Транспортные лимиты принадлежат
 адаптеру: конфигурация Yjs предоставляет `updateBytes()`, `requestBytes()`, `maxStateBytes()` и
 `checkpointRequestBytes()`; это не универсальные лимиты кадров Acme. Сетевой адаптер проверяет
 собственные лимиты кадров/updates до буферизации и лимиты проекции до публикации checkpoint.

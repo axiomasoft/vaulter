@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Revocation\Transports;
 
 use Illuminate\Http\Client\Factory;
+use Packman\Attributes\Internal;
 use RuntimeException;
 use Throwable;
-use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationCallResolver;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Revocation\ControlTransport;
 
 /**
@@ -25,7 +25,7 @@ final readonly class HttpControlTransport implements ControlTransport
 
     public function __construct(
         private Factory $http,
-        private CollaborationConfig $config,
+        private CollaborationOptions $config,
     ) {}
 
     public function name(): string

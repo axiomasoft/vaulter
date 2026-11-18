@@ -5,8 +5,9 @@ declare(strict_types=1);
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\IdsConfig;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\IdsOptions;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Schema\VaulterSchema;
@@ -20,7 +21,7 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
     $builder->createAll();
 
     try {
-        $columns = array_column(Schema::getColumns(app(DatabaseConfig::class)->table('node_grants')), null, 'name');
+        $columns = array_column(Schema::getColumns(app(DatabaseOptions::class)->table('node_grants')), null, 'name');
         $driver = DB::connection()->getDriverName();
         $expected = match ($type) {
             'string' => 'varchar',
@@ -38,7 +39,7 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
 
 it('rejects unknown host key configuration', function ($value): void {
     config()->set('vaulter.ids.host_keys', $value);
-    expect(fn () => app(IdsConfig::class)->hostKeys())->toThrow(InvalidArgumentException::class);
+    expect(fn () => app(IdsOptions::class)->hostKeys)->toThrow(InvalidConfiguration::class);
 })->with(['unknown', 42, null, ['nested']]);
 
 it('preserves nullable and index conventions for migration helpers', function (): void {

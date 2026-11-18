@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Data;
 
 use DateTimeImmutable;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
@@ -44,7 +44,7 @@ final readonly class WebhookEndpointSnapshot
             active: $endpoint->is_active,
             disabledAt: $endpoint->disabled_at === null ? null : DateTimeImmutable::createFromInterface($endpoint->disabled_at),
             createdAt: $endpoint->created_at === null ? null : DateTimeImmutable::createFromInterface($endpoint->created_at),
-            version: (int) $endpoint->version,
+            version: $endpoint->version,
             tenantId: is_int($tenant) || is_string($tenant) ? (string) $tenant : null,
         );
     }

@@ -4,17 +4,25 @@ declare(strict_types=1);
 
 namespace Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule;
 
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Doctor\Contracts\DoctorCheck;
+use Packman\Extensions\Concerns\Composition\ContributesToSlots;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Laravel\PluginRegistrar;
 use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\PluginModuleSpec;
 use Vaulter\Modules\SlotKind;
-use Vaulter\Modules\VaulterModule;
+use Vaulter\Modules\WithModuleRuntime;
 use Vaulter\Operations\OperationMiddleware;
 
 /**
@@ -23,45 +31,57 @@ use Vaulter\Operations\OperationMiddleware;
  * kernel has no built-in for) and contributes to the core and drive slots. Opt-in, like every module that
  * opens a new surface.
  */
-final class AcmeModule implements VaulterModule
+final class AcmeModule implements ExtensionPlugin, WithConfiguration, WithModuleRuntime, WithSchema, WithSlots
 {
-    public function id(): ModuleId
+    use Configurable;
+    use ContributesToSlots;
+    use OwnsSchema;
+
+    public function manifest(): PluginManifest
     {
-        return new ModuleId('acme');
+        return new PluginManifest(id: 'vaulter.acme', version: '1.0.0', requires: ['vaulter.core', 'vaulter.drive']);
     }
 
-    public function version(): string
+    public function register(PluginRegistrar $registrar): void {}
+
+    public function configRoot(): string
     {
-        return '1.0';
+        return 'vaulter-acme';
     }
 
-    public function activation(): Activation
+    public function defaultConfigPath(): ?string
     {
-        return Activation::OptIn;
+        return __DIR__.'/config.php';
     }
 
-    public function requires(): array
+    public function migrationPath(): ?string
     {
-        return ['core' => '^1.0', 'drive' => '^1.0'];
+        return __DIR__.'/migrations';
     }
 
-    public function register(ModuleBuilder $module): void
+    public function moduleRuntime(): PluginModuleSpec
     {
-        $module
-            ->config('vaulter-acme', __DIR__.'/config.php')
-            ->schema(__DIR__.'/migrations')
-            ->routes(__DIR__.'/routes.php')
-            ->operations(AcmeOperationPolicies::class)
-            ->commands(AcmeCommand::class)
-            ->listen(AcmePinged::class, AcmeListener::class)
-            ->bindings(AcmeBindings::class)
-            ->defineSlot(AcmeRestriction::class, SlotKind::Restriction, Cardinality::Many)
-            ->slot(AcmeRestriction::class, AcmeNarrowing::class, 'acme.narrowing')
-            ->slot(OperationMiddleware::class, AcmeMiddleware::class, 'acme.middleware', priority: 10)
-            ->slot(EventSink::class, AcmeEventSink::class, 'acme.sink', priority: 50)
-            ->slot(OutboxConsumer::class, AcmeOutboxConsumer::class, AcmeOutboxConsumer::ID)
-            ->slot(DoctorCheck::class, AcmeDoctorCheck::class, 'acme.endpoint', key: 'acme.endpoint')
-            ->slot(DownloadGuard::class, AcmeDownloadGuard::class, 'acme.download-guard', priority: -5)
-            ->slot(NodeSnapshotContributor::class, AcmeSnapshotContributor::class, 'acme.snapshot');
+        return new PluginModuleSpec(plugin: self::class, activation: Activation::OptIn,
+            routes: [__DIR__.'/routes.php'], operations: [AcmeOperationPolicies::class],
+            commands: [AcmeCommand::class], listeners: [['event' => AcmePinged::class, 'listener' => AcmeListener::class]],
+            bindings: [AcmeBindings::class]);
+    }
+
+    public function definedSlots(): array
+    {
+        return [AcmeRestriction::class => ['kind' => SlotKind::Restriction->value, 'cardinality' => Cardinality::Many->value]];
+    }
+
+    public function slotContributions(): array
+    {
+        return [
+            ['slot' => AcmeRestriction::class, 'implementation' => AcmeNarrowing::class, 'id' => 'acme.narrowing'],
+            ['slot' => OperationMiddleware::class, 'implementation' => AcmeMiddleware::class, 'id' => 'acme.middleware', 'priority' => 10],
+            ['slot' => EventSink::class, 'implementation' => AcmeEventSink::class, 'id' => 'acme.sink', 'priority' => 50],
+            ['slot' => OutboxConsumer::class, 'implementation' => AcmeOutboxConsumer::class, 'id' => AcmeOutboxConsumer::ID],
+            ['slot' => DoctorCheck::class, 'implementation' => AcmeDoctorCheck::class, 'id' => 'acme.endpoint', 'key' => 'acme.endpoint'],
+            ['slot' => DownloadGuard::class, 'implementation' => AcmeDownloadGuard::class, 'id' => 'acme.download-guard', 'priority' => -5],
+            ['slot' => NodeSnapshotContributor::class, 'implementation' => AcmeSnapshotContributor::class, 'id' => 'acme.snapshot'],
+        ];
     }
 }

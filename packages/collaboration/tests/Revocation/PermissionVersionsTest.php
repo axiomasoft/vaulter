@@ -8,7 +8,7 @@ use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Collaboration\Revocation\PermissionVersionSink;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Revocation;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\AccessInvalidation;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -17,6 +17,7 @@ use Vaulter\Drive\Data\DriveRef;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\SinkWriter;
 use Vaulter\Kernel;
+use Vaulter\Modules\SlotContribution;
 
 /**
  * v_collaboration_permission_versions: the collaboration.permissions sink counts every
@@ -29,18 +30,18 @@ beforeEach(function (): void {
 
 function permissionVersionRows(): array
 {
-    return DB::table(app(DatabaseConfig::class)->table(PermissionVersions::TABLE))->orderBy('scope_key')->pluck('version', 'scope_key')->map(static fn (mixed $version): int => (int) $version)->all();
+    return DB::table(app(DatabaseOptions::class)->table(PermissionVersions::TABLE))->orderBy('scope_key')->pluck('version', 'scope_key')->map(static fn (mixed $version): int => (int) $version)->all();
 }
 
 it('contributes the counting sink to the active module graph', function (): void {
-    $ids = array_map(static fn ($contribution): string => $contribution->id, app(Kernel::class)->extensions()->contributions(EventSink::class));
+    $ids = array_map(static fn (SlotContribution $contribution): string => $contribution->id, app(Kernel::class)->extensions()->contributions(EventSink::class));
 
     expect($ids)->toContain(PermissionVersionSink::ID);
 });
 
 it('starts every drive at version 0 without a row', function (): void {
     ['node' => $node] = Revocation::inheritedDocument();
-    DB::table(app(DatabaseConfig::class)->table(PermissionVersions::TABLE))->delete();
+    DB::table(app(DatabaseOptions::class)->table(PermissionVersions::TABLE))->delete();
 
     expect(Revocation::versions($node))->toEqual(new PermissionVersion(drive: 0, global: 0))
         ->and(permissionVersionRows())->toBe([]);
@@ -121,9 +122,9 @@ it('creates the first row of a scope at version 1 and increments it afterwards',
 it('tells a pair that predates a change from a current one', function (): void {
     $current = new PermissionVersion(drive: 4, global: 2);
 
-    expect((new PermissionVersion(drive: 3, global: 2))->olderThan($current))->toBeTrue()
-        ->and((new PermissionVersion(drive: 4, global: 1))->olderThan($current))->toBeTrue()
-        ->and((new PermissionVersion(drive: 4, global: 2))->olderThan($current))->toBeFalse()
+    expect(new PermissionVersion(drive: 3, global: 2)->olderThan($current))->toBeTrue()
+        ->and(new PermissionVersion(drive: 4, global: 1)->olderThan($current))->toBeTrue()
+        ->and(new PermissionVersion(drive: 4, global: 2)->olderThan($current))->toBeFalse()
         ->and(PermissionVersion::fromClaim(['drive' => 4, 'global' => 2]))->toEqual($current)
         ->and(PermissionVersion::fromClaim((object) ['drive' => 4, 'global' => 2]))->toEqual($current)
         ->and(PermissionVersion::fromClaim(['drive' => '4', 'global' => 2]))->toBeNull()

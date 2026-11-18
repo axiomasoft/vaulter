@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\AzGuard\Testing;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Attributes\Api;
+use Packman\Attributes\Api;
 use Vaulter\AzGuard\Contracts\AzGuardGuard;
 
 /**
@@ -104,7 +104,7 @@ final class FakeAzGuardGuard implements AzGuardGuard
             /** @var int|string|null $key */
             $key = $entity->getKey();
 
-            return $morph.':'.(string) $key;
+            return $morph.':'.$key;
         }
 
         return spl_object_hash($entity);

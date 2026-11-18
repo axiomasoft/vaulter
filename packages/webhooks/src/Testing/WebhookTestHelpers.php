@@ -6,8 +6,9 @@ namespace Vaulter\Webhooks\Testing;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Str;
-use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
+use Packman\Attributes\Internal;
+use RuntimeException;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\DeliveryState;
@@ -18,7 +19,7 @@ use Vaulter\Kernel;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Support\Identity;
-use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -85,7 +86,7 @@ final class WebhookTestHelpers
         $outbox->refresh();
 
         if ($consumer !== null) {
-            app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->insert([
+            app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))->insert([
                 'event_id' => $outbox->event_id,
                 'consumer_id' => $consumer,
                 'outbox_seq' => $outbox->outbox_seq,
@@ -108,7 +109,7 @@ final class WebhookTestHelpers
      */
     public static function outboxDelivery(string $eventId, string $consumer = WebhookFanoutConsumer::ID): ?array
     {
-        $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))
+        $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(OutboxStore::DELIVERIES))
             ->where('event_id', $eventId)->where('consumer_id', $consumer)->first();
 
         if ($row === null) {
@@ -121,10 +122,10 @@ final class WebhookTestHelpers
     /** Makes the next INSERT into v_outbox fail, as a lost connection or a full disk would. */
     public static function failOutboxInsert(string $message = 'outbox insert failed'): void
     {
-        $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+        $table = app(DatabaseOptions::class)->table(OutboxStore::EVENTS);
         app(VaulterDatabase::class)->connection()->beforeExecuting(static function (string $query) use ($table, $message): void {
             if (preg_match('/^insert into ["`]?'.preg_quote($table, '/').'["`]? /i', $query) === 1) {
-                throw new \RuntimeException($message);
+                throw new RuntimeException($message);
             }
         });
     }
@@ -184,7 +185,7 @@ final class WebhookTestHelpers
     /** Run the delivery job once, as a queue worker would. */
     public static function deliver(WebhookDelivery $delivery): void
     {
-        (new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())))
-            ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
+        new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey()))
+            ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), webhooksConfig: app(WebhooksOptions::class), database: app(VaulterDatabase::class));
     }
 }

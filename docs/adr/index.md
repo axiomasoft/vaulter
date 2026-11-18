@@ -44,3 +44,5 @@ Records of the significant architectural decisions behind Vaulter.
 
 - [ADR-0037 — Public contract, BC gate and deprecation policy](/adr/0037-public-contract-bc-and-deprecation) — accepted.
 - [ADR-0038 — Supply chain and artifact verification](/adr/0038-supply-chain-and-artifact-verification) — accepted.
+
+- [ADR-0039: Native Packman extensions](0039-native-packman-extensions.md)

@@ -24,7 +24,7 @@ use Vaulter\Inventory\Repo;
 
 require_once __DIR__.'/bootstrap.php';
 
-const SURFACE_ATTRIBUTES = ['Vaulter\Attributes\Api', 'Vaulter\Attributes\Spi', 'Vaulter\Attributes\Internal'];
+const SURFACE_ATTRIBUTES = ['Packman\Attributes\Api', 'Packman\Attributes\Spi', 'Packman\Attributes\Internal'];
 
 /** Framework types a host cannot hand to a constructor: the container and the infrastructure behind it. */
 const INFRASTRUCTURE = [
@@ -111,7 +111,7 @@ foreach ($byFile as $file => $types) {
             if ($namespaceName !== 'Vaulter\Attributes' && !$fqn) {
                 $imports['Vaulter\Attributes\\'.$short] = true;
                 if (str_starts_with($kind, 'Spi')) {
-                    $imports['Vaulter\Attributes\SpiKind'] = true;
+                    $imports['Packman\Attributes\SpiKind'] = true;
                 }
             }
             $counts['fqn'] += $fqn ? 1 : 0;
@@ -141,7 +141,7 @@ foreach ($byFile as $file => $types) {
                 $handled[spl_object_id($member)] = true;
                 $fqn = $needsFqn('Internal');
                 if (!$fqn && $namespaceName !== 'Vaulter\Attributes') {
-                    $imports['Vaulter\Attributes\Internal'] = true;
+                    $imports['Packman\Attributes\Internal'] = true;
                 }
                 $counts['member']++;
                 $start = lineStart($code, $member->getStartFilePos());
@@ -164,7 +164,7 @@ foreach ($byFile as $file => $types) {
             if ($constructor !== null && !hasInternal($constructor) && !isset($handled[spl_object_id($constructor)])) {
                 $fqn = $needsFqn('Internal');
                 if (!$fqn && $namespaceName !== 'Vaulter\Attributes') {
-                    $imports['Vaulter\Attributes\Internal'] = true;
+                    $imports['Packman\Attributes\Internal'] = true;
                 }
                 $counts['constructor']++;
                 $start = lineStart($code, $constructor->getStartFilePos());
@@ -244,7 +244,7 @@ function hasInternal(Stmt\ClassMethod|Stmt\Property|Stmt\ClassConst $member): bo
 {
     foreach ($member->attrGroups as $group) {
         foreach ($group->attrs as $attribute) {
-            if ($attribute->name->toString() === 'Vaulter\Attributes\Internal') {
+            if ($attribute->name->toString() === 'Packman\Attributes\Internal') {
                 return true;
             }
         }

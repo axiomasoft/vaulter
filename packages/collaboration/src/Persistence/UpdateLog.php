@@ -8,13 +8,13 @@ use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use LogicException;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
-use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
@@ -39,13 +39,15 @@ final readonly class UpdateLog
 {
     public function __construct(
         private VaulterDatabase $database,
-        private DatabaseConfig $tables,
+        private DatabaseOptions $tables,
         private CollaborativeState $state,
         private DrainState $draining,
         private YjsStateCompatibility $compatibility,
     ) {}
 
     /**
+     * @param (Closure(LockedDocumentState): void)|null $authorize
+     *
      * @throws CollaborationDrainingException       a managed disable drains the log; nothing was written
      * @throws NodeNotFoundException                the node is gone or in the trash, or its drive is being deleted
      * @throws PermissionDeniedException            its drive was archived after the room was opened

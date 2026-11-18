@@ -1,0 +1,138 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-webhooks configuration",
+    "type": "object",
+    "properties": {
+        "vaulter-webhooks": {
+            "type": "object",
+            "properties": {
+                "delivery": {
+                    "type": "object",
+                    "properties": {
+                        "allowed_ip_ranges": {
+                            "type": [
+                                "array",
+                                "object"
+                            ]
+                        },
+                        "allowed_schemes": {
+                            "type": "array"
+                        },
+                        "blocked_ip_ranges": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "connect_timeout": {
+                            "type": "integer",
+                            "default": 2
+                        },
+                        "max_response_bytes": {
+                            "type": "integer",
+                            "default": 65536
+                        },
+                        "url_guard": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "disable_after_days": {
+                    "type": "integer",
+                    "default": 5
+                },
+                "manage_ability": {
+                    "type": "string",
+                    "default": "vaulter.webhooks.manage"
+                },
+                "models": {
+                    "type": "object",
+                    "properties": {
+                        "webhook_delivery": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        },
+                        "webhook_endpoint": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "array",
+                                "object",
+                                "null"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "relay": {
+                    "type": "object",
+                    "properties": {
+                        "fanout_chunk": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "retention_days": {
+                    "type": "integer",
+                    "default": 30
+                },
+                "retry_claim_seconds": {
+                    "type": "integer",
+                    "default": 60
+                },
+                "retry_jitter": {
+                    "type": "number",
+                    "default": 0.1
+                },
+                "retry_schedule": {
+                    "type": "array"
+                },
+                "schedule": {
+                    "type": "object",
+                    "properties": {
+                        "webhooks_prune": {
+                            "type": "string",
+                            "default": "dailyAt:03:10"
+                        },
+                        "webhooks_retry": {
+                            "type": "string",
+                            "default": "everyMinute"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "secret_rotation_overlap": {
+                    "type": "integer",
+                    "default": 86400
+                },
+                "timeout": {
+                    "type": "integer",
+                    "default": 15
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

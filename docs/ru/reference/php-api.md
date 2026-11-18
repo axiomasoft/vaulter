@@ -8,7 +8,7 @@ outline: deep
 
 `Vaulter\Drive\Facades\Vaulter` — публичная точка входа drive. Это тонкий фасад Laravel
 поверх `Vaulter\Drive\Vaulter`, который `vaulter-drive` регистрирует как синглтон контейнера (алиас `'vaulter'`)
-и заодно объявляет для хоста алиас класса `Vaulter`. Фасаду нужен `axioma-studio/vaulter-drive`; без него
+и заодно объявляет для хоста алиас класса `Vaulter`. Фасаду нужен `axiomasoft/vaulter-drive`; без него
 `Vaulter::drive()` бросает `MissingPackageException` с именем пакета. Каждый метод ниже — реальный метод
 `Vaulter\Drive\Vaulter`.
 
@@ -204,12 +204,12 @@ interface AzGuardGuard
 }
 ```
 
-Контракт поставляется `axioma-studio/vaulter-azguard`, вместе с реальным
+Контракт поставляется `axiomasoft/vaulter-azguard`, вместе с реальным
 `AzGuardGuardAdapter` и тестовым `Vaulter\AzGuard\Testing\FakeAzGuardGuard`.
 Provider регистрирует драйвер и адаптер автоматически.
 
 **Используйте, когда** `config('vaulter-drive.access.permission_driver') = 'azguard'`:
-установите `composer require axioma-studio/vaulter-azguard`, добавьте
+установите `composer require axiomasoft/vaulter-azguard`, добавьте
 `Vaulter\AzGuard\Contracts\AzGuardBackedUser` на модель пользователя, зарегистрируйте
 morph-алиасы моделей пользователя и workspace и объявите алиасы workspace типами assignment
 scope панели AzGuard. Фейк также требует установленного моста и его зависимостей.
@@ -576,7 +576,7 @@ interface IdStrategy
   пользователей владеет хост).
 
 ::: info По умолчанию — `ulid`
-ULID стоит по умолчанию, чтобы морф-ключи совпадали с экосистемой Corex/AzGuard; `uuid7`
+ULID стоит по умолчанию, чтобы морф-ключи совпадали с экосистемой AzGuard; `uuid7`
 ложится на нативные Postgres-колонки `uuid`; `bigint` — легаси-путь с автоинкрементом.
 См. [Авторизация → Мультитенантность](/ru/concepts/tenancy) для выравнивания морфов.
 :::
@@ -590,7 +590,7 @@ ULID стоит по умолчанию, чтобы морф-ключи совп
 ## Поддерживаемая поверхность
 
 То, что Vaulter обещает сохранять, размечено в коде, а не перечислено вручную. Каждый тип `packages/*/src` несёт ровно один
-атрибут из `Vaulter\Attributes`:
+атрибут из `Packman\Attributes`:
 
 | Атрибут | Смысл |
 |---|---|
@@ -611,7 +611,7 @@ ULID стоит по умолчанию, чтобы морф-ключи совп
 `NodeSnapshot::$syncKey` имеет тип `?string` и проецируется для текущего читателя;
 сохраняйте его с локальным деревом. `NodeChange` содержит `operation`, `syncKey`,
 `nodeId`, `subtree`, `node`, `nodeSequence`; remove не раскрывает raw id, причину или снимок.
-`ChangesConfig::keyGeneration()` и `cursorMaxAgeSeconds()` возвращают проверенные настройки.
+`ChangesOptions::keyGeneration()` и `cursorMaxAgeSeconds()` возвращают проверенные настройки.
 `ChangeOperations::startCursor()` вызывается до первого обхода и вне внешней транзакции;
 `list()` сохраняет чтение внутри транзакции. Внутренний метод получения ключа —
 `ReaderSyncIdentity::cursorSubkey()`; новый публичный API `cursorKey` не вводится.

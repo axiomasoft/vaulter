@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Exceptions;
 
-use Vaulter\Attributes\Api;
+use Override;
+use Packman\Attributes\Api;
+use Packman\Errors\Data\ErrorDescriptor;
+use Packman\Errors\Enums\ErrorCategory;
+use Vaulter\Collaboration\Errors\CollaborationErrorCode;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -33,5 +37,11 @@ final class CollaborationConfigException extends VaulterException
             .'Fix: set VAULTER_COLLAB_ISSUER or the application URL (app.url). '
             .'Docs: '.self::docs('missing-collab-secret'),
         );
+    }
+
+    #[Override]
+    public function errorDescriptor(): ErrorDescriptor
+    {
+        return new ErrorDescriptor(code: CollaborationErrorCode::Config, category: ErrorCategory::Internal);
     }
 }

@@ -5,13 +5,12 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
-use Vaulter\Contracts\Doctor\DoctorCheck;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Doctor\Contracts\DoctorCheck;
 use Vaulter\Events\Outbox\OutboxConsumer;
-use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
-use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\ModuleDeclarations;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -39,22 +38,21 @@ function webhookRouteNames(Application $app): array
 it('declares the webhooks module: opt-in, over the core and the drive, owner of its two tables', function (): void {
     $module = new WebhooksModule;
 
-    expect($module->id())->toEqual(new ModuleId('webhooks'))
-        ->and($module->activation())->toBe(Activation::OptIn)
-        ->and($module->requires())->toBe(['core' => '^1.0', 'drive' => '^1.0'])
-        ->and(WebhooksModule::ownedSchema())->toBe(WebhooksSchema::class);
+    expect($module->manifest()->id)->toBe('vaulter.webhooks')
+        ->and($module->moduleRuntime()->activation)->toBe(Activation::OptIn)
+        ->and($module->manifest()->requires)->toBe(['vaulter.core', 'vaulter.drive'])
+        ->and($module->schemaComponents()[0])->toBe(WebhooksSchema::class);
 });
 
 it('declares everything of the package through its manifest, paths relative to the package', function (): void {
-    $module = new ModuleBuilder(new ModuleId('webhooks'));
-    (new WebhooksModule)->register($module);
+    $module = ModuleDeclarations::buildOffered(WebhooksModule::class);
     $package = dirname(__DIR__, 2);
 
     expect(array_map(realpath(...), $module->configs()))->toBe(['vaulter-webhooks' => realpath($package.'/config/vaulter-webhooks.php')])
         ->and(array_map(realpath(...), $module->routeFiles()))->toBe([realpath($package.'/routes/webhooks.php')])
         ->and(array_map(realpath(...), $module->schemaPaths()))->toBe([realpath($package.'/database/migrations')])
         ->and($module->problemSources())->toBe([WebhooksProblemCodes::class])
-        ->and(array_map(static fn (string $class): string => (new ReflectionClass($class))->getShortName(), $module->commandClasses()))
+        ->and(array_map(static fn (string $class): string => new ReflectionClass($class)->getShortName(), $module->commandClasses()))
         ->toBe(['RetryWebhooksCommand', 'PruneWebhooksCommand', 'RedeliverWebhooksCommand']);
 
     $contributions = array_map(static fn (SlotContribution $c): array => [$c->slot, $c->implementation, $c->id], $module->contributions());
@@ -63,7 +61,7 @@ it('declares everything of the package through its manifest, paths relative to t
 });
 
 it('ships its two create-migrations in the package, in the block of numbers of the webhooks owner', function (): void {
-    $files = array_map('basename', glob(dirname(__DIR__, 2).'/database/migrations/*.php') ?: []);
+    $files = array_map(basename(...), glob(dirname(__DIR__, 2).'/database/migrations/*.php') ?: []);
 
     expect($files)->toBe([
         '0001_01_01_000401_create_v_webhook_endpoints_table.php',
@@ -120,8 +118,8 @@ it('refuses to activate without the drive module it requires', function (): void
 });
 
 it('fails the boot of the active module on a malformed vaulter-webhooks value', function (): void {
-    expect(fn () => FreshApplication::boot(['vaulter-webhooks.retry_jitter' => 0.9]))
-        ->toThrow(InvalidConfigurationException::class, 'vaulter-webhooks.retry_jitter');
+    expect(fn (): Application => FreshApplication::boot(['vaulter-webhooks.retry_jitter' => 0.9]))
+        ->toThrow(InvalidConfiguration::class, 'vaulter-webhooks.retry_jitter');
 });
 
 it('does not read the configuration of an inactive module at boot', function (): void {

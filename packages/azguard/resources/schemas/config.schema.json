@@ -1,0 +1,89 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/vaulter-azguard configuration",
+    "type": "object",
+    "properties": {
+        "vaulter-azguard": {
+            "type": "object",
+            "properties": {
+                "create_permission": {
+                    "type": "string",
+                    "default": "documents.create"
+                },
+                "guard": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "default": null
+                },
+                "panel_id": {
+                    "type": [
+                        "string",
+                        "integer",
+                        "number",
+                        "boolean",
+                        "null"
+                    ],
+                    "default": null
+                },
+                "permissions": {
+                    "type": "object",
+                    "properties": {
+                        "comment": {
+                            "type": "string",
+                            "default": "documents.comment"
+                        },
+                        "copy": {
+                            "type": "string",
+                            "default": "documents.update"
+                        },
+                        "create": {
+                            "type": "string",
+                            "default": "documents.create"
+                        },
+                        "delete": {
+                            "type": "string",
+                            "default": "documents.delete"
+                        },
+                        "download": {
+                            "type": "string",
+                            "default": "documents.download"
+                        },
+                        "edit": {
+                            "type": "string",
+                            "default": "documents.update"
+                        },
+                        "manage": {
+                            "type": "string",
+                            "default": "documents.manage"
+                        },
+                        "move": {
+                            "type": "string",
+                            "default": "documents.update"
+                        },
+                        "restore": {
+                            "type": "string",
+                            "default": "documents.delete"
+                        },
+                        "share": {
+                            "type": "string",
+                            "default": "documents.manage"
+                        },
+                        "trash": {
+                            "type": "string",
+                            "default": "documents.delete"
+                        },
+                        "view": {
+                            "type": "string",
+                            "default": "documents.view"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

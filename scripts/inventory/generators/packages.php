@@ -16,7 +16,7 @@ use Vaulter\Inventory\Repo;
  */
 return new class implements Generator
 {
-    private const VENDOR_PREFIX = 'axioma-studio/vaulter-';
+    private const VENDOR_PREFIX = 'axiomasoft/vaulter-';
 
     public function name(): string
     {

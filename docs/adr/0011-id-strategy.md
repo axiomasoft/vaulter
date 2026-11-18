@@ -5,7 +5,7 @@
 ## Context
 
 ADR-0003 offered a binary `id_type` of `id | ulid`. Vaulter must also align with
-the ecosystem's morph keys (Corex/AzGuard use ULID), support native Postgres
+the ecosystem's morph keys (AzGuard use ULID), support native Postgres
 `uuid`, and keep legacy auto-increment hosts working — three shapes, not two — all
 behind one swappable seam.
 
@@ -13,7 +13,7 @@ behind one swappable seam.
 
 - **ULID is the default PK**, with `bigint | ulid | uuid7` selectable behind an
   `IdStrategy` contract (`key`/`reference`/`actor`/`cast`/`modelConcern`). ULID
-  aligns with Corex/AzGuard morphs; `uuid7` targets native Postgres `uuid`;
+  aligns with AzGuard morphs; `uuid7` targets native Postgres `uuid`;
   `bigint` is for legacy hosts. The default is `config('vaulter.ids.default')`
   (env `VAULTER_ID_STRATEGY`, default `ulid`); the strategy classes are ported
   from chatom (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids` + `IdStrategyResolver`).

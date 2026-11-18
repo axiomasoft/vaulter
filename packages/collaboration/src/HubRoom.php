@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration;
 
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Drive\Enums\Access\Ability;

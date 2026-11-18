@@ -6,10 +6,11 @@ namespace Vaulter\AzGuard\Providers;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Attributes\Internal;
+use Packman\Attributes\Internal;
 use Vaulter\AzGuard\AzGuardGuardAdapter;
 use Vaulter\AzGuard\AzGuardModule;
-use Vaulter\AzGuard\Configuration\AzGuardConfig;
+use Vaulter\AzGuard\Configuration\AzGuardOptions;
+use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Modules\ModuleBindings;
 
 /**
@@ -28,12 +29,12 @@ final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
-        $app->singleton(AzGuardConfig::class, static fn (Container $app): AzGuardConfig => new AzGuardConfig($app->make('config')));
+        $app->bind(AzGuardOptions::class, static fn (Container $app): AzGuardOptions => CompiledOptionsCache::resolve($app, 'vaulter-azguard', static fn (array $raw): AzGuardOptions => AzGuardOptions::fromArray($raw)));
     }
 
     public function boot(Application $app): void
     {
         // Fail at boot on a guard class that does not implement the seam.
-        $app->make(AzGuardConfig::class)->guard();
+        $app->make(AzGuardOptions::class)->guard();
     }
 }

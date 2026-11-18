@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Data;
 
-use Vaulter\Attributes\Api;
-use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Packman\Attributes\Api;
+use Vaulter\Collaboration\Configuration\CollaborationOptions;
 
 /**
  * The parts of a collaboration room name ("<prefix>.<driveId>.<nodeId>.<epoch>"),
- * as {@see CollaborationConfig::parseRoom()} reads them.
+ * as {@see CollaborationOptions::parseRoom()} reads them.
  * Ids stay strings, the way every public id is compared.
  */
 #[Api]
