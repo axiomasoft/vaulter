@@ -12,7 +12,7 @@ use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\Webhooks\Providers\WebhooksPackageRegistrar;
 
 /**
- * Vaulter Webhooks — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see WebhooksModule}.
+ * Vaulter Webhooks — signed outbound webhook endpoints, delivery retries, and SSRF guard. Registers Packman facets and offers {@see WebhooksModule}.
  */
 #[Api(since: '1.0')]
 final class VaulterWebhooksServiceProvider extends ServiceProvider
@@ -35,7 +35,7 @@ final class VaulterWebhooksServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-webhooks');
         $this->bootRegistrars();
     }
 }

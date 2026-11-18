@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Container\Container;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Vaulter\CoreModule;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeAudit\AcmeFacetedAuditPlugin;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeMiddleware;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\Broken\DigitPrefixPlugin;
 use Vaulter\Integration\Tests\Modules\Fixtures\FixtureProblemCodes;
 use Vaulter\Integration\Tests\Modules\Fixtures\MalformedProblemCodes;
 use Vaulter\Integration\Tests\Modules\Fixtures\NotAGreeter;
@@ -19,6 +23,7 @@ use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Modules\SlotKind;
+use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Tests\Modules\Fixtures\FirstStep;
 use Vaulter\Tests\Modules\Fixtures\FixtureModule;
 use Vaulter\Tests\Modules\Fixtures\Greeter;
@@ -443,4 +448,20 @@ it('keeps the problem sources of an inactive module out of the sealed state', fu
     assert($result instanceof CompiledModules && $enabled instanceof CompiledModules);
     expect($result->problems)->toBe([])
         ->and($enabled->problems)->toBe(['optional' => [FixtureProblemCodes::class]]);
+});
+
+it('compiles third-party dotted plugin ids and imperative PluginRegistrar slot contributions, and records invalid module ids cleanly', function (): void {
+    $compiled = (new ModuleCompiler)->compileOffered([CoreModule::class, AcmeFacetedAuditPlugin::class], []);
+
+    expect($compiled)->toBeInstanceOf(CompiledModules::class);
+    assert($compiled instanceof CompiledModules);
+    expect($compiled->module('acme-audit')?->active)->toBeTrue()
+        ->and(array_map(static fn (SlotContribution $c): array => [$c->id, $c->module, $c->implementation], $compiled->contributions[OperationMiddleware::class]))
+        ->toContain(['acme.audit.middleware', 'acme-audit', AcmeMiddleware::class]);
+
+    $invalid = (new ModuleCompiler)->compileOffered([CoreModule::class, DigitPrefixPlugin::class], []);
+
+    expect($invalid)->toBeInstanceOf(InvalidModuleGraph::class);
+    assert($invalid instanceof InvalidModuleGraph);
+    expect($invalid->reasons[0])->toContain('DigitPrefixPlugin has an invalid manifest:')->toContain('is not a module id');
 });

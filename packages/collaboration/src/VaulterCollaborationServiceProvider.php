@@ -12,7 +12,7 @@ use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\Collaboration\Providers\CollaborationPackageRegistrar;
 
 /**
- * Vaulter Collaboration — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see CollaborationModule}.
+ * Vaulter Collaboration — real-time Yjs collaboration log, hub verification, and revocation transport. Registers Packman facets and offers {@see CollaborationModule}.
  */
 #[Api(since: '1.0')]
 final class VaulterCollaborationServiceProvider extends ServiceProvider
@@ -35,7 +35,7 @@ final class VaulterCollaborationServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-collaboration');
         $this->bootRegistrars();
     }
 }

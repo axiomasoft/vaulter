@@ -5087,8 +5087,8 @@
             "id": "publish:vaulter-media-translations",
             "owner": "media",
             "source": {
-                "file": "packages/azguard/src/VaulterAzGuardServiceProvider.php",
-                "symbol": "Vaulter\\AzGuard\\VaulterAzGuardServiceProvider::boot"
+                "file": "packages/media/src/VaulterMediaServiceProvider.php",
+                "symbol": "Vaulter\\Media\\VaulterMediaServiceProvider::boot"
             },
             "via": "module:translations"
         },
@@ -5114,8 +5114,8 @@
             "id": "publish:vaulter-webhooks-translations",
             "owner": "webhooks",
             "source": {
-                "file": "packages/webhooks/src/WebhooksModule.php",
-                "symbol": "Vaulter\\Webhooks\\WebhooksModule::moduleRuntime"
+                "file": "packages/webhooks/src/VaulterWebhooksServiceProvider.php",
+                "symbol": "Vaulter\\Webhooks\\VaulterWebhooksServiceProvider::boot"
             },
             "via": "module:translations"
         }

@@ -9303,6 +9303,50 @@
             "doc_internal": false,
             "doc": [],
             "members": {
+                "method:boundeddetail": {
+                    "kind": "method",
+                    "name": "boundedDetail",
+                    "visibility": "protected",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "value",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "maxChars",
+                            "type": "int",
+                            "default": "512",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "maxJsonBytes",
+                            "type": "int",
+                            "default": "1024",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:docs": {
                     "kind": "method",
                     "name": "docs",

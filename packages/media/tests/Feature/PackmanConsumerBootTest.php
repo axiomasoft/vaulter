@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
 use Packman\Plugins\Data\Contributions\SlotContribution;
+use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Kernel;
@@ -48,4 +49,13 @@ it('boots core and media providers and commits reads and pins real CAS content',
 
     app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin($blob->id, 'consumer.asset', 'asset-1'));
     expect(app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table('blob_references'))->where('blob_id', $blob->id)->count())->toBe(1);
+});
+
+it('resolves both PluginInspector and SchemaOwnership cleanly under aligned manifest owner ids', function (): void {
+    $inspector = app(PluginInspector::class);
+    $ownership = app(SchemaOwnership::class);
+
+    expect($inspector->describe())->not->toBeEmpty()
+        ->and($ownership->ownerOf('outbox'))->toBe('vaulter.core')
+        ->and($ownership->ownerOf('blobs'))->toBe('vaulter.media');
 });

@@ -5938,6 +5938,44 @@
             "uses": [],
             "doc": [],
             "methods": {
+                "boundedDetail": {
+                    "visibility": "protected",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "value",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "maxChars",
+                            "type": "int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "512",
+                            "flags": 0
+                        },
+                        {
+                            "name": "maxJsonBytes",
+                            "type": "int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "1024",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "string",
+                    "doc": []
+                },
                 "docs": {
                     "visibility": "protected",
                     "static": true,

@@ -710,7 +710,9 @@
                         }
                     ],
                     "return": "void",
-                    "attributes": [],
+                    "attributes": [
+                        "Override"
+                    ],
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
@@ -736,7 +738,9 @@
                         }
                     ],
                     "return": "void",
-                    "attributes": [],
+                    "attributes": [
+                        "Override"
+                    ],
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []

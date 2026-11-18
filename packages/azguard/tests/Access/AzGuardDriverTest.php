@@ -10,12 +10,14 @@ use Vaulter\AzGuard\Contracts\AzGuardGuard;
 use Vaulter\AzGuard\Testing\FakeAzGuardGuard;
 use Vaulter\AzGuard\Tests\Access\AccessTestHelpers;
 use Vaulter\AzGuard\Tests\Stubs\HostGuard;
+use Vaulter\AzGuard\Tests\Stubs\RestrictivePermissionsHostProvider;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
@@ -261,4 +263,29 @@ it('uses the actor itself as the guard when the actor implements the AzGuardGuar
 
     expect($driver->override($actor, $scope))->toBeNull()
         ->and($driver->canCreateIn($actor, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1)))->toBeTrue();
+});
+
+it('preserves a host-restricted permission map set before provider registration without merging default abilities back in', function (): void {
+    $fresh = FreshApplication::boot(
+        config: ['vaulter-azguard.guard' => FakeAzGuardGuard::class],
+        before: [RestrictivePermissionsHostProvider::class],
+    );
+    $fresh->instance(
+        FakeAzGuardGuard::class,
+        new FakeAzGuardGuard(workspaceGrants: array_map(
+            static fn (string $permission): array => ['project', 1, $permission],
+            ['documents.view', 'documents.download', 'documents.comment', 'documents.update', 'documents.create', 'documents.delete', 'documents.manage'],
+        )),
+    );
+
+    $map = $fresh->make(AzGuardPermissionMap::class);
+    $driver = $fresh->make(AzGuardPermissionDriver::class);
+    $actor = AccessTestHelpers::user();
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
+
+    expect($fresh['config']->get('vaulter-azguard.permissions'))->toBe(['edit' => 'host.docs.write'])
+        ->and($map->permissionMap())->toBe(['edit' => 'host.docs.write'])
+        ->and($map->permissionFor(Ability::View))->toBeNull()
+        ->and($map->permissionFor(Ability::Manage))->toBeNull()
+        ->and($driver->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull();
 });

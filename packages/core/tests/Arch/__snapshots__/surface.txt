@@ -464,6 +464,7 @@ Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException api since 1.0 final cla
   public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
 
 Vaulter\Exceptions\VaulterException api since 1.0 class extends Packman\Errors\Exceptions\CodedException
+  protected static function boundedDetail(string $value, int $maxChars = 512, int $maxJsonBytes = 1024): string
   protected static function docs(string $anchor): string
   public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
 

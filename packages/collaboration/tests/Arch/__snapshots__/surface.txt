@@ -45,11 +45,11 @@ Vaulter\Collaboration\Configuration\CollaborationOptions api since 1.0 final rea
   public function hubJwtActiveKid(): ?string
   public function hubJwtKeys(): array
   public function hubJwtKeysViolation(): ?string
-  public function hubJwtSigningKey(): ?string
+  public function hubJwtSigningKey(): ?Packman\Config\Data\SecretRef
   public function hubTimestampTolerance(): int
   public function hubTokenTtl(): int
   public function hubUrl(): ?string
-  public function hubWebhookSecret(): ?string
+  public function hubWebhookSecret(): ?Packman\Config\Data\SecretRef
   public function maxStateBytes(): int
   public function mode(): string
   public function parseRoom(string $room): ?Vaulter\Collaboration\Data\RoomRef

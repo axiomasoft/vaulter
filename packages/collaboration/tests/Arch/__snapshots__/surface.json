@@ -733,7 +733,7 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": [
-                        "@return array<string, string>"
+                        "@return array<string, SecretRef>"
                     ]
                 },
                 "method:hubjwtkeysviolation": {
@@ -762,7 +762,7 @@
                     "final": false,
                     "by_ref": false,
                     "params": [],
-                    "return": "null|string",
+                    "return": "Packman\\Config\\Data\\SecretRef|null",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
@@ -828,7 +828,7 @@
                     "final": false,
                     "by_ref": false,
                     "params": [],
-                    "return": "null|string",
+                    "return": "Packman\\Config\\Data\\SecretRef|null",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,

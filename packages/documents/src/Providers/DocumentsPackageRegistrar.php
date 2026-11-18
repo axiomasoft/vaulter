@@ -21,6 +21,7 @@ final class DocumentsPackageRegistrar implements PackageRegistrar
 {
     /** @var list<string> */
     private const array REPLACEMENT_MAPS = [
+        'vaulter-documents.types',
         'vaulter-documents.tiptap.extra_attributes',
         'vaulter-documents.tiptap.url_attributes',
     ];

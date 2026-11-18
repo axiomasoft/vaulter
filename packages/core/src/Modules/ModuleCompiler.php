@@ -402,10 +402,10 @@ final class ModuleCompiler
         $class = $manifest::class;
         try {
             $spec ??= $manifest instanceof WithModuleRuntime ? $manifest->moduleRuntime() : null;
-            $id = ModuleDeclarations::moduleId($manifest->manifest()->id);
+            $id = (new ModuleId(ModuleDeclarations::moduleId($manifest->manifest()->id)))->value;
             $version = $spec->protocolVersion ?? ModuleDeclarations::protocolVersion($manifest->manifest()->version);
             $activation = $spec->activation ?? Activation::Auto;
-            $requires = $spec->requires ?? ModuleDeclarations::requires($manifest);
+            $requires = ModuleDeclarations::requires($manifest, $spec);
         } catch (Throwable $e) {
             $reasons[] = sprintf('%s has an invalid manifest: %s', $class, $e->getMessage());
 

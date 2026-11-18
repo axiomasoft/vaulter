@@ -9,6 +9,7 @@ use Firebase\JWT\Key;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Packman\Attributes\Internal;
+use Packman\Config\Data\SecretRef;
 use Throwable;
 use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Revocation\PermissionVersion;
@@ -124,7 +125,7 @@ final readonly class CollaborationCallResolver
             return false;
         }
 
-        $expected = self::signature(rawBody: $rawBody, secret: $secret, timestamp: $timestamp);
+        $expected = self::signature(rawBody: $rawBody, secret: $secret->reveal(), timestamp: $timestamp);
 
         if (!hash_equals($expected, $presentedSignature)) {
             // Invalid signature for this exact rawBody — do NOT burn the nonce slot,
@@ -164,7 +165,7 @@ final readonly class CollaborationCallResolver
             return null;
         }
 
-        $map = array_map(static fn (string $secret): Key => new Key($secret, 'HS256'), $keys);
+        $map = array_map(static fn (SecretRef $secret): Key => new Key($secret->reveal(), 'HS256'), $keys);
 
         // The application clock, as the tokens are minted by it, and the clock skew both sides tolerate.
         [$leeway, $timestamp] = [JWT::$leeway, JWT::$timestamp];
@@ -236,7 +237,7 @@ final readonly class CollaborationCallResolver
      * Whether the unverified header allows a lookup at all: HS256 only, a string `kid` present in the local key map,
      * and no key reference (jku/x5u/x5c/jwk/crit) that could point outside it. The signature is still checked after.
      *
-     * @param array<string, string> $keys
+     * @param array<string, SecretRef> $keys
      */
     private function headerIsAllowed(string $token, array $keys): bool
     {

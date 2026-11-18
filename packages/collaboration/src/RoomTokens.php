@@ -78,7 +78,7 @@ final readonly class RoomTokens
                 'exp' => $exp,
                 'jti' => $jti,
             ],
-            key: $secret,
+            key: $secret->reveal(),
             alg: 'HS256',
             keyId: $kid,
         );

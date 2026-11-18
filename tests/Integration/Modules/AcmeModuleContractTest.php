@@ -36,6 +36,7 @@ use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Events\Outbox\OutboxStore;
 use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeAudit\AcmeFacetedAuditPlugin;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeConstraints;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeDownloadGuard;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeEventSink;
@@ -467,4 +468,22 @@ it('pauses the consumer of a module switched off without losing its events, and 
     expect(app(OutboxStore::class)->consumer(AcmeOutboxConsumer::ID)['state'])->toBe('active')
         ->and(acmeDelivery($waiting->event_id)['state'])->toBe('done')
         ->and(AcmeOutboxConsumer::$consumed)->toBe([$waiting->event_id]);
+});
+
+it('executes imperative ExtensionPlugin::register() operation middleware from a third-party dotted plugin in OperationRunner', function (): void {
+    AcmeProbe::reset();
+    AcmeMiddleware::$mode = 'pass';
+
+    $kernel = new Kernel(app());
+    $kernel->seal((new ModuleCompiler)->compileOffered([
+        CoreModule::class,
+        MediaModule::class,
+        DriveModule::class,
+        AcmeFacetedAuditPlugin::class,
+    ], []));
+
+    $result = acmeWrite(acmeRunner($kernel), static fn (): string => 'audited');
+
+    expect($result)->toBe('audited')
+        ->and(AcmeProbe::$log)->toContain('middleware:drive.folders.create');
 });

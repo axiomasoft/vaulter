@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Packman\Errors\Data\ErrorDescriptor;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Integration\Tests\TestCase;
 
@@ -66,4 +71,16 @@ it('renders as a 422 invalid_node_name problem with the reason and the name fiel
             'reason' => 'separator',
             'errors' => ['name' => [$exception->getMessage()]],
         ]);
+});
+
+it('bounds ErrorDescriptor details well below 4096 bytes for oversized or control-character node names', function (): void {
+    $longAscii = InvalidNodeNameException::forName(str_repeat('a', 5000), InvalidNodeNameException::TOO_LONG)->errorDescriptor();
+    $longEmoji = InvalidNodeNameException::forName(str_repeat('😀', 2000), InvalidNodeNameException::TOO_LONG)->errorDescriptor();
+    $conflict = NodeNameConflictException::forName(str_repeat("bad\nname", 800), str_repeat('p', 500))->errorDescriptor();
+    $subject = UnenumerableGrantSubjectException::for(new Subject('role', str_repeat("id\t", 2000)), DatabasePermissionDriver::class)->errorDescriptor();
+
+    foreach ([$longAscii, $longEmoji, $conflict, $subject] as $descriptor) {
+        expect($descriptor)->toBeInstanceOf(ErrorDescriptor::class)
+            ->and(strlen(json_encode($descriptor->details, JSON_THROW_ON_ERROR)))->toBeLessThanOrEqual(ErrorDescriptor::MAX_DETAIL_BYTES);
+    }
 });

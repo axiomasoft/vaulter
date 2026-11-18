@@ -70,7 +70,10 @@ final class CollaborationUnavailableException extends VaulterException implement
         return new ErrorDescriptor(
             code: DocumentsErrorCode::CollaborationUnavailable,
             category: ErrorCategory::Conflict,
-            details: array_filter(['reason' => $this->reason, 'type' => $this->type], static fn (?string $value): bool => $value !== null),
+            details: array_filter([
+                'reason' => self::boundedDetail($this->reason, 128),
+                'type' => $this->type === null ? null : self::boundedDetail($this->type, 128),
+            ], static fn (?string $value): bool => $value !== null),
         );
     }
 }

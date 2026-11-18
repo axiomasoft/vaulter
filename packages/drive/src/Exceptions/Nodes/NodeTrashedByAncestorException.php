@@ -66,7 +66,7 @@ final class NodeTrashedByAncestorException extends VaulterException implements P
         return new ErrorDescriptor(
             code: DriveErrorCode::NodeTrashedByAncestor,
             category: ErrorCategory::Conflict,
-            details: ['trash_root_id' => (string) $this->trashRootId],
+            details: ['trash_root_id' => self::boundedDetail((string) $this->trashRootId, 128)],
         );
     }
 }

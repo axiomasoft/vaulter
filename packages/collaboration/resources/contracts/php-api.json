@@ -423,7 +423,7 @@
                     "abstract": false,
                     "by_reference": false,
                     "parameters": [],
-                    "return": "?string",
+                    "return": "?Packman\\Config\\Data\\SecretRef",
                     "doc": []
                 },
                 "hubTimestampTolerance": {
@@ -463,7 +463,7 @@
                     "abstract": false,
                     "by_reference": false,
                     "parameters": [],
-                    "return": "?string",
+                    "return": "?Packman\\Config\\Data\\SecretRef",
                     "doc": []
                 },
                 "maxStateBytes": {

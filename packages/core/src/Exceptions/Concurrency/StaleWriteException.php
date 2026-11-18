@@ -40,7 +40,7 @@ final class StaleWriteException extends VaulterException implements ProblemExcep
         return new ErrorDescriptor(
             code: VaulterErrorCode::StaleWrite,
             category: ErrorCategory::Validation,
-            details: ['aggregate' => $this->aggregate, 'id' => $this->id],
+            details: ['aggregate' => self::boundedDetail($this->aggregate, 128), 'id' => self::boundedDetail($this->id, 128)],
         );
     }
 

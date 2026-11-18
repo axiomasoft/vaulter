@@ -29,10 +29,11 @@ final class NodeNameConflictException extends VaulterException implements Proble
 
     public static function forName(string $name, int|string|null $parentId): self
     {
-        $where = $parentId === null ? 'the storage root' : "parent [{$parentId}]";
+        $safeName = self::boundedDetail($name, 256);
+        $where = $parentId === null ? 'the storage root' : 'parent ['.self::boundedDetail((string) $parentId, 128).']';
 
         return new self(
-            "[Vaulter] A node named [{$name}] already exists under {$where}. ".
+            "[Vaulter] A node named [{$safeName}] already exists under {$where}. ".
             'Fix: pick a different name or move/trash the existing sibling first. '.
             'Docs: '.self::docs('node-name-conflict'),
         );
@@ -63,7 +64,7 @@ final class NodeNameConflictException extends VaulterException implements Proble
             code: DriveErrorCode::NodeNameConflict,
             category: ErrorCategory::Conflict,
             path: '/name',
-            details: ['errors' => [$this->getMessage()]],
+            details: ['errors' => [self::boundedDetail($this->getMessage())]],
         );
     }
 }

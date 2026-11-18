@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
+use Packman\Config\Data\SecretRef;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Data\RoomRef;
@@ -34,15 +35,34 @@ it('reads the shipped defaults of the vaulter-collaboration root', function (): 
 it('reads the key set, the active kid, the issuer and the webhook secret of the hub, leaving malformed entries out', function (): void {
     $config = config_of(['hub' => ['jwt_keys' => ['a' => 'key-a', 'b' => '', 'c' => 5, '' => 'x'], 'jwt_active_kid' => 'a', 'webhook_secret' => 'webhook', 'token_ttl' => 120, 'issuer' => 'https://issuer.test']]);
 
-    expect($config->hubJwtKeys())->toBe(['a' => 'key-a'])
+    expect(array_map(static fn (SecretRef $ref): string => $ref->reveal(), $config->hubJwtKeys()))->toBe(['a' => 'key-a'])
         ->and($config->hubJwtActiveKid())->toBe('a')
-        ->and($config->hubJwtSigningKey())->toBe('key-a')
+        ->and($config->hubJwtSigningKey()?->reveal())->toBe('key-a')
         ->and($config->hubIssuer())->toBe('https://issuer.test')
-        ->and($config->hubWebhookSecret())->toBe('webhook')
+        ->and($config->hubWebhookSecret()?->reveal())->toBe('webhook')
         ->and($config->hubTokenTtl())->toBe(120)
         ->and(config_of(['hub' => ['jwt_keys' => [], 'jwt_active_kid' => '', 'webhook_secret' => 5]])->hubJwtActiveKid())->toBeNull()
         ->and(config_of(['hub' => ['jwt_keys' => [], 'jwt_active_kid' => 'a']])->hubJwtSigningKey())->toBeNull()
         ->and(config_of(['hub' => ['webhook_secret' => 5]])->hubWebhookSecret())->toBeNull();
+});
+
+it('redacts JWT signing keys and webhook secrets from print_r and string casts via SecretRef', function (): void {
+    $rawJwtSecret = 'super-secret-jwt-key-0123456789-abcdef';
+    $rawWebhookSecret = 'super-secret-webhook-hmac-key-987654';
+    $options = config_of([
+        'hub' => [
+            'jwt_keys' => ['primary' => $rawJwtSecret],
+            'jwt_active_kid' => 'primary',
+            'webhook_secret' => $rawWebhookSecret,
+        ],
+    ]);
+
+    $dumped = print_r($options, true);
+
+    expect($dumped)->not->toContain($rawJwtSecret)
+        ->and($dumped)->not->toContain($rawWebhookSecret)
+        ->and((string) $options->hubJwtSigningKey())->toBe('[redacted]')
+        ->and((string) $options->hubWebhookSecret())->toBe('[redacted]');
 });
 
 it('takes the issuer from app.url unless hub.issuer is set, and never from empty values', function (): void {

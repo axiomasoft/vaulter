@@ -78,7 +78,7 @@ final class UnenumerableGrantSubjectException extends VaulterException implement
             code: DriveErrorCode::ValidationFailed,
             category: ErrorCategory::Validation,
             path: '/subject_type',
-            details: ['errors' => [$this->getMessage()]],
+            details: ['errors' => [self::boundedDetail($this->getMessage())]],
         );
     }
 }

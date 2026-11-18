@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
+use Packman\Config\Data\SecretRef;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Collaboration\Configuration\CollaborationOptions;
 use Vaulter\Collaboration\Security\HubUrlInvariant;
@@ -68,7 +69,7 @@ it('refuses an unusable JWT key set at boot in every environment, the old keys i
 it('reads the environment string of kid:secret pairs and refuses a malformed or repeated pair', function (): void {
     $parse = static fn (string $value): CollaborationOptions => collaborationConfig([], 'b', 'webhook', $value);
 
-    expect($parse('a:'.SECRETS_KEY_A.',b:'.SECRETS_KEY_B)->hubJwtKeys())->toBe(['a' => SECRETS_KEY_A, 'b' => SECRETS_KEY_B])
+    expect(array_map(static fn (SecretRef $ref): string => $ref->reveal(), $parse('a:'.SECRETS_KEY_A.',b:'.SECRETS_KEY_B)->hubJwtKeys()))->toBe(['a' => SECRETS_KEY_A, 'b' => SECRETS_KEY_B])
         ->and($parse('a:'.SECRETS_KEY_A.',b:'.SECRETS_KEY_B.',')->hubJwtKeysViolation())->toBeNull();
 
     foreach (['a:'.SECRETS_KEY_A.',b', 'b:'.SECRETS_KEY_B.',b:'.SECRETS_KEY_B, 'b:'.SECRETS_KEY_B.',a: '] as $value) {

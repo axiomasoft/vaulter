@@ -12,7 +12,7 @@ use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\AzGuard\Providers\AzGuardPackageRegistrar;
 
 /**
- * Vaulter AzGuard — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see AzGuardModule}.
+ * Vaulter AzGuard — AzGuard host-role permission driver integration. Registers Packman facets and offers {@see AzGuardModule}.
  */
 #[Api(since: '1.0')]
 final class VaulterAzGuardServiceProvider extends ServiceProvider
@@ -35,7 +35,6 @@ final class VaulterAzGuardServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
         $this->bootRegistrars();
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Support\Arr;
 use Override;
 use Packman\Attributes\Api;
 use Packman\Config\Contracts\OptionsFactory;
+use Packman\Config\Data\SecretRef;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Config\Laravel\ConfigurationValidator;
 use Vaulter\Collaboration\Data\RoomRef;
@@ -27,8 +28,17 @@ final readonly class CollaborationOptions implements OptionsFactory
     /** The hub's total retry deadline for one call (seconds), network time included: no retry arrives later. */
     public const int RETRY_HORIZON_SECONDS = 10;
 
-    /** @param array<array-key, mixed> $values */
-    private function __construct(private array $values, private string $roomPrefix = 'vaulter.documents', private ?string $defaultIssuer = null) {}
+    /**
+     * @param array<array-key, mixed>           $values
+     * @param array<int|string, SecretRef|null> $jwtKeyEntries
+     */
+    private function __construct(
+        private array $values,
+        private ?SecretRef $webhookSecret = null,
+        private array $jwtKeyEntries = [],
+        private string $roomPrefix = 'vaulter.documents',
+        private ?string $defaultIssuer = null,
+    ) {}
 
     /** @param array<array-key, mixed> $config */
     #[Override]
@@ -92,13 +102,15 @@ final readonly class CollaborationOptions implements OptionsFactory
         }
         $validator->failIfAny();
 
-        return new self($config);
+        [$sanitized, $webhookSecret, $jwtKeyEntries] = self::extractSecrets($config);
+
+        return new self($sanitized, $webhookSecret, $jwtKeyEntries);
     }
 
     /** Host context is captured as values; this snapshot never retains the config repository. */
     public function withContext(DocumentsOptions $documents, ?string $appUrl): self
     {
-        return new self($this->values, $documents->broadcast->channelPrefix, $appUrl);
+        return new self($this->values, $this->webhookSecret, $this->jwtKeyEntries, $documents->broadcast->channelPrefix, $appUrl);
     }
 
     public function channelPrefix(): string
@@ -245,11 +257,9 @@ final readonly class CollaborationOptions implements OptionsFactory
         return $this->hubTokenTtl() + self::RETRY_HORIZON_SECONDS + $this->retiredGenerationDays() * 86400;
     }
 
-    public function hubWebhookSecret(): ?string
+    public function hubWebhookSecret(): ?SecretRef
     {
-        $value = $this->value('vaulter-collaboration.hub.webhook_secret');
-
-        return is_string($value) && $value !== '' ? $value : null;
+        return $this->webhookSecret;
     }
 
     /** The audience every room token names: the hub, nothing else. */
@@ -268,13 +278,13 @@ final readonly class CollaborationOptions implements OptionsFactory
      * The local key map `kid => secret` that signs and verifies room tokens; malformed entries are left out here and
      * reported by {@see self::hubJwtKeysViolation()}. The hub never gets it.
      *
-     * @return array<string, string>
+     * @return array<string, SecretRef>
      */
     public function hubJwtKeys(): array
     {
         $keys = [];
-        foreach ($this->jwtKeyEntries() as $kid => $secret) {
-            if ((string) $kid !== '' && is_string($secret) && $secret !== '') {
+        foreach ($this->jwtKeyEntries as $kid => $secret) {
+            if ((string) $kid !== '' && $secret instanceof SecretRef && $secret->isPresent()) {
                 $keys[(string) $kid] = $secret;
             }
         }
@@ -291,7 +301,7 @@ final readonly class CollaborationOptions implements OptionsFactory
     }
 
     /** The secret of the active kid, or null while the key set does not name it. */
-    public function hubJwtSigningKey(): ?string
+    public function hubJwtSigningKey(): ?SecretRef
     {
         $kid = $this->hubJwtActiveKid();
 
@@ -311,35 +321,10 @@ final readonly class CollaborationOptions implements OptionsFactory
         return null;
     }
 
-    /**
-     * The raw entries of hub.jwt_keys: the array itself, or the comma-separated "kid:secret" pairs of the environment
-     * string (a pair without a secret or a repeated kid becomes an invalid entry, reported by the violation).
-     *
-     * @return array<int|string, mixed>
-     */
-    private function jwtKeyEntries(): array
-    {
-        $value = $this->value('vaulter-collaboration.hub.jwt_keys');
-        if (is_array($value)) {
-            return $value;
-        }
-        $entries = [];
-        foreach (is_string($value) ? explode(',', $value) : [] as $pair) {
-            if (trim($pair) === '') {
-                continue;
-            }
-            $parts = explode(':', trim($pair), 2);
-            $kid = $parts[0];
-            $entries[$kid] = array_key_exists($kid, $entries) ? null : ($parts[1] ?? null);
-        }
-
-        return $entries;
-    }
-
     /** Whether any room-token key setting exists at all (a fully unset module is reported by the doctor and the invariant). */
     private function hasJwtKeySettings(): bool
     {
-        return $this->jwtKeyEntries() !== [] || $this->hubJwtActiveKid() !== null;
+        return $this->jwtKeyEntries !== [] || $this->hubJwtActiveKid() !== null;
     }
 
     /**
@@ -349,19 +334,20 @@ final readonly class CollaborationOptions implements OptionsFactory
      */
     public function hubJwtKeysViolation(): ?string
     {
-        $value = $this->jwtKeyEntries();
+        $value = $this->jwtKeyEntries;
         if ($value === []) {
             return 'hub.jwt_keys is empty';
         }
         $webhook = $this->hubWebhookSecret();
         foreach ($value as $kid => $secret) {
-            if ((string) $kid === '' || (string) $kid !== trim((string) $kid) || !is_string($secret)) {
+            if ((string) $kid === '' || (string) $kid !== trim((string) $kid) || !$secret instanceof SecretRef) {
                 return 'hub.jwt_keys has an entry without a clean kid or a string secret';
             }
-            if (strlen($secret) < self::MIN_JWT_KEY_BYTES) {
+            $revealed = $secret->reveal();
+            if (strlen($revealed) < self::MIN_JWT_KEY_BYTES) {
                 return 'hub.jwt_keys has a key shorter than '.self::MIN_JWT_KEY_BYTES.' bytes';
             }
-            if ($webhook !== null && hash_equals($webhook, $secret)) {
+            if ($webhook !== null && hash_equals($webhook->reveal(), $revealed)) {
                 return 'hub.jwt_keys has a key equal to hub.webhook_secret';
             }
         }
@@ -508,5 +494,52 @@ final readonly class CollaborationOptions implements OptionsFactory
     private function value(string $key, mixed $default = null): mixed
     {
         return Arr::get($this->values, substr($key, strlen('vaulter-collaboration.')), $default);
+    }
+
+    /**
+     * Extracts sensitive hub secrets into {@see SecretRef} wrappers so raw strings never remain on `$this->values`.
+     *
+     * @param  array<array-key, mixed>                                                                $config
+     * @return array{0: array<array-key, mixed>, 1: ?SecretRef, 2: array<int|string, SecretRef|null>}
+     */
+    private static function extractSecrets(array $config): array
+    {
+        $sanitized = $config;
+        $rawWebhook = Arr::get($sanitized, 'hub.webhook_secret');
+        $webhookSecret = match (true) {
+            $rawWebhook instanceof SecretRef => $rawWebhook->isPresent() ? $rawWebhook : null,
+            is_string($rawWebhook) && $rawWebhook !== '' => new SecretRef($rawWebhook),
+            default => null,
+        };
+
+        $rawJwtKeys = Arr::get($sanitized, 'hub.jwt_keys');
+        /** @var array<int|string, SecretRef|null> $entries */
+        $entries = [];
+        if (is_array($rawJwtKeys)) {
+            foreach ($rawJwtKeys as $kid => $secret) {
+                $entries[$kid] = match (true) {
+                    $secret instanceof SecretRef => $secret,
+                    is_string($secret) => new SecretRef($secret),
+                    default => null,
+                };
+            }
+        } elseif (is_string($rawJwtKeys)) {
+            foreach (explode(',', $rawJwtKeys) as $pair) {
+                if (trim($pair) === '') {
+                    continue;
+                }
+                $parts = explode(':', trim($pair), 2);
+                $kid = $parts[0];
+                $entries[$kid] = array_key_exists($kid, $entries) || !isset($parts[1])
+                    ? null
+                    : new SecretRef($parts[1]);
+            }
+        }
+
+        if (isset($sanitized['hub']) && is_array($sanitized['hub'])) {
+            unset($sanitized['hub']['webhook_secret'], $sanitized['hub']['jwt_keys']);
+        }
+
+        return [$sanitized, $webhookSecret, $entries];
     }
 }

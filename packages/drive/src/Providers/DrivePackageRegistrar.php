@@ -21,6 +21,8 @@ final class DrivePackageRegistrar implements PackageRegistrar
 {
     /** @var list<string> Associative maps where an explicit host configuration replaces defaults wholesale. */
     private const array REPLACEMENT_MAPS = [
+        'vaulter-drive.handlers',
+        'vaulter-drive.profiles.providers',
         'vaulter-drive.access.permission_drivers',
         'vaulter-drive.access.gate.abilities',
         'vaulter-drive.access.spatie.permissions',

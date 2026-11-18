@@ -56,7 +56,7 @@ final class DocumentTypeUnavailableException extends VaulterException implements
         return new ErrorDescriptor(
             code: DocumentsErrorCode::DocumentTypeUnavailable,
             category: ErrorCategory::Conflict,
-            details: ['type' => $this->type],
+            details: ['type' => self::boundedDetail($this->type, 128)],
         );
     }
 }

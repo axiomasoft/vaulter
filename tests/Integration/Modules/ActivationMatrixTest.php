@@ -12,13 +12,19 @@ use Illuminate\Support\Facades\Facade;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Errors\Contracts\ProblemDefinitionProvider;
+use Packman\Plugins\Contracts\Registry\PluginInspector;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use Vaulter\AzGuard\VaulterAzGuardServiceProvider;
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
+use Vaulter\Filament\VaulterFilamentServiceProvider;
 use Vaulter\Http\Middleware\EnsureModuleActive;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeAudit\AcmeFacetedAuditServiceProvider;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeCommand;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeListener;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeMiddleware;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmePingController;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmePinged;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeProbe;
@@ -33,8 +39,10 @@ use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Operations\ModuleReadiness;
+use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
@@ -435,3 +443,39 @@ it('activates nothing at all while a module the top of the set requires is switc
     expect($console->call('vaulter:modules'))->toBe(1)
         ->and($console->output())->toContain(sprintf('module "%s" is active but requires "%s", which is not active', $set->top, $set->requiredOff));
 })->with(fn (): array => AppSets::dependentDataset());
+
+it('executes imperative ExtensionPlugin::register() middleware from a third-party dotted plugin alongside ExtensionRegistrar', function (): void {
+    AcmeProbe::reset();
+    AcmeMiddleware::$mode = 'pass';
+
+    $app = FreshApplication::boot(
+        after: [AcmeFacetedAuditServiceProvider::class],
+    );
+
+    $kernel = $app->make(Kernel::class);
+    $inspector = $app->make(PluginInspector::class);
+
+    expect($kernel->isValid())->toBeTrue()
+        ->and($kernel->isActive('acme-audit'))->toBeTrue()
+        ->and(array_map(static fn ($plugin): string => $plugin->id, $inspector->describe()))->toContain('vaulter.core', 'acme.audit');
+
+    $middlewares = $kernel->extensions()->resolve(OperationMiddleware::class);
+    expect(array_map(static fn (object $m): string => $m::class, $middlewares))->toContain(AcmeMiddleware::class);
+});
+
+it('keeps vaulter-media and optional package translation namespaces isolated when all providers boot together', function (): void {
+    $app = FreshApplication::boot(
+        after: [
+            VaulterCollaborationServiceProvider::class,
+            VaulterWebhooksServiceProvider::class,
+            VaulterAzGuardServiceProvider::class,
+            VaulterFilamentServiceProvider::class,
+        ],
+    );
+
+    $translator = $app->make('translator');
+
+    expect($translator->get('vaulter-media::problems.blob_unavailable.title'))->not->toBe('vaulter-media::problems.blob_unavailable.title')
+        ->and($translator->get('vaulter-collaboration::problems.collaboration_draining.title'))->toBe('Collaboration draining')
+        ->and($translator->get('vaulter-webhooks::problems.invalid_webhook_signature.title'))->toBe('Invalid webhook signature');
+});

@@ -12,7 +12,7 @@ use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\Filament\Providers\FilamentPackageRegistrar;
 
 /**
- * Vaulter Filament — the content-addressed file/blob layer (CAS). Registers Packman facets and offers {@see FilamentModule}.
+ * Vaulter Filament — Filament panel resources and surface integration. Registers Packman facets and offers {@see FilamentModule}.
  */
 #[Api(since: '1.0')]
 final class VaulterFilamentServiceProvider extends ServiceProvider
@@ -35,7 +35,6 @@ final class VaulterFilamentServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-media');
         $this->bootRegistrars();
     }
 }

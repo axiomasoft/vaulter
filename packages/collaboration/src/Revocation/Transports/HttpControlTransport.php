@@ -35,7 +35,10 @@ final readonly class HttpControlTransport implements ControlTransport
 
     public function publish(string $message): void
     {
-        $secret = $this->config->hubWebhookSecret() ?? throw new RuntimeException('the hub webhook secret that signs control messages is not set');
+        $secret = $this->config->hubWebhookSecret();
+        if ($secret === null) {
+            throw new RuntimeException('the hub webhook secret that signs control messages is not set');
+        }
         $urls = $this->config->controlHttpUrls();
         if ($urls === []) {
             throw new RuntimeException('vaulter-collaboration.control.http.urls names no hub');
@@ -48,7 +51,7 @@ final readonly class HttpControlTransport implements ControlTransport
                 $this->http->timeout($this->config->controlHttpTimeout())
                     ->withHeaders([
                         CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,
-                        CollaborationCallResolver::SIGNATURE_HEADER => CollaborationCallResolver::signature(rawBody: $message, secret: $secret, timestamp: $timestamp),
+                        CollaborationCallResolver::SIGNATURE_HEADER => CollaborationCallResolver::signature(rawBody: $message, secret: $secret->reveal(), timestamp: $timestamp),
                     ])
                     ->withBody($message, 'application/json')
                     ->post($url.self::PATH)

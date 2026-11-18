@@ -63,7 +63,7 @@ final class StaleDocumentStateException extends VaulterException implements Prob
         return new ErrorDescriptor(
             code: DocumentsErrorCode::DocumentStateMismatch,
             category: ErrorCategory::Validation,
-            details: $this->nodeId === null ? [] : ['node_id' => $this->nodeId],
+            details: $this->nodeId === null ? [] : ['node_id' => self::boundedDetail($this->nodeId, 128)],
         );
     }
 }

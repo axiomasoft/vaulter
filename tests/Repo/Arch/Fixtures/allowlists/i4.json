@@ -12,6 +12,17 @@
             "view": "current"
         },
         {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/azguard/src/Providers/AzGuardPackageRegistrar.php",
+            "kind": "probe",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never",
+            "symbol": "Vaulter\\AzGuard\\Providers\\AzGuardPackageRegistrar::register",
+            "target": "'config'",
+            "view": "current"
+        },
+        {
             "count": 1,
             "file": "packages/core/src/Configuration/CompiledOptionsCache.php",
             "kind": "probe",

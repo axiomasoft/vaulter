@@ -62,7 +62,11 @@ final class InvalidNodeNameException extends VaulterException implements Problem
 
     public static function forName(string $name, string $reason): self
     {
-        $printable = json_encode($name, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $preview = mb_scrub($name, 'UTF-8');
+        if (mb_strlen($preview, 'UTF-8') > 256) {
+            $preview = mb_substr($preview, 0, 256, 'UTF-8').'…';
+        }
+        $printable = json_encode($preview, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         $why = self::EXPLANATIONS[$reason] ?? throw new InvalidArgumentException('Unknown node name reason '.$reason.'.');
 
         return new self(
@@ -98,7 +102,7 @@ final class InvalidNodeNameException extends VaulterException implements Problem
             code: DriveErrorCode::InvalidNodeName,
             category: ErrorCategory::Validation,
             path: '/name',
-            details: ['reason' => $this->reason, 'errors' => [$this->getMessage()]],
+            details: ['reason' => self::boundedDetail($this->reason, 64), 'errors' => [self::boundedDetail($this->getMessage())]],
         );
     }
 }

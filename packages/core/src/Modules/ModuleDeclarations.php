@@ -10,6 +10,10 @@ use Packman\Extensions\Contracts\Composition\WithSlots;
 use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 use Packman\Extensions\Contracts\Persistence\WithSchema;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Internal\Graph\PluginDeclarations;
+use Packman\Plugins\Laravel\PluginRegistrar;
+use Vaulter\CoreModule;
 
 /**
  * Translates {@see ExtensionPlugin} declarations and optional {@see PluginModuleSpec} metadata into {@see ModuleBuilder}
@@ -20,7 +24,9 @@ final class ModuleDeclarations
 {
     public static function moduleId(string $pluginId): string
     {
-        return str_starts_with($pluginId, 'vaulter.') ? substr($pluginId, strlen('vaulter.')) : $pluginId;
+        $stripped = str_starts_with($pluginId, 'vaulter.') ? substr($pluginId, strlen('vaulter.')) : $pluginId;
+
+        return str_replace('.', '-', $stripped);
     }
 
     public static function protocolVersion(string $semver): string
@@ -33,11 +39,19 @@ final class ModuleDeclarations
     }
 
     /** @return array<string, string> module id => constraint */
-    public static function requires(ExtensionPlugin $plugin): array
+    public static function requires(ExtensionPlugin $plugin, ?PluginModuleSpec $spec = null): array
     {
-        $runtime = $plugin instanceof WithModuleRuntime ? $plugin->moduleRuntime() : null;
+        $runtime = $spec ?? ($plugin instanceof WithModuleRuntime ? $plugin->moduleRuntime() : null);
         if ($runtime?->requires !== null) {
-            return $runtime->requires;
+            $mapped = [];
+            foreach ($runtime->requires as $dependency => $constraint) {
+                $key = preg_match(PluginManifest::ID_PATTERN, $dependency) === 1
+                    ? self::moduleId($dependency)
+                    : $dependency;
+                $mapped[$key] = $constraint;
+            }
+
+            return $mapped;
         }
         $requires = [];
         foreach ($plugin->manifest()->requires as $dependency) {
@@ -79,34 +93,91 @@ final class ModuleDeclarations
             }
         }
 
+        $facetCapDefs = [];
+        $facetCapProviders = [];
         if ($plugin instanceof WithCapabilities) {
             foreach ($plugin->definedCapabilities() as $contract => $cardinality) {
-                $builder->defineCapability($contract, Cardinality::from($cardinality));
+                $card = Cardinality::from($cardinality);
+                $builder->defineCapability($contract, $card);
+                $facetCapDefs[$contract.'|'.$card->value] = true;
             }
             foreach ($plugin->providedCapabilities() as $contract => $provider) {
                 if (is_string($provider)) {
                     $builder->provides($contract, $provider);
+                    $facetCapProviders[$contract.'|class|'.$provider] = true;
                 } else {
-                    $builder->providesFromConfig($contract, $provider['config'], $provider['default'] ?? null);
+                    $default = $provider['default'] ?? null;
+                    $builder->providesFromConfig($contract, $provider['config'], $default);
+                    $facetCapProviders[$contract.'|config|'.$provider['config'].'|'.($default ?? '')] = true;
                 }
             }
         }
 
+        $facetSlotDefs = [];
+        $facetSlotContribs = [];
         if ($plugin instanceof WithSlots) {
             foreach ($plugin->definedSlots() as $contract => $definition) {
-                $builder->defineSlot(
-                    $contract,
-                    SlotKind::from($definition['kind']),
-                    Cardinality::from($definition['cardinality'] ?? Cardinality::Many->value),
-                );
+                $kind = SlotKind::from($definition['kind']);
+                $card = Cardinality::from($definition['cardinality'] ?? Cardinality::Many->value);
+                $builder->defineSlot($contract, $kind, $card);
+                $facetSlotDefs[$contract.'|'.$kind->value.'|'.$card->value] = true;
             }
             foreach ($plugin->slotContributions() as $contribution) {
+                $priority = $contribution['priority'] ?? 0;
+                $key = $contribution['key'] ?? null;
                 $builder->slot(
                     $contribution['slot'],
                     $contribution['implementation'],
                     $contribution['id'],
-                    $contribution['priority'] ?? 0,
-                    $contribution['key'] ?? null,
+                    $priority,
+                    $key,
+                );
+                $facetSlotContribs[$contribution['slot'].'|'.$contribution['id'].'|'.$contribution['implementation'].'|'.$priority.'|'.($key ?? '')] = true;
+            }
+        }
+
+        $pluginId = $plugin instanceof CoreModule ? 'vaulter.core' : $plugin->manifest()->id;
+        $declarations = new PluginDeclarations;
+        $plugin->register(new PluginRegistrar($declarations, $pluginId));
+        $declarations->seal();
+
+        foreach ($declarations->capabilityDefinitions() as $capDef) {
+            $card = Cardinality::from($capDef->cardinality->value);
+            $sig = $capDef->contract.'|'.$card->value;
+            if (!isset($facetCapDefs[$sig])) {
+                $builder->defineCapability($capDef->contract, $card);
+            }
+        }
+        foreach ($declarations->capabilityProviders() as $capProvider) {
+            if ($capProvider->configKey !== null) {
+                $sig = $capProvider->contract.'|config|'.$capProvider->configKey.'|'.($capProvider->default ?? '');
+                if (!isset($facetCapProviders[$sig])) {
+                    $builder->providesFromConfig($capProvider->contract, $capProvider->configKey, $capProvider->default);
+                }
+            } elseif ($capProvider->implementation !== null) {
+                $sig = $capProvider->contract.'|class|'.$capProvider->implementation;
+                if (!isset($facetCapProviders[$sig])) {
+                    $builder->provides($capProvider->contract, $capProvider->implementation);
+                }
+            }
+        }
+        foreach ($declarations->slotDefinitions() as $slotDef) {
+            $kind = SlotKind::from($slotDef->kind->value);
+            $card = Cardinality::from($slotDef->cardinality->value);
+            $sig = $slotDef->contract.'|'.$kind->value.'|'.$card->value;
+            if (!isset($facetSlotDefs[$sig])) {
+                $builder->defineSlot($slotDef->contract, $kind, $card);
+            }
+        }
+        foreach ($declarations->slotContributions() as $slotContrib) {
+            $sig = $slotContrib->slot.'|'.$slotContrib->id.'|'.$slotContrib->implementation.'|'.$slotContrib->priority.'|'.($slotContrib->key ?? '');
+            if (!isset($facetSlotContribs[$sig])) {
+                $builder->slot(
+                    $slotContrib->slot,
+                    $slotContrib->implementation,
+                    $slotContrib->id,
+                    $slotContrib->priority,
+                    $slotContrib->key,
                 );
             }
         }
