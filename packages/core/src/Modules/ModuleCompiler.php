@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Closure;
 use Packman\Attributes\Internal;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use ReflectionEnum;
@@ -42,9 +43,10 @@ final class ModuleCompiler
      * Instantiates the offered manifest classes, then compiles them.
      *
      * @param list<string>                                           $manifests   class-strings offered by the providers
+     * @param (Closure(string): bool)|null                           $allows
      * @param array<class-string<ExtensionPlugin>, PluginModuleSpec> $pluginSpecs
      */
-    public function compileOffered(array $manifests, mixed $overrides, array $pluginSpecs = []): CompiledModules|InvalidModuleGraph
+    public function compileOffered(array $manifests, mixed $overrides, array $pluginSpecs = [], ?Closure $allows = null): CompiledModules|InvalidModuleGraph
     {
         $reasons = [];
         $modules = [];
@@ -66,7 +68,7 @@ final class ModuleCompiler
             $overrides = [];
         }
 
-        $result = $this->compile($modules, $overrides, $pluginSpecs);
+        $result = $this->compile($modules, $overrides, $pluginSpecs, $allows);
         if ($reasons === []) {
             return $result;
         }
@@ -77,9 +79,10 @@ final class ModuleCompiler
     /**
      * @param list<ExtensionPlugin>                                  $modules
      * @param array<mixed>                                           $overrides   `vaulter.modules`: module id => bool
+     * @param (Closure(string): bool)|null                           $allows
      * @param array<class-string<ExtensionPlugin>, PluginModuleSpec> $pluginSpecs
      */
-    public function compile(array $modules, array $overrides, array $pluginSpecs = []): CompiledModules|InvalidModuleGraph
+    public function compile(array $modules, array $overrides, array $pluginSpecs = [], ?Closure $allows = null): CompiledModules|InvalidModuleGraph
     {
         $reasons = [];
 
@@ -134,6 +137,9 @@ final class ModuleCompiler
         // 2. Activation and the requires graph of the active modules.
         $active = [];
         foreach ($known as $id => $module) {
+            if ($allows !== null && !$allows($module['manifest']->manifest()->id)) {
+                $override[$id] = false;
+            }
             $active[$id] = $override[$id] ?? ($module['activation'] === Activation::Auto);
         }
         foreach ($known as $id => $module) {

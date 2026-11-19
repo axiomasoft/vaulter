@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
@@ -23,7 +24,31 @@ final class ModuleCatalog
     /** @var array<class-string<ExtensionPlugin>, PluginModuleSpec> */
     private array $pluginSpecs = [];
 
+    /** @var array<class-string<ExtensionPlugin>, Closure(): void> */
+    private array $activationCallbacks = [];
+
     private bool $sealed = false;
+
+    /**
+     * @param class-string<ExtensionPlugin> $plugin
+     * @param Closure(): void               $callback
+     */
+    public function onActivation(string $plugin, Closure $callback): void
+    {
+        if ($this->sealed) {
+            throw RegistryFrozenException::forRegistry('module');
+        }
+        $this->activationCallbacks[$plugin] = $callback;
+    }
+
+    public function activateFacets(CompiledModules $compiled): void
+    {
+        foreach ($compiled->modules as $module) {
+            if ($module->active && isset($this->activationCallbacks[$module->manifest])) {
+                ($this->activationCallbacks[$module->manifest])();
+            }
+        }
+    }
 
     /** The catalogue of the application; any provider may be the first to offer, so it binds itself. */
     public static function of(Container $app): self

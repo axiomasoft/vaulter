@@ -43,14 +43,6 @@ use Vaulter\Security\ProductionInvariants;
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class CoreKernelRegistrar implements PackageRegistrar
 {
-    /** @var list<string> */
-    private const array REPLACEMENT_MAPS = [
-        'vaulter.ids.strategies',
-        'vaulter.routes.middleware.authenticated',
-        'vaulter.routes.middleware.public',
-        'vaulter.routes.middleware.hub',
-    ];
-
     #[Override]
     public function register(Application $app): void
     {
@@ -66,8 +58,13 @@ final class CoreKernelRegistrar implements PackageRegistrar
             $catalog->seal();
 
             $kernel = $app->make(Kernel::class);
-            $overrides = $app->bound(Repository::class) ? $app->make(Repository::class)->get('vaulter.modules', []) : [];
-            $kernel->seal((new ModuleCompiler)->compileOffered($catalog->offered(), $overrides, $catalog->pluginSpecs()));
+            $config = $app->make(Repository::class);
+            $overrides = $config->get('vaulter.modules', []);
+            $disabled = $config->get('packman.disabled_plugins', []);
+            $gate = ExtensionRegistrar::activationGateFor($app, except: VaulterPluginActivationGate::class);
+            $kernel->seal((new ModuleCompiler)->compileOffered($catalog->offered(), $overrides, $catalog->pluginSpecs(),
+                static fn (string $id): bool => (!is_array($disabled) || !in_array($id, $disabled, true)) && ($gate?->isEnabled($id) ?? true),
+            ));
 
             $applier = $app->make(ModuleApplier::class);
             $applier->config('vaulter', dirname(__DIR__, 2).'/config/vaulter.php');
@@ -82,6 +79,7 @@ final class CoreKernelRegistrar implements PackageRegistrar
                 return;
             }
 
+            $catalog->activateFacets($kernel->compiled());
             $applier->register($kernel->compiled());
         });
 
@@ -132,17 +130,6 @@ final class CoreKernelRegistrar implements PackageRegistrar
 
     private function registerPackmanFacets(Application $app): void
     {
-        // Preserve host replacement maps across ExtensionFacetRegistrar's array_replace_recursive merge.
-        $preserved = [];
-        $config = $app->bound(Repository::class) ? $app->make(Repository::class) : null;
-        if ($config !== null) {
-            foreach (self::REPLACEMENT_MAPS as $key) {
-                if ($config->has($key)) {
-                    $preserved[$key] = $config->get($key);
-                }
-            }
-        }
-
         $app->register(PackmanServiceProvider::class);
         $app->register(PluginsServiceProvider::class);
         $app->register(SchemaServiceProvider::class);
@@ -150,11 +137,6 @@ final class CoreKernelRegistrar implements PackageRegistrar
 
         VaulterExtensionFacets::register($app, CoreModule::class, dirname(__DIR__, 2).'/composer.json');
 
-        if ($config !== null) {
-            foreach ($preserved as $key => $value) {
-                $config->set($key, $value);
-            }
-        }
     }
 
     private function registerDiagnosticCommands(Application $app): void

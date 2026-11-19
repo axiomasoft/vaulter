@@ -33,6 +33,7 @@ use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeProvider;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeService;
 use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSet;
 use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSets;
+use Vaulter\Integration\Tests\Modules\Fixtures\Apps\VetoDriveProvider;
 use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
@@ -488,3 +489,24 @@ it('keeps vaulter-media and optional package translation namespaces isolated whe
         ->and($translator->get('vaulter-collaboration::problems.collaboration_draining.title'))->toBe('Collaboration draining')
         ->and($translator->get('vaulter-webhooks::problems.invalid_webhook_signature.title'))->toBe('Invalid webhook signature');
 });
+
+it('applies a host veto to the domain graph and keeps installed schema under host control', function (bool $useGate): void {
+    $config = [
+        'vaulter.modules.drive' => true,
+        'vaulter-drive.access.permission_driver' => 'invalid-when-active',
+        'packman.schema.auto_load_migrations' => false,
+    ];
+    if (!$useGate) {
+        $config['packman.disabled_plugins'] = ['vaulter.drive'];
+    }
+    $app = FreshApplication::boot($config, after: $useGate ? [VetoDriveProvider::class] : []);
+
+    expect($app->make(Kernel::class)->isValid())->toBeTrue()
+        ->and($app->make(Kernel::class)->isActive('drive'))->toBeFalse()
+        ->and($app->make(PluginInspector::class)->disabledIds())->toContain('vaulter.drive')
+        ->and(matrixRoutes($app, 'drive'))->toBe([])
+        ->and($app->make(ConsoleKernel::class)->all())->not->toHaveKey('vaulter:trash:purge')
+        ->and($app['config']->has('vaulter-drive.handlers'))->toBeFalse()
+        ->and($app->make('migrator')->paths())->not->toContain(realpath(__DIR__.'/../../../packages/drive/database/migrations'))
+        ->and($app->make(Kernel::class)->compiled()->module('drive')?->schemaPaths)->not->toBeEmpty();
+})->with([false, true]);

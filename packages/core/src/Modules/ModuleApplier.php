@@ -146,6 +146,9 @@ final class ModuleApplier
     /** Registers `$path` with the migrator: a module's schema is installed whether the module is active or not. */
     public function schema(string $path): void
     {
+        if ($this->app->make(Repository::class)->get('packman.schema.auto_load_migrations', true) !== true) {
+            return;
+        }
         $this->afterResolving('migrator', static function (object $migrator) use ($path): void {
             if (method_exists($migrator, 'path')) {
                 $migrator->path($path);

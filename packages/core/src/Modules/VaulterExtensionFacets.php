@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Packman\Attributes\Internal;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 use Packman\Extensions\Laravel\ExtensionFacetRegistrar;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Laravel\ExtensionRegistrar;
@@ -30,11 +32,22 @@ final class VaulterExtensionFacets
         }
 
         ExtensionRegistrar::builtInFor($app, $plugin);
-        $profile = ExtensionFacetRegistrar::register($app, $instance, $composerManifest);
+        // Installed schemas remain available when a module is temporarily disabled.
         SchemaExtensions::register($app, $instance, $ownerId);
+        ModuleCatalog::of($app)->onActivation($plugin, static function () use ($app, $instance, $composerManifest): void {
+            $config = $app->make(Repository::class);
+            $root = $instance instanceof WithConfiguration ? $instance->configRoot() : '';
+            $hadRoot = $root !== '' && $config->has($root);
+            $host = $hadRoot ? $config->get($root) : null;
+            $profile = ExtensionFacetRegistrar::register($app, $instance, $composerManifest);
+            if ($hadRoot) {
+                // ModuleApplier merges shipped defaults using Vaulter's replacement-map semantics.
+                $config->set($root, $host);
+            }
 
-        foreach ($profile->healthChecks as $check) {
-            $app->bind($check);
-        }
+            foreach ($profile->healthChecks as $check) {
+                $app->bind($check);
+            }
+        });
     }
 }
