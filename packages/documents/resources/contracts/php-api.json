@@ -9264,6 +9264,7 @@
             ],
             "implements": [],
             "uses": [
+                "Vaulter\\Modules\\OffersModules",
                 "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
             ],
             "doc": [],

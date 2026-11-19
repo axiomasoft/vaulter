@@ -20,7 +20,7 @@ use PhpParser\ParserFactory;
 const PROVIDER_ALLOWED_CALLS = [
     'register' => ['offerModule', 'registerRegistrars'],
     'packageRegistered' => ['offerModule'],
-    'boot' => ['bootRegistrars', 'loadTranslationsFrom'],
+    'boot' => ['bootRegistrars', 'loadTranslationsFrom', 'markModuleProviderBooted'],
     'packageBooted' => [],
 ];
 
@@ -84,6 +84,14 @@ function providerDeclareOnlyViolations(string $file): array
         }
         $allowed = [...PROVIDER_ALLOWED_CALLS[$name], ...($isCore ? CORE_PROVIDER_KERNEL_CALLS[$name] ?? [] : [])];
         foreach ($method->stmts ?? [] as $stmt) {
+            if ($stmt instanceof Stmt\If_ && $stmt->cond instanceof Expr\MethodCall
+                && $stmt->cond->var instanceof Expr\Variable && $stmt->cond->var->name === 'this'
+                && $stmt->cond->name instanceof Node\Identifier
+                && $stmt->cond->name->toString() === (['register' => 'moduleProviderRegistered', 'boot' => 'moduleProviderBooted'][$name] ?? null)
+                && $stmt->cond->args === [] && $stmt->elseifs === [] && $stmt->else === null
+                && count($stmt->stmts) === 1 && $stmt->stmts[0] instanceof Stmt\Return_ && $stmt->stmts[0]->expr === null) {
+                continue;
+            }
             $call = $stmt instanceof Stmt\Expression ? $stmt->expr : null;
             $ok = $call instanceof Expr\MethodCall
                 && $call->var instanceof Expr\Variable && $call->var->name === 'this'

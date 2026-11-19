@@ -10,6 +10,7 @@ use Packman\Attributes\Api;
 use Packman\Foundation\Concerns\RegistersPackageRegistrars;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\AzGuard\Providers\AzGuardPackageRegistrar;
+use Vaulter\Modules\OffersModules;
 
 /**
  * Vaulter AzGuard — AzGuard host-role permission driver integration. Registers Packman facets and offers {@see AzGuardModule}.
@@ -17,6 +18,7 @@ use Vaulter\AzGuard\Providers\AzGuardPackageRegistrar;
 #[Api(since: '1.0')]
 final class VaulterAzGuardServiceProvider extends ServiceProvider
 {
+    use OffersModules;
     use RegistersPackageRegistrars {
         RegistersPackageRegistrars::register as protected registerRegistrars;
         RegistersPackageRegistrars::boot as protected bootRegistrars;
@@ -30,11 +32,20 @@ final class VaulterAzGuardServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        if ($this->moduleProviderRegistered()) {
+            return;
+        }
+
         $this->registerRegistrars();
     }
 
     public function boot(): void
     {
+        if ($this->moduleProviderBooted()) {
+            return;
+        }
+
         $this->bootRegistrars();
+        $this->markModuleProviderBooted();
     }
 }

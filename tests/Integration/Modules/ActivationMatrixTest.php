@@ -9,6 +9,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\ServiceProvider;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Errors\Contracts\ProblemDefinitionProvider;
@@ -36,6 +37,7 @@ use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSets;
 use Vaulter\Integration\Tests\Modules\Fixtures\Apps\VetoDriveProvider;
 use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
+use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Modules\ModuleId;
@@ -44,6 +46,7 @@ use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\VaulterServiceProvider;
 use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
@@ -510,3 +513,35 @@ it('applies a host veto to the domain graph and keeps installed schema under hos
         ->and($app->make('migrator')->paths())->not->toContain(realpath(__DIR__.'/../../../packages/drive/database/migrations'))
         ->and($app->make(Kernel::class)->compiled()->module('drive')?->schemaPaths)->not->toBeEmpty();
 })->with([false, true]);
+
+it('repeats a discovered provider without reopening its catalog or remounting its runtime', function (bool $active): void {
+    $app = matrixApp(['vaulter.modules.drive' => $active, 'vaulter.modules.media' => $active]);
+    $kernel = $app->make(Kernel::class);
+    $before = matrixSurface($app);
+
+    foreach ([VaulterServiceProvider::class, VaulterMediaServiceProvider::class] as $provider) {
+        $first = $app->getProvider($provider);
+        expect($app->register($provider))->toBe($first);
+        $app->register($provider, force: true);
+    }
+
+    expect($app->make(Kernel::class))->toBe($kernel)
+        ->and($kernel->isActive('media'))->toBe($active)
+        ->and(matrixSurface($app))->toBe($before);
+})->with([true, false]);
+
+it('boots the replacement provider once when the host repeats registration before boot', function (): void {
+    $first = matrixApp();
+    $repeat = new class($first) extends ServiceProvider
+    {
+        public function register(): void
+        {
+            $this->app->register(VaulterServiceProvider::class, force: true);
+            $this->app->register(VaulterMediaServiceProvider::class, force: true);
+        }
+    };
+    $second = FreshApplication::boot(after: [AcmeProvider::class, $repeat::class]);
+
+    expect($second->make(Kernel::class)->isActive('media'))->toBeTrue()
+        ->and(matrixSurface($second))->toBe(matrixSurface($first));
+});

@@ -9,6 +9,7 @@ use Override;
 use Packman\Attributes\Api;
 use Packman\Foundation\Concerns\RegistersPackageRegistrars;
 use Packman\Foundation\Contracts\PackageRegistrar;
+use Vaulter\Modules\OffersModules;
 use Vaulter\Webhooks\Providers\WebhooksPackageRegistrar;
 
 /**
@@ -17,6 +18,7 @@ use Vaulter\Webhooks\Providers\WebhooksPackageRegistrar;
 #[Api(since: '1.0')]
 final class VaulterWebhooksServiceProvider extends ServiceProvider
 {
+    use OffersModules;
     use RegistersPackageRegistrars {
         RegistersPackageRegistrars::register as protected registerRegistrars;
         RegistersPackageRegistrars::boot as protected bootRegistrars;
@@ -30,12 +32,21 @@ final class VaulterWebhooksServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        if ($this->moduleProviderRegistered()) {
+            return;
+        }
+
         $this->registerRegistrars();
     }
 
     public function boot(): void
     {
+        if ($this->moduleProviderBooted()) {
+            return;
+        }
+
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter-webhooks');
         $this->bootRegistrars();
+        $this->markModuleProviderBooted();
     }
 }

@@ -32,12 +32,20 @@ final class VaulterServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        if ($this->moduleProviderRegistered()) {
+            return;
+        }
+
         $this->offerModule(CoreModule::class);
         $this->registerRegistrars();
     }
 
     public function boot(): void
     {
+        if ($this->moduleProviderBooted()) {
+            return;
+        }
+
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'vaulter');
         $this->bootRegistrars();
         $this->app->make(CoreKernelRegistrar::class)->bootWithPublisher(
@@ -46,5 +54,6 @@ final class VaulterServiceProvider extends ServiceProvider
                 $this->publishes($paths, $tag);
             },
         );
+        $this->markModuleProviderBooted();
     }
 }

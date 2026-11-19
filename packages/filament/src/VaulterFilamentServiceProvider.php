@@ -10,6 +10,7 @@ use Packman\Attributes\Api;
 use Packman\Foundation\Concerns\RegistersPackageRegistrars;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Vaulter\Filament\Providers\FilamentPackageRegistrar;
+use Vaulter\Modules\OffersModules;
 
 /**
  * Vaulter Filament — Filament panel resources and surface integration. Registers Packman facets and offers {@see FilamentModule}.
@@ -17,6 +18,7 @@ use Vaulter\Filament\Providers\FilamentPackageRegistrar;
 #[Api(since: '1.0')]
 final class VaulterFilamentServiceProvider extends ServiceProvider
 {
+    use OffersModules;
     use RegistersPackageRegistrars {
         RegistersPackageRegistrars::register as protected registerRegistrars;
         RegistersPackageRegistrars::boot as protected bootRegistrars;
@@ -30,11 +32,20 @@ final class VaulterFilamentServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        if ($this->moduleProviderRegistered()) {
+            return;
+        }
+
         $this->registerRegistrars();
     }
 
     public function boot(): void
     {
+        if ($this->moduleProviderBooted()) {
+            return;
+        }
+
         $this->bootRegistrars();
+        $this->markModuleProviderBooted();
     }
 }
