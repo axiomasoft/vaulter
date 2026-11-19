@@ -11,6 +11,8 @@ This file covers the public channel; the commercial collaboration package keeps 
 
 ### Packman migration
 
+- Register Drive configuration diagnostics through Packman's supported SPI and give the shared registry a unique vaulter.config.valid check without changing local vaulter:doctor identifiers.
+
 - Complete native extensions, immutable closed-schema options, canonical errors, diagnostics and schema registration across all PHP packages.
 - Move the AzGuard adapter to `axiomasoft/azguard` 2.x and Filament 5 resources to shared Packman authorization.
 - Retire the temporary module bridge; preserve `OffersModules` and publish the native runtime registration SPI.

@@ -11,7 +11,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use LogicException;
 use Packman\Attributes\Internal;
-use Packman\Doctor\Checks\ConfigValidCheck as PackmanConfigValidCheck;
+use Packman\Config\Laravel\ConfigSectionRegistration;
 use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
@@ -105,14 +105,15 @@ final class BindingsRegistrar implements ModuleBindings
             UploadSessionManager::class,
             static fn (): UploadSessionManager => $app->build(UploadSessionManager::class),
         ));
-        $app->bind('vaulter.config_validator.drive', static fn (Container $container): Closure => static function () use ($app, $container): void {
-            $options = self::buildOptions($container);
-            $validator = new DriveOptionsValidator($container->make(Repository::class));
+        $validate = static function () use ($app): void {
+            $options = self::buildOptions($app);
+            $validator = new DriveOptionsValidator($app->make(Repository::class));
             $validator->validate($options, $app);
             $validator->validateScanWork($options);
-        });
+        };
+        $app->instance('vaulter.config_validator.drive', $validate);
         $app->tag('vaulter.config_validator.drive', ConfigValidCheck::TAG);
-        $app->tag('vaulter.config_validator.drive', PackmanConfigValidCheck::TAG);
+        ConfigSectionRegistration::registerValidator($app, 'vaulter.drive', $validate);
 
         $app->bind(NodeContentLifecycleRegistry::class, static fn (Application $app): NodeContentLifecycleRegistry => self::memoizeByOptions(
             $app,

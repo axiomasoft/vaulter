@@ -55,6 +55,7 @@ use Vaulter\Doctor\Checks\SchedulerCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Doctor\Checks\TenancyCheck;
+use Vaulter\Doctor\PackmanConfigValidCheck;
 use Vaulter\Errors\VaulterProblemDefinitions;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\Outbox\OutboxConsumer;
@@ -203,7 +204,10 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
     #[Override]
     public function healthChecks(): array
     {
-        return array_values(self::DOCTOR_CHECKS);
+        return array_map(
+            static fn (string $check): string => $check === ConfigValidCheck::class ? PackmanConfigValidCheck::class : $check,
+            array_values(self::DOCTOR_CHECKS),
+        );
     }
 
     /** @return list<class-string> */
