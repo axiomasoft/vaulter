@@ -4123,7 +4123,7 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": [
-                        "@return array<class-string, array{kind: string, cardinality?: string}>"
+                        "@return array<class-string, array{kind: string, cardinality?: string, shared?: bool}>"
                     ]
                 },
                 "method:healthchecks": {

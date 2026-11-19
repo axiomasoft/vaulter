@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { spawn } from 'node:child_process'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { Server } from '@hocuspocus/server'
@@ -170,7 +171,7 @@ test('fact 2: flushPendingStores() runs only debounced stores — it does not re
   }
 })
 
-test('fact 3: Server.destroy() does not settle while a document survived a failed store', async () => {
+test('fact 3: Server.destroy() does not settle while a document survived a failed store', { timeout: 30_000 }, async (t) => {
   // destroy() never settles here and leaves a poll timer behind, so it runs in a child process
   // that reports the verdict and exits by itself; the test process stays clean.
   const child = `
@@ -189,23 +190,14 @@ test('fact 3: Server.destroy() does not settle while a document survived a faile
     await sleep(20)
     const destroying = server.destroy()
     const verdict = await Promise.race([destroying.then(() => 'settled'), sleep(1000).then(() => 'pending')])
-    process.stdout.write(JSON.stringify({ stores, verdict, documents: server.hocuspocus.documents.size }))
-    process.exit(0)
+    process.stdout.write(JSON.stringify({ stores, verdict, documents: server.hocuspocus.documents.size }), () => process.exit(0))
   `
 
-  const output = await new Promise((resolve, reject) => {
-    const proc = spawn(process.execPath, ['--input-type=module', '-e', child], {
-      cwd: fileURLToPath(new URL('..', import.meta.url)),
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
-    let stdout = ''
-    const guard = setTimeout(() => { proc.kill('SIGKILL'); reject(new Error('child did not report within 5s')) }, 5000)
-
-    proc.stdout.on('data', (chunk) => { stdout += chunk })
-    proc.on('error', reject)
-    proc.on('close', () => { clearTimeout(guard); resolve(stdout) })
+  const { stdout } = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', child], {
+    cwd: fileURLToPath(new URL('..', import.meta.url)),
+    signal: t.signal,
   })
 
-  assert.deepEqual(JSON.parse(output), { stores: 1, verdict: 'pending', documents: 1 },
+  assert.deepEqual(JSON.parse(stdout), { stores: 1, verdict: 'pending', documents: 1 },
     'destroy() waits for getDocumentsCount() === 0 with no timeout; the failed document never unloads, so it stays pending for 1 s')
 })

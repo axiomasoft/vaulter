@@ -137,17 +137,6 @@
             "file": "packages/core/src/Modules/VaulterPluginActivationGate.php",
             "kind": "probe",
             "symbol": "Vaulter\\Modules\\VaulterPluginActivationGate::isEnabled",
-            "target": "$pluginClass",
-            "view": "current",
-            "category": "config-validation",
-            "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
-            "removed_in": "never"
-        },
-        {
-            "count": 1,
-            "file": "packages/core/src/Modules/VaulterPluginActivationGate.php",
-            "kind": "probe",
-            "symbol": "Vaulter\\Modules\\VaulterPluginActivationGate::isEnabled",
             "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
             "view": "current",
             "category": "host-lifecycle",
@@ -616,6 +605,17 @@
             "category": "host-lifecycle",
             "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
             "removed_in": "never"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
+            "kind": "probe",
+            "reason": "Register named limiters on an existing Laravel rate limiter during boot. Otherwise defer registration until the host resolves its cache inside the active scope.",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::boot",
+            "target": "\\Illuminate\\Cache\\RateLimiter::class",
+            "view": "current"
         },
         {
             "category": "config-validation",
