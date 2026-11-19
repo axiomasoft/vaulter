@@ -81,7 +81,8 @@ final class PackmanModuleCompatibilityTest extends TestCase
 
         try {
             (new ExtensionRegistrar)->register($app);
-            ExtensionRegistrar::builtIn(CoreModule::class);
+            Container::setInstance($previous);
+            ExtensionRegistrar::builtInFor($app, CoreModule::class);
             $registry = $app->make(PluginInspector::class);
 
             self::assertCount(1, $registry->describe());

@@ -585,7 +585,7 @@ class SingleCiTest(unittest.TestCase):
         manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
         entries = [p for p in manifest['php'] if p['path'] == 'packages/collaboration']
         self.assertEqual(1, len(entries))
-        self.assertEqual('axioma-studio/vaulter-collaboration', entries[0]['name'])
+        self.assertEqual('axiomasoft/vaulter-collaboration', entries[0]['name'])
         self.assertEqual(entries[0]['name'], entries[0]['split'])
         npm = [p for p in manifest['npm'] if p['name'] == '@vaulter/vue-collaboration']
         self.assertEqual([('packages/vue-collaboration', '1', 'private', 'restricted')],
@@ -603,7 +603,7 @@ class SingleCiTest(unittest.TestCase):
         manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
         entries = [p for p in manifest['php'] if p['path'] == 'packages/webhooks']
         self.assertEqual(1, len(entries))
-        self.assertEqual('axioma-studio/vaulter-webhooks', entries[0]['name'])
+        self.assertEqual('axiomasoft/vaulter-webhooks', entries[0]['name'])
         self.assertEqual(entries[0]['name'], entries[0]['split'])
         self.assertFalse(entries[0].get('metapackage', False))
         self.assertFalse(entries[0].get('excluded_unless_tagged', False))
@@ -611,7 +611,7 @@ class SingleCiTest(unittest.TestCase):
         split = policy.load_workflow(ROOT / '.github' / 'workflows' / 'monorepo-split.yml')
         # the matrix is computed from the manifest by route-release.php; webhooks is a public php entry of the v1 line
         self.assertEqual('${{ fromJSON(needs.route.outputs.matrix) }}', split['jobs']['split']['strategy']['matrix']['package'])
-        self.assertEqual(['v'], [e['tag_prefix'] for e in json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))['php'] if e['name'] == 'axioma-studio/vaulter-webhooks'])
+        self.assertEqual(['v'], [e['tag_prefix'] for e in json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))['php'] if e['name'] == 'axiomasoft/vaulter-webhooks'])
         self.assertIn('packages/webhooks', [p['path'] for p in manifest['php']])
 
     def test_consumer_packages_are_releasable_php_packages(self):

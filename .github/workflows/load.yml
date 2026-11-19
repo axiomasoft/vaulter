@@ -60,6 +60,9 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
+
       - name: Install dependencies (the stand bind-mounts vendor/ from the host)
         run: composer install --no-interaction --prefer-dist --no-progress
 
@@ -191,6 +194,9 @@ jobs:
           extensions: mbstring, pdo, pdo_pgsql, pgsql
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Install dependencies (the stand bind-mounts vendor/ from the host)
         run: composer install --no-interaction --prefer-dist --no-progress

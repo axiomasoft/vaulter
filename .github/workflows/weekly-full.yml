@@ -57,14 +57,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout pinned AzGuard v1
-        if: matrix.azguard
-        run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
-          git init ../azguard
-          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin "$sha"
-          git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
@@ -74,8 +66,10 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
+
       - name: Install dependencies (Laravel ${{ matrix.laravel }})
-        working-directory: ${{ matrix.dir }}
         env:
           LARAVEL: ${{ matrix.laravel }}
           TESTBENCH: ${{ matrix.testbench }}
@@ -84,7 +78,6 @@ jobs:
           composer update --prefer-dist --no-interaction --no-progress
 
       - name: Verify the installed versions
-        working-directory: ${{ matrix.dir }}
         env:
           LARAVEL: ${{ matrix.laravel }}
           TESTBENCH: ${{ matrix.testbench }}
@@ -117,7 +110,9 @@ jobs:
       - name: Type coverage (100%)
         if: matrix.types
         working-directory: ${{ matrix.dir }}
-        run: vendor/bin/pest --type-coverage --min=100
+        run: |
+          if [[ ! -e vendor ]]; then ln -s "$GITHUB_WORKSPACE/vendor" vendor; fi
+          "$GITHUB_WORKSPACE/vendor/bin/pest" --type-coverage --min=100
 
   engines:
     name: Full / ${{ matrix.engine }} / ${{ matrix.package }}
@@ -154,14 +149,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout pinned AzGuard v1
-        if: matrix.azguard
-        run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
-          git init ../azguard
-          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin "$sha"
-          git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
@@ -171,8 +158,10 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
+
       - name: Install dependencies
-        working-directory: ${{ matrix.dir }}
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Tests (${{ matrix.engine }}, full)
@@ -202,6 +191,9 @@ jobs:
           coverage: pcov
           tools: composer:v2
 
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
@@ -229,6 +221,9 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Setup Node.js 26
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -359,6 +354,9 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Setup Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0

@@ -19,12 +19,12 @@ Drive AccessResolver ─▶ AzGuardPermissionDriver ─▶ AzGuardGuard (seam)
                                                           │
                                     AzGuardGuardAdapter ◀──┘  (this package)
                                                           │
-                                    host User (AzGuard v1 HasAzGuard)
+                                    host User (AzGuard 2.x HasAzGuard)
 ```
 
 - **`AzGuardGuardAdapter`** implements the Vaulter seam and delegates to each check's explicit
   actor. It stores only the panel selector, so one configured adapter can serve several actors. It delegates to the host's
-  AzGuard v1 subject, translating the two checks into AzGuard decisions:
+  AzGuard 2.x subject, translating the two checks into AzGuard decisions:
   `hasScopedPermission` → `hasPermission(on: $entity)` (narrowing the entity to an
   Eloquent model) and `hasPermissionIn` → `hasPermission(on: AssignmentScopeRef::of($type, $id))`
   (the workspace lane).
@@ -56,8 +56,7 @@ VAULTER_PERMISSION_DRIVER=azguard
 
 ## Host integration (the alignment this package cannot do for you)
 
-Requires AzGuard v1 (`axiomasoft/azguard`). AzGuard publishes no tagged release, so the
-bridge pins one commit: `dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`.
+The bridge requires `axiomasoft/azguard` at `^2.0@dev`.
 
 1. **Mark your User** as AzGuard-backed for Vaulter — free if it already uses AzGuard:
 
@@ -71,7 +70,7 @@ bridge pins one commit: `dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`.
    }
    ```
 
-   `AzGuardBackedUser` is AzGuard v1's own `AzGuard\Contracts\Subjects\AzGuardSubject`, so the
+   `AzGuardBackedUser` is AzGuard 2.x's own `AzGuard\Contracts\Subjects\AzGuardSubject`, so the
    `HasAzGuard` trait already declares every method: no bodies needed, only the
    `implements` clause.
 
@@ -140,7 +139,7 @@ Three tiers:
   with the **real** Vaulter `AzGuardPermissionDriver` across every lane (workspace-role →
   grant-level, super-admin → owner, create gate), plus the provider binding, driven by
   a controllable user double.
-- **`tests/RealAzGuard/` — full real-ecosystem e2e** — a real Eloquent AzGuard v1 subject on
+- **`tests/RealAzGuard/` — full real-ecosystem e2e** — a real Eloquent AzGuard 2.x subject on
   a real panel (stored grants, `project` assignment scopes, the super-admin role) granted
   through AzGuard's `InteractsWithAzGuard` helpers, and the real adapter → real Vaulter
   resolver. Proves the adapter's calls actually resolve through AzGuard's own engine
@@ -153,7 +152,7 @@ Three tiers:
 Both use `axiomasoft/azguard` from a sibling `../azguard` checkout through a path repository
 (the AzGuard monorepo keeps the package in `packages/core`, which a Composer VCS repository
 cannot address). The path repository installs whatever the sibling checkout holds, so keep
-it at the pinned commit locally. CI checks out that same commit and tests the package on Laravel 13.
+it at the revision in `scripts/ci/checkout-ecosystem.sh` to reproduce the Laravel 13 CI run.
 
 ```bash
 composer install && composer test

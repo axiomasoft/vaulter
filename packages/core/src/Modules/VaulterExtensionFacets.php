@@ -29,7 +29,7 @@ final class VaulterExtensionFacets
         } catch (Throwable) {
         }
 
-        ExtensionRegistrar::builtIn($plugin);
+        ExtensionRegistrar::builtInFor($app, $plugin);
         $profile = ExtensionFacetRegistrar::register($app, $instance, $composerManifest);
         SchemaExtensions::register($app, $instance, $ownerId);
 

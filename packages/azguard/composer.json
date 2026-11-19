@@ -1,6 +1,6 @@
 {
     "name": "axiomasoft/vaulter-azguard",
-    "description": "AzGuard permission bridge for Vaulter — a real AzGuardGuard adapter delegating to AzGuard v1 panel checks on resources and assignment scopes, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
+    "description": "AzGuard permission bridge for Vaulter — a real AzGuardGuard adapter delegating to AzGuard 2.x panel checks on resources and assignment scopes, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
     "type": "library",
     "license": "MIT",
     "keywords": [

@@ -146,15 +146,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # no tagged release: the bridge pins the commit required in packages/azguard/composer.json (dev-main#<sha>).
-      - name: Checkout pinned AzGuard v1
-        if: matrix.azguard
-        run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
-          git init ../azguard
-          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin "$sha"
-          git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
@@ -163,6 +154,9 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -211,14 +205,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout pinned AzGuard v1
-        if: matrix.azguard
-        run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
-          git init ../azguard
-          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin "$sha"
-          git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
@@ -227,6 +213,9 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -243,7 +232,6 @@ jobs:
 
       # An explicit `composer require` per cell: a bare install resolves ONE Laravel (the constraint's upper bound).
       - name: Install dependencies (Laravel ${{ matrix.laravel }})
-        working-directory: ${{ matrix.dir }}
         env:
           LARAVEL: ${{ matrix.laravel }}
           TESTBENCH: ${{ matrix.testbench }}
@@ -252,7 +240,6 @@ jobs:
           composer update --prefer-dist --no-interaction --no-progress
 
       - name: Verify the installed versions
-        working-directory: ${{ matrix.dir }}
         env:
           LARAVEL: ${{ matrix.laravel }}
           TESTBENCH: ${{ matrix.testbench }}
@@ -284,7 +271,9 @@ jobs:
       - name: Type coverage (100%)
         if: matrix.types
         working-directory: ${{ matrix.dir }}
-        run: vendor/bin/pest --type-coverage --min=100
+        run: |
+          if [[ ! -e vendor ]]; then ln -s "$GITHUB_WORKSPACE/vendor" vendor; fi
+          "$GITHUB_WORKSPACE/vendor/bin/pest" --type-coverage --min=100
 
   db:
     name: DB / ${{ matrix.engine }} / ${{ matrix.package }}
@@ -330,14 +319,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout pinned AzGuard v1
-        if: matrix.azguard
-        run: |
-          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azguard/composer.json)
-          git init ../azguard
-          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin "$sha"
-          git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
@@ -346,6 +327,9 @@ jobs:
           extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_mysql, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -361,7 +345,6 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        working-directory: ${{ matrix.dir }}
         run: composer install --prefer-dist --no-interaction --no-progress
 
       # The database group: every test whose result depends on the engine (CAS locks, upload commit, yjs bytea,
@@ -425,6 +408,9 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
+
       - name: Get Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
@@ -439,7 +425,6 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        working-directory: ${{ matrix.dir }}
         run: composer install --prefer-dist --no-interaction --no-progress
 
       # Forked-process races, tus PATCH at one offset, tenant provisioning: one process, no parallel workers. The
@@ -479,6 +464,9 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -641,6 +629,9 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
 
       - name: Setup Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -818,6 +809,9 @@ jobs:
           php-version: '8.4'
           tools: composer:v2
           coverage: none
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26'

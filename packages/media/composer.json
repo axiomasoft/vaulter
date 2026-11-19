@@ -31,6 +31,7 @@
         "laravel/pint": "^1.32",
         "orchestra/testbench": "^11.3",
         "pestphp/pest": "^5.2",
+        "pestphp/pest-plugin-type-coverage": "^5.1",
         "phpstan/phpstan": "^2.2.16 <2.3.6"
     },
     "autoload": {
@@ -86,10 +87,10 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman": "0.1.0",
-                    "axiomasoft/packman-plugins": "0.1.0",
-                    "axiomasoft/packman-schema": "0.1.0",
-                    "axiomasoft/packman-testkit": "0.1.0"
+                    "axiomasoft/packman": "0.1.1",
+                    "axiomasoft/packman-plugins": "0.1.1",
+                    "axiomasoft/packman-schema": "0.1.1",
+                    "axiomasoft/packman-testkit": "0.1.1"
                 }
             }
         },

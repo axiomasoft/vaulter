@@ -64,12 +64,12 @@ permission, or AzGuard throws `InvalidAssignmentScopeException`, `PanelNotResolv
 `PrefixConflictException`, or a `Class "AzGuard\…" not found` style error surfaces.
 
 **Why.** The driver and the `Vaulter\AzGuard\Contracts\AzGuardGuard` seam live in
-`vaulter-azguard`, rather than core. Both checks of the seam are AzGuard v1 decisions, so the
+`vaulter-azguard`, rather than core. Both checks of the seam are AzGuard 2.x decisions, so the
 host's AzGuard panel must know the user, the workspace and the permissions Vaulter asks about.
 
 **Fix.**
 
-1. Install the bridge; it requires AzGuard v1 (`axiomasoft/azguard`, pinned to one commit) and
+1. Install the bridge; it requires AzGuard 2.x (`axiomasoft/azguard`, `^2.0@dev`) and
    its provider registers the `azguard` driver and the real adapter automatically:
 
    ```bash

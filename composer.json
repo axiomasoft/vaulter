@@ -35,13 +35,13 @@
             "options": {
                 "symlink": false,
                 "versions": {
-                    "axiomasoft/packman": "0.1.0",
-                    "axiomasoft/packman-devtools": "0.1.0",
-                    "axiomasoft/packman-filament": "0.1.0",
-                    "axiomasoft/packman-panels": "0.1.0",
-                    "axiomasoft/packman-plugins": "0.1.0",
-                    "axiomasoft/packman-schema": "0.1.0",
-                    "axiomasoft/packman-testkit": "0.1.0"
+                    "axiomasoft/packman": "0.1.1",
+                    "axiomasoft/packman-devtools": "0.1.1",
+                    "axiomasoft/packman-filament": "0.1.1",
+                    "axiomasoft/packman-panels": "0.1.1",
+                    "axiomasoft/packman-plugins": "0.1.1",
+                    "axiomasoft/packman-schema": "0.1.1",
+                    "axiomasoft/packman-testkit": "0.1.1"
                 }
             }
         },
@@ -87,6 +87,7 @@
         "opis/json-schema": "^2.4",
         "orchestra/testbench": "^11.3",
         "pestphp/pest": "^5.2",
+        "pestphp/pest-plugin-type-coverage": "^5.1",
         "phpstan/phpstan": "^2.2.16 <2.3.6",
         "phpstan/phpstan-strict-rules": "^2.0.12",
         "rector/rector": "^2.6",

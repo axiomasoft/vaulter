@@ -65,12 +65,12 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azguard
 `Class "AzGuard\…" not found`.
 
 **Почему.** Драйвер и шов `Vaulter\AzGuard\Contracts\AzGuardGuard` находятся в `vaulter-azguard`,
-а не в core. Обе проверки шва — решения AzGuard v1, поэтому панель AzGuard хоста должна знать
+а не в core. Обе проверки шва — решения AzGuard 2.x, поэтому панель AzGuard хоста должна знать
 пользователя, workspace и разрешения, о которых спрашивает Vaulter.
 
 **Решение.**
 
-1. Установите мост; он требует AzGuard v1 (`axiomasoft/azguard`, закреплён на коммите), а его
+1. Установите мост; он требует AzGuard 2.x (`axiomasoft/azguard`, `^2.0@dev`), а его
    provider сам регистрирует драйвер `azguard` и реальный адаптер:
 
    ```bash
