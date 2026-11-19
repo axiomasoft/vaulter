@@ -66,3 +66,19 @@ Consumers must change `*Config` injection to `*Options`, custom modules to nativ
 and surface attributes to `Packman\Attributes`. These changes are part of the unreleased
 1.0 migration, not a compatibility promise for the retired bridge. Published configuration
 keys, CAS behavior and domain activation semantics remain covered by the engine suites.
+
+## Product ownership of shared internals
+
+The explicit `gates.internal_ownership_groups` declaration in `packman.json` makes
+Vaulter's listed runtime subpackages one product owner for internal implementation
+sharing. It does not publish those implementations as an external SPI. Packman
+Internal types and other external dependencies cannot join the group. Development
+packages remain excluded; declared Composer edges, layer rules and runtime/dev
+separation still apply independently.
+
+The Vaulter owner is responsible for compatibility of the subpackages' declared
+Composer version constraints and verifies their installation together. Reviewed
+development snapshots use the same repository commit for grouped packages; the
+local ecosystem receipt records those exact sources. Applications and other
+products continue to use the public API/SPI. No consumer version tags are introduced
+by this ownership declaration.

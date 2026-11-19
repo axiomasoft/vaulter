@@ -258,6 +258,18 @@
         "provider_size_limit": 80,
         "disallow_internal_cross_imports": true,
         "require_api_manifest": true,
-        "error_urn_prefix": "urn:packman:problem:"
+        "error_urn_prefix": "urn:packman:problem:",
+        "internal_ownership_groups": {
+            "vaulter": [
+                "axiomasoft/vaulter-core",
+                "axiomasoft/vaulter-media",
+                "axiomasoft/vaulter-drive",
+                "axiomasoft/vaulter-documents",
+                "axiomasoft/vaulter-collaboration",
+                "axiomasoft/vaulter-webhooks",
+                "axiomasoft/vaulter-azguard",
+                "axiomasoft/vaulter-filament"
+            ]
+        }
     }
 }
