@@ -5,7 +5,7 @@ set -euo pipefail
 root=$(git rev-parse --show-toplevel)
 workspace=$(dirname "$root")
 packman_version=$(jq -er '.repositories[] | select(.url == "../packman/packages/*") | .options.versions["axiomasoft/packman"]' "$root/composer.json")
-azguard_ref=c6667eca964d40d50b4f3e154cafd2f42415f694
+azguard_ref=1718b337ac237a260c2876ecd5fafa5867c9a9b3
 
 fetch_dependency() {
     local directory=$1 url=$2 ref=$3
