@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Providers;
 
-use Closure;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Packman\Attributes\Internal;
-use Packman\Doctor\Checks\ConfigValidCheck as PackmanConfigValidCheck;
+use Packman\Config\Laravel\ConfigSectionRegistration;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
@@ -64,11 +63,12 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(DocumentsBroadcastOptions::class, static fn (Container $app): DocumentsBroadcastOptions => $app->make(DocumentsOptions::class)->broadcast);
         $app->bind(DocumentsModelsOptions::class, static fn (Container $app): DocumentsModelsOptions => $app->make(DocumentsOptions::class)->models);
 
-        $app->bind('vaulter.config_validator.documents', static fn (Container $app): Closure => static function () use ($app): void {
+        $validate = static function () use ($app): void {
             self::buildOptions($app);
-        });
+        };
+        $app->instance('vaulter.config_validator.documents', $validate);
         $app->tag('vaulter.config_validator.documents', ConfigValidCheck::TAG);
-        $app->tag('vaulter.config_validator.documents', PackmanConfigValidCheck::TAG);
+        ConfigSectionRegistration::registerValidator($app, 'vaulter.documents', $validate);
 
         $app->singleton(DocumentTypeRegistry::class);
         $app->singleton(DocumentExporterRegistry::class);

@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Closure;
-use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Contracts\Foundation\CachesRoutes;
@@ -197,8 +198,8 @@ final class ModuleApplier
         if ($commands === [] || !$this->app->runningInConsole()) {
             return;
         }
-        Artisan::starting(static function (Artisan $artisan) use ($commands): void {
-            $artisan->resolveCommands($commands);
+        $this->app->make(Dispatcher::class)->listen(ArtisanStarting::class, static function (ArtisanStarting $event) use ($commands): void {
+            $event->artisan->resolveCommands($commands);
         });
     }
 

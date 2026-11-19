@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Providers;
 
 use Closure;
-use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Support\Facades\Route;
@@ -159,8 +160,8 @@ final class CoreKernelRegistrar implements PackageRegistrar
     private function registerDiagnosticCommands(Application $app): void
     {
         if ($app->runningInConsole()) {
-            Artisan::starting(static function (Artisan $artisan): void {
-                $artisan->resolveCommands([ModulesCommand::class, DoctorCommand::class]);
+            $app->make(Dispatcher::class)->listen(ArtisanStarting::class, static function (ArtisanStarting $event): void {
+                $event->artisan->resolveCommands([ModulesCommand::class, DoctorCommand::class]);
             });
         }
     }
