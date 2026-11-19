@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Override;
 use Packman\Attributes\Internal;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Vaulter\Kernel;
 
@@ -22,28 +23,26 @@ final readonly class VaulterPluginActivationGate implements PluginActivationGate
     #[Override]
     public function isEnabled(string $pluginId): bool
     {
-        $kernel = $this->app->make(Kernel::class);
-        $moduleId = ModuleDeclarations::moduleId($pluginId);
-
-        if ($kernel->isSealed()) {
-            return $kernel->isValid() && $kernel->isActive($moduleId);
-        }
-
-        if ($this->app->bound(Repository::class)) {
-            $override = $this->app->make(Repository::class)->get('vaulter.modules.'.$moduleId);
-            if (is_bool($override)) {
-                return $override;
-            }
-        }
-
-        foreach (ModuleCatalog::of($this->app)->pluginSpecs() as $pluginClass => $spec) {
-            if (!class_exists($pluginClass)) {
+        $catalog = ModuleCatalog::of($this->app);
+        foreach ($catalog->offered() as $pluginClass) {
+            if (!is_a($pluginClass, ExtensionPlugin::class, true) || (new $pluginClass)->manifest()->id !== $pluginId) {
                 continue;
             }
-            $plugin = new $pluginClass;
-            if ($plugin->manifest()->id === $pluginId) {
-                return $spec->activation === Activation::Auto;
+            $kernel = $this->app->make(Kernel::class);
+            $moduleId = ModuleDeclarations::moduleId($pluginId);
+            if ($kernel->isSealed()) {
+                return $kernel->isValid() && $kernel->isActive($moduleId);
             }
+            if ($this->app->bound(Repository::class)) {
+                $override = $this->app->make(Repository::class)->get('vaulter.modules.'.$moduleId);
+                if (is_bool($override)) {
+                    return $override;
+                }
+            }
+
+            $spec = $catalog->pluginSpec($pluginClass);
+
+            return $spec === null || $spec->activation === Activation::Auto;
         }
 
         return true;

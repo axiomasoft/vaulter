@@ -11,9 +11,7 @@ use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 use Packman\Extensions\Contracts\Persistence\WithSchema;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Data\Plugin\PluginManifest;
-use Packman\Plugins\Internal\Graph\PluginDeclarations;
 use Packman\Plugins\Laravel\PluginRegistrar;
-use Vaulter\CoreModule;
 
 /**
  * Translates {@see ExtensionPlugin} declarations and optional {@see PluginModuleSpec} metadata into {@see ModuleBuilder}
@@ -136,11 +134,7 @@ final class ModuleDeclarations
             }
         }
 
-        $pluginId = $plugin instanceof CoreModule ? 'vaulter.core' : $plugin->manifest()->id;
-        $declarations = new PluginDeclarations;
-        $plugin->register(new PluginRegistrar($declarations, $pluginId));
-        $declarations->seal();
-
+        $declarations = PluginRegistrar::collect($plugin);
         foreach ($declarations->capabilityDefinitions() as $capDef) {
             $card = Cardinality::from($capDef->cardinality->value);
             $sig = $capDef->contract.'|'.$card->value;

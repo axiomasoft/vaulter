@@ -611,26 +611,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "outbox",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Events\\Outbox\\Models\\OutboxEvent::class",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "fromArray": {
                     "visibility": "public",
                     "static": true,
@@ -1801,16 +1781,6 @@
                     ],
                     "return": "self",
                     "doc": []
-                },
-                "outboxModel": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "string",
-                    "doc": []
                 }
             },
             "properties": {},
@@ -2462,16 +2432,6 @@
                     "return": "string",
                     "doc": []
                 },
-                "ownedSchema": {
-                    "visibility": "public",
-                    "static": true,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "string",
-                    "doc": []
-                },
                 "problemProviders": {
                     "visibility": "public",
                     "static": false,
@@ -2573,44 +2533,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "items",
-                            "type": "array",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "nextCursor",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "scanned",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "0",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "count": {
                     "visibility": "public",
                     "static": false,
@@ -2642,7 +2564,38 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "items": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "nextCursor": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scanned": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -2659,44 +2612,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "databaseOptions",
-                            "type": "Vaulter\\Configuration\\DatabaseOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "db",
-                            "type": "Illuminate\\Database\\DatabaseManager",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "advisoryLock": {
                     "visibility": "public",
                     "static": false,
@@ -2757,64 +2672,6 @@
                     "return": "string",
                     "doc": []
                 },
-                "insertOnce": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "table",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "row",
-                            "type": "array",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "uniqueColumn",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "bool",
-                    "doc": []
-                },
-                "isConcurrencyFailure": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "exception",
-                            "type": "Throwable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "bool",
-                    "doc": []
-                },
                 "lockAggregate": {
                     "visibility": "public",
                     "static": false,
@@ -2873,35 +2730,6 @@
                     "return": "void",
                     "doc": []
                 },
-                "retryingOutermost": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "callback",
-                            "type": "Closure",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "attempts",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "3",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "mixed",
-                    "doc": []
-                },
                 "transaction": {
                     "visibility": "public",
                     "static": false,
@@ -2925,26 +2753,6 @@
                             "variadic": false,
                             "optional": true,
                             "default": "3",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "mixed",
-                    "doc": []
-                },
-                "write": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "callback",
-                            "type": "Closure",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
                             "flags": 0
                         }
                     ],
@@ -3590,53 +3398,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "database",
-                            "type": "Vaulter\\Database\\VaulterDatabase",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "metrics",
-                            "type": "Vaulter\\Contracts\\Observability\\MetricsRecorder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "kernel",
-                            "type": "Vaulter\\Kernel",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "record": {
                     "visibility": "public",
                     "static": false,
@@ -3815,7 +3576,28 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "error": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "outcome": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [
                 {
                     "name": "DONE",
@@ -6929,26 +6711,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "assertValid": {
                     "visibility": "public",
                     "static": false,
@@ -6967,16 +6729,6 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "Vaulter\\Modules\\Capabilities",
-                    "doc": []
-                },
-                "compiled": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "Vaulter\\Modules\\CompiledModules",
                     "doc": []
                 },
                 "extensions": {
@@ -7057,26 +6809,6 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "array",
-                    "doc": []
-                },
-                "seal": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "state",
-                            "type": "Vaulter\\Modules\\CompiledModules|Vaulter\\Modules\\InvalidModuleGraph",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "void",
                     "doc": []
                 }
             },
@@ -7192,16 +6924,6 @@
                     "return": "void",
                     "doc": []
                 },
-                "getCasts": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "array",
-                    "doc": []
-                },
                 "initializeHasVaulterKeys": {
                     "visibility": "public",
                     "static": false,
@@ -7209,35 +6931,6 @@
                     "abstract": false,
                     "by_reference": false,
                     "parameters": [],
-                    "return": "void",
-                    "doc": []
-                },
-                "insertAndSetId": {
-                    "visibility": "protected",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "query",
-                            "type": "Illuminate\\Database\\Eloquent\\Builder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "attributes",
-                            "type": null,
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
                     "return": "void",
                     "doc": []
                 },
@@ -7323,35 +7016,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "modules",
-                            "type": "Vaulter\\Modules\\CompiledModules",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "all": {
                     "visibility": "public",
                     "static": false,
@@ -7481,35 +7145,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "modules",
-                            "type": "Vaulter\\Modules\\CompiledModules",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "contributions": {
                     "visibility": "public",
                     "static": false,
@@ -7881,26 +7516,6 @@
                         }
                     ],
                     "return": "self",
-                    "doc": []
-                },
-                "capabilityDefinitions": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "array",
-                    "doc": []
-                },
-                "capabilityProviders": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "array",
                     "doc": []
                 },
                 "commandClasses": {
@@ -8384,16 +7999,6 @@
                     "return": "array",
                     "doc": []
                 },
-                "seal": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "void",
-                    "doc": []
-                },
                 "slot": {
                     "visibility": "public",
                     "static": false,
@@ -8448,16 +8053,6 @@
                         }
                     ],
                     "return": "self",
-                    "doc": []
-                },
-                "slotDefinitions": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "array",
                     "doc": []
                 },
                 "translationDirs": {
@@ -9491,35 +9086,6 @@
                     "return": null,
                     "doc": []
                 },
-                "attempt": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "attemptNo",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "nested",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "self",
-                    "doc": []
-                },
                 "isNested": {
                     "visibility": "public",
                     "static": false,
@@ -10006,62 +9572,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "kernel",
-                            "type": "Vaulter\\Kernel",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "readiness",
-                            "type": "Vaulter\\Operations\\ModuleReadiness",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "database",
-                            "type": "Vaulter\\Database\\VaulterDatabase",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "claim",
-                            "type": "Vaulter\\Operations\\OperationClaim",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "catalog",
-                            "type": "Vaulter\\Operations\\OperationCatalog",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "inOperation": {
                     "visibility": "public",
                     "static": false,
@@ -10345,35 +9855,6 @@
                     ],
                     "return": "Illuminate\\Console\\Scheduling\\Event",
                     "doc": []
-                },
-                "whenScheduling": {
-                    "visibility": "public",
-                    "static": true,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "app",
-                            "type": "Illuminate\\Contracts\\Foundation\\Application",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "callback",
-                            "type": "Closure",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "void",
-                    "doc": []
                 }
             },
             "properties": {},
@@ -10602,35 +10083,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "config",
-                            "type": "Vaulter\\Configuration\\DatabaseOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "resolver",
-                            "type": "Vaulter\\Schema\\IdStrategyResolver",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "addHeadForeignKey": {
                     "visibility": "public",
                     "static": false,
@@ -11566,37 +11018,10 @@
                     "parameters": [],
                     "return": "string",
                     "doc": []
-                },
-                "set": {
-                    "visibility": "public",
-                    "static": true,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "tier",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "void",
-                    "doc": []
                 }
             },
             "properties": {},
-            "constants": [
-                {
-                    "name": "REQUEST_ATTRIBUTE",
-                    "type": "string",
-                    "visibility": "public",
-                    "final": false
-                }
-            ],
+            "constants": [],
             "enum_backing": null,
             "enum_cases": [],
             "spi_kind": "call"
@@ -12629,7 +12054,28 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "id": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "kind": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [
                 {
                     "name": "NONE",

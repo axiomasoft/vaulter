@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Providers;
 
+use Illuminate\Cache\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Packman\Attributes\Internal;
 use Vaulter\Configuration\RoutesOptions;
 use Vaulter\Drive\Configuration\DriveOptions;
@@ -107,7 +107,10 @@ final class DriveSliceRegistrar implements ModuleBindings
         if ($scanEnabled && self::resolveContract($app, ScanPolicyResolver::class) instanceof OffScanPolicyResolver) {
             throw new InvalidConfigurationException('Enabled scan policy requires the drive scan runtime.');
         }
-        $this->registerRateLimiters();
+        $app->afterResolving(RateLimiter::class, self::registerRateLimiters(...));
+        if ($app->resolved(RateLimiter::class)) {
+            self::registerRateLimiters($app->make(RateLimiter::class), $app);
+        }
     }
 
     private static function bootOptions(Application $app): DriveOptions
@@ -118,22 +121,22 @@ final class DriveSliceRegistrar implements ModuleBindings
     }
 
     /** A host limiter of the same name wins: it is registered only when none exists. */
-    private function registerRateLimiters(): void
+    private static function registerRateLimiters(RateLimiter $limiter, Application $app): void
     {
-        if (RateLimiter::limiter('vaulter-public') === null) {
-            RateLimiter::for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
-                app(RoutesOptions::class)->rateLimits->public,
+        if ($limiter->limiter('vaulter-public') === null) {
+            $limiter->for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
+                $app->make(RoutesOptions::class)->rateLimits->public,
             )->by($request->ip() ?? 'unknown'));
         }
 
-        if (RateLimiter::limiter('vaulter-uploads') === null) {
-            RateLimiter::for('vaulter-uploads', static function (Request $request): Limit {
+        if ($limiter->limiter('vaulter-uploads') === null) {
+            $limiter->for('vaulter-uploads', static function (Request $request) use ($app): Limit {
                 $user = $request->user();
                 $key = $user instanceof Authorizable
                     ? 'actor:'.Identity::stringify($user->getAuthIdentifier())
                     : 'ip:'.($request->ip() ?? 'unknown');
 
-                return Limit::perMinute(app(RoutesOptions::class)->rateLimits->uploads)->by($key);
+                return Limit::perMinute($app->make(RoutesOptions::class)->rateLimits->uploads)->by($key);
             });
         }
     }

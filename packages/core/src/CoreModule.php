@@ -169,12 +169,12 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
         return [KernelSchema::class];
     }
 
-    /** @return array<class-string, array{kind: string, cardinality?: string}> */
+    /** @return array<class-string, array{kind: string, cardinality?: string, shared?: bool}> */
     #[Override]
     public function definedSlots(): array
     {
         return [
-            DoctorCheck::class => ['kind' => PluginSlotKind::Handler->value, 'cardinality' => PluginCardinality::Many->value],
+            DoctorCheck::class => ['kind' => PluginSlotKind::Contributor->value, 'cardinality' => PluginCardinality::Many->value, 'shared' => true],
             OperationMiddleware::class => ['kind' => PluginSlotKind::OperationMiddleware->value, 'cardinality' => PluginCardinality::Many->value],
             EventSink::class => ['kind' => PluginSlotKind::EventSink->value, 'cardinality' => PluginCardinality::Many->value],
             OutboxConsumer::class => ['kind' => PluginSlotKind::OutboxConsumer->value, 'cardinality' => PluginCardinality::Many->value],

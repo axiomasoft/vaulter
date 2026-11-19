@@ -879,26 +879,6 @@
             ],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "reason",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "errorDescriptor": {
                     "visibility": "public",
                     "static": false,
@@ -940,7 +920,18 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "reason": {
+                    "flags": 65,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [
                 {
                     "name": "LEASE",
@@ -1032,16 +1023,6 @@
             ],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": null,
-                    "doc": []
-                },
                 "errorDescriptor": {
                     "visibility": "public",
                     "static": false,
@@ -1189,35 +1170,6 @@
             ],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "presented",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        },
-                        {
-                            "name": "expected",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "errorDescriptor": {
                     "visibility": "public",
                     "static": false,
@@ -1259,7 +1211,28 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "expected": {
+                    "flags": 65,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "presented": {
+                    "flags": 65,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -1384,35 +1357,6 @@
             ],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "updateId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        },
-                        {
-                            "name": "reason",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "errorDescriptor": {
                     "visibility": "public",
                     "static": false,
@@ -1494,7 +1438,28 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "reason": {
+                    "flags": 65,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "updateId": {
+                    "flags": 65,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -1517,35 +1482,6 @@
             ],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "sizeBytes",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        },
-                        {
-                            "name": "maxBytes",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "errorDescriptor": {
                     "visibility": "public",
                     "static": false,
@@ -1585,29 +1521,30 @@
                     "parameters": [],
                     "return": "array",
                     "doc": []
-                },
-                "undeclared": {
-                    "visibility": "public",
-                    "static": true,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "maxBytes",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "self",
-                    "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "maxBytes": {
+                    "flags": 65,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "sizeBytes": {
+                    "flags": 65,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -1624,71 +1561,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "documentId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "generation",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "updateId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "seq",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "sha256",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "duplicate",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "ack": {
                     "visibility": "public",
                     "static": false,
@@ -1700,7 +1572,68 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "documentId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "duplicate": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "generation": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "seq": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "sha256": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "updateId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []

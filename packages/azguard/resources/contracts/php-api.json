@@ -157,53 +157,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "kernel",
-                            "type": "Vaulter\\Kernel",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "config",
-                            "type": "Vaulter\\AzGuard\\Configuration\\AzGuardOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "permissions",
-                            "type": "Vaulter\\AzGuard\\AzGuardPermissionMap",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        },
-                        {
-                            "name": "roles",
-                            "type": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "canCreateIn": {
                     "visibility": "public",
                     "static": false,

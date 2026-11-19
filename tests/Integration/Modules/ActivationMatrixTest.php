@@ -13,6 +13,7 @@ use Packman\Config\Contracts\OptionsFactory;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Errors\Contracts\ProblemDefinitionProvider;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
+use Packman\Plugins\Laravel\ExtensionRegistrar;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Vaulter\AzGuard\VaulterAzGuardServiceProvider;
 use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
@@ -160,6 +161,14 @@ function matrixAssertZeroCost(Application $app, string $module = 'acme'): void
         ->and(AcmeProbe::$resolved)->toBe([])
         ->and(array_filter(FreshApplication::$resolved, static fn (string $class): bool => str_contains($class, 'Fixtures\\AcmeModule\\')))->toBe([]);
 }
+
+it('limits the Vaulter activation policy to the modules offered by this application', function (): void {
+    $app = matrixApp();
+    $gate = ExtensionRegistrar::activationGateFor($app);
+    expect($gate)->not->toBeNull()
+        ->and($gate?->isEnabled('chatom.core'))->toBeTrue()
+        ->and($gate?->isEnabled('vaulter.core'))->toBeTrue();
+});
 
 it('costs nothing when the module is absent: it is not installed, so a switch for it is a mistake', function (): void {
     $app = matrixApp(installed: false);

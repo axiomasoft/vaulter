@@ -16,62 +16,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "content",
-                            "type": "Vaulter\\Media\\Contracts\\Cas\\ContentStore",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "lock",
-                            "type": "Vaulter\\Media\\Cas\\BlobLock",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "blobs",
-                            "type": "Vaulter\\Media\\Repositories\\Cas\\BlobStoreRepository",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "database",
-                            "type": "Vaulter\\Database\\VaulterDatabase",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "mediaConfig",
-                            "type": "Vaulter\\Media\\Configuration\\MediaOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "commit": {
                     "visibility": "public",
                     "static": false,
@@ -148,44 +92,6 @@
                     "return": "Vaulter\\Media\\Data\\Snapshots\\BlobSnapshot",
                     "doc": []
                 },
-                "commitStagedRow": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "staged",
-                            "type": "Vaulter\\Media\\Contracts\\Cas\\StagedObject",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "scope",
-                            "type": "Vaulter\\Media\\ValueObjects\\Cas\\BlobScope",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "disk",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "Vaulter\\Media\\Models\\Cas\\Blob",
-                    "doc": []
-                },
                 "read": {
                     "visibility": "public",
                     "static": false,
@@ -256,144 +162,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "disk",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "'local'",
-                            "flags": 1
-                        },
-                        {
-                            "name": "dedupScope",
-                            "type": "Vaulter\\Media\\Configuration\\DedupScope",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Media\\Configuration\\DedupScope::Tenant",
-                            "flags": 1
-                        },
-                        {
-                            "name": "gcGraceHours",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "24",
-                            "flags": 1
-                        },
-                        {
-                            "name": "orphanGraceHours",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "24",
-                            "flags": 1
-                        },
-                        {
-                            "name": "scrubLimit",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "100",
-                            "flags": 1
-                        },
-                        {
-                            "name": "scrubMaxBytes",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        },
-                        {
-                            "name": "scrubMaxSeconds",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        },
-                        {
-                            "name": "scheduleBlobsGc",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "'dailyAt:04:00'",
-                            "flags": 1
-                        },
-                        {
-                            "name": "scheduleBlobsReconcile",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "'weeklyOn:0,04:30'",
-                            "flags": 1
-                        },
-                        {
-                            "name": "contentStore",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Media\\Cas\\Sha256ContentStore::class",
-                            "flags": 1
-                        },
-                        {
-                            "name": "storageDriver",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Media\\Cas\\FlysystemStorageDriver::class",
-                            "flags": 1
-                        },
-                        {
-                            "name": "blobStore",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Media\\Cas\\BlobStore::class",
-                            "flags": 1
-                        },
-                        {
-                            "name": "blobModel",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Media\\Models\\Cas\\Blob::class",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
-                "blobModel": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "string",
-                    "doc": []
-                },
                 "blobStore": {
                     "visibility": "public",
                     "static": false,
@@ -503,66 +271,6 @@
                     "return": "int",
                     "doc": []
                 },
-                "scrubLimit": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "override",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "int",
-                    "doc": []
-                },
-                "scrubMaxBytes": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "override",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "?int",
-                    "doc": []
-                },
-                "scrubMaxSeconds": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "override",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "?int",
-                    "doc": []
-                },
                 "storageDriver": {
                     "visibility": "public",
                     "static": false,
@@ -574,7 +282,128 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "blobStore": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "contentStore": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "dedupScope": {
+                    "flags": 1,
+                    "type": "Vaulter\\Media\\Configuration\\DedupScope",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "disk": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "gcGraceHours": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "orphanGraceHours": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scheduleBlobsGc": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scheduleBlobsReconcile": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scrubLimit": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scrubMaxBytes": {
+                    "flags": 1,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scrubMaxSeconds": {
+                    "flags": 1,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "storageDriver": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -1928,139 +1757,119 @@
             "implements": [],
             "uses": [],
             "doc": [],
-            "methods": {
-                "__construct": {
+            "methods": {},
+            "properties": {
+                "chunked": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
                     "visibility": "public",
                     "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "id",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "scopeKey",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "sha256",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "sizeBytes",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "disk",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "storageKey",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "status",
-                            "type": "Vaulter\\Media\\Enums\\Cas\\BlobStatus",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "intact",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "chunked",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "tenantId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "storageId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 },
-                "fromModel": {
+                "disk": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
                     "visibility": "public",
-                    "static": true,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "blob",
-                            "type": "Vaulter\\Media\\Models\\Cas\\Blob",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "self",
-                    "doc": []
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "id": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "intact": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "scopeKey": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "sha256": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "sizeBytes": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "status": {
+                    "flags": 1,
+                    "type": "Vaulter\\Media\\Enums\\Cas\\BlobStatus",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "storageId": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "storageKey": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "tenantId": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 }
             },
-            "properties": {},
             "constants": [],
             "enum_backing": null,
             "enum_cases": []

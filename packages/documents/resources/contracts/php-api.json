@@ -14,98 +14,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "locator",
-                            "type": "Vaulter\\Drive\\Operations\\NodeLocator",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "guard",
-                            "type": "Vaulter\\Drive\\Access\\OperationGuard",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "types",
-                            "type": "Vaulter\\Documents\\Types\\DocumentTypeRegistry",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "decoder",
-                            "type": "Vaulter\\Documents\\Content\\ContentDecoder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "query",
-                            "type": "Vaulter\\Documents\\Queries\\DocumentQuery",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "kernel",
-                            "type": "Vaulter\\Kernel",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "drives",
-                            "type": "Vaulter\\Drive\\Configuration\\DriveOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "resolver",
-                            "type": "Vaulter\\Drive\\Access\\AccessResolver",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "canViewDocumentNode": {
                     "visibility": "public",
                     "static": false,
@@ -652,55 +560,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "documentRevision",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Documents\\Models\\Revisions\\DocumentRevision::class",
-                            "flags": 1
-                        },
-                        {
-                            "name": "nodeComment",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "\\Vaulter\\Documents\\Models\\Comments\\NodeComment::class",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
-                "classFor": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "key",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "string",
-                    "doc": []
-                },
                 "fromArray": {
                     "visibility": "public",
                     "static": true,
@@ -887,26 +746,6 @@
                         }
                     ],
                     "return": "self",
-                    "doc": []
-                },
-                "model": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "key",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "string",
                     "doc": []
                 }
             },
@@ -1226,7 +1065,18 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "data": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -1458,26 +1308,6 @@
                         }
                     ],
                     "return": "Vaulter\\Documents\\Contracts\\DocumentContent",
-                    "doc": []
-                },
-                "decodeForRead": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "stored",
-                            "type": "array",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "Vaulter\\Documents\\Content\\ReadContent",
                     "doc": []
                 },
                 "maxSizeBytes": {
@@ -1748,7 +1578,18 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "doc": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -2975,119 +2816,119 @@
             "implements": [],
             "uses": [],
             "doc": [],
-            "methods": {
-                "__construct": {
+            "methods": {},
+            "properties": {
+                "anchor": {
+                    "flags": 1,
+                    "type": "?array",
+                    "readonly": true,
                     "visibility": "public",
                     "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "id",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "nodeId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "parentId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "authorType",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "authorId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "body",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "anchor",
-                            "type": "?array",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "resolvedAt",
-                            "type": "?DateTimeImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "resolvedBy",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "createdAt",
-                            "type": "DateTimeImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "version",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "0",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "authorId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "authorType": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "body": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "createdAt": {
+                    "flags": 1,
+                    "type": "DateTimeImmutable",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "id": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "nodeId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "parentId": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "resolvedAt": {
+                    "flags": 1,
+                    "type": "?DateTimeImmutable",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "resolvedBy": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "version": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 }
             },
-            "properties": {},
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -3103,200 +2944,209 @@
             "implements": [],
             "uses": [],
             "doc": [],
-            "methods": {
-                "__construct": {
+            "methods": {},
+            "properties": {
+                "collabProtocol": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
                     "visibility": "public",
                     "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "id",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "documentId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "nodeId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "type",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "number",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "schemaVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "label",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "isAutosave",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "keepForever",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "isHead",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "restoredFromRevisionId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "contentHash",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "contentSize",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabStateSize",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "createdAt",
-                            "type": "DateTimeImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "createdBy",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabProtocol",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabStateFormat",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        },
-                        {
-                            "name": "epoch",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "0",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "collabStateFormat": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "collabStateSize": {
+                    "flags": 1,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "contentHash": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "contentSize": {
+                    "flags": 1,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "createdAt": {
+                    "flags": 1,
+                    "type": "DateTimeImmutable",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "createdBy": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "documentId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "epoch": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "id": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "isAutosave": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "isHead": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "keepForever": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "label": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "nodeId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "number": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "restoredFromRevisionId": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "schemaVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "type": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 }
             },
-            "properties": {},
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -3312,182 +3162,189 @@
             "implements": [],
             "uses": [],
             "doc": [],
-            "methods": {
-                "__construct": {
+            "methods": {},
+            "properties": {
+                "collabProtocol": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
                     "visibility": "public",
                     "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "nodeId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "documentId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "type",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "schemaVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "typeAvailable",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "editable",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "epoch",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "dirty",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "headRevisionId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "content",
-                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "revision",
-                            "type": "?Vaulter\\Documents\\Data\\Snapshots\\DocumentRevisionSnapshot",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "contentHash",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabStateSize",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "updatedAt",
-                            "type": "DateTimeImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "updatedBy",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabProtocol",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabStateFormat",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "collabStateFormat": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "collabStateSize": {
+                    "flags": 1,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "content": {
+                    "flags": 1,
+                    "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "contentHash": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "dirty": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "documentId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "editable": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "epoch": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "headRevisionId": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "nodeId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "revision": {
+                    "flags": 1,
+                    "type": "?Vaulter\\Documents\\Data\\Snapshots\\DocumentRevisionSnapshot",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "schemaVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "type": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "typeAvailable": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "updatedAt": {
+                    "flags": 1,
+                    "type": "DateTimeImmutable",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "updatedBy": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 }
             },
-            "properties": {},
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -4137,71 +3994,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "comment",
-                            "type": "Vaulter\\Documents\\Models\\Comments\\NodeComment",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityTarget": {
                     "visibility": "public",
                     "static": false,
@@ -4315,71 +4107,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "comment",
-                            "type": "Vaulter\\Documents\\Models\\Comments\\NodeComment",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityTarget": {
                     "visibility": "public",
                     "static": false,
@@ -4493,71 +4220,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "comment",
-                            "type": "Vaulter\\Documents\\Models\\Comments\\NodeComment",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityTarget": {
                     "visibility": "public",
                     "static": false,
@@ -4669,116 +4331,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "node",
-                            "type": "Vaulter\\Drive\\Models\\Node",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "version",
-                            "type": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "created",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "epoch",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "nodes",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\Mapping\\NodeSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityTarget": {
                     "visibility": "public",
                     "static": false,
@@ -4861,9 +4413,39 @@
                 }
             },
             "properties": {
+                "created": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "epoch": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "node": {
                     "flags": 1,
                     "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
                     "readonly": true,
                     "visibility": "public",
                     "static": false,
@@ -4900,107 +4482,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "node",
-                            "type": "Vaulter\\Drive\\Models\\Node",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "version",
-                            "type": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "epoch",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "nodes",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\Mapping\\NodeSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityContext": {
                     "visibility": "public",
                     "static": false,
@@ -5083,9 +4564,29 @@
                 }
             },
             "properties": {
+                "epoch": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "node": {
                     "flags": 1,
                     "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
                     "readonly": true,
                     "visibility": "public",
                     "static": false,
@@ -5122,116 +4623,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "node",
-                            "type": "Vaulter\\Drive\\Models\\Node",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "version",
-                            "type": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "restoredFrom",
-                            "type": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "epoch",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "nodes",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\Mapping\\NodeSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityContext": {
                     "visibility": "public",
                     "static": false,
@@ -5314,6 +4705,16 @@
                 }
             },
             "properties": {
+                "epoch": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "node": {
                     "flags": 1,
                     "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot",
@@ -5327,6 +4728,16 @@
                 "restoredFrom": {
                     "flags": 1,
                     "type": "Vaulter\\Documents\\Data\\Snapshots\\DocumentRevisionSnapshot",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
                     "readonly": true,
                     "visibility": "public",
                     "static": false,
@@ -5363,116 +4774,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "node",
-                            "type": "Vaulter\\Drive\\Models\\Node",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "version",
-                            "type": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "epoch",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "restored",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "actor",
-                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "correlationId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "nodes",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\Mapping\\NodeSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "documents",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "eventId",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        },
-                        {
-                            "name": "occurredAt",
-                            "type": "?Carbon\\CarbonImmutable",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "activityContext": {
                     "visibility": "public",
                     "static": false,
@@ -5535,9 +4836,39 @@
                 }
             },
             "properties": {
+                "epoch": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "node": {
                     "flags": 1,
                     "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "restored": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
                     "readonly": true,
                     "visibility": "public",
                     "static": false,
@@ -6005,26 +5336,6 @@
             ],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "marker",
-                            "type": "Vaulter\\Documents\\State\\PendingMarker",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 65
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "errorDescriptor": {
                     "visibility": "public",
                     "static": false,
@@ -6066,7 +5377,18 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "marker": {
+                    "flags": 65,
+                    "type": "Vaulter\\Documents\\State\\PendingMarker",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -7238,26 +6560,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "all": {
                     "visibility": "public",
                     "static": false,
@@ -7315,26 +6617,6 @@
                         }
                     ],
                     "return": "array",
-                    "doc": []
-                },
-                "freeze": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "void",
-                    "doc": []
-                },
-                "isFrozen": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "bool",
                     "doc": []
                 },
                 "register": {
@@ -7674,107 +6956,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "context",
-                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "locator",
-                            "type": "Vaulter\\Drive\\Operations\\NodeLocator",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "guard",
-                            "type": "Vaulter\\Drive\\Access\\OperationGuard",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "profiles",
-                            "type": "Vaulter\\Drive\\Profiles\\ProfilePolicy",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "query",
-                            "type": "Vaulter\\Documents\\Queries\\DocumentQuery",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "mapper",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "add",
-                            "type": "Vaulter\\Documents\\Actions\\Comments\\AddCommentAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "resolve",
-                            "type": "Vaulter\\Documents\\Actions\\Comments\\ResolveCommentAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "delete",
-                            "type": "Vaulter\\Documents\\Actions\\Comments\\DeleteCommentAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "runner",
-                            "type": "Vaulter\\Operations\\OperationRunner",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "add": {
                     "visibility": "public",
                     "static": false,
@@ -7840,44 +7021,6 @@
                         }
                     ],
                     "return": "void",
-                    "doc": []
-                },
-                "forWrite": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "node",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "comment",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\CommentSnapshot|string|int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "delete",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "Vaulter\\Documents\\Data\\Snapshots\\CommentSnapshot",
                     "doc": []
                 },
                 "list": {
@@ -7967,206 +7110,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "context",
-                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "locator",
-                            "type": "Vaulter\\Drive\\Operations\\NodeLocator",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "guard",
-                            "type": "Vaulter\\Drive\\Access\\OperationGuard",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "profiles",
-                            "type": "Vaulter\\Drive\\Profiles\\ProfilePolicy",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "types",
-                            "type": "Vaulter\\Documents\\Types\\DocumentTypeRegistry",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "decoder",
-                            "type": "Vaulter\\Documents\\Content\\ContentDecoder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "create",
-                            "type": "Vaulter\\Documents\\Actions\\Documents\\CreateDocumentAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "update",
-                            "type": "Vaulter\\Documents\\Actions\\Documents\\UpdateDocumentContentAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "snapshot",
-                            "type": "Vaulter\\Documents\\Actions\\Revisions\\CreateNamedRevisionAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "restore",
-                            "type": "Vaulter\\Documents\\Actions\\Revisions\\RestoreDocumentRevisionAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "retention",
-                            "type": "Vaulter\\Documents\\Actions\\Revisions\\UpdateRevisionRetentionAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "export",
-                            "type": "Vaulter\\Documents\\Actions\\Export\\ExportDocumentAction",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "query",
-                            "type": "Vaulter\\Documents\\Queries\\DocumentQuery",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "mapper",
-                            "type": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "nodes",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\Mapping\\NodeSnapshotMapper",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "runner",
-                            "type": "Vaulter\\Operations\\OperationRunner",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "pending",
-                            "type": "Vaulter\\Documents\\State\\PendingStateGuard",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "collaborationPolicy",
-                            "type": "Vaulter\\Documents\\Access\\CollaborationAccessPolicy",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "kernel",
-                            "type": "Vaulter\\Kernel",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "metrics",
-                            "type": "Vaulter\\Contracts\\Observability\\MetricsRecorder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "collaborationSession": {
                     "visibility": "public",
                     "static": false,
@@ -8357,35 +7300,6 @@
                     "return": "Vaulter\\Documents\\Data\\Snapshots\\DocumentSnapshot",
                     "doc": []
                 },
-                "revisionPage": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "document",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "options",
-                            "type": "?Vaulter\\Drive\\Data\\ListOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "Illuminate\\Pagination\\CursorPaginator",
-                    "doc": []
-                },
                 "revisions": {
                     "visibility": "public",
                     "static": false,
@@ -8528,44 +7442,6 @@
                     ],
                     "return": "Vaulter\\Documents\\Data\\Snapshots\\DocumentSnapshot",
                     "doc": []
-                },
-                "updateContent": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "document",
-                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "content",
-                            "type": "array",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        },
-                        {
-                            "name": "expectedStateVersion",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 0
-                        }
-                    ],
-                    "return": "Vaulter\\Documents\\Data\\Snapshots\\DocumentSnapshot",
-                    "doc": []
                 }
             },
             "properties": {},
@@ -8587,35 +7463,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "decoder",
-                            "type": "Vaulter\\Documents\\Content\\ContentDecoder",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "kernel",
-                            "type": "Vaulter\\Kernel",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 4
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "kind": {
                     "visibility": "public",
                     "static": false,
@@ -8755,65 +7602,59 @@
             "implements": [],
             "uses": [],
             "doc": [],
-            "methods": {
-                "__construct": {
+            "methods": {},
+            "properties": {
+                "changed": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
                     "visibility": "public",
                     "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "published",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "changed",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "generation",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "pending",
-                            "type": "?Vaulter\\Documents\\State\\PendingMarker",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "generation": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "pending": {
+                    "flags": 1,
+                    "type": "?Vaulter\\Documents\\State\\PendingMarker",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "published": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 }
             },
-            "properties": {},
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -9308,146 +8149,149 @@
             "implements": [],
             "uses": [],
             "doc": [],
-            "methods": {
-                "__construct": {
+            "methods": {},
+            "properties": {
+                "binding": {
+                    "flags": 1,
+                    "type": "?Vaulter\\Documents\\State\\CollaborationStateBinding",
+                    "readonly": true,
                     "visibility": "public",
                     "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "documentId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "nodeId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "driveId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "type",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "schemaVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "generation",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "stateVersion",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "pending",
-                            "type": "?Vaulter\\Documents\\State\\PendingMarker",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "trashed",
-                            "type": "bool",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "binding",
-                            "type": "?Vaulter\\Documents\\State\\CollaborationStateBinding",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabState",
-                            "type": "?string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "content",
-                            "type": "array",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "driveStatus",
-                            "type": "?Vaulter\\Drive\\Enums\\DriveStatus",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        },
-                        {
-                            "name": "collabStateSize",
-                            "type": "?int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": true,
-                            "default": "null",
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "collabState": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "collabStateSize": {
+                    "flags": 1,
+                    "type": "?int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "content": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "documentId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "driveId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "driveStatus": {
+                    "flags": 1,
+                    "type": "?Vaulter\\Drive\\Enums\\DriveStatus",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "generation": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "nodeId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "pending": {
+                    "flags": 1,
+                    "type": "?Vaulter\\Documents\\State\\PendingMarker",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "schemaVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "trashed": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "type": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
                 }
             },
-            "properties": {},
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -9464,53 +8308,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "documentId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "nodeId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "binding",
-                            "type": "Vaulter\\Documents\\State\\CollaborationStateBinding",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        },
-                        {
-                            "name": "throughSeq",
-                            "type": "int",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "coveredBy": {
                     "visibility": "public",
                     "static": false,
@@ -9552,7 +8349,47 @@
                 }
             },
             "properties": {
+                "binding": {
+                    "flags": 1,
+                    "type": "Vaulter\\Documents\\State\\CollaborationStateBinding",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "documentId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "generation": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "nodeId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "throughSeq": {
                     "flags": 1,
                     "type": "int",
                     "readonly": true,
@@ -9816,26 +8653,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "container",
-                            "type": "Illuminate\\Contracts\\Container\\Container",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "all": {
                     "visibility": "public",
                     "static": false,
@@ -9864,16 +8681,6 @@
                         }
                     ],
                     "return": "?Vaulter\\Documents\\Contracts\\DocumentType",
-                    "doc": []
-                },
-                "freeze": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
-                    "return": "void",
                     "doc": []
                 },
                 "get": {
@@ -9913,16 +8720,6 @@
                             "flags": 0
                         }
                     ],
-                    "return": "bool",
-                    "doc": []
-                },
-                "isFrozen": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [],
                     "return": "bool",
                     "doc": []
                 },

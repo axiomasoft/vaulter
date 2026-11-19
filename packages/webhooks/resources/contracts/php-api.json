@@ -125,26 +125,6 @@
                     "return": "int",
                     "doc": []
                 },
-                "model": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "key",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 0
-                        }
-                    ],
-                    "return": "string",
-                    "doc": []
-                },
                 "relayFanoutChunk": {
                     "visibility": "public",
                     "static": false,

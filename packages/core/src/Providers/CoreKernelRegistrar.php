@@ -16,7 +16,7 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Packman\PackmanServiceProvider;
-use Packman\Plugins\Contracts\Registry\PluginActivationGate;
+use Packman\Plugins\Laravel\ExtensionRegistrar;
 use Packman\Plugins\Laravel\PluginsServiceProvider;
 use Packman\Schema\Laravel\SchemaServiceProvider;
 use Vaulter\Configuration\ConfigNormalizer;
@@ -145,10 +145,7 @@ final class CoreKernelRegistrar implements PackageRegistrar
         $app->register(PackmanServiceProvider::class);
         $app->register(PluginsServiceProvider::class);
         $app->register(SchemaServiceProvider::class);
-        $app->singletonIf(
-            PluginActivationGate::class,
-            static fn (Application $app): PluginActivationGate => new VaulterPluginActivationGate($app),
-        );
+        ExtensionRegistrar::addActivationGate($app, VaulterPluginActivationGate::class);
 
         VaulterExtensionFacets::register($app, CoreModule::class, dirname(__DIR__, 2).'/composer.json');
 
