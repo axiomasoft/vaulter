@@ -24,6 +24,15 @@ The first release. It targets PHP 8.4 and Laravel 13 on PostgreSQL 18, MySQL 9.7
 and Node 26 for the JavaScript packages. See [Compatibility](docs/reference/compatibility.md) for the
 promise that starts with 1.0.
 
+### Fixed
+
+- Media doctor contributions use the canonical Packman contract and finding values, so installing
+  media alongside the Packman-based core produces a valid graph and activates blob bindings.
+- Media consumes the current immutable database options and schedule parser, and validates its own
+  configured implementations without the removed core configuration wrappers.
+- The core plugin declares its Packman slots once through its declarative facets.
+- The core plugin publishes a canonical absolute resource root without parent-directory segments.
+
 ### Added
 
 - `axiomasoft/vaulter-core`: the kernel — module graph, the operation catalog with its concurrency and
