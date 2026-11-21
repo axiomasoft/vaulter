@@ -1,0 +1,2527 @@
+{
+  "startedAt": "2026-11-21T08:20:50.822Z",
+  "mode": "cloud",
+  "room": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+  "observations": [
+    {
+      "at": "2026-11-21T08:20:50.974Z",
+      "elapsedMs": 151.15896500000002,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "at": "2026-11-21T08:20:50.994Z",
+      "elapsedMs": 171.95050300000003,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "at": "2026-11-21T08:20:51.001Z",
+      "elapsedMs": 178.85163999999997,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/@vite/client"
+    },
+    {
+      "at": "2026-11-21T08:20:51.002Z",
+      "elapsedMs": 179.00397700000002,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/src/main.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.015Z",
+      "elapsedMs": 192.202875,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/src/main.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.183336,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_core.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.362283,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_starter-kit.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.462945,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.565926,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration-caret.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.67447700000002,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@hocuspocus_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.78715499999998,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.016Z",
+      "elapsedMs": 193.91269599999998,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/@id/__x00__virtual:cloud-provider"
+    },
+    {
+      "at": "2026-11-21T08:20:51.017Z",
+      "elapsedMs": 193.996151,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/src/style.css"
+    },
+    {
+      "at": "2026-11-21T08:20:51.019Z",
+      "elapsedMs": 196.394542,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_core.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.019Z",
+      "elapsedMs": 196.67110100000002,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-C78taGyF.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.031Z",
+      "elapsedMs": 208.469385,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_starter-kit.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.035Z",
+      "elapsedMs": 212.76928199999998,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.036Z",
+      "elapsedMs": 213.27373599999999,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-B6MJgAc1.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.036Z",
+      "elapsedMs": 213.387047,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.036Z",
+      "elapsedMs": 213.550003,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-DRdQ3ACr.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.037Z",
+      "elapsedMs": 214.613747,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/@id/__x00__virtual:cloud-provider"
+    },
+    {
+      "at": "2026-11-21T08:20:51.038Z",
+      "elapsedMs": 214.986335,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap-pro_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.038Z",
+      "elapsedMs": 215.412238,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration-caret.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.049Z",
+      "elapsedMs": 226.832894,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/src/style.css"
+    },
+    {
+      "at": "2026-11-21T08:20:51.053Z",
+      "elapsedMs": 229.97915999999998,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@hocuspocus_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.057Z",
+      "elapsedMs": 234.64351900000003,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-B6MJgAc1.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.072Z",
+      "elapsedMs": 249.013279,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-DRdQ3ACr.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.076Z",
+      "elapsedMs": 253.75405999999998,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/@vite/client"
+    },
+    {
+      "at": "2026-11-21T08:20:51.076Z",
+      "elapsedMs": 253.865698,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.077Z",
+      "elapsedMs": 254.65705000000003,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.080Z",
+      "elapsedMs": 257.436311,
+      "client": "primary",
+      "socketId": "primary-1",
+      "kind": "ws-open",
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.081Z",
+      "elapsedMs": 258.293703,
+      "client": "primary",
+      "kind": "ws-upgrade",
+      "requestId": "2269866.19",
+      "status": 101
+    },
+    {
+      "at": "2026-11-21T08:20:51.081Z",
+      "elapsedMs": 258.836068,
+      "client": "primary",
+      "socketId": "primary-1",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 20,
+        "sha256": "06062342cef4dcb8babd7c0308d2786482506a738db066de952ccc0554f59b80",
+        "status": "malformed"
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.083Z",
+      "elapsedMs": 260.729027,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-C78taGyF.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.208Z",
+      "elapsedMs": 385.05736700000006,
+      "client": "primary",
+      "socketId": "primary-1",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 33,
+        "sha256": "ddc91ee165174795fdc96c13ae7810e0ff05a94ed12e29d69b74c9aeb664b014",
+        "status": "malformed"
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.210Z",
+      "elapsedMs": 386.975448,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap-pro_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.210Z",
+      "elapsedMs": 387.22405799999996,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/hocuspocus-provider.esm-B62MnYDb.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.210Z",
+      "elapsedMs": 387.272544,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-DsFBIdji.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.216Z",
+      "elapsedMs": 393.337335,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/hocuspocus-provider.esm-B62MnYDb.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.231Z",
+      "elapsedMs": 407.95168700000005,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "at": "2026-11-21T08:20:51.233Z",
+      "elapsedMs": 410.68336500000004,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-DsFBIdji.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.234Z",
+      "elapsedMs": 411.77454800000004,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "at": "2026-11-21T08:20:51.241Z",
+      "elapsedMs": 418.099545,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/@vite/client"
+    },
+    {
+      "at": "2026-11-21T08:20:51.241Z",
+      "elapsedMs": 418.146105,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/src/main.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.16488499999997,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/src/main.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.35468499999996,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_core.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.39472600000005,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_starter-kit.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.56389199999995,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.61469300000005,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration-caret.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.63629199999997,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@hocuspocus_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.65782399999995,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.676311,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/@id/__x00__virtual:cloud-provider"
+    },
+    {
+      "at": "2026-11-21T08:20:51.243Z",
+      "elapsedMs": 420.76679099999996,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/src/style.css"
+    },
+    {
+      "at": "2026-11-21T08:20:51.247Z",
+      "elapsedMs": 424.15918700000003,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_core.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.247Z",
+      "elapsedMs": 424.308235,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-C78taGyF.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.250Z",
+      "elapsedMs": 427.70194699999996,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.251Z",
+      "elapsedMs": 428.116972,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration-caret.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.251Z",
+      "elapsedMs": 428.64368700000006,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@hocuspocus_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.251Z",
+      "elapsedMs": 428.78043299999996,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-DscwUIlh.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.252Z",
+      "elapsedMs": 429.263705,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/hocuspocus-provider.esm-B62MnYDb.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.252Z",
+      "elapsedMs": 429.307441,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/hocuspocus-provider.esm-B62MnYDb.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.252Z",
+      "elapsedMs": 429.35014600000005,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.252Z",
+      "elapsedMs": 429.37941099999995,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-DsFBIdji.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.252Z",
+      "elapsedMs": 429.400415,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-DsFBIdji.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.255Z",
+      "elapsedMs": 432.49568000000005,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_starter-kit.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.255Z",
+      "elapsedMs": 432.693191,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/@id/__x00__virtual:cloud-provider"
+    },
+    {
+      "at": "2026-11-21T08:20:51.255Z",
+      "elapsedMs": 432.849451,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 304,
+      "url": "http://127.0.0.1:5193/src/style.css"
+    },
+    {
+      "at": "2026-11-21T08:20:51.256Z",
+      "elapsedMs": 432.949084,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap-pro_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.261Z",
+      "elapsedMs": 438.104486,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap-pro_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.262Z",
+      "elapsedMs": 439.62243099999995,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-DscwUIlh.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.276Z",
+      "elapsedMs": 453.15395500000005,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 304,
+      "url": "http://127.0.0.1:5193/@vite/client"
+    },
+    {
+      "at": "2026-11-21T08:20:51.276Z",
+      "elapsedMs": 453.32097000000005,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.277Z",
+      "elapsedMs": 454.047443,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 304,
+      "url": "http://127.0.0.1:5193/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:51.278Z",
+      "elapsedMs": 455.938294,
+      "client": "primary",
+      "socketId": "primary-2",
+      "kind": "ws-open",
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.279Z",
+      "elapsedMs": 456.29911799999996,
+      "client": "primary",
+      "kind": "ws-upgrade",
+      "requestId": "2269866.41",
+      "status": 101
+    },
+    {
+      "at": "2026-11-21T08:20:51.279Z",
+      "elapsedMs": 456.472725,
+      "client": "primary",
+      "socketId": "primary-2",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 20,
+        "sha256": "06062342cef4dcb8babd7c0308d2786482506a738db066de952ccc0554f59b80",
+        "status": "malformed"
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.290Z",
+      "elapsedMs": 467.34663600000005,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-C78taGyF.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.317Z",
+      "elapsedMs": 494.42702,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/api/config"
+    },
+    {
+      "at": "2026-11-21T08:20:51.337Z",
+      "elapsedMs": 514.006985,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/api/config"
+    },
+    {
+      "at": "2026-11-21T08:20:51.703Z",
+      "elapsedMs": 880.924839,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-open",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:51.808Z",
+      "elapsedMs": 985.1272060000001,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "POST",
+      "url": "http://127.0.0.1:5193/api/token"
+    },
+    {
+      "at": "2026-11-21T08:20:51.808Z",
+      "elapsedMs": 985.2824130000001,
+      "client": "primary",
+      "kind": "ws-upgrade",
+      "requestId": "2269866.44",
+      "status": 101
+    },
+    {
+      "at": "2026-11-21T08:20:51.820Z",
+      "elapsedMs": 997.701495,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/api/token"
+    },
+    {
+      "at": "2026-11-21T08:20:51.821Z",
+      "elapsedMs": 998.6764740000001,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 456,
+        "sha256": "a0097642eb65a4fa0d9ece47fd18d1e42cd63ed5692fde8c6b511de791f4bb8a",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 2,
+        "typeName": "Auth",
+        "authSubtype": "[REDACTED]",
+        "authPayload": "[REDACTED]",
+        "payloadBytes": 394
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.822Z",
+      "elapsedMs": 998.963984,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 64,
+        "sha256": "8298435b8309b05698a708a904f07e933236d70c7088d11f8e28ecd1da6b5658",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 0,
+        "syncName": "SyncStep1",
+        "payloadBytes": 1,
+        "payloadSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.822Z",
+      "elapsedMs": 999.12673,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 113,
+        "sha256": "abc7afc05663206aeddec01eaf0e6636880424924318852f774def687b4d0284",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "deee8383fbeef2e39dca0e9cfae2bdf3ea01f4b6fd96b615d6a1f4004ea1db83",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.974Z",
+      "elapsedMs": 1151.415854,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 73,
+        "sha256": "0943f959383294affdd9760c601cb321056eb689bc9c6ca254da4912fe08ed5f",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 2,
+        "typeName": "Auth",
+        "authSubtype": "[REDACTED]",
+        "authPayload": "[REDACTED]",
+        "payloadBytes": 11
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:51.974Z",
+      "elapsedMs": 1151.560733,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 113,
+        "sha256": "abc7afc05663206aeddec01eaf0e6636880424924318852f774def687b4d0284",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "deee8383fbeef2e39dca0e9cfae2bdf3ea01f4b6fd96b615d6a1f4004ea1db83",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.084Z",
+      "elapsedMs": 1261.114049,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 109,
+        "sha256": "4b6f487323ecd8d3c47051e43ab55e369f54ccef0682e770f53aa77d21913088",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 47,
+        "payload": {
+          "event": "document.saved",
+          "date": 1795249251600
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.095Z",
+      "elapsedMs": 1272.792159,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-open",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:52.149Z",
+      "elapsedMs": 1326.3603500000002,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 70,
+        "sha256": "b8bac8fb6bf509185c9f9cfe0b0f6782244ea1097c2a7f0faa6b0d32e31a2067",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 0,
+        "syncName": "SyncStep1",
+        "payloadBytes": 7,
+        "payloadSha256": "87ad0b9d315ee3f16199f5d13d1d050210b2f4a0a696e4f829a5b3231cea78fb",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.149Z",
+      "elapsedMs": 1326.9431180000001,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 65,
+        "sha256": "6538dc53a61e91a0a1862447ff99d2ea417699fa2f36cf05b589a3a61168480e",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 1,
+        "syncName": "SyncStep2",
+        "payloadBytes": 2,
+        "payloadSha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.155Z",
+      "elapsedMs": 1331.99497,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 119,
+        "sha256": "226c05df8164ac0333cac57ef34aaa52ce1aa59c9b0938dbd5da5ed006b62d44",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 1,
+        "syncName": "SyncStep2",
+        "payloadBytes": 56,
+        "payloadSha256": "2ddcd1bb53e029e2785af7bfe9ad8c24a59850044a61875b36e874213b0ba214",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.155Z",
+      "elapsedMs": 1332.39085,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 88,
+        "sha256": "f270ea237127180892c77314ac03be0c38395358ab65880fb333a5ec5a0c23fa",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 26,
+        "payload": {
+          "action": "versions.list"
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.155Z",
+      "elapsedMs": 1332.8449890000002,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 113,
+        "sha256": "abc7afc05663206aeddec01eaf0e6636880424924318852f774def687b4d0284",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "deee8383fbeef2e39dca0e9cfae2bdf3ea01f4b6fd96b615d6a1f4004ea1db83",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.171Z",
+      "elapsedMs": 1348.569522,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "POST",
+      "url": "http://127.0.0.1:5193/api/token"
+    },
+    {
+      "at": "2026-11-21T08:20:52.171Z",
+      "elapsedMs": 1348.793154,
+      "client": "primary",
+      "kind": "ws-upgrade",
+      "requestId": "2269866.45",
+      "status": 101
+    },
+    {
+      "at": "2026-11-21T08:20:52.178Z",
+      "elapsedMs": 1355.5586,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/api/token"
+    },
+    {
+      "at": "2026-11-21T08:20:52.179Z",
+      "elapsedMs": 1356.6036100000001,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 453,
+        "sha256": "37385ded3ce43a732fd20ceab23764d251b6a5f18cc2fa360cb27cc402459127",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 2,
+        "typeName": "Auth",
+        "authSubtype": "[REDACTED]",
+        "authPayload": "[REDACTED]",
+        "payloadBytes": 391
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.179Z",
+      "elapsedMs": 1356.867023,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 64,
+        "sha256": "8298435b8309b05698a708a904f07e933236d70c7088d11f8e28ecd1da6b5658",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 0,
+        "syncName": "SyncStep1",
+        "payloadBytes": 1,
+        "payloadSha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.180Z",
+      "elapsedMs": 1357.156847,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 111,
+        "sha256": "2df023ce1e51d3ad633864799121f202b37bd5a8144c4d7341b84d3039449668",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "b788ddb91142a7386c1bc07880710721b57c6baf789e7cb1deda15be742183c8",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.227Z",
+      "elapsedMs": 1404.590073,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 62,
+        "sha256": "7ad16ceada2b0af11052454662511bc6dbcfbad440016ed3f3f692f208b93dd9",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 8,
+        "typeName": "SyncStatus",
+        "syncStatus": 1,
+        "applied": true,
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.250Z",
+      "elapsedMs": 1427.568548,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 111,
+        "sha256": "2df023ce1e51d3ad633864799121f202b37bd5a8144c4d7341b84d3039449668",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "b788ddb91142a7386c1bc07880710721b57c6baf789e7cb1deda15be742183c8",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.254Z",
+      "elapsedMs": 1431.14653,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 73,
+        "sha256": "0943f959383294affdd9760c601cb321056eb689bc9c6ca254da4912fe08ed5f",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 2,
+        "typeName": "Auth",
+        "authSubtype": "[REDACTED]",
+        "authPayload": "[REDACTED]",
+        "payloadBytes": 11
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.254Z",
+      "elapsedMs": 1431.424543,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 111,
+        "sha256": "2df023ce1e51d3ad633864799121f202b37bd5a8144c4d7341b84d3039449668",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "b788ddb91142a7386c1bc07880710721b57c6baf789e7cb1deda15be742183c8",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.254Z",
+      "elapsedMs": 1431.8322660000001,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 113,
+        "sha256": "abc7afc05663206aeddec01eaf0e6636880424924318852f774def687b4d0284",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "deee8383fbeef2e39dca0e9cfae2bdf3ea01f4b6fd96b615d6a1f4004ea1db83",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.255Z",
+      "elapsedMs": 1432.8401470000001,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 109,
+        "sha256": "4b6f487323ecd8d3c47051e43ab55e369f54ccef0682e770f53aa77d21913088",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 47,
+        "payload": {
+          "event": "document.saved",
+          "date": 1795249251600
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.256Z",
+      "elapsedMs": 1433.458607,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 70,
+        "sha256": "b8bac8fb6bf509185c9f9cfe0b0f6782244ea1097c2a7f0faa6b0d32e31a2067",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 0,
+        "syncName": "SyncStep1",
+        "payloadBytes": 7,
+        "payloadSha256": "87ad0b9d315ee3f16199f5d13d1d050210b2f4a0a696e4f829a5b3231cea78fb",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.256Z",
+      "elapsedMs": 1433.7192750000002,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 65,
+        "sha256": "6538dc53a61e91a0a1862447ff99d2ea417699fa2f36cf05b589a3a61168480e",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 1,
+        "syncName": "SyncStep2",
+        "payloadBytes": 2,
+        "payloadSha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.257Z",
+      "elapsedMs": 1434.166686,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 119,
+        "sha256": "226c05df8164ac0333cac57ef34aaa52ce1aa59c9b0938dbd5da5ed006b62d44",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 1,
+        "syncName": "SyncStep2",
+        "payloadBytes": 56,
+        "payloadSha256": "2ddcd1bb53e029e2785af7bfe9ad8c24a59850044a61875b36e874213b0ba214",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.257Z",
+      "elapsedMs": 1434.405274,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 88,
+        "sha256": "f270ea237127180892c77314ac03be0c38395358ab65880fb333a5ec5a0c23fa",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 26,
+        "payload": {
+          "action": "versions.list"
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.257Z",
+      "elapsedMs": 1434.9163210000002,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 111,
+        "sha256": "2df023ce1e51d3ad633864799121f202b37bd5a8144c4d7341b84d3039449668",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "b788ddb91142a7386c1bc07880710721b57c6baf789e7cb1deda15be742183c8",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.274Z",
+      "elapsedMs": 1451.880157,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 150,
+        "sha256": "11707b77540c83245fed937a66c965b9f8edfa5ad520010ce20c44011461df4d",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 87,
+        "payloadSha256": "71db497350a1af58b437471f11a259b279fbbf0a7a79c3624f100e12131041b7",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.276Z",
+      "elapsedMs": 1453.867657,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 101,
+        "sha256": "f84a1ae46da1aab2002072bec3ca71073e67ce5a98a8288a987fae87291e07aa",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 39,
+        "payload": {
+          "event": "versions.list",
+          "versions": []
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.329Z",
+      "elapsedMs": 1505.979075,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 62,
+        "sha256": "7ad16ceada2b0af11052454662511bc6dbcfbad440016ed3f3f692f208b93dd9",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 8,
+        "typeName": "SyncStatus",
+        "syncStatus": 1,
+        "applied": true,
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.351Z",
+      "elapsedMs": 1528.547654,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 62,
+        "sha256": "7ad16ceada2b0af11052454662511bc6dbcfbad440016ed3f3f692f208b93dd9",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 8,
+        "typeName": "SyncStatus",
+        "syncStatus": 1,
+        "applied": true,
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.352Z",
+      "elapsedMs": 1529.528294,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 150,
+        "sha256": "11707b77540c83245fed937a66c965b9f8edfa5ad520010ce20c44011461df4d",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 87,
+        "payloadSha256": "71db497350a1af58b437471f11a259b279fbbf0a7a79c3624f100e12131041b7",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.365Z",
+      "elapsedMs": 1542.201686,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 150,
+        "sha256": "11707b77540c83245fed937a66c965b9f8edfa5ad520010ce20c44011461df4d",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 87,
+        "payloadSha256": "71db497350a1af58b437471f11a259b279fbbf0a7a79c3624f100e12131041b7",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.368Z",
+      "elapsedMs": 1545.1924780000002,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 101,
+        "sha256": "f84a1ae46da1aab2002072bec3ca71073e67ce5a98a8288a987fae87291e07aa",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 39,
+        "payload": {
+          "event": "versions.list",
+          "versions": []
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.458Z",
+      "elapsedMs": 1635.3502130000002,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 74,
+        "sha256": "b209c13182cd7e16dbcc1d5da757b2655737293cf37ade84fac74038240d9f51",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 12,
+        "payloadSha256": "ed31a4dff9ec18fbc10e0aebb7829be5f96ff2bf5528c311bc731d17377afd0b",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.460Z",
+      "elapsedMs": 1637.843175,
+      "client": "primary",
+      "socketId": "primary-4",
+      "kind": "ws-close",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:52.474Z",
+      "elapsedMs": 1651.212577,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 95,
+        "sha256": "f2a9f111567e695f2c701479925387d7d89852a3ba90807c3509b186e5b69f54",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 32,
+        "payloadSha256": "ee3720ab4366142f8e89635470a44798863e340a884585cf9e226edd08b1e99a",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.549Z",
+      "elapsedMs": 1726.458243,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 62,
+        "sha256": "7ad16ceada2b0af11052454662511bc6dbcfbad440016ed3f3f692f208b93dd9",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 8,
+        "typeName": "SyncStatus",
+        "syncStatus": 1,
+        "applied": true,
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.549Z",
+      "elapsedMs": 1726.5277720000001,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 95,
+        "sha256": "f2a9f111567e695f2c701479925387d7d89852a3ba90807c3509b186e5b69f54",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 32,
+        "payloadSha256": "ee3720ab4366142f8e89635470a44798863e340a884585cf9e226edd08b1e99a",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.773Z",
+      "elapsedMs": 1950.726318,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-open",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:52.852Z",
+      "elapsedMs": 2029.198143,
+      "client": "primary",
+      "kind": "http-request",
+      "method": "POST",
+      "url": "http://127.0.0.1:5193/api/token"
+    },
+    {
+      "at": "2026-11-21T08:20:52.852Z",
+      "elapsedMs": 2029.5295660000002,
+      "client": "primary",
+      "kind": "ws-upgrade",
+      "requestId": "2269866.48",
+      "status": 101
+    },
+    {
+      "at": "2026-11-21T08:20:52.858Z",
+      "elapsedMs": 2035.39012,
+      "client": "primary",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/api/token"
+    },
+    {
+      "at": "2026-11-21T08:20:52.860Z",
+      "elapsedMs": 2037.0396810000002,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 453,
+        "sha256": "03b93dcb0685cdf5d75d70bc163ad6ef263f422911f210f5159686a0ba233aa4",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 2,
+        "typeName": "Auth",
+        "authSubtype": "[REDACTED]",
+        "authPayload": "[REDACTED]",
+        "payloadBytes": 391
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.860Z",
+      "elapsedMs": 2037.323101,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 82,
+        "sha256": "bd6a7e2e7f3aee20e5485659974e756664823c7d93146a3c6bb30b0ebde29880",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 0,
+        "syncName": "SyncStep1",
+        "payloadBytes": 19,
+        "payloadSha256": "61de74b7fa60ef7e7f68cf55ca5e1aecea6ddd1f29cb4380fb993c927b97879e",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.860Z",
+      "elapsedMs": 2037.5601339999998,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 111,
+        "sha256": "2df023ce1e51d3ad633864799121f202b37bd5a8144c4d7341b84d3039449668",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "b788ddb91142a7386c1bc07880710721b57c6baf789e7cb1deda15be742183c8",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.934Z",
+      "elapsedMs": 2111.713403,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 73,
+        "sha256": "0943f959383294affdd9760c601cb321056eb689bc9c6ca254da4912fe08ed5f",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 2,
+        "typeName": "Auth",
+        "authSubtype": "[REDACTED]",
+        "authPayload": "[REDACTED]",
+        "payloadBytes": 11
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.934Z",
+      "elapsedMs": 2111.8367200000002,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 96,
+        "sha256": "b69282245be82452544e0498a6fabc17eb7bb5308614ebf4ca96c7944ff8e329",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 33,
+        "payloadSha256": "9a0b2f1eee124db25666a1758570cc5725a49e3745e21975f4900f697fbbb16b",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.935Z",
+      "elapsedMs": 2112.262839,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 113,
+        "sha256": "abc7afc05663206aeddec01eaf0e6636880424924318852f774def687b4d0284",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "deee8383fbeef2e39dca0e9cfae2bdf3ea01f4b6fd96b615d6a1f4004ea1db83",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.935Z",
+      "elapsedMs": 2112.3834500000003,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 109,
+        "sha256": "4b6f487323ecd8d3c47051e43ab55e369f54ccef0682e770f53aa77d21913088",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 47,
+        "payload": {
+          "event": "document.saved",
+          "date": 1795249251600
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.935Z",
+      "elapsedMs": 2112.614747,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 76,
+        "sha256": "3e0fd7ff4fa333b7666355e397f6e509fe7750ee2123f0eb2c3b32db8f2b8d48",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 0,
+        "syncName": "SyncStep1",
+        "payloadBytes": 13,
+        "payloadSha256": "1bad82894983bc85a117e4c620b1027ae2b11955455f8e9cb33f0debd09e090f",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.935Z",
+      "elapsedMs": 2112.715666,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 96,
+        "sha256": "eb5f91afc47f18be9e1bfa35a3b74fc330aa2a7c11651ca7b8044c8b2e22fb33",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 1,
+        "syncName": "SyncStep2",
+        "payloadBytes": 33,
+        "payloadSha256": "9a0b2f1eee124db25666a1758570cc5725a49e3745e21975f4900f697fbbb16b",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.936Z",
+      "elapsedMs": 2113.880036,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 95,
+        "sha256": "84887aa00773eada66e776aaa20f32bf18b66d0e02af495ea74c66fb5596d399",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 1,
+        "syncName": "SyncStep2",
+        "payloadBytes": 32,
+        "payloadSha256": "ee3720ab4366142f8e89635470a44798863e340a884585cf9e226edd08b1e99a",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:52.937Z",
+      "elapsedMs": 2114.0112910000003,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 88,
+        "sha256": "f270ea237127180892c77314ac03be0c38395358ab65880fb333a5ec5a0c23fa",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 26,
+        "payload": {
+          "action": "versions.list"
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.007Z",
+      "elapsedMs": 2184.914543,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 96,
+        "sha256": "b69282245be82452544e0498a6fabc17eb7bb5308614ebf4ca96c7944ff8e329",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 33,
+        "payloadSha256": "9a0b2f1eee124db25666a1758570cc5725a49e3745e21975f4900f697fbbb16b",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.015Z",
+      "elapsedMs": 2191.98672,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 62,
+        "sha256": "7ad16ceada2b0af11052454662511bc6dbcfbad440016ed3f3f692f208b93dd9",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 8,
+        "typeName": "SyncStatus",
+        "syncStatus": 1,
+        "applied": true,
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.015Z",
+      "elapsedMs": 2192.104684,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 96,
+        "sha256": "b69282245be82452544e0498a6fabc17eb7bb5308614ebf4ca96c7944ff8e329",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 0,
+        "typeName": "Sync",
+        "syncSubtype": 2,
+        "syncName": "Update",
+        "payloadBytes": 33,
+        "payloadSha256": "9a0b2f1eee124db25666a1758570cc5725a49e3745e21975f4900f697fbbb16b",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.015Z",
+      "elapsedMs": 2192.163145,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 62,
+        "sha256": "7ad16ceada2b0af11052454662511bc6dbcfbad440016ed3f3f692f208b93dd9",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 8,
+        "typeName": "SyncStatus",
+        "syncStatus": 1,
+        "applied": true,
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.051Z",
+      "elapsedMs": 2227.968448,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 101,
+        "sha256": "f84a1ae46da1aab2002072bec3ca71073e67ce5a98a8288a987fae87291e07aa",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 39,
+        "payload": {
+          "event": "versions.list",
+          "versions": []
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.060Z",
+      "elapsedMs": 2237.261024,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "at": "2026-11-21T08:20:53.063Z",
+      "elapsedMs": 2240.268076,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "at": "2026-11-21T08:20:53.067Z",
+      "elapsedMs": 2244.1556450000003,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/@vite/client"
+    },
+    {
+      "at": "2026-11-21T08:20:53.067Z",
+      "elapsedMs": 2244.230476,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/src/main.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:53.076Z",
+      "elapsedMs": 2253.607931,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/src/main.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:53.076Z",
+      "elapsedMs": 2253.920806,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/@vite/client"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.57228,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_core.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.642382,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_starter-kit.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.6926320000002,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.740873,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration-caret.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.794551,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@hocuspocus_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.842306,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.887194,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/@id/__x00__virtual:cloud-provider"
+    },
+    {
+      "at": "2026-11-21T08:20:53.077Z",
+      "elapsedMs": 2254.922564,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/src/style.css"
+    },
+    {
+      "at": "2026-11-21T08:20:53.078Z",
+      "elapsedMs": 2255.087545,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:53.079Z",
+      "elapsedMs": 2256.033232,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_core.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.079Z",
+      "elapsedMs": 2256.158343,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-C78taGyF.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.082Z",
+      "elapsedMs": 2259.911762,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.083Z",
+      "elapsedMs": 2260.316928,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@hocuspocus_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.083Z",
+      "elapsedMs": 2260.6291,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-DscwUIlh.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.083Z",
+      "elapsedMs": 2260.712079,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_extension-collaboration-caret.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.084Z",
+      "elapsedMs": 2261.073766,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/hocuspocus-provider.esm-B62MnYDb.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.084Z",
+      "elapsedMs": 2261.173733,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/@id/__x00__virtual:cloud-provider"
+    },
+    {
+      "at": "2026-11-21T08:20:53.084Z",
+      "elapsedMs": 2261.580358,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.084Z",
+      "elapsedMs": 2261.6773940000003,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap-pro_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.084Z",
+      "elapsedMs": 2261.7335120000002,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-DsFBIdji.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.085Z",
+      "elapsedMs": 2262.374437,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/src/style.css"
+    },
+    {
+      "at": "2026-11-21T08:20:53.085Z",
+      "elapsedMs": 2262.568339,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "at": "2026-11-21T08:20:53.088Z",
+      "elapsedMs": 2265.116104,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap_starter-kit.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.088Z",
+      "elapsedMs": 2265.304534,
+      "client": "fresh-context",
+      "socketId": "fresh-context-6",
+      "kind": "ws-open",
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.098Z",
+      "elapsedMs": 2275.8596780000003,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/@tiptap-pro_provider.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.099Z",
+      "elapsedMs": 2276.138159,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/hocuspocus-provider.esm-B62MnYDb.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.099Z",
+      "elapsedMs": 2276.682821,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-DscwUIlh.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.103Z",
+      "elapsedMs": 2280.485244,
+      "client": "fresh-context",
+      "kind": "ws-upgrade",
+      "requestId": "2270153.20",
+      "status": 101
+    },
+    {
+      "at": "2026-11-21T08:20:53.103Z",
+      "elapsedMs": 2280.869837,
+      "client": "fresh-context",
+      "socketId": "fresh-context-6",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 20,
+        "sha256": "06062342cef4dcb8babd7c0308d2786482506a738db066de952ccc0554f59b80",
+        "status": "malformed"
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:53.109Z",
+      "elapsedMs": 2286.067473,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/yjs-DsFBIdji.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.110Z",
+      "elapsedMs": 2287.332874,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/node_modules/.vite/deps/dist-C78taGyF.js?v=%5BREDACTED%5D"
+    },
+    {
+      "at": "2026-11-21T08:20:53.135Z",
+      "elapsedMs": 2312.8870660000002,
+      "client": "fresh-context",
+      "kind": "http-request",
+      "method": "GET",
+      "url": "http://127.0.0.1:5193/api/config"
+    },
+    {
+      "at": "2026-11-21T08:20:53.144Z",
+      "elapsedMs": 2321.439742,
+      "client": "fresh-context",
+      "kind": "http-response",
+      "status": 200,
+      "url": "http://127.0.0.1:5193/api/config"
+    },
+    {
+      "at": "2026-11-21T08:20:55.107Z",
+      "elapsedMs": 4284.355994,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 109,
+        "sha256": "0f65b49606b7690c5ce483244c632df60b135f73674e30a0b8a5b1804d4b633e",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 47,
+        "payload": {
+          "event": "document.saved",
+          "date": 1795249254632
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:55.107Z",
+      "elapsedMs": 4284.637487999999,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 110,
+        "sha256": "5d036aa02fef7ab68042b083bcfb10958fd409201c67fa6d83ef3657c6816c0f",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 48,
+        "payload": {
+          "event": "content.changed",
+          "date": 1795249254632
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:55.108Z",
+      "elapsedMs": 4285.2014309999995,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 109,
+        "sha256": "0f65b49606b7690c5ce483244c632df60b135f73674e30a0b8a5b1804d4b633e",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 47,
+        "payload": {
+          "event": "document.saved",
+          "date": 1795249254632
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:20:55.108Z",
+      "elapsedMs": 4285.687956,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 110,
+        "sha256": "5d036aa02fef7ab68042b083bcfb10958fd409201c67fa6d83ef3657c6816c0f",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 5,
+        "typeName": "Stateless",
+        "payloadBytes": 48,
+        "payload": {
+          "event": "content.changed",
+          "date": 1795249254632
+        },
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:09.351Z",
+      "elapsedMs": 18527.955684,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 113,
+        "sha256": "537bbbb9171202c1e30d14eff583b9c41470a6bbd428931ac2013c6bec87d7af",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "7be00a014972ea177cfc294df413d75d373b288679d69a5468a9c87f75189b75",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:09.366Z",
+      "elapsedMs": 18543.486176,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 111,
+        "sha256": "f96a2e38fc97e1e23f5fbadca06b61a2d7b6c81cf19303a840e252194ba9e139",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "952cad717ef3eb531d92b86ff649c94816e65eda3be94b03d83122b3bacb6738",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:09.434Z",
+      "elapsedMs": 18611.756127999997,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 113,
+        "sha256": "537bbbb9171202c1e30d14eff583b9c41470a6bbd428931ac2013c6bec87d7af",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "7be00a014972ea177cfc294df413d75d373b288679d69a5468a9c87f75189b75",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:09.437Z",
+      "elapsedMs": 18614.420727999997,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 113,
+        "sha256": "537bbbb9171202c1e30d14eff583b9c41470a6bbd428931ac2013c6bec87d7af",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 51,
+        "payloadSha256": "7be00a014972ea177cfc294df413d75d373b288679d69a5468a9c87f75189b75",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:09.440Z",
+      "elapsedMs": 18617.634799,
+      "client": "primary",
+      "socketId": "primary-3",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 111,
+        "sha256": "f96a2e38fc97e1e23f5fbadca06b61a2d7b6c81cf19303a840e252194ba9e139",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "952cad717ef3eb531d92b86ff649c94816e65eda3be94b03d83122b3bacb6738",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:09.442Z",
+      "elapsedMs": 18619.854972999998,
+      "client": "primary",
+      "socketId": "primary-5",
+      "kind": "ws-frame",
+      "direction": "received",
+      "frame": {
+        "bytes": 111,
+        "sha256": "f96a2e38fc97e1e23f5fbadca06b61a2d7b6c81cf19303a840e252194ba9e139",
+        "status": "decoded",
+        "documentName": "tiptap-pro-lab-capture-099b749a-b5ef-4b79-b6b5-6415fa28e312",
+        "type": 1,
+        "typeName": "Awareness",
+        "payloadBytes": 49,
+        "payloadSha256": "952cad717ef3eb531d92b86ff649c94816e65eda3be94b03d83122b3bacb6738",
+        "trailingBytes": 0
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:21.280Z",
+      "elapsedMs": 30457.820878,
+      "client": "primary",
+      "socketId": "primary-2",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 15,
+        "sha256": "cdeb977b07509618335ceaa57b4b76fe3ec9c72f50102f74dcfbab92228ec6fb",
+        "status": "malformed"
+      }
+    },
+    {
+      "at": "2026-11-21T08:21:23.105Z",
+      "elapsedMs": 32282.103702999997,
+      "client": "fresh-context",
+      "socketId": "fresh-context-6",
+      "kind": "ws-frame",
+      "direction": "sent",
+      "frame": {
+        "bytes": 15,
+        "sha256": "cdeb977b07509618335ceaa57b4b76fe3ec9c72f50102f74dcfbab92228ec6fb",
+        "status": "malformed"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "two-clients-connected",
+      "passed": true,
+      "detail": "Two independent Y.Doc and provider instances are authenticated and synced."
+    },
+    {
+      "name": "initial-convergence",
+      "passed": true,
+      "detail": "Synthetic contract: payment in 15 days."
+    },
+    {
+      "name": "after-initial-edit",
+      "observation": {
+        "states": [
+          {
+            "status": "connected",
+            "synced": true,
+            "authenticated": "[REDACTED]",
+            "unsynced": 0
+          },
+          {
+            "status": "connected",
+            "synced": true,
+            "authenticated": "[REDACTED]",
+            "unsynced": 0
+          }
+        ],
+        "documents": [
+          {
+            "type": "doc",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Synthetic contract: payment in 15 days."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "doc",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Synthetic contract: payment in 15 days."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "sharedTypes": [
+          [
+            {
+              "name": "default",
+              "type": "YXmlFragment"
+            },
+            {
+              "name": "__tiptapcollab__config",
+              "type": "YMap"
+            }
+          ],
+          [
+            {
+              "name": "default",
+              "type": "YXmlFragment"
+            },
+            {
+              "name": "__tiptapcollab__config",
+              "type": "YMap"
+            }
+          ]
+        ]
+      },
+      "sha256": "404ab7349f05b02688beb8a275440237747a93524fbf2bb6a131b95d338a7830"
+    },
+    {
+      "name": "offline-reconnect-convergence",
+      "passed": true,
+      "detail": "Both independent edits survive reconnection."
+    },
+    {
+      "name": "after-reconnect",
+      "observation": {
+        "states": [
+          {
+            "status": "connected",
+            "synced": true,
+            "authenticated": "[REDACTED]",
+            "unsynced": 0
+          },
+          {
+            "status": "connected",
+            "synced": true,
+            "authenticated": "[REDACTED]",
+            "unsynced": 1
+          }
+        ],
+        "documents": [
+          {
+            "type": "doc",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Synthetic contract: payment in 15 days. Offline change. Online change."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "doc",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Synthetic contract: payment in 15 days. Offline change. Online change."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "sharedTypes": [
+          [
+            {
+              "name": "default",
+              "type": "YXmlFragment"
+            },
+            {
+              "name": "__tiptapcollab__config",
+              "type": "YMap"
+            }
+          ],
+          [
+            {
+              "name": "default",
+              "type": "YXmlFragment"
+            },
+            {
+              "name": "__tiptapcollab__config",
+              "type": "YMap"
+            }
+          ]
+        ]
+      },
+      "sha256": "17760ab5ecd806d5be49dbcdc83f4a5356f2a65dde304ac1e7dd58c04cc54a21"
+    }
+  ],
+  "limitations": [
+    "WebSocket acknowledgements do not establish durable backend storage.",
+    "A fresh client proves server retrieval while the test server process remains alive.",
+    "Only synthetic lab documents and text are used. No raw auth frames or HTTP bodies are recorded."
+  ],
+  "outcome": "failed",
+  "error": {
+    "name": "TimeoutError",
+    "message": "page.waitForFunction: Timeout 30000ms exceeded."
+  },
+  "finishedAt": "2026-11-21T08:21:23.251Z"
+}

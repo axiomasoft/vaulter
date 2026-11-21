@@ -1,0 +1,47 @@
+{
+  "schema": "tiptap-pro-public-comments-earlier-summary/v1",
+  "provenance": "Summary of the first run observed in this session tool outputs. The original full JSON was replaced by the later diagnostic UI run; this is not a raw packet capture.",
+  "runId": "c08fce71-74a2-49e7-bbb1-4c03cb9a04ab",
+  "target": "public official demo, not user Cloud environment",
+  "status": "partial",
+  "checks": {
+    "editorLoaded": true,
+    "commentVisible": true,
+    "replyVisible": true,
+    "hiddenFromOpenAfterResolve": true
+  },
+  "blocker": {
+    "stage": "resolve-own-thread",
+    "errorClass": "TimeoutError",
+    "failedCheck": "own comment visible in Resolved"
+  },
+  "requests": 59,
+  "frameSummary": {
+    "sent:Auth": 1,
+    "sent:Sync:SyncStep1": 1,
+    "sent:Awareness": 2,
+    "received:Auth": 1,
+    "sent:Sync:Update": 7,
+    "received:Stateless": 4,
+    "received:Sync:SyncStep1": 1,
+    "sent:Sync:SyncStep2": 1,
+    "received:Sync:SyncStep2": 1,
+    "sent:Stateless": 1,
+    "received:Sync:Update": 4,
+    "received:Awareness": 1,
+    "received:SyncStatus": 8
+  },
+  "appliedAcknowledgements": 8,
+  "receivedEvents": [
+    "document.saved",
+    "versions.list",
+    "document.saved",
+    "content.changed"
+  ],
+  "observedOwnTextAnchor": {
+    "type": "inlineThread",
+    "attributeName": "data-thread-id",
+    "value": "1e3dce42-581f-4621-85a8-d7f26da48437",
+    "retainedAfterResolve": true
+  }
+}

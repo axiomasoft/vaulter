@@ -1,0 +1,2030 @@
+{
+  "runAt": "2026-11-21T08:23:54.589Z",
+  "scope": "installed-Pro-0.14.3-local-black-box-no-Cloud",
+  "status": "passed",
+  "moduleErrors": [],
+  "cases": [
+    {
+      "name": "mark-change-review-and-projection",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "bold-proposal",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      },
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435594-dzeefje",
+                          "type": "markChange",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.594Z",
+                          "updatedAt": "2026-11-21T08:23:55.594Z",
+                          "userMetadata": null,
+                          "markChanges": [
+                            {
+                              "operation": "added",
+                              "markName": "bold",
+                              "markAttrs": {}
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "text": "alpha"
+                  },
+                  {
+                    "type": "text",
+                    "text": " beta"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435594-dzeefje",
+              "type": "markChange",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.594Z",
+              "updatedAt": "2026-11-21T08:23:55.594Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 6,
+              "text": "alpha",
+              "fullText": "alpha",
+              "markChanges": [
+                {
+                  "operation": "added",
+                  "markName": "bold",
+                  "markAttrs": {}
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "reject-bold",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha beta"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": []
+        },
+        {
+          "label": "accept-bold",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "alpha"
+                  },
+                  {
+                    "type": "text",
+                    "text": " beta"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": []
+        }
+      ],
+      "baseProjection": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "alpha beta"
+              }
+            ]
+          }
+        ]
+      },
+      "acceptedProjection": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "alpha",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " beta"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "atom-attribute-revise-cancel-reject-accept",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "attribute-red",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "probeAtom",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": "suggestion-1795249435610-avv3xoy",
+                  "suggestionType": "attributeChange",
+                  "suggestionUserId": "author-a",
+                  "suggestionCreatedAt": "2026-11-21T08:23:55.610Z",
+                  "suggestionUpdatedAt": "2026-11-21T08:23:55.610Z",
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": [
+                    {
+                      "attributeName": "color",
+                      "oldValue": "blue",
+                      "newValue": "red"
+                    }
+                  ],
+                  "color": "red",
+                  "label": "synthetic"
+                }
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                }
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435610-avv3xoy",
+              "type": "attributeChange",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.610Z",
+              "updatedAt": "2026-11-21T08:23:55.610Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 8,
+              "text": "",
+              "fullText": "",
+              "nodeType": "probeAtom",
+              "attributeChanges": [
+                {
+                  "attributeName": "color",
+                  "oldValue": "blue",
+                  "newValue": "red"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "attribute-green-same-author",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "probeAtom",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": "suggestion-1795249435610-avv3xoy",
+                  "suggestionType": "attributeChange",
+                  "suggestionUserId": "author-a",
+                  "suggestionCreatedAt": "2026-11-21T08:23:55.610Z",
+                  "suggestionUpdatedAt": "2026-11-21T08:23:55.611Z",
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": [
+                    {
+                      "attributeName": "color",
+                      "oldValue": "blue",
+                      "newValue": "green"
+                    }
+                  ],
+                  "color": "green",
+                  "label": "synthetic"
+                }
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                }
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435610-avv3xoy",
+              "type": "attributeChange",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.610Z",
+              "updatedAt": "2026-11-21T08:23:55.611Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 8,
+              "text": "",
+              "fullText": "",
+              "nodeType": "probeAtom",
+              "attributeChanges": [
+                {
+                  "attributeName": "color",
+                  "oldValue": "blue",
+                  "newValue": "green"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "reject-attribute",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "probeAtom",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null,
+                  "color": "blue",
+                  "label": "synthetic"
+                }
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                }
+              }
+            ]
+          },
+          "suggestions": []
+        },
+        {
+          "label": "accept-attribute",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "probeAtom",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null,
+                  "color": "green",
+                  "label": "synthetic"
+                }
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                }
+              }
+            ]
+          },
+          "suggestions": []
+        }
+      ]
+    },
+    {
+      "name": "structural-paragraph-split",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "split-existing-paragraph",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": "suggestion-1795249435616-5itbtud",
+                  "suggestionType": "blockSplit",
+                  "suggestionUserId": "author-a",
+                  "suggestionCreatedAt": "2026-11-21T08:23:55.616Z",
+                  "suggestionUpdatedAt": "2026-11-21T08:23:55.616Z",
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": "structural",
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": " beta"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435616-5itbtud",
+              "type": "split",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.616Z",
+              "updatedAt": "2026-11-21T08:23:55.616Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 14,
+              "text": " beta",
+              "fullText": " beta",
+              "splitKind": "structural",
+              "nodeType": "paragraph"
+            }
+          ]
+        },
+        {
+          "label": "reject-structural-split",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha beta"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": []
+        },
+        {
+          "label": "accept-structural-split",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": " beta"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": []
+        }
+      ]
+    },
+    {
+      "name": "end-paragraph-split",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "split-at-end",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": "suggestion-1795249435622-htnv44c",
+                  "suggestionType": "blockSplit",
+                  "suggestionUserId": "author-a",
+                  "suggestionCreatedAt": "2026-11-21T08:23:55.622Z",
+                  "suggestionUpdatedAt": "2026-11-21T08:23:55.622Z",
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": "insertion",
+                  "suggestionAttributeChanges": null
+                }
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435622-htnv44c",
+              "type": "split",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.622Z",
+              "updatedAt": "2026-11-21T08:23:55.622Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 9,
+              "text": "",
+              "fullText": "",
+              "splitKind": "insertion",
+              "nodeType": "paragraph"
+            }
+          ]
+        },
+        {
+          "label": "reject-end-split",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "alpha"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": []
+        }
+      ]
+    },
+    {
+      "name": "adjacent-grouping-and-own-insertion-deletion",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "two-adjacent-insertions",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435625-p7m8odr",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.625Z",
+                          "updatedAt": "2026-11-21T08:23:55.626Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "xy"
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435625-p7m8odr",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.625Z",
+              "updatedAt": "2026-11-21T08:23:55.626Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 3,
+              "text": "xy",
+              "fullText": "xy"
+            }
+          ]
+        },
+        {
+          "label": "delete-own-pending-insertion",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435625-p7m8odr",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.625Z",
+                          "updatedAt": "2026-11-21T08:23:55.626Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "x"
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435625-p7m8odr",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.625Z",
+              "updatedAt": "2026-11-21T08:23:55.626Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 2,
+              "text": "x",
+              "fullText": "x"
+            }
+          ]
+        },
+        {
+          "label": "other-author-adjacent-insertion",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435625-p7m8odr",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.625Z",
+                          "updatedAt": "2026-11-21T08:23:55.626Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "x"
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435627-gd01dd6",
+                          "type": "add",
+                          "userId": "author-b",
+                          "createdAt": "2026-11-21T08:23:55.627Z",
+                          "updatedAt": "2026-11-21T08:23:55.627Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "z"
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435625-p7m8odr",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.625Z",
+              "updatedAt": "2026-11-21T08:23:55.626Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 2,
+              "text": "x",
+              "fullText": "x"
+            },
+            {
+              "id": "suggestion-1795249435627-gd01dd6",
+              "type": "add",
+              "userId": "author-b",
+              "createdAt": "2026-11-21T08:23:55.627Z",
+              "updatedAt": "2026-11-21T08:23:55.627Z",
+              "userMetadata": null,
+              "from": 2,
+              "to": 3,
+              "text": "z",
+              "fullText": "z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "nested-authors-and-review-order",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "b-inserts-inside-a-pending-add",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435629-ajtyeon",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.629Z",
+                          "updatedAt": "2026-11-21T08:23:55.629Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "Hello "
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435629-ajtyeon",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.629Z",
+                          "updatedAt": "2026-11-21T08:23:55.629Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      },
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435630-qjqfyk3",
+                          "type": "add",
+                          "userId": "author-b",
+                          "createdAt": "2026-11-21T08:23:55.630Z",
+                          "updatedAt": "2026-11-21T08:23:55.630Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "great "
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435629-ajtyeon",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.629Z",
+                          "updatedAt": "2026-11-21T08:23:55.629Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "world "
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435629-ajtyeon",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.629Z",
+              "updatedAt": "2026-11-21T08:23:55.629Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 19,
+              "text": "Hello world ",
+              "fullText": "Hello great world "
+            },
+            {
+              "id": "suggestion-1795249435630-qjqfyk3",
+              "type": "add",
+              "userId": "author-b",
+              "createdAt": "2026-11-21T08:23:55.630Z",
+              "updatedAt": "2026-11-21T08:23:55.630Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 13,
+              "text": "great ",
+              "fullText": "great "
+            }
+          ]
+        },
+        {
+          "label": "reject-inner-b",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435629-ajtyeon",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.629Z",
+                          "updatedAt": "2026-11-21T08:23:55.629Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "Hello world "
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435629-ajtyeon",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.629Z",
+              "updatedAt": "2026-11-21T08:23:55.629Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 13,
+              "text": "Hello world ",
+              "fullText": "Hello world "
+            }
+          ]
+        }
+      ],
+      "final": {
+        "document": {
+          "type": "doc",
+          "attrs": {
+            "suggestionNodeTypeChange": null,
+            "suggestionId": null,
+            "suggestionType": null,
+            "suggestionUserId": null,
+            "suggestionCreatedAt": null,
+            "suggestionUpdatedAt": null,
+            "suggestionUserMetadata": null,
+            "suggestionNestingDelta": null,
+            "suggestionSplitSide": null,
+            "suggestionSplitKind": null,
+            "suggestionAttributeChanges": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "suggestionNodeTypeChange": null,
+                "suggestionId": null,
+                "suggestionType": null,
+                "suggestionUserId": null,
+                "suggestionCreatedAt": null,
+                "suggestionUpdatedAt": null,
+                "suggestionUserMetadata": null,
+                "suggestionNestingDelta": null,
+                "suggestionSplitSide": null,
+                "suggestionSplitKind": null,
+                "suggestionAttributeChanges": null
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Hello world base"
+                }
+              ]
+            }
+          ]
+        },
+        "suggestions": []
+      }
+    },
+    {
+      "name": "direct-yjs-two-editors-no-retracking",
+      "status": "passed",
+      "observations": [
+        {
+          "label": "a-after-local-insertion",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "Hello world "
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435639-2xakgxd",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.639Z",
+              "updatedAt": "2026-11-21T08:23:55.639Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 13,
+              "text": "Hello world ",
+              "fullText": "Hello world "
+            }
+          ]
+        },
+        {
+          "label": "b-after-remote-insertion",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "Hello world "
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435639-2xakgxd",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.639Z",
+              "updatedAt": "2026-11-21T08:23:55.639Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 13,
+              "text": "Hello world ",
+              "fullText": "Hello world "
+            }
+          ]
+        },
+        {
+          "label": "a-after-b-nested-insert",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "Hello "
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      },
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435642-hrqrsg3",
+                          "type": "add",
+                          "userId": "author-b",
+                          "createdAt": "2026-11-21T08:23:55.642Z",
+                          "updatedAt": "2026-11-21T08:23:55.642Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "great "
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "world "
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435639-2xakgxd",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.639Z",
+              "updatedAt": "2026-11-21T08:23:55.639Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 19,
+              "text": "Hello world ",
+              "fullText": "Hello great world "
+            },
+            {
+              "id": "suggestion-1795249435642-hrqrsg3",
+              "type": "add",
+              "userId": "author-b",
+              "createdAt": "2026-11-21T08:23:55.642Z",
+              "updatedAt": "2026-11-21T08:23:55.642Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 13,
+              "text": "great ",
+              "fullText": "great "
+            }
+          ]
+        },
+        {
+          "label": "b-after-own-nested-insert",
+          "document": {
+            "type": "doc",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "suggestionNodeTypeChange": null,
+                  "suggestionId": null,
+                  "suggestionType": null,
+                  "suggestionUserId": null,
+                  "suggestionCreatedAt": null,
+                  "suggestionUpdatedAt": null,
+                  "suggestionUserMetadata": null,
+                  "suggestionNestingDelta": null,
+                  "suggestionSplitSide": null,
+                  "suggestionSplitKind": null,
+                  "suggestionAttributeChanges": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "Hello "
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      },
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435642-hrqrsg3",
+                          "type": "add",
+                          "userId": "author-b",
+                          "createdAt": "2026-11-21T08:23:55.642Z",
+                          "updatedAt": "2026-11-21T08:23:55.642Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "great "
+                  },
+                  {
+                    "type": "text",
+                    "marks": [
+                      {
+                        "type": "suggestion",
+                        "attrs": {
+                          "id": "suggestion-1795249435639-2xakgxd",
+                          "type": "add",
+                          "userId": "author-a",
+                          "createdAt": "2026-11-21T08:23:55.639Z",
+                          "updatedAt": "2026-11-21T08:23:55.639Z",
+                          "userMetadata": null,
+                          "markChanges": null
+                        }
+                      }
+                    ],
+                    "text": "world "
+                  },
+                  {
+                    "type": "text",
+                    "text": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "suggestions": [
+            {
+              "id": "suggestion-1795249435639-2xakgxd",
+              "type": "add",
+              "userId": "author-a",
+              "createdAt": "2026-11-21T08:23:55.639Z",
+              "updatedAt": "2026-11-21T08:23:55.639Z",
+              "userMetadata": null,
+              "from": 1,
+              "to": 19,
+              "text": "Hello world ",
+              "fullText": "Hello great world "
+            },
+            {
+              "id": "suggestion-1795249435642-hrqrsg3",
+              "type": "add",
+              "userId": "author-b",
+              "createdAt": "2026-11-21T08:23:55.642Z",
+              "updatedAt": "2026-11-21T08:23:55.642Z",
+              "userMetadata": null,
+              "from": 7,
+              "to": 13,
+              "text": "great ",
+              "fullText": "great "
+            }
+          ]
+        }
+      ],
+      "transport": "direct-Y.applyUpdate-in-memory; no provider, auth or Cloud server"
+    },
+    {
+      "name": "node-type-proposals-yjs-guard",
+      "status": "passed",
+      "observations": [],
+      "initializationError": "Node type changes are not supported with Yjs collaboration."
+    }
+  ],
+  "checks": [
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "programmatic-mark-command-succeeds",
+      "passed": true
+    },
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "query-exposes-added-bold",
+      "passed": true
+    },
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "projection-does-not-mutate-live-editor",
+      "passed": true
+    },
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "reason-is-not-persisted",
+      "passed": true
+    },
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "reject-mark-succeeds",
+      "passed": true
+    },
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "reject-removes-bold",
+      "passed": true
+    },
+    {
+      "case": "mark-change-review-and-projection",
+      "name": "accept-keeps-bold-without-proposal",
+      "passed": true
+    },
+    {
+      "case": "atom-attribute-revise-cancel-reject-accept",
+      "name": "attribute-proposal-records-old-new",
+      "passed": true
+    },
+    {
+      "case": "atom-attribute-revise-cancel-reject-accept",
+      "name": "same-author-reuses-id-and-original-value",
+      "passed": true
+    },
+    {
+      "case": "atom-attribute-revise-cancel-reject-accept",
+      "name": "returning-to-original-cancels-proposal",
+      "passed": true
+    },
+    {
+      "case": "atom-attribute-revise-cancel-reject-accept",
+      "name": "reject-restores-original-attribute",
+      "passed": true
+    },
+    {
+      "case": "atom-attribute-revise-cancel-reject-accept",
+      "name": "accept-keeps-proposed-attribute",
+      "passed": true
+    },
+    {
+      "case": "structural-paragraph-split",
+      "name": "existing-text-split-is-structural",
+      "passed": true
+    },
+    {
+      "case": "structural-paragraph-split",
+      "name": "rejection-joins-original-paragraph",
+      "passed": true
+    },
+    {
+      "case": "structural-paragraph-split",
+      "name": "acceptance-keeps-two-paragraphs",
+      "passed": true
+    },
+    {
+      "case": "end-paragraph-split",
+      "name": "end-split-is-insertion-kind",
+      "passed": true
+    },
+    {
+      "case": "end-paragraph-split",
+      "name": "reject-removes-added-empty-paragraph",
+      "passed": true
+    },
+    {
+      "case": "adjacent-grouping-and-own-insertion-deletion",
+      "name": "same-author-adjacent-insertions-group",
+      "passed": true
+    },
+    {
+      "case": "adjacent-grouping-and-own-insertion-deletion",
+      "name": "own-pending-insert-deletion-shrinks-add",
+      "passed": true
+    },
+    {
+      "case": "adjacent-grouping-and-own-insertion-deletion",
+      "name": "different-author-does-not-merge-id",
+      "passed": true
+    },
+    {
+      "case": "nested-authors-and-review-order",
+      "name": "nested-authors-keep-distinct-suggestions",
+      "passed": true
+    },
+    {
+      "case": "nested-authors-and-review-order",
+      "name": "outer-text-excludes-inner-insertion",
+      "passed": true
+    },
+    {
+      "case": "nested-authors-and-review-order",
+      "name": "rejecting-inner-keeps-outer-proposal",
+      "passed": true
+    },
+    {
+      "case": "nested-authors-and-review-order",
+      "name": "accepting-outer-after-inner-rejection",
+      "passed": true
+    },
+    {
+      "case": "direct-yjs-two-editors-no-retracking",
+      "name": "remote-update-is-not-retracked-as-b",
+      "passed": true
+    },
+    {
+      "case": "direct-yjs-two-editors-no-retracking",
+      "name": "both-live-documents-converge",
+      "passed": true
+    },
+    {
+      "case": "direct-yjs-two-editors-no-retracking",
+      "name": "two-authors-not-duplicate-remote-proposals",
+      "passed": true
+    },
+    {
+      "case": "node-type-proposals-yjs-guard",
+      "name": "unsupported-type-change-yjs-combination-rejected",
+      "passed": true
+    }
+  ],
+  "browser": "156.0.8078.47",
+  "package": "0.14.3"
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "tiptap-pro-independent-readback/v1",
+  "room": "tiptap-pro-lab-agent-success-3069a0f4-27cb-4f94-8f74-b9340a8ecd8a",
+  "kind": "agent",
+  "startedAt": "2026-11-21T08:36:01.317Z",
+  "checks": {},
+  "requests": [],
+  "limitation": "Fresh server retrieval after browser closure; no server crash or SQL transaction boundary is observed.",
+  "status": "failed",
+  "error": {
+    "name": "TypeError",
+    "message": "fetch failed",
+    "causeCode": "UND_ERR_CONNECT_TIMEOUT"
+  }
+}

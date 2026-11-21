@@ -1,0 +1,95 @@
+{
+  "schema": "tiptap-pro-headless-agent/v1",
+  "runId": "62c1c783-736c-4496-90fd-2ace4ebd311b",
+  "startedAt": "2026-11-21T08:26:35.821Z",
+  "requests": [
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "POST",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 312,
+      "sha256": "5bfd894e6aad3e3ea4127138621ff99ada6b19c37c77de3d320a557e85fa90f1"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 312,
+      "sha256": "5bfd894e6aad3e3ea4127138621ff99ada6b19c37c77de3d320a557e85fa90f1"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 357,
+      "sha256": "1ede91f0ec1abf16375209b9ed1f17482dfe5f0097128c081a107d95b7b705ea"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 394,
+      "sha256": "cb90d0018018d572513bcd208b64986bf611df6800ba3031ee2cdd71f1621b05"
+    }
+  ],
+  "checks": {
+    "target-unchanged-after-neighbour-edit": true,
+    "payment-changed-once": false
+  },
+  "limitations": [
+    "This tests Cloud REST and Yjs feasibility, not Vaulter office.prepare/commit/status/verify.",
+    "No durable business intent, command receipt, reviewer ACL, transaction fencing or logical command deduplication is provided here.",
+    "Replaying identical Yjs bytes is transport idempotency, not proof that recomputing an intent is idempotent.",
+    "Neighbour edits are simulated by a second independent server-side Y.Doc, not a live human browser."
+  ],
+  "documents": {
+    "success": "tiptap-pro-lab-agent-success-62c1c783-736c-4496-90fd-2ace4ebd311b",
+    "conflict": "tiptap-pro-lab-agent-conflict-62c1c783-736c-4496-90fd-2ace4ebd311b"
+  },
+  "agentUpdate": {
+    "bytes": 35,
+    "sha256": "8d81bc3e60579921a0322b01907ecbbfe10b3ad02a14563077e23491277f9044"
+  },
+  "status": "failed",
+  "error": {
+    "name": "Error",
+    "message": "Postcondition failed: payment-changed-once"
+  },
+  "finishedAt": "2026-11-21T08:26:37.744Z"
+}

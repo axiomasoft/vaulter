@@ -1,0 +1,97 @@
+{
+  "schema": "tiptap-pro-independent-readback/v1",
+  "room": "tiptap-pro-lab-comments-versions-ea7e6bbe-d90a-4fbe-a000-b01728e5ec71",
+  "kind": "comments-versions",
+  "startedAt": "2026-11-21T08:38:03.244Z",
+  "checks": {
+    "stable-block-identities": true,
+    "restored-payment-15": true,
+    "bold-preserved": true,
+    "comment-and-reply-preserved": true,
+    "resolved-discussion-survives-text-restore": true
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "bytes": 2086,
+      "sha256": "8c33d466ca54c8a55703fda412b8304de3cb4fe39c69964318cc9db107edd357"
+    }
+  ],
+  "limitation": "Fresh server retrieval after browser closure; no server crash or SQL transaction boundary is observed.",
+  "sharedTypes": [
+    "__tiptapcollab__config",
+    "__tiptapcollab__versions",
+    "__tiptapcollab__users",
+    "default",
+    "__tiptapcollab__threads"
+  ],
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "attrs": {
+          "blockId": "p42"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Payment within "
+          },
+          {
+            "type": "text",
+            "text": "15",
+            "marks": [
+              {
+                "type": "bold"
+              },
+              {
+                "type": "inlineThread",
+                "attrs": {
+                  "data-thread-id": "42a8105c-0f3c-40a0-a078-3cb2d626186b"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " working days."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "blockId": "p71"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Independent clause stays unchanged."
+          }
+        ]
+      }
+    ]
+  },
+  "threads": [
+    {
+      "id": "42a8105c-0f3c-40a0-a078-3cb2d626186b",
+      "resolvedAt": "2026-11-21T08:30:58.903Z",
+      "comments": [
+        {
+          "id": "e80d0869-4f57-40c4-a088-1056b79b71c7",
+          "content": "Synthetic review: confirm the payment term.",
+          "deletedAt": null
+        },
+        {
+          "id": "0eeb9f29-0712-4fc4-969b-99c8acdd337c",
+          "content": "Synthetic Bob reply: term reviewed.",
+          "deletedAt": null
+        }
+      ]
+    }
+  ],
+  "status": "passed"
+}

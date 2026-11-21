@@ -1,0 +1,313 @@
+{
+  "startedAt": "2026-11-21T09:34:19.912Z",
+  "externalRequests": 0,
+  "cases": [
+    {
+      "name": "paste-through-editor",
+      "checks": {
+        "aria-heading-converted": true,
+        "bold-body-kept": true,
+        "word-artifacts-removed": true,
+        "flat-list-nested-in-document": true
+      },
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Budget"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "Total"
+              }
+            ]
+          }
+        ]
+      },
+      "list": {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Outer"
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Inner"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "markdown-export",
+      "checks": {
+        "heading-and-bold-serialized": true,
+        "matches-open-source-serializer": true
+      },
+      "markdown": "## Budget\n\n**Total**",
+      "passed": true
+    },
+    {
+      "name": "pagekit-with-starter-kit",
+      "checks": {
+        "page-layout-mounted": true,
+        "page-break-command-succeeds": true,
+        "explicit-break-stored-as-node": true,
+        "dom-layout-increases-page-count": true,
+        "both-paragraphs-kept": true
+      },
+      "before": 1,
+      "after": 2,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "First page"
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          },
+          {
+            "type": "pageBreak"
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Second page"
+              }
+            ]
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "pagekit-with-convert-kit",
+      "checks": {
+        "page-layout-mounted": true,
+        "page-break-command-succeeds": true,
+        "explicit-break-stored-as-node": true,
+        "dom-layout-increases-page-count": true,
+        "both-paragraphs-kept": true
+      },
+      "before": 1,
+      "after": 2,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null,
+              "contextualSpacing": null,
+              "keepNext": null,
+              "keepLines": null,
+              "spacingBefore": null,
+              "spacingAfter": null,
+              "lineHeight": null,
+              "fontSize": null,
+              "indent": null,
+              "firstLineIndent": null,
+              "indentRight": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "First page"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null,
+              "contextualSpacing": null,
+              "keepNext": null,
+              "keepLines": null,
+              "spacingBefore": null,
+              "spacingAfter": null,
+              "lineHeight": null,
+              "fontSize": null,
+              "indent": null,
+              "firstLineIndent": null,
+              "indentRight": null
+            }
+          },
+          {
+            "type": "pageBreak"
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null,
+              "contextualSpacing": null,
+              "keepNext": null,
+              "keepLines": null,
+              "spacingBefore": null,
+              "spacingAfter": null,
+              "lineHeight": null,
+              "fontSize": null,
+              "indent": null,
+              "firstLineIndent": null,
+              "indentRight": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Second page"
+              }
+            ]
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "doc-multipart-request",
+      "checks": {
+        "mock-endpoint": true,
+        "request-headers": true,
+        "multipart-docx-file": true,
+        "zip-signature": "[REDACTED]",
+        "callback-got-file": true
+      },
+      "request": {
+        "path": "/v2/convert/export/doc",
+        "body": "multipart",
+        "fields": [
+          "docxFile"
+        ],
+        "docxBytes": 9367
+      },
+      "passed": true
+    },
+    {
+      "name": "pdf-multipart-request",
+      "checks": {
+        "mock-endpoint": true,
+        "request-headers": true,
+        "multipart-docx-file": true,
+        "zip-signature": "[REDACTED]",
+        "callback-got-file": true
+      },
+      "request": {
+        "path": "/v2/convert/export/pdf",
+        "body": "multipart",
+        "fields": [
+          "docxFile"
+        ],
+        "docxBytes": 9367
+      },
+      "passed": true
+    },
+    {
+      "name": "odt-multipart-request",
+      "checks": {
+        "mock-endpoint": true,
+        "request-headers": true,
+        "multipart-docx-file": true,
+        "zip-signature": "[REDACTED]",
+        "callback-got-file": true
+      },
+      "request": {
+        "path": "/v2/convert/export/odt",
+        "body": "multipart",
+        "fields": [
+          "docxFile"
+        ],
+        "docxBytes": 9366
+      },
+      "passed": true
+    },
+    {
+      "name": "epub-multipart-request",
+      "checks": {
+        "mock-endpoint": true,
+        "request-headers": true,
+        "multipart-docx-file": true,
+        "zip-signature": "[REDACTED]",
+        "callback-got-file": true
+      },
+      "request": {
+        "path": "/v2/convert/export/epub",
+        "body": "multipart",
+        "fields": [
+          "docxFile"
+        ],
+        "docxBytes": 9367
+      },
+      "passed": true
+    },
+    {
+      "name": "pdf-json-request",
+      "checks": {
+        "mock-endpoint": true,
+        "request-headers": true,
+        "json-document-round-trip": true,
+        "callback-got-file": true
+      },
+      "request": {
+        "path": "/v2/convert/export/pdf",
+        "body": "json",
+        "fields": [
+          "doc"
+        ]
+      },
+      "passed": true
+    }
+  ],
+  "pageErrors": [],
+  "httpErrors": [],
+  "status": "passed"
+}

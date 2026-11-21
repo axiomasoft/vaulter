@@ -1,0 +1,399 @@
+{
+  "runAt": "2026-11-21T08:30:06.592Z",
+  "room": "tiptap-pro-lab-lifecycle-8263082e-8549-44b5-8fc7-aa2b7ffbea95",
+  "status": "pending-handshake-or-sync-observed",
+  "scope": "three-provider-constructions-maximum; no-content-mutations",
+  "cdp": [
+    {
+      "event": "webSocketCreated",
+      "at": 1795249806932,
+      "requestId": "2371833.16",
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "event": "webSocketWillSendHandshakeRequest",
+      "at": 1795249806937,
+      "requestId": "2371833.16"
+    },
+    {
+      "event": "webSocketHandshakeResponseReceived",
+      "at": 1795249806938,
+      "requestId": "2371833.16",
+      "status": 101
+    },
+    {
+      "event": "webSocketCreated",
+      "at": 1795249807007,
+      "requestId": "2371833.48",
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "event": "webSocketWillSendHandshakeRequest",
+      "at": 1795249807010,
+      "requestId": "2371833.48"
+    },
+    {
+      "event": "webSocketHandshakeResponseReceived",
+      "at": 1795249807011,
+      "requestId": "2371833.48",
+      "status": 101
+    },
+    {
+      "event": "webSocketCreated",
+      "at": 1795249807624,
+      "requestId": "2371833.57",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "event": "webSocketCreated",
+      "at": 1795249807624,
+      "requestId": "2371833.58",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "event": "webSocketWillSendHandshakeRequest",
+      "at": 1795249814063,
+      "requestId": "2371833.57"
+    },
+    {
+      "event": "webSocketHandshakeResponseReceived",
+      "at": 1795249814156,
+      "requestId": "2371833.57",
+      "status": 101
+    },
+    {
+      "event": "webSocketFrameError",
+      "at": 1795249817642,
+      "requestId": "2371833.58",
+      "error": "WebSocket is closed before the connection is established."
+    },
+    {
+      "event": "webSocketCreated",
+      "at": 1795249817642,
+      "requestId": "2371833.61",
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "event": "webSocketClosed",
+      "at": 1795249817643,
+      "requestId": "2371833.58"
+    },
+    {
+      "event": "webSocketFrameError",
+      "at": 1795249827654,
+      "requestId": "2371833.61",
+      "error": "WebSocket is closed before the connection is established."
+    },
+    {
+      "event": "webSocketClosed",
+      "at": 1795249827654,
+      "requestId": "2371833.61"
+    }
+  ],
+  "playwrightSockets": [
+    {
+      "at": 1795249806937,
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "at": 1795249807011,
+      "url": "ws://127.0.0.1:5193/?%5BREDACTED%5D=%5BREDACTED%5D"
+    },
+    {
+      "at": 1795249814064,
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "at": 1795249817641,
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    },
+    {
+      "at": 1795249827654,
+      "url": "wss://09x44y5k.collab.tiptap.cloud/?__version=%5BREDACTED%5D"
+    }
+  ],
+  "attempts": [
+    {
+      "kind": "initial",
+      "outcome": "timeout-10s",
+      "durationMs": 10008,
+      "snapshot": {
+        "providers": [
+          {
+            "providerId": 1,
+            "websocketId": 2,
+            "nativeId": 3,
+            "isAttached": true,
+            "isSynced": true,
+            "isAuthenticated": "[REDACTED]",
+            "manageSocket": true,
+            "status": "connected",
+            "shouldConnect": true,
+            "nativeReadyState": 1,
+            "autoConnect": true,
+            "retryTimeout": 0,
+            "initialDelay": 0,
+            "delay": 1000,
+            "messageReconnectTimeout": 30000,
+            "mapSize": 1,
+            "routedToSelf": true,
+            "hasConnectionAttempt": false,
+            "lastMessageReceivedNonzero": true
+          },
+          {
+            "providerId": 4,
+            "websocketId": 5,
+            "nativeId": 6,
+            "isAttached": true,
+            "isSynced": false,
+            "isAuthenticated": "[REDACTED]",
+            "manageSocket": true,
+            "status": "connecting",
+            "shouldConnect": true,
+            "nativeReadyState": 0,
+            "autoConnect": true,
+            "retryTimeout": 0,
+            "initialDelay": 0,
+            "delay": 1000,
+            "messageReconnectTimeout": 30000,
+            "mapSize": 1,
+            "routedToSelf": true,
+            "hasConnectionAttempt": true,
+            "lastMessageReceivedNonzero": false
+          }
+        ],
+        "replacement": null
+      }
+    },
+    {
+      "kind": "replacement",
+      "outcome": "timeout-10s",
+      "durationMs": 10002,
+      "snapshot": {
+        "providers": [
+          {
+            "providerId": 1,
+            "websocketId": 2,
+            "nativeId": 3,
+            "isAttached": true,
+            "isSynced": true,
+            "isAuthenticated": "[REDACTED]",
+            "manageSocket": true,
+            "status": "connected",
+            "shouldConnect": true,
+            "nativeReadyState": 1,
+            "autoConnect": true,
+            "retryTimeout": 0,
+            "initialDelay": 0,
+            "delay": 1000,
+            "messageReconnectTimeout": 30000,
+            "mapSize": 1,
+            "routedToSelf": true,
+            "hasConnectionAttempt": false,
+            "lastMessageReceivedNonzero": true
+          },
+          {
+            "providerId": 4,
+            "websocketId": 5,
+            "nativeId": null,
+            "isAttached": false,
+            "isSynced": false,
+            "isAuthenticated": "[REDACTED]",
+            "manageSocket": true,
+            "status": "connecting",
+            "shouldConnect": false,
+            "nativeReadyState": null,
+            "autoConnect": true,
+            "retryTimeout": 0,
+            "initialDelay": 0,
+            "delay": 1000,
+            "messageReconnectTimeout": 30000,
+            "mapSize": 0,
+            "routedToSelf": false,
+            "hasConnectionAttempt": false,
+            "lastMessageReceivedNonzero": false
+          }
+        ],
+        "replacement": {
+          "providerId": 7,
+          "websocketId": 8,
+          "nativeId": 9,
+          "isAttached": true,
+          "isSynced": false,
+          "isAuthenticated": "[REDACTED]",
+          "manageSocket": true,
+          "status": "connecting",
+          "shouldConnect": true,
+          "nativeReadyState": 0,
+          "autoConnect": true,
+          "retryTimeout": 0,
+          "initialDelay": 0,
+          "delay": 1000,
+          "messageReconnectTimeout": 30000,
+          "mapSize": 1,
+          "routedToSelf": true,
+          "hasConnectionAttempt": true,
+          "lastMessageReceivedNonzero": false
+        }
+      }
+    }
+  ],
+  "pageEvents": [
+    {
+      "event": "main-frame-navigation",
+      "at": 1795249806903,
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "event": "vite-console",
+      "at": 1795249806932,
+      "text": "[vite] connecting..."
+    },
+    {
+      "event": "vite-console",
+      "at": 1795249806938,
+      "text": "[vite] connected."
+    },
+    {
+      "event": "main-frame-navigation",
+      "at": 1795249806995,
+      "url": "http://127.0.0.1:5193/"
+    },
+    {
+      "event": "vite-console",
+      "at": 1795249807006,
+      "text": "[vite] connecting..."
+    },
+    {
+      "event": "vite-console",
+      "at": 1795249807011,
+      "text": "[vite] connected."
+    }
+  ],
+  "initialImmediate": {
+    "providers": [
+      {
+        "providerId": 1,
+        "websocketId": 2,
+        "nativeId": 3,
+        "isAttached": true,
+        "isSynced": false,
+        "isAuthenticated": "[REDACTED]",
+        "manageSocket": true,
+        "status": "connecting",
+        "shouldConnect": true,
+        "nativeReadyState": 0,
+        "autoConnect": true,
+        "retryTimeout": 0,
+        "initialDelay": 0,
+        "delay": 1000,
+        "messageReconnectTimeout": 30000,
+        "mapSize": 1,
+        "routedToSelf": true,
+        "hasConnectionAttempt": true,
+        "lastMessageReceivedNonzero": false
+      },
+      {
+        "providerId": 4,
+        "websocketId": 5,
+        "nativeId": 6,
+        "isAttached": true,
+        "isSynced": false,
+        "isAuthenticated": "[REDACTED]",
+        "manageSocket": true,
+        "status": "connecting",
+        "shouldConnect": true,
+        "nativeReadyState": 0,
+        "autoConnect": true,
+        "retryTimeout": 0,
+        "initialDelay": 0,
+        "delay": 1000,
+        "messageReconnectTimeout": 30000,
+        "mapSize": 1,
+        "routedToSelf": true,
+        "hasConnectionAttempt": true,
+        "lastMessageReceivedNonzero": false
+      }
+    ],
+    "replacement": null
+  },
+  "destroyAndReplace": {
+    "afterDestroy": {
+      "attached": false,
+      "shouldConnect": false,
+      "nativeCleared": true,
+      "mapSize": 0
+    },
+    "differentSocketObject": true,
+    "differentNativeObject": true,
+    "explicitOldSocketPassed": false
+  },
+  "replacementImmediate": {
+    "providers": [
+      {
+        "providerId": 1,
+        "websocketId": 2,
+        "nativeId": 3,
+        "isAttached": true,
+        "isSynced": true,
+        "isAuthenticated": "[REDACTED]",
+        "manageSocket": true,
+        "status": "connected",
+        "shouldConnect": true,
+        "nativeReadyState": 1,
+        "autoConnect": true,
+        "retryTimeout": 0,
+        "initialDelay": 0,
+        "delay": 1000,
+        "messageReconnectTimeout": 30000,
+        "mapSize": 1,
+        "routedToSelf": true,
+        "hasConnectionAttempt": false,
+        "lastMessageReceivedNonzero": true
+      },
+      {
+        "providerId": 4,
+        "websocketId": 5,
+        "nativeId": null,
+        "isAttached": false,
+        "isSynced": false,
+        "isAuthenticated": "[REDACTED]",
+        "manageSocket": true,
+        "status": "connecting",
+        "shouldConnect": false,
+        "nativeReadyState": null,
+        "autoConnect": true,
+        "retryTimeout": 0,
+        "initialDelay": 0,
+        "delay": 1000,
+        "messageReconnectTimeout": 30000,
+        "mapSize": 0,
+        "routedToSelf": false,
+        "hasConnectionAttempt": false,
+        "lastMessageReceivedNonzero": false
+      }
+    ],
+    "replacement": {
+      "providerId": 7,
+      "websocketId": 8,
+      "nativeId": 9,
+      "isAttached": true,
+      "isSynced": false,
+      "isAuthenticated": "[REDACTED]",
+      "manageSocket": true,
+      "status": "connecting",
+      "shouldConnect": true,
+      "nativeReadyState": 0,
+      "autoConnect": true,
+      "retryTimeout": 0,
+      "initialDelay": 0,
+      "delay": 1000,
+      "messageReconnectTimeout": 30000,
+      "mapSize": 1,
+      "routedToSelf": true,
+      "hasConnectionAttempt": true,
+      "lastMessageReceivedNonzero": false
+    }
+  },
+  "finishedAt": "2026-11-21T08:30:27.718Z"
+}

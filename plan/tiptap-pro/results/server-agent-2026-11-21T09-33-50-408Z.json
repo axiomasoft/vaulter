@@ -1,0 +1,259 @@
+{
+  "schema": "tiptap-pro-headless-agent/v1",
+  "runId": "a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+  "startedAt": "2026-11-21T09:33:50.408Z",
+  "requests": [
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "POST",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 312,
+      "sha256": "27389b12de81e4fbc7f0e5a02bc0c593238c659586d1b29a1841d0fd043242cb"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 312,
+      "sha256": "27389b12de81e4fbc7f0e5a02bc0c593238c659586d1b29a1841d0fd043242cb"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 357,
+      "sha256": "3dfa57e51bf03ce854ba0ad19eb48ec82d7100a6f3ff2e6c0666a3c93666013d"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 392,
+      "sha256": "31353210f3dce3fb62032e480fc34356fe729ee0b884f16bff6c193d369bd88f"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-conflict-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "POST",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-conflict-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 312,
+      "sha256": "9ee14bda6c366b5fff47a2f2c52f7de220019d8f1c9f38523b52c5cb2bf7da93"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-conflict-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "PATCH",
+      "format": "yjs",
+      "status": 204,
+      "responseBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "document": "tiptap-pro-lab-agent-conflict-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "responseBytes": 353,
+      "sha256": "6f91be39eb3e082c410c3b884a57947e6cab34d94a5e3236f431479bdada0d8d"
+    }
+  ],
+  "checks": {
+    "target-unchanged-after-neighbour-edit": true,
+    "payment-changed-once": true,
+    "bold-preserved": true,
+    "neighbour-preserved": true,
+    "stable-block-identities": true,
+    "changed-target-rejected-without-write": true,
+    "competing-value-preserved": true,
+    "fresh-browser-reads-server-agent-result": true
+  },
+  "limitations": [
+    "This tests Cloud REST and Yjs feasibility, not Vaulter office.prepare/commit/status/verify.",
+    "No durable business intent, command receipt, reviewer ACL, transaction fencing or logical command deduplication is provided here.",
+    "Replaying identical Yjs bytes is transport idempotency, not proof that recomputing an intent is idempotent.",
+    "Neighbour edits are simulated by a second independent server-side Y.Doc, not a live human browser."
+  ],
+  "documents": {
+    "success": "tiptap-pro-lab-agent-success-a72d62e5-e71b-42b9-a82b-1a6f55a2417b",
+    "conflict": "tiptap-pro-lab-agent-conflict-a72d62e5-e71b-42b9-a82b-1a6f55a2417b"
+  },
+  "agentUpdate": {
+    "bytes": 79,
+    "sha256": "a0002df76727c36e6c8479cd9b0ec4218d036acea00496e3169aea359c929a4a"
+  },
+  "successDocument": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "attrs": {
+          "blockId": "p42"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Срок оплаты: "
+          },
+          {
+            "type": "text",
+            "text": "30",
+            "marks": [
+              {
+                "type": "bold"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " рабочих дней."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "blockId": "p71"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Реквизиты: Банк Б."
+          }
+        ]
+      }
+    ]
+  },
+  "conflictDocument": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "attrs": {
+          "blockId": "p42"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Срок оплаты: "
+          },
+          {
+            "type": "text",
+            "text": "20",
+            "marks": [
+              {
+                "type": "bold"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " рабочих дней."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "blockId": "p71"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Реквизиты: Банк А."
+          }
+        ]
+      }
+    ]
+  },
+  "mutationsFinishedAt": "2026-11-21T09:33:53.113Z",
+  "browserStartedAfterMutations": true,
+  "freshBrowserDocuments": [
+    {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "blockId": "p42"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Срок оплаты: "
+            },
+            {
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ],
+              "text": "30"
+            },
+            {
+              "type": "text",
+              "text": " рабочих дней."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "attrs": {
+            "blockId": "p71"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Реквизиты: Банк Б."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "status": "passed",
+  "finishedAt": "2026-11-21T09:33:53.968Z"
+}

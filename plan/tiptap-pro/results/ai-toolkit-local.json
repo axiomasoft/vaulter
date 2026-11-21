@@ -1,0 +1,684 @@
+{
+  "schema": "tiptap-ai-local-probe/v1",
+  "startedAt": "2026-11-21T08:46:02.098Z",
+  "mode": "local-mocked-resolvers",
+  "environmentFileRead": false,
+  "realLlmCalls": 0,
+  "checks": [
+    {
+      "name": "basic-completion-request",
+      "passed": true,
+      "endpoint": "/v1/ai/text/summarize",
+      "htmlFlag": true
+    },
+    {
+      "name": "basic-stream-request",
+      "passed": true,
+      "endpoint": "/v1/ai/text/prompt?stream=1",
+      "bodyStreamFlag": true
+    },
+    {
+      "name": "legacy-image-request-mocked",
+      "passed": true,
+      "endpoint": "/v1/ai/image/prompt",
+      "realImageGeneration": false
+    },
+    {
+      "name": "basic-error-response-conversion",
+      "passed": true,
+      "syntheticStatus": 403
+    },
+    {
+      "name": "server-toolkit-context-and-hash-registration",
+      "passed": true,
+      "contextExcludesDocument": true,
+      "localHashAssignment": false,
+      "customMetadataOverride": true
+    },
+    {
+      "name": "completion-editor-replacement",
+      "passed": true,
+      "pastResponseCount": 2
+    },
+    {
+      "name": "basic-reject-restores-local-selection-slice",
+      "passed": true,
+      "responseHistoryCleared": true
+    },
+    {
+      "name": "basic-preview-then-accept",
+      "passed": true,
+      "previewDoesNotWrite": true
+    },
+    {
+      "name": "plain-text-completion-and-preview-accept-formatting-differ",
+      "passed": true,
+      "directReplacementKeepsBold": false,
+      "previewAcceptKeepsBold": true
+    },
+    {
+      "name": "stream-utf8-boundary-decoding",
+      "passed": true,
+      "byteChunkSize": 2,
+      "response": "30 ✅"
+    },
+    {
+      "name": "loading-guards-overlapping-commands",
+      "passed": true,
+      "secondCommandAccepted": false
+    },
+    {
+      "name": "stream-range-maps-independent-edit",
+      "passed": true,
+      "independentEditPreserved": true
+    },
+    {
+      "name": "resolver-error-is-visible-without-editor-write",
+      "passed": true
+    }
+  ],
+  "transports": [
+    {
+      "path": "/v1/ai/text/summarize",
+      "method": "POST",
+      "verifiedAccessHeader": true,
+      "applicationIdHeader": "synthetic-app",
+      "body": {
+        "html": true,
+        "format": "rich-text",
+        "modelName": "synthetic-model",
+        "language": "en",
+        "text": "Own synthetic text."
+      },
+      "signalProvided": false
+    },
+    {
+      "path": "/v1/ai/text/prompt?stream=1",
+      "method": "POST",
+      "verifiedAccessHeader": true,
+      "applicationIdHeader": "synthetic-app",
+      "body": {
+        "format": "plain-text",
+        "text": "Own synthetic prompt.",
+        "stream": true
+      },
+      "signalProvided": true
+    },
+    {
+      "path": "/v1/ai/image/prompt",
+      "method": "POST",
+      "verifiedAccessHeader": true,
+      "applicationIdHeader": "synthetic-app",
+      "body": {
+        "size": "256x256",
+        "text": "Own synthetic image prompt."
+      },
+      "signalProvided": false
+    },
+    {
+      "path": "/v1/ai/text/prompt",
+      "method": "POST",
+      "verifiedAccessHeader": true,
+      "applicationIdHeader": "synthetic-app",
+      "body": {
+        "text": "Own input."
+      },
+      "signalProvided": false
+    }
+  ],
+  "packages": [
+    {
+      "name": "@tiptap/ai-toolkit",
+      "version": "0.5.0",
+      "license": "MIT"
+    },
+    {
+      "name": "@tiptap-pro/extension-ai",
+      "version": "3.12.9",
+      "license": "SEE LICENSE IN LICENSE.md"
+    }
+  ],
+  "blockedExternalRequests": [],
+  "browserErrors": [],
+  "editorContext": {
+    "propertyNames": [
+      "items",
+      "serializedSchema"
+    ],
+    "nodes": [
+      "paragraph",
+      "blockquote",
+      "bulletList",
+      "codeBlock",
+      "doc",
+      "hardBreak",
+      "heading",
+      "horizontalRule",
+      "listItem",
+      "orderedList",
+      "text",
+      "probeBlock"
+    ],
+    "marks": [
+      "link",
+      "bold",
+      "code",
+      "italic",
+      "strike",
+      "underline"
+    ],
+    "itemNames": [
+      {
+        "extensionName": "text",
+        "name": "Text"
+      },
+      {
+        "extensionName": "heading",
+        "name": "Heading"
+      },
+      {
+        "extensionName": "blockquote",
+        "name": "Blockquote"
+      },
+      {
+        "extensionName": "codeBlock",
+        "name": "Code Block"
+      },
+      {
+        "extensionName": "hardBreak",
+        "name": "Line Break"
+      },
+      {
+        "extensionName": "horizontalRule",
+        "name": "Horizontal Rule"
+      },
+      {
+        "extensionName": "bulletList",
+        "name": "Bullet List"
+      },
+      {
+        "extensionName": "orderedList",
+        "name": "Ordered List"
+      },
+      {
+        "extensionName": "listItem",
+        "name": "List Item"
+      },
+      {
+        "extensionName": "bold",
+        "name": "Bold"
+      },
+      {
+        "extensionName": "italic",
+        "name": "Italic"
+      },
+      {
+        "extensionName": "code",
+        "name": "Code"
+      },
+      {
+        "extensionName": "link",
+        "name": "Link"
+      },
+      {
+        "extensionName": "strike",
+        "name": "Strike"
+      },
+      {
+        "extensionName": "underline",
+        "name": "Underline"
+      },
+      {
+        "extensionName": "probeBlock",
+        "name": "Own probe block"
+      },
+      {
+        "extensionName": "paragraph",
+        "name": "Own paragraph override"
+      }
+    ],
+    "paragraphAttributes": {
+      "_hash": {
+        "default": null,
+        "validate": null
+      }
+    },
+    "ownNode": {
+      "name": "Own probe block",
+      "description": "Synthetic schema-awareness fixture.",
+      "isMark": false,
+      "extensionName": "probeBlock",
+      "attributes": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "schemaContainsDomHooks": false,
+    "containsOwnDocumentText": false,
+    "ownParagraphMetadata": {
+      "extensionName": "paragraph",
+      "name": "Own paragraph override",
+      "description": "Own fixture metadata."
+    },
+    "initialHashes": [
+      null,
+      null
+    ],
+    "hashesAfterEdit": [
+      null,
+      null
+    ]
+  },
+  "editorRuns": [
+    {
+      "name": "completion",
+      "text": "Payment in 30 days.\n\nIndependent clause.",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in 30 days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause."
+              }
+            ]
+          }
+        ]
+      },
+      "state": "idle",
+      "response": "30",
+      "pastResponseCount": 2,
+      "generatedRange": {
+        "from": 12,
+        "to": 14
+      },
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": false,
+          "action": "prompt"
+        },
+        {
+          "type": "success",
+          "response": "30",
+          "isStreaming": false
+        }
+      ]
+    },
+    {
+      "name": "reject",
+      "text": "Payment in 15 days.\n\nIndependent clause.",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in "
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "15"
+              },
+              {
+                "type": "text",
+                "text": " days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause."
+              }
+            ]
+          }
+        ]
+      },
+      "state": "idle",
+      "response": null,
+      "pastResponseCount": 0,
+      "generatedRange": null,
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": false,
+          "action": "prompt"
+        },
+        {
+          "type": "success",
+          "response": "30",
+          "isStreaming": false
+        }
+      ]
+    },
+    {
+      "name": "insert-false",
+      "text": "Payment in 15 days.\n\nIndependent clause.",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in "
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "15"
+              },
+              {
+                "type": "text",
+                "text": " days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause."
+              }
+            ]
+          }
+        ]
+      },
+      "state": "idle",
+      "response": "30",
+      "pastResponseCount": 2,
+      "generatedRange": null,
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": false,
+          "action": "prompt"
+        },
+        {
+          "type": "success",
+          "response": "30",
+          "isStreaming": false
+        }
+      ]
+    },
+    {
+      "name": "accept-preview",
+      "text": "Payment in 30 days.\n\nIndependent clause.",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in "
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "30"
+              },
+              {
+                "type": "text",
+                "text": " days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause."
+              }
+            ]
+          }
+        ]
+      },
+      "state": "idle",
+      "response": null,
+      "pastResponseCount": 0,
+      "generatedRange": null,
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": false,
+          "action": "prompt"
+        },
+        {
+          "type": "success",
+          "response": "30",
+          "isStreaming": false
+        }
+      ]
+    },
+    {
+      "name": "stream-multibyte",
+      "text": "Payment in 30 ✅ days.\n\nIndependent clause.",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in 30 ✅ days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause."
+              }
+            ]
+          }
+        ]
+      },
+      "state": "idle",
+      "response": "30 ✅",
+      "pastResponseCount": 1,
+      "generatedRange": {
+        "from": 12,
+        "to": 16
+      },
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": true,
+          "action": "prompt"
+        },
+        {
+          "type": "chunk",
+          "chunk": "30",
+          "response": "30"
+        },
+        {
+          "type": "chunk",
+          "chunk": " ",
+          "response": "30 "
+        },
+        {
+          "type": "chunk",
+          "chunk": "✅",
+          "response": "30 ✅"
+        },
+        {
+          "type": "success",
+          "response": "30 ✅",
+          "isStreaming": true
+        }
+      ]
+    },
+    {
+      "name": "stream-with-independent-edit",
+      "text": "Payment in 30 days.\n\nIndependent clause. HUMAN",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in 30 days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause. HUMAN"
+              }
+            ]
+          }
+        ]
+      },
+      "state": "idle",
+      "response": "30",
+      "pastResponseCount": 4,
+      "generatedRange": {
+        "from": 12,
+        "to": 14
+      },
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": true,
+          "action": "prompt"
+        },
+        {
+          "type": "chunk",
+          "chunk": "3",
+          "response": "3"
+        },
+        {
+          "type": "chunk",
+          "chunk": "0",
+          "response": "30"
+        },
+        {
+          "type": "success",
+          "response": "30",
+          "isStreaming": true
+        }
+      ]
+    },
+    {
+      "name": "resolver-error",
+      "text": "Payment in 15 days.\n\nIndependent clause.",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Payment in "
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "15"
+              },
+              {
+                "type": "text",
+                "text": " days."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Independent clause."
+              }
+            ]
+          }
+        ]
+      },
+      "state": "error",
+      "response": null,
+      "pastResponseCount": 4,
+      "generatedRange": null,
+      "events": [
+        {
+          "type": "loading",
+          "isStreaming": false,
+          "action": "prompt"
+        },
+        {
+          "type": "error"
+        }
+      ]
+    }
+  ],
+  "status": "passed",
+  "finishedAt": "2026-11-21T08:46:02.646Z",
+  "sourceProvenance": [
+    {
+      "path": "node_modules/@tiptap/ai-toolkit/src/schema-awareness/get-editor-context.ts",
+      "sha256": "228dd12671e5352cf2f7d4e669b0269f44bf2dad71655c2a9521392aad19a1c7",
+      "bytes": 3500
+    },
+    {
+      "path": "node_modules/@tiptap/ai-toolkit/src/hash-extension/server-ai-toolkit-hash-extension.ts",
+      "sha256": "5ae5c444d2a3b7798bec59cadc6154ac5467ba9811974814a6a7aa89a5ad36aa",
+      "bytes": 2150
+    },
+    {
+      "path": "node_modules/@tiptap-pro/extension-ai/dist/index.js",
+      "sha256": "db5d7498c53fb7ef106eb825af7192cf58e62ee37d11124a65cd2a1270f06dee",
+      "bytes": 21454
+    }
+  ]
+}

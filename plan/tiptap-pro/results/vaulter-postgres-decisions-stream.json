@@ -1,0 +1,55 @@
+{
+  "postgres": "18.4 (Ubuntu 18.4-1.pgdg24.04+1)",
+  "decision_cases": [
+    {
+      "first": "approved",
+      "first_rolled_back": false,
+      "second_waited": true,
+      "outcome": "approved",
+      "reviewer": "reviewer-1",
+      "route_count": 1,
+      "dispatch_count": 1,
+      "Q": "pending"
+    },
+    {
+      "first": "rejected",
+      "first_rolled_back": false,
+      "second_waited": true,
+      "outcome": "rejected",
+      "reviewer": "reviewer-1",
+      "route_count": 0,
+      "dispatch_count": 0,
+      "Q": "pending"
+    },
+    {
+      "first": "approved",
+      "first_rolled_back": true,
+      "second_waited": true,
+      "outcome": "rejected",
+      "reviewer": "reviewer-2",
+      "route_count": 0,
+      "dispatch_count": 0,
+      "Q": "pending"
+    }
+  ],
+  "expiry_race": {
+    "checked_before_lock": "approved",
+    "checked_after_lock": "pending"
+  },
+  "sse_order": {
+    "identity_cursor_skipped_committed_late_event": 1,
+    "serialized_session_sequences": [
+      1,
+      2,
+      3
+    ],
+    "different_session_written_without_wait": true,
+    "rolled_back_sequence_reused": true
+  },
+  "tool_recovery": {
+    "receipt_recovered_from_owner": true,
+    "owner_effects_after_retry": 1,
+    "same_slot_other_digest_matches": false,
+    "separate_slot_same_digest_has_distinct_command": true
+  }
+}

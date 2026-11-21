@@ -1,0 +1,49 @@
+{
+  "name": "vaulter-tiptap-pro-research",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "node server.mjs",
+    "dev:web": "vite --host 127.0.0.1 --port 5193 --strictPort",
+    "build": "vite build",
+    "test": "playwright test",
+    "check:config": "node scripts/check-config.mjs",
+    "install:pro": "node scripts/install-pro.mjs"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "4.9.0",
+    "@hocuspocus/server": "4.9.0",
+    "@tiptap-pro/extension-ai": "3.12.9",
+    "@tiptap-pro/extension-comments": "3.12.9",
+    "@tiptap-pro/extension-convert-kit": "0.16.1",
+    "@tiptap-pro/extension-export-doc": "0.7.4",
+    "@tiptap-pro/extension-export-docx": "0.34.4",
+    "@tiptap-pro/extension-export-epub": "0.5.4",
+    "@tiptap-pro/extension-export-markdown": "0.2.8",
+    "@tiptap-pro/extension-export-odt": "0.7.4",
+    "@tiptap-pro/extension-export-pdf": "0.7.4",
+    "@tiptap-pro/extension-pages-pagekit": "0.1.21",
+    "@tiptap-pro/extension-pages-tablekit": "0.4.8",
+    "@tiptap-pro/extension-paste-handler": "3.12.9",
+    "@tiptap-pro/extension-snapshot": "3.12.9",
+    "@tiptap-pro/extension-snapshot-compare": "3.12.9",
+    "@tiptap-pro/extension-tracked-changes": "0.14.3",
+    "@tiptap-pro/provider": "3.12.9",
+    "@tiptap/ai-toolkit": "0.5.0",
+    "@tiptap/core": "3.35.0",
+    "@tiptap/extension-collaboration": "3.35.0",
+    "@tiptap/extension-collaboration-caret": "3.35.0",
+    "@tiptap/starter-kit": "3.35.0",
+    "@tiptap/y-tiptap": "3.3.1",
+    "dotenv": "18.0.10",
+    "jose": "6.2.18",
+    "y-protocols": "1.0.7",
+    "yjs": "13.6.33"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "vite": "8.3.8"
+  }
+}

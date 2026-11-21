@@ -1,0 +1,15 @@
+{
+  "schema": "tiptap-pro-independent-readback/v1",
+  "room": "tiptap-pro-lab-comments-versions-ea7e6bbe-d90a-4fbe-a000-b01728e5ec71",
+  "kind": "comments-versions",
+  "startedAt": "2026-11-21T08:36:11.902Z",
+  "checks": {},
+  "requests": [],
+  "limitation": "Fresh server retrieval after browser closure; no server crash or SQL transaction boundary is observed.",
+  "status": "failed",
+  "error": {
+    "name": "TypeError",
+    "message": "fetch failed",
+    "causeCode": "UND_ERR_CONNECT_TIMEOUT"
+  }
+}

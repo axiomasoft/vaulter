@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Tiptap Pro research lab</title></head>
+  <body>
+    <main>
+      <h1>Tiptap Pro · исследовательский стенд</h1>
+      <p>Два независимых клиента одной комнаты. Cloud и локальный OSS-сервер проверяются раздельно.</p>
+      <form id="connect-form">
+        <label>Транспорт <select data-testid="mode" id="mode"><option value="cloud">Tiptap Cloud (Pro provider)</option><option value="local">Локальный Hocuspocus (память процесса)</option></select></label>
+        <label>Комната <input id="room" data-testid="room" value="tiptap-pro-lab-manual" pattern="tiptap-pro-lab-[A-Za-z0-9_.-]+" required></label>
+        <button data-testid="connect" type="submit">Подключить</button>
+      </form>
+      <fieldset class="feature-flags"><legend>Схема Pro-функций (применяется при подключении; одинакова у обоих клиентов)</legend><label><input type="checkbox" data-feature="comments" checked> Comments</label><label><input type="checkbox" data-feature="snapshot" checked> Snapshot / versions</label><label><input type="checkbox" data-feature="trackedChanges" checked> Tracked Changes</label><label><input type="checkbox" data-feature="snapshotCompare"> Snapshot Compare</label></fieldset>
+      <p id="config-status" data-testid="config-status">Чтение конфигурации…</p>
+      <section class="editors">
+        <article><h2>Alice</h2><p id="state-0" data-testid="state-0">Отключён</p><div id="editor-0" data-testid="editor-0"></div><button data-testid="disconnect-0" data-disconnect="0">Отключить сеть Alice</button><button data-testid="reconnect-0" data-reconnect="0">Восстановить сеть Alice</button></article>
+        <article><h2>Bob</h2><p id="state-1" data-testid="state-1">Отключён</p><div id="editor-1" data-testid="editor-1"></div><button data-testid="disconnect-1" data-disconnect="1">Отключить сеть Bob</button><button data-testid="reconnect-1" data-reconnect="1">Восстановить сеть Bob</button></article>
+      </section>
+      <section><h2>Действия Pro · Alice</h2><p>Действия выполняются над исследовательской комнатой. Для комментария сначала выделите текст в Alice. IDs потоков и версий видны ниже.</p><div class="pro-controls"><label>Комментарий / reply<input id="comment-content" data-testid="comment-content" value="Исследовательский комментарий"></label><button data-pro-action="create-thread" data-testid="create-thread">Создать thread на выделении</button><label>Thread ID<input id="thread-id" data-testid="thread-id"></label><button data-pro-action="reply" data-testid="reply">Reply</button><button data-pro-action="resolve" data-testid="resolve">Resolve</button><button data-pro-action="unresolve" data-testid="unresolve">Reopen</button></div><div class="pro-controls"><label>Название версии<input id="version-name" data-testid="version-name" value="Lab version"></label><button data-pro-action="save-version" data-testid="save-version">Сохранить версию</button><button data-pro-action="fetch-versions" data-testid="fetch-versions">Список версий</button><label>Номер версии<input id="version-id" data-testid="version-id" type="number" min="0" value="1"></label><button data-pro-action="preview-version" data-testid="preview-version">Preview</button><button data-pro-action="revert-version" data-testid="revert-version">Restore</button></div><div class="pro-controls"><button data-pro-action="track-on" data-testid="track-on">Tracking on</button><button data-pro-action="track-off" data-testid="track-off">Tracking off</button><label>Suggestion ID<input id="suggestion-id" data-testid="suggestion-id"></label><button data-pro-action="accept" data-testid="accept-suggestion">Accept</button><button data-pro-action="reject" data-testid="reject-suggestion">Reject</button></div><p id="pro-result" data-testid="pro-result"></p><pre id="pro-state" data-testid="pro-state"></pre></section>
+      <section><h2>Наблюдаемые события</h2><p>JWT и бинарные auth-сообщения не выводятся. «Synced» означает состояние provider, а не доказанную SQL-фиксацию.</p><pre id="events" data-testid="events"></pre></section>
+      <p id="error" data-testid="error" role="alert"></p>
+    </main>
+    <script type="module" src="/src/main.mjs"></script>
+  </body>
+</html>

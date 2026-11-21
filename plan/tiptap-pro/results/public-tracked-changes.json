@@ -1,0 +1,2989 @@
+{
+  "runAt": "2026-11-21T08:16:55.595Z",
+  "source": "https://embed-pro.tiptap.dev/preview/Experiments/TrackedChanges",
+  "scope": "official-public-demo-only",
+  "status": "passed",
+  "browser": "156.0.8078.47",
+  "navigation": [
+    {
+      "url": "https://embed-pro.tiptap.dev/preview/Experiments/TrackedChanges",
+      "status": 200
+    }
+  ],
+  "network": [
+    {
+      "at": "2026-11-21T08:16:55.786Z",
+      "method": "GET",
+      "resourceType": "document",
+      "url": "https://embed-pro.tiptap.dev/preview/Experiments/TrackedChanges",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/index-vpcIH9pP.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/rolldown-runtime-QTnfLwEv.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/helper-B9I10rJ5.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/iframeResizer.contentWindow-BayRV2UZ.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/runtime-dom.esm-bundler-LyOfazhv.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-B4LEs878.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/_plugin-vue_export-helper-BDNMzG2s.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:56.759Z",
+      "method": "GET",
+      "resourceType": "stylesheet",
+      "url": "https://embed-pro.tiptap.dev/assets/index-B-tKxk-c.css",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.164Z",
+      "method": "GET",
+      "resourceType": "document",
+      "url": "https://embed-pro.tiptap.dev/src/Experiments/TrackedChanges/null/"
+    },
+    {
+      "at": "2026-11-21T08:16:57.166Z",
+      "method": "GET",
+      "resourceType": "document",
+      "url": "https://embed-pro.tiptap.dev/src/Experiments/TrackedChanges/React/",
+      "status": 301
+    },
+    {
+      "at": "2026-11-21T08:16:57.166Z",
+      "method": "GET",
+      "resourceType": "font",
+      "url": "https://rsms.me/inter/font-files/Inter-SemiBold.woff2?v=%5BREDACTED%5D",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.371Z",
+      "method": "GET",
+      "resourceType": "document",
+      "url": "https://embed-pro.tiptap.dev/src/experiments/trackedchanges/react/",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.451Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/index-qjq8Q2Ue.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.451Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/helper-B9I10rJ5.js",
+      "status": 304
+    },
+    {
+      "at": "2026-11-21T08:16:57.451Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/rolldown-runtime-QTnfLwEv.js",
+      "status": 304
+    },
+    {
+      "at": "2026-11-21T08:16:57.451Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/style-BH7FkF4x.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.451Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/react-dom-ZBZN4r4X.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.452Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/preload-helper-Czpn1I53.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.452Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/react-Bg7ftpf-.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.452Z",
+      "method": "GET",
+      "resourceType": "stylesheet",
+      "url": "https://embed-pro.tiptap.dev/assets/style-g4PQgcPS.css",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/React-C5Znp2Tm.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-B4LEs878.js",
+      "status": 304
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-G1kXxG6u.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-Cpbhaccp.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/tables-VtDaFLCx.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-D5r5IJ5p.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-BYb-n9yV.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/linkify-XPlQz50u.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-D8en5gq9.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-D5oP_Kys.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-BuCiR6mI.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-BA45z99m.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-DJBgbaXP.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/code-block-compat-vw07hZgR.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/src-DHGjhpDn.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/dist-InJz-ZG5.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.648Z",
+      "method": "GET",
+      "resourceType": "stylesheet",
+      "url": "https://embed-pro.tiptap.dev/assets/React-C21DTcfZ.css",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.846Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/shiki.worker-CdQnLQ1W.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "font",
+      "url": "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono/web/woff2/JetBrainsMono-Bold.woff2",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "font",
+      "url": "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "font",
+      "url": "https://rsms.me/inter/font-files/Inter-Regular.woff2?v=%5BREDACTED%5D",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://picsum.photos/seed/tiptap1/600/300",
+      "status": 302
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://picsum.photos/seed/tiptap2/300/200",
+      "status": 302
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://picsum.photos/seed/tiptap3/300/200",
+      "status": 302
+    },
+    {
+      "at": "2026-11-21T08:16:57.917Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://picsum.photos/seed/tracked-changes-figure/720/360",
+      "status": 302
+    },
+    {
+      "at": "2026-11-21T08:16:58.208Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/wasm-S0UXjx1m.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/material-theme-darker-2IIEA8gg.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/html-BL86BucZ.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/javascript-BtsQFgUw.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/jsx-DUAdMht_.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/typescript-u-6EiuZG.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/tsx-B1v6Msca.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/css-BSHTDVks.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/vue-html-BqxBZmUN.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/vue-DSUIsSb4.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.209Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/scss-CqKgk3Xa.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.573Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://fastly.picsum.photos/id/1021/720/360.jpg?hmac=%5BREDACTED%5D",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.574Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://fastly.picsum.photos/id/94/600/300.jpg?hmac=%5BREDACTED%5D",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.574Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://fastly.picsum.photos/id/400/300/200.jpg?hmac=%5BREDACTED%5D",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.578Z",
+      "method": "GET",
+      "resourceType": "image",
+      "url": "https://fastly.picsum.photos/id/280/300/200.jpg?hmac=%5BREDACTED%5D",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.583Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/json-BxBWv_Iz.js",
+      "status": 200
+    },
+    {
+      "at": "2026-11-21T08:16:58.583Z",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "https://embed-pro.tiptap.dev/assets/html-derivative-BSRbLIC7.js",
+      "status": 200
+    }
+  ],
+  "websockets": [],
+  "console": [
+    {
+      "type": "error",
+      "location": "https://embed-pro.tiptap.dev/favicon.ico",
+      "messageSha256": "be3180416310eb750f5ff396974c2445881cabb1073f8851f9e3562cf6a387de"
+    }
+  ],
+  "steps": [
+    {
+      "name": "clear-initial-demo-suggestions",
+      "durationMs": 74,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 87,
+          "paragraph": 61,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [],
+        "syntheticBlocks": [],
+        "syntheticText": "",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "create-untracked-synthetic-baseline",
+      "durationMs": 134,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "insert-suggestion",
+      "durationMs": 68,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 89,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          },
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_INSERT_REJECT"
+            ],
+            "marks": [
+              {
+                "type": "suggestion",
+                "attrs": {
+                  "id": "suggestion-1795249020372-7v8m7su",
+                  "type": "add",
+                  "userId": "current-demo-user",
+                  "createdAt": "2026-11-21T08:17:00.372Z",
+                  "updatedAt": "2026-11-21T08:17:00.372Z",
+                  "userMetadata": {
+                    "name": "Demo User",
+                    "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                  },
+                  "markChanges": null
+                }
+              }
+            ]
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249020372-7v8m7su",
+                      "type": "add",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:00.372Z",
+                      "updatedAt": "2026-11-21T08:17:00.372Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": " ZZLAB_INSERT_REJECT"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_INSERT_REJECT",
+        "suggestionElements": [
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249020372-7v8m7su",
+              "data-suggestion-type": "add",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:00.372Z",
+              "data-suggestion-updated": "2026-11-21T08:17:00.372Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": " ZZLAB_INSERT_REJECT",
+            "textLength": 20
+          }
+        ],
+        "suggestionElementCount": 1,
+        "uniqueSuggestionCount": 1,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "reject-insertion",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "insert-for-accept",
+      "durationMs": 65,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 89,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          },
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_ACCEPTED"
+            ],
+            "marks": [
+              {
+                "type": "suggestion",
+                "attrs": {
+                  "id": "suggestion-1795249020503-q0ce8su",
+                  "type": "add",
+                  "userId": "current-demo-user",
+                  "createdAt": "2026-11-21T08:17:00.503Z",
+                  "updatedAt": "2026-11-21T08:17:00.503Z",
+                  "userMetadata": {
+                    "name": "Demo User",
+                    "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                  },
+                  "markChanges": null
+                }
+              }
+            ]
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249020503-q0ce8su",
+                      "type": "add",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:00.503Z",
+                      "updatedAt": "2026-11-21T08:17:00.503Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": " ZZLAB_ACCEPTED"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_ACCEPTED",
+        "suggestionElements": [
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249020503-q0ce8su",
+              "data-suggestion-type": "add",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:00.503Z",
+              "data-suggestion-updated": "2026-11-21T08:17:00.503Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": " ZZLAB_ACCEPTED",
+            "textLength": 15
+          }
+        ],
+        "suggestionElementCount": 1,
+        "uniqueSuggestionCount": 1,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "accept-insertion",
+      "durationMs": 66,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_ACCEPTED"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_ACCEPTED"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_ACCEPTED",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "delete-suggestion",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 89,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          },
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_ACCEPTED"
+            ],
+            "marks": [
+              {
+                "type": "suggestion",
+                "attrs": {
+                  "id": "suggestion-1795249020642-iabjqty",
+                  "type": "delete",
+                  "userId": "current-demo-user",
+                  "createdAt": "2026-11-21T08:17:00.642Z",
+                  "updatedAt": "2026-11-21T08:17:00.642Z",
+                  "userMetadata": {
+                    "name": "Demo User",
+                    "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                  },
+                  "markChanges": null
+                }
+              }
+            ]
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249020642-iabjqty",
+                      "type": "delete",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:00.642Z",
+                      "updatedAt": "2026-11-21T08:17:00.642Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": " ZZLAB_ACCEPTED"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_ACCEPTED",
+        "suggestionElements": [
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249020642-iabjqty",
+              "data-suggestion-type": "delete",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:00.642Z",
+              "data-suggestion-updated": "2026-11-21T08:17:00.642Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": " ZZLAB_ACCEPTED",
+            "textLength": 15
+          }
+        ],
+        "suggestionElementCount": 1,
+        "uniqueSuggestionCount": 1,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "reject-deletion",
+      "durationMs": 66,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_ACCEPTED"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_ACCEPTED"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_ACCEPTED",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "delete-for-accept",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 89,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          },
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_ACCEPTED"
+            ],
+            "marks": [
+              {
+                "type": "suggestion",
+                "attrs": {
+                  "id": "suggestion-1795249020773-yb2pmoo",
+                  "type": "delete",
+                  "userId": "current-demo-user",
+                  "createdAt": "2026-11-21T08:17:00.773Z",
+                  "updatedAt": "2026-11-21T08:17:00.773Z",
+                  "userMetadata": {
+                    "name": "Demo User",
+                    "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                  },
+                  "markChanges": null
+                }
+              }
+            ]
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249020773-yb2pmoo",
+                      "type": "delete",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:00.773Z",
+                      "updatedAt": "2026-11-21T08:17:00.773Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": " ZZLAB_ACCEPTED"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_ACCEPTED",
+        "suggestionElements": [
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249020773-yb2pmoo",
+              "data-suggestion-type": "delete",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:00.773Z",
+              "data-suggestion-updated": "2026-11-21T08:17:00.773Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": " ZZLAB_ACCEPTED",
+            "textLength": 15
+          }
+        ],
+        "suggestionElementCount": 1,
+        "uniqueSuggestionCount": 1,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "accept-deletion",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "seed-replacement-baseline",
+      "durationMs": 133,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_REPLACE_OLD"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_REPLACE_OLD"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_REPLACE_OLD",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "replace-suggestion",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 90,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_REPLACE_"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_REPLACE_"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249021039-8swfusu",
+                      "type": "replaceDeletion",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:01.039Z",
+                      "updatedAt": "2026-11-21T08:17:01.039Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": "OLD"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249021039-8swfusu",
+                      "type": "replaceInsertion",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:01.039Z",
+                      "updatedAt": "2026-11-21T08:17:01.039Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": "NEW"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_REPLACE_OLDNEW",
+        "suggestionElements": [
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249021039-8swfusu",
+              "data-suggestion-type": "replaceDeletion",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:01.039Z",
+              "data-suggestion-updated": "2026-11-21T08:17:01.039Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": "OLD",
+            "textLength": 3
+          },
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249021039-8swfusu",
+              "data-suggestion-type": "replaceInsertion",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:01.039Z",
+              "data-suggestion-updated": "2026-11-21T08:17:01.039Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": "NEW",
+            "textLength": 3
+          }
+        ],
+        "suggestionElementCount": 2,
+        "uniqueSuggestionCount": 1,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "reject-replacement",
+      "durationMs": 66,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_REPLACE_OLD"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_REPLACE_OLD"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_REPLACE_OLD",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "replace-for-accept",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 90,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_REPLACE_"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_REPLACE_"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249021172-djfmwoz",
+                      "type": "replaceDeletion",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:01.172Z",
+                      "updatedAt": "2026-11-21T08:17:01.172Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": "OLD"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "suggestion",
+                    "attrs": {
+                      "id": "suggestion-1795249021172-djfmwoz",
+                      "type": "replaceInsertion",
+                      "userId": "current-demo-user",
+                      "createdAt": "2026-11-21T08:17:01.172Z",
+                      "updatedAt": "2026-11-21T08:17:01.172Z",
+                      "userMetadata": {
+                        "name": "Demo User",
+                        "avatarUrl": "https://i.pravatar.cc/150?u=%5BREDACTED%5D"
+                      },
+                      "markChanges": null
+                    }
+                  }
+                ],
+                "text": "NEW"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_REPLACE_OLDNEW",
+        "suggestionElements": [
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249021172-djfmwoz",
+              "data-suggestion-type": "replaceDeletion",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:01.172Z",
+              "data-suggestion-updated": "2026-11-21T08:17:01.172Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": "OLD",
+            "textLength": 3
+          },
+          {
+            "tag": "SPAN",
+            "attrs": {
+              "data-suggestion-id": "suggestion-1795249021172-djfmwoz",
+              "data-suggestion-type": "replaceInsertion",
+              "data-suggestion-user": "current-demo-user",
+              "data-suggestion-created": "2026-11-21T08:17:01.172Z",
+              "data-suggestion-updated": "2026-11-21T08:17:01.172Z",
+              "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+              "data-suggestion": ""
+            },
+            "text": "NEW",
+            "textLength": 3
+          }
+        ],
+        "suggestionElementCount": 2,
+        "uniqueSuggestionCount": 1,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "accept-replacement",
+      "durationMs": 67,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_REPLACE_NEW"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_REPLACE_NEW"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_REPLACE_NEW",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Disable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    },
+    {
+      "name": "disabled-tracking-direct-edit",
+      "durationMs": 99,
+      "snapshot": {
+        "editorExposed": true,
+        "jsonAvailable": true,
+        "extensions": [
+          "link",
+          "paragraph",
+          "link",
+          "listItemBranchingDeleteKeymap",
+          "editable",
+          "clipboardTextSerializer",
+          "commands",
+          "focusEvents",
+          "keymap",
+          "tabindex",
+          "drop",
+          "paste",
+          "delete",
+          "textDirection",
+          "starterKit",
+          "bold",
+          "blockquote",
+          "bulletList",
+          "code",
+          "doc",
+          "dropCursor",
+          "gapCursor",
+          "hardBreak",
+          "heading",
+          "undoRedo",
+          "horizontalRule",
+          "italic",
+          "listItem",
+          "listKeymap",
+          "orderedList",
+          "strike",
+          "text",
+          "underline",
+          "trailingNode",
+          "codeBlock",
+          "placeholder",
+          "trackedChanges",
+          "suggestion",
+          "suggestionNodeAttributes",
+          "figure",
+          "image",
+          "tableKit",
+          "table",
+          "tableCell",
+          "tableHeader",
+          "tableRow"
+        ],
+        "documentNodeTypes": {
+          "doc": 1,
+          "heading": 17,
+          "text": 88,
+          "paragraph": 62,
+          "bulletList": 7,
+          "listItem": 23,
+          "orderedList": 3,
+          "blockquote": 1,
+          "codeBlock": 1,
+          "image": 3,
+          "figure": 1,
+          "table": 1,
+          "tableRow": 4,
+          "tableHeader": 3,
+          "tableCell": 9,
+          "horizontalRule": 1
+        },
+        "syntheticLeaves": [
+          {
+            "type": "text",
+            "sentinels": [
+              "ZZLAB_BASE",
+              "ZZLAB_REPLACE_NEW",
+              "ZZLAB_UNTRACKED"
+            ],
+            "marks": []
+          }
+        ],
+        "syntheticBlocks": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "suggestionNodeTypeChange": null,
+              "suggestionId": null,
+              "suggestionType": null,
+              "suggestionUserId": null,
+              "suggestionCreatedAt": null,
+              "suggestionUpdatedAt": null,
+              "suggestionUserMetadata": null,
+              "suggestionNestingDelta": null,
+              "suggestionSplitSide": null,
+              "suggestionSplitKind": null,
+              "suggestionAttributeChanges": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "ZZLAB_BASE alpha beta omega ZZLAB_REPLACE_NEW ZZLAB_UNTRACKED"
+              }
+            ]
+          }
+        ],
+        "syntheticText": "ZZLAB_BASE ZZLAB_REPLACE_NEW ZZLAB_UNTRACKED",
+        "suggestionElements": [],
+        "suggestionElementCount": 0,
+        "uniqueSuggestionCount": 0,
+        "trackingButton": "Enable Track Changes"
+      },
+      "networkIndices": [
+        63,
+        63
+      ],
+      "networkRequestsDuringAction": [],
+      "websocketFramesDuringAction": 0
+    }
+  ],
+  "assertions": [
+    {
+      "name": "isolated-synthetic-paragraph-created",
+      "passed": true
+    },
+    {
+      "name": "insertion-has-add-marker",
+      "passed": true
+    },
+    {
+      "name": "rejected-insertion-removed",
+      "passed": true
+    },
+    {
+      "name": "accepted-insertion-kept-without-marker",
+      "passed": true
+    },
+    {
+      "name": "deletion-retains-text-under-delete-marker",
+      "passed": true
+    },
+    {
+      "name": "rejected-deletion-restores-text",
+      "passed": true
+    },
+    {
+      "name": "accepted-deletion-removes-text",
+      "passed": true
+    },
+    {
+      "name": "replacement-has-linked-insertion-and-deletion",
+      "passed": true
+    },
+    {
+      "name": "rejected-replacement-restores-old",
+      "passed": true
+    },
+    {
+      "name": "accepted-replacement-keeps-new",
+      "passed": true
+    },
+    {
+      "name": "disabled-tracking-adds-no-marker",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "No user Cloud credentials or demo tokens are extracted or reused.",
+    "No source or bundle content is copied. Only rendered editor state is inspected.",
+    "Network deltas cover each observed action interval, not all possible delayed future traffic.",
+    "Public demo local behavior does not establish hosted collaboration or durable persistence."
+  ],
+  "editorURL": "https://embed-pro.tiptap.dev/src/experiments/trackedchanges/react/",
+  "initial": {
+    "editorExposed": true,
+    "jsonAvailable": true,
+    "extensions": [
+      "link",
+      "paragraph",
+      "link",
+      "listItemBranchingDeleteKeymap",
+      "editable",
+      "clipboardTextSerializer",
+      "commands",
+      "focusEvents",
+      "keymap",
+      "tabindex",
+      "drop",
+      "paste",
+      "delete",
+      "textDirection",
+      "starterKit",
+      "bold",
+      "blockquote",
+      "bulletList",
+      "code",
+      "doc",
+      "dropCursor",
+      "gapCursor",
+      "hardBreak",
+      "heading",
+      "undoRedo",
+      "horizontalRule",
+      "italic",
+      "listItem",
+      "listKeymap",
+      "orderedList",
+      "strike",
+      "text",
+      "underline",
+      "trailingNode",
+      "codeBlock",
+      "placeholder",
+      "trackedChanges",
+      "suggestion",
+      "suggestionNodeAttributes",
+      "figure",
+      "image",
+      "tableKit",
+      "table",
+      "tableCell",
+      "tableHeader",
+      "tableRow"
+    ],
+    "documentNodeTypes": {
+      "doc": 1,
+      "heading": 17,
+      "text": 104,
+      "paragraph": 62,
+      "bulletList": 7,
+      "listItem": 24,
+      "orderedList": 3,
+      "blockquote": 1,
+      "codeBlock": 1,
+      "image": 3,
+      "figure": 1,
+      "table": 1,
+      "tableRow": 4,
+      "tableHeader": 3,
+      "tableCell": 9,
+      "horizontalRule": 1
+    },
+    "syntheticLeaves": [],
+    "syntheticBlocks": [],
+    "syntheticText": "",
+    "suggestionElements": [
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-mark-1",
+          "data-suggestion-type": "markChange",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T08:55:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+          "data-suggestion-mark-changes": "[{\"operation\":\"added\",\"markName\":\"bold\",\"markAttrs\":{}}]",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 21
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-1",
+          "data-suggestion-type": "add",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:00:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 33
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-mark-2",
+          "data-suggestion-type": "markChange",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:02:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\",\"avatarUrl\":\"https://i.pravatar.cc/150?u=%5BREDACTED%5D\"}",
+          "data-suggestion-mark-changes": "[{\"operation\":\"added\",\"markName\":\"italic\",\"markAttrs\":{}}]",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 22
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-2",
+          "data-suggestion-type": "delete",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:05:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 37
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-3",
+          "data-suggestion-type": "replaceDeletion",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:10:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 16
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-3",
+          "data-suggestion-type": "replaceInsertion",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:10:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 15
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-4",
+          "data-suggestion-type": "add",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:15:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 33
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-5",
+          "data-suggestion-type": "add",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:20:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 9
+      },
+      {
+        "tag": "IMG",
+        "attrs": {
+          "data-suggestion-id": "suggestion-6",
+          "data-suggestion-type": "delete",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:25:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}"
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 0
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-figure-move",
+          "data-suggestion-type": "add",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:35:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 20
+      },
+      {
+        "tag": "SPAN",
+        "attrs": {
+          "data-suggestion-id": "suggestion-7",
+          "data-suggestion-type": "delete",
+          "data-suggestion-user": "demo-user",
+          "data-suggestion-created": "2026-03-10T09:30:00Z",
+          "data-suggestion-user-metadata": "{\"name\":\"Demo User\"}",
+          "data-suggestion": ""
+        },
+        "text": "[BASE DEMO TEXT OMITTED]",
+        "textLength": 12
+      }
+    ],
+    "suggestionElementCount": 11,
+    "uniqueSuggestionCount": 10,
+    "trackingButton": "Disable Track Changes"
+  },
+  "replacementMarkerTypes": [
+    "replaceDeletion",
+    "replaceInsertion"
+  ],
+  "finishedAt": "2026-11-21T08:17:01.418Z"
+}

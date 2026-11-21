@@ -1,0 +1,40 @@
+{
+  "schema": "tiptap-pro-independent-readback/v1",
+  "room": "tiptap-pro-lab-review-7a8a88b0-ef5d-4f75-8ccc-095301bfbe10",
+  "kind": "tracked-changes",
+  "startedAt": "2026-11-21T09:27:43.374Z",
+  "checks": {
+    "accepted-replacement-persisted": true,
+    "review-mark-cleared": true
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "format": "yjs",
+      "status": 200,
+      "bytes": 425,
+      "sha256": "b62afa47d56e0110c13463dcd732bfc1b04008bee073d54d5583ece09d6b2d86"
+    }
+  ],
+  "limitation": "Fresh server retrieval after browser closure; no server crash or SQL transaction boundary is observed.",
+  "sharedTypes": [
+    "__tiptapcollab__users",
+    "default",
+    "__tiptapcollab__config"
+  ],
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Payment in 30 days."
+          }
+        ]
+      }
+    ]
+  },
+  "status": "passed"
+}

@@ -1,0 +1,19 @@
+{
+  "yjs": "13.6.33",
+  "comments": {
+    "insert_at_both_edges_retained_text": "15",
+    "partial_delete_retained_text": "5",
+    "full_delete_resolved_to_empty_range": [
+      9,
+      9
+    ],
+    "delete_block_resolved_to": [
+      null,
+      null
+    ]
+  },
+  "restore": {
+    "old_text_delta_on_fresh_seed": "missing_history",
+    "accepted_dependency_free_append_without_generation_gate": true
+  }
+}
