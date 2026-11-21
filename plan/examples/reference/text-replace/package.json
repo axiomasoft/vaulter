@@ -1,0 +1,12 @@
+{
+  "name": "vaulter-reference-text-replace",
+  "private": true,
+  "type": "module",
+  "description": "Portable text.replace_exact@1 at ProseMirror level; versions equal the root package-lock.json of Vaulter (b230f6e27).",
+  "engines": { "node": ">=24" },
+  "dependencies": {
+    "orderedmap": "2.1.1",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-transform": "1.12.2"
+  }
+}

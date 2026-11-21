@@ -1,0 +1,13 @@
+{
+    "name": "vaulter/reference-proposal-digest-mmccook",
+    "description": "Isolated check of the JCS library named in plan/spec/implementation/ai.md (AI Core) against the shared proposal-digest vectors.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "mmccook/php-json-canonicalization-scheme": "1.0.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

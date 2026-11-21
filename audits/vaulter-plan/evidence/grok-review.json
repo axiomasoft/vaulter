@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-20",
+  "client": "grok 1.0.89",
+  "vaulter_source_commit": "b230f6e27b53c92145fa81be2fdeb89ea5c8ae03",
+  "reviews": [
+    {
+      "subject": "Снимок совместного текста и правка, принятая после выдачи аренды",
+      "model": [
+        "grok-4.7-build"
+      ],
+      "session_id": "01a1f9d5-b23c-7942-aa14-5a0a37500dd5",
+      "source_files": [
+        "packages/collaboration/src/Persistence/Checkpoint.php",
+        "packages/collaboration/src/Persistence/CompactionLeases.php",
+        "packages/collaboration/src/Persistence/LeaseBinding.php",
+        "packages/collaboration/src/Persistence/Head.php"
+      ],
+      "question": "Ревью публикации checkpoint в существующем хранилище совместного текста. Последовательность: worker получил lease и прочитал checkpoint плюс байты журнала до seq=41; пользователь дописал seq=42 во время merge. Ответ воркера может заявить coveredThrough=41 или 42. В приложенных исходниках проверь предпосылку, может ли сервер различить эти случаи и сохранить неизвестный воркеру хвост. Также проверь поздний старый экземпляр после новой аренды. Дай минимальную поправку и 2 приёмочных теста. Отметь, если риск требует неисправного клиента; наличие воспроизводимого сценария в штатном Hub не предполагается.",
+      "prompt_sha256": "b46a026bba362a232db1003d7f3e646c85b7989d02a5cebcecb284d14900abd1",
+      "answer": "Дефект: сервер не разделяет `coveredThrough=41` и `42`. Честный `H=41` и поздний старый экземпляр протокол выдерживает. Потеря хвоста требует клиента, заявившего непрочитанный seq.\n\n**Дефект.** Верхняя граница в `Checkpoint::transaction`:\n\n`$request->coveredThrough > $head->headSeq`\n\nК `publish` commit уже выставил `headSeq=42`, поэтому оба ответа проходят условие комментария «C ≤ H ≤ HS». `LeaseBinding::digest` включает `nonce`, `documentId`, `type`, `binding->protocol`, `stateFormat`, `schemaVersion`, `generation`, `version` и не включает seq снимка. Дальше общее удаление:\n\n`->where('seq', '<=', $request->coveredThrough)->delete()`\n\nи запись `checkpoint_seq = coveredThrough`.\n\nПоследовательность: `lease` под `lockHead` читает журнал до seq=41 и пишет `lease_token`; commit вставки seq=42; `publish` с тем же токеном и `coveredThrough=42`. Сейчас исключения нет, строка seq=42 удалена, `checkpoint_seq=42`, lease погашен.\n\n**Допущение, не дефект штатного Hub.** Если воркер ставит `coveredThrough` последним прочитанным seq (41), та же последовательность иная: `COVERAGE` не возникает, удаляются только `seq<=41`, seq=42 остаётся, `lease_token=null`, `checkpoint_seq=41`. Комментарий к голове рассчитывает на правки «past H». Заявить 42 можно, только назвав seq, которого не было в снимке аренды. Воспроизводимый сценарий в штатном Hub не предполагается.\n\n**Поздний экземпляр протокол выдерживает.** Аренда токена A (горизонт 41); истечение либо погашение; `CompactionLeases::lease` пишет `lease_token` B; старый экземпляр шлёт токен A. `Head::heldBy`: `leased()` требует `leaseExpiresAt->greaterThan($now)`, затем `hash_equals` с текущим `lease_token`. Ожидание: `CollaborationCheckpointConflictException::LEASE`, журнал и `checkpoint_seq` не меняются. Пока транзакция A держит `FOR UPDATE` головы, выдача B ждёт тот же `lockHead`. Если B уже опубликовал, расходятся `expectedCheckpointVersion` и digest `version`.\n\n**Поправка.** В `UPDATE` выдачи, рядом с `lease_token`, записать `lease_head_seq = headSeq` под тем же `lockHead`. В публикации заменить границу на `coveredThrough > head->leaseHeadSeq`; `null` считать `COVERAGE`. При погашении аренды обнулять `lease_head_seq`.\n\n**Тест 1.** Аренда до 41, commit seq=42, `publish` с `coveredThrough=41`. Ожидание: `CheckpointResult`, seq=42 на месте, `checkpoint_seq=41`, `lease_token` null.\n\n**Тест 2.** Та же история, `coveredThrough=42`. Ожидание: `CollaborationCheckpointConflictException::COVERAGE`; seq=42, прежние `checkpoint_seq`, `checkpoint_version` и `lease_token` без изменений."
+    },
+    {
+      "subject": "Повтор команды книги после commit, смены режима, истечения аренды или TTL",
+      "model": [
+        "grok-4.7-build"
+      ],
+      "session_id": "01a1f9d5-b1da-7283-8dca-857f7914008d",
+      "source_files": [
+        "spec/database/sheets.md",
+        "spec/implementation/workbook-flow.md",
+        "spec/database/sql/sheets.sql"
+      ],
+      "question": "Ревью точного контракта повторов книги. Проверить потерю ответа после commit в snapshot, переход того же документа в journal, гонку двух исполнителей за истёкшую аренду и повтор той же команды после истечения TTL. Имеется ли либо ложный конфликт, либо повторный эффект, либо выдача после отзыва прав? Проверь порядок по тексту, схему хранения ключа и кто имеет право выдать квитанцию. Не предлагай новый продукт. В этом ревью учитывай только v_sheets_commands, общий реестр маршрутов AI лежит в отдельном пакете.",
+      "prompt_sha256": "75275caacceb12233e3997844f718da2100c56ac085fe108f2f50fab5c703f61",
+      "answer": "Протокол выдерживает все четыре сценария. Ложного конфликта, повторного эффекта и выдачи после отзыва нет.\n\n**Потеря ответа после commit.** «Поиск существующего исхода выполняется до проверки свежести исходного маркера»; для `committed` — «Вернуть прежнюю квитанцию»; «режим, generation, позиция, время и lease в fingerprint не входят». Commit пишет payload, строку, `receipt_id` и outbox. Повторный POST/GET с тем же ключом, телом и старым If-Match после проверки прав читает `UNIQUE (tenant_id, project_scope, subject_type, subject_id, document_id, command_id)`. Тот же `fingerprint` возвращает прежний `receipt_id` без runtime. Проверка: одна `committed_position`, `apply` не растёт.\n\n**Переход в journal.** «При смене режима/restore у квитанции остаётся исходное поколение. Повтор обходится без вызова runtime, движения головы и новой записи в журнал». Режим в `fingerprint` не входит; fence относится к новой фиксации после поиска. Проверка: `receipt_id`, `generation` и позиция равны первому commit, `append` не растёт.\n\n**Два исполнителя, истёкшая аренда.** «Условно захватывает прежнюю запись … под блокировкой»; «повторно проверить token, состояние команды, полномочия и голову»; эффект и квитанция — один commit. `v_sheets_commands_reclaim_idx` только при `state = 'running'`. Проверка: один переход в `committed`, один `receipt_id`; UPDATE со старым `worker_token` не меняет строку. `CHECK (state = 'running' OR worker_token IS NULL)` не оставляет token у committed.\n\n**Повтор после TTL.** «Текущее время достигло `replay_until`, или состояние `expired`» → `410`; «сохранять scope, key, fingerprint и UUID». UNIQUE не исключает `expired`; expiry-индекс только `committed`/`rejected`. Тот же `fingerprint`: `INSERT … ON CONFLICT DO NOTHING` не создаёт вторую строку. Иной `fingerprint` → `409`, «Первый исход сохраняется». Проверка: нет второй фиксации и нового `receipt_id`.\n\n**Отзыв.** Сначала «проверить действующие права… Потеря доступа даёт закрытый ответ»; те же «действующие права» на фиксации. `receipt_id` без DEFAULT пишет только эта транзакция владельца. status/verify после проверки доступа не выпускают квитанцию. Проверка: POST и GET status пусты по содержимому.\n\n**Допущение.** «Условно» — один UPDATE `state = 'running' AND worker_token` под блокировкой; провал не пишет `rejected` поверх `committed`. Строка 410 — про уже завершённую команду: `replay_until` ставится при завершении, `running` забирает reclaim, не 410."
+    },
+    {
+      "subject": "Проверка доказательства SDK на момент фиксации и на текущей версии",
+      "model": [
+        "grok-4.7-build"
+      ],
+      "session_id": "01a1f9d7-e4ed-7c63-a74e-e09c21039685",
+      "source_files": [
+        "spec/agent-sdk.md",
+        "spec/schemas/office-v1.schema.json (verifyInput, verifyResult и транзитивные $ref)"
+      ],
+      "question": "Ты рецензируешь конкретный wire-контракт. PHP владеет документами и подтверждает эффект агента через office.verify для text.replace_exact@1 или sheet.fill_formula@1. Ниже приложены спецификация и полное замыкание JSON Schema для этой операции. Найди ровно 0–2 реально возможных противоречия между заявленным положительным/отрицательным ответом, причинностью маркера, проверкой at_commit/current и проверкой адаптером. Различай, какие инварианты проверяются по одному сообщению схемой и какие требуют чтения устойчивого состояния. Для каждой ошибки дай минимальный ответ или последовательность с полями, основание и тест. Если дефекта нет, так и скажи. Без веба, по-русски до 300 слов.",
+      "prompt_sha256": "ca35bfd383ed2823f77ad297b391710f3e307548a2b73b7b59580b96283d1710",
+      "answer": "Проверю замыкание схемы против текста про `passed`/`failed`, маркер и режимы `at_commit`/`current`. Сначала посмотрю, есть ли в дереве полный контракт.\n\nПротиворечия нет. Схема и текст согласованы: форма одного ответа отделена от сверки с квитанцией.\n\nПо одному сообщению схема фиксирует вид ответа. При `outcome=passed` все `checks` имеют `passed=true` и ровно один профиль: пара `text_exact` и `marks` либо пять имён `row_ids`, `formulas`, `calculated_values`, `calculated_at`, `sum`, каждое один раз. У `row_ids` значения уникальны, у успешного расчёта элементы — числа. Порядок `checks` произвольный. При `outcome=failed` есть хотя бы одна проверка с `passed=false`. Полный набор имён задан для `passed`. `marker` и `calculated_at` — целые `generation` и `position` от 0 до 2^53−1. Лишние поля закрыты.\n\nСверка с хранимым состоянием остаётся у владельца и адаптера. Адаптер выбирает профиль по команде квитанции: в сообщении нет имени `text.replace_exact@1` или `sheet.fill_formula@1`, поэтому схема принимает оба профиля. Длины трёх массивов, общий порядок и сами формулы, числа и сумма сравниваются с целями предложения. Для `at_commit` `marker` и `calculated_at` берутся из доказательства этой квитанции и сохраняются после нового поколения. `generation_changed` даёт чтение по старому маркеру. `verify(at_commit)` идёт по `receipt_id` и доступной истории. Для `current` `marker` — версия этого чтения: поздняя правка цели даёт `failed` при `passed` у `at_commit`. Отставание проекции или расчёта возвращает `projection_pending` или `calculation_pending`: это конверт ошибки, а не `verifyResult`. Совпадение `receipt_id` и `mode` с запросом видно только в паре запрос–ответ."
+    }
+  ]
+}

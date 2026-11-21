@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "request_id": "change-pear-price#1",
+  "ok": true,
+  "operation": "apply",
+  "base_sha256": "6f6f16c8fd58fcb627801b83a63fb031d520ed41ecd66274cec2bb3ef8c22554",
+  "workbook": {
+    "format_version": 2,
+    "profile": {
+      "id": "univer-oss-basic-1",
+      "engine": "@univerjs/core@1.5.2",
+      "plugins": [
+        {
+          "name": "@univerjs/docs",
+          "version": "1.5.2"
+        },
+        {
+          "name": "@univerjs/engine-formula",
+          "version": "1.5.2"
+        },
+        {
+          "name": "@univerjs/engine-render",
+          "version": "1.5.2"
+        },
+        {
+          "name": "@univerjs/sheets",
+          "version": "1.5.2"
+        },
+        {
+          "name": "@univerjs/sheets-formula",
+          "version": "1.5.2"
+        },
+        {
+          "name": "@univerjs/sheets-numfmt",
+          "version": "1.5.2"
+        }
+      ]
+    },
+    "native": {
+      "id": "budget-probe",
+      "sheetOrder": [
+        "detail",
+        "summary"
+      ],
+      "name": "budget-probe",
+      "appVersion": "1.5.2",
+      "locale": "enUS",
+      "styles": {
+        "BBgA00": {
+          "n": {
+            "pattern": "0.00"
+          }
+        }
+      },
+      "sheets": {
+        "detail": {
+          "cellData": {
+            "0": {
+              "0": {
+                "t": 1,
+                "v": "Товар"
+              },
+              "1": {
+                "t": 1,
+                "v": "Количество"
+              },
+              "2": {
+                "t": 1,
+                "v": "Цена"
+              },
+              "3": {
+                "t": 1,
+                "v": "Сумма"
+              }
+            },
+            "1": {
+              "0": {
+                "t": 1,
+                "v": "Яблоки"
+              },
+              "1": {
+                "t": 2,
+                "v": 2
+              },
+              "2": {
+                "t": 2,
+                "v": 10
+              },
+              "3": {
+                "f": "=B2*C2",
+                "s": "BBgA00",
+                "t": 2,
+                "v": 20
+              }
+            },
+            "2": {
+              "0": {
+                "t": 1,
+                "v": "Груши"
+              },
+              "1": {
+                "t": 2,
+                "v": 3
+              },
+              "2": {
+                "t": 2,
+                "v": 7
+              },
+              "3": {
+                "f": "=B3*C3",
+                "s": "BBgA00",
+                "t": 2,
+                "v": 21
+              }
+            }
+          },
+          "columnCount": 20,
+          "columnData": {},
+          "columnHeader": {
+            "height": 20,
+            "hidden": 0
+          },
+          "defaultColumnWidth": 88,
+          "defaultRowHeight": 24,
+          "freeze": {
+            "startColumn": -1,
+            "startRow": -1,
+            "xSplit": 0,
+            "ySplit": 0
+          },
+          "hidden": 0,
+          "id": "detail",
+          "mergeData": [],
+          "name": "Detail",
+          "rightToLeft": 0,
+          "rowCount": 100,
+          "rowData": {},
+          "rowHeader": {
+            "hidden": 0,
+            "width": 46
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "showGridlines": 1,
+          "tabColor": "",
+          "zoomRatio": 1
+        },
+        "summary": {
+          "cellData": {
+            "1": {
+              "0": {
+                "t": 1,
+                "v": "Итого"
+              },
+              "1": {
+                "f": "=SUM(Detail!D2:D3)",
+                "s": "BBgA00",
+                "t": 2,
+                "v": 41
+              }
+            }
+          },
+          "columnCount": 20,
+          "columnData": {},
+          "columnHeader": {
+            "height": 20,
+            "hidden": 0
+          },
+          "defaultColumnWidth": 88,
+          "defaultRowHeight": 24,
+          "freeze": {
+            "startColumn": -1,
+            "startRow": -1,
+            "xSplit": 0,
+            "ySplit": 0
+          },
+          "hidden": 0,
+          "id": "summary",
+          "mergeData": [],
+          "name": "Summary",
+          "rightToLeft": 0,
+          "rowCount": 100,
+          "rowData": {},
+          "rowHeader": {
+            "hidden": 0,
+            "width": 46
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "showGridlines": 1,
+          "tabColor": "",
+          "zoomRatio": 1
+        }
+      },
+      "resources": [
+        {
+          "name": "SHEET_RANGE_PROTECTION_PLUGIN",
+          "data": ""
+        },
+        {
+          "name": "SHEET_AuthzIoMockService_PLUGIN",
+          "data": "{}"
+        },
+        {
+          "name": "SHEET_WORKSHEET_PROTECTION_PLUGIN",
+          "data": "{}"
+        },
+        {
+          "name": "SHEET_WORKSHEET_PROTECTION_POINT_PLUGIN",
+          "data": "{}"
+        },
+        {
+          "name": "SHEET_DEFINED_NAME_PLUGIN",
+          "data": "{}"
+        },
+        {
+          "name": "SHEET_RANGE_THEME_MODEL_PLUGIN",
+          "data": "{}"
+        }
+      ],
+      "calculationSettings": {
+        "iterativeCalculation": false,
+        "maxIterations": 100,
+        "maxChange": 0.001
+      }
+    },
+    "tables": []
+  },
+  "candidate_sha256": "1343eca4348359d7eb57437bc0ab2751418f4f5384659c419c86af074bd1b998",
+  "changed_ranges": [
+    {
+      "sheet_id": "detail",
+      "range": "C3"
+    }
+  ],
+  "calculation": {
+    "state": "ready",
+    "source_sha256": "1343eca4348359d7eb57437bc0ab2751418f4f5384659c419c86af074bd1b998"
+  },
+  "checks": {
+    "resources_preserved": [
+      "SHEET_RANGE_PROTECTION_PLUGIN",
+      "SHEET_AuthzIoMockService_PLUGIN",
+      "SHEET_WORKSHEET_PROTECTION_PLUGIN",
+      "SHEET_WORKSHEET_PROTECTION_POINT_PLUGIN",
+      "SHEET_DEFINED_NAME_PLUGIN",
+      "SHEET_RANGE_THEME_MODEL_PLUGIN"
+    ],
+    "cells": [
+      {
+        "sheet_id": "detail",
+        "a1": "C3",
+        "row": 3,
+        "column": 3,
+        "formula": null,
+        "value": 7
+      }
+    ]
+  }
+}

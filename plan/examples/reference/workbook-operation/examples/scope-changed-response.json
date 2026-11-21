@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "request_id": "sheet-2#1",
+  "ok": false,
+  "error": {
+    "code": "scope_changed",
+    "message": "membership of costs changed since prepare",
+    "detail": {
+      "expected": [
+        "r-telecom",
+        "r-travel"
+      ],
+      "actual": [
+        "r-telecom",
+        "r-telecom2",
+        "r-travel"
+      ]
+    }
+  }
+}

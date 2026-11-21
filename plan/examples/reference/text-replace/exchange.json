@@ -1,0 +1,297 @@
+{
+ "id": "text_link_astral_verify_drift",
+ "note": "Wire exchange of the text-replace reference: two similar fragments, a character outside the BMP and a link whose href the agent never sees. The ambiguous fragment is refused at prepare; the unique one commits; after a later human edit the same receipt verifies passed at_commit and failed current. Document state: vectors.json (p-terms), private preconditions: proposal_record.",
+ "events": [
+  {
+   "before_step": 1,
+   "type": "seed_text",
+   "details": {
+    "resource_id": "contract-17",
+    "marker": {
+     "generation": 3,
+     "position": 40
+    },
+    "document": "vectors.json#/doc"
+   }
+  },
+  {
+   "before_step": 6,
+   "type": "human_edits_block",
+   "details": {
+    "resource_id": "contract-17",
+    "block_id": "p-terms",
+    "replace": {
+     "expected": "приёмка: 10 дней",
+     "replacement": "приёмка: 12 дней"
+    },
+    "marker": {
+     "generation": 3,
+     "position": 42
+    }
+   }
+  }
+ ],
+ "proposal_record": {
+  "proposal_id": "proposal-terms-1",
+  "stored_by": "v_ai_proposal_payloads (1:1 v_ai_proposals.proposal_id), immutable, not in the wire digest",
+  "private_preconditions": {
+   "block_id": "p-terms",
+   "node_type": "paragraph",
+   "schema_version": 2,
+   "write_mode": "snapshot",
+   "generation": 3,
+   "state_version": 40,
+   "block": "vectors.json#/doc/content/1",
+   "start_utf16": 20,
+   "end_utf16": 36,
+   "run_marks": []
+  }
+ },
+ "steps": [
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.read",
+    "input": {
+     "resource_id": "contract-17",
+     "selector": {
+      "kind": "text_block",
+      "block_id": "p-terms"
+     }
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.read",
+    "ok": true,
+    "result": {
+     "marker": {
+      "generation": 3,
+      "position": 40
+     },
+     "read_token": "rt-terms-40",
+     "data": {
+      "kind": "text_block",
+      "block_id": "p-terms",
+      "segments": [
+       {
+        "text": "Оплата: 15 дней 🧾, приёмка: 15 дней — см. ",
+        "marks": []
+       },
+       {
+        "text": "условия",
+        "marks": [
+         "link"
+        ]
+       },
+       {
+        "text": ".",
+        "marks": []
+       }
+      ]
+     },
+     "truncated": false,
+     "next_cursor": null
+    }
+   }
+  },
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.prepare",
+    "input": {
+     "resource_id": "contract-17",
+     "command": "text.replace_exact@1",
+     "read_token": "rt-terms-40",
+     "arguments": {
+      "block_id": "p-terms",
+      "expected": "15 дней",
+      "replacement": "10 дней"
+     }
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.prepare",
+    "ok": false,
+    "error": {
+     "code": "invalid_input",
+     "retryable": false,
+     "next_action": "stop"
+    }
+   }
+  },
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.prepare",
+    "input": {
+     "resource_id": "contract-17",
+     "command": "text.replace_exact@1",
+     "read_token": "rt-terms-40",
+     "arguments": {
+      "block_id": "p-terms",
+      "expected": "приёмка: 15 дней",
+      "replacement": "приёмка: 10 дней"
+     }
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.prepare",
+    "ok": true,
+    "result": {
+     "proposal_id": "proposal-terms-1",
+     "base": {
+      "generation": 3,
+      "position": 40
+     },
+     "approval": "automatic",
+     "summary": "В абзаце p-terms заменить «приёмка: 15 дней» на «приёмка: 10 дней»",
+     "targets": [
+      "p-terms"
+     ],
+     "expires_at": "2026-11-21T12:00:00Z",
+     "digest": "d5033072e999a1a4f94ce46dea370ec44c4081dac4cfccc774df068c5f81aedb"
+    }
+   }
+  },
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.commit",
+    "input": {
+     "resource_id": "contract-17",
+     "proposal_id": "proposal-terms-1",
+     "digest": "d5033072e999a1a4f94ce46dea370ec44c4081dac4cfccc774df068c5f81aedb",
+     "command_id": "edit-terms-1"
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.commit",
+    "ok": true,
+    "result": {
+     "command_id": "edit-terms-1",
+     "state": "committed",
+     "receipt_id": "receipt-terms-41",
+     "marker": {
+      "generation": 3,
+      "position": 41
+     }
+    }
+   }
+  },
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.verify",
+    "input": {
+     "resource_id": "contract-17",
+     "receipt_id": "receipt-terms-41",
+     "mode": "at_commit"
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.verify",
+    "ok": true,
+    "result": {
+     "receipt_id": "receipt-terms-41",
+     "mode": "at_commit",
+     "outcome": "passed",
+     "marker": {
+      "generation": 3,
+      "position": 41
+     },
+     "checks": [
+      {
+       "name": "text_exact",
+       "passed": true,
+       "actual": "приёмка: 10 дней"
+      },
+      {
+       "name": "marks",
+       "passed": true,
+       "actual": []
+      }
+     ]
+    }
+   }
+  },
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.verify",
+    "input": {
+     "resource_id": "contract-17",
+     "receipt_id": "receipt-terms-41",
+     "mode": "current"
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.verify",
+    "ok": true,
+    "result": {
+     "receipt_id": "receipt-terms-41",
+     "mode": "current",
+     "outcome": "failed",
+     "marker": {
+      "generation": 3,
+      "position": 42
+     },
+     "checks": [
+      {
+       "name": "text_exact",
+       "passed": false,
+       "actual": "приёмка: 12 дней"
+      },
+      {
+       "name": "marks",
+       "passed": true,
+       "actual": []
+      }
+     ]
+    }
+   }
+  },
+  {
+   "request": {
+    "version": 1,
+    "operation": "office.verify",
+    "input": {
+     "resource_id": "contract-17",
+     "receipt_id": "receipt-terms-41",
+     "mode": "at_commit"
+    }
+   },
+   "response": {
+    "version": 1,
+    "operation": "office.verify",
+    "ok": true,
+    "result": {
+     "receipt_id": "receipt-terms-41",
+     "mode": "at_commit",
+     "outcome": "passed",
+     "marker": {
+      "generation": 3,
+      "position": 41
+     },
+     "checks": [
+      {
+       "name": "text_exact",
+       "passed": true,
+       "actual": "приёмка: 10 дней"
+      },
+      {
+       "name": "marks",
+       "passed": true,
+       "actual": []
+      }
+     ]
+    }
+   }
+  }
+ ]
+}
