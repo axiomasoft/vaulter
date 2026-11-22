@@ -40,7 +40,7 @@ it('appends an update and answers the committed receipt with the protocol header
         ->assertHeader(HubProtocol::HEADER, '2')
         ->assertExactJson(['generation' => 0, 'update_id' => $id, 'seq' => 1, 'sha256' => hash('sha256', "\x00\x01update"), 'persisted' => true, 'permissions_stale' => false]);
 
-    expect([Hub::aggregate($this->node)->pending_generation, Hub::aggregate($this->node)->pending_through_seq])->toBe([0, 1]);
+    expect([Hub::aggregate($this->node)->syncState?->pending_generation, Hub::aggregate($this->node)->syncState?->pending_through_seq])->toBe([0, 1]);
 });
 
 it('answers a retried append with the same receipt', function (): void {
@@ -108,11 +108,14 @@ it('seeds a load from the content of the locked row, together with its state ver
     $room = $hub->open($call, $call->room);
 
     // A REST PUT commits between open() and the locked read of the log.
-    $opened = Hub::aggregate($this->node)->content;
+    $opened = Hub::aggregate($this->node)->payload?->content;
     $version = Hub::aggregate($this->node)->state_version + 1;
     DB::table(app(DatabaseOptions::class)->table('documents'))
         ->where('node_id', $this->node->getKey())
-        ->update(['content' => json_encode(Hub::tiptap('Changed')), 'state_version' => $version]);
+        ->update(['state_version' => $version]);
+    DB::table(app(DatabaseOptions::class)->table('document_payloads'))
+        ->where('document_id', Hub::aggregate($this->node)->getKey())
+        ->update(['content' => json_encode(Hub::tiptap('Changed'))]);
 
     $loaded = $hub->loadLog($room, $call);
 

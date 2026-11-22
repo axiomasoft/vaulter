@@ -19,6 +19,7 @@ use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Access\AccessResolver;
@@ -56,12 +57,27 @@ final readonly class CollaborationAccessPolicy
 
     public function evaluate(DriveContext $context, NodeSnapshot|string|int $document, CollaborationMode $ceiling = CollaborationMode::Write, ?int $clientSchemaVersion = null): CollaborationAccessDecision
     {
+        return $this->evaluateForSession($context, $document, $clientSchemaVersion, $ceiling)[0];
+    }
+
+    /** @return array{CollaborationAccessDecision, Node, Document} */
+    #[Internal]
+    public function evaluateForSession(DriveContext $context, NodeSnapshot|string|int $document, ?int $clientSchemaVersion, CollaborationMode $ceiling = CollaborationMode::Write): array
+    {
         $node = $this->document($context, $document, Ability::View, OperationKind::Metadata);
+        $ability = $this->ability($context, $node);
+        $aggregate = $this->query->document($node, withState: true, withHead: false, withPayload: $ceiling === CollaborationMode::Write && $ability === Ability::Edit);
+
+        return [$this->evaluateState($context, $node, $aggregate, $clientSchemaVersion, $ceiling, $ability), $node, $aggregate];
+    }
+
+    #[Internal]
+    public function evaluateState(DriveContext $context, Node $node, Document $aggregate, ?int $clientSchemaVersion, CollaborationMode $ceiling = CollaborationMode::Write, ?Ability $ability = null): CollaborationAccessDecision
+    {
         $actor = $context->actor->ref()->id;
         if ($context->actor->isSystem() || $actor === null) {
             throw MissingActorException::required();
         }
-        $aggregate = $this->query->document($node);
         $type = $this->types->find($aggregate->type);
         if ($type !== null && !$type instanceof SupportsCollaboration) {
             throw CollaborationUnavailableException::unsupportedType($type->key());
@@ -79,16 +95,11 @@ final readonly class CollaborationAccessPolicy
         if ($driver->protocol() !== $binding->protocol) {
             throw new CollaborationProtocolContractException;
         }
-        $hasCheckpoint = $aggregate->collab_state !== null;
+        $hasCheckpoint = $aggregate->syncState?->collab_state_size !== null;
         if (!$driver->supportsState($aggregate->type, $binding->stateFormat, $binding->schemaVersion, $hasCheckpoint, CollaborationMode::Read)) {
             throw new CollaborationUnavailableException('unsupported_binding', $aggregate->type);
         }
-        $flags = $this->guard->abilities($context, $node)->flags;
-        $ability = match (true) {
-            $flags[Ability::Edit->value] ?? false => Ability::Edit,
-            $flags[Ability::Comment->value] ?? false => Ability::Comment,
-            default => Ability::View,
-        };
+        $ability ??= $this->ability($context, $node);
         // The same rule the hub re-checks on every call: only an editor of content this
         // installation can save back, on an active drive, with a client that speaks the
         // type's schema, gets a room that writes; everyone else watches it.
@@ -108,6 +119,17 @@ final readonly class CollaborationAccessPolicy
             schemaVersion: $binding->schemaVersion, documentType: $aggregate->type, protocol: $binding->protocol,
             stateFormat: $binding->stateFormat, notAfter: Carbon::now()->getTimestamp() + $this->container->make(DocumentsOptions::class)->collaboration->sessionTtl,
         ), $ability, $driveActive);
+    }
+
+    private function ability(DriveContext $context, Node $node): Ability
+    {
+        $flags = $this->guard->abilities($context, $node)->flags;
+
+        return match (true) {
+            $flags[Ability::Edit->value] ?? false => Ability::Edit,
+            $flags[Ability::Comment->value] ?? false => Ability::Comment,
+            default => Ability::View,
+        };
     }
 
     /**

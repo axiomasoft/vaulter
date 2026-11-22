@@ -124,7 +124,7 @@ final readonly class ContentDecoder
 
         return $type !== null
             && $this->schemaWritable($type, $document->schema_version)
-            && $this->read($document->type, $document->content, $document->schema_version)->lossless;
+            && $this->read($document->type, $document->payload?->content, $document->schema_version)->lossless;
     }
 
     /**

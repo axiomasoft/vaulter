@@ -60,6 +60,28 @@ final class DocumentRevisionReadRepository
         return $this->forDocumentOf($node)->whereKey($revisionId)->first();
     }
 
+    /** Load a restore source and its state after the caller has locked the owner. */
+    public function forRestore(Document $document, int|string $revisionId): ?DocumentRevision
+    {
+        $model = $this->documentsConfig->model('document_revision');
+        if ($revisionId === '' || !Identity::fitsKey(new $model, $revisionId)) {
+            return null;
+        }
+
+        $revision = $model::query()
+            ->where('document_id', $document->getKey())
+            ->whereKey($revisionId)
+            ->sharedLock()
+            ->first();
+
+        if ($revision === null) {
+            return null;
+        }
+
+        return $revision->setRelation('payload', $revision->payload()->sharedLock()->first())
+            ->setRelation('syncState', $revision->syncState()->sharedLock()->first());
+    }
+
     /**
      * Every checkpoint of the node's document, newest number first. Returns a
      * Builder so the controller paginates it.

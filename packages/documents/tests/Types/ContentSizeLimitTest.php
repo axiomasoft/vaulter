@@ -35,7 +35,7 @@ it('creates content of exactly the limit and refuses one byte more', function (s
     $documents = Documents::in(DocumentTestHelpers::drive());
 
     $node = $documents->create('At the limit', type: $type, content: contentOfSize($limit, $field));
-    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content_size)->toBe($limit);
+    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->payload?->content_size)->toBe($limit);
 
     expect(fn () => $documents->create('Over the limit', type: $type, content: contentOfSize($limit + 1, $field)))
         ->toThrow(InvalidDocumentContentException::class, sprintf('(%d bytes > %d bytes)', $limit + 1, $limit));
@@ -47,7 +47,7 @@ it('updates to exactly the limit and refuses one byte more without writing', fun
 
     $documents->update($node->id, contentOfSize($limit, $field));
     $before = Document::query()->where('node_id', $node->id)->firstOrFail();
-    expect($before->content_size)->toBe($limit);
+    expect($before->payload?->content_size)->toBe($limit);
 
     expect(fn () => $documents->update($node->id, contentOfSize($limit + 1, $field)))
         ->toThrow(InvalidDocumentContentException::class, sprintf('(%d bytes > %d bytes)', $limit + 1, $limit));

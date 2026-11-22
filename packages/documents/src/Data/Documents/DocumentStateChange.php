@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Data\Documents;
 
 use Packman\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
+use Vaulter\Documents\Enums\Documents\DocumentWriteMode;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
@@ -33,5 +34,6 @@ final readonly class DocumentStateChange
         public ?string $documentType = null,
         public ?string $protocol = null,
         public ?string $stateFormat = null,
+        public ?DocumentWriteMode $writeMode = null,
     ) {}
 }

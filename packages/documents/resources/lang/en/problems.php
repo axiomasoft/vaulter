@@ -12,6 +12,10 @@ return [
         'title' => 'Comment not found',
         'detail' => 'The comment does not exist or belongs to another node.',
     ],
+    'document_command_required' => [
+        'title' => 'Document command required',
+        'detail' => 'Send edits through the active document journal.',
+    ],
     'document_content_degraded' => [
         'title' => 'Document content degraded',
         'detail' => 'Saving would drop parts the document type no longer accepts.',

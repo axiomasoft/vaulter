@@ -6,12 +6,12 @@ namespace Vaulter\Documents\Models\Revisions;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use LogicException;
 use Override;
 use Packman\Attributes\Internal;
 use Vaulter\Configuration\DatabaseOptions;
-use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Models\Documents\Document;
@@ -27,31 +27,23 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * After INSERT only keep_forever may change — the model refuses any other update,
  * so a checkpoint id always names the same bytes (cacheable exports, stable history).
  *
- * @property int|string                $id
- * @property int|string|null           $tenant_id
- * @property int|string                $document_id
- * @property int                       $number
- * @property string|null               $collab_protocol
- * @property string|null               $collab_state_format
- * @property string|null               $pending_protocol
- * @property string|null               $pending_state_format
- * @property int|null                  $pending_schema_version
- * @property string                    $type
- * @property int                       $collab_epoch
- * @property int                       $schema_version
- * @property array<string, mixed>|null $content
- * @property string|null               $content_hash
- * @property int|null                  $content_size
- * @property string|null               $collab_state
- * @property int|null                  $collab_state_size
- * @property int                       $state_version
- * @property string|null               $label
- * @property bool                      $is_autosave
- * @property bool                      $keep_forever
- * @property string                    $status
- * @property int|string|null           $restored_from_revision_id
- * @property int|string|null           $created_by
- * @property Carbon|null               $created_at
+ * @property int|string      $id
+ * @property int|string|null $tenant_id
+ * @property int|string      $document_id
+ * @property int             $number
+ * @property string          $type
+ * @property int             $collab_epoch
+ * @property int             $schema_version
+ * @property int             $state_version
+ * @property string|null     $label
+ * @property bool            $is_autosave
+ * @property bool            $keep_forever
+ * @property string          $status
+ * @property int|string|null $restored_from_revision_id
+ * @property int|string|null $created_by
+ * @property Carbon|null     $created_at
+ * @property-read DocumentRevisionPayload|null $payload
+ * @property-read DocumentRevisionSyncState|null $syncState
  * @property-read Document              $document
  * @property-read DocumentRevision|null $restoredFrom
  */
@@ -75,10 +67,24 @@ class DocumentRevision extends Model
      */
     protected $fillable = [];
 
+    /** @return HasOne<DocumentRevisionPayload, $this> */
+    public function payload(): HasOne
+    {
+        return $this->hasOne(DocumentRevisionPayload::class, 'revision_id');
+    }
+
+    /** @return HasOne<DocumentRevisionSyncState, $this> */
+    public function syncState(): HasOne
+    {
+        return $this->hasOne(DocumentRevisionSyncState::class, 'revision_id');
+    }
+
     public function collaborationBinding(): ?CollaborationStateBinding
     {
-        return $this->collab_protocol === null ? null : new CollaborationStateBinding(
-            $this->collab_protocol, $this->collab_state_format ?? throw new LogicException('Incomplete stored binding.'), $this->schema_version, $this->collab_epoch,
+        $sync = $this->syncState;
+
+        return $sync?->collab_protocol === null ? null : new CollaborationStateBinding(
+            $sync->collab_protocol, $sync->collab_state_format ?? throw new LogicException('Incomplete stored binding.'), $this->schema_version, $this->collab_epoch,
         );
     }
 
@@ -139,7 +145,7 @@ class DocumentRevision extends Model
      */
     public function tipTapContent(): TipTapContent
     {
-        $content = $this->content;
+        $content = $this->payload?->content;
 
         return is_array($content) ? TipTapContent::decayFrom($content) : TipTapContent::empty();
     }
@@ -150,7 +156,7 @@ class DocumentRevision extends Model
      */
     public function opaqueContent(): OpaqueContent
     {
-        $content = $this->content;
+        $content = $this->payload?->content;
 
         return OpaqueContent::fromArray(is_array($content) ? $content : []);
     }
@@ -162,15 +168,10 @@ class DocumentRevision extends Model
     protected function casts(): array
     {
         return [
-            'content' => 'array',
-            // Postgres returns bytea as a stream resource; normalise to a string on every
-            // driver so consumers (copy/restore actions, collab load) never see a resource.
-            'collab_state' => BinaryString::class,
             'number' => 'integer',
+            'collab_epoch' => 'integer',
             'schema_version' => 'integer',
             'state_version' => 'integer',
-            'content_size' => 'integer',
-            'collab_state_size' => 'integer',
             'is_autosave' => 'boolean',
             'keep_forever' => 'boolean',
         ];

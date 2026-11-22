@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
+use Vaulter\Documents\Exceptions\DocumentCommandRequiredException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
@@ -72,15 +73,11 @@ it('runs ACK checkpoint drain transition restore and fences the previous credent
     expect($this->documents->content($this->node)->content->toArray())->toBe($two);
     expect(app(AcmePendingStateDrainer::class)->calls[0]->throughSeq)->toBe(2);
     $settled = $this->documents->content($this->node);
-    $changed = $this->documents->update($this->node, ['columns' => []]);
-    expect($changed->epoch)->toBe($settled->epoch + 1);
-    // The ordinary replacement captures the accepted old projection before reseeding.
-    $source = Document::query()->where('node_id', $this->node->id)->firstOrFail()->revisions()->get()
-        ->first(fn ($revision): bool => $revision->content === $two);
-    expect($source)->not->toBeNull();
-    $this->documents->restore($this->node, $source->getKey());
+    expect(fn () => $this->documents->update($this->node, ['columns' => []]))->toThrow(DocumentCommandRequiredException::class);
+    $source = $this->documents->snapshot($this->node, 'Accepted journal projection');
+    $this->documents->restore($this->node, $source->id);
     $restored = $this->documents->content($this->node);
-    expect($restored->epoch)->toBe($changed->epoch + 1)->and($restored->content->toArray())->toBe($two)
+    expect($restored->epoch)->toBe($settled->epoch + 1)->and($restored->content->toArray())->toBe($two)
         ->and($restored->collabProtocol)->toBe('acme-ot')->and($restored->collabStateFormat)->toBe('acme-ot-v1')
         ->and($restored->schemaVersion)->toBe(1)->and($restored->collabStateSize)->toBeNull();
     $next = $this->documents->collaborationSession($this->node);
@@ -91,7 +88,7 @@ it('runs ACK checkpoint drain transition restore and fences the previous credent
     expect($this->log->append($next->token, ['columns' => ['new']])->generation)->toBe($next->generation);
 });
 
-it('executes settled ordinary JSON editing after adapter disable with a fresh generation', function (): void {
+it('keeps an existing journal fenced when its adapter is disabled', function (): void {
     $this->log->append($this->session->token, ['columns' => ['accepted']]);
     $before = $this->documents->content($this->node);
     disableFixtureAdapter();
@@ -102,13 +99,12 @@ it('executes settled ordinary JSON editing after adapter disable with a fresh ge
             $resolutions[] = $object::class;
         }
     });
-    $updated = $this->documents->update($this->node, ['columns' => ['local']]);
-    expect($updated->epoch)->toBe($before->epoch + 1)->and($updated->stateVersion)->toBe($before->stateVersion + 1)
-        ->and($updated->collabProtocol)->toBe('acme-ot')->and($updated->collabStateFormat)->toBe('acme-ot-v1')
-        ->and($updated->schemaVersion)->toBe(1)->and($updated->content->toArray())->toBe(['columns' => ['local']]);
+    expect(fn () => $this->documents->update($this->node, ['columns' => ['local']]))->toThrow(DocumentCommandRequiredException::class);
+    $after = $this->documents->content($this->node);
+    expect($after->epoch)->toBe($before->epoch)->and($after->stateVersion)->toBe($before->stateVersion)
+        ->and($after->content->toArray())->toBe(['columns' => ['accepted']]);
     expect($resolutions)->not->toContain(AcmeDriver::class, AcmePendingStateDrainer::class);
     expect(fn () => $this->documents->collaborationSession($this->node))->toThrow(CollaborationUnavailableException::class);
-    expect(fn () => $this->log->append($this->session->token, ['columns' => []]))->toThrow(InvalidArgumentException::class, 'Stale credential binding.');
 });
 
 it('refuses unresolved pending after adapter disable and retains every ACKed byte', function (): void {
@@ -117,7 +113,8 @@ it('refuses unresolved pending after adapter disable and retains every ACKed byt
     $before = Document::query()->where('node_id', $this->node->id)->firstOrFail()->getAttributes();
     disableFixtureAdapter();
     $this->documents = Documents::in($this->drive->actingAs(AccessTestHelpers::user(5)));
-    expect(fn () => $this->documents->update($this->node, ['columns' => []]))->toThrow(DocumentStatePendingException::class);
+    expect(fn () => $this->documents->content($this->node))->toThrow(DocumentStatePendingException::class)
+        ->and(fn () => $this->documents->update($this->node, ['columns' => []]))->toThrow(DocumentCommandRequiredException::class);
     expect(Document::query()->where('node_id', $this->node->id)->firstOrFail()->getAttributes())->toBe($before)
         ->and($this->log->records())->toBe($records);
 });
@@ -127,7 +124,7 @@ it('dispatches a mixed pending page by stored protocol and preserves unknown mar
     $yjs = Documents::in($this->drive)->create('Yjs-like');
     $unknown = Documents::in($this->drive)->create('Unknown', type: 'acme/ot');
     // A stored protocol from an uninstalled adapter, not a runtime product branch.
-    Document::query()->where('node_id', $unknown->id)->update(['collab_protocol' => 'uninstalled']);
+    Document::query()->where('node_id', $unknown->id)->firstOrFail()->syncState()->update(['collab_protocol' => 'uninstalled']);
     app(VaulterDatabase::class)->transaction(function () use ($yjs, $unknown): void {
         $state = app(CollaborativeState::class);
         foreach ([$yjs, $unknown] as $node) {

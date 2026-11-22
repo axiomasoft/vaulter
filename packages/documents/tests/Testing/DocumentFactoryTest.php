@@ -22,7 +22,7 @@ it('creates a rich text document under a drive', function (): void {
         ->and($document->exists)->toBeTrue()
         ->and($document->type)->toBe(RichTextDocumentType::KEY)
         ->and($document->revision_count)->toBe(1)
-        ->and($document->content['content'][0]['content'][0]['text'])->toBe('Hello')
+        ->and($document->payload?->content['content'][0]['content'][0]['text'])->toBe('Hello')
         ->and($document->node->kind)->toBe(NodeKind::Document);
 });
 
@@ -33,7 +33,7 @@ it('creates a document of another type with that type default content', function
 
     expect($document->type)->toBe('acme/kanban')
         ->and($document->node->name)->toBe('Board')
-        ->and($document->content)->toBe(['columns' => []]);
+        ->and($document->payload?->content)->toBe(['columns' => []]);
 });
 
 it('creates a document inside a folder', function (): void {

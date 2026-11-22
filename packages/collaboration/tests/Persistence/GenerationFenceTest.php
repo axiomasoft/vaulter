@@ -90,7 +90,7 @@ it('refuses an append of the generation a restore closed between load and append
         ->and(Hub::aggregate($this->node)->collab_epoch)->toBe($loaded + 1)
         ->and(fenceRows('collaboration_updates'))->toBe(0)
         ->and(fenceRows('collaboration_receipts'))->toBe(0)
-        ->and(Hub::aggregate($this->node)->pending_generation)->toBeNull();
+        ->and(Hub::aggregate($this->node)->syncState?->pending_generation)->toBeNull();
 });
 
 it('answers the hub the same 409 over HTTP for a room of the closed generation', function (): void {
@@ -112,7 +112,7 @@ it('takes appends of the new generation after the restore, numbered from 1 again
         ->and(fenceRows('collaboration_receipts'))->toBe(1);
 
     // Once the generation is clear (as a checkpoint would leave it), the restore closes it and the next one starts at 1.
-    Hub::aggregate($this->node)->forceFill(['pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
+    Hub::aggregate($this->node)->syncState?->forceFill(['pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
     fenceRestore($this->node);
     $result = fenceAppend($this->node, 1, seed: true);
 
@@ -151,7 +151,7 @@ it('refuses incompatible stored schema or format on load and lease with or witho
         Compaction::publish(Compaction::leaseOf($this->node));
         fenceAppend($this->node, 0, 'tail');
     }
-    app(VaulterDatabase::class)->write(fn () => Hub::aggregate($this->node)->forceFill([$field => $value])->save());
+    app(VaulterDatabase::class)->write(fn () => ($field === 'schema_version' ? Hub::aggregate($this->node) : Hub::aggregate($this->node)->syncState)?->forceFill([$field => $value])->save());
     $before = fenceStoredAttributes($this->node);
     Hub::call('load', ['room' => Hub::room($this->node)], Hub::token($this->node))->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
     expect(fn (): array => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
@@ -199,7 +199,7 @@ it('never serves or leases old bytes under a newly installed type schema or form
     }
     Hub::call('load', ['room' => Hub::room($node)], $token)->assertStatus(409)->assertJsonPath('code', 'collaboration_unavailable');
     expect(fn (): array => Compaction::lease())->toThrow(CollaborationUnavailableException::class);
-    expect(fenceStoredAttributes($node))->toBe($before)->and(Hub::aggregate($node)->schema_version)->toBe(1)->and(Hub::aggregate($node)->collab_state_format)->toBe('yjs-update-v1');
+    expect(fenceStoredAttributes($node))->toBe($before)->and(Hub::aggregate($node)->schema_version)->toBe(1)->and(Hub::aggregate($node)->syncState?->collab_state_format)->toBe('yjs-update-v1');
 })->with(['pre-seed schema change' => [false, 'schema'], 'checkpoint schema change' => [true, 'schema'], 'pre-seed format change' => [false, 'format'], 'checkpoint format change' => [true, 'format']]);
 
 it('serves Markdown session load lease checkpoint and drain for both checkpoint states', function (bool $checkpoint): void {

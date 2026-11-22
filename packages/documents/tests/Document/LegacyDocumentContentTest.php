@@ -38,7 +38,7 @@ function legacyVersion(array $content): DocumentRevision
 
     // Перезаписываем снапшот «как он лежал в старом формате» прямо в БД (ревизии неизменяемы
     // через модель) — миграции данных нет, версия остаётся такой, какой её записал старый код.
-    app(VaulterDatabase::class)->write(fn () => DocumentRevision::query()->whereKey($headId)->update(['content' => json_encode($content)]));
+    app(VaulterDatabase::class)->write(fn () => DocumentRevision::query()->whereKey($headId)->firstOrFail()->payload()->update(['content' => json_encode($content)]));
 
     return DocumentRevision::query()->whereKey($headId)->firstOrFail();
 }

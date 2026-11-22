@@ -60,7 +60,7 @@ it('does not answer JSON and creates no revision', function (): void {
 
 it('marks an export of partly readable content with X-Vaulter-Export-Lossy', function (): void {
     [$node, $user] = exportedNode('Partly readable');
-    app(VaulterDatabase::class)->write(fn () => DocumentTestHelpers::document(DriveTestHelpers::model($node))->forceFill(['content' => ['type' => 'doc', 'content' => [
+    app(VaulterDatabase::class)->write(fn () => DocumentTestHelpers::document(DriveTestHelpers::model($node))->payload?->forceFill(['content' => ['type' => 'doc', 'content' => [
         ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'kept']]],
         ['type' => 'hostWidgetNode'],
     ]]])->save());

@@ -11,12 +11,11 @@ use Vaulter\Documents\Http\Requests\UpdateDocumentContentRequest;
 use Vaulter\Documents\Http\Resources\DocumentResponses;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
+use Vaulter\Http\Support\Preconditions;
 
 /**
- * Replace a document's content (Edit). If-Match is required and is compared with the
- * content's own tag, so renaming or moving the document never invalidates it; a hub
- * store that landed after the caller read makes this write fail 412 document_state_mismatch. The write is conditional,
- * not keyed: a repeat of the same PUT after the commit carries the old tag and answers 412 without a second revision.
+ * Replace a document's content (Edit). If-Match is compared under the same lock
+ * that checks write mode and saves the content.
  */
 #[Internal]
 final readonly class UpdateDocumentContentController
@@ -31,8 +30,9 @@ final readonly class UpdateDocumentContentController
     public function __invoke(UpdateDocumentContentRequest $request, string $node): JsonResponse
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        $expected = $this->responses->expectedStateVersion($request, $drive, $node);
 
-        return $this->responses->content($this->documents->in($drive)->updateContent($node, $request->content(), expectedStateVersion: $expected));
+        return $this->responses->content($this->documents->in($drive)->updateContent(
+            $node, $request->content(), matchesTag: static fn (string $tag): bool => Preconditions::matches($request, $tag),
+        ));
     }
 }

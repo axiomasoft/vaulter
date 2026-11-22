@@ -7,6 +7,7 @@ use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Documents\DocumentSyncState;
 use Vaulter\Documents\State\CheckpointPublication;
 use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
@@ -99,7 +100,7 @@ it('answers 409 without resolving a drainer when none is active', function (): v
         ->and($after->collab_epoch)->toBe($before->collab_epoch)
         ->and($after->state_version)->toBe($before->state_version)
         ->and($after->revision_count)->toBe($before->revision_count)
-        ->and([$after->pending_generation, $after->pending_through_seq])->toBe([0, 3]);
+        ->and([$after->syncState?->pending_generation, $after->syncState?->pending_through_seq])->toBe([0, 3]);
 });
 
 it('still serves a checkpoint of a pending document: only the working state is stale', function (): void {
@@ -120,7 +121,7 @@ it('drains outside any transaction and serves the drained state', function (): v
         ->and(FakePendingStateDrainer::$calls[0]['marker']->throughSeq)->toBe(3)
         ->and(FakePendingStateDrainer::$calls[0]['marker']->nodeId)->toBe($this->id)
         ->and(data_get($snapshot->content->toArray(), 'content.0.content.0.text'))->toBe('Drained')
-        ->and(($this->aggregate)()->pending_generation)->toBeNull();
+        ->and(($this->aggregate)()->syncState?->pending_generation)->toBeNull();
 });
 
 it('drains before an export of the working state', function (): void {
@@ -141,7 +142,7 @@ it('drains before a replace and writes on top of the drained edits', function ()
     expect(FakePendingStateDrainer::$calls)->toHaveCount(1)
         ->and(FakePendingStateDrainer::$calls[0]['transactionLevel'])->toBe(0)
         ->and(guardText($document))->toBe('Mine')
-        ->and($document->pending_generation)->toBeNull();
+        ->and($document->syncState?->pending_generation)->toBeNull();
 });
 
 it('refuses a replace whose tag predates the drained edits instead of overwriting them', function (): void {
@@ -163,7 +164,7 @@ it('drains before a restore, then closes the generation', function (): void {
     expect(FakePendingStateDrainer::$calls)->toHaveCount(1)
         ->and($document->collab_epoch)->toBe(1)
         ->and(guardText($document))->toBe('Saved')
-        ->and($document->pending_generation)->toBeNull();
+        ->and($document->syncState?->pending_generation)->toBeNull();
 });
 
 it('refuses with 409 and keeps the generation when the drain misses its deadline', function (): void {
@@ -183,8 +184,8 @@ it('refuses with 409 and keeps the generation when the drain misses its deadline
         ->and($after->collab_epoch)->toBe($before->collab_epoch)
         ->and($after->state_version)->toBe($before->state_version)
         ->and($after->revision_count)->toBe($before->revision_count)
-        ->and($after->content_hash)->toBe($before->content_hash)
-        ->and([$after->pending_generation, $after->pending_through_seq])->toBe([0, 3]);
+        ->and($after->payload?->content_hash)->toBe($before->payload?->content_hash)
+        ->and([$after->syncState?->pending_generation, $after->syncState?->pending_through_seq])->toBe([0, 3]);
 });
 
 it('never waits on the drainer inside a transaction', function (): void {
@@ -209,7 +210,7 @@ it('drains a trashed pending document before the purge transaction, then purges 
         ->and(FakePendingStateDrainer::$calls)->toHaveCount(1)
         ->and(FakePendingStateDrainer::$calls[0]['marker']->nodeId)->toBe($this->id)
         ->and(FakePendingStateDrainer::$calls[0]['transactionLevel'])->toBe(0)
-        ->and(Document::query()->where('node_id', $live)->value('pending_through_seq'))->toBe(1);
+        ->and(Document::query()->where('node_id', $live)->firstOrFail()->syncState?->pending_through_seq)->toBe(1);
 });
 
 it('refuses to purge a pending document the drain did not settle, or without a drainer, and keeps it', function (bool $drainer): void {
@@ -226,7 +227,7 @@ it('refuses to purge a pending document the drain did not settle, or without a d
     expect(FakePendingStateDrainer::$calls)->toHaveCount($drainer ? 1 : 0)
         ->and($after->collab_epoch)->toBe($before->collab_epoch)
         ->and($after->revision_count)->toBe($before->revision_count)
-        ->and([$after->pending_generation, $after->pending_through_seq])->toBe([0, 3]);
+        ->and([$after->syncState?->pending_generation, $after->syncState?->pending_through_seq])->toBe([0, 3]);
 })->with(['drain misses its deadline' => [true], 'no drainer' => [false]]);
 
 it('does not drain before a purge that runs inside a transaction', function (): void {
@@ -245,7 +246,7 @@ it('drains the purge target even behind more trashed pending documents than one 
     foreach (range(1, 101) as $n) {
         $stuck[] = (string) $this->documents->create('Stuck '.$n, content: DocumentTestHelpers::content('Stuck')->toArray())->id;
     }
-    Document::query()->whereIn('node_id', $stuck)->update(['pending_generation' => 0, 'pending_through_seq' => 1, 'pending_protocol' => 'yjs', 'pending_state_format' => 'yjs-update-v1', 'pending_schema_version' => 1]);
+    DocumentSyncState::query()->whereIn('document_id', Document::query()->whereIn('node_id', $stuck)->select('id'))->update(['pending_generation' => 0, 'pending_through_seq' => 1, 'pending_protocol' => 'yjs', 'pending_state_format' => 'yjs-update-v1', 'pending_schema_version' => 1]);
     Node::query()->whereIn('id', $stuck)->update(['trashed_at' => now()]);
     $target = (string) $this->documents->create('Target', content: DocumentTestHelpers::content('Target')->toArray())->id;
     guardMark($target, 3);
@@ -356,11 +357,11 @@ it('answers the REST content, export, replace and restore with the problem docum
 it('routes each mixed pending page by stored protocol and never drops unknown markers', function (): void {
     guardDrainer(true);
     $unknown = ($this->aggregate)();
-    $unknown->forceFill(['pending_protocol' => 'acme-ot', 'pending_state_format' => 'acme-json-v1', 'pending_schema_version' => 1,
+    $unknown->syncState?->forceFill(['pending_protocol' => 'acme-ot', 'pending_state_format' => 'acme-json-v1', 'pending_schema_version' => 1,
         'pending_generation' => 0, 'pending_through_seq' => 1])->save();
     $known = $this->documents->create('Known', content: DocumentTestHelpers::content('Known')->toArray());
     guardMark($known->id, 3);
     app(PendingStateGuard::class)->drainTrashed($this->handle->model()->getKey(), wholeDrive: true);
-    expect($unknown->fresh()->pending_through_seq)->toBe(1)
+    expect($unknown->fresh()->syncState?->pending_through_seq)->toBe(1)
         ->and(array_map(static fn (array $call) => $call['marker']->nodeId, FakePendingStateDrainer::$calls))->toContain((string) $known->id);
 });

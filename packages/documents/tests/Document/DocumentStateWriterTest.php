@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -16,7 +17,10 @@ use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Documents\DocumentPayload;
+use Vaulter\Documents\Models\Documents\DocumentSyncState;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Models\Revisions\DocumentRevisionSyncState;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\CollaborativeStateTransition;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -55,11 +59,11 @@ function writeState(Node $node, DocumentStateChange $change): DocumentStateResul
 
 it('reads streamed collaboration state repeatedly without consuming its stored bytes', function (): void {
     $bytes = "room\0state\xff";
-    foreach ([new Document, new DocumentRevision] as $model) {
+    foreach ([new DocumentSyncState, new DocumentRevisionSyncState] as $model) {
         $stream = fopen('php://memory', 'r+');
         expect($stream)->toBeResource();
         try {
-            fwrite($stream, base64_encode($bytes));
+            fwrite($stream, $bytes);
             rewind($stream);
             $model->setRawAttributes(['collab_state' => $stream], sync: true);
 
@@ -92,11 +96,11 @@ it('captures the working state verbatim into a checkpoint', function (): void {
 
     expect($checkpoint)->toBeInstanceOf(DocumentRevision::class)
         ->and($checkpoint?->number)->toBe(2)
-        ->and($checkpoint?->content)->toEqual(DocumentTestHelpers::content('captured')->toArray())
-        ->and($checkpoint?->content_hash)->toBe(DocumentTestHelpers::content('captured')->contentHash())
-        ->and($checkpoint?->content_size)->toBe(DocumentTestHelpers::content('captured')->sizeInBytes())
-        ->and($checkpoint?->collab_state)->toBe("yjs\0bytes")
-        ->and($checkpoint?->collab_state_size)->toBe(9)
+        ->and($checkpoint?->payload?->content)->toEqual(DocumentTestHelpers::content('captured')->toArray())
+        ->and($checkpoint?->payload?->content_hash)->toBe(DocumentTestHelpers::content('captured')->contentHash())
+        ->and($checkpoint?->payload?->content_size)->toBe(DocumentTestHelpers::content('captured')->sizeInBytes())
+        ->and($checkpoint?->syncState?->collab_state)->toBe("yjs\0bytes")
+        ->and($checkpoint?->syncState?->collab_state_size)->toBe(9)
         ->and($checkpoint?->schema_version)->toBe(2)
         ->and($checkpoint?->state_version)->toBe(2)
         ->and($checkpoint?->label)->toBe('labelled')
@@ -120,7 +124,7 @@ it('checkpoints by interval: none inside it, an autosave one after it', function
     expect($inside->checkpoint)->toBeNull()
         ->and($after->checkpoint?->is_autosave)->toBeTrue()
         ->and($after->checkpoint?->state_version)->toBe(3)
-        ->and($after->checkpoint?->content)->toEqual(DocumentTestHelpers::content('after')->toArray());
+        ->and($after->checkpoint?->payload?->content)->toEqual(DocumentTestHelpers::content('after')->toArray());
 });
 
 it('takes a named checkpoint of an unchanged state without moving its validators', function (): void {
@@ -134,7 +138,7 @@ it('takes a named checkpoint of an unchanged state without moving its validators
     $document = DocumentTestHelpers::document($node);
 
     expect($checkpoint->number)->toBe(2)
-        ->and($checkpoint->content)->toBe(DocumentTestHelpers::revisions($node)->first()?->content)
+        ->and($checkpoint->payload?->content)->toBe(DocumentTestHelpers::revisions($node)->first()?->payload?->content)
         ->and($checkpoint->is_autosave)->toBeFalse()
         ->and($document->state_version)->toBe(1)
         ->and($document->collab_epoch)->toBe(0)
@@ -156,7 +160,7 @@ it('moves the epoch for restore and for a JSON replace of Yjs state, never for c
 
     expect($collab->epochChanged)->toBeFalse()
         ->and($collab->document->collab_epoch)->toBe(0)
-        ->and($collab->document->content)->toEqual(DocumentTestHelpers::content('v1')->toArray())
+        ->and($collab->document->payload?->content)->toEqual(DocumentTestHelpers::content('v1')->toArray())
         ->and($restore->epochChanged)->toBeTrue()
         ->and($restore->document->collab_epoch)->toBe(1)
         ->and($restore->checkpoint?->restored_from_revision_id)->toEqual($source->id);
@@ -176,14 +180,14 @@ it('keeps the collaborative state a generation closes over in a revision before 
         restoredFrom: $cause === StateWriteCause::Restore ? $source : null,
     ));
 
-    $kept = DocumentTestHelpers::revisions($node)->firstWhere('collab_state', "room\0state");
+    $kept = DocumentTestHelpers::revisions($node)->firstWhere('syncState.collab_state', "room\0state");
     expect($closing->epochChanged)->toBeTrue()
         ->and($kept)->not->toBeNull()
-        ->and($kept?->content)->toEqual(DocumentTestHelpers::content('saved edits')->toArray())
+        ->and($kept?->payload?->content)->toEqual(DocumentTestHelpers::content('saved edits')->toArray())
         ->and($kept?->state_version)->toBe(2)
         ->and($kept?->is_autosave)->toBeTrue()
-        ->and($closing->document->content)->toEqual(DocumentTestHelpers::content('replacement')->toArray());
-})->with(['restore' => [StateWriteCause::Restore], 'JSON replace' => [StateWriteCause::Update]]);
+        ->and($closing->document->payload?->content)->toEqual(DocumentTestHelpers::content('replacement')->toArray());
+})->with(['restore' => [StateWriteCause::Restore], 'transition' => [StateWriteCause::Transition]]);
 
 it('adds no revision when the state a generation closes over is already one, or holds no Yjs state', function (bool $collaborative): void {
     $node = writerDocument();
@@ -256,4 +260,30 @@ it('rejects rich-text prepared payload after a locked Markdown transition withou
     expect($snapshot())->toBe($before)->and($events)->toBe([]);
     $normal = $action->execute($context, new UpdateDocumentContentInput($node, DocumentTestHelpers::content('valid unconditional')));
     expect($normal->changed)->toBeTrue()->and($normal->document->type)->toBe('vaulter/markdown');
+});
+
+it('rolls back head metadata and the checkpoint when the payload write fails its constraint', function (): void {
+    config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);
+    $node = writerDocument();
+    $before = DocumentTestHelpers::document($node);
+    $hash = $before->payload?->content_hash;
+    $outbox = DB::table('v_outbox')->count();
+
+    app('events')->listen('eloquent.updating: '.DocumentPayload::class, static function (DocumentPayload $payload) use ($before): void {
+        if ($payload->document_id === $before->id) {
+            $payload->forceFill(['content_size' => -1]);
+        }
+    });
+    expect(fn () => app(UpdateDocumentContentAction::class)->execute(
+        DocumentTestHelpers::context($node), new UpdateDocumentContentInput($node, DocumentTestHelpers::content('cannot persist')),
+    ))->toThrow(QueryException::class);
+
+    $after = DocumentTestHelpers::document($node);
+    expect($after->state_version)->toBe($before->state_version)
+        ->and($after->collab_epoch)->toBe($before->collab_epoch)
+        ->and($after->current_revision_id)->toBe($before->current_revision_id)
+        ->and($after->revision_count)->toBe($before->revision_count)
+        ->and($after->payload?->content_hash)->toBe($hash)
+        ->and(DB::table('v_outbox')->count())->toBe($outbox)
+        ->and(DocumentTestHelpers::revisions($node))->toHaveCount(1);
 });

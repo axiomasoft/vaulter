@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
@@ -42,7 +44,7 @@ function readPathStorage(): Drive
 function seedLegacyHeadContent(int|string $nodeId, array $content): void
 {
     // The content endpoint reads the working state; seed it as old code stored it.
-    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $nodeId)->update(['content' => json_encode($content)]));
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $nodeId)->firstOrFail()->payload()->update(['content' => json_encode($content)]));
 }
 
 it('отдаёт легаси-контент с javascript:-ссылкой обеззараженным, а не сырым, R-12', function (): void {
@@ -142,4 +144,25 @@ it('сохраняет безопасные ссылки при чтении —
 
     expect((string) json_encode($content))->toContain('https:\/\/example.test\/a')
         ->and($content['content'][0]['content'][0]['marks'][0]['attrs']['target'])->toBe('_blank');
+});
+
+it('reads the metadata of a page of documents without loading JSON or binary checkpoints', function (): void {
+    $drive = DocumentTestHelpers::drive();
+    $documents = Documents::in($drive);
+    $documents->create('First document');
+    $documents->create('Second document');
+    $db = app(VaulterDatabase::class)->connection();
+    $db->flushQueryLog();
+    $db->enableQueryLog();
+    try {
+        $page = $drive->nodes()->children();
+        $queries = array_column($db->getQueryLog(), 'query');
+    } finally {
+        $db->disableQueryLog();
+        $db->flushQueryLog();
+    }
+
+    expect($page->items)->toHaveCount(2)
+        ->and(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'v_documents')))->toHaveCount(1)
+        ->and(implode("\n", $queries))->not->toContain('v_document_payloads', 'v_document_sync_states', 'v_document_revision_payloads', 'v_document_revision_sync_states');
 });

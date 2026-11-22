@@ -194,7 +194,12 @@ it('hides unavailable adapters until View and rejects system principals', functi
 });
 
 it('rejects missing stored compatibility even without a client schema', function (string $column, mixed $value): void {
-    Document::query()->where('node_id', $this->node->id)->update([$column => $value]);
+    $document = Document::query()->where('node_id', $this->node->id)->firstOrFail();
+    if ($column === 'schema_version') {
+        $document->forceFill([$column => $value])->save();
+    } else {
+        $document->syncState()->update([$column => $value]);
+    }
     expect(fn () => app(CollaborationAccessPolicy::class)->evaluate($this->context, $this->node))->toThrow(CollaborationUnavailableException::class);
 })->with([['schema_version', 2], ['collab_state_format', 'foreign'], ['collab_protocol', 'foreign']]);
 
@@ -225,7 +230,7 @@ it('hides other drives, explicit tenant mismatch, trash and deleting drives', fu
 })->with(['drive', 'tenant', 'trash', 'deleting']);
 
 it('does not make degraded JSON writable', function (): void {
-    Document::query()->where('node_id', $this->node->id)->update(['content' => json_encode(['type' => 'doc', 'content' => [['type' => 'uninstalled-node']]])]);
+    Document::query()->where('node_id', $this->node->id)->firstOrFail()->payload()->update(['content' => json_encode(['type' => 'doc', 'content' => [['type' => 'uninstalled-node']]])]);
     expect(app(CollaborationAccessPolicy::class)->evaluate($this->context, $this->node)->grant->mode)->toBe(CollaborationMode::Read);
 });
 

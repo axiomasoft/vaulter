@@ -8,16 +8,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use LogicException;
 use Override;
 use Packman\Attributes\Internal;
 use Vaulter\Configuration\DatabaseOptions;
-use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
+use Vaulter\Documents\Enums\Documents\DocumentWriteMode;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Drive\Configuration\DriveOptions;
@@ -33,33 +34,24 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * checkpoint. Checkpoints are immutable {@see DocumentRevision} rows. Only
  * DocumentStateWriter writes the working state.
  *
- * @property int|string                $id
- * @property int|string|null           $tenant_id
- * @property int|string                $node_id
- * @property string                    $type
- * @property string|null               $collab_protocol
- * @property string|null               $collab_state_format
- * @property string|null               $pending_protocol
- * @property string|null               $pending_state_format
- * @property int|null                  $pending_schema_version
- * @property int                       $schema_version
- * @property int|string|null           $current_revision_id
- * @property int                       $revision_count
- * @property int                       $collab_epoch
- * @property int                       $state_version
- * @property int                       $checkpoint_state_version
- * @property int|null                  $pending_generation
- * @property int|null                  $pending_through_seq
- * @property array<string, mixed>|null $content
- * @property string|null               $content_hash
- * @property int|null                  $content_size
- * @property string|null               $collab_state
- * @property int|null                  $collab_state_size
- * @property Carbon|null               $last_checkpoint_at
- * @property int|string|null           $created_by
- * @property int|string|null           $updated_by
- * @property Carbon|null               $created_at
- * @property Carbon|null               $updated_at
+ * @property int|string        $id
+ * @property int|string|null   $tenant_id
+ * @property int|string        $node_id
+ * @property string            $type
+ * @property DocumentWriteMode $write_mode
+ * @property int               $schema_version
+ * @property int|string|null   $current_revision_id
+ * @property int               $revision_count
+ * @property int               $collab_epoch
+ * @property int               $state_version
+ * @property int               $checkpoint_state_version
+ * @property Carbon|null       $last_checkpoint_at
+ * @property int|string|null   $created_by
+ * @property int|string|null   $updated_by
+ * @property Carbon|null       $created_at
+ * @property Carbon|null       $updated_at
+ * @property-read DocumentPayload|null $payload
+ * @property-read DocumentSyncState|null $syncState
  * @property-read Node                  $node
  * @property-read DocumentRevision|null $currentRevision
  */
@@ -83,10 +75,24 @@ class Document extends Model
      */
     protected $fillable = [];
 
+    /** @return HasOne<DocumentPayload, $this> */
+    public function payload(): HasOne
+    {
+        return $this->hasOne(DocumentPayload::class, 'document_id');
+    }
+
+    /** @return HasOne<DocumentSyncState, $this> */
+    public function syncState(): HasOne
+    {
+        return $this->hasOne(DocumentSyncState::class, 'document_id');
+    }
+
     public function collaborationBinding(): ?CollaborationStateBinding
     {
-        return $this->collab_protocol === null ? null : new CollaborationStateBinding(
-            $this->collab_protocol, $this->collab_state_format ?? throw new LogicException('Incomplete stored binding.'), $this->schema_version, $this->collab_epoch,
+        $sync = $this->syncState;
+
+        return $sync?->collab_protocol === null ? null : new CollaborationStateBinding(
+            $sync->collab_protocol, $sync->collab_state_format ?? throw new LogicException('Incomplete stored binding.'), $this->schema_version, $this->collab_epoch,
         );
     }
 
@@ -148,7 +154,7 @@ class Document extends Model
     /** Whether committed collaboration edits are not in the working state yet (the pending-state marker is set). */
     public function hasPendingState(): bool
     {
-        return $this->pending_generation !== null;
+        return $this->syncState?->pending_generation !== null;
     }
 
     /**
@@ -157,7 +163,7 @@ class Document extends Model
      */
     public function tipTapContent(): TipTapContent
     {
-        $content = $this->content;
+        $content = $this->payload?->content;
 
         return is_array($content) ? TipTapContent::decayFrom($content) : TipTapContent::empty();
     }
@@ -165,7 +171,7 @@ class Document extends Model
     /** The working state as an opaque snapshot (a non-rich-text type, e.g. a workbook). */
     public function opaqueContent(): OpaqueContent
     {
-        $content = $this->content;
+        $content = $this->payload?->content;
 
         return OpaqueContent::fromArray(is_array($content) ? $content : []);
     }
@@ -185,19 +191,12 @@ class Document extends Model
     protected function casts(): array
     {
         return [
-            'content' => 'array',
-            // Postgres returns bytea as a stream resource; normalise to a string.
-            'collab_state' => BinaryString::class,
+            'write_mode' => DocumentWriteMode::class,
             'schema_version' => 'integer',
             'revision_count' => 'integer',
             'collab_epoch' => 'integer',
             'state_version' => 'integer',
             'checkpoint_state_version' => 'integer',
-            'pending_schema_version' => 'integer',
-            'pending_generation' => 'integer',
-            'pending_through_seq' => 'integer',
-            'content_size' => 'integer',
-            'collab_state_size' => 'integer',
             'last_checkpoint_at' => 'datetime',
         ];
     }

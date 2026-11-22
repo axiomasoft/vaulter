@@ -73,7 +73,7 @@ it('fences identical JSON transitions and retains explicit user attribution', fu
     expect($outcome->published)->toBeTrue()
         ->and($after->collab_epoch)->toBe($before->collab_epoch + 1)
         ->and($after->state_version)->toBe($before->state_version + 1)
-        ->and($after->content_hash)->toBe($before->content_hash)
+        ->and($after->payload?->content_hash)->toBe($before->payload?->content_hash)
         ->and((string) $after->updated_by)->toBe('42')
         ->and((string) $after->currentRevision->created_by)->toBe('42')
         ->and($after->currentRevision->type)->toBe($before->type);
@@ -208,7 +208,7 @@ it('emits no events and preserves every aggregate row when transition CAS or pen
     expect(p36Rows())->toBe($before)->and($events)->toBe([]);
 })->with(['binding', 'version', 'pending']);
 
-it('executes ordinary Documents update without an active driver and fences even identical pre-seed JSON', function (bool $identical): void {
+it('keeps the snapshot generation on ordinary edits without an active driver', function (bool $identical): void {
     expect(app(Kernel::class)->isActive('collaboration'))->toBeFalse();
     $drive = DocumentTestHelpers::drive();
     $documents = Documents::in($drive);
@@ -216,9 +216,9 @@ it('executes ordinary Documents update without an active driver and fences even 
     $before = $documents->content($node);
     $json = $identical ? $before->content->toArray() : GrantedDocuments::tiptap('Local edit');
     $updated = $documents->update($node, $json);
-    expect($updated->epoch)->toBe($before->epoch + 1)->and($updated->stateVersion)->toBe($before->stateVersion + 1)
+    expect($updated->epoch)->toBe($before->epoch)->and($updated->stateVersion)->toBe($before->stateVersion + (int) !$identical)
         ->and($updated->collabProtocol)->toBe('yjs')->and($updated->collabStateFormat)->toBe('yjs-update-v1')
-        ->and($updated->schemaVersion)->toBe($before->schemaVersion)->and($updated->collabStateSize)->toBeNull();
+        ->and($updated->schemaVersion)->toBe($before->schemaVersion)->and($updated->collabStateSize)->toBe($identical ? $before->collabStateSize : null);
 })->with(['changed JSON' => false, 'identical JSON' => true]);
 
 it('keeps pending data when ordinary Documents update has no active drainer', function (): void {
@@ -281,10 +281,10 @@ it('preserves Acme stateless null state through checkpoint transition restore an
     $beforeRestore = GrantedDocuments::aggregate($node);
     $documents->restore($node->getKey(), $source->getKey());
     $restored = GrantedDocuments::aggregate($node);
-    expect($restored->collab_epoch)->toBe($beforeRestore->collab_epoch + 1)->and($restored->schema_version)->toBe(1)->and($restored->collab_protocol)->toBe('acme-ot')->and($restored->collab_state_format)->toBe('acme-json-v1')->and($restored->collab_state)->toBeNull();
+    expect($restored->collab_epoch)->toBe($beforeRestore->collab_epoch + 1)->and($restored->schema_version)->toBe(1)->and($restored->syncState?->collab_protocol)->toBe('acme-ot')->and($restored->syncState?->collab_state_format)->toBe('acme-json-v1')->and($restored->syncState?->collab_state)->toBeNull();
     $copySnapshot = $drive->nodes()->copy($node->getKey(), options: new CopyOptions(name: 'Stateless copy'));
     $copy = Document::query()->where('node_id', $copySnapshot->id)->firstOrFail();
-    expect($copy->collab_epoch)->toBe(0)->and($copy->pending_generation)->toBeNull()->and($copy->collab_protocol)->toBe('acme-ot')->and($copy->collab_state_format)->toBe('acme-json-v1')->and($copy->collab_state)->toBeNull()->and($copy->schema_version)->toBe(1)
+    expect($copy->collab_epoch)->toBe(0)->and($copy->syncState?->pending_generation)->toBeNull()->and($copy->syncState?->collab_protocol)->toBe('acme-ot')->and($copy->syncState?->collab_state_format)->toBe('acme-json-v1')->and($copy->syncState?->collab_state)->toBeNull()->and($copy->schema_version)->toBe(1)
         ->and($source->fresh()->getAttributes())->toBe($sourceBytes);
 });
 
@@ -369,5 +369,5 @@ it('publishes an ACKed historical schema checkpoint without upgrading its stored
         return $state->publishCheckpoint($locked, new CheckpointPublication($locked->binding, $locked->stateVersion, 1, null, ['columns' => ['accepted']]));
     });
     $after = GrantedDocuments::aggregate($node);
-    expect($result->published)->toBeTrue()->and($result->pending)->toBeNull()->and($after->schema_version)->toBe(1)->and($after->collab_epoch)->toBe($before->collab_epoch)->and($after->collab_state)->toBeNull()->and($after->content)->toBe(['columns' => ['accepted']]);
+    expect($result->published)->toBeTrue()->and($result->pending)->toBeNull()->and($after->schema_version)->toBe(1)->and($after->collab_epoch)->toBe($before->collab_epoch)->and($after->syncState?->collab_state)->toBeNull()->and($after->payload?->content)->toBe(['columns' => ['accepted']]);
 });

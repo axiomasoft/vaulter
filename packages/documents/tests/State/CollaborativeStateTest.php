@@ -7,6 +7,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Documents\DocumentSyncState;
 use Vaulter\Documents\State\CheckpointOutcome;
 use Vaulter\Documents\State\CheckpointPublication;
 use Vaulter\Documents\State\CollaborationStateBinding;
@@ -71,7 +72,7 @@ it('requires an open Vaulter transaction for every method', function (): void {
         ->and(fn () => $state->markPending($locked, new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), 1))->toThrow(LogicException::class)
         ->and(fn () => $state->publishCheckpoint($locked, collabStatePublication($locked, 1)))->toThrow(LogicException::class)
         ->and(fn () => $state->pendingDocuments())->toThrow(LogicException::class)
-        ->and(GrantedDocuments::aggregate($this->node)->pending_generation)->toBeNull();
+        ->and(GrantedDocuments::aggregate($this->node)->syncState?->pending_generation)->toBeNull();
 });
 
 it('locks the document of a node and reads its state', function (): void {
@@ -146,7 +147,7 @@ it('keeps the highest sequence of the current generation in the marker', functio
         ->and($higher->throughSeq)->toBe(5)
         ->and($higher->documentId)->toBe(Identity::stringify($document->getKey()))
         ->and($higher->nodeId)->toBe(Identity::stringify($this->node->getKey()))
-        ->and([$document->pending_generation, $document->pending_through_seq])->toBe([0, 5])
+        ->and([$document->syncState?->pending_generation, $document->syncState?->pending_through_seq])->toBe([0, 5])
         // The marker is not content: the validators stay.
         ->and($document->state_version)->toBe(GrantedDocuments::aggregate($this->node)->state_version)
         ->and($document->collab_epoch)->toBe(0);
@@ -155,7 +156,7 @@ it('keeps the highest sequence of the current generation in the marker', functio
 it('sets a marker only for the current generation and a sequence of at least one', function (): void {
     expect(fn (): PendingMarker => collabStateMark($this->node, 1, generation: 1))->toThrow(LogicException::class)
         ->and(fn (): PendingMarker => collabStateMark($this->node, 0))->toThrow(InvalidArgumentException::class)
-        ->and(GrantedDocuments::aggregate($this->node)->pending_generation)->toBeNull();
+        ->and(GrantedDocuments::aggregate($this->node)->syncState?->pending_generation)->toBeNull();
 });
 
 it('publishes a covering checkpoint as the working state and clears the marker', function (): void {
@@ -176,10 +177,10 @@ it('publishes a covering checkpoint as the working state and clears the marker',
         ->and($outcome->stateVersion)->toBe($before->state_version + 1)
         ->and($document->state_version)->toBe($before->state_version + 1)
         ->and($document->collab_epoch)->toBe(0)
-        ->and($document->collab_state)->toBe('state:Merged')
+        ->and($document->syncState?->collab_state)->toBe('state:Merged')
         ->and($document->tipTapContent()->toArray())->toBe(GrantedDocuments::tiptap('Merged'))
-        ->and($document->pending_generation)->toBeNull()
-        ->and($document->pending_through_seq)->toBeNull();
+        ->and($document->syncState?->pending_generation)->toBeNull()
+        ->and($document->syncState?->pending_through_seq)->toBeNull();
 });
 
 it('keeps the marker of an edit appended after the merge read the log', function (): void {
@@ -194,8 +195,8 @@ it('keeps the marker of an edit appended after the merge read the log', function
 
     expect($outcome->published)->toBeTrue()
         ->and($outcome->pending?->throughSeq)->toBe(4)
-        ->and([$document->pending_generation, $document->pending_through_seq])->toBe([0, 4])
-        ->and($document->collab_state)->toBe('state:Merged');
+        ->and([$document->syncState?->pending_generation, $document->syncState?->pending_through_seq])->toBe([0, 4])
+        ->and($document->syncState?->collab_state)->toBe('state:Merged');
 
     // The append before the read and the publication in the other order end the same: the marker stays at 4.
     $other = GrantedDocuments::document(level: null);
@@ -208,7 +209,7 @@ it('keeps the marker of an edit appended after the merge read the log', function
     collabStateMark($other, 4);
 
     expect($published->pending)->toBeNull()
-        ->and(GrantedDocuments::aggregate($other)->pending_through_seq)->toBe(4);
+        ->and(GrantedDocuments::aggregate($other)->syncState?->pending_through_seq)->toBe(4);
 });
 
 it('loses the CAS on a moved state version or a closed generation and changes nothing', function (): void {
@@ -232,9 +233,9 @@ it('loses the CAS on a moved state version or a closed generation and changes no
         ->and($closed->published)->toBeFalse()
         ->and($closed->generation)->toBe(0)
         ->and($after->state_version)->toBe($before->state_version)
-        ->and($after->content_hash)->toBe($before->content_hash)
-        ->and($after->collab_state)->toBeNull()
-        ->and([$after->pending_generation, $after->pending_through_seq])->toBe([0, 3]);
+        ->and($after->payload?->content_hash)->toBe($before->payload?->content_hash)
+        ->and($after->syncState?->collab_state)->toBeNull()
+        ->and([$after->syncState?->pending_generation, $after->syncState?->pending_through_seq])->toBe([0, 3]);
 });
 
 it('clears a covered marker even when the published state is the one already there', function (): void {
@@ -255,7 +256,7 @@ it('clears a covered marker even when the published state is the one already the
         ->and($again->changed)->toBeFalse()
         ->and($again->stateVersion)->toBe($published->stateVersion)
         ->and($again->pending)->toBeNull()
-        ->and(GrantedDocuments::aggregate($this->node)->pending_generation)->toBeNull();
+        ->and(GrantedDocuments::aggregate($this->node)->syncState?->pending_generation)->toBeNull();
 });
 
 it('lists the pending documents in id order, a page at a time', function (): void {
@@ -278,9 +279,9 @@ it('lists the pending documents in id order, a page at a time', function (): voi
 });
 
 it('refuses half a marker or a sequence below one in the database', function (array $values): void {
-    $table = app(VaulterDatabase::class)->connection()->table((new Document)->getTable());
+    $table = app(VaulterDatabase::class)->connection()->table((new DocumentSyncState)->getTable());
 
-    expect(fn () => $table->where('node_id', $this->node->getKey())->update($values))->toThrow(QueryException::class);
+    expect(fn () => $table->where('document_id', GrantedDocuments::aggregate($this->node)->getKey())->update($values))->toThrow(QueryException::class);
 })->with([
     'generation alone' => [['pending_generation' => 0]],
     'sequence alone' => [['pending_through_seq' => 1]],

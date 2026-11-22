@@ -38,6 +38,17 @@
         {
             "package": "axiomasoft/vaulter-documents",
             "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
+            "case": "DocumentCommandRequired",
+            "code": "documents.document_command_required",
+            "type": "urn:packman:problem:documents.document_command_required",
+            "status": 409,
+            "title": "Document command required",
+            "retryable": true,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-documents",
+            "enum": "Vaulter\\Documents\\Errors\\DocumentsErrorCode",
             "case": "DocumentContentDegraded",
             "code": "documents.document_content_degraded",
             "type": "urn:packman:problem:documents.document_content_degraded",

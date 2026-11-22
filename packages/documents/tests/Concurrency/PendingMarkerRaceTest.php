@@ -54,8 +54,8 @@ it('keeps the marker of an append racing a publication of the head it read', fun
 
     $document = DocumentTestHelpers::document($node);
     expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])
-        ->and([$document->pending_generation, $document->pending_through_seq])->toBe([$read->generation, 4])
-        ->and($document->collab_state)->toBe('merged through 3')
+        ->and([$document->syncState?->pending_generation, $document->syncState?->pending_through_seq])->toBe([$read->generation, 4])
+        ->and($document->syncState?->collab_state)->toBe('merged through 3')
         ->and($document->state_version)->toBe($read->stateVersion + 1)
         ->and($document->collab_epoch)->toBe($read->generation);
 });

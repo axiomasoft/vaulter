@@ -50,9 +50,9 @@ it('refuses an update whose precheck went stale to a restore that committed befo
         ? ['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'before']]], ['type' => 'acmeWidget']]]
         : DocumentTestHelpers::content('degraded')->toArray();
     // Written by a newer release of the type, or by an editor extension this installation has off.
-    app(VaulterDatabase::class)->write(fn () => DocumentRevision::query()->whereKey($degraded->getKey())->update(
-        $case === 'lossy' ? ['content' => json_encode($stored)] : ['schema_version' => 99],
-    ));
+    app(VaulterDatabase::class)->write(fn () => $case === 'lossy'
+        ? $degraded->payload()->update(['content' => json_encode($stored)])
+        : DocumentRevision::query()->whereKey($degraded->getKey())->update(['schema_version' => 99]));
     $update('current');
     $before = DocumentTestHelpers::document($node);
     $dir = sys_get_temp_dir().'/vlt_degraded_'.getmypid().'_'.bin2hex(random_bytes(4));
@@ -100,6 +100,6 @@ it('refuses an update whose precheck went stale to a restore that committed befo
         ->and($after->revision_count)->toBe($before->revision_count + 1)
         ->and($after->schema_version)->toBe($case === 'lossy' ? 1 : 99)
         // jsonb returns object keys in its own order; the canonical hash ignores it.
-        ->and(ContentHasher::hash($after->content))->toBe(ContentHasher::hash($stored))
-        ->and($after->collab_state)->toBeNull();
+        ->and(ContentHasher::hash($after->payload?->content))->toBe(ContentHasher::hash($stored))
+        ->and($after->syncState?->collab_state)->toBeNull();
 })->with('degraded revisions');

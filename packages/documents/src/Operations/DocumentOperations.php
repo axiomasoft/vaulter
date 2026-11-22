@@ -6,12 +6,17 @@ namespace Vaulter\Documents\Operations;
 
 use Closure;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\DatabaseTransactionRecord;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Pagination\CursorPaginator;
+use LogicException;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Page;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
+use Vaulter\Documents\Actions\Documents\ChangeDocumentWriteModeAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
@@ -22,6 +27,7 @@ use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
@@ -32,6 +38,7 @@ use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
+use Vaulter\Documents\Enums\Documents\DocumentWriteMode;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
@@ -110,6 +117,7 @@ final readonly class DocumentOperations implements DriveExtension
         private ContentDecoder $decoder,
         private CreateDocumentAction $create,
         private UpdateDocumentContentAction $update,
+        private ChangeDocumentWriteModeAction $changeWriteMode,
         private CreateNamedRevisionAction $snapshot,
         private RestoreDocumentRevisionAction $restore,
         private UpdateRevisionRetentionAction $retention,
@@ -118,6 +126,7 @@ final readonly class DocumentOperations implements DriveExtension
         private DocumentSnapshotMapper $mapper,
         private NodeSnapshotMapper $nodes,
         private OperationRunner $runner,
+        private VaulterDatabase $database,
         private PendingStateGuard $pending,
         private CollaborationAccessPolicy $collaborationPolicy,
         private Kernel $kernel,
@@ -127,7 +136,15 @@ final readonly class DocumentOperations implements DriveExtension
     /** Issue a protocol-neutral session after the shared live access policy. */
     public function collaborationSession(NodeSnapshot|string|int $document, ?int $clientSchemaVersion = null): CollaborationSession
     {
-        $decision = $this->collaborationPolicy->evaluate($this->context, $document, clientSchemaVersion: $clientSchemaVersion);
+        [$decision, $node, $aggregate] = $this->collaborationPolicy->evaluateForSession($this->context, $document, $clientSchemaVersion);
+        if ($decision->grant->mode === CollaborationMode::Write) {
+            $this->assertSessionSeesCommittedState();
+            if ($aggregate->write_mode === DocumentWriteMode::Snapshot) {
+                $decision = $this->write('change_write_mode', fn () => $this->changeWriteMode->execute(
+                    $this->context, $node, $aggregate->collab_epoch, $aggregate->state_version, $clientSchemaVersion,
+                ));
+            }
+        }
         $grant = $decision->grant;
         $driver = $this->kernel->extensions()->handler(CollaborationProtocolDriver::class, $grant->protocol);
         if ($driver->protocol() !== $grant->protocol) {
@@ -138,6 +155,22 @@ final readonly class DocumentOperations implements DriveExtension
         $this->metrics->counter(name: 'vaulter_collab_session_issued_total', labels: ['protocol' => $grant->protocol, 'ability' => $decision->ability->value]);
 
         return $session;
+    }
+
+    private function assertSessionSeesCommittedState(): void
+    {
+        $connection = $this->database->connection();
+        if ($connection->transactionLevel() === 0) {
+            return;
+        }
+
+        /** @var DatabaseTransactionsManager $transactions */
+        $transactions = $this->container->make('db.transactions');
+        if ($transactions->callbackApplicableTransactions()->contains(
+            static fn (DatabaseTransactionRecord $record): bool => $record->connection === $connection->getName(),
+        )) {
+            throw new LogicException('[Vaulter] A writable collaboration session requires committed document state.');
+        }
     }
 
     /**
@@ -194,7 +227,7 @@ final readonly class DocumentOperations implements DriveExtension
             // Inline content has no scan evidence, but it leaves through the same egress
             // gate as file bytes so profile and tenant rules apply to it too.
             $node = $this->document($document, Ability::View, OperationKind::ContentEgress);
-            $aggregate = $this->query->document($node);
+            $aggregate = $this->query->document($node, withState: true);
             if ($revision === null) {
                 $this->pending->assertSettled($aggregate);
             }
@@ -229,29 +262,30 @@ final readonly class DocumentOperations implements DriveExtension
     /**
      * The HTTP JSON autosave; binary state is written only through CollaborativeState.
      *
-     * @param array<string, mixed> $content
+     * @param array<string, mixed>         $content
+     * @param (Closure(string): bool)|null $matchesTag
      */
     #[Internal]
-    public function updateContent(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null): DocumentSnapshot
+    public function updateContent(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null, ?Closure $matchesTag = null): DocumentSnapshot
     {
-        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $expectedStateVersion)));
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $expectedStateVersion, $matchesTag)));
     }
 
-    /** @param array<string, mixed> $content */
-    private function writeContent(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion): DocumentSnapshot
+    /**
+     * @param array<string, mixed>         $content
+     * @param (Closure(string): bool)|null $matchesTag
+     */
+    private function writeContent(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion, ?Closure $matchesTag = null): DocumentSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
-        // Checked here so a degraded document answers before its payload is validated,
-        // and again on the locked row, where a racing restore can no longer slip in.
-        $type = $this->decoder->editableType($this->query->document($node));
-
-        $this->update->execute($this->context, new UpdateDocumentContentInput(
+        $result = $this->update->execute($this->context, new UpdateDocumentContentInput(
             node: $node,
-            content: $this->decoder->decode($type, $content),
+            content: $content,
             expectedStateVersion: $expectedStateVersion,
+            matchesTag: $matchesTag,
         ));
 
-        return $this->current($node);
+        return $this->mapper->document($result->document, $result->document->currentRevision);
     }
 
     /** Checkpoint the working state as a named revision; it becomes the head. */
@@ -400,7 +434,7 @@ final readonly class DocumentOperations implements DriveExtension
 
     private function current(Node $node): DocumentSnapshot
     {
-        $aggregate = $this->query->document($node);
+        $aggregate = $this->query->document($node, withState: true);
 
         return $this->mapper->document($aggregate, $aggregate->currentRevision);
     }

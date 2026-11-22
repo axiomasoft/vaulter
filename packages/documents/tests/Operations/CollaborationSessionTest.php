@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Facades\Documents;
@@ -28,7 +29,7 @@ it('issues through the documents handle with a typed principal and opaque verifi
     expect(fn () => Documents::in($drive)->collaborationSession($node))->toThrow(MissingActorException::class);
     $session = Documents::in($drive->actingAs(AccessTestHelpers::user(5)))->collaborationSession($node);
     $grant = app(AcmeDriver::class)->verify($session->token);
-    expect($session->mode)->toBe(CollaborationMode::Write)->and($session->generation)->toBe(0)
+    expect($session->mode)->toBe(CollaborationMode::Write)->and($session->generation)->toBe(1)
         ->and($grant->principal)->toEqual(Docs::context($drive, 5)->actor->ref())
         ->and($grant->nodeId)->toBe($node->id)->and($grant->driveId)->toBe($node->driveId)
         ->and($grant->tenant)->toBeNull()->and($grant->stateFormat)->toBe('acme-ot-v1')
@@ -74,3 +75,15 @@ it('hides a document in another drive or tenant and after trash', function (stri
     }
     expect(fn () => Documents::in($acting->actingAs(AccessTestHelpers::user(5)))->collaborationSession($node))->toThrow(NodeNotFoundException::class);
 })->with(['drive', 'tenant', 'trash']);
+
+it('cannot issue a writable session from an open transaction', function (): void {
+    $drive = Docs::drive();
+    $node = Documents::in($drive)->create('Acme', type: 'acme/ot');
+    AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
+    $documents = Documents::in($drive->actingAs(AccessTestHelpers::user(5)));
+
+    expect(fn () => app(VaulterDatabase::class)->transaction(fn () => $documents->collaborationSession($node)))
+        ->toThrow(LogicException::class, 'requires committed document state');
+    expect($documents->content($node)->stateVersion)->toBe(1)
+        ->and($documents->collaborationSession($node)->generation)->toBe(1);
+});

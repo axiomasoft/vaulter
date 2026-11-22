@@ -30,7 +30,7 @@ final readonly class DocumentSnapshotMapper
         $typeAvailable = $this->decoder->available($typeKey);
         $source = $revision ?? $head;
         $schemaVersion = $revision->schema_version ?? $document->schema_version;
-        $read = $this->decoder->read($typeKey, $revision === null ? $document->content : $revision->content, $schemaVersion);
+        $read = $this->decoder->read($typeKey, $revision === null ? $document->payload?->content : $revision->payload?->content, $schemaVersion);
 
         return new DocumentSnapshot(
             nodeId: SnapshotValue::id($document->node_id),
@@ -51,12 +51,12 @@ final readonly class DocumentSnapshotMapper
             headRevisionId: SnapshotValue::nullableId($document->current_revision_id),
             content: $read->content,
             revision: $source === null ? null : $this->revision($source, $document),
-            contentHash: $revision === null ? $document->content_hash : $revision->content_hash,
-            collabStateSize: $revision === null ? $document->collab_state_size : $revision->collab_state_size,
+            contentHash: $revision === null ? $document->payload?->content_hash : $revision->payload?->content_hash,
+            collabStateSize: $revision === null ? $document->syncState?->collab_state_size : $revision->syncState?->collab_state_size,
             updatedAt: SnapshotValue::requiredTime($revision === null ? $document->updated_at : $revision->created_at),
             updatedBy: SnapshotValue::nullableId($revision === null ? $document->updated_by : $revision->created_by),
-            collabProtocol: $revision === null ? $document->collab_protocol : $revision->collab_protocol,
-            collabStateFormat: $revision === null ? $document->collab_state_format : $revision->collab_state_format,
+            collabProtocol: $revision === null ? $document->syncState?->collab_protocol : $revision->syncState?->collab_protocol,
+            collabStateFormat: $revision === null ? $document->syncState?->collab_state_format : $revision->syncState?->collab_state_format,
         );
     }
 
@@ -77,13 +77,13 @@ final readonly class DocumentSnapshotMapper
             keepForever: $revision->keep_forever,
             isHead: SnapshotValue::nullableId($document->current_revision_id) === $id,
             restoredFromRevisionId: SnapshotValue::nullableId($revision->restored_from_revision_id),
-            contentHash: $revision->content_hash,
-            contentSize: $revision->content_size,
-            collabStateSize: $revision->collab_state_size,
+            contentHash: $revision->payload?->content_hash,
+            contentSize: $revision->payload?->content_size,
+            collabStateSize: $revision->syncState?->collab_state_size,
             createdAt: SnapshotValue::requiredTime($revision->created_at),
             createdBy: SnapshotValue::nullableId($revision->created_by),
-            collabProtocol: $revision->collab_protocol,
-            collabStateFormat: $revision->collab_state_format,
+            collabProtocol: $revision->syncState?->collab_protocol,
+            collabStateFormat: $revision->syncState?->collab_state_format,
             epoch: $revision->collab_epoch,
         );
     }

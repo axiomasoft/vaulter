@@ -13,13 +13,10 @@ use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
 use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
-/** The tables the documents module owns: node comments, documents and their revisions. */
+/** The tables the documents module owns: node comments and document metadata, payloads and sync states. */
 #[Internal]
 final class DocumentsSchema implements ModuleSchema
 {
-    /** The pending-state marker is set as a whole or not at all. */
-    private const string PENDING_MARKER_PAIR = '(pending_generation IS NULL AND pending_through_seq IS NULL AND pending_protocol IS NULL AND pending_state_format IS NULL AND pending_schema_version IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL AND pending_protocol IS NOT NULL AND length(trim(pending_protocol)) > 0 AND pending_state_format IS NOT NULL AND length(trim(pending_state_format)) > 0 AND pending_schema_version IS NOT NULL AND pending_schema_version >= 1)';
-
     public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
@@ -29,6 +26,10 @@ final class DocumentsSchema implements ModuleSchema
             'node_comments',
             'documents',
             'document_revisions',
+            'document_payloads',
+            'document_sync_states',
+            'document_revision_payloads',
+            'document_revision_sync_states',
         ];
     }
 
@@ -44,6 +45,10 @@ final class DocumentsSchema implements ModuleSchema
             new KeyColumnExpectation('documents', 'updated_by', 'HK'),
             new KeyColumnExpectation('document_revisions', 'tenant_id', 'HK'),
             new KeyColumnExpectation('document_revisions', 'created_by', 'HK'),
+            new KeyColumnExpectation('document_payloads', 'document_id', 'REF'),
+            new KeyColumnExpectation('document_sync_states', 'document_id', 'REF'),
+            new KeyColumnExpectation('document_revision_payloads', 'revision_id', 'REF'),
+            new KeyColumnExpectation('document_revision_sync_states', 'revision_id', 'REF'),
         ];
     }
 
@@ -56,6 +61,10 @@ final class DocumentsSchema implements ModuleSchema
                 'node_comments' => $this->defineNodeComments(table: $table, ids: $ids),
                 'documents' => $this->defineDocuments(table: $table, ids: $ids),
                 'document_revisions' => $this->defineDocumentRevisions(table: $table, ids: $ids),
+                'document_payloads' => $this->definePayload($table, $ids, 'documents', 'document_id'),
+                'document_sync_states' => $this->defineSyncState($table, $ids, working: true),
+                'document_revision_payloads' => $this->definePayload($table, $ids, 'document_revisions', 'revision_id'),
+                'document_revision_sync_states' => $this->defineSyncState($table, $ids, working: false),
                 default => throw new InvalidArgumentException(sprintf('Unknown documents entity [%s].', $entity)),
             };
         });
@@ -67,11 +76,20 @@ final class DocumentsSchema implements ModuleSchema
     {
         // A document and its revisions reference each other (head FK one way, owner FK the other), so the head FK goes
         // first whichever side drops.
+        $schema = $this->helpers->schemaConnection();
+        $name = $this->helpers->table($entity);
         if (in_array($entity, ['documents', 'document_revisions'], true)) {
+            if ($this->driver() === 'sqlite') {
+                // The head FK was declared at CREATE time. Drop the two sides in
+                // reverse dependency order without attempting a cascading delete.
+                $schema->withoutForeignKeyConstraints(static fn () => $schema->dropIfExists($name));
+
+                return;
+            }
             $this->helpers->dropHeadForeignKey(aggregate: 'documents');
         }
 
-        $this->helpers->schemaConnection()->dropIfExists($this->helpers->table($entity));
+        $schema->dropIfExists($name);
     }
 
     /**
@@ -155,23 +173,15 @@ final class DocumentsSchema implements ModuleSchema
         $ids->reference(table: $table, column: 'node_id');
 
         $table->string('type', 64);
-        $table->integer('schema_version');
-        $this->defineStoredBinding($table);
+        $this->defineSchemaVersion($table);
+        $mode = $this->driver() === 'mysql' ? 'CAST(write_mode AS BINARY)' : 'write_mode';
+        $table->rawColumn('write_mode', "VARCHAR(16) CHECK({$mode} IN ('snapshot', 'journal'))")->default('snapshot');
         $ids->reference(table: $table, column: 'current_revision_id', nullable: true);
         // Monotonic: pruning old checkpoints never hands a number out twice.
         $table->integer('revision_count')->default(0);
         $this->helpers->counterColumn(table: $table, column: 'collab_epoch');
         $this->helpers->counterColumn(table: $table, column: 'state_version');
         $this->helpers->counterColumn(table: $table, column: 'checkpoint_state_version');
-        $this->definePendingMarker(table: $table);
-
-        // The canonical JSON projection of the working state. jsonb on Postgres,
-        // json on MySQL, text on SQLite.
-        $table->jsonb('content')->nullable();
-        $table->char('content_hash', 64)->nullable();
-        $table->integer('content_size')->nullable();
-        $this->helpers->binaryColumn(table: $table, column: 'collab_state');
-        $table->integer('collab_state_size')->nullable();
         $table->timestamp('last_checkpoint_at')->nullable();
 
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
@@ -183,70 +193,18 @@ final class DocumentsSchema implements ModuleSchema
         $table->unique('node_id', $name.'_node_uniq');
         // Lets doctor list documents of types no installed package registers.
         $table->index('type', $name.'_type_idx');
-        // The documents whose working state lags behind the collaboration log (CollaborativeState::pendingDocuments()).
-        $table->index('pending_generation', $name.'_pending_idx');
+        $table->index(['current_revision_id', 'id'], $name.'_head_fk_idx');
+        if ($this->driver() === 'sqlite') {
+            $table->foreign(['current_revision_id', 'id'], $name.'_head_fk')
+                ->references(['id', 'document_id'])
+                ->on($this->helpers->table('document_revisions'))
+                ->restrictOnDelete();
+        }
 
         $table->foreign('node_id')
             ->references('id')
             ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
-    }
-
-    /**
-     * The pending-state marker: (pending_generation, pending_through_seq) — the collaboration generation and the
-     * last committed log sequence the working state does not cover yet. Both NULL means the checkpoint covers every
-     * saved edit; one without the other is refused by a CHECK. SQLite and PostgreSQL take the pair CHECK on the column,
-     * MySQL refuses a column CHECK naming another column, so afterCreate() adds it there as a named constraint.
-     */
-    private function nonblank(string $column): string
-    {
-        $driver = $this->helpers->dbConnection()->getDriverName();
-        if ($driver === 'mysql') {
-            return "{$column} REGEXP '[^[:space:]]'";
-        }
-        $character = $driver === 'pgsql' ? 'chr' : 'char';
-        $whitespace = "' '||{$character}(9)||{$character}(10)||{$character}(11)||{$character}(12)||{$character}(13)";
-        $trim = $driver === 'pgsql' ? 'btrim' : 'trim';
-
-        return "length({$trim}({$column}, {$whitespace})) > 0";
-    }
-
-    private function storedCheck(): string
-    {
-        $integer = $this->helpers->dbConnection()->getDriverName() === 'sqlite' ? "typeof(schema_version) = 'integer' AND " : '';
-
-        return $integer.'schema_version >= 1 AND ((collab_protocol IS NULL AND collab_state_format IS NULL AND collab_state IS NULL) OR '
-            .'(collab_protocol IS NOT NULL AND collab_state_format IS NOT NULL AND '.$this->nonblank('collab_protocol').' AND '.$this->nonblank('collab_state_format').'))';
-    }
-
-    private function pendingCheck(): string
-    {
-        $check = str_replace(['length(trim(pending_protocol)) > 0', 'length(trim(pending_state_format)) > 0'], [$this->nonblank('pending_protocol'), $this->nonblank('pending_state_format')], self::PENDING_MARKER_PAIR);
-        if ($this->helpers->dbConnection()->getDriverName() === 'sqlite') {
-            $check = str_replace('pending_schema_version >= 1', "typeof(pending_schema_version) = 'integer' AND pending_schema_version >= 1", $check);
-        }
-
-        return $check;
-    }
-
-    private function defineStoredBinding(Blueprint $table): void
-    {
-        $table->string('collab_protocol')->nullable();
-        $constraint = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.$this->storedCheck().')';
-        $table->rawColumn('collab_state_format', 'VARCHAR(255)'.$constraint)->nullable();
-    }
-
-    private function definePendingMarker(Blueprint $table): void
-    {
-        $table->string('pending_protocol')->nullable();
-        $table->string('pending_state_format')->nullable();
-        $table->integer('pending_schema_version')->nullable();
-        $sqlite = $this->helpers->dbConnection()->getDriverName() === 'sqlite';
-        $type = static fn (string $column): string => $sqlite ? "typeof({$column}) = 'integer' AND " : '';
-        $pair = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.$this->pendingCheck().')';
-
-        $table->rawColumn('pending_generation', 'BIGINT CHECK(pending_generation IS NULL OR ('.$type('pending_generation').'pending_generation >= 0))')->nullable();
-        $table->rawColumn('pending_through_seq', 'BIGINT CHECK(pending_through_seq IS NULL OR ('.$type('pending_through_seq').'pending_through_seq >= 1))'.$pair)->nullable();
     }
 
     /**
@@ -264,14 +222,8 @@ final class DocumentsSchema implements ModuleSchema
         $table->integer('number');
         $table->string('type', 64);
         $this->helpers->counterColumn(table: $table, column: 'collab_epoch');
-        $table->integer('schema_version');
-        $this->defineStoredBinding($table);
+        $this->defineSchemaVersion($table);
 
-        $table->jsonb('content')->nullable();
-        $table->char('content_hash', 64)->nullable();
-        $table->integer('content_size')->nullable();
-        $this->helpers->binaryColumn(table: $table, column: 'collab_state');
-        $table->integer('collab_state_size')->nullable();
         // The working state version this checkpoint captured.
         $this->helpers->counterColumn(table: $table, column: 'state_version');
 
@@ -301,38 +253,156 @@ final class DocumentsSchema implements ModuleSchema
             ->nullOnDelete();
     }
 
-    /**
-     * The OPTIONAL gin(content jsonb_path_ops) index for document-revision content
-     * containment queries. Postgres-only (gin + jsonb); on SQLite/MySQL
-     * content is a plain json column and the index is skipped — the history is read
-     * by (document_id, number) / (document_id, is_autosave), all btree-covered.
-     */
-    private function addDocumentContentGinIndex(string $table): void
+    private function defineSchemaVersion(Blueprint $table): void
     {
-        if ($this->helpers->schemaConnection()->getConnection()->getDriverName() !== 'pgsql') {
+        $check = $this->integerAtLeast('schema_version', 1);
+        $table->rawColumn('schema_version', "INTEGER CONSTRAINT {$table->getTable()}_schema_version_positive CHECK({$check})");
+    }
+
+    private function defineOwner(Blueprint $table, IdStrategy $ids, string $owner, string $key): void
+    {
+        $ids->reference(table: $table, column: $key);
+        // The primary key already indexes the owner foreign key.
+        $table->getColumns()[0]->index(false);
+        $table->primary($key);
+        $table->foreign($key, $table->getTable().'_owner_fk')
+            ->references('id')
+            ->on($this->helpers->table($owner))
+            ->cascadeOnDelete();
+    }
+
+    private function definePayload(Blueprint $table, IdStrategy $ids, string $owner, string $key): void
+    {
+        $this->defineOwner($table, $ids, $owner, $key);
+        $table->jsonb('content')->nullable();
+        $table->char('content_hash', 64)->nullable();
+        $this->checkedColumn($table, 'content_size', 'INTEGER', $this->payloadChecks());
+    }
+
+    private function defineSyncState(Blueprint $table, IdStrategy $ids, bool $working): void
+    {
+        $this->defineOwner($table, $ids, $working ? 'documents' : 'document_revisions', $working ? 'document_id' : 'revision_id');
+        $table->string('collab_protocol')->nullable();
+        $table->string('collab_state_format')->nullable();
+        $this->helpers->binaryColumn($table, 'collab_state');
+        $checks = $this->syncChecks($working);
+        if ($working) {
+            $table->integer('collab_state_size')->nullable();
+            $table->string('pending_protocol')->nullable();
+            $table->string('pending_state_format')->nullable();
+            $table->integer('pending_schema_version')->nullable();
+            $table->bigInteger('pending_generation')->nullable();
+            $this->checkedColumn($table, 'pending_through_seq', 'BIGINT', $checks);
+
+            if ($this->driver() === 'mysql') {
+                $table->index(['pending_generation', 'document_id'], $table->getTable().'_pending_idx');
+            }
+
             return;
         }
+        $this->checkedColumn($table, 'collab_state_size', 'INTEGER', $checks);
+    }
 
-        $this->helpers->dbConnection()->statement(sprintf('CREATE INDEX %s_content_gin ON %s USING gin (content jsonb_path_ops)', $table, $table));
+    /** @return array<string, string> */
+    private function payloadChecks(): array
+    {
+        return ['complete' => '(content IS NULL AND content_hash IS NULL AND content_size IS NULL) OR '
+            .'(content IS NOT NULL AND content_hash IS NOT NULL AND content_size IS NOT NULL AND '.$this->integerAtLeast('content_size', 0).')'];
+    }
+
+    /** @return array<string, string> */
+    private function syncChecks(bool $working): array
+    {
+        $byteLength = $this->driver() === 'sqlite' ? 'length(CAST(collab_state AS BLOB))' : 'octet_length(collab_state)';
+        $checks = [
+            'protocol' => '(collab_protocol IS NULL AND collab_state_format IS NULL AND collab_state IS NULL) OR '
+                .'('.$this->nonblank('collab_protocol').' AND '.$this->nonblank('collab_state_format').')',
+            'binary_size' => '(collab_state IS NULL AND collab_state_size IS NULL) OR '
+                .'(collab_state IS NOT NULL AND collab_state_size IS NOT NULL AND collab_state_size = '.$byteLength.')',
+            'present' => $working ? 'collab_protocol IS NOT NULL OR pending_protocol IS NOT NULL' : 'collab_protocol IS NOT NULL',
+        ];
+
+        if ($working) {
+            $checks['pending'] = '(pending_protocol IS NULL AND pending_state_format IS NULL AND pending_schema_version IS NULL AND pending_generation IS NULL AND pending_through_seq IS NULL) OR '
+                .'('.$this->nonblank('pending_protocol').' AND '.$this->nonblank('pending_state_format')
+                .' AND pending_schema_version IS NOT NULL AND '.$this->integerAtLeast('pending_schema_version', 1)
+                .' AND pending_generation IS NOT NULL AND '.$this->integerAtLeast('pending_generation', 0)
+                .' AND pending_through_seq IS NOT NULL AND '.$this->integerAtLeast('pending_through_seq', 1).')';
+        }
+
+        return $checks;
+    }
+
+    private function nonblank(string $column): string
+    {
+        $test = match ($this->driver()) {
+            'pgsql' => "{$column} ~ '[^[:space:]]'",
+            'mysql' => "{$column} REGEXP '[^[:space:]]'",
+            default => "length(trim({$column}, char(9, 10, 11, 12, 13, 32))) > 0",
+        };
+
+        return "{$column} IS NOT NULL AND {$test}";
+    }
+
+    private function integerAtLeast(string $column, int $minimum): string
+    {
+        $type = $this->driver() === 'sqlite' ? "typeof({$column}) = 'integer' AND " : '';
+
+        return "{$type}{$column} >= {$minimum}";
+    }
+
+    /** @param array<string, string> $checks */
+    private function checkedColumn(Blueprint $table, string $column, string $type, array $checks): void
+    {
+        // MySQL requires checks that reference other columns to be table constraints.
+        if ($this->driver() !== 'mysql') {
+            foreach ($checks as $suffix => $check) {
+                $type .= " CONSTRAINT {$table->getTable()}_{$suffix} CHECK({$check})";
+            }
+        }
+
+        $table->rawColumn($column, $type)->nullable();
     }
 
     private function afterCreate(string $entity): void
     {
-        if ($entity === 'documents' && $this->helpers->dbConnection()->getDriverName() === 'mysql') {
-            $name = $this->helpers->table('documents');
-            $grammar = $this->helpers->dbConnection()->getQueryGrammar();
-            $this->helpers->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_pending_marker_check').' CHECK('.$this->pendingCheck().')');
-        }
-
-        if (in_array($entity, ['documents', 'document_revisions'], true) && $this->helpers->dbConnection()->getDriverName() === 'mysql') {
-            $name = $this->helpers->table($entity);
-            $grammar = $this->helpers->dbConnection()->getQueryGrammar();
-            $this->helpers->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_stored_binding_check').' CHECK('.$this->storedCheck().')');
-        }
-
         if ($entity === 'document_revisions') {
-            $this->addDocumentContentGinIndex(table: $this->helpers->table('document_revisions'));
             $this->helpers->addHeadForeignKey(aggregate: 'documents', revisions: 'document_revisions', owner: 'document_id');
         }
+
+        $connection = $this->helpers->dbConnection();
+        $name = $this->helpers->table($entity);
+        $grammar = $connection->getQueryGrammar();
+        $table = $grammar->wrapTable($name);
+
+        if ($this->driver() === 'mysql') {
+            $checks = match ($entity) {
+                'document_payloads', 'document_revision_payloads' => $this->payloadChecks(),
+                'document_sync_states' => $this->syncChecks(working: true),
+                'document_revision_sync_states' => $this->syncChecks(working: false),
+                default => [],
+            };
+            foreach ($checks as $suffix => $expression) {
+                $constraint = $grammar->wrap($name.'_'.$suffix);
+                $connection->statement("ALTER TABLE {$table} ADD CONSTRAINT {$constraint} CHECK({$expression})");
+            }
+        }
+
+        if ($entity === 'document_sync_states' && $this->driver() !== 'mysql') {
+            $index = $grammar->wrap($name.'_pending_idx');
+            $connection->statement("CREATE INDEX {$index} ON {$table} (pending_generation, document_id) WHERE pending_generation IS NOT NULL");
+        }
+
+        if ($entity === 'document_revision_payloads' && $this->driver() === 'pgsql') {
+            $index = $grammar->wrap($name.'_content_gin');
+            $connection->statement("CREATE INDEX {$index} ON {$table} USING gin (content jsonb_path_ops)");
+        }
+    }
+
+    private function driver(): string
+    {
+        $driver = $this->helpers->dbConnection()->getDriverName();
+
+        return $driver === 'mariadb' ? 'mysql' : $driver;
     }
 }

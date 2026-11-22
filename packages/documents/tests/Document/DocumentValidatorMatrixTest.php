@@ -151,9 +151,9 @@ dataset('document writers', [
     'unstar' => ['unstar', [0, 0, 0]],
     'restrictInheritance (ACL, not the node)' => ['restrictInheritance', [0, 0, 0]],
     'copy (the source is untouched)' => ['copy', [0, 0, 0]],
-    'update' => ['update', [0, 1, 1]],
+    'update' => ['update', [0, 1, 0]],
     'update, identical content (no write)' => ['update (identical content)', [0, 0, 0]],
-    'update of a document with Yjs state (fences open rooms)' => ['update (document with Yjs state)', [0, 1, 1]],
+    'update of a snapshot with Yjs state' => ['update (document with Yjs state)', [0, 1, 0]],
     'collab seed' => ['collab seed', [0, 1, 0]],
     'collab store' => ['collab store', [0, 1, 0]],
     'collab store, identical state (no write)' => ['collab store (identical state)', [0, 0, 0]],
@@ -218,7 +218,7 @@ it('keeps the node validator independent from content edits in either order', fu
     ));
     $drive->nodes()->rename($node->getKey(), 'Second', expectedSequence: 1);
 
-    expect(matrixValidators($node))->toBe([2, 2, 1]);
+    expect(matrixValidators($node))->toBe([2, 2, 0]);
 });
 
 /** A plain file node: only the node validator exists, and only a new head moves it. */
@@ -258,15 +258,15 @@ it('carries the content validators the writer produced in every document event',
     Event::assertDispatched(DocumentCreated::class, static fn (DocumentCreated $e): bool => [$e->stateVersion, $e->epoch] === [1, 0]);
 
     app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('edited')));
-    Event::assertDispatched(DocumentContentUpdated::class, static fn (DocumentContentUpdated $e): bool => [$e->stateVersion, $e->epoch] === [2, 1]);
+    Event::assertDispatched(DocumentContentUpdated::class, static fn (DocumentContentUpdated $e): bool => [$e->stateVersion, $e->epoch] === [2, 0]);
 
     // A binary state written by the collaboration store moves the validator like any content write (the event is the store's: see the collaboration suite).
     matrixYjs($node, 'room edit');
 
     app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(node: $node, label: 'named', keepForever: false));
-    Event::assertDispatched(DocumentRevisionCreated::class, static fn (DocumentRevisionCreated $e): bool => !$e->restored && [$e->stateVersion, $e->epoch] === [3, 1]);
+    Event::assertDispatched(DocumentRevisionCreated::class, static fn (DocumentRevisionCreated $e): bool => !$e->restored && [$e->stateVersion, $e->epoch] === [3, 0]);
 
     app(RestoreDocumentRevisionAction::class)->execute(DocumentTestHelpers::context($node), new RestoreDocumentRevisionInput(node: $node, revision: DocumentTestHelpers::revisions($node)->first()));
-    Event::assertDispatched(DocumentRevisionCreated::class, static fn (DocumentRevisionCreated $e): bool => $e->restored && [$e->stateVersion, $e->epoch] === [4, 2]);
-    Event::assertDispatched(DocumentRestored::class, static fn (DocumentRestored $e): bool => [$e->stateVersion, $e->epoch] === [4, 2]);
+    Event::assertDispatched(DocumentRevisionCreated::class, static fn (DocumentRevisionCreated $e): bool => $e->restored && [$e->stateVersion, $e->epoch] === [4, 1]);
+    Event::assertDispatched(DocumentRestored::class, static fn (DocumentRestored $e): bool => [$e->stateVersion, $e->epoch] === [4, 1]);
 });

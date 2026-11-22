@@ -17,6 +17,7 @@ enum DocumentsErrorCode: string implements ErrorCode
     case CollaborationProtocolContract = 'documents.collaboration_protocol_contract';
     case CollaborationUnavailable = 'documents.collaboration_unavailable';
     case CommentNotFound = 'documents.comment_not_found';
+    case DocumentCommandRequired = 'documents.document_command_required';
     case DocumentContentDegraded = 'documents.document_content_degraded';
     case DocumentRevisionNotFound = 'documents.document_revision_not_found';
     case DocumentStateMismatch = 'documents.document_state_mismatch';

@@ -45,7 +45,7 @@ it('refuses the publication of a lease the restore outlived and changes nothing'
     $after = Hub::aggregate($this->node);
     expect($restored->collab_epoch)->toBe(1)
         ->and($after->state_version)->toBe($restored->state_version)
-        ->and($after->collab_state)->toBe($restored->collab_state)
+        ->and($after->syncState?->collab_state)->toBe($restored->syncState?->collab_state)
         ->and($after->revision_count)->toBe($restored->revision_count)
         ->and(Compaction::head($this->node, 0))->toEqual($closed)
         ->and($closed?->retiredAt)->not->toBeNull()
@@ -95,17 +95,19 @@ it('starts the next generation with an open log of its own', function (): void {
         ->and(Compaction::leaseOf($this->node)->log->generation)->toBe(1);
 });
 
-it('closes the generation a REST replace moves past, with no pending edits to drain', function (): void {
+it('leaves a settled snapshot generation open on an ordinary replacement', function (): void {
     Compaction::append($this->node, 'u1');
     Compaction::publish(Compaction::leaseOf($this->node));
     FakeHub::install();
+    $before = Hub::aggregate($this->node);
 
     $this->documents->update($this->id, DocumentTestHelpers::content('Replaced')->toArray());
 
+    $after = Hub::aggregate($this->node);
     expect(FakeHub::$drains)->toBe([])
-        ->and(Hub::aggregate($this->node)->collab_epoch)->toBe(1)
-        ->and(Compaction::head($this->node, 0)?->retiredAt)->not->toBeNull()
-        ->and(fn (): AppendResult => Compaction::append($this->node, 'late', generation: 0))->toThrow(CollaborationEpochMismatchException::class);
+        ->and($after->collab_epoch)->toBe($before->collab_epoch)
+        ->and($after->state_version)->toBe($before->state_version + 1)
+        ->and(Compaction::head($this->node, 0)?->retiredAt)->toBeNull();
 });
 
 it('leaves the current generation open when a checkpoint publication records its content event', function (): void {

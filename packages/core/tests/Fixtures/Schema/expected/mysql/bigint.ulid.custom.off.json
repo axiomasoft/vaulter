@@ -1394,6 +1394,302 @@
             },
             "create_sql": "CREATE TABLE `custom_collaboration_updates` (\n  `document_id` bigint unsigned NOT NULL,\n  `generation` bigint NOT NULL DEFAULT '0',\n  `seq` bigint NOT NULL DEFAULT '0',\n  `update_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `payload` longblob,\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`document_id`,`generation`,`seq`),\n  UNIQUE KEY `custom_collaboration_updates_update_uniq` (`document_id`,`generation`,`update_id`),\n  KEY `custom_collaboration_updates_document_id_index` (`document_id`),\n  CONSTRAINT `custom_collaboration_updates_document_fk` FOREIGN KEY (`document_id`) REFERENCES `custom_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_collaboration_updates_chk_1` CHECK ((`generation` >= 0)),\n  CONSTRAINT `custom_collaboration_updates_chk_2` CHECK ((`seq` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
+        "custom_document_payloads": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "content",
+                    "type": "json",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "content_hash",
+                    "type": "char(64)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "content_size",
+                    "type": "int",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "custom_document_payloads_document_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "document_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "document_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": {
+                "custom_document_payloads_owner_fk": {
+                    "type": "foreign key",
+                    "ref_table": "custom_documents",
+                    "update": "NO ACTION",
+                    "delete": "CASCADE",
+                    "columns": [
+                        [
+                            "document_id",
+                            "id"
+                        ]
+                    ]
+                },
+                "custom_document_payloads_complete": {
+                    "type": "check",
+                    "clause": "(((`content` is null) and (`content_hash` is null) and (`content_size` is null)) or ((`content` is not null) and (`content_hash` is not null) and (`content_size` is not null) and (`content_size` >= 0)))",
+                    "enforced": "YES"
+                }
+            },
+            "create_sql": "CREATE TABLE `custom_document_payloads` (\n  `document_id` bigint unsigned NOT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  PRIMARY KEY (`document_id`),\n  KEY `custom_document_payloads_document_id_index` (`document_id`),\n  CONSTRAINT `custom_document_payloads_owner_fk` FOREIGN KEY (`document_id`) REFERENCES `custom_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_document_payloads_complete` CHECK ((((`content` is null) and (`content_hash` is null) and (`content_size` is null)) or ((`content` is not null) and (`content_hash` is not null) and (`content_size` is not null) and (`content_size` >= 0))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
+        "custom_document_revision_payloads": {
+            "columns": [
+                {
+                    "name": "revision_id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "content",
+                    "type": "json",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "content_hash",
+                    "type": "char(64)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "content_size",
+                    "type": "int",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "custom_document_revision_payloads_revision_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "revision_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "revision_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": {
+                "custom_document_revision_payloads_owner_fk": {
+                    "type": "foreign key",
+                    "ref_table": "custom_document_revisions",
+                    "update": "NO ACTION",
+                    "delete": "CASCADE",
+                    "columns": [
+                        [
+                            "revision_id",
+                            "id"
+                        ]
+                    ]
+                },
+                "custom_document_revision_payloads_complete": {
+                    "type": "check",
+                    "clause": "(((`content` is null) and (`content_hash` is null) and (`content_size` is null)) or ((`content` is not null) and (`content_hash` is not null) and (`content_size` is not null) and (`content_size` >= 0)))",
+                    "enforced": "YES"
+                }
+            },
+            "create_sql": "CREATE TABLE `custom_document_revision_payloads` (\n  `revision_id` bigint unsigned NOT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  PRIMARY KEY (`revision_id`),\n  KEY `custom_document_revision_payloads_revision_id_index` (`revision_id`),\n  CONSTRAINT `custom_document_revision_payloads_owner_fk` FOREIGN KEY (`revision_id`) REFERENCES `custom_document_revisions` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_document_revision_payloads_complete` CHECK ((((`content` is null) and (`content_hash` is null) and (`content_size` is null)) or ((`content` is not null) and (`content_hash` is not null) and (`content_size` is not null) and (`content_size` >= 0))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
+        "custom_document_revision_sync_states": {
+            "columns": [
+                {
+                    "name": "revision_id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "varchar(255)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_state",
+                    "type": "longblob",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "collab_state_size",
+                    "type": "int",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "custom_document_revision_sync_states_revision_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "revision_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "revision_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": {
+                "custom_document_revision_sync_states_owner_fk": {
+                    "type": "foreign key",
+                    "ref_table": "custom_document_revisions",
+                    "update": "NO ACTION",
+                    "delete": "CASCADE",
+                    "columns": [
+                        [
+                            "revision_id",
+                            "id"
+                        ]
+                    ]
+                },
+                "custom_document_revision_sync_states_binary_size": {
+                    "type": "check",
+                    "clause": "(((`collab_state` is null) and (`collab_state_size` is null)) or ((`collab_state` is not null) and (`collab_state_size` is not null) and (`collab_state_size` = length(`collab_state`))))",
+                    "enforced": "YES"
+                },
+                "custom_document_revision_sync_states_present": {
+                    "type": "check",
+                    "clause": "(`collab_protocol` is not null)",
+                    "enforced": "YES"
+                },
+                "custom_document_revision_sync_states_protocol": {
+                    "type": "check",
+                    "clause": "(((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and regexp_like(`collab_protocol`,_utf8mb4\\'[^[:space:]]\\') and (`collab_state_format` is not null) and regexp_like(`collab_state_format`,_utf8mb4\\'[^[:space:]]\\')))",
+                    "enforced": "YES"
+                }
+            },
+            "create_sql": "CREATE TABLE `custom_document_revision_sync_states` (\n  `revision_id` bigint unsigned NOT NULL,\n  `collab_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state` longblob,\n  `collab_state_size` int DEFAULT NULL,\n  PRIMARY KEY (`revision_id`),\n  KEY `custom_document_revision_sync_states_revision_id_index` (`revision_id`),\n  CONSTRAINT `custom_document_revision_sync_states_owner_fk` FOREIGN KEY (`revision_id`) REFERENCES `custom_document_revisions` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_document_revision_sync_states_binary_size` CHECK ((((`collab_state` is null) and (`collab_state_size` is null)) or ((`collab_state` is not null) and (`collab_state_size` is not null) and (`collab_state_size` = length(`collab_state`))))),\n  CONSTRAINT `custom_document_revision_sync_states_present` CHECK ((`collab_protocol` is not null)),\n  CONSTRAINT `custom_document_revision_sync_states_protocol` CHECK ((((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and regexp_like(`collab_protocol`,_utf8mb4'[^[:space:]]') and (`collab_state_format` is not null) and regexp_like(`collab_state_format`,_utf8mb4'[^[:space:]]'))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
         "custom_document_revisions": {
             "columns": [
                 {
@@ -1460,76 +1756,6 @@
                     "name": "schema_version",
                     "type": "int",
                     "nullable": "NO",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "collab_protocol",
-                    "type": "varchar(255)",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "collab_state_format",
-                    "type": "varchar(255)",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "content",
-                    "type": "json",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "content_hash",
-                    "type": "char(64)",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "content_size",
-                    "type": "int",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "collab_state",
-                    "type": "longblob",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "collab_state_size",
-                    "type": "int",
-                    "nullable": "YES",
                     "default": null,
                     "charset": null,
                     "collation": null,
@@ -1769,59 +1995,19 @@
                     "clause": "(`state_version` >= 0)",
                     "enforced": "YES"
                 },
-                "custom_document_revisions_stored_binding_check": {
+                "custom_document_revisions_schema_version_positive": {
                     "type": "check",
-                    "clause": "((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4\\'[^[:space:]]\\') and regexp_like(`collab_state_format`,_utf8mb4\\'[^[:space:]]\\'))))",
+                    "clause": "(`schema_version` >= 1)",
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_document_revisions` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `document_id` bigint unsigned NOT NULL,\n  `number` int NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `schema_version` int NOT NULL,\n  `collab_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `collab_state` longblob,\n  `collab_state_size` int DEFAULT NULL,\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `label` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `is_autosave` tinyint(1) NOT NULL DEFAULT '0',\n  `keep_forever` tinyint(1) NOT NULL DEFAULT '0',\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'committed',\n  `restored_from_revision_id` bigint unsigned DEFAULT NULL,\n  `created_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_document_revisions_no_uniq` (`document_id`,`number`),\n  UNIQUE KEY `custom_document_revisions_id_doc_uniq` (`id`,`document_id`),\n  KEY `custom_document_revisions_history_idx` (`document_id`,`is_autosave`,`created_at`),\n  KEY `custom_document_revisions_tenant_id_index` (`tenant_id`),\n  KEY `custom_document_revisions_document_id_index` (`document_id`),\n  KEY `custom_document_revisions_restored_from_revision_id_index` (`restored_from_revision_id`),\n  CONSTRAINT `custom_document_revisions_document_id_foreign` FOREIGN KEY (`document_id`) REFERENCES `custom_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_document_revisions_restored_fk` FOREIGN KEY (`restored_from_revision_id`) REFERENCES `custom_document_revisions` (`id`) ON DELETE SET NULL,\n  CONSTRAINT `custom_document_revisions_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `custom_document_revisions_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `custom_document_revisions_stored_binding_check` CHECK (((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4'[^[:space:]]') and regexp_like(`collab_state_format`,_utf8mb4'[^[:space:]]')))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_document_revisions` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `document_id` bigint unsigned NOT NULL,\n  `number` int NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `schema_version` int NOT NULL,\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `label` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `is_autosave` tinyint(1) NOT NULL DEFAULT '0',\n  `keep_forever` tinyint(1) NOT NULL DEFAULT '0',\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'committed',\n  `restored_from_revision_id` bigint unsigned DEFAULT NULL,\n  `created_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_document_revisions_no_uniq` (`document_id`,`number`),\n  UNIQUE KEY `custom_document_revisions_id_doc_uniq` (`id`,`document_id`),\n  KEY `custom_document_revisions_history_idx` (`document_id`,`is_autosave`,`created_at`),\n  KEY `custom_document_revisions_tenant_id_index` (`tenant_id`),\n  KEY `custom_document_revisions_document_id_index` (`document_id`),\n  KEY `custom_document_revisions_restored_from_revision_id_index` (`restored_from_revision_id`),\n  CONSTRAINT `custom_document_revisions_document_id_foreign` FOREIGN KEY (`document_id`) REFERENCES `custom_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_document_revisions_restored_fk` FOREIGN KEY (`restored_from_revision_id`) REFERENCES `custom_document_revisions` (`id`) ON DELETE SET NULL,\n  CONSTRAINT `custom_document_revisions_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `custom_document_revisions_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `custom_document_revisions_schema_version_positive` CHECK ((`schema_version` >= 1))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
-        "custom_documents": {
+        "custom_document_sync_states": {
             "columns": [
                 {
-                    "name": "id",
+                    "name": "document_id",
                     "type": "bigint unsigned",
-                    "nullable": "NO",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "auto_increment",
-                    "generation": ""
-                },
-                {
-                    "name": "tenant_id",
-                    "type": "char(26)",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "node_id",
-                    "type": "bigint unsigned",
-                    "nullable": "NO",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "type",
-                    "type": "varchar(64)",
-                    "nullable": "NO",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "schema_version",
-                    "type": "int",
                     "nullable": "NO",
                     "default": null,
                     "charset": null,
@@ -1850,8 +2036,8 @@
                     "generation": ""
                 },
                 {
-                    "name": "current_revision_id",
-                    "type": "bigint unsigned",
+                    "name": "collab_state",
+                    "type": "longblob",
                     "nullable": "YES",
                     "default": null,
                     "charset": null,
@@ -1860,40 +2046,10 @@
                     "generation": ""
                 },
                 {
-                    "name": "revision_count",
+                    "name": "collab_state_size",
                     "type": "int",
-                    "nullable": "NO",
-                    "default": "0",
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "collab_epoch",
-                    "type": "bigint",
-                    "nullable": "NO",
-                    "default": "0",
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "state_version",
-                    "type": "bigint",
-                    "nullable": "NO",
-                    "default": "0",
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "checkpoint_state_version",
-                    "type": "bigint",
-                    "nullable": "NO",
-                    "default": "0",
+                    "nullable": "YES",
+                    "default": null,
                     "charset": null,
                     "collation": null,
                     "extra": "",
@@ -1948,20 +2104,106 @@
                     "collation": null,
                     "extra": "",
                     "generation": ""
+                }
+            ],
+            "indexes": {
+                "custom_document_sync_states_document_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "document_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
                 },
+                "custom_document_sync_states_pending_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "pending_generation",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "document_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "document_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": {
+                "custom_document_sync_states_owner_fk": {
+                    "type": "foreign key",
+                    "ref_table": "custom_documents",
+                    "update": "NO ACTION",
+                    "delete": "CASCADE",
+                    "columns": [
+                        [
+                            "document_id",
+                            "id"
+                        ]
+                    ]
+                },
+                "custom_document_sync_states_binary_size": {
+                    "type": "check",
+                    "clause": "(((`collab_state` is null) and (`collab_state_size` is null)) or ((`collab_state` is not null) and (`collab_state_size` is not null) and (`collab_state_size` = length(`collab_state`))))",
+                    "enforced": "YES"
+                },
+                "custom_document_sync_states_pending": {
+                    "type": "check",
+                    "clause": "(((`pending_protocol` is null) and (`pending_state_format` is null) and (`pending_schema_version` is null) and (`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_protocol` is not null) and regexp_like(`pending_protocol`,_utf8mb4\\'[^[:space:]]\\') and (`pending_state_format` is not null) and regexp_like(`pending_state_format`,_utf8mb4\\'[^[:space:]]\\') and (`pending_schema_version` is not null) and (`pending_schema_version` >= 1) and (`pending_generation` is not null) and (`pending_generation` >= 0) and (`pending_through_seq` is not null) and (`pending_through_seq` >= 1)))",
+                    "enforced": "YES"
+                },
+                "custom_document_sync_states_present": {
+                    "type": "check",
+                    "clause": "((`collab_protocol` is not null) or (`pending_protocol` is not null))",
+                    "enforced": "YES"
+                },
+                "custom_document_sync_states_protocol": {
+                    "type": "check",
+                    "clause": "(((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and regexp_like(`collab_protocol`,_utf8mb4\\'[^[:space:]]\\') and (`collab_state_format` is not null) and regexp_like(`collab_state_format`,_utf8mb4\\'[^[:space:]]\\')))",
+                    "enforced": "YES"
+                }
+            },
+            "create_sql": "CREATE TABLE `custom_document_sync_states` (\n  `document_id` bigint unsigned NOT NULL,\n  `collab_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state` longblob,\n  `collab_state_size` int DEFAULT NULL,\n  `pending_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `pending_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `pending_schema_version` int DEFAULT NULL,\n  `pending_generation` bigint DEFAULT NULL,\n  `pending_through_seq` bigint DEFAULT NULL,\n  PRIMARY KEY (`document_id`),\n  KEY `custom_document_sync_states_pending_idx` (`pending_generation`,`document_id`),\n  KEY `custom_document_sync_states_document_id_index` (`document_id`),\n  CONSTRAINT `custom_document_sync_states_owner_fk` FOREIGN KEY (`document_id`) REFERENCES `custom_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_document_sync_states_binary_size` CHECK ((((`collab_state` is null) and (`collab_state_size` is null)) or ((`collab_state` is not null) and (`collab_state_size` is not null) and (`collab_state_size` = length(`collab_state`))))),\n  CONSTRAINT `custom_document_sync_states_pending` CHECK ((((`pending_protocol` is null) and (`pending_state_format` is null) and (`pending_schema_version` is null) and (`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_protocol` is not null) and regexp_like(`pending_protocol`,_utf8mb4'[^[:space:]]') and (`pending_state_format` is not null) and regexp_like(`pending_state_format`,_utf8mb4'[^[:space:]]') and (`pending_schema_version` is not null) and (`pending_schema_version` >= 1) and (`pending_generation` is not null) and (`pending_generation` >= 0) and (`pending_through_seq` is not null) and (`pending_through_seq` >= 1)))),\n  CONSTRAINT `custom_document_sync_states_present` CHECK (((`collab_protocol` is not null) or (`pending_protocol` is not null))),\n  CONSTRAINT `custom_document_sync_states_protocol` CHECK ((((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and regexp_like(`collab_protocol`,_utf8mb4'[^[:space:]]') and (`collab_state_format` is not null) and regexp_like(`collab_state_format`,_utf8mb4'[^[:space:]]'))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
+        "custom_documents": {
+            "columns": [
                 {
-                    "name": "content",
-                    "type": "json",
-                    "nullable": "YES",
+                    "name": "id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
                     "default": null,
                     "charset": null,
                     "collation": null,
-                    "extra": "",
+                    "extra": "auto_increment",
                     "generation": ""
                 },
                 {
-                    "name": "content_hash",
-                    "type": "char(64)",
+                    "name": "tenant_id",
+                    "type": "char(26)",
                     "nullable": "YES",
                     "default": null,
                     "charset": "utf8mb4",
@@ -1970,8 +2212,48 @@
                     "generation": ""
                 },
                 {
-                    "name": "content_size",
+                    "name": "node_id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "type",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "schema_version",
                     "type": "int",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "write_mode",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": "snapshot",
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "current_revision_id",
+                    "type": "bigint unsigned",
                     "nullable": "YES",
                     "default": null,
                     "charset": null,
@@ -1980,20 +2262,40 @@
                     "generation": ""
                 },
                 {
-                    "name": "collab_state",
-                    "type": "longblob",
-                    "nullable": "YES",
-                    "default": null,
+                    "name": "revision_count",
+                    "type": "int",
+                    "nullable": "NO",
+                    "default": "0",
                     "charset": null,
                     "collation": null,
                     "extra": "",
                     "generation": ""
                 },
                 {
-                    "name": "collab_state_size",
-                    "type": "int",
-                    "nullable": "YES",
-                    "default": null,
+                    "name": "collab_epoch",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "state_version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "checkpoint_state_version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
                     "charset": null,
                     "collation": null,
                     "extra": "",
@@ -2064,7 +2366,7 @@
                         }
                     ]
                 },
-                "custom_documents_head_fk": {
+                "custom_documents_head_fk_idx": {
                     "unique": false,
                     "type": "BTREE",
                     "visible": "YES",
@@ -2103,19 +2405,6 @@
                     "parts": [
                         {
                             "column": "node_id",
-                            "expression": null,
-                            "sub_part": null,
-                            "direction": "A"
-                        }
-                    ]
-                },
-                "custom_documents_pending_idx": {
-                    "unique": false,
-                    "type": "BTREE",
-                    "visible": "YES",
-                    "parts": [
-                        {
-                            "column": "pending_generation",
                             "expression": null,
                             "sub_part": null,
                             "direction": "A"
@@ -2193,41 +2482,31 @@
                 },
                 "custom_documents_chk_1": {
                     "type": "check",
-                    "clause": "(`collab_epoch` >= 0)",
+                    "clause": "(cast(`write_mode` as char charset binary) in (_binary\\'snapshot\\',_binary\\'journal\\'))",
                     "enforced": "YES"
                 },
                 "custom_documents_chk_2": {
                     "type": "check",
-                    "clause": "(`state_version` >= 0)",
+                    "clause": "(`collab_epoch` >= 0)",
                     "enforced": "YES"
                 },
                 "custom_documents_chk_3": {
                     "type": "check",
-                    "clause": "(`checkpoint_state_version` >= 0)",
+                    "clause": "(`state_version` >= 0)",
                     "enforced": "YES"
                 },
                 "custom_documents_chk_4": {
                     "type": "check",
-                    "clause": "((`pending_generation` is null) or (`pending_generation` >= 0))",
+                    "clause": "(`checkpoint_state_version` >= 0)",
                     "enforced": "YES"
                 },
-                "custom_documents_chk_5": {
+                "custom_documents_schema_version_positive": {
                     "type": "check",
-                    "clause": "((`pending_through_seq` is null) or (`pending_through_seq` >= 1))",
-                    "enforced": "YES"
-                },
-                "custom_documents_pending_marker_check": {
-                    "type": "check",
-                    "clause": "(((`pending_generation` is null) and (`pending_through_seq` is null) and (`pending_protocol` is null) and (`pending_state_format` is null) and (`pending_schema_version` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null) and (`pending_protocol` is not null) and regexp_like(`pending_protocol`,_utf8mb4\\'[^[:space:]]\\') and (`pending_state_format` is not null) and regexp_like(`pending_state_format`,_utf8mb4\\'[^[:space:]]\\') and (`pending_schema_version` is not null) and (`pending_schema_version` >= 1)))",
-                    "enforced": "YES"
-                },
-                "custom_documents_stored_binding_check": {
-                    "type": "check",
-                    "clause": "((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4\\'[^[:space:]]\\') and regexp_like(`collab_state_format`,_utf8mb4\\'[^[:space:]]\\'))))",
+                    "clause": "(`schema_version` >= 1)",
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_documents` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` bigint unsigned NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `schema_version` int NOT NULL,\n  `collab_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `collab_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `current_revision_id` bigint unsigned DEFAULT NULL,\n  `revision_count` int NOT NULL DEFAULT '0',\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `checkpoint_state_version` bigint NOT NULL DEFAULT '0',\n  `pending_protocol` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `pending_state_format` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `pending_schema_version` int DEFAULT NULL,\n  `pending_generation` bigint DEFAULT NULL,\n  `pending_through_seq` bigint DEFAULT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `collab_state` longblob,\n  `collab_state_size` int DEFAULT NULL,\n  `last_checkpoint_at` timestamp NULL DEFAULT NULL,\n  `created_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_documents_node_uniq` (`node_id`),\n  KEY `custom_documents_type_idx` (`type`),\n  KEY `custom_documents_pending_idx` (`pending_generation`),\n  KEY `custom_documents_tenant_id_index` (`tenant_id`),\n  KEY `custom_documents_node_id_index` (`node_id`),\n  KEY `custom_documents_current_revision_id_index` (`current_revision_id`),\n  KEY `custom_documents_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `custom_documents_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `custom_document_revisions` (`id`, `document_id`) ON DELETE RESTRICT,\n  CONSTRAINT `custom_documents_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_documents_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `custom_documents_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `custom_documents_chk_3` CHECK ((`checkpoint_state_version` >= 0)),\n  CONSTRAINT `custom_documents_chk_4` CHECK (((`pending_generation` is null) or (`pending_generation` >= 0))),\n  CONSTRAINT `custom_documents_chk_5` CHECK (((`pending_through_seq` is null) or (`pending_through_seq` >= 1))),\n  CONSTRAINT `custom_documents_pending_marker_check` CHECK ((((`pending_generation` is null) and (`pending_through_seq` is null) and (`pending_protocol` is null) and (`pending_state_format` is null) and (`pending_schema_version` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null) and (`pending_protocol` is not null) and regexp_like(`pending_protocol`,_utf8mb4'[^[:space:]]') and (`pending_state_format` is not null) and regexp_like(`pending_state_format`,_utf8mb4'[^[:space:]]') and (`pending_schema_version` is not null) and (`pending_schema_version` >= 1)))),\n  CONSTRAINT `custom_documents_stored_binding_check` CHECK (((`schema_version` >= 1) and (((`collab_protocol` is null) and (`collab_state_format` is null) and (`collab_state` is null)) or ((`collab_protocol` is not null) and (`collab_state_format` is not null) and regexp_like(`collab_protocol`,_utf8mb4'[^[:space:]]') and regexp_like(`collab_state_format`,_utf8mb4'[^[:space:]]')))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_documents` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` bigint unsigned NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `schema_version` int NOT NULL,\n  `write_mode` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'snapshot',\n  `current_revision_id` bigint unsigned DEFAULT NULL,\n  `revision_count` int NOT NULL DEFAULT '0',\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `checkpoint_state_version` bigint NOT NULL DEFAULT '0',\n  `last_checkpoint_at` timestamp NULL DEFAULT NULL,\n  `created_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_documents_node_uniq` (`node_id`),\n  KEY `custom_documents_type_idx` (`type`),\n  KEY `custom_documents_head_fk_idx` (`current_revision_id`,`id`),\n  KEY `custom_documents_tenant_id_index` (`tenant_id`),\n  KEY `custom_documents_node_id_index` (`node_id`),\n  KEY `custom_documents_current_revision_id_index` (`current_revision_id`),\n  CONSTRAINT `custom_documents_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `custom_document_revisions` (`id`, `document_id`) ON DELETE RESTRICT,\n  CONSTRAINT `custom_documents_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_documents_chk_1` CHECK ((cast(`write_mode` as char charset binary) in (_binary'snapshot',_binary'journal'))),\n  CONSTRAINT `custom_documents_chk_2` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `custom_documents_chk_3` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `custom_documents_chk_4` CHECK ((`checkpoint_state_version` >= 0)),\n  CONSTRAINT `custom_documents_schema_version_positive` CHECK ((`schema_version` >= 1))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "custom_drive_change_heads": {
             "columns": [

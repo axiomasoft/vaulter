@@ -12,6 +12,7 @@ use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Documents\DocumentSyncState;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
@@ -74,8 +75,24 @@ final readonly class DocumentPresenter implements KindPresenter
     /** @return array{string, int, ?string, ?string, bool} */
     private function head(NodeSnapshot $node): array
     {
-        $document = Document::query()->where('node_id', $node->id)->first(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'collab_state_size']);
+        $head = (new Document)->getTable();
+        $sync = (new DocumentSyncState)->getTable();
+        $document = Document::query()
+            ->leftJoin($sync, $sync.'.document_id', '=', $head.'.id')
+            ->where($head.'.node_id', $node->id)
+            ->toBase()
+            ->first([$head.'.type', $head.'.schema_version', $sync.'.collab_protocol', $sync.'.collab_state_format', $sync.'.collab_state_size']);
 
-        return $document === null ? ['', 1, null, null, false] : [$document->type, $document->schema_version, $document->collab_protocol, $document->collab_state_format, $document->collab_state_size !== null];
+        if ($document === null) {
+            return ['', 1, null, null, false];
+        }
+
+        return [
+            is_string($document->type) ? $document->type : '',
+            is_numeric($document->schema_version) ? (int) $document->schema_version : 1,
+            is_string($document->collab_protocol) ? $document->collab_protocol : null,
+            is_string($document->collab_state_format) ? $document->collab_state_format : null,
+            $document->collab_state_size !== null,
+        ];
     }
 }

@@ -100,10 +100,10 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             pending: PendingStateGuard::markerOf($document),
             trashed: $current->trashed_at !== null,
             binding: $document->collaborationBinding(),
-            collabState: $document->collab_state,
-            content: $document->content ?? [],
+            collabState: $document->syncState?->collab_state,
+            content: $document->payload->content ?? [],
             driveStatus: $driveStatus instanceof DriveStatus ? $driveStatus : null,
-            collabStateSize: $document->collab_state_size,
+            collabStateSize: $document->syncState?->collab_state_size,
         );
         $this->issued[$state] = [$this->database->connection(), $this->transactionRecord()];
 
@@ -267,17 +267,14 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             throw new InvalidArgumentException('[Vaulter] A page of pending documents holds at least one.');
         }
 
-        $query = Document::query()->whereNotNull('pending_generation')->orderBy('id')->limit($limit);
-        if ($protocol !== null) {
-            $query->where('pending_protocol', $protocol);
-        }
+        $query = PendingStateGuard::markedDocuments($protocol)->orderBy('id')->limit($limit);
         if ($after !== null) {
             $query->where('id', '>', $after);
         }
 
         return array_values(array_filter(array_map(
             PendingStateGuard::markerOf(...),
-            $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq', 'pending_protocol', 'pending_state_format', 'pending_schema_version'])->all(),
+            $query->get(['id', 'node_id'])->all(),
         )));
     }
 
@@ -293,7 +290,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             throw new LogicException('[Vaulter] The locked document state does not name a document; take it with CollaborativeState::lock() in this transaction.');
         }
 
-        return $document;
+        return $this->documents->loadLockedState($document);
     }
 
     private function transactionRecord(): DatabaseTransactionRecord

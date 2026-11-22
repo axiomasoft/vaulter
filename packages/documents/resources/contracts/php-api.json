@@ -3902,6 +3902,10 @@
                     "value": "'documents.comment_not_found'"
                 },
                 {
+                    "name": "DocumentCommandRequired",
+                    "value": "'documents.document_command_required'"
+                },
+                {
                     "name": "DocumentContentDegraded",
                     "value": "'documents.document_content_degraded'"
                 },
@@ -5143,6 +5147,80 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "string",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Vaulter\\Documents\\Exceptions\\DocumentCommandRequiredException": {
+            "kind": "class",
+            "layer": "api",
+            "since": "1.0",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [
+                "Vaulter\\Exceptions\\VaulterException"
+            ],
+            "implements": [
+                "Vaulter\\Exceptions\\Contracts\\ProblemException"
+            ],
+            "uses": [
+                "Vaulter\\Exceptions\\Concerns\\ProvidesProblemDetails"
+            ],
+            "doc": [],
+            "methods": {
+                "__construct": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": null,
+                    "doc": []
+                },
+                "errorDescriptor": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "Packman\\Errors\\Data\\ErrorDescriptor",
+                    "doc": []
+                },
+                "httpStatus": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "int",
+                    "doc": []
+                },
+                "problemCode": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "string",
+                    "doc": []
+                },
+                "problemDetails": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
                     "doc": []
                 }
             },

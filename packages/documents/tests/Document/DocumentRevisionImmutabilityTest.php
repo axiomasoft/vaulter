@@ -31,21 +31,23 @@ function immutableCheckpoint(): DocumentRevision
     return DocumentTestHelpers::head($node);
 }
 
-it('refuses to change any payload or provenance column of a stored checkpoint', function (string $column, mixed $value): void {
+it('refuses to change any payload or provenance column of a stored checkpoint', function (?string $relation, string $column, mixed $value): void {
     $revision = immutableCheckpoint();
-    $before = $revision->getAttributes();
+    $row = $relation === null ? $revision : $revision->getRelationValue($relation);
+    $before = $row->getAttributes();
+    $original = $revision->fresh();
 
-    expect(fn () => $revision->forceFill([$column => $value])->save())->toThrow(LogicException::class, 'immutable');
-    expect(DocumentRevision::query()->whereKey($revision->id)->firstOrFail()->getAttributes())->toEqual($before);
+    expect(fn () => app(VaulterDatabase::class)->write(fn () => $row->forceFill([$column => $value])->save()))->toThrow(LogicException::class, 'immutable');
+    expect(($relation === null ? $original : $original->getRelationValue($relation))->getAttributes())->toEqual($before);
 })->with([
-    'content' => ['content', ['type' => 'doc', 'content' => []]],
-    'content_hash' => ['content_hash', str_repeat('0', 64)],
-    'collab_state' => ['collab_state', "rewritten\0state"],
-    'number' => ['number', 99],
-    'label' => ['label', 'renamed'],
-    'is_autosave' => ['is_autosave', true],
-    'state_version' => ['state_version', 42],
-    'document_id' => ['document_id', 999],
+    'content' => ['payload', 'content', ['type' => 'doc', 'content' => []]],
+    'content_hash' => ['payload', 'content_hash', str_repeat('0', 64)],
+    'collab_state' => ['syncState', 'collab_state', "rewritten\0state"],
+    'number' => [null, 'number', 99],
+    'label' => [null, 'label', 'renamed'],
+    'is_autosave' => [null, 'is_autosave', true],
+    'state_version' => [null, 'state_version', 42],
+    'document_id' => [null, 'document_id', 999],
 ]);
 
 it('changes keep_forever through setRetention, the one allowed mutation', function (): void {

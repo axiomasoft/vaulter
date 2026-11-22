@@ -90,7 +90,7 @@ it('checks a stale expectation before an identical write and leaves no side effe
 
     $after = DocumentTestHelpers::document($node);
     expect($after->state_version)->toBe($before->state_version)
-        ->and($after->content_hash)->toBe($before->content_hash)
+        ->and($after->payload?->content_hash)->toBe($before->payload?->content_hash)
         ->and(DocumentTestHelpers::revisions($node))->toHaveCount(1);
     Event::assertNotDispatched(DocumentContentUpdated::class);
 });
@@ -148,11 +148,11 @@ it('counts Yjs and projection changes while an identical Yjs state is a no-op', 
     StateWrites::yjs($node, "second\0state", DocumentTestHelpers::content('projection changed')->toArray());
     $document = DocumentTestHelpers::document($node);
     expect($document->state_version)->toBe(4)
-        ->and($document->collab_state)->toBe("second\0state")
+        ->and($document->syncState?->collab_state)->toBe("second\0state")
         ->and($document->collab_epoch)->toBe(0);
 });
 
-it('replacing the JSON of a document with Yjs state drops that state and moves the epoch', function (): void {
+it('replacing the JSON of a document with Yjs state drops that state and keeps its generation', function (): void {
     $node = stateVersionDocument();
     StateWrites::yjs($node, "room\0state");
 
@@ -161,10 +161,10 @@ it('replacing the JSON of a document with Yjs state drops that state and moves t
         content: DocumentTestHelpers::content('replaced from REST'),
     ));
 
-    expect($result->epochChanged)->toBeTrue()
-        ->and($result->document->collab_epoch)->toBe(1)
-        ->and($result->document->collab_state)->toBeNull()
-        ->and($result->document->collab_state_size)->toBeNull();
+    expect($result->epochChanged)->toBeFalse()
+        ->and($result->document->collab_epoch)->toBe(0)
+        ->and($result->document->syncState?->collab_state)->toBeNull()
+        ->and($result->document->syncState?->collab_state_size)->toBeNull();
 });
 
 it('refuses a negative expectation', function (): void {
@@ -192,7 +192,7 @@ it('rolls back content and checkpoint writes when the state version is exhausted
 
     $after = DocumentTestHelpers::document($node);
     expect($after->state_version)->toBe(PHP_INT_MAX)
-        ->and($after->content_hash)->toBe($before->content_hash)
+        ->and($after->payload?->content_hash)->toBe($before->payload?->content_hash)
         ->and($after->current_revision_id)->toEqual($before->current_revision_id)
         ->and(DocumentTestHelpers::revisions($node))->toHaveCount(1);
     Event::assertNotDispatched(DocumentContentUpdated::class);

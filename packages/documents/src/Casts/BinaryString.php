@@ -7,69 +7,41 @@ namespace Vaulter\Documents\Casts;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Packman\Attributes\Internal;
+use RuntimeException;
 
 /**
- * Round-trip an arbitrary binary blob through a database column as a plain PHP string
- * on EVERY driver — including binaries that contain NUL bytes.
- *
- * The attribute is the raw bytes in PHP; at rest it is stored BASE64-encoded. That
- * encoding is what makes it portable:
- *
- *   - PostgreSQL `bytea` via PDO's default string binding (PARAM_STR) silently
- *     TRUNCATES a binary at its first NUL byte — a raw Yjs update (which routinely
- *     starts with NUL) round-trips to an EMPTY column, destroying the snapshot. PDO
- *     also hands `bytea` back as a STREAM RESOURCE, not a string. Base64 (NUL-free
- *     ASCII) sidesteps both: it binds losslessly as a string and the get() drains any
- *     stream before decoding.
- *   - SQLite (BLOB) and MySQL (longblob) keep raw binary fine, but storing base64
- *     uniformly across drivers keeps the on-disk format identical everywhere — a row
- *     is driver-portable, and there is no per-driver branch to drift.
- *
- * The cached byte length (collab_state_size) is computed by DocumentStateWriter from
- * the RAW value before this cast encodes it, so it stays the
- * true payload size regardless of the at-rest base64 representation.
- *
- * Used for v_documents.collab_state and v_document_revisions.collab_state — the binary Yjs
- * CRDT state that is the collaboration source of truth, read back through
- * Eloquent by the restore path and checkpoint capture. No code reads the column out of band (the hub persists it
- * via the collab/store webhook and never queries it directly).
+ * Store raw binary in the working and revision sync rows. Laravel binds streams
+ * as PDO::PARAM_LOB, preserving embedded NUL bytes on PostgreSQL and matching
+ * the database check that measures the stored bytes.
  *
  * @implements CastsAttributes<string|null, string|null>
  */
 #[Internal]
 final class BinaryString implements CastsAttributes
 {
-    /**
-     * Reading: drain a Postgres bytea stream to its bytes, then base64-decode back to
-     * the raw payload. A value that is not valid base64 (e.g. a legacy raw-stored row)
-     * is returned as-is rather than nulled.
-     *
-     * @param array<string, mixed> $attributes
-     */
+    /** @param array<string, mixed> $attributes */
     public function get(Model $model, string $key, mixed $value, array $attributes): ?string
     {
-        $stored = $this->toStringOrNull($value);
-
-        if ($stored === null || $stored === '') {
-            return $stored;
-        }
-
-        $decoded = base64_decode($stored, true);
-
-        return $decoded === false ? $stored : $decoded;
+        return $this->toStringOrNull($value);
     }
 
     /**
-     * Writing: base64-encode the raw bytes so they bind losslessly (NUL-safe) on every
-     * driver. A stream is drained first; null passes through.
-     *
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed> $attributes
+     * @return resource|null
      */
-    public function set(Model $model, string $key, mixed $value, array $attributes): ?string
+    public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
         $raw = $this->toStringOrNull($value);
+        if ($raw === null) {
+            return null;
+        }
 
-        return $raw === null ? null : base64_encode($raw);
+        $stream = fopen('php://memory', 'w+b');
+        if ($stream === false || fwrite($stream, $raw) !== strlen($raw) || !rewind($stream)) {
+            throw new RuntimeException('[Vaulter] Could not bind the document checkpoint as binary.');
+        }
+
+        return $stream;
     }
 
     /**
@@ -83,7 +55,7 @@ final class BinaryString implements CastsAttributes
         }
 
         if (is_resource($value)) {
-            // Eloquent casts the same PDO bytea resource on every attribute read.
+            // Eloquent may cast the same stream on multiple attribute reads.
             // Read the entire value without consuming it for the next getter or checkpoint.
             $position = ftell($value);
             $seekable = stream_get_meta_data($value)['seekable'];

@@ -1155,6 +1155,252 @@
                 }
             }
         },
+        "v_document_payloads": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content_hash",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "content_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_document_payloads_document_id_index": "CREATE INDEX v_document_payloads_document_id_index ON public.v_document_payloads USING btree (document_id)",
+                "v_document_payloads_pkey": "CREATE UNIQUE INDEX v_document_payloads_pkey ON public.v_document_payloads USING btree (document_id)"
+            },
+            "constraints": {
+                "v_document_payloads_complete": {
+                    "type": "c",
+                    "definition": "CHECK ((((content IS NULL) AND (content_hash IS NULL) AND (content_size IS NULL)) OR ((content IS NOT NULL) AND (content_hash IS NOT NULL) AND (content_size IS NOT NULL) AND (content_size >= 0))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_payloads_document_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL document_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_payloads_owner_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES v_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_payloads_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_document_revision_payloads": {
+            "columns": [
+                {
+                    "name": "revision_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content_hash",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "content_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_document_revision_payloads_content_gin": "CREATE INDEX v_document_revision_payloads_content_gin ON public.v_document_revision_payloads USING gin (content jsonb_path_ops)",
+                "v_document_revision_payloads_pkey": "CREATE UNIQUE INDEX v_document_revision_payloads_pkey ON public.v_document_revision_payloads USING btree (revision_id)",
+                "v_document_revision_payloads_revision_id_index": "CREATE INDEX v_document_revision_payloads_revision_id_index ON public.v_document_revision_payloads USING btree (revision_id)"
+            },
+            "constraints": {
+                "v_document_revision_payloads_complete": {
+                    "type": "c",
+                    "definition": "CHECK ((((content IS NULL) AND (content_hash IS NULL) AND (content_size IS NULL)) OR ((content IS NOT NULL) AND (content_hash IS NOT NULL) AND (content_size IS NOT NULL) AND (content_size >= 0))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_payloads_owner_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (revision_id) REFERENCES v_document_revisions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_payloads_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (revision_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_payloads_revision_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL revision_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_document_revision_sync_states": {
+            "columns": [
+                {
+                    "name": "revision_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_state",
+                    "type": "bytea",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "collab_state_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_document_revision_sync_states_pkey": "CREATE UNIQUE INDEX v_document_revision_sync_states_pkey ON public.v_document_revision_sync_states USING btree (revision_id)",
+                "v_document_revision_sync_states_revision_id_index": "CREATE INDEX v_document_revision_sync_states_revision_id_index ON public.v_document_revision_sync_states USING btree (revision_id)"
+            },
+            "constraints": {
+                "v_document_revision_sync_states_binary_size": {
+                    "type": "c",
+                    "definition": "CHECK ((((collab_state IS NULL) AND (collab_state_size IS NULL)) OR ((collab_state IS NOT NULL) AND (collab_state_size IS NOT NULL) AND (collab_state_size = octet_length(collab_state)))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_sync_states_owner_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (revision_id) REFERENCES v_document_revisions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_sync_states_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (revision_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_sync_states_present": {
+                    "type": "c",
+                    "definition": "CHECK ((collab_protocol IS NOT NULL))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_sync_states_protocol": {
+                    "type": "c",
+                    "definition": "CHECK ((((collab_protocol IS NULL) AND (collab_state_format IS NULL) AND (collab_state IS NULL)) OR ((collab_protocol IS NOT NULL) AND ((collab_protocol)::text ~ '[^[:space:]]'::text) AND (collab_state_format IS NOT NULL) AND ((collab_state_format)::text ~ '[^[:space:]]'::text))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_revision_sync_states_revision_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL revision_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
         "v_document_revisions": {
             "columns": [
                 {
@@ -1215,69 +1461,6 @@
                     "name": "schema_version",
                     "type": "integer",
                     "not_null": true,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "collab_protocol",
-                    "type": "character varying(255)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "collab_state_format",
-                    "type": "character varying(255)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "content",
-                    "type": "jsonb",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "content_hash",
-                    "type": "character(64)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "content_size",
-                    "type": "integer",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "collab_state",
-                    "type": "bytea",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "collab_state_size",
-                    "type": "integer",
-                    "not_null": false,
                     "default": null,
                     "identity": "",
                     "generated": "",
@@ -1357,7 +1540,6 @@
                 }
             ],
             "indexes": {
-                "v_document_revisions_content_gin": "CREATE INDEX v_document_revisions_content_gin ON public.v_document_revisions USING gin (content jsonb_path_ops)",
                 "v_document_revisions_document_id_index": "CREATE INDEX v_document_revisions_document_id_index ON public.v_document_revisions USING btree (document_id)",
                 "v_document_revisions_history_idx": "CREATE INDEX v_document_revisions_history_idx ON public.v_document_revisions USING btree (document_id, is_autosave, created_at)",
                 "v_document_revisions_id_doc_uniq": "CREATE UNIQUE INDEX v_document_revisions_id_doc_uniq ON public.v_document_revisions USING btree (id, document_id)",
@@ -1367,13 +1549,6 @@
                 "v_document_revisions_tenant_id_index": "CREATE INDEX v_document_revisions_tenant_id_index ON public.v_document_revisions USING btree (tenant_id)"
             },
             "constraints": {
-                "v_document_revisions_check": {
-                    "type": "c",
-                    "definition": "CHECK (((schema_version >= 1) AND (((collab_protocol IS NULL) AND (collab_state_format IS NULL) AND (collab_state IS NULL)) OR ((collab_protocol IS NOT NULL) AND (collab_state_format IS NOT NULL) AND (length(btrim((collab_protocol)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (length(btrim((collab_state_format)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0)))))",
-                    "deferrable": false,
-                    "deferred": false,
-                    "validated": true
-                },
                 "v_document_revisions_collab_epoch_check": {
                     "type": "c",
                     "definition": "CHECK ((collab_epoch >= 0))",
@@ -1465,6 +1640,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "v_document_revisions_schema_version_positive": {
+                    "type": "c",
+                    "definition": "CHECK ((schema_version >= 1))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "v_document_revisions_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((state_version >= 0))",
@@ -1489,6 +1671,156 @@
                 "v_document_revisions_type_not_null": {
                     "type": "n",
                     "definition": "NOT NULL type",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_document_sync_states": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "collab_state",
+                    "type": "bytea",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "collab_state_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pending_protocol",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "pending_state_format",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "pending_schema_version",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pending_generation",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pending_through_seq",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_document_sync_states_document_id_index": "CREATE INDEX v_document_sync_states_document_id_index ON public.v_document_sync_states USING btree (document_id)",
+                "v_document_sync_states_pending_idx": "CREATE INDEX v_document_sync_states_pending_idx ON public.v_document_sync_states USING btree (pending_generation, document_id) WHERE (pending_generation IS NOT NULL)",
+                "v_document_sync_states_pkey": "CREATE UNIQUE INDEX v_document_sync_states_pkey ON public.v_document_sync_states USING btree (document_id)"
+            },
+            "constraints": {
+                "v_document_sync_states_binary_size": {
+                    "type": "c",
+                    "definition": "CHECK ((((collab_state IS NULL) AND (collab_state_size IS NULL)) OR ((collab_state IS NOT NULL) AND (collab_state_size IS NOT NULL) AND (collab_state_size = octet_length(collab_state)))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_sync_states_document_id_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL document_id",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_sync_states_owner_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES v_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_sync_states_pending": {
+                    "type": "c",
+                    "definition": "CHECK ((((pending_protocol IS NULL) AND (pending_state_format IS NULL) AND (pending_schema_version IS NULL) AND (pending_generation IS NULL) AND (pending_through_seq IS NULL)) OR ((pending_protocol IS NOT NULL) AND ((pending_protocol)::text ~ '[^[:space:]]'::text) AND (pending_state_format IS NOT NULL) AND ((pending_state_format)::text ~ '[^[:space:]]'::text) AND (pending_schema_version IS NOT NULL) AND (pending_schema_version >= 1) AND (pending_generation IS NOT NULL) AND (pending_generation >= 0) AND (pending_through_seq IS NOT NULL) AND (pending_through_seq >= 1))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_sync_states_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_sync_states_present": {
+                    "type": "c",
+                    "definition": "CHECK (((collab_protocol IS NOT NULL) OR (pending_protocol IS NOT NULL)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_document_sync_states_protocol": {
+                    "type": "c",
+                    "definition": "CHECK ((((collab_protocol IS NULL) AND (collab_state_format IS NULL) AND (collab_state IS NULL)) OR ((collab_protocol IS NOT NULL) AND ((collab_protocol)::text ~ '[^[:space:]]'::text) AND (collab_state_format IS NOT NULL) AND ((collab_state_format)::text ~ '[^[:space:]]'::text))))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1543,19 +1875,10 @@
                     "collation": null
                 },
                 {
-                    "name": "collab_protocol",
-                    "type": "character varying(255)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "collab_state_format",
-                    "type": "character varying(255)",
-                    "not_null": false,
-                    "default": null,
+                    "name": "write_mode",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'snapshot'::character varying",
                     "identity": "",
                     "generated": "",
                     "collation": "default"
@@ -1601,96 +1924,6 @@
                     "type": "bigint",
                     "not_null": true,
                     "default": "'0'::bigint",
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "pending_protocol",
-                    "type": "character varying(255)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "pending_state_format",
-                    "type": "character varying(255)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "pending_schema_version",
-                    "type": "integer",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "pending_generation",
-                    "type": "bigint",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "pending_through_seq",
-                    "type": "bigint",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "content",
-                    "type": "jsonb",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "content_hash",
-                    "type": "character(64)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "content_size",
-                    "type": "integer",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "collab_state",
-                    "type": "bytea",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "collab_state_size",
-                    "type": "integer",
-                    "not_null": false,
-                    "default": null,
                     "identity": "",
                     "generated": "",
                     "collation": null
@@ -1743,28 +1976,14 @@
             ],
             "indexes": {
                 "v_documents_current_revision_id_index": "CREATE INDEX v_documents_current_revision_id_index ON public.v_documents USING btree (current_revision_id)",
+                "v_documents_head_fk_idx": "CREATE INDEX v_documents_head_fk_idx ON public.v_documents USING btree (current_revision_id, id)",
                 "v_documents_node_id_index": "CREATE INDEX v_documents_node_id_index ON public.v_documents USING btree (node_id)",
                 "v_documents_node_uniq": "CREATE UNIQUE INDEX v_documents_node_uniq ON public.v_documents USING btree (node_id)",
-                "v_documents_pending_idx": "CREATE INDEX v_documents_pending_idx ON public.v_documents USING btree (pending_generation)",
                 "v_documents_pkey": "CREATE UNIQUE INDEX v_documents_pkey ON public.v_documents USING btree (id)",
                 "v_documents_tenant_id_index": "CREATE INDEX v_documents_tenant_id_index ON public.v_documents USING btree (tenant_id)",
                 "v_documents_type_idx": "CREATE INDEX v_documents_type_idx ON public.v_documents USING btree (type)"
             },
             "constraints": {
-                "v_documents_check": {
-                    "type": "c",
-                    "definition": "CHECK (((schema_version >= 1) AND (((collab_protocol IS NULL) AND (collab_state_format IS NULL) AND (collab_state IS NULL)) OR ((collab_protocol IS NOT NULL) AND (collab_state_format IS NOT NULL) AND (length(btrim((collab_protocol)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (length(btrim((collab_state_format)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0)))))",
-                    "deferrable": false,
-                    "deferred": false,
-                    "validated": true
-                },
-                "v_documents_check1": {
-                    "type": "c",
-                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL) AND (pending_protocol IS NULL) AND (pending_state_format IS NULL) AND (pending_schema_version IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL) AND (pending_protocol IS NOT NULL) AND (length(btrim((pending_protocol)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (pending_state_format IS NOT NULL) AND (length(btrim((pending_state_format)::text, (((((' '::text || chr(9)) || chr(10)) || chr(11)) || chr(12)) || chr(13)))) > 0) AND (pending_schema_version IS NOT NULL) AND (pending_schema_version >= 1))))",
-                    "deferrable": false,
-                    "deferred": false,
-                    "validated": true
-                },
                 "v_documents_checkpoint_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((checkpoint_state_version >= 0))",
@@ -1828,20 +2047,6 @@
                     "deferred": false,
                     "validated": true
                 },
-                "v_documents_pending_generation_check": {
-                    "type": "c",
-                    "definition": "CHECK (((pending_generation IS NULL) OR (pending_generation >= 0)))",
-                    "deferrable": false,
-                    "deferred": false,
-                    "validated": true
-                },
-                "v_documents_pending_through_seq_check": {
-                    "type": "c",
-                    "definition": "CHECK (((pending_through_seq IS NULL) OR (pending_through_seq >= 1)))",
-                    "deferrable": false,
-                    "deferred": false,
-                    "validated": true
-                },
                 "v_documents_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
@@ -1863,6 +2068,13 @@
                     "deferred": false,
                     "validated": true
                 },
+                "v_documents_schema_version_positive": {
+                    "type": "c",
+                    "definition": "CHECK ((schema_version >= 1))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "v_documents_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((state_version >= 0))",
@@ -1880,6 +2092,20 @@
                 "v_documents_type_not_null": {
                     "type": "n",
                     "definition": "NOT NULL type",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_documents_write_mode_check": {
+                    "type": "c",
+                    "definition": "CHECK (((write_mode)::text = ANY ((ARRAY['snapshot'::character varying, 'journal'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_documents_write_mode_not_null": {
+                    "type": "n",
+                    "definition": "NOT NULL write_mode",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

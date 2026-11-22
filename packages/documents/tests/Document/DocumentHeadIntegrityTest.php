@@ -21,7 +21,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
  * For documents: the head of a document is always one of its own checkpoints.
- * Every writer path keeps it so (SQLite has nothing else); on PostgreSQL and MySQL the
+ * Every writer path keeps it so. On every supported database the
  * composite head FK (current_revision_id, id) → v_document_revisions(id, document_id)
  * with ON DELETE RESTRICT also refuses a foreign head and the deletion of a head.
  */
@@ -64,22 +64,13 @@ it('keeps the head inside its own document through every writer', function (): v
     assertOwnHead($node);
 });
 
-it('enforces the head foreign key in the database where the driver supports it', function (): void {
-    $driver = app(VaulterDatabase::class)->driver();
+it('enforces the head foreign key in the database', function (): void {
     $documents = (new Document)->getTable();
-    $keys = array_column(app(VaulterDatabase::class)->connection()->getSchemaBuilder()->getForeignKeys($documents), null, 'name');
+    $keys = app(VaulterDatabase::class)->connection()->getSchemaBuilder()->getForeignKeys($documents);
 
-    if ($driver === 'sqlite') {
-        // SQLite cannot add the constraint after both tables exist; the writer test above
-        // is the whole guarantee there (docs/reference/compatibility.md).
-        expect($keys)->not->toHaveKey($documents.'_head_fk');
-
-        return;
-    }
-
-    expect($keys[$documents.'_head_fk']['columns'])->toBe(['current_revision_id', 'id'])
-        ->and($keys[$documents.'_head_fk']['foreign_columns'])->toBe(['id', 'document_id'])
-        ->and(strtolower((string) $keys[$documents.'_head_fk']['on_delete']))->toBe('restrict');
+    $headKey = array_find($keys, static fn (array $key): bool => $key['columns'] === ['current_revision_id', 'id']);
+    expect($headKey['foreign_columns'])->toBe(['id', 'document_id'])
+        ->and(strtolower($headKey['on_delete']))->toBe('restrict');
 
     $node = headIntegrityDocument('Guarded');
     $other = headIntegrityDocument('Other');

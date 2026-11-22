@@ -62,7 +62,7 @@ final readonly class ExportDocumentAction
         return $this->metrics->timing(
             name: 'vaulter_export_duration_seconds',
             operation: function () use ($data): DocumentExport {
-                $document = $this->query->document($data->node);
+                $document = $this->query->document($data->node, withState: $data->revision === null, withHead: false);
                 // The working state lags behind saved collaboration edits; a checkpoint is what it was.
                 if ($data->revision === null) {
                     $this->pending->assertSettled($document);
@@ -72,7 +72,7 @@ final readonly class ExportDocumentAction
                 $typeKey = $revision->type ?? $document->type;
                 $type = $this->decoder->writable($typeKey);
                 $exporter = $this->exporters->for($type->key(), $data->format);
-                $read = $this->decoder->read($typeKey, $source->content, $source->schema_version);
+                $read = $this->decoder->read($typeKey, $source->payload?->content, $source->schema_version);
 
                 return new DocumentExport(
                     bytes: $exporter->export($read->content, $type),

@@ -10,6 +10,8 @@ use Packman\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Models\Revisions\DocumentRevisionPayload;
+use Vaulter\Documents\Models\Revisions\DocumentRevisionSyncState;
 
 /**
  * Write-side row work for the immutable checkpoints in v_document_revisions:
@@ -25,16 +27,26 @@ final class DocumentRevisionStoreRepository
     ) {}
 
     /**
-     * @param array<string, mixed> $attributes server-built by DocumentStateWriter
+     * @param array<string, mixed>      $attributes        server-built by DocumentStateWriter
+     * @param array<string, mixed>      $payloadAttributes
+     * @param array<string, mixed>|null $syncAttributes
      */
-    public function create(array $attributes): DocumentRevision
+    public function create(array $attributes, array $payloadAttributes, ?array $syncAttributes): DocumentRevision
     {
         $model = $this->documentsConfig->model('document_revision');
         $revision = new $model;
         $revision->forceFill($attributes);
         $revision->save();
 
-        return $revision->refresh();
+        $payload = (new DocumentRevisionPayload)->forceFill($payloadAttributes);
+        $revision->payload()->save($payload);
+        $sync = null;
+        if ($syncAttributes !== null) {
+            $sync = (new DocumentRevisionSyncState)->forceFill($syncAttributes);
+            $revision->syncState()->save($sync);
+        }
+
+        return $revision->setRelation('payload', $payload)->setRelation('syncState', $sync);
     }
 
     /** The one mutation a stored checkpoint allows. */

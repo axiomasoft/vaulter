@@ -53,7 +53,7 @@ it('creates a kind=document node with its aggregate and checkpoint #1', function
         ->and($first->number)->toBe(1)
         ->and($first->is_autosave)->toBeFalse()
         ->and($first->status)->toBe('committed')
-        ->and($first->content)->toBe($document->content);
+        ->and($first->payload?->content)->toBe($document->payload?->content);
 
     Event::assertDispatched(DocumentCreated::class, fn (DocumentCreated $event): bool => $event->version->id === (string) $first->getKey());
 });
@@ -91,11 +91,9 @@ it('writes autosaves to the working state and leaves stored checkpoints alone in
 
     expect($result->changed)->toBeTrue()
         ->and($result->checkpoint)->toBeNull()
-        // The second collaborative JSON reseed captures the generation it closes.
-        ->and(DocumentTestHelpers::revisions($node))->toHaveCount(2)
-        ->and(DocumentTestHelpers::revisions($node)->last()?->content)->toBe(DocumentTestHelpers::content('edit one')->toArray())
-        ->and(DocumentTestHelpers::revisions($node)->last()?->state_version)->toBe(2)
-        ->and(DocumentTestHelpers::revisions($node)->last()?->is_autosave)->toBeTrue()
+        ->and(DocumentTestHelpers::revisions($node))->toHaveCount(1)
+        ->and($result->document->current_revision_id)->toBe($first->getKey())
+        ->and($result->document->collab_epoch)->toBe(0)
         ->and($first->refresh()->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('seed')->toArray())
         ->and($result->document->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('edit two')->toArray())
         ->and($result->document->state_version)->toBe(3)
@@ -165,14 +163,14 @@ it('restore copies a prior checkpoint forward and records where it came from', f
     $after = DocumentTestHelpers::document($node);
 
     expect($restored->getKey())->not->toEqual($first->getKey())
-        ->and($restored->content)->toEqual($first->content)
+        ->and($restored->payload?->content)->toEqual($first->payload?->content)
         ->and($restored->restored_from_revision_id)->toEqual($first->getKey())
         ->and($restored->label)->toBe('Restored from #1')
         ->and($after->current_revision_id)->toEqual($restored->getKey())
-        ->and($after->content)->toEqual($first->content)
+        ->and($after->payload?->content)->toEqual($first->payload?->content)
         ->and($after->state_version)->toBe($before->state_version + 1)
         ->and($after->collab_epoch)->toBe($before->collab_epoch + 1)
-        ->and($first->refresh()->content)->toEqual($restored->content);
+        ->and($first->refresh()->payload?->content)->toEqual($restored->payload?->content);
 
     Event::assertDispatched(DocumentRevisionCreated::class, fn (DocumentRevisionCreated $e): bool => $e->restored === true);
 });

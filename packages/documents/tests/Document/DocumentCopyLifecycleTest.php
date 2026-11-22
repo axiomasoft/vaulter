@@ -36,12 +36,11 @@ function copyLifecycleSource(DriveHandle $drive, string $name = 'Source'): Node
     foreach (['two', 'three'] as $text) {
         app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content($text)));
     }
-    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->getKey())->update([
-        'state_version' => 5,
-        'collab_epoch' => 2,
-        'collab_state' => 'yjs-bytes',
-        'collab_state_size' => 9,
-    ]));
+    app(VaulterDatabase::class)->write(function () use ($node): void {
+        $document = DocumentTestHelpers::document($node);
+        $document->forceFill(['state_version' => 5, 'collab_epoch' => 2])->save();
+        $document->syncState?->forceFill(['collab_state' => 'yjs-bytes', 'collab_state_size' => 9])->save();
+    });
 
     return $node;
 }
@@ -64,9 +63,9 @@ it('V33 copies a document into a new aggregate with one revision and its own wor
     expect($copy->getKey())->not->toBe($original->getKey())
         ->and($copy->type)->toBe($original->type)
         ->and($copy->schema_version)->toBe($original->schema_version)
-        ->and($copy->content)->toBe($original->content)
-        ->and($copy->content_hash)->toBe($original->content_hash)
-        ->and($copy->collab_state)->toBe('yjs-bytes')
+        ->and($copy->payload?->content)->toBe($original->payload?->content)
+        ->and($copy->payload?->content_hash)->toBe($original->payload?->content_hash)
+        ->and($copy->syncState?->collab_state)->toBe('yjs-bytes')
         ->and($copy->revision_count)->toBe(1)
         ->and(copyLifecycleRevisionCount($copy))->toBe(1)
         ->and($copy->collab_epoch)->toBe(0)
@@ -109,5 +108,5 @@ it('copies the content of a document whose type is not registered, as it is', fu
     $copy = DocumentTestHelpers::document($copyNode);
 
     expect($copy->type)->toBe('vendor/unknown')
-        ->and($copy->content)->toBe(DocumentTestHelpers::document($source)->content);
+        ->and($copy->payload?->content)->toBe(DocumentTestHelpers::document($source)->payload?->content);
 });

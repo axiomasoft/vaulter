@@ -58,7 +58,7 @@ it('refuses a previewer, who may view but not download, and hides the document f
 
 it('marks an export of partly readable content with X-Vaulter-Export-Lossy', function (): void {
     $writer = Granted::document(level: RoleRegistry::READER, actorId: 1);
-    app(VaulterDatabase::class)->write(fn () => Granted::aggregate($writer)->forceFill(['content' => ['type' => 'doc', 'content' => [
+    app(VaulterDatabase::class)->write(fn () => Granted::aggregate($writer)->payload?->forceFill(['content' => ['type' => 'doc', 'content' => [
         ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'kept']]],
         ['type' => 'hostWidgetNode'],
     ]]])->save());

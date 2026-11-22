@@ -54,7 +54,7 @@ it('refuses a JSON update without an expectation once a newer schema is the work
     $after = DocumentTestHelpers::document($node);
     expect($after->state_version)->toBe($before->state_version)
         ->and($after->schema_version)->toBe(99)
-        ->and($after->content_hash)->toBe($before->content_hash)
+        ->and($after->payload?->content_hash)->toBe($before->payload?->content_hash)
         ->and($after->revision_count)->toBe($before->revision_count)
         ->and($after->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('newer')->toArray());
 });

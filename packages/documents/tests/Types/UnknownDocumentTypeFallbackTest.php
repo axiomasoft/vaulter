@@ -46,7 +46,7 @@ it('keeps a document of a removed type readable, read-only and movable, then wor
     expect($node->document?->type)->toBe('acme/kanban')
         ->and($node->document?->typeAvailable)->toBeTrue()
         // JSON object key order is not preserved by PostgreSQL/MySQL.
-        ->and($stored->content)->toEqual(kanbanBoard());
+        ->and($stored->payload?->content)->toEqual(kanbanBoard());
 
     // The extension is removed.
     TypesTestCase::installTypes(typesWithoutKanban());
@@ -69,7 +69,7 @@ it('keeps a document of a removed type readable, read-only and movable, then wor
     // History, copy and trash still work.
     expect($documents->revisions($node->id)->items)->toHaveCount(1);
     $copy = $handle->nodes()->copy($node->id, options: new CopyOptions(name: 'Board copy'));
-    expect(Document::query()->where('node_id', $copy->id)->firstOrFail()->content)->toEqual(kanbanBoard());
+    expect(Document::query()->where('node_id', $copy->id)->firstOrFail()->payload?->content)->toEqual(kanbanBoard());
     $handle->nodes()->trash($copy->id);
     $handle->trash()->purge($copy->id);
     expect(Document::query()->where('node_id', $copy->id)->exists())->toBeFalse();
@@ -118,3 +118,44 @@ it('presents a document of a removed type with the unsupported viewer', function
         ->and($presentation['capabilities']['editable'])->toBeFalse()
         ->and($presentation['capabilities']['collaborative'])->toBeFalse();
 });
+
+it('round-trips and purges every storage row for :dataset', function (string $type, array $before, array $after, bool $sync): void {
+    $drive = DocumentTestHelpers::drive();
+    $documents = Documents::in($drive);
+    $node = $documents->create('Round trip', type: $type, content: $before);
+    $document = DocumentTestHelpers::document(DriveTestHelpers::model($node));
+    $rows = [
+        'v_document_payloads' => 'document_id',
+        'v_document_sync_states' => 'document_id',
+        'v_document_revision_payloads' => 'revision_id',
+        'v_document_revision_sync_states' => 'revision_id',
+    ];
+    expect($document->payload?->content)->toEqual($documents->content($node)->content->toArray())
+        ->and($document->syncState !== null)->toBe($sync);
+    $checkpoint = $documents->snapshot($node, 'Before edit', keepForever: true);
+    $updated = $documents->update($node, $after, expectedStateVersion: $document->state_version);
+    expect($updated->epoch)->toBe($document->collab_epoch)
+        ->and($updated->stateVersion)->toBe($document->state_version + 1);
+
+    $restored = $documents->restore($node, $checkpoint, expectedStateVersion: $updated->stateVersion);
+    expect($restored->content->toArray())->toEqual($before)
+        ->and($restored->epoch)->toBe($updated->epoch + 1);
+    $revisions = $document->revisions()->pluck('id')->all();
+    $db = $document->getConnection();
+    foreach ($rows as $table => $key) {
+        $owner = $key === 'document_id' ? [$document->id] : $revisions;
+        expect($db->table($table)->whereIn($key, $owner)->count())->toBe(
+            !$sync && str_ends_with($table, '_sync_states') ? 0 : count($owner),
+        );
+    }
+
+    $drive->nodes()->trash($node);
+    $drive->trash()->purge($node->id);
+    foreach ($rows as $table => $key) {
+        expect($db->table($table)->whereIn($key, $key === 'document_id' ? [$document->id] : $revisions)->exists())->toBeFalse();
+    }
+})->with([
+    'rich text' => fn (): array => ['vaulter/rich-text', DocumentTestHelpers::content('before')->toArray(), DocumentTestHelpers::content('after')->toArray(), true],
+    'markdown' => fn (): array => ['vaulter/markdown', DocumentTestHelpers::content('before')->toArray(), DocumentTestHelpers::content('after')->toArray(), true],
+    'third-party opaque type' => ['acme/kanban', ['columns' => []], ['columns' => [['title' => 'New', 'cards' => []]]], false],
+]);

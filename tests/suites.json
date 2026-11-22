@@ -1454,6 +1454,7 @@
             "packages/documents/tests/Concurrency/DocumentMutationLivenessRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
             "packages/documents/tests/Concurrency/DocumentStateRaceTest.php",
+            "packages/documents/tests/Concurrency/DocumentWriteModeRaceTest.php",
             "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php",
             "packages/documents/tests/Concurrency/PendingMarkerRaceTest.php"
           ]

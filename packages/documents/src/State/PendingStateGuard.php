@@ -34,23 +34,46 @@ final readonly class PendingStateGuard
     /** The trashed pending documents read per query while a purge drains them all. */
     private const int PURGE_DRAIN_PAGE = 100;
 
+    public const array SYNC_COLUMNS = [
+        'document_id', 'pending_protocol', 'pending_state_format', 'pending_schema_version', 'pending_generation', 'pending_through_seq',
+    ];
+
     public function __construct(
         private Kernel $kernel,
         private VaulterDatabase $database,
     ) {}
 
-    /** The marker of a document row, null when its working state covers every committed edit. */
+    /** @return Builder<Document> */
+    public static function markedDocuments(?string $protocol = null): Builder
+    {
+        return Document::query()
+            ->whereHas('syncState', static function (Builder $sync) use ($protocol): void {
+                $sync->whereNotNull('pending_generation');
+                if ($protocol !== null) {
+                    $sync->where('pending_protocol', $protocol);
+                }
+            })
+            ->with('syncState:'.implode(',', self::SYNC_COLUMNS));
+    }
+
+    /** The marker of a document, null when its working state covers every committed edit. */
     public static function markerOf(Document $document): ?PendingMarker
     {
-        if ($document->pending_generation === null || $document->pending_through_seq === null) {
+        $sync = $document->syncState;
+        if ($sync?->pending_generation === null || $sync->pending_through_seq === null) {
             return null;
         }
 
         return new PendingMarker(
             documentId: Identity::stringify($document->getKey()),
             nodeId: Identity::stringify($document->node_id),
-            binding: new CollaborationStateBinding($document->pending_protocol ?? throw new LogicException('Incomplete pending binding.'), $document->pending_state_format ?? throw new LogicException('Incomplete pending binding.'), $document->pending_schema_version ?? 0, $document->pending_generation),
-            throughSeq: $document->pending_through_seq,
+            binding: new CollaborationStateBinding(
+                $sync->pending_protocol ?? throw new LogicException('Incomplete pending binding.'),
+                $sync->pending_state_format ?? throw new LogicException('Incomplete pending binding.'),
+                $sync->pending_schema_version ?? 0,
+                $sync->pending_generation,
+            ),
+            throughSeq: $sync->pending_through_seq,
         );
     }
 
@@ -70,8 +93,7 @@ final readonly class PendingStateGuard
         // never starve the ones after them.
         $after = null;
         do {
-            $query = Document::query()
-                ->whereNotNull('pending_generation')
+            $query = self::markedDocuments()
                 ->whereHas('node', static fn (Builder $node): Builder => $wholeDrive
                     ? $node->where('drive_id', $driveId)
                     : $node->where('drive_id', $driveId)->whereNotNull('trashed_at'))
@@ -80,7 +102,7 @@ final readonly class PendingStateGuard
             if ($after !== null) {
                 $query->where('id', '>', $after);
             }
-            $documents = $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq', 'pending_protocol', 'pending_state_format', 'pending_schema_version']);
+            $documents = $query->get(['id', 'node_id']);
             foreach ($documents as $document) {
                 $after = $document->getKey();
                 $marker = self::markerOf($document);

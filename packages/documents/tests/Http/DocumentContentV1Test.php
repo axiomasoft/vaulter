@@ -161,7 +161,7 @@ it('refuses a PUT after another writer landed between the read and the write', f
     Docs::put($id, Docs::doc('Late editor'), $tag)
         ->assertStatus(412)
         ->assertJsonPath('code', 'document_state_mismatch');
-    expect(Granted::aggregate($node)->content['content'][0]['content'][0]['text'])->toBe('From another writer');
+    expect(Granted::aggregate($node)->payload?->content['content'][0]['content'][0]['text'])->toBe('From another writer');
 });
 
 it('lets a previewer read the content and refuses its write before any tag is compared', function (): void {

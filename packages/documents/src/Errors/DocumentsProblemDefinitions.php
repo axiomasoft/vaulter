@@ -45,6 +45,7 @@ final class DocumentsProblemDefinitions implements ProblemDefinitionProvider
             DocumentsErrorCode::CollaborationProtocolContract => [503, 'Collaboration protocol contract error', false, ErrorCategory::Unavailable, []],
             DocumentsErrorCode::CollaborationUnavailable => [409, 'Collaboration unavailable', false, ErrorCategory::Conflict, ['context']],
             DocumentsErrorCode::CommentNotFound => [404, 'Comment not found', false, ErrorCategory::NotFound, []],
+            DocumentsErrorCode::DocumentCommandRequired => [409, 'Document command required', true, ErrorCategory::Conflict, []],
             DocumentsErrorCode::DocumentContentDegraded => [409, 'Document content degraded', false, ErrorCategory::Conflict, ['context']],
             DocumentsErrorCode::DocumentRevisionNotFound => [404, 'Document revision not found', false, ErrorCategory::NotFound, []],
             DocumentsErrorCode::DocumentStateMismatch => [412, 'Document state mismatch', true, ErrorCategory::Validation, ['node_id']],

@@ -33,7 +33,7 @@ use Vaulter\Support\Int64Counter;
  *
  * Content has its own validators: state_version moves by exactly one per effective
  * write and collab_epoch whenever open collaboration rooms must not write back
- * (restore, an external replace). v_nodes.sequence is never touched — renaming a
+ * (restore or a generation transition). v_nodes.sequence is never touched — renaming a
  * document and editing it do not invalidate each other.
  */
 #[Internal]
@@ -53,32 +53,22 @@ final readonly class DocumentStateWriter
     {
         $this->assertTransaction();
 
-        // Preconditions are checked before anything is written.
-        if ($change->expectedStateVersion !== null) {
-            if ($change->expectedStateVersion < 0) {
-                throw new InvalidArgumentException('[Vaulter] An expected state version must be nonnegative.');
-            }
-
-            if ($change->expectedStateVersion !== $locked->state_version) {
-                throw new StaleDocumentStateException(expected: $change->expectedStateVersion, actual: $locked->state_version, nodeId: Identity::stringify($locked->node_id));
-            }
-        }
+        $this->assertExpectedVersion($locked, $change->expectedStateVersion);
 
         $checkpointDue = $this->intervalElapsed($locked);
-        $hash = $change->content?->contentHash() ?? $locked->content_hash;
-        if (($change->cause !== StateWriteCause::Update || $locked->collab_protocol === null) && $change->cause->skipsIdenticalWrite() && $hash === $locked->content_hash && $change->collabState === $locked->collab_state) {
+        $payload = $locked->payload;
+        $sync = $locked->syncState;
+        $hash = $change->content?->contentHash() ?? $payload?->content_hash;
+        if ($change->cause->skipsIdenticalWrite() && $hash === $payload?->content_hash
+            && ($change->cause === StateWriteCause::Update || $change->collabState === $sync?->collab_state)) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
         }
 
-        // A restore, or a JSON replace of a document that has Yjs state, makes every
-        // open room's history stale: the next epoch fences their stores off.
-        $epochChanged = $change->cause === StateWriteCause::Restore
-            || $change->cause === StateWriteCause::Transition
-            || ($change->cause === StateWriteCause::Update && $locked->collab_protocol !== null);
+        $epochChanged = $change->cause === StateWriteCause::Restore || $change->cause === StateWriteCause::Transition;
 
-        // Closing a generation over collaborative state no checkpoint holds yet would leave its saved edits in no
-        // revision: the state is captured first, then replaced.
-        if ($epochChanged && $locked->hasUncheckpointedChanges()) {
+        // Preserve a dirty binary checkpoint before replacing it or closing its generation.
+        $replacesCheckpoint = $change->cause === StateWriteCause::Update && $sync?->collab_state !== null;
+        if (($epochChanged || $replacesCheckpoint) && $locked->hasUncheckpointedChanges()) {
             $this->capture(
                 document: $locked,
                 label: null,
@@ -92,31 +82,42 @@ final readonly class DocumentStateWriter
         $attributes = [
             'state_version' => Int64Counter::increment($locked->state_version),
             'collab_epoch' => $epochChanged ? Int64Counter::increment($locked->collab_epoch) : $locked->collab_epoch,
-            'collab_state' => $change->collabState,
-            'collab_state_size' => $change->collabState === null ? null : strlen($change->collabState),
             'schema_version' => $change->schemaVersion,
             'updated_by' => $change->actorId,
         ];
 
-        if ($change->content !== null) {
-            $attributes['content'] = $change->content->toArray();
-            $attributes['content_hash'] = $change->content->contentHash();
-            $attributes['content_size'] = $change->content->sizeInBytes();
-        }
-
+        $protocol = $sync?->collab_protocol;
+        $format = $sync?->collab_state_format;
         if ($change->cause === StateWriteCause::Create) {
             $type = $this->decoder->writable($locked->type);
             if ($type instanceof SupportsCollaboration) {
-                $attributes['collab_protocol'] = $type->collaborationProtocol();
-                $attributes['collab_state_format'] = $type->collaborationStateFormat();
+                $protocol = $type->collaborationProtocol();
+                $format = $type->collaborationStateFormat();
             }
         }
         if (in_array($change->cause, [StateWriteCause::Transition, StateWriteCause::Restore, StateWriteCause::Copy], true)) {
             $attributes['type'] = $change->documentType ?? $locked->type;
-            $attributes['collab_protocol'] = $change->protocol;
-            $attributes['collab_state_format'] = $change->stateFormat;
+            $protocol = $change->protocol;
+            $format = $change->stateFormat;
+        }
+        if ($change->writeMode !== null) {
+            $attributes['write_mode'] = $change->writeMode;
         }
         $this->documents->update($locked, $attributes);
+
+        if ($change->content !== null || $payload === null || $change->cause === StateWriteCause::Restore) {
+            $this->documents->savePayload($locked, [
+                'content' => $change->content?->toArray(),
+                'content_hash' => $change->content?->contentHash(),
+                'content_size' => $change->content?->sizeInBytes(),
+            ]);
+        }
+        $this->documents->saveSyncState($locked, [
+            'collab_protocol' => $protocol,
+            'collab_state_format' => $format,
+            'collab_state' => $change->collabState,
+            'collab_state_size' => $change->collabState === null ? null : strlen($change->collabState),
+        ]);
 
         $checkpoint = null;
         if ($change->forceCheckpoint || $locked->current_revision_id === null || $checkpointDue) {
@@ -166,7 +167,27 @@ final readonly class DocumentStateWriter
             throw new InvalidArgumentException('[Vaulter] A pending marker is a generation of at least 0 with a sequence of at least 1, or none at all.');
         }
 
-        $this->documents->update($locked, ['pending_generation' => $generation, 'pending_through_seq' => $throughSeq, 'pending_protocol' => $generation === null ? null : $locked->collab_protocol, 'pending_state_format' => $generation === null ? null : $locked->collab_state_format, 'pending_schema_version' => $generation === null ? null : $locked->schema_version]);
+        $sync = $locked->syncState;
+        $this->documents->saveSyncState($locked, [
+            'pending_protocol' => $generation === null ? null : $sync?->collab_protocol,
+            'pending_state_format' => $generation === null ? null : $sync?->collab_state_format,
+            'pending_schema_version' => $generation === null ? null : $locked->schema_version,
+            'pending_generation' => $generation,
+            'pending_through_seq' => $throughSeq,
+        ]);
+    }
+
+    private function assertExpectedVersion(Document $document, ?int $expected): void
+    {
+        if ($expected === null) {
+            return;
+        }
+        if ($expected < 0) {
+            throw new InvalidArgumentException('[Vaulter] An expected state version must be nonnegative.');
+        }
+        if ($expected !== $document->state_version) {
+            throw new StaleDocumentStateException(expected: $expected, actual: $document->state_version, nodeId: Identity::stringify($document->node_id));
+        }
     }
 
     private function capture(
@@ -180,20 +201,15 @@ final readonly class DocumentStateWriter
         $number = $document->revision_count + 1;
         $now = Carbon::now();
 
+        $payload = $document->payload;
+        $sync = $document->syncState;
         $revision = $this->revisions->create([
             'tenant_id' => $document->tenant_id,
             'document_id' => $document->getKey(),
             'number' => $number,
             'type' => $document->type,
-            'collab_protocol' => $document->collab_protocol,
-            'collab_state_format' => $document->collab_state_format,
             'collab_epoch' => $document->collab_epoch,
             'schema_version' => $document->schema_version,
-            'content' => $document->content,
-            'content_hash' => $document->content_hash,
-            'content_size' => $document->content_size,
-            'collab_state' => $document->collab_state,
-            'collab_state_size' => $document->collab_state_size,
             'state_version' => $document->state_version,
             'label' => $label,
             'is_autosave' => $autosave,
@@ -202,6 +218,15 @@ final readonly class DocumentStateWriter
             'restored_from_revision_id' => $restoredFrom?->getKey(),
             'created_by' => $actorId,
             'created_at' => $now,
+        ], [
+            'content' => $payload?->content,
+            'content_hash' => $payload?->content_hash,
+            'content_size' => $payload?->content_size,
+        ], $sync?->collab_protocol === null ? null : [
+            'collab_protocol' => $sync->collab_protocol,
+            'collab_state_format' => $sync->collab_state_format,
+            'collab_state' => $sync->collab_state,
+            'collab_state_size' => $sync->collab_state_size,
         ]);
 
         $this->documents->update($document, [

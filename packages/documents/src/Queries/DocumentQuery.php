@@ -16,6 +16,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Enums\NodeSort;
 use Vaulter\Drive\Models\Node;
@@ -29,20 +30,25 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class DocumentQuery
 {
-    public function __construct(private DocumentsOptions $config) {}
+    private const array REVISION_METADATA = ['payload:revision_id,content_hash,content_size', 'syncState:revision_id,collab_protocol,collab_state_format,collab_state_size'];
 
-    public function document(Node $node): Document
+    public function __construct(private DocumentsOptions $config, private DocumentReadRepository $documents) {}
+
+    public function document(Node $node, bool $withState = false, bool $withHead = true, bool $withPayload = true): Document
     {
-        $document = Document::query()->where('node_id', $node->getKey())->with('currentRevision')->first();
+        $document = $this->documents->forNode($node, $withState, $withPayload) ?? throw NotADocumentException::forNode($node->getKey());
+        if ($withState && $withHead) {
+            $document->load(array_map(static fn (string $relation): string => 'currentRevision.'.$relation, self::REVISION_METADATA));
+        }
 
-        return $document ?? throw NotADocumentException::forNode($node->getKey());
+        return $document;
     }
 
     public function revision(Node $node, Document $document, DocumentRevisionSnapshot|int|string $revision): DocumentRevision
     {
         $key = $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision;
         $model = $this->config->model('document_revision');
-        $found = $key === '' || !Identity::fitsKey(new $model, $key) ? null : $model::query()->where('document_id', $document->getKey())->whereKey($key)->first();
+        $found = $key === '' || !Identity::fitsKey(new $model, $key) ? null : $model::query()->where('document_id', $document->getKey())->whereKey($key)->with(['payload', self::REVISION_METADATA[1]])->first();
 
         return $found ?? throw DocumentRevisionNotFoundException::forNode($node->getKey(), $key);
     }
@@ -58,6 +64,7 @@ final readonly class DocumentQuery
         $model = $this->config->model('document_revision');
 
         return $model::query()
+            ->with(self::REVISION_METADATA)
             ->where('document_id', $document->getKey())
             ->orderByDesc('created_at')
             ->orderByDesc('id')

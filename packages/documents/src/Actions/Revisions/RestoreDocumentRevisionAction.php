@@ -13,6 +13,7 @@ use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
+use Vaulter\Documents\Enums\Documents\DocumentWriteMode;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
@@ -67,24 +68,27 @@ final readonly class RestoreDocumentRevisionAction
             [$node, $document] = $this->writeLock->acquire($context, $node, $nodeId);
             // Closing the generation over saved edits not in the working state would lose them: G stays.
             $this->pending->assertSettled($document);
-            $source = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->revisions->forNode($node, $versionId) : null;
+            $source = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->revisions->forRestore($document, $versionId) : null;
             if (!$source instanceof DocumentRevision) {
                 throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);
             }
 
+            $content = $source->payload?->content;
+            $sync = $source->syncState;
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Restore,
-                content: OpaqueContent::fromArray($source->content ?? []),
+                content: is_array($content) ? OpaqueContent::fromArray($content) : null,
                 schemaVersion: $source->schema_version,
-                collabState: $source->collab_state,
+                collabState: $sync?->collab_state,
                 actorId: $actorId,
                 expectedStateVersion: $data->expectedStateVersion,
                 forceCheckpoint: true,
                 label: sprintf('Restored from #%d', $source->number),
                 restoredFrom: $source,
                 documentType: $source->type,
-                protocol: $source->collab_protocol,
-                stateFormat: $source->collab_state_format,
+                protocol: $sync?->collab_protocol,
+                stateFormat: $sync?->collab_state_format,
+                writeMode: $sync === null ? DocumentWriteMode::Snapshot : null,
             ));
             $revision = $result->checkpoint ?? throw new LogicException('[Vaulter] A restore must create a checkpoint.');
 

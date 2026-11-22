@@ -10,6 +10,7 @@ use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Configuration\DriveOptions;
@@ -34,6 +35,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
     #[Internal]
     public function __construct(
         private DocumentStoreRepository $documents,
+        private DocumentReadRepository $reads,
         private DocumentStateWriter $writer,
         private DocumentsOptions $documentsConfig,
         private DriveOptions $drives,
@@ -57,6 +59,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
             throw new LogicException('[Vaulter] A document node has no document aggregate.');
         }
 
+        $this->reads->loadLockedState($original);
         $this->pending->assertSettled($original);
         $actorId = $context->actor->ref()->id;
         $document = $this->documents->create([
@@ -70,18 +73,20 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         $nodeModel = $this->drives->model('node');
         $document->setRelation('node', $nodeModel::query()->whereKey($copy->id)->firstOrFail());
 
+        $content = $original->payload?->content;
+
         // The payload is carried verbatim as opaque JSON: the copy must keep content of a
         // type that is not registered (any more) instead of failing or decaying it.
         $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Copy,
-            content: is_array($original->content) ? OpaqueContent::fromArray($original->content) : null,
+            content: is_array($content) ? OpaqueContent::fromArray($content) : null,
             schemaVersion: $original->schema_version,
-            collabState: $original->collab_state,
+            collabState: $original->syncState?->collab_state,
             actorId: $actorId,
             forceCheckpoint: true,
             documentType: $original->type,
-            protocol: $original->collab_protocol,
-            stateFormat: $original->collab_state_format,
+            protocol: $original->syncState?->collab_protocol,
+            stateFormat: $original->syncState?->collab_state_format,
         ));
 
         // Inline content is not part of the drive quota.
@@ -96,6 +101,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         }
         // Saved collaboration edits not in the working state yet go only through a drain, never with the purge.
         // PendingPurgeDrain drained before this transaction; nothing waits here, a marker still set refuses the purge.
+        $document->setRelation('syncState', $document->syncState()->sharedLock()->first(PendingStateGuard::SYNC_COLUMNS));
         $this->pending->assertSettled($document);
 
         // MySQL checks the RESTRICT head foreign key while the history goes away, so the

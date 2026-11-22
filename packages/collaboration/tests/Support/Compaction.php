@@ -38,7 +38,7 @@ final class Compaction
     {
         $aggregate = Hub::aggregate($node);
         $generation ??= $aggregate->collab_epoch;
-        $seed = $seed || ($generation === $aggregate->collab_epoch && $aggregate->collab_state_size === null && (self::head($node, $generation)?->headSeq ?? 0) === 0);
+        $seed = $seed || ($generation === $aggregate->collab_epoch && $aggregate->syncState?->collab_state_size === null && (self::head($node, $generation)?->headSeq ?? 0) === 0);
 
         return app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
             generation: $generation,
@@ -133,6 +133,6 @@ final class Compaction
     {
         $document = Hub::aggregate($node);
 
-        return [$document->pending_generation, $document->pending_through_seq];
+        return [$document->syncState?->pending_generation, $document->syncState?->pending_through_seq];
     }
 }

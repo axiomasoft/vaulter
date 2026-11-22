@@ -36,7 +36,7 @@ function casState(mixed $node): array
         'receipts' => Compaction::rows('collaboration_receipts'),
         'head' => Compaction::head($node),
         'state_version' => $document->state_version,
-        'collab_state' => $document->collab_state,
+        'collab_state' => $document->syncState?->collab_state,
         'marker' => Compaction::marker($node),
         'revisions' => $document->revision_count,
     ];
@@ -67,7 +67,7 @@ it('keeps an update committed after the lease read the log, and its marker, when
         ->and(Compaction::marker($this->node))->toBe([0, 3])
         ->and(Compaction::seqs($this->node))->toBe([3])
         ->and(Compaction::rows('collaboration_receipts'))->toBe(3)
-        ->and($document->collab_state)->toBe('u1u2')
+        ->and($document->syncState?->collab_state)->toBe('u1u2')
         ->and($head?->checkpointSeq)->toBe(2)
         ->and($head?->headSeq)->toBe(3)
         ->and($head?->checkpointVersion)->toBe($document->state_version)
@@ -92,8 +92,8 @@ it('compacts the late update with the next lease and clears the marker then', fu
         ->and(Compaction::marker($this->node))->toBe([null, null])
         ->and(Compaction::seqs($this->node))->toBe([])
         ->and(Compaction::rows('collaboration_receipts'))->toBe(3)
-        ->and(Hub::aggregate($this->node)->collab_state)->toBe('u1u2u3')
-        ->and(Hub::aggregate($this->node)->content['content'][0]['content'][0]['text'])->toBe('Compacted through 3');
+        ->and(Hub::aggregate($this->node)->syncState?->collab_state)->toBe('u1u2u3')
+        ->and(Hub::aggregate($this->node)->payload?->content['content'][0]['content'][0]['text'])->toBe('Compacted through 3');
 });
 
 it('refuses the second publication of the same (C, H) and leaves HS − H updates (5)', function (): void {
@@ -195,7 +195,7 @@ it('answers a REST replace with document_state_pending while the marker of the l
     expect(Compaction::marker($this->node))->toBe([0, 2])
         ->and(Compaction::seqs($this->node))->toBe([2])
         ->and(Hub::aggregate($this->node)->collab_epoch)->toBe(0)
-        ->and(Hub::aggregate($this->node)->collab_state)->toBe('u1');
+        ->and(Hub::aggregate($this->node)->syncState?->collab_state)->toBe('u1');
 });
 
 it('publishes and answers over HTTP with the new checkpoint version and the marker cleared', function (): void {
