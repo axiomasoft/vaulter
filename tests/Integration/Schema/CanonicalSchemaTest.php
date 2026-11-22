@@ -28,15 +28,22 @@ it('creates the canonical schema independently of runtime features and legacy ta
 
     foreach (['drives' => ['profile'], 'nodes' => ['drive_id', 'profile'], 'blobs' => ['storage_id'],
         'files' => ['current_revision_id', 'revision_count'], 'file_revisions' => ['number', 'sha256', 'declared_mime_type', 'scan_status', 'restored_from_revision_id'],
-        'documents' => ['node_id', 'type', 'schema_version', 'current_revision_id', 'revision_count', 'collab_epoch', 'state_version', 'checkpoint_state_version', 'content', 'content_hash', 'content_size', 'collab_state', 'collab_state_size', 'last_checkpoint_at'],
+        'documents' => ['node_id', 'type', 'schema_version', 'write_mode', 'current_revision_id', 'revision_count', 'collab_epoch', 'state_version', 'checkpoint_state_version', 'last_checkpoint_at'],
         'document_revisions' => ['document_id', 'number', 'schema_version', 'state_version', 'label', 'restored_from_revision_id'],
+        'document_payloads' => ['document_id', 'content', 'content_hash', 'content_size'],
+        'document_revision_payloads' => ['revision_id', 'content', 'content_hash', 'content_size'],
+        'document_sync_states' => ['document_id', 'collab_protocol', 'collab_state_format', 'collab_state', 'collab_state_size', 'pending_protocol', 'pending_state_format', 'pending_schema_version', 'pending_generation', 'pending_through_seq'],
+        'document_revision_sync_states' => ['revision_id', 'collab_protocol', 'collab_state_format', 'collab_state', 'collab_state_size'],
         'file_revision_blobs' => ['file_revision_id'], 'upload_sessions' => ['drive_id', 'target_node_id', 'result_node_id', 'result_revision_id'],
         'activity' => ['drive_id', 'event_id'], 'outbox' => ['scope_kind', 'scope_id', 'aggregate_type', 'aggregate_id', 'sequence']] as $entity => $columns) {
         expect($schema->hasColumns(app(DatabaseOptions::class)->table($entity), $columns))->toBeTrue();
     }
 
+    $splitColumns = ['content', 'content_hash', 'content_size', 'collab_protocol', 'collab_state_format', 'collab_state', 'collab_state_size'];
     foreach (['drives' => ['storage_type', 'slug', 'default_node_permissions', 'deleted_at'], 'files' => ['deleted_at'],
-        'nodes' => ['current_version_id', 'file_id', 'deleted_at', 'owner_id'], 'document_revisions' => ['node_id', 'version_no', 'snapshot_label', 'format'],
+        'nodes' => ['current_version_id', 'file_id', 'deleted_at', 'owner_id'],
+        'documents' => [...$splitColumns, 'pending_protocol', 'pending_state_format', 'pending_schema_version', 'pending_generation', 'pending_through_seq'],
+        'document_revisions' => [...$splitColumns, 'node_id', 'version_no', 'snapshot_label', 'format'],
         'node_grants' => ['deleted_at', 'inherited', 'inherited_from_node_id', 'grant_active', 'level', 'permissions', 'effect'], 'node_shares' => ['deleted_at']] as $entity => $columns) {
         foreach ($columns as $column) {
             expect($schema->hasColumn(app(DatabaseOptions::class)->table($entity), $column))->toBeFalse();

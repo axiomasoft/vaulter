@@ -8,6 +8,7 @@ use Packman\Attributes\Internal;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
+use Vaulter\Documents\Exceptions\DocumentCommandRequiredException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
@@ -41,6 +42,7 @@ final class DocumentsProblemCodes implements ProblemCodeSource
             'collaboration_protocol_contract' => new ProblemSpec(503, CollaborationProtocolContractException::class),
             'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class),
             'comment_not_found' => new ProblemSpec(404, CommentNotFoundException::class),
+            'document_command_required' => new ProblemSpec(409, DocumentCommandRequiredException::class),
             'document_content_degraded' => new ProblemSpec(409, DocumentContentDegradedException::class, receipt: ReceiptPolicy::Cacheable),
             'document_revision_not_found' => new ProblemSpec(404, DocumentRevisionNotFoundException::class),
             'document_state_mismatch' => new ProblemSpec(412, StaleDocumentStateException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),

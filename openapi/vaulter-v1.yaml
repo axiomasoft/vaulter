@@ -4404,6 +4404,7 @@ components:
           - cross_drive_operation
           - cursor_expired
           - dependency_unavailable
+          - document_command_required
           - document_content_degraded
           - document_revision_not_found
           - document_state_mismatch
@@ -4510,6 +4511,7 @@ components:
         cross_drive_operation: {status: 409, retryable: never, receipt: cacheable, module: drive}
         cursor_expired: {status: 410, retryable: after_refetch, receipt: never, module: drive}
         dependency_unavailable: {status: 503, retryable: with_backoff, receipt: never, module: core}
+        document_command_required: {status: 409, retryable: never, receipt: never, module: documents}
         document_content_degraded: {status: 409, retryable: never, receipt: cacheable, module: documents}
         document_revision_not_found: {status: 404, retryable: never, receipt: never, module: documents}
         document_state_mismatch: {status: 412, retryable: after_refetch, receipt: cacheable, module: documents}

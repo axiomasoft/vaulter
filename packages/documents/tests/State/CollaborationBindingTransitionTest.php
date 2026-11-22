@@ -24,6 +24,7 @@ use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\CollaborativeStateTransition;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
+use Vaulter\Documents\Tests\Fixtures\StateWrites;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -208,18 +209,30 @@ it('emits no events and preserves every aggregate row when transition CAS or pen
     expect(p36Rows())->toBe($before)->and($events)->toBe([]);
 })->with(['binding', 'version', 'pending']);
 
-it('keeps the snapshot generation on ordinary edits without an active driver', function (bool $identical): void {
+it('writes bound snapshots and keeps their generation without an active driver', function (bool $identical, bool $withCheckpoint): void {
     expect(app(Kernel::class)->isActive('collaboration'))->toBeFalse();
     $drive = DocumentTestHelpers::drive();
     $documents = Documents::in($drive);
     $node = $documents->create('No driver');
+    $model = Node::query()->findOrFail($node->id);
+    $checkpoint = "working\0checkpoint";
+    if ($withCheckpoint) {
+        StateWrites::yjs($model, $checkpoint, seed: true);
+    }
     $before = $documents->content($node);
+    expect($before->collabStateSize)->toBe($withCheckpoint ? strlen($checkpoint) : null);
     $json = $identical ? $before->content->toArray() : GrantedDocuments::tiptap('Local edit');
     $updated = $documents->update($node, $json);
-    expect($updated->epoch)->toBe($before->epoch)->and($updated->stateVersion)->toBe($before->stateVersion + (int) !$identical)
+    expect($updated->epoch)->toBe($before->epoch)->and($updated->stateVersion)->toBe($before->stateVersion + 1)
         ->and($updated->collabProtocol)->toBe('yjs')->and($updated->collabStateFormat)->toBe('yjs-update-v1')
-        ->and($updated->schemaVersion)->toBe($before->schemaVersion)->and($updated->collabStateSize)->toBe($identical ? $before->collabStateSize : null);
-})->with(['changed JSON' => false, 'identical JSON' => true]);
+        ->and($updated->schemaVersion)->toBe($before->schemaVersion)->and($updated->collabStateSize)->toBeNull()
+        ->and(GrantedDocuments::aggregate($model)->syncState?->collab_state)->toBeNull();
+
+    if ($withCheckpoint) {
+        $saved = GrantedDocuments::aggregate($model)->revisions()->where('state_version', $before->stateVersion)->sole();
+        expect($saved->syncState?->collab_state)->toBe($checkpoint);
+    }
+})->with(['changed JSON' => [false, false], 'identical JSON' => [true, false], 'identical JSON with binary state' => [true, true]]);
 
 it('keeps pending data when ordinary Documents update has no active drainer', function (): void {
     $drive = DocumentTestHelpers::drive();

@@ -99,6 +99,72 @@
                 "pgsql"
             ],
             "from_owner": "documents",
+            "from_table": "v_document_payloads",
+            "head": false,
+            "name": "v_document_payloads_owner_fk",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_documents",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_document_revision_payloads",
+            "head": false,
+            "name": "v_document_revision_payloads_owner_fk",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_document_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_document_revision_sync_states",
+            "head": false,
+            "name": "v_document_revision_sync_states_owner_fk",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_document_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "document_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
             "from_table": "v_document_revisions",
             "head": false,
             "name": "v_document_revisions_document_id_foreign",
@@ -131,6 +197,28 @@
             ],
             "to_owner": "documents",
             "to_table": "v_document_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "document_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_document_sync_states",
+            "head": false,
+            "name": "v_document_sync_states_owner_fk",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_documents",
             "verdict": "ok"
         },
         {

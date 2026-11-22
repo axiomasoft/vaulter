@@ -1425,9 +1425,9 @@
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.collab_state",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\DocumentSyncState.collab_state",
             "kind": "protocol",
-            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "removed",
@@ -1439,9 +1439,9 @@
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.collab_state",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState.collab_state",
             "kind": "protocol",
-            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "removed",
@@ -3002,6 +3002,18 @@
             "status": 503
         },
         {
+            "exception": "Vaulter\\Documents\\Exceptions\\DocumentCommandRequiredException",
+            "id": "problem:document_command_required",
+            "owner": "documents",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
+                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
             "exception": "Vaulter\\Documents\\Exceptions\\DocumentContentDegradedException",
             "id": "problem:document_content_degraded",
             "owner": "documents",
@@ -3147,6 +3159,18 @@
         },
         {
             "exception": null,
+            "id": "problem:foreign_key_violation",
+            "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
+            "exception": null,
             "id": "problem:grant_not_found",
             "owner": "drive",
             "receipt": "never",
@@ -3156,6 +3180,18 @@
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
+        },
+        {
+            "exception": "Vaulter\\Exceptions\\Idempotency\\IdempotencyKeyExpiredException",
+            "id": "problem:idempotency_key_expired",
+            "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 410
         },
         {
             "exception": "Vaulter\\Exceptions\\Idempotency\\IdempotencyKeyReusedException",
@@ -3770,6 +3806,18 @@
             "status": 422
         },
         {
+            "exception": "Vaulter\\Exceptions\\Http\\WeakEtagNotAllowedException",
+            "id": "problem:weak_etag_not_allowed",
+            "owner": "core",
+            "receipt": "never",
+            "retryable": "after_refetch",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 412
+        },
+        {
             "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookDeliveryNotFoundException",
             "id": "problem:webhook_delivery_not_found",
             "owner": "webhooks",
@@ -3818,9 +3866,9 @@
             "status": 500
         },
         {
-            "attribute": "collab_state",
-            "cast": "Vaulter\\Documents\\Casts\\BinaryString",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.collab_state",
+            "attribute": "write_mode",
+            "cast": "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.write_mode",
             "model": "Vaulter\\Documents\\Models\\Documents\\Document",
             "owner": "documents",
             "source": {
@@ -3831,12 +3879,23 @@
         {
             "attribute": "collab_state",
             "cast": "Vaulter\\Documents\\Casts\\BinaryString",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.collab_state",
-            "model": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\DocumentSyncState.collab_state",
+            "model": "Vaulter\\Documents\\Models\\Documents\\DocumentSyncState",
             "owner": "documents",
             "source": {
-                "file": "packages/documents/src/Models/Revisions/DocumentRevision.php",
-                "symbol": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision::casts"
+                "file": "packages/documents/src/Models/Documents/DocumentSyncState.php",
+                "symbol": "Vaulter\\Documents\\Models\\Documents\\DocumentSyncState::casts"
+            }
+        },
+        {
+            "attribute": "collab_state",
+            "cast": "Vaulter\\Documents\\Casts\\BinaryString",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState.collab_state",
+            "model": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/Models/Revisions/DocumentRevisionSyncState.php",
+                "symbol": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState::casts"
             }
         },
         {

@@ -30,6 +30,10 @@ use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\DocumentsModule;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Documents\DocumentPayload;
+use Vaulter\Documents\Models\Documents\DocumentSyncState;
+use Vaulter\Documents\Models\Revisions\DocumentRevisionPayload;
+use Vaulter\Documents\Models\Revisions\DocumentRevisionSyncState;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\State\CollaborativeState;
@@ -91,7 +95,12 @@ final class BindingsRegistrar implements ModuleBindings
     public function boot(Application $app): void
     {
         $options = self::buildOptions($app);
-        Document::configure($app->make(DatabaseOptions::class), self::buildDriveOptions($app), $options);
+        $database = $app->make(DatabaseOptions::class);
+        Document::configure($database, self::buildDriveOptions($app), $options);
+        DocumentPayload::configure($database);
+        DocumentSyncState::configure($database);
+        DocumentRevisionPayload::configure($database);
+        DocumentRevisionSyncState::configure($database);
         // Core reads a document head through this relation without depending on
         // the documents package; subclasses of the configured node model inherit it.
         Node::resolveRelationUsing('document', static fn (Node $node): HasOne => $node->hasOne(Document::class, 'node_id'));

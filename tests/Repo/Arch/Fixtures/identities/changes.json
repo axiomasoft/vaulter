@@ -4878,65 +4878,30 @@
         {
             "change": "added",
             "decision": "D26",
-            "id": "column:v_documents.pending_generation",
+            "id": "column:v_document_sync_states.pending_generation",
             "kind": "schema",
-            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+            "reason": "P5.3 defines the journal generation marker. Task 1.0 stores it in the working sync state."
         },
         {
             "change": "added",
             "decision": "D26",
-            "id": "column:v_documents.pending_through_seq",
+            "id": "column:v_document_sync_states.pending_through_seq",
             "kind": "schema",
-            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+            "reason": "P5.3 defines the last committed sequence marker. Task 1.0 stores it in the working sync state."
         },
         {
             "change": "added",
             "decision": "D26",
-            "id": "constraint:v_documents.v_documents_check",
+            "id": "constraint:v_document_sync_states.v_document_sync_states_pending",
             "kind": "schema",
-            "reason": "P5.3: pgsql name of the marker pair CHECK (both NULL or both NOT NULL) on pending_through_seq"
+            "reason": "Task 1.0 checks the complete P5.3 pending marker together with the stored protocol, format and schema version."
         },
         {
             "change": "added",
             "decision": "D26",
-            "id": "constraint:v_documents.v_documents_chk_4",
+            "id": "index:v_document_sync_states.v_document_sync_states_pending_idx",
             "kind": "schema",
-            "reason": "P5.3: mysql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "constraint:v_documents.v_documents_chk_5",
-            "kind": "schema",
-            "reason": "P5.3: mysql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "constraint:v_documents.v_documents_pending_generation_check",
-            "kind": "schema",
-            "reason": "P5.3: pgsql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "constraint:v_documents.v_documents_pending_marker_check",
-            "kind": "schema",
-            "reason": "P5.3: mysql named marker pair CHECK (both NULL or both NOT NULL), added after create because MySQL refuses a column CHECK naming another column"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "constraint:v_documents.v_documents_pending_through_seq_check",
-            "kind": "schema",
-            "reason": "P5.3: pgsql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "index:v_documents.v_documents_pending_idx",
-            "kind": "schema",
-            "reason": "P5.3: the documents carrying a pending marker (CollaborativeState::pendingDocuments(), drain and compaction lease)"
+            "reason": "Task 1.0 moves the P5.3 pending-document index to the working sync state."
         },
         {
             "change": "added",
@@ -5704,9 +5669,9 @@
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.collab_state",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\DocumentSyncState.collab_state",
             "kind": "protocol",
-            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "removed",
@@ -5718,9 +5683,9 @@
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.collab_state",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState.collab_state",
             "kind": "protocol",
-            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "removed",
@@ -5739,30 +5704,30 @@
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_document_revisions.collab_protocol",
+            "id": "column:v_document_revision_sync_states.collab_protocol",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_document_revisions.collab_state",
+            "id": "column:v_document_revision_sync_states.collab_state",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_document_revisions.collab_state_format",
+            "id": "column:v_document_revision_sync_states.collab_state_format",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_document_revisions.collab_state_size",
+            "id": "column:v_document_revision_sync_states.collab_state_size",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
@@ -5788,51 +5753,51 @@
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.collab_protocol",
+            "id": "column:v_document_sync_states.collab_protocol",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.collab_state",
+            "id": "column:v_document_sync_states.collab_state",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.collab_state_format",
+            "id": "column:v_document_sync_states.collab_state_format",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.collab_state_size",
+            "id": "column:v_document_sync_states.collab_state_size",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.pending_protocol",
+            "id": "column:v_document_sync_states.pending_protocol",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.pending_schema_version",
+            "id": "column:v_document_sync_states.pending_schema_version",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "added",
             "decision": "PLAN4-D16",
-            "id": "column:v_documents.pending_state_format",
+            "id": "column:v_document_sync_states.pending_state_format",
             "kind": "schema",
-            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+            "reason": "Task 1.0 moves the P3.6 protocol binding and binary checkpoint to the corresponding sync state."
         },
         {
             "change": "removed",

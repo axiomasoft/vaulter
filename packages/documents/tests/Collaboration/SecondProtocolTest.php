@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Content\ContentHasher;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentCommandRequiredException;
@@ -70,14 +71,16 @@ it('runs ACK checkpoint drain transition restore and fences the previous credent
     });
     $two = ['columns' => [['title' => 'ACK 2', 'cards' => ['a', 'b']]]];
     $this->log->append($this->session->token, $two);
-    expect($this->documents->content($this->node)->content->toArray())->toBe($two);
+    // PostgreSQL jsonb can reorder object keys. The canonical hash still pins list order and values.
+    $projectionHash = ContentHasher::hash($two);
+    expect(ContentHasher::hash($this->documents->content($this->node)->content->toArray()))->toBe($projectionHash);
     expect(app(AcmePendingStateDrainer::class)->calls[0]->throughSeq)->toBe(2);
     $settled = $this->documents->content($this->node);
     expect(fn () => $this->documents->update($this->node, ['columns' => []]))->toThrow(DocumentCommandRequiredException::class);
     $source = $this->documents->snapshot($this->node, 'Accepted journal projection');
     $this->documents->restore($this->node, $source->id);
     $restored = $this->documents->content($this->node);
-    expect($restored->epoch)->toBe($settled->epoch + 1)->and($restored->content->toArray())->toBe($two)
+    expect($restored->epoch)->toBe($settled->epoch + 1)->and(ContentHasher::hash($restored->content->toArray()))->toBe($projectionHash)
         ->and($restored->collabProtocol)->toBe('acme-ot')->and($restored->collabStateFormat)->toBe('acme-ot-v1')
         ->and($restored->schemaVersion)->toBe(1)->and($restored->collabStateSize)->toBeNull();
     $next = $this->documents->collaborationSession($this->node);

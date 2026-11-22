@@ -62,6 +62,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`cross_drive_operation`](#cross_drive_operation) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException` |
 | [`cursor_expired`](#cursor_expired) | 410 | drive | `after_refetch` | `never` | `Vaulter\Drive\Exceptions\Changes\CursorExpiredException` |
 | [`dependency_unavailable`](#dependency_unavailable) | 503 | core | `with_backoff` | `never` | — |
+| [`document_command_required`](#document_command_required) | 409 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\DocumentCommandRequiredException` |
 | [`document_content_degraded`](#document_content_degraded) | 409 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\DocumentContentDegradedException` |
 | [`document_revision_not_found`](#document_revision_not_found) | 404 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | [`document_state_mismatch`](#document_state_mismatch) | 412 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
@@ -241,6 +242,12 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 **503** · core · retryable `with_backoff` · receipt `never`
 
 **Dependency unavailable** — A service the request depends on is unavailable; retry later.
+
+### `document_command_required`
+
+**409** · documents · retryable `never` · receipt `never`
+
+**Document command required** — Send edits through the active document journal.
 
 ### `document_content_degraded`
 

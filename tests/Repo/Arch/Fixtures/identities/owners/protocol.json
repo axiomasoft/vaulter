@@ -147,6 +147,24 @@
         },
         {
             "match": "exact",
+            "value": "problem:foreign_key_violation",
+            "owner": "core",
+            "why": "Core maps database constraint failures to this problem."
+        },
+        {
+            "match": "exact",
+            "value": "problem:idempotency_key_expired",
+            "owner": "core",
+            "why": "The core idempotency pipeline checks receipt validity."
+        },
+        {
+            "match": "exact",
+            "value": "problem:weak_etag_not_allowed",
+            "owner": "core",
+            "why": "The core HTTP precondition parser requires strong write validators."
+        },
+        {
+            "match": "exact",
             "value": "problem:blob_unavailable",
             "owner": "media",
             "why": "D23: a pin refused because the bytes of the blob are gone — the media pin protocol"

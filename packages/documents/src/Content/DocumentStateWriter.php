@@ -59,8 +59,11 @@ final readonly class DocumentStateWriter
         $payload = $locked->payload;
         $sync = $locked->syncState;
         $hash = $change->content?->contentHash() ?? $payload?->content_hash;
-        if ($change->cause->skipsIdenticalWrite() && $hash === $payload?->content_hash
-            && ($change->cause === StateWriteCause::Update || $change->collabState === $sync?->collab_state)) {
+        // A bound snapshot save reseeds the working state, even when the JSON is identical.
+        if ($change->cause->skipsIdenticalWrite()
+            && ($change->cause !== StateWriteCause::Update || $sync?->collab_protocol === null)
+            && $hash === $payload?->content_hash
+            && $change->collabState === $sync?->collab_state) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
         }
 

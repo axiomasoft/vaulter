@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Models\Documents;
 
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 use Override;
 use Packman\Attributes\Internal;
 use Vaulter\Configuration\DatabaseOptions;
@@ -38,10 +39,17 @@ final class DocumentSyncState extends Model
 
     public $timestamps = false;
 
+    private static ?string $configuredTable = null;
+
+    public static function configure(DatabaseOptions $database): void
+    {
+        self::$configuredTable = $database->table('document_sync_states');
+    }
+
     #[Override]
     public function getTable(): string
     {
-        return app(DatabaseOptions::class)->table('document_sync_states');
+        return $this->table ?? self::$configuredTable ?? throw new LogicException('[Vaulter] The documents service provider has not booted.');
     }
 
     /** @return array<string, string> */

@@ -1133,6 +1133,7 @@ export interface components {
              * @example cross_drive_operation
              * @example cursor_expired
              * @example dependency_unavailable
+             * @example document_command_required
              * @example document_content_degraded
              * @example document_revision_not_found
              * @example document_state_mismatch

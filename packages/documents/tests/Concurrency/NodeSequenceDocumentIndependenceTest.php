@@ -24,10 +24,10 @@ beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this, app(VaulterDatabase::class)->connection()->getName());
 });
 
-// A JSON update of a document with a collaboration binding fences its open rooms, as a restore does: both move the epoch.
+// A snapshot update preserves its generation. Restore starts a new one.
 dataset('content writers', [
     'collaboration store' => ['store', 2, 0, 0],
-    'JSON update' => ['update', 2, 1, 1],
+    'JSON update' => ['update', 2, 0, 1],
     'restore' => ['restore', 2, 1, 2],
 ]);
 

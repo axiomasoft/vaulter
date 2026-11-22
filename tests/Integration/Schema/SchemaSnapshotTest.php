@@ -60,23 +60,34 @@ it('keeps one expected and one original snapshot for every preset on every engin
     }
 })->with(['sqlite', 'pgsql', 'mysql']);
 
-it('creates the same table set as the pre-P1.10 original in every preset', function (string $driver): void {
+it('keeps the original tables and adds the declared tables in every preset', function (string $driver): void {
     $metadata = json_decode((string) file_get_contents(SchemaPresets::FIXTURES.'/original/metadata.json'), true, 512, JSON_THROW_ON_ERROR);
     expect($metadata['product_tree_clean_vs'])->toBe('c64bba25')
         ->and($metadata['engines'])->toHaveKey($driver);
 
+    $added = [
+        'blob_references',
+        'collaboration_heads',
+        'collaboration_permission_versions',
+        'collaboration_receipts',
+        'collaboration_updates',
+        'document_payloads',
+        'document_revision_payloads',
+        'document_revision_sync_states',
+        'document_sync_states',
+        'idempotency_keys',
+        'outbox_consumers',
+        'outbox_deliveries',
+    ];
     foreach (SchemaPresets::all() as $preset => $definition) {
         $original = schemaSnapshotFixture('original', $driver, $preset);
         $expected = schemaSnapshotFixture('expected', $driver, $preset);
-        // The migration chain creates the same tables as the 0.x chain; only the idempotency receipts, the outbox
-        // consumers and deliveries, the blob pins and the collaboration log
-        // are new.
-        $created = array_values(array_filter(
-            array_keys($expected['tables']),
-            static fn (string $table): bool => !str_ends_with($table, 'idempotency_keys') && !str_ends_with($table, 'outbox_consumers') && !str_ends_with($table, 'outbox_deliveries') && !str_ends_with($table, 'blob_references')
-                && !str_contains($table, 'collaboration_'),
-        ));
-        expect($created)->toBe(array_keys($original['tables']), $preset);
+        $tables = [...array_keys($original['tables']), ...array_map(
+            static fn (string $table): string => $definition['table_prefix'].$table,
+            $added,
+        )];
+        sort($tables, SORT_STRING);
+        expect(array_keys($expected['tables']))->toBe($tables, $preset);
     }
 })->with(['sqlite', 'pgsql', 'mysql']);
 

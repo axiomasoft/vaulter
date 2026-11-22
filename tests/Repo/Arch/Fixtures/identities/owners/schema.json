@@ -111,6 +111,30 @@
         },
         {
             "match": "exact",
+            "value": "table:v_document_payloads",
+            "owner": "documents",
+            "why": "Task 1.0: documents owns the working JSON payload"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_document_sync_states",
+            "owner": "documents",
+            "why": "Task 1.0: documents owns the working protocol state"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_document_revision_payloads",
+            "owner": "documents",
+            "why": "Task 1.0: documents owns the revision JSON payload"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_document_revision_sync_states",
+            "owner": "documents",
+            "why": "Task 1.0: documents owns the revision protocol state"
+        },
+        {
+            "match": "exact",
             "value": "table:v_upload_sessions",
             "owner": "drive",
             "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
