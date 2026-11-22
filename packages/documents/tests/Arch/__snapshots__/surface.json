@@ -3147,6 +3147,78 @@
                 }
             }
         },
+        "Vaulter\\Documents\\Contracts\\AtomicDocumentMutation": {
+            "kind": "interface",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:run": {
+                    "kind": "method",
+                    "name": "run",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "context",
+                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "nodeId",
+                            "type": "int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "operation",
+                            "type": "Closure",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "mixed",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param Closure(LockedDocumentMutation):",
+                        "@return TResult",
+                        "@template TResult",
+                        "@throws NodeNotFoundException"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Documents\\Contracts\\CollaborationProtocolDriver": {
             "kind": "interface",
             "surface": "Spi:Implement",
@@ -3772,6 +3844,118 @@
                     "doc": []
                 }
             }
+        },
+        "Vaulter\\Documents\\Contracts\\LockedDocumentMutation": {
+            "kind": "interface",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:connection": {
+                    "kind": "method",
+                    "name": "connection",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Illuminate\\Database\\Connection",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:replace": {
+                    "kind": "method",
+                    "name": "replace",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "content",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "expectedStateVersion",
+                            "type": "int",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Data\\Documents\\DocumentMutationState",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:snapshot": {
+                    "kind": "method",
+                    "name": "snapshot",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Vaulter\\Documents\\Data\\Documents\\DocumentMutationState",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Documents\\Contracts\\RequiresCommandWrite": {
+            "kind": "interface",
+            "surface": "Spi:Implement",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {}
         },
         "Vaulter\\Documents\\Contracts\\SupportsCollaboration": {
             "kind": "interface",
@@ -4920,6 +5104,339 @@
                     "abstract": false,
                     "final": false,
                     "type": "int|null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Documents\\Data\\Documents\\DocumentMutationState": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "constant:MAX_WIRE_COUNTER": {
+                    "kind": "constant",
+                    "name": "MAX_WIRE_COUNTER",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "int",
+                    "value": "9007199254740991",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "nodeId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "documentId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "type",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schemaVersion",
+                            "type": "int",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "generation",
+                            "type": "int",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "position",
+                            "type": "int",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "writeMode",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "protocol",
+                            "type": "null|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "pending",
+                            "type": "bool",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "content",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:content": {
+                    "kind": "property",
+                    "name": "content",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:documentId": {
+                    "kind": "property",
+                    "name": "documentId",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:generation": {
+                    "kind": "property",
+                    "name": "generation",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:nodeId": {
+                    "kind": "property",
+                    "name": "nodeId",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:pending": {
+                    "kind": "property",
+                    "name": "pending",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "bool",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:position": {
+                    "kind": "property",
+                    "name": "position",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:protocol": {
+                    "kind": "property",
+                    "name": "protocol",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:schemaVersion": {
+                    "kind": "property",
+                    "name": "schemaVersion",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:type": {
+                    "kind": "property",
+                    "name": "type",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:writeMode": {
+                    "kind": "property",
+                    "name": "writeMode",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "string",
                     "default": null,
                     "hooks": [],
                     "attributes": [],

@@ -28,6 +28,7 @@ final class DocumentsOperationPolicies implements OperationPolicySource
             'documents.documents.initialize_block_ids' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Conditional),
             'documents.documents.change_write_mode' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Conditional),
             'documents.documents.update_content' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Conditional, ['documents.content.update']),
+            'documents.documents.atomic_mutation' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Protocol),
             'documents.documents.snapshot' => new OperationPolicy('documents.document', ConcurrencyPolicy::Append, IdempotencyPolicy::Receipt, ['documents.revisions.store']),
             'documents.documents.restore' => new OperationPolicy('documents.document', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['documents.revisions.restore']),
             'documents.documents.set_retention' => new OperationPolicy('documents.revision', ConcurrencyPolicy::Natural, IdempotencyPolicy::Natural, ['documents.revisions.update']),

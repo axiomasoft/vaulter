@@ -23,7 +23,10 @@ uses(TestCase::class, RefreshDatabase::class)->in('Schema', 'Unit');
 uses(DocumentTestCase::class, RefreshDatabase::class)->in('Doctor');
 
 // The document-node suite boots with 'document_versions' ON so the routes register.
-uses(DocumentTestCase::class, RefreshDatabase::class)->in('Document');
+uses(DocumentTestCase::class)->in('Document');
+$atomicMutationTest = __DIR__.'/Document/AtomicDocumentMutationTest.php';
+uses(RefreshDatabase::class)->in(...array_diff(glob(__DIR__.'/Document/*Test.php') ?: [], [$atomicMutationTest]));
+uses(DatabaseMigrations::class)->in($atomicMutationTest);
 
 // PostgreSQL ForkRace scenarios: forked backends must see committed fixtures, so these
 // migrate per test instead of wrapping it in a transaction.

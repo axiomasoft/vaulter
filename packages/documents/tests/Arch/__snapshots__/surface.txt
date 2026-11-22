@@ -134,6 +134,9 @@ Vaulter\Documents\Content\TipTap\TipTapSchema api since 1.0 final readonly class
   public static function richText(): self
   public function urlAttributes(string $type): array
 
+Vaulter\Documents\Contracts\AtomicDocumentMutation api since 1.0 interface
+  public function run(Vaulter\Drive\Operations\DriveContext $context, int|string $nodeId, Closure $operation): mixed
+
 Vaulter\Documents\Contracts\CollaborationProtocolDriver spi:implement since 1.0 interface
   public function issueSession(Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant): Vaulter\Documents\Data\Collaboration\CollaborationSession
   public function protocol(): string
@@ -168,6 +171,13 @@ Vaulter\Documents\Contracts\DocumentType spi:implement since 1.0 interface
 
 Vaulter\Documents\Contracts\ExportFilenameResolver spi:implement since 1.0 interface
   public function resolve(Vaulter\Drive\Data\Snapshots\NodeSnapshot $node, string $extension): string
+
+Vaulter\Documents\Contracts\LockedDocumentMutation api since 1.0 interface
+  public function connection(): Illuminate\Database\Connection
+  public function replace(Vaulter\Documents\Contracts\DocumentContent $content, int $expectedStateVersion): Vaulter\Documents\Data\Documents\DocumentMutationState
+  public function snapshot(): Vaulter\Documents\Data\Documents\DocumentMutationState
+
+Vaulter\Documents\Contracts\RequiresCommandWrite spi:implement since 1.0 interface
 
 Vaulter\Documents\Contracts\SupportsCollaboration spi:implement since 1.0 interface
   public function collaborationProtocol(): string
@@ -221,6 +231,20 @@ Vaulter\Documents\Data\Comments\AddCommentInput api since 1.0 final readonly cla
   public string $body
   public int|null|string $parentId
   public function __construct(string $body, int|null|string $parentId = null, ?array $anchor = null)
+
+Vaulter\Documents\Data\Documents\DocumentMutationState api since 1.0 final readonly class
+  public const int MAX_WIRE_COUNTER = 9007199254740991
+  public Vaulter\Documents\Contracts\DocumentContent $content
+  public string $documentId
+  public int $generation
+  public string $nodeId
+  public bool $pending
+  public int $position
+  public ?string $protocol
+  public int $schemaVersion
+  public string $type
+  public string $writeMode
+  public function __construct(string $nodeId, string $documentId, string $type, int $schemaVersion, int $generation, int $position, string $writeMode, ?string $protocol, bool $pending, Vaulter\Documents\Contracts\DocumentContent $content)
 
 Vaulter\Documents\Data\Snapshots\CommentSnapshot api since 1.0 final readonly class
   public ?array $anchor

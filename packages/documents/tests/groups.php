@@ -11,6 +11,7 @@ return [
         'Concurrency',
         'AfterCommit/CommentAfterCommitTest.php',
         'Schema',
+        'Document/AtomicDocumentMutationTest.php',
         'Document/DocumentHeadIntegrityTest.php',
         'Document/DocumentPurgeLifecycleTest.php',
         'Document/DocumentStateVersionTest.php',

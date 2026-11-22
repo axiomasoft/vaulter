@@ -44,7 +44,7 @@ it('issues a neutral opaque session without the commercial module and never cach
         ->assertConflict()
         ->assertJsonPath('code', 'document_command_required')
         ->assertJsonPath('title', 'Document command required')
-        ->assertJsonPath('detail', 'Send edits through the active document journal.')
+        ->assertJsonPath('detail', 'Send edits through the document command writer.')
         ->assertJsonPath('retryable', 'never');
     $this->postJson($url)->assertCreated()->assertJsonPath('data.generation', $after->collab_epoch);
     expect(Granted::aggregate($node)->state_version)->toBe($after->state_version);

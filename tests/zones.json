@@ -797,6 +797,7 @@
         "packages/core/tests/Providers/EventsRegistrarTest.php",
         "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php",
         "packages/documents/tests/Concurrency",
+        "packages/documents/tests/Document/AtomicDocumentMutationTest.php",
         "packages/documents/tests/Document/DocumentCopyLifecycleTest.php",
         "packages/documents/tests/Document/DocumentHeadIntegrityTest.php",
         "packages/documents/tests/Document/DocumentPurgeLifecycleTest.php",

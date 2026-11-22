@@ -13,7 +13,7 @@ use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-/** The active journal owns the sequence of changes to this document. */
+/** The document's type or active journal requires a command for a full replacement. */
 #[Api]
 final class DocumentCommandRequiredException extends VaulterException implements ProblemException
 {
@@ -21,7 +21,7 @@ final class DocumentCommandRequiredException extends VaulterException implements
 
     public function __construct()
     {
-        parent::__construct('[Vaulter] The document must be edited through its active journal.');
+        parent::__construct('[Vaulter] The document must be edited through its command writer.');
     }
 
     public function problemCode(): string

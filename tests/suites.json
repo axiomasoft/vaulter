@@ -1448,6 +1448,7 @@
             "serial"
           ],
           "files": [
+            "packages/documents/tests/Concurrency/AtomicDocumentMutationRaceTest.php",
             "packages/documents/tests/Concurrency/CommentMutationRaceTest.php",
             "packages/documents/tests/Concurrency/CommentVersionRaceTest.php",
             "packages/documents/tests/Concurrency/DegradedContentRaceTest.php",
@@ -1456,7 +1457,8 @@
             "packages/documents/tests/Concurrency/DocumentStateRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentWriteModeRaceTest.php",
             "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php",
-            "packages/documents/tests/Concurrency/PendingMarkerRaceTest.php"
+            "packages/documents/tests/Concurrency/PendingMarkerRaceTest.php",
+            "packages/documents/tests/Document/AtomicDocumentMutationTest.php"
           ]
         },
         {

@@ -35,6 +35,7 @@ final readonly class DriveLifecycle
             driveId: $context->driveId(),
             system: $system,
             purge: $system && $context->actor->ref()->reason === OperationGuard::PURGE_REASON,
+            treeLocked: true,
         );
     }
 
@@ -44,10 +45,16 @@ final readonly class DriveLifecycle
         $this->assertState(driveId: $driveId, system: false, purge: false);
     }
 
-    private function assertState(int|string $driveId, bool $system, bool $purge): void
+    private function assertState(int|string $driveId, bool $system, bool $purge, bool $treeLocked = false): void
     {
         $class = $this->config->model('drive');
-        $drive = $class::query()->whereKey($driveId)->first(['id', 'status']);
+        $query = $class::query()->whereKey($driveId);
+        if ($treeLocked && in_array($query->getModel()->getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            // T already holds this row. A locking read leaves the repeatable-read snapshot
+            // unopened, so authorization after N can see a revoke that committed while N waited.
+            $query->sharedLock();
+        }
+        $drive = $query->first(['id', 'status']);
         if (!$drive instanceof Drive) {
             throw NodeNotFoundException::forId('drive');
         }

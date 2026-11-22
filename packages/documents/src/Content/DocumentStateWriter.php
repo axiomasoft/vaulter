@@ -8,6 +8,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
+use OverflowException;
 use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsOptions;
@@ -49,8 +50,12 @@ final readonly class DocumentStateWriter
         private ContentDecoder $decoder,
     ) {}
 
-    public function write(Document $locked, DocumentStateChange $change): DocumentStateResult
-    {
+    public function write(
+        Document $locked,
+        DocumentStateChange $change,
+        ?int $maximumStateVersion = null,
+        bool $reseedBoundSnapshot = true,
+    ): DocumentStateResult {
         $this->assertTransaction();
 
         $this->assertExpectedVersion($locked, $change->expectedStateVersion);
@@ -60,12 +65,18 @@ final readonly class DocumentStateWriter
         $sync = $locked->syncState;
         $hash = $change->content?->contentHash() ?? $payload?->content_hash;
         // A bound snapshot save reseeds the working state, even when the JSON is identical.
+        $snapshotUpdate = $change->cause === StateWriteCause::Update;
+        $syncUnchanged = ($snapshotUpdate && !$reseedBoundSnapshot)
+            || ($change->collabState === $sync?->collab_state && (!$snapshotUpdate || $sync?->collab_protocol === null));
         if ($change->cause->skipsIdenticalWrite()
-            && ($change->cause !== StateWriteCause::Update || $sync?->collab_protocol === null)
+            && $syncUnchanged
             && $hash === $payload?->content_hash
-            && $change->collabState === $sync?->collab_state
             && $change->schemaVersion === $locked->schema_version) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
+        }
+
+        if ($maximumStateVersion !== null && $locked->state_version >= $maximumStateVersion) {
+            throw new OverflowException('[Vaulter] The next document position is outside the safe wire range.');
         }
 
         $epochChanged = $change->cause === StateWriteCause::Restore || $change->cause === StateWriteCause::Transition;
@@ -181,7 +192,7 @@ final readonly class DocumentStateWriter
         ]);
     }
 
-    private function assertExpectedVersion(Document $document, ?int $expected): void
+    public function assertExpectedVersion(Document $document, ?int $expected): void
     {
         if ($expected === null) {
             return;

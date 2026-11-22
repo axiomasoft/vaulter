@@ -16,6 +16,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
+use Vaulter\Documents\Actions\Documents\RunAtomicDocumentMutation;
 use Vaulter\Documents\Configuration\DocumentsBroadcastOptions;
 use Vaulter\Documents\Configuration\DocumentsCollaborationOptions;
 use Vaulter\Documents\Configuration\DocumentsCommentsOptions;
@@ -24,6 +25,7 @@ use Vaulter\Documents\Configuration\DocumentsModelsOptions;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Configuration\DocumentsRevisionsOptions;
 use Vaulter\Documents\Configuration\TipTapOptions;
+use Vaulter\Documents\Contracts\AtomicDocumentMutation;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\DocumentsManager;
@@ -79,6 +81,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(DocumentsManager::class);
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
+        $app->bind(AtomicDocumentMutation::class, RunAtomicDocumentMutation::class);
         $app->alias(DocumentsManager::class, 'vaulter.documents');
         $app->singleton(CollaborativeState::class, DatabaseCollaborativeState::class);
 

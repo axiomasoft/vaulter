@@ -1,3 +1,6 @@
+Vaulter\Documents\Contracts\AtomicDocumentMutation
+  run(\Vaulter\Drive\Operations\DriveContext $context, int|string $nodeId, \Closure $operation): mixed
+
 Vaulter\Documents\Contracts\CollaborationProtocolDriver
   issueSession(\Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   protocol(): string
@@ -32,6 +35,14 @@ Vaulter\Documents\Contracts\DocumentType
 
 Vaulter\Documents\Contracts\ExportFilenameResolver
   resolve(\Vaulter\Drive\Data\Snapshots\NodeSnapshot $node, string $extension): string
+
+Vaulter\Documents\Contracts\LockedDocumentMutation
+  connection(): \Illuminate\Database\Connection
+  replace(\Vaulter\Documents\Contracts\DocumentContent $content, int $expectedStateVersion): \Vaulter\Documents\Data\Documents\DocumentMutationState
+  snapshot(): \Vaulter\Documents\Data\Documents\DocumentMutationState
+
+Vaulter\Documents\Contracts\RequiresCommandWrite
+
 
 Vaulter\Documents\Contracts\SupportsCollaboration
   collaborationProtocol(): string
@@ -284,6 +295,19 @@ Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
   readonly string $id
   readonly string $nodeId
   readonly string $type
+
+Vaulter\Documents\Data\Documents\DocumentMutationState
+  __construct(string $nodeId, string $documentId, string $type, int $schemaVersion, int $generation, int $position, string $writeMode, ?string $protocol, bool $pending, \Vaulter\Documents\Contracts\DocumentContent $content)
+  readonly ?string $protocol
+  readonly \Vaulter\Documents\Contracts\DocumentContent $content
+  readonly bool $pending
+  readonly int $generation
+  readonly int $position
+  readonly int $schemaVersion
+  readonly string $documentId
+  readonly string $nodeId
+  readonly string $type
+  readonly string $writeMode
 
 Vaulter\Documents\Data\Snapshots\CommentSnapshot
 

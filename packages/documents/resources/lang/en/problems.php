@@ -14,7 +14,7 @@ return [
     ],
     'document_command_required' => [
         'title' => 'Document command required',
-        'detail' => 'Send edits through the active document journal.',
+        'detail' => 'Send edits through the document command writer.',
     ],
     'document_content_degraded' => [
         'title' => 'Document content degraded',

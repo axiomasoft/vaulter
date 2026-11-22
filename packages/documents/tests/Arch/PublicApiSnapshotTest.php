@@ -9,6 +9,7 @@ use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Data\Documents\DocumentMutationState;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
@@ -304,6 +305,7 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
     foreach ([
         DocumentSnapshot::class,
         DocumentRevisionSnapshot::class,
+        DocumentMutationState::class,
         CommentSnapshot::class,
         AddCommentInput::class,
         DocumentViewer::class,

@@ -35,9 +35,17 @@ final readonly class DocumentWriteLock
      */
     public function acquire(DriveContext $context, Node $node, int|string $nodeId): array
     {
+        $node = $this->tree->sync($node, $this->lockNode($context, $nodeId));
+
+        return [$node, $this->lockDocument($node)];
+    }
+
+    /** T → N. Callers that authorize under N do so before calling lockDocument(). */
+    public function lockNode(DriveContext $context, int|string $nodeId): Node
+    {
         $this->database->lockAggregateShared('drives', $context->driveId());
         $this->lifecycle->assertWritable($context);
-        $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
+        $current = $this->tree->lock([$nodeId])->first() ?? throw NodeNotFoundException::forId($nodeId);
         if (!$this->tree->sameStorage($current, $context->driveId())) {
             throw NodeNotFoundException::forId($nodeId);
         }
@@ -45,10 +53,15 @@ final readonly class DocumentWriteLock
         if (!$current->kind->isDocument()) {
             throw NotADocumentException::forNode($nodeId);
         }
-        $node = $this->tree->sync($node, $current);
-        $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
-        $document->setRelation('node', $node);
 
-        return [$node, $document];
+        return $current;
+    }
+
+    /** D. The caller must already hold T and N. */
+    public function lockDocument(Node $node): Document
+    {
+        $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($node->id);
+
+        return $document->setRelation('node', $node);
     }
 }
