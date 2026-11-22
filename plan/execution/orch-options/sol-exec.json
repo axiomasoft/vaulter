@@ -27,6 +27,9 @@
     "fence": "project",
     "outside": "deviation"
   },
+  "review": {
+    "dynamic": false
+  },
   "checks": {
     "red_first": true,
     "fail_fast": false,
