@@ -53,7 +53,7 @@ for (const type of Object.keys(fixture)) {
 const richText = {
   type: 'doc',
   content: [
-    { type: 'paragraph', content: [{ type: 'text', text: 'see', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] }] },
+    { type: 'paragraph', attrs: { blockId: 'p42' }, content: [{ type: 'text', text: 'see', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] }] },
     { type: 'image', attrs: { src: 'https://example.com/a.png', alt: 'a' } },
     { type: 'table', content: [{ type: 'tableRow', content: [
       { type: 'tableHeader', content: [{ type: 'paragraph' }] },

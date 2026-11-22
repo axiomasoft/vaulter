@@ -69,7 +69,7 @@ Vaulter\Documents\Configuration\DocumentsRevisionsOptions
   fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
 Vaulter\Documents\Configuration\TipTapOptions
-  __construct(array $extraNodes = [], array $extraMarks = [], array $extraAttributes = [], array $urlAttributes = [])
+  __construct(array $extraNodes = [], array $extraMarks = [], array $extraAttributes = [], array $urlAttributes = [], bool $blockIds = false)
   fromArray(mixed $raw, string $path, \Packman\Config\Laravel\ConfigurationValidator $validator): \self
 
 Vaulter\Documents\Events\Comments\CommentAdded
@@ -228,6 +228,7 @@ Vaulter\Documents\Operations\DocumentOperations
   content(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Drive\Data\CreateFolderOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
   export(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport
+  initializeBlockIds(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   restore(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   revisions(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
   setRetention(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot

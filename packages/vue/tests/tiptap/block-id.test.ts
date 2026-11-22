@@ -2,7 +2,7 @@ import { Editor } from '@tiptap/core'
 import { Slice } from '@tiptap/pm/model'
 import StarterKit from '@tiptap/starter-kit'
 import { describe, expect, it } from 'vitest'
-import { BlockId } from '../../src/tiptap/block-id'
+import { BlockId } from '../../src'
 
 function createEditor(content: Record<string, unknown>, seqPrefix = 'b') {
   let seq = 0
@@ -70,6 +70,28 @@ describe('BlockId Tiptap extension', () => {
     expect(ids[0]).toBe('p1')
     expect(ids[1]).toBeTruthy()
     expect(ids[1]).not.toBe('p1')
+
+    editor.destroy()
+  })
+
+  it('keeps the original ID on the first block when splitting at the start of a heading', () => {
+    const editor = createEditor({
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { level: 2, blockId: 'h1' }, content: [{ type: 'text', text: 'Title' }] },
+        { type: 'paragraph', attrs: { blockId: 'p2' }, content: [{ type: 'text', text: 'Body' }] },
+      ],
+    })
+
+    editor.commands.setTextSelection(1)
+    editor.commands.splitBlock()
+
+    const ids = blockIds(editor)
+    expect(ids).toHaveLength(3)
+    expect(ids[0]).toBe('h1')
+    expect(ids[1]).toBeTruthy()
+    expect(ids[1]).not.toBe('h1')
+    expect(ids[2]).toBe('p2')
 
     editor.destroy()
   })
@@ -142,6 +164,42 @@ describe('BlockId Tiptap extension', () => {
 
     expect(blockIds(editor)).toEqual(['p2', 'p1'])
 
+    editor.destroy()
+  })
+
+  it('preserves block ID on internal drag-move through transformPasted and regenerates on copy-drag', () => {
+    const editor = createEditor({
+      type: 'doc',
+      content: [
+        { type: 'paragraph', attrs: { blockId: 'p1' }, content: [{ type: 'text', text: 'First' }] },
+        { type: 'paragraph', attrs: { blockId: 'p42' }, content: [{ type: 'text', text: 'Dragged' }] },
+      ],
+    })
+
+    const plugin = editor.state.plugins.find((p) => p.props.transformPasted)
+    expect(plugin).toBeDefined()
+
+    const firstSize = editor.state.doc.child(0).nodeSize
+    const secondNode = editor.state.doc.child(1)
+    const dragSlice = new Slice(editor.state.doc.content.cut(firstSize, firstSize + secondNode.nodeSize), 0, 0)
+
+    // Internal move: view.dragging.move = true preserves p42
+    ;(editor.view as unknown as { dragging: { slice: Slice; move: boolean } | null }).dragging = {
+      slice: dragSlice,
+      move: true,
+    }
+    const moveSlice = plugin!.props.transformPasted!.call(plugin!, dragSlice, editor.view, false)
+    expect(moveSlice.content.firstChild?.attrs.blockId).toBe('p42')
+
+    // Copy-drag: view.dragging.move = false strips p42
+    ;(editor.view as unknown as { dragging: { slice: Slice; move: boolean } | null }).dragging = {
+      slice: dragSlice,
+      move: false,
+    }
+    const copySlice = plugin!.props.transformPasted!.call(plugin!, dragSlice, editor.view, false)
+    expect(copySlice.content.firstChild?.attrs.blockId).toBeNull()
+
+    ;(editor.view as unknown as { dragging: null }).dragging = null
     editor.destroy()
   })
 

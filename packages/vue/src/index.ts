@@ -76,6 +76,10 @@ export { default as VaulterSharePanel } from './components/VaulterSharePanel.vue
 export { default as VaulterUnsupportedNode } from './components/VaulterUnsupportedNode.vue'
 export { default as VaulterUploader } from './components/VaulterUploader.vue'
 
+// TipTap
+export { BLOCK_ID_TYPES, BlockId, generateBlockId } from './tiptap/block-id'
+export type { BlockIdOptions } from './tiptap/block-id'
+
 // Display helpers
 export { humanByteSize, nodeIconKind } from './components/drive/nodeDisplay'
 export type { NodeIconKind } from './components/drive/nodeDisplay'

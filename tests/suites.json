@@ -1693,6 +1693,7 @@
             "packages/documents/tests/Schema/DocumentAggregateSchemaTest.php",
             "packages/documents/tests/Schema/DocumentsKeyColumnsTest.php",
             "packages/documents/tests/Schema/NodeCommentSchemaTest.php",
+            "packages/documents/tests/Unit/BlockIdentityTest.php",
             "packages/documents/tests/Unit/ContentHasherTest.php",
             "packages/documents/tests/Unit/DocumentsConfigMergeTest.php",
             "packages/documents/tests/Unit/MutationContractTest.php",

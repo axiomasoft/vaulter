@@ -146,6 +146,16 @@ final class InvalidDocumentContentException extends VaulterException implements 
         );
     }
 
+    public static function missingBlockId(string $nodeType): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: missing blockId on "%s". ', $nodeType)
+            .'Why: schema v2 rich-text documents require a unique attrs.blockId on every paragraph and heading. '
+            .'Fix: preserve existing blockId attributes and assign unique IDs to new blocks. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
+
     public function problemCode(): string
     {
         return self::PROBLEM_CODE;

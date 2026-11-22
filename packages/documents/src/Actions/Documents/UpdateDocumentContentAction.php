@@ -8,6 +8,8 @@ use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Content\TipTap\BlockIdentity;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
@@ -24,6 +26,7 @@ use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\State\PendingStateGuard;
+use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
@@ -91,9 +94,14 @@ final readonly class UpdateDocumentContentAction
                 throw new CollaborationUnavailableException('unsupported_binding', $document->type);
             }
             $raw = $data->content instanceof DocumentContent ? $data->content->toArray() : $data->content;
+            $decoded = $this->decoder->decode($type, $raw);
+            if ($document->type === RichTextDocumentType::KEY && $type->schemaVersion() >= 2 && $decoded instanceof TipTapContent) {
+                BlockIdentity::assertComplete($decoded->toArray());
+            }
+
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Update,
-                content: $this->decoder->decode($type, $raw),
+                content: $decoded,
                 schemaVersion: $type->schemaVersion(),
                 actorId: $context->actor->ref()->id,
                 expectedStateVersion: $data->expectedStateVersion,

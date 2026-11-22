@@ -1,7 +1,25 @@
+import { Extension } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+
+const BlockId = Extension.create({
+  name: 'blockId',
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['paragraph', 'heading'],
+        attributes: {
+          blockId: {
+            default: null,
+          },
+        },
+      },
+    ]
+  },
+})
 
 // The TipTap extensions the hub builds a room from when a document has no Yjs state
 // yet (one-time seed from its JSON) and projects back to JSON on every store. They
@@ -17,7 +35,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 export const FIELD = 'default'
 
 const TYPES = {
-  // StarterKit (with Underline), Link, Image, Table.
+  // StarterKit (with Underline), Link, Image, Table, BlockId.
   'vaulter/rich-text': () => [
     StarterKit.configure({ link: false }),
     Link,
@@ -26,6 +44,7 @@ const TYPES = {
     TableRow,
     TableHeader,
     TableCell,
+    BlockId,
   ],
   // Only what Markdown can represent.
   'vaulter/markdown': () => [

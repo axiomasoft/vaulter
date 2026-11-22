@@ -103,7 +103,20 @@ final readonly class BlockIdentity
     public static function assertUnique(array $doc): void
     {
         $seen = [];
-        self::walkAssert($doc, $seen);
+        self::walkAssert($doc, $seen, requireAll: false);
+    }
+
+    /**
+     * Verify that every addressable node in the document carries a valid, unique `attrs.blockId`.
+     *
+     * @param array<string, mixed> $doc
+     *
+     * @throws InvalidDocumentContentException
+     */
+    public static function assertComplete(array $doc): void
+    {
+        $seen = [];
+        self::walkAssert($doc, $seen, requireAll: true);
     }
 
     /**
@@ -183,14 +196,19 @@ final readonly class BlockIdentity
      * @param array<string, mixed> $node
      * @param array<string, true>  $seen
      */
-    private static function walkAssert(array $node, array &$seen): void
+    private static function walkAssert(array $node, array &$seen, bool $requireAll): void
     {
         $type = $node['type'] ?? null;
 
-        if (is_string($type) && self::isAddressable($type) && isset($node['attrs']) && is_array($node['attrs'])) {
-            $blockId = $node['attrs'][self::ATTR_KEY] ?? null;
+        if (is_string($type) && self::isAddressable($type)) {
+            $attrs = isset($node['attrs']) && is_array($node['attrs']) ? $node['attrs'] : [];
+            $blockId = $attrs[self::ATTR_KEY] ?? null;
 
-            if ($blockId !== null) {
+            if ($blockId === null) {
+                if ($requireAll) {
+                    throw InvalidDocumentContentException::missingBlockId($type);
+                }
+            } else {
                 if (!self::isValid($blockId)) {
                     throw InvalidDocumentContentException::disallowedAttribute($type, self::ATTR_KEY);
                 }
@@ -208,7 +226,7 @@ final readonly class BlockIdentity
             foreach ($node['content'] as $child) {
                 if (is_array($child)) {
                     /** @var array<string, mixed> $child */
-                    self::walkAssert($child, $seen);
+                    self::walkAssert($child, $seen, $requireAll);
                 }
             }
         }

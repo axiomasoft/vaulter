@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\TipTap\BlockIdentity;
@@ -13,11 +12,8 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers as Docs;
-use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-
-uses(TestCase::class, RefreshDatabase::class);
 
 it('defaults vaulter-documents.tiptap.block_ids to false', function (): void {
     $options = app(DocumentsOptions::class);
@@ -169,7 +165,7 @@ it('assigns block IDs on creation when enabled, preserves on reopen, and does no
     expect(BlockIdentity::extractIds($second->content->toArray()))->toBe($ids);
 });
 
-it('normalizes legacy v1 rich-text document to v2 via CAS, rejects stale CAS, and is idempotent on repeat (3.1-A)', function (): void {
+it('normalizes legacy v1 rich-text document to v2 via CAS, rejects stale CAS, advances epoch for bound docs, and is idempotent on repeat (3.1-A)', function (): void {
     Config::set('vaulter-documents.tiptap.block_ids', false);
 
     $docs = Documents::in(Docs::drive());
@@ -185,14 +181,25 @@ it('normalizes legacy v1 rich-text document to v2 via CAS, rejects stale CAS, an
     expect($before->schemaVersion)->toBe(1);
     expect(BlockIdentity::extractIds($before->content->toArray()))->toBe([]);
 
+    // With block_ids=false, initializeBlockIds is a no-op so the document stays v1 and editable.
+    $noop = $docs->initializeBlockIds($node, expectedStateVersion: $before->stateVersion);
+    expect($noop->schemaVersion)->toBe(1);
+    expect($noop->stateVersion)->toBe($before->stateVersion);
+    expect($noop->editable)->toBeTrue();
+
+    // Enable block_ids so v2 is writable.
+    Config::set('vaulter-documents.tiptap.block_ids', true);
+
     // Competing normalization with stale expectedStateVersion fails CAS.
     expect(fn () => $docs->initializeBlockIds($node, expectedStateVersion: $before->stateVersion + 99))
         ->toThrow(StaleDocumentStateException::class);
 
-    // Authorized normalization transitions v1 -> v2.
+    // Authorized normalization transitions v1 -> v2 and advances collab_epoch for bound docs.
     $normalized = $docs->initializeBlockIds($node, expectedStateVersion: $before->stateVersion);
     expect($normalized->schemaVersion)->toBe(2);
     expect($normalized->stateVersion)->toBe($before->stateVersion + 1);
+    expect($normalized->epoch)->toBe($before->epoch + 1);
+    expect($normalized->editable)->toBeTrue();
     $ids = BlockIdentity::extractIds($normalized->content->toArray());
     expect($ids)->toHaveCount(1);
 
@@ -204,6 +211,23 @@ it('normalizes legacy v1 rich-text document to v2 via CAS, rejects stale CAS, an
     $repeated = $docs->initializeBlockIds($node);
     expect($repeated->stateVersion)->toBe($normalized->stateVersion);
     expect(BlockIdentity::extractIds($repeated->content->toArray()))->toBe($ids);
+
+    // Normal update with complete blockIds succeeds, while omitting blockId is rejected.
+    expect(fn () => $docs->update($node, [
+        'type' => 'doc',
+        'content' => [
+            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Missing ID']]],
+        ],
+    ], expectedStateVersion: $normalized->stateVersion))
+        ->toThrow(InvalidDocumentContentException::class);
+
+    $updated = $docs->update($node, [
+        'type' => 'doc',
+        'content' => [
+            ['type' => 'paragraph', 'attrs' => ['blockId' => $ids[0]], 'content' => [['type' => 'text', 'text' => 'Updated']]],
+        ],
+    ], expectedStateVersion: $normalized->stateVersion);
+    expect(BlockIdentity::extractIds($updated->content->toArray()))->toBe($ids);
 });
 
 it('restores block IDs from the restored revision and advances collaboration epoch (3.1-A)', function (): void {

@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core'
 import { Fragment, Slice, type Node as ProseMirrorNode } from '@tiptap/pm/model'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
+import type { EditorView } from '@tiptap/pm/view'
 
 export const BLOCK_ID_TYPES = ['paragraph', 'heading'] as const
 
@@ -99,16 +100,52 @@ export const BlockId = Extension.create<BlockIdOptions>({
         key: BLOCK_ID_PLUGIN_KEY,
 
         props: {
-          transformPasted(slice: Slice): Slice {
+          transformPasted(slice: Slice, view: EditorView): Slice {
+            // Preserve IDs on internal drag-moves within the same editor; strip on paste or copy-drag.
+            if (view?.dragging?.move) {
+              return slice
+            }
+
             const stripped = stripBlockIdsInFragment(slice.content, typeSet)
 
             return new Slice(stripped, slice.openStart, slice.openEnd)
           },
         },
 
-        appendTransaction(transactions, _oldState, newState) {
+        appendTransaction(transactions, oldState, newState) {
           if (!transactions.some((tr) => tr.docChanged)) {
             return null
+          }
+
+          // Detect start-of-block split where Tiptap converted the first fragment to a
+          // default paragraph without carrying over the original blockId (e.g. Enter at
+          // pos 1 of a heading): carry the original ID onto the first fragment so the
+          // second fragment receives a fresh ID via the deduplication pass below.
+          let splitCarryPos: number | null = null
+          let splitCarryId: string | null = null
+          if (
+            oldState.selection.empty &&
+            oldState.selection.$from.depth >= 1 &&
+            oldState.selection.$from.parentOffset === 0
+          ) {
+            const oldPos = oldState.selection.$from.before()
+            const oldParent = oldState.selection.$from.parent
+            const oldId = oldParent.attrs.blockId
+            if (typeSet.has(oldParent.type.name) && typeof oldId === 'string' && oldId !== '') {
+              const firstNew = oldPos < newState.doc.content.size ? newState.doc.nodeAt(oldPos) : null
+              if (
+                firstNew &&
+                typeSet.has(firstNew.type.name) &&
+                (firstNew.attrs.blockId == null || firstNew.attrs.blockId === '')
+              ) {
+                const secondPos = oldPos + firstNew.nodeSize
+                const secondNew = secondPos < newState.doc.content.size ? newState.doc.nodeAt(secondPos) : null
+                if (secondNew && typeSet.has(secondNew.type.name) && secondNew.attrs.blockId === oldId) {
+                  splitCarryPos = oldPos
+                  splitCarryId = oldId
+                }
+              }
+            }
           }
 
           const seen = new Set<string>()
@@ -117,6 +154,14 @@ export const BlockId = Extension.create<BlockIdOptions>({
 
           newState.doc.descendants((node, pos) => {
             if (!typeSet.has(node.type.name)) {
+              return
+            }
+
+            if (pos === splitCarryPos && splitCarryId !== null && !seen.has(splitCarryId)) {
+              seen.add(splitCarryId)
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, blockId: splitCarryId })
+              modified = true
+
               return
             }
 

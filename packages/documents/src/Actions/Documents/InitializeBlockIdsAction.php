@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Actions\Documents;
 
 use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\TipTap\BlockIdentity;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
@@ -46,6 +47,7 @@ final readonly class InitializeBlockIdsAction
         private DocumentWriteLock $lock,
         private OperationGuard $guard,
         private PendingStateGuard $pending,
+        private ContentDecoder $decoder,
         private DocumentStateWriter $writer,
         private EventRecorder $recorder,
         private NodeSnapshotMapper $nodeSnapshots,
@@ -78,6 +80,11 @@ final readonly class InitializeBlockIdsAction
                 return new DocumentStateResult(changed: false, document: $document, checkpoint: null, epochChanged: false);
             }
 
+            $type = $this->decoder->editableType($document);
+            if ($type->schemaVersion() < 2) {
+                return new DocumentStateResult(changed: false, document: $document, checkpoint: null, epochChanged: false);
+            }
+
             $raw = $document->payload?->content;
             if (!is_array($raw) || ($raw['type'] ?? null) !== 'doc') {
                 $raw = TipTapContent::empty()->toArray();
@@ -89,12 +96,17 @@ final readonly class InitializeBlockIdsAction
             }
 
             $content = TipTapContent::fromArray($normalized['doc'], TipTapSchema::richText());
+            $sync = $document->syncState;
+            $isBound = $sync?->collab_protocol !== null;
             $result = $this->writer->write($document, new DocumentStateChange(
-                cause: StateWriteCause::Update,
+                cause: $isBound ? StateWriteCause::Transition : StateWriteCause::Update,
                 content: $content,
                 schemaVersion: max(2, $document->schema_version),
                 actorId: $context->actor->ref()->id,
                 expectedStateVersion: $expectedStateVersion ?? $document->state_version,
+                documentType: $isBound ? $document->type : null,
+                protocol: $isBound ? $sync->collab_protocol : null,
+                stateFormat: $isBound ? $sync->collab_state_format : null,
             ));
 
             $head = $result->checkpoint ?? $document->currentRevision()->sharedLock()->firstOrFail();
