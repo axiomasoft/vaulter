@@ -63,7 +63,8 @@ final readonly class DocumentStateWriter
         if ($change->cause->skipsIdenticalWrite()
             && ($change->cause !== StateWriteCause::Update || $sync?->collab_protocol === null)
             && $hash === $payload?->content_hash
-            && $change->collabState === $sync?->collab_state) {
+            && $change->collabState === $sync?->collab_state
+            && $change->schemaVersion === $locked->schema_version) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
         }
 

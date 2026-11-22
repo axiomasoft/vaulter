@@ -90,6 +90,16 @@ final readonly class TipTapSchema
     ];
 
     /**
+     * Additional canonical attributes that exist only on rich-text nodes (not Markdown).
+     *
+     * @var array<string, list<string>>
+     */
+    private const array RICH_TEXT_ONLY_ATTRIBUTES = [
+        'paragraph' => [BlockIdentity::ATTR_KEY],
+        'heading' => [BlockIdentity::ATTR_KEY],
+    ];
+
+    /**
      * The package's own URL-bearing attributes. They are always scheme-checked AND always
      * REQUIRED: a link with no href, an image with no src is not a degraded node, it is a
      * malformed one, and the store rejects it.
@@ -173,9 +183,15 @@ final readonly class TipTapSchema
     {
         $canon = self::ATTRIBUTES[$type] ?? [];
 
-        return $this->hostExtensions
-            ? array_values(array_unique([...$canon, ...($this->config()->tiptap->extraAttributes[$type] ?? [])]))
-            : $canon;
+        if (!$this->hostExtensions) {
+            return $canon;
+        }
+
+        return array_values(array_unique([
+            ...$canon,
+            ...(self::RICH_TEXT_ONLY_ATTRIBUTES[$type] ?? []),
+            ...($this->config()->tiptap->extraAttributes[$type] ?? []),
+        ]));
     }
 
     /**

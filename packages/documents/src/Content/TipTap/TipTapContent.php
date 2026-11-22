@@ -56,6 +56,7 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         self::validateNode($schema ?? TipTapSchema::richText(), $doc);
+        BlockIdentity::assertUnique($doc);
 
         return new self($doc);
     }
@@ -360,6 +361,13 @@ final readonly class TipTapContent implements DocumentContent
         if ($type === 'heading' && array_key_exists('level', $attributes) && !is_numeric($attributes['level'])) {
             throw InvalidDocumentContentException::disallowedAttribute('heading', 'level');
         }
+
+        if (BlockIdentity::isAddressable($type)
+            && array_key_exists(BlockIdentity::ATTR_KEY, $attributes)
+            && $attributes[BlockIdentity::ATTR_KEY] !== null
+            && !BlockIdentity::isValid($attributes[BlockIdentity::ATTR_KEY])) {
+            throw InvalidDocumentContentException::disallowedAttribute($type, BlockIdentity::ATTR_KEY);
+        }
     }
 
     private static function validateUrl(mixed $url): void
@@ -631,6 +639,13 @@ final readonly class TipTapContent implements DocumentContent
 
         if ($type === 'heading' && array_key_exists('level', $attrs) && !is_numeric($attrs['level'])) {
             unset($attrs['level']);
+        }
+
+        if (BlockIdentity::isAddressable($type)
+            && array_key_exists(BlockIdentity::ATTR_KEY, $attrs)
+            && $attrs[BlockIdentity::ATTR_KEY] !== null
+            && !BlockIdentity::isValid($attrs[BlockIdentity::ATTR_KEY])) {
+            unset($attrs[BlockIdentity::ATTR_KEY]);
         }
 
         return $attrs;

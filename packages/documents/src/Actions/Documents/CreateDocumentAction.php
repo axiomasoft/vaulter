@@ -10,13 +10,16 @@ use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Content\TipTap\BlockIdentity;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapSchema;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\OnNameConflict;
@@ -81,11 +84,19 @@ final readonly class CreateDocumentAction
         // the docs/adr/0004-content-format.md size limit was defined but never enforced at save
         // time — check it before the transaction, not just at the UI layer. Callers
         // that decode through the type already applied its own limit.
-        if ($data->content instanceof TipTapContent) {
-            $data->content->ensureWithin($this->container->make(DocumentsOptions::class)->content->maxSizeKb);
+        $options = $this->container->make(DocumentsOptions::class);
+        $content = $data->content;
+        $schemaVersion = $data->schemaVersion;
+
+        if ($content instanceof TipTapContent) {
+            if ($data->type === RichTextDocumentType::KEY && $options->tiptap->blockIds) {
+                $content = TipTapContent::fromArray(BlockIdentity::assignMissing($content->toArray()), TipTapSchema::richText());
+                $schemaVersion = max(2, $schemaVersion);
+            }
+            $content->ensureWithin($options->content->maxSizeKb);
         }
 
-        return $this->database->transaction(function () use ($context, $data, $name, $parentId, $actorId): Node {
+        return $this->database->transaction(function () use ($context, $data, $content, $schemaVersion, $name, $parentId, $actorId): Node {
             $this->database->lockAggregateShared('drives', $data->storage->id);
             $this->lifecycle->assertWritable($context);
 
@@ -106,14 +117,14 @@ final readonly class CreateDocumentAction
                 'kind' => NodeKind::Document,
                 'name' => $name,
                 'mime_type' => CreateDocumentInput::NODE_MIME,
-                'size_bytes' => $data->content->sizeInBytes(),
+                'size_bytes' => $content->sizeInBytes(),
                 'created_by' => $actorId,
             ]);
 
             $document = $this->documents->create([
                 'node_id' => $node->getKey(),
                 'type' => $data->type,
-                'schema_version' => $data->schemaVersion,
+                'schema_version' => $schemaVersion,
                 'created_by' => $actorId,
                 'updated_by' => $actorId,
             ]);
@@ -121,8 +132,8 @@ final readonly class CreateDocumentAction
 
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Create,
-                content: $data->content,
-                schemaVersion: $data->schemaVersion,
+                content: $content,
+                schemaVersion: $schemaVersion,
                 actorId: $actorId,
                 forceCheckpoint: true,
             ));

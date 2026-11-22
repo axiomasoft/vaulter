@@ -25,6 +25,7 @@ final readonly class TipTapOptions
         public array $extraMarks = [],
         public array $extraAttributes = [],
         public array $urlAttributes = [],
+        public bool $blockIds = false,
     ) {}
 
     public static function fromArray(mixed $raw, string $path, ConfigurationValidator $validator): self
@@ -35,13 +36,20 @@ final readonly class TipTapOptions
             return new self;
         }
 
-        $validator->rejectUnknownKeys($raw, ['extra_nodes', 'extra_marks', 'extra_attributes', 'url_attributes'], $path);
+        $validator->rejectUnknownKeys($raw, ['block_ids', 'extra_nodes', 'extra_marks', 'extra_attributes', 'url_attributes'], $path);
+
+        $blockIds = $raw['block_ids'] ?? false;
+        if (!is_bool($blockIds)) {
+            $validator->add($path.'.block_ids', 'must be a boolean.');
+            $blockIds = false;
+        }
 
         return new self(
             extraNodes: StringList::from($raw['extra_nodes'] ?? [], []),
             extraMarks: StringList::from($raw['extra_marks'] ?? [], []),
             extraAttributes: self::parseAttributeMap($raw['extra_attributes'] ?? []),
             urlAttributes: self::parseAttributeMap($raw['url_attributes'] ?? []),
+            blockIds: $blockIds,
         );
     }
 

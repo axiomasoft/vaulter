@@ -136,6 +136,16 @@ final class InvalidDocumentContentException extends VaulterException implements 
         );
     }
 
+    public static function duplicateBlockId(string $blockId): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: duplicate blockId "%s". ', $blockId)
+            .'Why: every addressable block in a document must have a unique attrs.blockId. '
+            .'Fix: assign a distinct blockId to each paragraph and heading. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
+
     public function problemCode(): string
     {
         return self::PROBLEM_CODE;

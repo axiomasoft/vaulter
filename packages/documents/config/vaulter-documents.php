@@ -20,6 +20,7 @@ return [
     // Document exporter classes, resolved by (document type, format).
     'exporters' => [HtmlExporter::class, MarkdownExporter::class],
     'tiptap' => [
+        'block_ids' => false,
         'extra_nodes' => [],
         'extra_marks' => [],
         'extra_attributes' => [],

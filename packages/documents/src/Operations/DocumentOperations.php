@@ -18,6 +18,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
 use Vaulter\Documents\Actions\Documents\ChangeDocumentWriteModeAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Actions\Documents\InitializeBlockIdsAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
@@ -117,6 +118,7 @@ final readonly class DocumentOperations implements DriveExtension
         private ContentDecoder $decoder,
         private CreateDocumentAction $create,
         private UpdateDocumentContentAction $update,
+        private InitializeBlockIdsAction $initializeBlockIds,
         private ChangeDocumentWriteModeAction $changeWriteMode,
         private CreateNamedRevisionAction $snapshot,
         private RestoreDocumentRevisionAction $restore,
@@ -286,6 +288,20 @@ final readonly class DocumentOperations implements DriveExtension
         ));
 
         return $this->mapper->document($result->document, $result->document->currentRevision);
+    }
+
+    /**
+     * Authorized CAS normalization of a rich-text document to schema v2 with unique block IDs.
+     * Repeating normalization on an already-normalized document is a no-op.
+     */
+    public function initializeBlockIds(NodeSnapshot|string|int $document, ?int $expectedStateVersion = null): DocumentSnapshot
+    {
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('initialize_block_ids', function () use ($document, $expectedStateVersion): DocumentSnapshot {
+            $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+            $result = $this->initializeBlockIds->execute($this->context, $node, $expectedStateVersion);
+
+            return $this->mapper->document($result->document, $result->document->currentRevision);
+        }));
     }
 
     /** Checkpoint the working state as a named revision; it becomes the head. */
