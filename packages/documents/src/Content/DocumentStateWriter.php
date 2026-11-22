@@ -122,7 +122,7 @@ final readonly class DocumentStateWriter
 
         if ($change->content !== null || $payload === null || $change->cause === StateWriteCause::Restore) {
             $this->documents->savePayload($locked, [
-                'content' => $change->content?->toArray(),
+                'content' => $this->decoder->storagePayload($locked->type, $change->content),
                 'content_hash' => $change->content?->contentHash(),
                 'content_size' => $change->content?->sizeInBytes(),
             ]);
@@ -234,7 +234,7 @@ final readonly class DocumentStateWriter
             'created_by' => $actorId,
             'created_at' => $now,
         ], [
-            'content' => $payload?->content,
+            'content' => $this->decoder->storedPayload($document->type, $payload?->getAttributes()['content'] ?? null, $payload?->content),
             'content_hash' => $payload?->content_hash,
             'content_size' => $payload?->content_size,
         ], $sync?->collab_protocol === null ? null : [

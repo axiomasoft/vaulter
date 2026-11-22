@@ -11,6 +11,7 @@ use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\UpgradesSchema;
+use Vaulter\Documents\Contracts\ManagedDocumentCodec;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
@@ -72,6 +73,25 @@ final readonly class ContentDecoder
         return $content;
     }
 
+    public function storagePayload(string $typeKey, ?DocumentContent $content): ?array
+    {
+        $codec = $this->types->find($typeKey)?->codec();
+
+        return $content === null ? null : ($codec instanceof ManagedDocumentCodec
+            ? $codec->storagePayload($content)
+            : $content->toArray());
+    }
+
+    public function storedPayload(string $typeKey, ?string $raw, ?array $fallback): ?array
+    {
+        if ($raw === null || !$this->types->find($typeKey)?->codec() instanceof ManagedDocumentCodec) {
+            return $fallback;
+        }
+        $decoded = json_decode($raw);
+
+        return $decoded instanceof \stdClass ? (array) $decoded : $fallback;
+    }
+
     /**
      * Stored content for display.
      *
@@ -97,7 +117,12 @@ final readonly class ContentDecoder
         }
 
         try {
-            return new ReadContent($codec->decode($stored, $type->schemaVersion()), lossless: true);
+            return new ReadContent(
+                $codec instanceof ManagedDocumentCodec
+                    ? $codec->decodeStored($stored, $schemaVersion)
+                    : $codec->decode($stored, $type->schemaVersion()),
+                lossless: true,
+            );
         } catch (InvalidDocumentContentException) {
             return new ReadContent(OpaqueContent::fromArray($stored), lossless: false);
         }
@@ -124,7 +149,7 @@ final readonly class ContentDecoder
 
         return $type !== null
             && $this->schemaWritable($type, $document->schema_version)
-            && $this->read($document->type, $document->payload?->content, $document->schema_version)->lossless;
+            && $this->read($document->type, $this->storedPayload($document->type, $document->payload?->getAttributes()['content'] ?? null, $document->payload?->content), $document->schema_version)->lossless;
     }
 
     /**

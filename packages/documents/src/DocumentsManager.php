@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
+use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Api;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Operations\DriveContext;
 
 #[Api]
 final readonly class DocumentsManager
@@ -36,6 +38,12 @@ final readonly class DocumentsManager
     public function in(DriveHandle $drive): DocumentOperations
     {
         return $drive->extension(DocumentOperations::class);
+    }
+
+    /** Use an already resolved drive operation context. */
+    public function forContext(DriveContext $context): DocumentOperations
+    {
+        return app(Container::class)->makeWith(DocumentOperations::class, ['context' => $context]);
     }
 
     /** The comments on the nodes of one drive, as the handle's actor. */

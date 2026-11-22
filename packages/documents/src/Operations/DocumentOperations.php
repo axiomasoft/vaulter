@@ -28,6 +28,7 @@ use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Contracts\ManagedDocumentCodec;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
@@ -194,8 +195,20 @@ final readonly class DocumentOperations implements DriveExtension
             fingerprint: ['name' => $name, 'type' => $type, 'content' => $content, 'parent' => $parentId, 'on_conflict' => ($options ?? new CreateFolderOptions)->onConflict->value],
         );
 
+        $prepared = null;
+        if ($content !== null) {
+            $candidateType = $this->types->find($type ?? $this->container->make(DocumentsOptions::class)->defaultType);
+            $codec = $candidateType?->codec();
+            if ($codec instanceof ManagedDocumentCodec) {
+                $folder = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+                $this->guard->authorizeCreate($this->context, $folder);
+                $this->profiles->assertDocumentType(drive: $this->context->drive, type: $candidateType->key());
+                $prepared = $codec->prepare($this->decoder->decode($candidateType, $content), $this->context);
+            }
+        }
+
         /** @var NodeSnapshot $created */
-        $created = $this->write('create', function () use ($name, $type, $content, $parent, $options): NodeSnapshot {
+        $created = $this->write('create', function () use ($name, $type, $content, $parent, $options, $prepared): NodeSnapshot {
             $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
             $this->guard->authorizeCreate($this->context, $parent);
             $documentType = $this->types->get($type ?? $this->container->make(DocumentsOptions::class)->defaultType);
@@ -204,7 +217,7 @@ final readonly class DocumentOperations implements DriveExtension
             $node = $this->create->execute($this->context, new CreateDocumentInput(
                 storage: $this->context->drive,
                 name: $name,
-                content: $this->decoder->decode($documentType, $content),
+                content: $prepared ?? $this->decoder->decode($documentType, $content),
                 parent: $parent,
                 type: $documentType->key(),
                 schemaVersion: $documentType->schemaVersion(),

@@ -12,6 +12,7 @@ use Vaulter\Documents\Content\TipTap\BlockIdentity;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\RequiresCommandWrite;
+use Vaulter\Documents\Contracts\ManagedDocumentCodec;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentMutationState;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
@@ -81,7 +82,10 @@ final readonly class WriteLockedDocumentContent
             || $type->collaborationProtocol() !== $sync->collab_protocol || $type->collaborationStateFormat() !== $sync->collab_state_format)) {
             throw new CollaborationUnavailableException('unsupported_binding', $document->type);
         }
-        $decoded = $this->decoder->decode($type, $content instanceof DocumentContent ? $content->toArray() : $content);
+        $codec = $type->codec();
+        $decoded = $command && $content instanceof DocumentContent && $codec instanceof ManagedDocumentCodec
+            ? $codec->decodeStored($codec->storagePayload($content), $type->schemaVersion())
+            : $this->decoder->decode($type, $content instanceof DocumentContent ? $content->toArray() : $content);
         if ($document->type === RichTextDocumentType::KEY && $type->schemaVersion() >= 2 && $decoded instanceof TipTapContent) {
             BlockIdentity::assertComplete($decoded->toArray());
         }

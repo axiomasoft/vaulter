@@ -12,6 +12,9 @@ use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
+use Vaulter\Documents\Contracts\ManagedDocumentCodec;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
@@ -40,6 +43,10 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         private DocumentsOptions $documentsConfig,
         private DriveOptions $drives,
         private PendingStateGuard $pending,
+        private DocumentRevisionStoreRepository $revisionStore,
+        private ManagedDocumentPayloads $references,
+        private DocumentTypeRegistry $types,
+        private ContentDecoder $decoder,
     ) {}
 
     public function kind(): NodeKind
@@ -73,13 +80,17 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         $nodeModel = $this->drives->model('node');
         $document->setRelation('node', $nodeModel::query()->whereKey($copy->id)->firstOrFail());
 
-        $content = $original->payload?->content;
+        $content = $this->decoder->storedPayload($original->type, $original->payload?->getAttributes()['content'] ?? null, $original->payload?->content);
+        $codec = $this->types->find($original->type)?->codec();
+        $copyContent = is_array($content) ? ($codec instanceof ManagedDocumentCodec
+            ? $codec->decodeStored($content, $original->schema_version)
+            : OpaqueContent::fromArray($content)) : null;
 
         // The payload is carried verbatim as opaque JSON: the copy must keep content of a
         // type that is not registered (any more) instead of failing or decaying it.
         $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Copy,
-            content: is_array($content) ? OpaqueContent::fromArray($content) : null,
+            content: $copyContent,
             schemaVersion: $original->schema_version,
             collabState: $original->syncState?->collab_state,
             actorId: $actorId,
@@ -117,10 +128,11 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
                 ->pluck('id')
                 ->all();
             if ($ids !== []) {
-                $revisions::query()->whereKey($ids)->delete();
+                $this->revisionStore->purge($ids);
             }
         } while (count($ids) === self::PURGE_BATCH);
 
+        $this->references->change($document->type, 'working', (string) $document->getKey(), $document->payload?->content, null);
         Document::query()->whereKey($document->getKey())->delete();
     }
 }

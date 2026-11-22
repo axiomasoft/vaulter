@@ -9,6 +9,9 @@ use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Content\ContentDecoder;
+use Vaulter\Documents\Contracts\ManagedDocumentCodec;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
@@ -50,6 +53,8 @@ final readonly class RestoreDocumentRevisionAction
         private DocumentWriteLock $writeLock,
         private NodeSnapshotMapper $nodeSnapshots,
         private DocumentSnapshotMapper $documentSnapshots,
+        private DocumentTypeRegistry $types,
+        private ContentDecoder $decoder,
     ) {}
 
     public function execute(DriveContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
@@ -73,11 +78,14 @@ final readonly class RestoreDocumentRevisionAction
                 throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);
             }
 
-            $content = $source->payload?->content;
+            $content = $this->decoder->storedPayload($source->type, $source->payload?->getAttributes()['content'] ?? null, $source->payload?->content);
+            $codec = $this->types->find($source->type)?->codec();
             $sync = $source->syncState;
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Restore,
-                content: is_array($content) ? OpaqueContent::fromArray($content) : null,
+                content: is_array($content) ? ($codec instanceof ManagedDocumentCodec
+                    ? $codec->decodeStored($content, $source->schema_version)
+                    : OpaqueContent::fromArray($content)) : null,
                 schemaVersion: $source->schema_version,
                 collabState: $sync?->collab_state,
                 actorId: $actorId,

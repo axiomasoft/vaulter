@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Repositories\Revisions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Packman\Attributes\Internal;
+use Vaulter\Documents\Content\ManagedDocumentPayloads;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -24,6 +25,7 @@ final class DocumentRevisionStoreRepository
 {
     public function __construct(
         private readonly DocumentsOptions $documentsConfig,
+        private readonly ManagedDocumentPayloads $references,
     ) {}
 
     /**
@@ -39,6 +41,7 @@ final class DocumentRevisionStoreRepository
         $revision->save();
 
         $payload = (new DocumentRevisionPayload)->forceFill($payloadAttributes);
+        $this->references->change($revision->type, 'revision', (string) $revision->getKey(), null, $payload->content);
         $revision->payload()->save($payload);
         $sync = null;
         if ($syncAttributes !== null) {
@@ -91,8 +94,19 @@ final class DocumentRevisionStoreRepository
             return 0;
         }
 
-        $model::query()->whereKey($excess->modelKeys())->delete();
+        $this->purge($excess->modelKeys());
 
         return $excess->count();
+    }
+
+    /** @param list<int|string> $ids */
+    public function purge(array $ids): void
+    {
+        $model = $this->documentsConfig->model('document_revision');
+        $query = $model::query()->whereKey($ids);
+        foreach ((clone $query)->with('payload')->get() as $revision) {
+            $this->references->change($revision->type, 'revision', (string) $revision->getKey(), $revision->payload?->content, null);
+        }
+        $query->delete();
     }
 }

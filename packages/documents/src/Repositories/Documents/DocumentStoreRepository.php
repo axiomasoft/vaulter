@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Documents;
 
 use Packman\Attributes\Internal;
+use Vaulter\Documents\Content\ManagedDocumentPayloads;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Documents\DocumentPayload;
 use Vaulter\Documents\Models\Documents\DocumentSyncState;
@@ -16,6 +17,7 @@ use Vaulter\Documents\Models\Documents\DocumentSyncState;
 #[Internal]
 final class DocumentStoreRepository
 {
+    public function __construct(private readonly ManagedDocumentPayloads $references) {}
     /**
      * @param array<string, mixed> $attributes server-built, never request input
      */
@@ -41,6 +43,7 @@ final class DocumentStoreRepository
     public function savePayload(Document $document, array $attributes): void
     {
         $payload = $document->payload ?? new DocumentPayload;
+        $this->references->change($document->type, 'working', (string) $document->getKey(), $payload->content, $attributes['content']);
         $document->payload()->save($payload->forceFill($attributes));
         $document->setRelation('payload', $payload);
     }
