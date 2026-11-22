@@ -176,7 +176,7 @@ it('refuses a type that is not registered on create, and uses the configured def
     $documents = Documents::in(DocumentTestHelpers::drive());
 
     expect(fn () => $documents->create('X', 'acme/unknown'))->toThrow(UnknownDocumentTypeException::class)
-        ->and(fn () => $documents->create('S', 'vaulter/spreadsheet'))->toThrow(UnknownDocumentTypeException::class)
+        ->and(fn () => $documents->create('S', 'acme/opaque-note'))->toThrow(UnknownDocumentTypeException::class)
         ->and($documents->create('Y')->document?->type)->toBe('vaulter/rich-text');
 
     config()->set('vaulter-documents.default_type', 'vaulter/markdown');

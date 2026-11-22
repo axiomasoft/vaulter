@@ -12,9 +12,9 @@ use Vaulter\Documents\Data\Types\DocumentFeatures;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 
 /**
  * The built-in types (and a third-party one) keep the document type
@@ -27,7 +27,7 @@ it('keeps the document type contract', function (DocumentType $type): void {
 })->with([
     'rich text' => fn (): DocumentType => new RichTextDocumentType,
     'markdown' => fn (): DocumentType => new MarkdownDocumentType,
-    'spreadsheet' => fn (): DocumentType => new SpreadsheetDocumentType,
+    'opaque note' => fn (): DocumentType => new OpaqueNoteType,
     'third party' => fn (): DocumentType => new AcmeKanbanType,
 ]);
 
@@ -37,7 +37,7 @@ it('describes each built-in type by key, viewer and collaboration', function ():
 
     $rich = new RichTextDocumentType;
     $markdown = new MarkdownDocumentType;
-    $sheet = new SpreadsheetDocumentType;
+    $opaque = new OpaqueNoteType;
 
     expect($rich->key())->toBe('vaulter/rich-text')
         ->and($rich->viewer()->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'rich-text']])
@@ -47,11 +47,11 @@ it('describes each built-in type by key, viewer and collaboration', function ():
         ->and($markdown->key())->toBe('vaulter/markdown')
         ->and($markdown->viewer()->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'markdown']])
         ->and($markdown)->toBeInstanceOf(SupportsCollaboration::class)
-        ->and($sheet->key())->toBe('vaulter/spreadsheet')
-        ->and($sheet->viewer()->key)->toBe('vaulter/univer')
-        ->and($sheet)->not->toBeInstanceOf(SupportsCollaboration::class)
-        ->and($sheet->features()->editable)->toBeTrue()
-        ->and($sheet->codec())->toBeInstanceOf(OpaqueJsonCodec::class);
+        ->and($opaque->key())->toBe('acme/opaque-note')
+        ->and($opaque->viewer()->key)->toBe('acme/opaque-note')
+        ->and($opaque)->not->toBeInstanceOf(SupportsCollaboration::class)
+        ->and($opaque->features()->editable)->toBeTrue()
+        ->and($opaque->codec())->toBeInstanceOf(OpaqueJsonCodec::class);
 });
 
 it('restricts markdown to the nodes and marks Markdown can represent', function (array $doc): void {
@@ -72,7 +72,7 @@ it('keeps the markdown schema closed to host editor extensions', function (): vo
 });
 
 it('accepts any JSON object for an opaque type and refuses a list', function (): void {
-    $codec = (new SpreadsheetDocumentType)->codec();
+    $codec = (new OpaqueNoteType)->codec();
 
     expect($codec->decode(['sheets' => ['s1' => []]], 1))->toBeInstanceOf(OpaqueContent::class)
         ->and($codec->decode([], 1)->toArray())->toBe([]);

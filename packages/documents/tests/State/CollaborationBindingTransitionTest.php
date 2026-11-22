@@ -25,10 +25,10 @@ use Vaulter\Documents\State\CollaborativeStateTransition;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
 use Vaulter\Documents\Tests\Fixtures\StateWrites;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\CopyOptions;
@@ -326,7 +326,7 @@ it('reads an immutable revision through its source type after a prepared cross-t
 
 it('returns unpublished without rows or events when a prepared checkpoint loses to a noncollaborative transition', function (): void {
     $registry = new DocumentTypeRegistry(app());
-    foreach ([new RichTextDocumentType, new MarkdownDocumentType, new SpreadsheetDocumentType] as $type) {
+    foreach ([new RichTextDocumentType, new MarkdownDocumentType, new OpaqueNoteType] as $type) {
         $registry->register($type);
     }
     $registry->freeze();
@@ -341,7 +341,7 @@ it('returns unpublished without rows or events when a prepared checkpoint loses 
         $state = app(CollaborativeState::class);
         $locked = $state->lock($node->getKey());
         expect($state->transition($locked, new CollaborativeStateTransition($locked->binding, $locked->stateVersion,
-            'vaulter/spreadsheet', 1, null, null, OpaqueContent::fromArray(['sheets' => []]), null,
+            OpaqueNoteType::KEY, 1, null, null, OpaqueContent::fromArray(['blocks' => []]), null,
             new ActorRef('staff', '42'), 'noncollab-race'))->published)->toBeTrue();
     });
     $before = p36Rows();

@@ -9,10 +9,10 @@ use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
 use Vaulter\Documents\Tests\Fixtures\Types\KeyedType;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 
@@ -28,7 +28,7 @@ function freshTypes(): DocumentTypeRegistry
 it('registers the configured types at boot and freezes once the application booted', function (): void {
     $types = Documents::types();
 
-    expect(array_keys($types->all()))->toBe(['acme/kanban', 'vaulter/markdown', 'vaulter/rich-text', 'vaulter/spreadsheet'])
+    expect(array_keys($types->all()))->toBe(['acme/kanban', 'acme/opaque-note', 'vaulter/markdown', 'vaulter/rich-text'])
         ->and($types->get('acme/kanban'))->toBeInstanceOf(AcmeKanbanType::class)
         ->and($types->isFrozen())->toBeTrue();
 
@@ -83,15 +83,15 @@ it('orders types by key whatever order the providers registered them in', functi
     $forward = freshTypes();
     $backward = freshTypes();
 
-    foreach ([AcmeKanbanType::class, SpreadsheetDocumentType::class, MarkdownDocumentType::class, RichTextDocumentType::class] as $class) {
+    foreach ([AcmeKanbanType::class, OpaqueNoteType::class, MarkdownDocumentType::class, RichTextDocumentType::class] as $class) {
         $forward->register($class);
     }
-    foreach ([RichTextDocumentType::class, MarkdownDocumentType::class, SpreadsheetDocumentType::class, AcmeKanbanType::class] as $class) {
+    foreach ([RichTextDocumentType::class, MarkdownDocumentType::class, OpaqueNoteType::class, AcmeKanbanType::class] as $class) {
         $backward->register($class);
     }
 
     expect(array_keys($forward->all()))->toBe(array_keys($backward->all()))
-        ->and(array_keys($forward->all()))->toBe(['acme/kanban', 'vaulter/markdown', 'vaulter/rich-text', 'vaulter/spreadsheet']);
+        ->and(array_keys($forward->all()))->toBe(['acme/kanban', 'acme/opaque-note', 'vaulter/markdown', 'vaulter/rich-text']);
 });
 
 it('collects types from two providers in either order and from the container tag', function (): void {

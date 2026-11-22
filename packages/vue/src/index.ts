@@ -73,7 +73,6 @@ export { default as VaulterNodeList } from './components/VaulterNodeList.vue'
 export type { NodeAction } from './components/VaulterNodeList.vue'
 export { default as VaulterSharedWithMe } from './components/VaulterSharedWithMe.vue'
 export { default as VaulterSharePanel } from './components/VaulterSharePanel.vue'
-export { default as VaulterSpreadsheet } from './components/VaulterSpreadsheet.vue'
 export { default as VaulterUnsupportedNode } from './components/VaulterUnsupportedNode.vue'
 export { default as VaulterUploader } from './components/VaulterUploader.vue'
 

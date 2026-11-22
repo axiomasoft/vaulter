@@ -53,7 +53,7 @@ it('creates a document under a folder (documents guide)', function (): void {
     // [recipe:documents-create]
     $node = Documents::in($drive)->create(
         name: 'Design notes',
-        type: 'vaulter/rich-text',              // or 'vaulter/markdown', 'vaulter/spreadsheet'
+        type: 'vaulter/rich-text',              // or 'vaulter/markdown'
         content: [
             'type' => 'doc',
             'content' => [

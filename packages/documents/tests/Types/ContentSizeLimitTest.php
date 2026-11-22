@@ -21,8 +21,8 @@ function contentOfSize(int $bytes, string $field): array
 }
 
 dataset('size-limited types', [
-    // The spreadsheet codec has no limit of its own: the global one applies.
-    'spreadsheet, global limit' => ['vaulter/spreadsheet', 'sheets', 1024],
+    // The opaque note codec has no limit of its own: the global one applies.
+    'opaque note, global limit' => ['acme/opaque-note', 'notes', 1024],
     // acme/kanban's codec allows 4096 bytes, which wins over the 1 KB global limit.
     'own codec limit' => ['acme/kanban', 'columns', 4096],
 ]);

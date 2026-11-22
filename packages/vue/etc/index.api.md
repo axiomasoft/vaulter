@@ -5662,17 +5662,10 @@ export const VaulterSharedWithMe: __VLS_WithSlots_9<typeof __VLS_component_9, __
 // @public (undocumented)
 export const VaulterSharePanel: __VLS_WithSlots_10<typeof __VLS_component_10, __VLS_Slots_10>;
 
-// Warning: (ae-forgotten-export) The symbol "__VLS_WithSlots_11" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "__VLS_component_11" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "__VLS_Slots_11" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "__VLS_Props_12" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export const VaulterSpreadsheet: __VLS_WithSlots_11<typeof __VLS_component_11, __VLS_Slots_11>;
-
-// Warning: (ae-forgotten-export) The symbol "__VLS_Props_13" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const VaulterUnsupportedNode: DefineComponent<__VLS_Props_13, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {
+export const VaulterUnsupportedNode: DefineComponent<__VLS_Props_12, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {
 download: (node: {
 id: string;
 drive_id: string;
@@ -5748,7 +5741,7 @@ collab_epoch: number;
 revision_id: string | null;
 } | null;
 }) => any;
-}, string, PublicProps, Readonly<__VLS_Props_13> & Readonly<{
+}, string, PublicProps, Readonly<__VLS_Props_12> & Readonly<{
 onDownload?: ((node: {
 id: string;
 drive_id: string;
@@ -5826,12 +5819,12 @@ revision_id: string | null;
 }) => any) | undefined;
 }>, {}, {}, {}, {}, string, ComponentProvideOptions, false, {}, any>;
 
-// Warning: (ae-forgotten-export) The symbol "__VLS_WithSlots_12" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "__VLS_component_12" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "__VLS_Slots_12" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "__VLS_WithSlots_11" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "__VLS_component_11" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "__VLS_Slots_11" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export const VaulterUploader: __VLS_WithSlots_12<typeof __VLS_component_12, __VLS_Slots_12>;
+export const VaulterUploader: __VLS_WithSlots_11<typeof __VLS_component_11, __VLS_Slots_11>;
 
 // Warning: (ae-forgotten-export) The symbol "__VLS_Props" needs to be exported by the entry point index.d.ts
 //
@@ -5843,7 +5836,6 @@ readonly: boolean;
 // @public
 export const VIEWER_KEYS: {
     readonly tiptap: "vaulter/tiptap";
-    readonly univer: "vaulter/univer";
     readonly pdfPreview: "vaulter/pdf-preview";
     readonly imagePreview: "vaulter/image-preview";
     readonly download: "vaulter/download";

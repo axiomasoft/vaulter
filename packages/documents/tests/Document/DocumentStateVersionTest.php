@@ -19,8 +19,8 @@ use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\StateWrites;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
@@ -46,14 +46,14 @@ function stateVersionDocument(): Node
 it('starts at one and counts each changed write once; an identical write is a no-op', function (): void {
     // Collaborative JSON saves reseed even identical content. This case exercises
     // the noncollaborative no-op; CollaborationBindingTransitionTest pins the fence.
-    TypesTestCase::installTypes([SpreadsheetDocumentType::class]);
+    TypesTestCase::installTypes([OpaqueNoteType::class]);
     $drive = DocumentTestHelpers::drive();
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Noncollaborative state version',
         content: OpaqueContent::fromArray(['cells' => ['initial']]),
         parent: DriveTestHelpers::model($drive->root()),
-        type: SpreadsheetDocumentType::KEY,
+        type: OpaqueNoteType::KEY,
     ));
     $action = app(UpdateDocumentContentAction::class);
     expect(DocumentTestHelpers::document($node)->state_version)->toBe(1);

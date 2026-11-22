@@ -15,7 +15,6 @@ import VaulterNameDialog from './components/VaulterNameDialog.vue'
 import VaulterNodeList from './components/VaulterNodeList.vue'
 import VaulterSharedWithMe from './components/VaulterSharedWithMe.vue'
 import VaulterSharePanel from './components/VaulterSharePanel.vue'
-import VaulterSpreadsheet from './components/VaulterSpreadsheet.vue'
 import VaulterUnsupportedNode from './components/VaulterUnsupportedNode.vue'
 import VaulterUploader from './components/VaulterUploader.vue'
 import VaulterViewer from './viewers/VaulterViewer.vue'
@@ -67,7 +66,6 @@ export const VaulterPlugin = {
     app.component('VaulterNodeList', VaulterNodeList)
     app.component('VaulterSharedWithMe', VaulterSharedWithMe)
     app.component('VaulterSharePanel', VaulterSharePanel)
-    app.component('VaulterSpreadsheet', VaulterSpreadsheet)
     app.component('VaulterUnsupportedNode', VaulterUnsupportedNode)
     app.component('VaulterUploader', VaulterUploader)
     app.component('VaulterViewer', VaulterViewer)

@@ -10,7 +10,7 @@ use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 
 return [
-    // Document type classes; add SpreadsheetDocumentType or your own here.
+    // Document type classes; add your own DocumentType implementations here.
     'types' => [RichTextDocumentType::class, MarkdownDocumentType::class],
     'default_type' => 'vaulter/rich-text',
     'collaboration' => ['session_ttl' => 300],

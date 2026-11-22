@@ -23,9 +23,9 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
 use Vaulter\Documents\Tests\Fixtures\StateWrites;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadSource;
@@ -48,7 +48,7 @@ beforeEach(function (): void {
 function matrixSubject(bool $collaborative = true): array
 {
     if (!$collaborative) {
-        TypesTestCase::installTypes([RichTextDocumentType::class, SpreadsheetDocumentType::class]);
+        TypesTestCase::installTypes([RichTextDocumentType::class, OpaqueNoteType::class]);
     }
     $drive = DocumentTestHelpers::drive();
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
@@ -56,7 +56,7 @@ function matrixSubject(bool $collaborative = true): array
         name: 'Matrix document',
         content: DocumentTestHelpers::content('initial'),
         parent: DriveTestHelpers::model($drive->root()),
-        type: $collaborative ? RichTextDocumentType::KEY : SpreadsheetDocumentType::KEY,
+        type: $collaborative ? RichTextDocumentType::KEY : OpaqueNoteType::KEY,
     ));
 
     return ['drive' => $drive, 'node' => $node];

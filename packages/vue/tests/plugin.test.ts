@@ -19,7 +19,7 @@ const Probe = defineComponent({
 })
 
 describe('VaulterPlugin', () => {
-  it('provides the client, a per-app viewer registry with the six built-in keys, and i18n', () => {
+  it('provides the client, a per-app viewer registry with the five built-in keys, and i18n', () => {
     const wrapper = mount(Probe, {
       global: { plugins: [[VaulterPlugin, { baseUrl: '/api/vaulter/v1' }]] },
     })
@@ -85,7 +85,7 @@ describe('VaulterPlugin', () => {
     for (const name of [
       'VaulterBreadcrumb', 'VaulterCommentsPanel', 'VaulterDocumentNode', 'VaulterDrive', 'VaulterFolderPicker',
       'VaulterGrantsPanel', 'VaulterNameDialog', 'VaulterNodeList', 'VaulterSharedWithMe', 'VaulterSharePanel',
-      'VaulterSpreadsheet', 'VaulterUnsupportedNode', 'VaulterUploader', 'VaulterViewer',
+      'VaulterUnsupportedNode', 'VaulterUploader', 'VaulterViewer',
     ]) {
       expect(app.component(name), name).toBeTruthy()
     }

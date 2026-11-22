@@ -123,5 +123,5 @@ it('boots with both built-in exporters registered and frozen', function (): void
     expect(array_keys($exporters->all()))->toBe(['vaulter/html', 'vaulter/markdown'])
         ->and($exporters->isFrozen())->toBeTrue()
         ->and($exporters->formatsFor('vaulter/markdown'))->toBe(['html', 'markdown'])
-        ->and($exporters->formatsFor('vaulter/spreadsheet'))->toBe([]);
+        ->and($exporters->formatsFor('acme/opaque-note'))->toBe([]);
 });

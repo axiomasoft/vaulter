@@ -38,13 +38,12 @@ describe('createViewerRegistry', () => {
     expect(wrapper.text()).toBe('lazy')
   })
 
-  it('lists the six built-in keys the server may name', () => {
+  it('lists the five built-in keys the server may name', () => {
     expect(Object.keys(builtinViewers()).sort()).toEqual([
       'vaulter/download',
       'vaulter/image-preview',
       'vaulter/pdf-preview',
       'vaulter/tiptap',
-      'vaulter/univer',
       'vaulter/unsupported',
     ])
     expect(Object.values(VIEWER_KEYS).sort()).toEqual(Object.keys(builtinViewers()).sort())

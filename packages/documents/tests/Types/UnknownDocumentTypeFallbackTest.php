@@ -9,11 +9,11 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -35,7 +35,7 @@ function kanbanBoard(): array
 /** @return list<class-string> */
 function typesWithoutKanban(): array
 {
-    return [RichTextDocumentType::class, MarkdownDocumentType::class, SpreadsheetDocumentType::class];
+    return [RichTextDocumentType::class, MarkdownDocumentType::class, OpaqueNoteType::class];
 }
 
 it('keeps a document of a removed type readable, read-only and movable, then works again once reinstalled', function (): void {

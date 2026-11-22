@@ -7,13 +7,13 @@ namespace Vaulter\Documents\Tests\Export;
 use Illuminate\Foundation\Application;
 use Override;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 
 /**
- * The Documents API with database grants, plus a spreadsheet and a third-party type
+ * The Documents API with database grants, plus an opaque note and a third-party type
  * that no built-in exporter renders.
  */
 abstract class ExportTestCase extends OperationsTestCase
@@ -29,7 +29,7 @@ abstract class ExportTestCase extends OperationsTestCase
         $app['config']->set('vaulter-documents.types', [
             RichTextDocumentType::class,
             MarkdownDocumentType::class,
-            SpreadsheetDocumentType::class,
+            OpaqueNoteType::class,
             AcmeKanbanType::class,
         ]);
     }

@@ -26,7 +26,6 @@ use Vaulter\Documents\Testing\Contracts\ExporterContractTests;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 
 /**
@@ -323,7 +322,6 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         DocumentExporterRegistry::class,
         RichTextDocumentType::class,
         MarkdownDocumentType::class,
-        SpreadsheetDocumentType::class,
         OpaqueContent::class,
         OpaqueJsonCodec::class,
         TipTapContent::class,

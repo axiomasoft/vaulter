@@ -71,8 +71,8 @@ it('answers unknown_export_format with the allowed formats for a format the type
     }
 
     // A type no exporter lists has no formats at all, even for the built-in ones.
-    [$handle, $sheet, $user] = exportFixture(RoleRegistry::OWNER, 'vaulter/spreadsheet', ['id' => 'wb', 'sheets' => []]);
-    expect(fn () => Documents::in($handle->actingAs($user))->export($sheet->id, 'html'))->toThrow(UnknownExportFormatException::class);
+    [$handle, $opaque, $user] = exportFixture(RoleRegistry::OWNER, 'acme/opaque-note', ['id' => 'note', 'blocks' => []]);
+    expect(fn () => Documents::in($handle->actingAs($user))->export($opaque->id, 'html'))->toThrow(UnknownExportFormatException::class);
 });
 
 it('answers 422 with the allowed list through HTTP and a stable code for a missing grant', function (): void {

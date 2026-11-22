@@ -8,13 +8,13 @@ use Illuminate\Foundation\Application;
 use Override;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
+use Vaulter\Documents\Tests\Fixtures\Types\OpaqueNoteType;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\Types\SpreadsheetDocumentType;
 
 /**
- * Boots documents with the built-in types, the spreadsheet type and a third-party
+ * Boots documents with the built-in types, an opaque note fixture and a third-party
  * type (acme/kanban) registered from config, the way a host installs an extension.
  */
 abstract class TypesTestCase extends DocumentTestCase
@@ -30,7 +30,7 @@ abstract class TypesTestCase extends DocumentTestCase
         $app['config']->set('vaulter-documents.types', [
             RichTextDocumentType::class,
             MarkdownDocumentType::class,
-            SpreadsheetDocumentType::class,
+            OpaqueNoteType::class,
             AcmeKanbanType::class,
         ]);
     }

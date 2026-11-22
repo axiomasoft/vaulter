@@ -384,15 +384,6 @@ Vaulter\Documents\Types\MarkdownDocumentType
   schemaVersion(): int
   viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
 
-Vaulter\Documents\Types\SpreadsheetDocumentType
-  codec(): \Vaulter\Documents\Contracts\DocumentCodec
-  defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
-  features(): \Vaulter\Documents\Data\Types\DocumentFeatures
-  key(): string
-  label(): string
-  schemaVersion(): int
-  viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
-
 Vaulter\Documents\Content\OpaqueContent
   contentHash(): string
   fromArray(array $data): \self

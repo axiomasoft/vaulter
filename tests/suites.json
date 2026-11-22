@@ -1521,7 +1521,6 @@
             "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
             "packages/documents/tests/Document/ReleaseKeptVersionTest.php",
             "packages/documents/tests/Document/RevisionIdentityTest.php",
-            "packages/documents/tests/Document/SpreadsheetContentTest.php",
             "packages/documents/tests/Document/TrashDocumentTest.php",
             "packages/documents/tests/Document/VersionFormatCarryForwardTest.php",
             "packages/documents/tests/Http/CollaborationSessionV1Test.php",

@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Types;
+namespace Vaulter\Documents\Tests\Fixtures\Types;
 
-use Packman\Attributes\Api;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
@@ -14,14 +13,11 @@ use Vaulter\Documents\Data\Types\DocumentFeatures;
 use Vaulter\Documents\Data\Types\DocumentViewer;
 
 /**
- * A spreadsheet workbook owned by the Univer editor; the server stores its JSON
- * snapshot as is. Single-user: Univer collaboration is a separate engine, not the
- * Yjs lane. Registered only when listed in vaulter-documents.types.
+ * A non-collaborative opaque JSON document type fixture using the default global size limit.
  */
-#[Api]
-final readonly class SpreadsheetDocumentType implements DocumentType
+final readonly class OpaqueNoteType implements DocumentType
 {
-    public const string KEY = 'vaulter/spreadsheet';
+    public const string KEY = 'acme/opaque-note';
 
     public function key(): string
     {
@@ -30,7 +26,7 @@ final readonly class SpreadsheetDocumentType implements DocumentType
 
     public function label(): string
     {
-        return 'Spreadsheet';
+        return 'Opaque note';
     }
 
     public function schemaVersion(): int
@@ -50,7 +46,7 @@ final readonly class SpreadsheetDocumentType implements DocumentType
 
     public function viewer(): DocumentViewer
     {
-        return new DocumentViewer(key: 'vaulter/univer');
+        return new DocumentViewer(key: 'acme/opaque-note');
     }
 
     public function features(): DocumentFeatures
