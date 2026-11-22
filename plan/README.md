@@ -36,7 +36,8 @@
 | --- | --- |
 | [repos/README.md](repos/README.md) | Короткие паспорта всех 5 репозиториев: имена, пакеты, границы и зависимости |
 | [dev-plans/](dev-plans/vaulter.md) | Автономные планы разработки для каждого из 5 репозиториев |
-| [execution/models-and-orchestration.md](execution/models-and-orchestration.md) | Глобальная оркестрация (`SKM orch.py` + `Antigravity run_workflow`), 4 эшелона моделей (**Grok**, **Gemini Neon**, **GPT-6.2 Sol**, **Astra**), жёсткое `Исполнитель ≠ Ревьюер`, волны W0–W7, треки `MVP-1`/`MVP-2` и протокол анти-залипания (Max-2 цикла + [polish-backlog.md](polish-backlog.md)) |
+| [execution/models-and-orchestration.md](execution/models-and-orchestration.md) | Глобальная оркестрация (`SKM orch.py` + `Antigravity run_workflow`), 4 эшелона моделей (**Grok**, **Gemini Neon**, **GPT-6.2 Sol**, **Astra**), жёсткое `Исполнитель ≠ Ревьюер`, волны W0–W7, треки `MVP-1`/`MVP-2`, анти-залипание (Max-2 цикла + [polish-backlog.md](polish-backlog.md)) и контролёр контекста |
+| [execution/orchestrator-prompt.md](execution/orchestrator-prompt.md) | Готовый стартовый промпт для тонкого оркестратора `Gemini Neon (low effort)` + 0-токенные инструменты `watchdog.py`, `pack-brief.py` и пресеты `execution/orch-options/*.json` |
 | [audit-report.md](audit-report.md) | Реестр найденных и закрытых дыр плана и согласование внешнего архитектурного аудита |
 | [spec/engineering-standards.md](spec/engineering-standards.md) | Матрица рантаймов 2026 (PHP 8.4/8.5, Laravel 13, PG 18/19, Node 26 LTS + `libatomic`, Vue 3.5, Filament 5), 10 постоянных стоп-кранов CI, RLS/PgBouncer/Octane, S3/ClamAV/ZIP и таблица согласования аудита |
 | [spec/implementation/vaulter.md](spec/implementation/vaulter.md) | Существующие PHP/Vue/Hub файлы, изменения и владельцы, переносы и удаления |

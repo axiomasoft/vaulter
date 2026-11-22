@@ -1,0 +1,48 @@
+{
+  "scout_enabled": true,
+  "stages": [
+    {
+      "role": "context-scout",
+      "provider": "grok",
+      "model": "grok-4.5",
+      "effort": "low"
+    },
+    {
+      "role": "executor",
+      "provider": "codex",
+      "model": "gpt-6.2-sol",
+      "effort": "high"
+    },
+    {
+      "role": "report-fixer",
+      "provider": "grok",
+      "model": "grok-4.5",
+      "effort": "low"
+    }
+  ],
+  "session": {
+    "executor": "per-item"
+  },
+  "scope": {
+    "fence": "project",
+    "outside": "deviation"
+  },
+  "checks": {
+    "red_first": true,
+    "fail_fast": false,
+    "reuse": true
+  },
+  "limits": {
+    "check_fixes": 2,
+    "retries": 1,
+    "repairs": 1,
+    "prompt_core_tokens": 12000,
+    "prompt_supporting_tokens": 20000,
+    "stall_repeat_n": 4
+  },
+  "rules": [
+    "Follow the exact contracts, SQL DDL and concurrency invariants in the packed task brief.",
+    "Respect all 12 CI stop-rails in plan/spec/engineering-standards.md.",
+    "Keep changes tightly scoped; do not spend turns refactoring unrelated code."
+  ]
+}
