@@ -357,7 +357,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 
 | Ключ | По умолчанию |
 |---|---|
-| `vaulter-documents.types` | `[RichTextDocumentType::class, MarkdownDocumentType::class]` — зарегистрированные [типы документов](/ru/extending/document-types); добавьте `SpreadsheetDocumentType::class` или свой |
+| `vaulter-documents.types` | `[RichTextDocumentType::class, MarkdownDocumentType::class]` — зарегистрированные [типы документов](/ru/extending/document-types); добавьте свой |
 | `vaulter-documents.default_type` | `'vaulter/rich-text'` — тип, который использует `create()`, если тип не указан; обязан быть зарегистрирован |
 | `vaulter-documents.content.max_size_kb` | `5120` — лимит кодека, у которого `maxSizeBytes()` равен `null` |
 
@@ -528,7 +528,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 
 | Key | Env | Default | Description |
 |---|---|---|---|
-| `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add SpreadsheetDocumentType or your own here. |
+| `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add your own here. |
 | `vaulter-documents.default_type` | — | `'vaulter/rich-text'` | — |
 | `vaulter-documents.collaboration.session_ttl` | — | `300` | — |
 | `vaulter-documents.content.max_size_kb` | — | `5120` | — |

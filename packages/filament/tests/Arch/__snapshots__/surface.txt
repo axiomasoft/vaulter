@@ -18,7 +18,7 @@ Vaulter\Filament\Providers\FilamentPackageRegistrar spi:call since 1.0 final cla
   public function boot(Illuminate\Contracts\Foundation\Application $app): void
   public function register(Illuminate\Contracts\Foundation\Application $app): void
 
-Vaulter\Filament\VaulterFilamentServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\Filament\VaulterFilamentServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\Filament\Providers\FilamentPackageRegistrar::class]
   public function boot(): void
   public function register(): void

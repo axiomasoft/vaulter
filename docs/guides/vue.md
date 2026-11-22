@@ -227,8 +227,8 @@ app.use(VaulterPlugin, {
 ```
 
 A viewer component receives `node` and `readonly` (plus the server's `viewer.props`, which can never override those
-two). The built-in keys are `vaulter/tiptap`, `vaulter/univer` (the headless editing shells
-`VaulterDocumentNode` / `VaulterSpreadsheet` — **you** mount the editor engine in their slot or replace the key),
+two). The built-in keys are `vaulter/tiptap` (the headless editing shell
+`VaulterDocumentNode` — **you** mount the editor engine in its slot or replace the key),
 `vaulter/pdf-preview`, `vaulter/image-preview` (shown through the authorised download, so a *previewer* without the
 `download` ability sees no bytes), `vaulter/download` and `vaulter/unsupported`.
 
@@ -295,7 +295,7 @@ node's `abilities` — a button or a key is never offered for an ability the ser
 | `VaulterCommentsPanel` | a comment thread |
 | `VaulterSharedWithMe` | the cross-drive listing |
 | `VaulterViewer`, `VaulterUnsupportedNode` | see [viewers](#viewers) |
-| `VaulterDocumentNode`, `VaulterSpreadsheet` | editing shells (load, autosave, collaboration, conflict) for **your** editor |
+| `VaulterDocumentNode` | editing shell (load, autosave, collaboration, conflict) for **your** editor |
 
 Display helpers: `humanByteSize(bytes)` and `nodeIconKind(node)`.
 

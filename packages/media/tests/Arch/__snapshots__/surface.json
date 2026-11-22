@@ -4596,7 +4596,8 @@
             ],
             "implements": [],
             "traits": [
-                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                "Vaulter\\Modules\\OffersModules"
             ],
             "adaptations": [
                 {

@@ -1,6 +1,6 @@
 ---
 title: Типы документов
-description: Реестр типов документов — встроенные rich text, markdown и spreadsheet, собственные типы, кодеки, версии схемы и что происходит, когда тип удалён.
+description: Реестр типов документов — встроенные rich text и markdown, собственные типы, кодеки, версии схемы и что происходит, когда тип удалён.
 outline: deep
 ---
 
@@ -28,10 +28,9 @@ outline: deep
 |---|---|---|---|
 | `vaulter/rich-text` | `TipTapCodec` со схемой rich text (StarterKit, Image, Table, Link, CodeBlock и `vaulter-documents.tiptap.*`) | Yjs | `vaulter/tiptap` (`preset: rich-text`) |
 | `vaulter/markdown` | `TipTapCodec` со схемой markdown (только то, что представимо в Markdown; расширения хоста не применяются) | Yjs | `vaulter/tiptap` (`preset: markdown`) |
-| `vaulter/spreadsheet` | `OpaqueJsonCodec` (любой JSON-объект) | нет | `vaulter/univer` |
 
-Rich text и markdown регистрируются по умолчанию. Тип spreadsheet регистрируется, только если
-вы его перечислили:
+Rich text и markdown регистрируются по умолчанию. Собственные типы документов добавляются в
+`config/vaulter-documents.php`:
 
 <!-- snippet: config -->
 
@@ -40,7 +39,6 @@ Rich text и markdown регистрируются по умолчанию. Ти
 'types' => [
     \Vaulter\Documents\Types\RichTextDocumentType::class,
     \Vaulter\Documents\Types\MarkdownDocumentType::class,
-    \Vaulter\Documents\Types\SpreadsheetDocumentType::class,
 ],
 'default_type' => 'vaulter/rich-text',
 ```

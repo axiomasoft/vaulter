@@ -1986,6 +1986,38 @@
             "action": "keep",
             "phase": "stay",
             "why": "Packman migration: supported plugin registration SPI for independently distributed addons."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\DatabaseErrorMapper",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core database error mapping utility."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\PackmanConfigValidCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core doctor check for Packman configuration validity."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Http\\WeakEtagNotAllowedException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core HTTP precondition exception."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\ExposeVaulterCorsHeaders",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core HTTP CORS header middleware."
         }
     ]
 }

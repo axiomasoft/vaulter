@@ -362,7 +362,7 @@ with a key the app never registered, or whose document type this application can
 (`type_available = false`) falls back to the `vaulter/unsupported` viewer — the item is still
 shown, named and downloadable.
 
-The built-in keys (`vaulter/tiptap`, `vaulter/univer`, `vaulter/pdf-preview`,
+The built-in keys (`vaulter/tiptap`, `vaulter/pdf-preview`,
 `vaulter/image-preview`, `vaulter/download`, `vaulter/unsupported`) are installed by the plugin.
 Add your own, or replace a built-in one, through the plugin's `viewers` option — an explicit
 ES-module import, not an ambient global:
@@ -408,8 +408,8 @@ defineProps<{ node: Node }>()
 `useViewerRegistry()` returns the registry for runtime changes (`register`, `unregister`,
 `has`, `keys`). Registrations belong to one app: two apps on a page never share viewers.
 
-The `vaulter/tiptap` and `vaulter/univer` viewers are headless editing shells
-(`VaulterDocumentNode`, `VaulterSpreadsheet`): they load the content, autosave and, when the
+The `vaulter/tiptap` viewer is a headless editing shell
+(`VaulterDocumentNode`): it loads the content, autosaves and, when the
 presentation is **collaborative**, a matching protocol adapter is registered, request a neutral collaboration session. The editor
 engine itself is yours — replace the key as above, or fill the shell's default slot. See
 [Document nodes](/guides/documents#working-state-and-checkpoints) for the autosave path.

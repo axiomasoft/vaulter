@@ -223,7 +223,7 @@ Vaulter\Media\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
   public function tenantId(): ?string
   public static function unshared(): self
 
-Vaulter\Media\VaulterMediaServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\Media\VaulterMediaServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\Media\Providers\MediaPackageRegistrar::class]
   public function boot(): void
   public function register(): void

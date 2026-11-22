@@ -1866,7 +1866,7 @@ Vaulter\Drive\Vaulter api since 1.0 final readonly class
   public function permissions(): Vaulter\Drive\Access\PermissionDriverManager
   public function profiles(): Vaulter\Drive\Profiles\ProfileRegistry
 
-Vaulter\Drive\VaulterDriveServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\Drive\VaulterDriveServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\Drive\Providers\DrivePackageRegistrar::class]
   public function boot(): void
   public function register(): void

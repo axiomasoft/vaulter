@@ -18398,6 +18398,123 @@
       "new": "P\\Tests\\Document\\DocumentValidatorMatrixTest::__pest_evaluable_it_moves_exactly_the_documented_validators___dataset\"dataset \"update of a snapshot with Yjs state\"\"",
       "reason": "Update the test for the storage and generation invariant specified by task 1.0.",
       "decision": "task 1.0"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text__Univer__node_instead_of_rendering_it_blank\"('html')\"",
+      "replacement": [
+        "P\\Tests\\Document\\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text_opaque_node_instead_of_rendering_it_blank\"('html')\""
+      ],
+      "reason": "renamed in 1.2 after removing SpreadsheetDocumentType from base documents package",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text__Univer__node_instead_of_rendering_it_blank\"('markdown')\"",
+      "replacement": [
+        "P\\Tests\\Document\\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text_opaque_node_instead_of_rendering_it_blank\"('markdown')\""
+      ],
+      "reason": "renamed in 1.2 after removing SpreadsheetDocumentType from base documents package",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_autosaves_an_opaque_Univer_workbook_on_a_spreadsheet_document",
+      "replacement": [
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+      ],
+      "reason": "SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2)",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_creates_a_spreadsheet_document_from_its_type_key",
+      "replacement": [
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+      ],
+      "reason": "SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2)",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_rejects_a_non_doc_create_payload_on_a_rich_text_node__no_type_",
+      "replacement": [
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+      ],
+      "reason": "SpreadsheetContentTest removed with SpreadsheetDocumentType in 1.2; rich-text validation covered by TipTap codec tests",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_rejects_a_spreadsheet_create_when_the_spreadsheet_type_is_not_registered",
+      "replacement": [
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+      ],
+      "reason": "SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2)",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_still_creates_a_rich_text__tiptap__node_and_enforces___type___doc___when_no_type_is_given",
+      "replacement": [
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+      ],
+      "reason": "SpreadsheetContentTest removed with SpreadsheetDocumentType in 1.2; default rich-text creation covered by BuiltInDocumentTypesTest",
+      "decision": "1.2"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the six built-in keys, and i18n",
+      "replacement": [
+        "tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the five built-in keys, and i18n"
+      ],
+      "reason": "renamed in 1.2 after removing vaulter/univer built-in viewer",
+      "decision": "1.2"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/viewers/registry.test.ts > createViewerRegistry > lists the six built-in keys the server may name",
+      "replacement": [
+        "tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name"
+      ],
+      "reason": "renamed in 1.2 after removing vaulter/univer built-in viewer",
+      "decision": "1.2"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/spreadsheet.test.ts > VaulterSpreadsheet > ignores edits when the caller cannot edit the node",
+      "replacement": [
+        "tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name"
+      ],
+      "reason": "VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2)",
+      "decision": "1.2"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/spreadsheet.test.ts > VaulterSpreadsheet > loads on mount and exposes the workbook + a save through the default slot",
+      "replacement": [
+        "tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name"
+      ],
+      "reason": "VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2)",
+      "decision": "1.2"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/spreadsheet.test.ts > VaulterSpreadsheet > persists with the ETag of the loaded snapshot",
+      "replacement": [
+        "tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name"
+      ],
+      "reason": "VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2)",
+      "decision": "1.2"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/spreadsheet.test.ts > VaulterSpreadsheet > surfaces a load failure in the error slot",
+      "replacement": [
+        "tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name"
+      ],
+      "reason": "VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2)",
+      "decision": "1.2"
     }
   ],
   "additions": {
@@ -20387,17 +20504,50 @@
       ]
     },
     "vue": {
-      "count": 37,
+      "count": 84,
       "names": [
+        "tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > writes with the strong validator exposed through gzip and CORS (body=false)",
+        "tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > writes with the strong validator exposed through gzip and CORS (body=true)",
         "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > lists the grants with the access tag of the node",
         "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > reads every page of the grants and the shares, following an empty page and refusing a repeated cursor",
         "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > rejects a stale tag with a 412 stale_write VaulterApiError",
         "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > sends the resource tag verbatim in If-Match for every versioned write",
+        "tests/api/client.test.ts > createVaulterClient — requests > does not invent a share session when the response has no X-Share-Session",
+        "tests/api/client.test.ts > createVaulterClient — requests > keeps X-Share-Session on the share node and the page for the next call",
+        "tests/api/client.test.ts > createVaulterClient — requests > rejects a quarantined download as 423 content_unavailable before any byte",
+        "tests/api/client.test.ts > createVaulterClient — requests > returns file bytes on 200 and does not follow a direct_signed redirect",
         "tests/api/client.test.ts > preserves a protocol-neutral session and sends the supported schema without importing an adapter",
         "tests/api/errors.test.ts > Retry-After > decodes delta-seconds into retryAfterSeconds",
         "tests/api/errors.test.ts > Retry-After > is null without the header",
         "tests/api/errors.test.ts > Retry-After > reads the header of a non-problem response too",
         "tests/api/errors.test.ts > Retry-After > turns an HTTP-date into the seconds left, never negative, and ignores garbage",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > bootstraps from the start cursor and a keyed listing, keeping pins and the new keys after an owner bump",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > does not reset again while the cache is still waiting for its bootstrap (no reset storm)",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > invalidates a legacy cache whose nodes have no key",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > keeps the scanned progress across pages and through a refused page",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > keeps the trash view independent of feed removes and of the live view",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > leaves the cache untouched when a page cannot be applied (atomic checkpoint)",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > removes a node and its descendants by sync key and moves the cursor with the nodes",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > removing a pinned node by its own key drops it without queueing a revalidation",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > resets on a 400 or 410 from the feed only",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > revalidates a pinned descendant on its own when its ancestor is removed, and never by raw id",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > treats a remove of an unknown key as harmless",
+        "tests/api/sync-contract.test.ts > keyed change feed cache > wakes up into a bootstrap for a keyless or cursorless cache, a revalidation for queued pins, else the feed",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > advances the checkpoint only after the fresh listing: stale gone, newly visible shown",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > does not advance the checkpoint or show stale nodes when the reconciliation fails or is unfinished",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > does not queue a pinned descendant again that was proven on its own while still listed under the folder",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > drops a reconciled folder the reader no longer sees and a folder removed in the same page",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > keeps a pinned independent descendant for its own revalidation, and the trash view apart",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > keeps folder F directly visible but stops showing its revoked inherited descendants, with the cursor still at c0",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > moves the cursor only after all roots of the page are reconciled",
+        "tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > shows the descendants of a copied or restored folder that the cache never held",
+        "tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid (\"\")",
+        "tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid (\"-1\")",
+        "tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid (\"1.5\")",
+        "tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid (\"bad\")",
+        "tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid (null)",
+        "tests/api/uploads.test.ts > resumable uploads — tus > resumes a 409 from the Upload-Offset header instead of failing the upload",
+        "tests/api/uploads.test.ts > resumable uploads — tus > resumes from an explicit zero Upload-Offset instead of treating it as absent",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the forbidden shapes",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > imports only itself and framework-neutral packages",
@@ -20424,8 +20574,22 @@
         "tests/document-node.test.ts > VaulterDocumentNode > goes read-only when the session turns read-only (a status error stops local edits)",
         "tests/document-node.test.ts > VaulterDocumentNode > passes the status of the session to the slot and rebinds a replaced document",
         "tests/document-node.test.ts > VaulterDocumentNode > re-reads the content when the session reports a new generation (onEpochChanged)",
+        "tests/drive-components.test.ts > VaulterDrive > does not say the item was reloaded when the re-read after 412 is 401 or the network fails",
         "tests/drive-composables.test.ts > useGrants > revokes with the held access tag without reloading, and passes a 412 through",
-        "tests/plugin.test.ts > VaulterPlugin > provides the collaboration adapter given in the options, and none otherwise"
+        "tests/drive-composables.test.ts > useNodes > a stale etag (412) > keeps the row when the re-read is 401 or the network fails, and does not call that a reload",
+        "tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the five built-in keys, and i18n",
+        "tests/plugin.test.ts > VaulterPlugin > provides the collaboration adapter given in the options, and none otherwise",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns new unique IDs to pasted blocks without altering originals",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns unique blockIds on missing blocks and preserves existing ones",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID and assigns a new ID to the second block on split",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID on join",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves block ID when a block is moved within the document",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves bold and link marks under block p42 (3.1-B)",
+        "tests/viewers/fallback.test.ts > built-in preview viewers > image preview links the download URL when direct_signed redirects",
+        "tests/viewers/fallback.test.ts > built-in preview viewers > image preview shows a failure instead of a broken image when the bytes are unavailable",
+        "tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview links the download URL when direct_signed redirects",
+        "tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview shows a failure instead of a frame when the bytes are unavailable",
+        "tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name"
       ]
     },
     "collaboration": {

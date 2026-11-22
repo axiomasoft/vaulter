@@ -43,7 +43,7 @@ Vaulter\AzGuard\Testing\FakeAzGuardGuard api since 1.0 final class implements Va
   public function hasScopedPermission(Illuminate\Contracts\Auth\Access\Authorizable $actor, string $permission, object $entity): bool
   public static function superAdmin(): self
 
-Vaulter\AzGuard\VaulterAzGuardServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\AzGuard\VaulterAzGuardServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\AzGuard\Providers\AzGuardPackageRegistrar::class]
   public function boot(): void
   public function register(): void

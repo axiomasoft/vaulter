@@ -228,8 +228,8 @@ app.use(VaulterPlugin, {
 ```
 
 Компонент viewer'а получает `node` и `readonly` (плюс `viewer.props` с сервера, которые не могут их переопределить).
-Встроенные ключи: `vaulter/tiptap`, `vaulter/univer` (headless-оболочки редактирования `VaulterDocumentNode` /
-`VaulterSpreadsheet` — движок редактора монтируете **вы** в их слоте или заменяете ключ), `vaulter/pdf-preview`,
+Встроенные ключи: `vaulter/tiptap` (headless-оболочка редактирования `VaulterDocumentNode` —
+движок редактора монтируете **вы** в её слоте или заменяете ключ), `vaulter/pdf-preview`,
 `vaulter/image-preview` (показ идёт через авторизованное скачивание, поэтому *previewer* без права `download` не
 получает байтов), `vaulter/download` и `vaulter/unsupported`.
 
@@ -295,7 +295,7 @@ await rename(node, 'new name')       // отправляет If-Match: node.etag
 | `VaulterCommentsPanel` | обсуждение |
 | `VaulterSharedWithMe` | список «доступно мне» по всем дискам |
 | `VaulterViewer`, `VaulterUnsupportedNode` | см. [viewer'ы](#viewer-ы) |
-| `VaulterDocumentNode`, `VaulterSpreadsheet` | оболочки редактирования (загрузка, автосохранение, совместная работа, конфликт) для **вашего** редактора |
+| `VaulterDocumentNode` | оболочка редактирования (загрузка, автосохранение, совместная работа, конфликт) для **вашего** редактора |
 
 Хелперы отображения: `humanByteSize(bytes)` и `nodeIconKind(node)`.
 

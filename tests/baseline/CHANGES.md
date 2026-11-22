@@ -2171,6 +2171,19 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `documents` `P\Tests\Document\DocumentHeadIntegrityTest::__pest_evaluable_it_enforces_the_head_foreign_key_in_the_database_where_the_driver_supports_it` → `P\Tests\Document\DocumentHeadIntegrityTest::__pest_evaluable_it_enforces_the_head_foreign_key_in_the_database` — Update the test for the storage and generation invariant specified by task 1.0. (task 1.0)
 - `documents` `P\Tests\Document\DocumentStateVersionTest::__pest_evaluable_it_replacing_the_JSON_of_a_document_with_Yjs_state_drops_that_state_and_moves_the_epoch` → `P\Tests\Document\DocumentStateVersionTest::__pest_evaluable_it_replacing_the_JSON_of_a_document_with_Yjs_state_drops_that_state_and_keeps_its_generation` — Update the test for the storage and generation invariant specified by task 1.0. (task 1.0)
 - `documents` `P\Tests\Document\DocumentValidatorMatrixTest::__pest_evaluable_it_moves_exactly_the_documented_validators___dataset"dataset "update of a document with Yjs state (fences open rooms)""` → `P\Tests\Document\DocumentValidatorMatrixTest::__pest_evaluable_it_moves_exactly_the_documented_validators___dataset"dataset "update of a snapshot with Yjs state""` — Update the test for the storage and generation invariant specified by task 1.0. (task 1.0)
+- `documents` `P\Tests\Document\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text__Univer__node_instead_of_rendering_it_blank"('html')"` → replacement `P\Tests\Document\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text_opaque_node_instead_of_rendering_it_blank"('html')"` — renamed in 1.2 after removing SpreadsheetDocumentType from base documents package (1.2)
+- `documents` `P\Tests\Document\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text__Univer__node_instead_of_rendering_it_blank"('markdown')"` → replacement `P\Tests\Document\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text_opaque_node_instead_of_rendering_it_blank"('markdown')"` — renamed in 1.2 after removing SpreadsheetDocumentType from base documents package (1.2)
+- `documents` `P\Tests\Document\SpreadsheetContentTest::__pest_evaluable_it_autosaves_an_opaque_Univer_workbook_on_a_spreadsheet_document` → replacement  — SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2) (1.2)
+- `documents` `P\Tests\Document\SpreadsheetContentTest::__pest_evaluable_it_creates_a_spreadsheet_document_from_its_type_key` → replacement  — SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2) (1.2)
+- `documents` `P\Tests\Document\SpreadsheetContentTest::__pest_evaluable_it_rejects_a_non_doc_create_payload_on_a_rich_text_node__no_type_` → replacement  — SpreadsheetContentTest removed with SpreadsheetDocumentType in 1.2; rich-text validation covered by TipTap codec tests (1.2)
+- `documents` `P\Tests\Document\SpreadsheetContentTest::__pest_evaluable_it_rejects_a_spreadsheet_create_when_the_spreadsheet_type_is_not_registered` → replacement  — SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2) (1.2)
+- `documents` `P\Tests\Document\SpreadsheetContentTest::__pest_evaluable_it_still_creates_a_rich_text__tiptap__node_and_enforces___type___doc___when_no_type_is_given` → replacement  — SpreadsheetContentTest removed with SpreadsheetDocumentType in 1.2; default rich-text creation covered by BuiltInDocumentTypesTest (1.2)
+- `vue` `tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the six built-in keys, and i18n` → replacement `tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the five built-in keys, and i18n` — renamed in 1.2 after removing vaulter/univer built-in viewer (1.2)
+- `vue` `tests/viewers/registry.test.ts > createViewerRegistry > lists the six built-in keys the server may name` → replacement `tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name` — renamed in 1.2 after removing vaulter/univer built-in viewer (1.2)
+- `vue` `tests/spreadsheet.test.ts > VaulterSpreadsheet > ignores edits when the caller cannot edit the node` → replacement  — VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2) (1.2)
+- `vue` `tests/spreadsheet.test.ts > VaulterSpreadsheet > loads on mount and exposes the workbook + a save through the default slot` → replacement  — VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2) (1.2)
+- `vue` `tests/spreadsheet.test.ts > VaulterSpreadsheet > persists with the ETag of the loaded snapshot` → replacement  — VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2) (1.2)
+- `vue` `tests/spreadsheet.test.ts > VaulterSpreadsheet > surfaces a load failure in the error slot` → replacement  — VaulterSpreadsheet moved to commercial @vaulter/vue-sheets package (1.2) (1.2)
 
 ## Additions (current − original)
 
@@ -2182,7 +2195,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `azguard`: 46
 - `filament`: 27
 - `webhooks`: 208
-- `vue`: 37
+- `vue`: 84
 - `collaboration`: 461
 - `hub`: 30
 - `vue-collaboration`: 57

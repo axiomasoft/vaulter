@@ -26,6 +26,8 @@ tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > do
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > reports a missing ETag header as null instead of inventing one
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > sends the opaque etag verbatim in If-Match for every node mutation
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > takes the document validator from the ETag response header
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > writes with the strong validator exposed through gzip and CORS (body=false)
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > writes with the strong validator exposed through gzip and CORS (body=true)
 tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > lists the grants with the access tag of the node
 tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > reads every page of the grants and the shares, following an empty page and refusing a repeated cursor
 tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > rejects a stale tag with a 412 stale_write VaulterApiError
@@ -33,12 +35,16 @@ tests/api/client.test.ts > createVaulterClient — preconditions on drives, gran
 tests/api/client.test.ts > createVaulterClient — requests > builds download URLs without fetching
 tests/api/client.test.ts > createVaulterClient — requests > creates a folder with a snake_case body
 tests/api/client.test.ts > createVaulterClient — requests > creates a grant with the subject object and a share with snake_case fields
+tests/api/client.test.ts > createVaulterClient — requests > does not invent a share session when the response has no X-Share-Session
 tests/api/client.test.ts > createVaulterClient — requests > exports a document with the filename the server sent
 tests/api/client.test.ts > createVaulterClient — requests > honours baseUrl, extra headers and the CSRF token
+tests/api/client.test.ts > createVaulterClient — requests > keeps X-Share-Session on the share node and the page for the next call
 tests/api/client.test.ts > createVaulterClient — requests > lists children with the parent and cursor as query and keeps the page meta
 tests/api/client.test.ts > createVaulterClient — requests > maps trash.empty to the purged count
 tests/api/client.test.ts > createVaulterClient — requests > reads the change cursor and pages the feed
+tests/api/client.test.ts > createVaulterClient — requests > rejects a quarantined download as 423 content_unavailable before any byte
 tests/api/client.test.ts > createVaulterClient — requests > resolves a 204 to undefined
+tests/api/client.test.ts > createVaulterClient — requests > returns file bytes on 200 and does not follow a direct_signed redirect
 tests/api/client.test.ts > createVaulterClient — requests > returns no page/total fields: lists are cursor-only
 tests/api/client.test.ts > createVaulterClient — requests > sends share access headers for a public share
 tests/api/client.test.ts > preserves a protocol-neutral session and sends the supported schema without importing an adapter
@@ -52,11 +58,38 @@ tests/api/errors.test.ts > VaulterApiError.fromResponse > maps an HTML proxy err
 tests/api/errors.test.ts > VaulterApiError.fromResponse > maps an empty body (504) to http_504
 tests/api/errors.test.ts > VaulterApiError.fromResponse > parses a problem+json body into code, detail, requestId, meta and errors
 tests/api/errors.test.ts > client error surface > throws VaulterApiError with the problem code from a failed call
+tests/api/sync-contract.test.ts > keyed change feed cache > bootstraps from the start cursor and a keyed listing, keeping pins and the new keys after an owner bump
+tests/api/sync-contract.test.ts > keyed change feed cache > does not reset again while the cache is still waiting for its bootstrap (no reset storm)
+tests/api/sync-contract.test.ts > keyed change feed cache > invalidates a legacy cache whose nodes have no key
+tests/api/sync-contract.test.ts > keyed change feed cache > keeps the scanned progress across pages and through a refused page
+tests/api/sync-contract.test.ts > keyed change feed cache > keeps the trash view independent of feed removes and of the live view
+tests/api/sync-contract.test.ts > keyed change feed cache > leaves the cache untouched when a page cannot be applied (atomic checkpoint)
+tests/api/sync-contract.test.ts > keyed change feed cache > removes a node and its descendants by sync key and moves the cursor with the nodes
+tests/api/sync-contract.test.ts > keyed change feed cache > removing a pinned node by its own key drops it without queueing a revalidation
+tests/api/sync-contract.test.ts > keyed change feed cache > resets on a 400 or 410 from the feed only
+tests/api/sync-contract.test.ts > keyed change feed cache > revalidates a pinned descendant on its own when its ancestor is removed, and never by raw id
+tests/api/sync-contract.test.ts > keyed change feed cache > treats a remove of an unknown key as harmless
+tests/api/sync-contract.test.ts > keyed change feed cache > wakes up into a bootstrap for a keyless or cursorless cache, a revalidation for queued pins, else the feed
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > advances the checkpoint only after the fresh listing: stale gone, newly visible shown
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > does not advance the checkpoint or show stale nodes when the reconciliation fails or is unfinished
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > does not queue a pinned descendant again that was proven on its own while still listed under the folder
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > drops a reconciled folder the reader no longer sees and a folder removed in the same page
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > keeps a pinned independent descendant for its own revalidation, and the trash view apart
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > keeps folder F directly visible but stops showing its revoked inherited descendants, with the cursor still at c0
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > moves the cursor only after all roots of the page are reconciled
+tests/api/sync-contract.test.ts > subtree upsert starts root reconciliation > shows the descendants of a copied or restored folder that the cache never held
 tests/api/uploads.test.ts > resumable uploads — abort during the create request > deletes the tus session that was created after abort() was called, and never uploads
 tests/api/uploads.test.ts > resumable uploads — abort during the create request > refuses an empty file over S3 multipart before creating a session the server cannot complete
 tests/api/uploads.test.ts > resumable uploads — s3-multipart > uploads numbered parts and completes the session
 tests/api/uploads.test.ts > resumable uploads — tus > aborts the session on the server and stops the loop
 tests/api/uploads.test.ts > resumable uploads — tus > creates the session, resumes from the server offset and PATCHes until the node is created
+tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid ("")
+tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid ("-1")
+tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid ("1.5")
+tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid ("bad")
+tests/api/uploads.test.ts > resumable uploads — tus > keeps the conflict when Upload-Offset is absent or invalid (null)
+tests/api/uploads.test.ts > resumable uploads — tus > resumes a 409 from the Upload-Offset header instead of failing the upload
+tests/api/uploads.test.ts > resumable uploads — tus > resumes from an explicit zero Upload-Offset instead of treating it as absent
 tests/api/uploads.test.ts > resumable uploads — tus > sends If-Match when replacing the content of an existing file
 tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the forbidden shapes
 tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text
@@ -113,6 +146,7 @@ tests/document-node.test.ts > VaulterDocumentNode > stays read-only (never autos
 tests/document-node.test.ts > VaulterDocumentNode > two overlapping load() calls: the superseded one is not a failed session, and the editor stays editable
 tests/drive-components.test.ts > VaulterBreadcrumb > renders crumbs and emits navigate(null) for the root and the node id for a crumb
 tests/drive-components.test.ts > VaulterDrive > does NOT rename when the name is unchanged (skips the no-op the backend rejects)
+tests/drive-components.test.ts > VaulterDrive > does not say the item was reloaded when the re-read after 412 is 401 or the network fails
 tests/drive-components.test.ts > VaulterDrive > navigates into a folder on open (folder is handled internally) and loads its breadcrumb
 tests/drive-components.test.ts > VaulterDrive > offers download through the files route
 tests/drive-components.test.ts > VaulterDrive > opens the folder picker for the move action and moves with the node etag (no window.prompt)
@@ -182,6 +216,7 @@ tests/drive-composables.test.ts > useGrants > revokes with the held access tag w
 tests/drive-composables.test.ts > useNodes > a missing precondition (428) is an integration error: rethrown, no re-read, no conflict
 tests/drive-composables.test.ts > useNodes > a stale etag (412) > clears the conflict on the next mutation
 tests/drive-composables.test.ts > useNodes > a stale etag (412) > drops the row when the re-read finds the node gone
+tests/drive-composables.test.ts > useNodes > a stale etag (412) > keeps the row when the re-read is 401 or the network fails, and does not call that a reload
 tests/drive-composables.test.ts > useNodes > a stale etag (412) > re-reads the node, sets conflict and still rejects
 tests/drive-composables.test.ts > useNodes > drops a node from the list after trash, sending its etag
 tests/drive-composables.test.ts > useNodes > loads a folder and updates the reactive list after createFolder
@@ -266,7 +301,7 @@ tests/plugin.test.ts > VaulterPlugin > falls back to English per key for an unkn
 tests/plugin.test.ts > VaulterPlugin > merges host viewers and replaces a built-in key
 tests/plugin.test.ts > VaulterPlugin > passes i18n options through: the ru locale and message overrides
 tests/plugin.test.ts > VaulterPlugin > provide helpers wire a client and a registry into an app by hand
-tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the six built-in keys, and i18n
+tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the five built-in keys, and i18n
 tests/plugin.test.ts > VaulterPlugin > provides the collaboration adapter given in the options, and none otherwise
 tests/plugin.test.ts > VaulterPlugin > registers every component globally
 tests/plugin.test.ts > VaulterPlugin > uses the client given in the options instead of building one
@@ -290,10 +325,12 @@ tests/shared-with-me.test.ts > useSharedNodes > captures a load failure into err
 tests/shared-with-me.test.ts > useSharedNodes > continues an empty scan-budget page to the next visible node
 tests/shared-with-me.test.ts > useSharedNodes > loads the shared nodes and exposes them on refresh
 tests/shared-with-me.test.ts > useSharedNodes > pages with loadMore when more pages exist, then stops
-tests/spreadsheet.test.ts > VaulterSpreadsheet > ignores edits when the caller cannot edit the node
-tests/spreadsheet.test.ts > VaulterSpreadsheet > loads on mount and exposes the workbook + a save through the default slot
-tests/spreadsheet.test.ts > VaulterSpreadsheet > persists with the ETag of the loaded snapshot
-tests/spreadsheet.test.ts > VaulterSpreadsheet > surfaces a load failure in the error slot
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns new unique IDs to pasted blocks without altering originals
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns unique blockIds on missing blocks and preserves existing ones
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID and assigns a new ID to the second block on split
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID on join
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves block ID when a block is moved within the document
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves bold and link marks under block p42 (3.1-B)
 tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a document whose type is not available shows the fallback with its document_type
 tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a node without a presentation (a folder) falls back too
 tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a null viewer key falls back
@@ -306,9 +343,13 @@ tests/viewers/fallback.test.ts > VaulterViewer — registered viewers > mounts a
 tests/viewers/fallback.test.ts > VaulterViewer — registered viewers > mounts the viewer registered under presentation.viewer.key with the node
 tests/viewers/fallback.test.ts > VaulterViewer — registered viewers > never lets server viewer props override the node
 tests/viewers/fallback.test.ts > built-in preview viewers > download viewer links the file only when abilities.download
+tests/viewers/fallback.test.ts > built-in preview viewers > image preview links the download URL when direct_signed redirects
+tests/viewers/fallback.test.ts > built-in preview viewers > image preview shows a failure instead of a broken image when the bytes are unavailable
 tests/viewers/fallback.test.ts > built-in preview viewers > image preview shows the authorised bytes through an object URL, and nothing for a previewer
+tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview links the download URL when direct_signed redirects
 tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview reports a failed download
-tests/viewers/registry.test.ts > createViewerRegistry > lists the six built-in keys the server may name
+tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview shows a failure instead of a frame when the bytes are unavailable
+tests/viewers/registry.test.ts > createViewerRegistry > lists the five built-in keys the server may name
 tests/viewers/registry.test.ts > createViewerRegistry > replaces and unregisters a key
 tests/viewers/registry.test.ts > createViewerRegistry > resolves a registered component, and null for an unknown key
 tests/viewers/registry.test.ts > createViewerRegistry > turns a loader function into one stable async component

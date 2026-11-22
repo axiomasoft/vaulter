@@ -165,7 +165,7 @@ Vaulter\Collaboration\Providers\CollaborationPackageRegistrar spi:call since 1.0
 Vaulter\Collaboration\Schema\CollaborationSchemaSets spi:call since 1.0 final class implements Packman\Schema\Contracts\Migration\SchemaSetProvider
   public function sets(): array
 
-Vaulter\Collaboration\VaulterCollaborationServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\Collaboration\VaulterCollaborationServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\Collaboration\Providers\CollaborationPackageRegistrar::class]
   public function boot(): void
   public function register(): void

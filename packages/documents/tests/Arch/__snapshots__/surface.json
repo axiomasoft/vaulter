@@ -198,6 +198,12 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:evaluateforsession": {
+                    "kind": "method",
+                    "name": "evaluateForSession",
+                    "visibility": "public",
+                    "internal": true
+                },
                 "method:evaluatereference": {
                     "kind": "method",
                     "name": "evaluateReference",
@@ -279,6 +285,12 @@
                     "doc": [
                         "@throws NodeNotFoundException"
                     ]
+                },
+                "method:evaluatestate": {
+                    "kind": "method",
+                    "name": "evaluateState",
+                    "visibility": "public",
+                    "internal": true
                 }
             }
         },
@@ -1397,6 +1409,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "blockIds",
+                            "type": "bool",
+                            "default": "false",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -1449,6 +1470,25 @@
                         }
                     ],
                     "return": "Vaulter\\Documents\\Configuration\\TipTapOptions",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:blockIds": {
+                    "kind": "property",
+                    "name": "blockIds",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "bool",
+                    "default": null,
+                    "hooks": [],
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
@@ -1834,6 +1874,326 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
+                }
+            }
+        },
+        "Vaulter\\Documents\\Content\\TipTap\\BlockIdentity": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "constant:ADDRESSABLE_NODES": {
+                    "kind": "constant",
+                    "name": "ADDRESSABLE_NODES",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "array",
+                    "value": "['paragraph', 'heading']",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@var list<string>"
+                    ]
+                },
+                "constant:ATTR_KEY": {
+                    "kind": "constant",
+                    "name": "ATTR_KEY",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'blockId'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "constant:MAX_LENGTH": {
+                    "kind": "constant",
+                    "name": "MAX_LENGTH",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "int",
+                    "value": "64",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "constant:WIRE_KEY": {
+                    "kind": "constant",
+                    "name": "WIRE_KEY",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'block_id'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:assertunique": {
+                    "kind": "method",
+                    "name": "assertUnique",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "doc",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<string, mixed> $doc",
+                        "@throws InvalidDocumentContentException"
+                    ]
+                },
+                "method:assignmissing": {
+                    "kind": "method",
+                    "name": "assignMissing",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "doc",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "generator",
+                            "type": "Closure|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param (Closure(): string)|null $generator",
+                        "@param array<string, mixed> $doc",
+                        "@return array<string, mixed>"
+                    ]
+                },
+                "method:extractids": {
+                    "kind": "method",
+                    "name": "extractIds",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "doc",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<string, mixed> $doc",
+                        "@return list<string>"
+                    ]
+                },
+                "method:generate": {
+                    "kind": "method",
+                    "name": "generate",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:isaddressable": {
+                    "kind": "method",
+                    "name": "isAddressable",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "nodeType",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:isvalid": {
+                    "kind": "method",
+                    "name": "isValid",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "value",
+                            "type": "mixed",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:normalize": {
+                    "kind": "method",
+                    "name": "normalize",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "doc",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "generator",
+                            "type": "Closure|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param (Closure(): string)|null $generator",
+                        "@param array<string, mixed> $doc",
+                        "@return array{doc: array<string, mixed>, changed: bool}"
+                    ]
+                },
+                "method:regenerateall": {
+                    "kind": "method",
+                    "name": "regenerateAll",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "doc",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "generator",
+                            "type": "Closure|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param (Closure(): string)|null $generator",
+                        "@param array<string, mixed> $doc",
+                        "@return array<string, mixed>"
+                    ]
                 }
             }
         },
@@ -6522,6 +6882,14 @@
                     "deprecated": false,
                     "doc": []
                 },
+                "case:DocumentCommandRequired": {
+                    "kind": "case",
+                    "name": "DocumentCommandRequired",
+                    "value": "'documents.document_command_required'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
                 "case:DocumentContentDegraded": {
                     "kind": "case",
                     "name": "DocumentContentDegraded",
@@ -8599,6 +8967,119 @@
                 }
             }
         },
+        "Vaulter\\Documents\\Exceptions\\DocumentCommandRequiredException": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [
+                "Vaulter\\Exceptions\\VaulterException"
+            ],
+            "implements": [
+                "Vaulter\\Exceptions\\Contracts\\ProblemException"
+            ],
+            "traits": [
+                "Vaulter\\Exceptions\\Concerns\\ProvidesProblemDetails"
+            ],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:errordescriptor": {
+                    "kind": "method",
+                    "name": "errorDescriptor",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "Packman\\Errors\\Data\\ErrorDescriptor",
+                    "attributes": [
+                        "Override"
+                    ],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:httpstatus": {
+                    "kind": "method",
+                    "name": "httpStatus",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "int",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:problemcode": {
+                    "kind": "method",
+                    "name": "problemCode",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:problemdetails": {
+                    "kind": "method",
+                    "name": "problemDetails",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array<string, mixed>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Documents\\Exceptions\\DocumentContentDegradedException": {
             "kind": "class",
             "surface": "Api",
@@ -9626,6 +10107,32 @@
                     "params": [
                         {
                             "name": "href",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Exceptions\\InvalidDocumentContentException",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:duplicateblockid": {
+                    "kind": "method",
+                    "name": "duplicateBlockId",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "blockId",
                             "type": "string",
                             "default": null,
                             "variadic": false,
@@ -11639,6 +12146,41 @@
                         "@throws DocumentTypeUnavailableException",
                         "@throws UnknownExportFormatException"
                     ]
+                },
+                "method:initializeblockids": {
+                    "kind": "method",
+                    "name": "initializeBlockIds",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "document",
+                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "expectedStateVersion",
+                            "type": "int|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Data\\Snapshots\\DocumentSnapshot",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
                 },
                 "method:restore": {
                     "kind": "method",
@@ -14543,156 +15085,6 @@
                 }
             }
         },
-        "Vaulter\\Documents\\Types\\SpreadsheetDocumentType": {
-            "kind": "class",
-            "surface": "Api",
-            "since": "1.0",
-            "modifiers": {
-                "abstract": false,
-                "final": true,
-                "readonly": true
-            },
-            "backing": null,
-            "extends": [],
-            "implements": [
-                "Vaulter\\Documents\\Contracts\\DocumentType"
-            ],
-            "traits": [],
-            "adaptations": [],
-            "attributes": [
-                "Packman\\Attributes\\Api"
-            ],
-            "deprecated": false,
-            "doc_internal": false,
-            "doc": [],
-            "members": {
-                "constant:KEY": {
-                    "kind": "constant",
-                    "name": "KEY",
-                    "visibility": "public",
-                    "internal": false,
-                    "final": false,
-                    "type": "string",
-                    "value": "'vaulter/spreadsheet'",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:codec": {
-                    "kind": "method",
-                    "name": "codec",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "Vaulter\\Documents\\Contracts\\DocumentCodec",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:defaultcontent": {
-                    "kind": "method",
-                    "name": "defaultContent",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "Vaulter\\Documents\\Contracts\\DocumentContent",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:features": {
-                    "kind": "method",
-                    "name": "features",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "Vaulter\\Documents\\Data\\Types\\DocumentFeatures",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:key": {
-                    "kind": "method",
-                    "name": "key",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "string",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:label": {
-                    "kind": "method",
-                    "name": "label",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "string",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:schemaversion": {
-                    "kind": "method",
-                    "name": "schemaVersion",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "int",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                },
-                "method:viewer": {
-                    "kind": "method",
-                    "name": "viewer",
-                    "visibility": "public",
-                    "internal": false,
-                    "static": false,
-                    "abstract": false,
-                    "final": false,
-                    "by_ref": false,
-                    "params": [],
-                    "return": "Vaulter\\Documents\\Data\\Types\\DocumentViewer",
-                    "attributes": [],
-                    "deprecated": false,
-                    "doc_internal": false,
-                    "doc": []
-                }
-            }
-        },
         "Vaulter\\Documents\\ValueObjects\\DocumentExport": {
             "kind": "class",
             "surface": "Api",
@@ -14972,7 +15364,8 @@
             ],
             "implements": [],
             "traits": [
-                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                "Vaulter\\Modules\\OffersModules"
             ],
             "adaptations": [
                 {

@@ -51,11 +51,12 @@ Vaulter\Documents\Configuration\DocumentsRevisionsOptions api since 1.0 final re
   public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
 Vaulter\Documents\Configuration\TipTapOptions api since 1.0 final readonly class
+  public bool $blockIds
   public array $extraAttributes
   public array $extraMarks
   public array $extraNodes
   public array $urlAttributes
-  public function __construct(array $extraNodes = [], array $extraMarks = [], array $extraAttributes = [], array $urlAttributes = [])
+  public function __construct(array $extraNodes = [], array $extraMarks = [], array $extraAttributes = [], array $urlAttributes = [], bool $blockIds = false)
   public static function fromArray(mixed $raw, string $path, Packman\Config\Laravel\ConfigurationValidator $validator): self
 
 Vaulter\Documents\Content\ContentHasher api since 1.0 final class
@@ -73,6 +74,20 @@ Vaulter\Documents\Content\OpaqueJsonCodec api since 1.0 final readonly class imp
   public function __construct(?int $maxSizeBytes = null)
   public function decode(array $raw, int $schemaVersion): Vaulter\Documents\Contracts\DocumentContent
   public function maxSizeBytes(): ?int
+
+Vaulter\Documents\Content\TipTap\BlockIdentity api since 1.0 final readonly class
+  public const array ADDRESSABLE_NODES = ['paragraph', 'heading']
+  public const string ATTR_KEY = 'blockId'
+  public const int MAX_LENGTH = 64
+  public const string WIRE_KEY = 'block_id'
+  public static function assertUnique(array $doc): void
+  public static function assignMissing(array $doc, ?Closure $generator = null): array
+  public static function extractIds(array $doc): array
+  public static function generate(): string
+  public static function isAddressable(string $nodeType): bool
+  public static function isValid(mixed $value): bool
+  public static function normalize(array $doc, ?Closure $generator = null): array
+  public static function regenerateAll(array $doc, ?Closure $generator = null): array
 
 Vaulter\Documents\Content\TipTap\LinkSchemeValidator api since 1.0 final readonly class
   public static function isAllowed(string $href): bool
@@ -315,6 +330,7 @@ Vaulter\Documents\Errors\DocumentsErrorCode api since 1.0 enum: string implement
   case CollaborationProtocolContract = 'documents.collaboration_protocol_contract'
   case CollaborationUnavailable = 'documents.collaboration_unavailable'
   case CommentNotFound = 'documents.comment_not_found'
+  case DocumentCommandRequired = 'documents.document_command_required'
   case DocumentContentDegraded = 'documents.document_content_degraded'
   case DocumentRevisionNotFound = 'documents.document_revision_not_found'
   case DocumentStateMismatch = 'documents.document_state_mismatch'
@@ -443,6 +459,13 @@ Vaulter\Documents\Exceptions\CommentNotFoundException api since 1.0 final class 
   public function httpStatus(): int
   public function problemCode(): string
 
+Vaulter\Documents\Exceptions\DocumentCommandRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
 Vaulter\Documents\Exceptions\DocumentContentDegradedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly string $type
   public function __construct(string $type)
@@ -497,6 +520,7 @@ Vaulter\Documents\Exceptions\DuplicateDocumentTypeException api since 1.0 final 
 Vaulter\Documents\Exceptions\InvalidDocumentContentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function disallowedAttribute(string $nodeType, string $attribute): self
   public static function disallowedUrlScheme(string $href): self
+  public static function duplicateBlockId(string $blockId): self
   public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function malformedNode(string $nodeType, string $field): self
@@ -591,6 +615,7 @@ Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly cla
   public function content(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function create(string $name, ?string $type = null, ?array $content = null, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Drive\Data\CreateFolderOptions $options = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
   public function export(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\ValueObjects\DocumentExport
+  public function initializeBlockIds(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function restore(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function revisions(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?Vaulter\Drive\Data\ListOptions $options = null): Vaulter\Data\Page
   public function setRetention(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
@@ -726,16 +751,6 @@ Vaulter\Documents\Types\RichTextDocumentType api since 1.0 final readonly class 
   public function schemaVersion(): int
   public function viewer(): Vaulter\Documents\Data\Types\DocumentViewer
 
-Vaulter\Documents\Types\SpreadsheetDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType
-  public const string KEY = 'vaulter/spreadsheet'
-  public function codec(): Vaulter\Documents\Contracts\DocumentCodec
-  public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
-  public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
-  public function key(): string
-  public function label(): string
-  public function schemaVersion(): int
-  public function viewer(): Vaulter\Documents\Data\Types\DocumentViewer
-
 Vaulter\Documents\ValueObjects\DocumentExport api since 1.0 final readonly class
   public string $bytes
   public string $filename
@@ -747,7 +762,7 @@ Vaulter\Documents\ValueObjects\DocumentExport api since 1.0 final readonly class
   public int $sourceStateVersion
   public function __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId, bool $lossy = false)
 
-Vaulter\Documents\VaulterDocumentsServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\Documents\VaulterDocumentsServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\Documents\Providers\DocumentsPackageRegistrar::class]
   public function boot(): void
   public function register(): void

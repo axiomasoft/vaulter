@@ -150,6 +150,42 @@
         },
         {
             "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000304_create_v_document_payloads_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000305_create_v_document_sync_states_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000306_create_v_document_revision_payloads_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000307_create_v_document_revision_sync_states_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
             "file": "packages/documents/routes/documents.php",
             "note": null,
             "owner": "documents",
@@ -2360,6 +2396,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Database/DatabaseErrorMapper.php",
+            "fqcn": "Vaulter\\Database\\DatabaseErrorMapper",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Database\\DatabaseErrorMapper",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Database\\DatabaseErrorMapper"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Database/GuardedBuilder.php",
             "fqcn": "Vaulter\\Database\\GuardedBuilder",
             "kind": "final-class",
@@ -2710,6 +2760,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Doctor/PackmanConfigValidCheck.php",
+            "fqcn": "Vaulter\\Doctor\\PackmanConfigValidCheck",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\PackmanConfigValidCheck",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Doctor\\PackmanConfigValidCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Access/CollaborationAccessPolicy.php",
             "fqcn": "Vaulter\\Documents\\Access\\CollaborationAccessPolicy",
             "kind": "final-class",
@@ -2766,6 +2830,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Actions/Documents/ChangeDocumentWriteModeAction.php",
+            "fqcn": "Vaulter\\Documents\\Actions\\Documents\\ChangeDocumentWriteModeAction",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Actions\\Documents\\ChangeDocumentWriteModeAction"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
             "fqcn": "Vaulter\\Documents\\Actions\\Documents\\CreateDocumentAction",
             "kind": "final-class",
@@ -2790,6 +2868,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Actions\\Documents\\DocumentWriteLock"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Actions/Documents/InitializeBlockIdsAction.php",
+            "fqcn": "Vaulter\\Documents\\Actions\\Documents\\InitializeBlockIdsAction",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Actions\\Documents\\InitializeBlockIdsAction"
         },
         {
             "action": "keep",
@@ -3112,6 +3204,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Content\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Content\\ReadContent"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Content/TipTap/BlockIdentity.php",
+            "fqcn": "Vaulter\\Documents\\Content\\TipTap\\BlockIdentity",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Content\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Content\\TipTap\\BlockIdentity"
         },
         {
             "action": "keep",
@@ -3662,6 +3768,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Enums/Documents/DocumentWriteMode.php",
+            "fqcn": "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode",
+            "kind": "enum",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Enums\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Enums/Documents/StateWriteCause.php",
             "fqcn": "Vaulter\\Documents\\Enums\\Documents\\StateWriteCause",
             "kind": "enum",
@@ -3840,6 +3960,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Exceptions\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\Exceptions\\CommentNotFoundException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Exceptions/DocumentCommandRequiredException.php",
+            "fqcn": "Vaulter\\Documents\\Exceptions\\DocumentCommandRequiredException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Exceptions\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Exceptions\\DocumentCommandRequiredException"
         },
         {
             "action": "keep",
@@ -4600,6 +4734,34 @@
         {
             "action": "keep",
             "eloquent": true,
+            "file": "packages/documents/src/Models/Documents/DocumentPayload.php",
+            "fqcn": "Vaulter\\Documents\\Models\\Documents\\DocumentPayload",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Models\\Documents\\DocumentPayload"
+        },
+        {
+            "action": "keep",
+            "eloquent": true,
+            "file": "packages/documents/src/Models/Documents/DocumentSyncState.php",
+            "fqcn": "Vaulter\\Documents\\Models\\Documents\\DocumentSyncState",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Models\\Documents\\DocumentSyncState"
+        },
+        {
+            "action": "keep",
+            "eloquent": true,
             "file": "packages/documents/src/Models/Revisions/DocumentRevision.php",
             "fqcn": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
             "kind": "class",
@@ -4610,6 +4772,34 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision"
+        },
+        {
+            "action": "keep",
+            "eloquent": true,
+            "file": "packages/documents/src/Models/Revisions/DocumentRevisionPayload.php",
+            "fqcn": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionPayload",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionPayload"
+        },
+        {
+            "action": "keep",
+            "eloquent": true,
+            "file": "packages/documents/src/Models/Revisions/DocumentRevisionSyncState.php",
+            "fqcn": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevisionSyncState"
         },
         {
             "action": "keep",
@@ -5128,20 +5318,6 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Types\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\Types\\RichTextDocumentType"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/documents/src/Types/SpreadsheetDocumentType.php",
-            "fqcn": "Vaulter\\Documents\\Types\\SpreadsheetDocumentType",
-            "kind": "final-class",
-            "note": null,
-            "owner": "documents",
-            "package": "documents",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Documents\\Types\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Documents\\Types\\SpreadsheetDocumentType"
         },
         {
             "action": "keep",
@@ -13308,6 +13484,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Uploads/Inspection/ZipCentralDirectoryGuard.php",
+            "fqcn": "Vaulter\\Drive\\Uploads\\Inspection\\ZipCentralDirectoryGuard",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Uploads\\Inspection\\ZipCentralDirectoryGuard"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Uploads/PreparedUpload.php",
             "fqcn": "Vaulter\\Drive\\Uploads\\PreparedUpload",
             "kind": "final-class",
@@ -13994,6 +14184,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Exceptions/Http/WeakEtagNotAllowedException.php",
+            "fqcn": "Vaulter\\Exceptions\\Http\\WeakEtagNotAllowedException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Exceptions\\Http\\WeakEtagNotAllowedException",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Exceptions\\Http\\WeakEtagNotAllowedException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Exceptions/Idempotency/IdempotencyKeyExpiredException.php",
+            "fqcn": "Vaulter\\Exceptions\\Idempotency\\IdempotencyKeyExpiredException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:prefix:Vaulter\\Exceptions\\Idempotency\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Exceptions\\Idempotency\\IdempotencyKeyExpiredException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Exceptions/Idempotency/IdempotencyKeyReusedException.php",
             "fqcn": "Vaulter\\Exceptions\\Idempotency\\IdempotencyKeyReusedException",
             "kind": "final-class",
@@ -14620,6 +14838,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Http\\Middleware\\EnsureModuleActive",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Http\\Middleware\\EnsureModuleActive"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Http/Middleware/ExposeVaulterCorsHeaders.php",
+            "fqcn": "Vaulter\\Http\\Middleware\\ExposeVaulterCorsHeaders",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Http\\Middleware\\ExposeVaulterCorsHeaders",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Http\\Middleware\\ExposeVaulterCorsHeaders"
         },
         {
             "action": "keep",

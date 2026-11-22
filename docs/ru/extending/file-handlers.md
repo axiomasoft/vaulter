@@ -362,7 +362,7 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers
 обрабатывать (`type_available = false`), уходит во вьюер `vaulter/unsupported` — элемент всё
 равно виден, назван и доступен для скачивания.
 
-Встроенные ключи (`vaulter/tiptap`, `vaulter/univer`, `vaulter/pdf-preview`,
+Встроенные ключи (`vaulter/tiptap`, `vaulter/pdf-preview`,
 `vaulter/image-preview`, `vaulter/download`, `vaulter/unsupported`) ставит плагин. Свои — или
 замену встроенных — добавляет опция плагина `viewers`: явный ES-импорт, а не неявный глобал:
 
@@ -408,8 +408,8 @@ defineProps<{ node: Node }>()
 `has`, `keys`). Регистрации принадлежат одному приложению: два приложения на странице не делят
 вьюеры.
 
-Вьюеры `vaulter/tiptap` и `vaulter/univer` — «безголовые» оболочки редактирования
-(`VaulterDocumentNode`, `VaulterSpreadsheet`): они загружают контент, автосохраняют и, когда
+Вьюер `vaulter/tiptap` — «безголовая» оболочка редактирования
+(`VaulterDocumentNode`): она загружает контент, автосохраняет и, когда
 презентация **коллаборативна**, модуль `vaulter-collaboration` активен и установлен `@vaulter/vue-collaboration`, открывают Yjs-сессию. Сам движок
 редактора — ваш: замените ключ как выше или заполните слот оболочки по умолчанию. Путь
 автосохранения — в [Узлы-документы](/ru/guides/documents#рабочее-состояние-и-чекпоинты).

@@ -1,6 +1,6 @@
 ---
 title: Document Types
-description: The registry of document types — built-in rich text, markdown and spreadsheet, your own types, codecs, schema versions and what happens when a type is removed.
+description: The registry of document types — built-in rich text and markdown, your own types, codecs, schema versions and what happens when a type is removed.
 outline: deep
 ---
 
@@ -28,10 +28,8 @@ document" exists.
 |---|---|---|---|
 | `vaulter/rich-text` | `TipTapCodec` with the rich-text schema (StarterKit, Image, Table, Link, CodeBlock, plus `vaulter-documents.tiptap.*`) | Yjs | `vaulter/tiptap` (`preset: rich-text`) |
 | `vaulter/markdown` | `TipTapCodec` with the markdown schema (only what Markdown can represent; host extensions do not apply) | Yjs | `vaulter/tiptap` (`preset: markdown`) |
-| `vaulter/spreadsheet` | `OpaqueJsonCodec` (any JSON object) | none | `vaulter/univer` |
 
-Rich text and markdown are registered by default. The spreadsheet type is registered only
-when you list it:
+Rich text and markdown are registered by default. Add your own document types in `config/vaulter-documents.php`:
 
 <!-- snippet: config -->
 
@@ -40,7 +38,6 @@ when you list it:
 'types' => [
     \Vaulter\Documents\Types\RichTextDocumentType::class,
     \Vaulter\Documents\Types\MarkdownDocumentType::class,
-    \Vaulter\Documents\Types\SpreadsheetDocumentType::class,
 ],
 'default_type' => 'vaulter/rich-text',
 ```

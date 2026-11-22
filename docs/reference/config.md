@@ -385,7 +385,7 @@ See [Usage → Versions](/guides/documents).
 
 | Key | Default |
 |---|---|
-| `vaulter-documents.types` | `[RichTextDocumentType::class, MarkdownDocumentType::class]` — the registered [document types](/extending/document-types); add `SpreadsheetDocumentType::class` or your own |
+| `vaulter-documents.types` | `[RichTextDocumentType::class, MarkdownDocumentType::class]` — the registered [document types](/extending/document-types); add your own here |
 | `vaulter-documents.default_type` | `'vaulter/rich-text'` — the type `create()` uses when none is named; must be registered |
 | `vaulter-documents.content.max_size_kb` | `5120` — the limit of a codec whose `maxSizeBytes()` is `null` |
 
@@ -557,7 +557,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 
 | Key | Env | Default | Description |
 |---|---|---|---|
-| `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add SpreadsheetDocumentType or your own here. |
+| `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add your own here. |
 | `vaulter-documents.default_type` | — | `'vaulter/rich-text'` | — |
 | `vaulter-documents.collaboration.session_ttl` | — | `300` | — |
 | `vaulter-documents.content.max_size_kb` | — | `5120` | — |

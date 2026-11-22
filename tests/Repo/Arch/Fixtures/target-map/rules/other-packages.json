@@ -570,6 +570,38 @@
         },
         {
             "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000304_create_v_document_payloads_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence: v_document_payloads is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000305_create_v_document_sync_states_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence: v_document_sync_states is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000306_create_v_document_revision_payloads_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence: v_document_revision_payloads is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000307_create_v_document_revision_sync_states_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence: v_document_revision_sync_states is created by the migration of documents"
+        },
+        {
+            "match": "file",
             "value": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
             "owner": "collaboration",
             "action": "keep",
