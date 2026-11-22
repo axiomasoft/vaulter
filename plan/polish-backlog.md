@@ -5,3 +5,4 @@
 | Дата | Задача | Репозиторий | Файл / зона | Суть замечания (P2) | Ревьюер | Статус |
 | --- | --- | --- | --- | --- | --- | --- |
 | — | — | — | — | *(пока пусто — заполняется в ходе прохождения волн)* | — | — |
+| 0.2 | vaulter | neon | Column-level contrast in ownership.md is by column name only (types/nullability not normalized) | open |
