@@ -51,7 +51,7 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 | `id` | по стратегии id | Первичный ключ. |
 | `tenant_id` | ключ хоста, nullable | Только при включённой тенантности. |
 | `node_id` | FK → `v_nodes`, уникален | Узел `kind=document` (каскад при удалении). |
-| `type` | string(64) | Ключ типа документа: `vaulter/rich-text`, `vaulter/markdown`, `vaulter/spreadsheet`. |
+| `type` | string(64) | Ключ типа документа, например `vaulter/rich-text` или `vaulter/markdown`. |
 | `schema_version` | integer | Версия схемы контента рабочего состояния. |
 | `current_revision_id` | ссылка, nullable | Чекпоинт-голова. |
 | `revision_count` | integer | Монотонный счётчик чекпоинтов; прунинг его не уменьшает, номер не переиспользуется. |
@@ -142,7 +142,7 @@ Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', an
 типом лишь частично — см. [Типы документов](/ru/extending/document-types)), `epoch`, `stateVersion`,
 `dirty` (рабочее состояние опережает чекпоинт-голову), `headRevisionId`, `content`
 (`DocumentContent` типа: `TipTapContent` для rich text и markdown, `OpaqueContent` для
-spreadsheet или неустановленного типа), `revision`
+непрозрачного или неустановленного типа), `revision`
 (голова или запрошенная ревизия), `contentHash`, `collabStateSize`, `updatedAt` и `updatedBy`. Id —
 строки. Actions за этими методами — внутренние.
 
@@ -162,7 +162,7 @@ use Vaulter\Drive\Enums\OnNameConflict;
 
 $node = Documents::in($drive)->create(
     name: 'Design notes',
-    type: 'vaulter/rich-text',              // or 'vaulter/markdown', 'vaulter/spreadsheet'
+    type: 'vaulter/rich-text',              // или 'vaulter/markdown'
     content: [
         'type' => 'doc',
         'content' => [

@@ -329,8 +329,12 @@ tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns new unique ID
 tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns unique blockIds on missing blocks and preserves existing ones
 tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID and assigns a new ID to the second block on split
 tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID on join
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the heading ID when inserting a paragraph before it
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the original ID on the first block when splitting at the start of a heading
 tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves block ID when a block is moved within the document
 tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves bold and link marks under block p42 (3.1-B)
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > uses the drop modifier to resolve block IDs (copy at drop: false)
+tests/tiptap/block-id.test.ts > BlockId Tiptap extension > uses the drop modifier to resolve block IDs (copy at drop: true)
 tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a document whose type is not available shows the fallback with its document_type
 tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a node without a presentation (a folder) falls back too
 tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a null viewer key falls back

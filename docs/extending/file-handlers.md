@@ -128,8 +128,9 @@ force an editable/preview handler onto hostile bytes.
 An uploaded `.docx`, `.doc`, `.md` or `.xlsx` file is a **file**: it resolves to
 `PreviewHandler` or `DownloadOnlyHandler` and is never declared editable or collaborative,
 until an import "file → document" exists. Editable content lives in document nodes, whose
-presentation comes from their [document type](./document-types.md) (`vaulter/rich-text`,
-`vaulter/markdown`, `vaulter/spreadsheet` or your own).
+presentation comes from their [document type](./document-types.md). The base package provides
+`vaulter/rich-text` and `vaulter/markdown`. The Sheets add-on provides `vaulter/spreadsheet`,
+and hosts can register their own types.
 
 ## Resolution algorithm
 

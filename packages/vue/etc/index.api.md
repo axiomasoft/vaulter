@@ -10,6 +10,7 @@ import { ComponentOptionsMixin } from 'vue';
 import { ComponentProvideOptions } from 'vue';
 import { ComputedRef } from 'vue';
 import { DefineComponent } from 'vue';
+import { Extension } from '@tiptap/core';
 import type { InjectionKey } from 'vue';
 import { MaybeRefOrGetter } from 'vue';
 import { PublicProps } from 'vue';
@@ -24,6 +25,18 @@ export type AbilitiesExplained = Schemas['AbilitiesExplained'];
 
 // @public (undocumented)
 export type Activity = Schemas['Activity'];
+
+// @public (undocumented)
+export const BLOCK_ID_TYPES: readonly ["paragraph", "heading"];
+
+// @public
+export const BlockId: Extension<BlockIdOptions, any>;
+
+// @public (undocumented)
+export interface BlockIdOptions {
+    generateId: () => string;
+    types: string[];
+}
 
 // @public (undocumented)
 export type BuiltinViewerKey = (typeof VIEWER_KEYS)[keyof typeof VIEWER_KEYS];
@@ -885,6 +898,9 @@ export function filenameFromDisposition(header: string | null): string | null;
 
 // @public (undocumented)
 export type FileRevision = Schemas['FileRevision'];
+
+// @public (undocumented)
+export function generateBlockId(): string;
 
 // @public (undocumented)
 export type Grant = Schemas['Grant'];

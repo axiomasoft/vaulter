@@ -1952,6 +1952,35 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:assertcomplete": {
+                    "kind": "method",
+                    "name": "assertComplete",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "doc",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param array<string, mixed> $doc",
+                        "@throws InvalidDocumentContentException"
+                    ]
+                },
                 "method:assertunique": {
                     "kind": "method",
                     "name": "assertUnique",
@@ -10202,6 +10231,32 @@
                         },
                         {
                             "name": "field",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Exceptions\\InvalidDocumentContentException",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:missingblockid": {
+                    "kind": "method",
+                    "name": "missingBlockId",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "nodeType",
                             "type": "string",
                             "default": null,
                             "variadic": false,

@@ -80,6 +80,7 @@ Vaulter\Documents\Content\TipTap\BlockIdentity api since 1.0 final readonly clas
   public const string ATTR_KEY = 'blockId'
   public const int MAX_LENGTH = 64
   public const string WIRE_KEY = 'block_id'
+  public static function assertComplete(array $doc): void
   public static function assertUnique(array $doc): void
   public static function assignMissing(array $doc, ?Closure $generator = null): array
   public static function extractIds(array $doc): array
@@ -524,6 +525,7 @@ Vaulter\Documents\Exceptions\InvalidDocumentContentException api since 1.0 final
   public function errorDescriptor(): Packman\Errors\Data\ErrorDescriptor
   public function httpStatus(): int
   public static function malformedNode(string $nodeType, string $field): self
+  public static function missingBlockId(string $nodeType): self
   public static function missingDocNode(): self
   public static function missingProjection(string $type): self
   public static function notAnObject(): self

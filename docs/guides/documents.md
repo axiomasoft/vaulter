@@ -50,7 +50,7 @@ deleting it (SQLite: see [Database compatibility](/reference/compatibility)).
 | `id` | id-strategy | Primary key. |
 | `tenant_id` | host key, nullable | Present only when tenancy is enabled. |
 | `node_id` | FK → `v_nodes`, unique | The owning `kind=document` node (cascade on delete). |
-| `type` | string(64) | The document type key, e.g. `vaulter/rich-text`, `vaulter/markdown`, `vaulter/spreadsheet`. |
+| `type` | string(64) | The document type key, e.g. `vaulter/rich-text` or `vaulter/markdown`. |
 | `schema_version` | integer | Version of the content schema of the working state. |
 | `current_revision_id` | ref, nullable | The head checkpoint. |
 | `revision_count` | integer | Monotonic checkpoint counter; pruning never lowers it, so a number is never reused. |
@@ -139,8 +139,8 @@ Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', an
 `editable` (false for a historical revision, a type that is not installed, or content that reads
 only partly under its type — see [Document Types](/extending/document-types)), `epoch`, `stateVersion`,
 `dirty` (the working state runs ahead of the head checkpoint), `headRevisionId`, `content` (the
-type's `DocumentContent`: `TipTapContent` for rich text and markdown, `OpaqueContent` for a
-spreadsheet or a type that is not installed), `revision`
+type's `DocumentContent`: `TipTapContent` for rich text and markdown, `OpaqueContent` for an
+opaque or uninstalled type), `revision`
 (the head, or the revision asked for), `contentHash`, `collabStateSize`, `updatedAt` and `updatedBy`.
 Ids are strings. The Actions behind these methods are internal.
 
@@ -161,7 +161,7 @@ use Vaulter\Drive\Enums\OnNameConflict;
 
 $node = Documents::in($drive)->create(
     name: 'Design notes',
-    type: 'vaulter/rich-text',              // or 'vaulter/markdown', 'vaulter/spreadsheet'
+    type: 'vaulter/rich-text',              // or 'vaulter/markdown'
     content: [
         'type' => 'doc',
         'content' => [

@@ -1,7 +1,7 @@
 import { Extension } from '@tiptap/core'
 import { Fragment, Slice, type Node as ProseMirrorNode } from '@tiptap/pm/model'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
-import type { EditorView } from '@tiptap/pm/view'
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state'
+import { Mapping, ReplaceStep } from '@tiptap/pm/transform'
 
 export const BLOCK_ID_TYPES = ['paragraph', 'heading'] as const
 
@@ -49,6 +49,24 @@ function stripBlockIdsInFragment(fragment: Fragment, types: ReadonlySet<string>)
   return Fragment.fromArray(children)
 }
 
+function hasStartOfBlockSplit(transactions: readonly Transaction[], blockId: string): boolean {
+  return transactions.some((tr) => tr.steps.some((step, index) => {
+    if (
+      !(step instanceof ReplaceStep) ||
+      step.from !== step.to ||
+      step.slice.openStart !== 1 ||
+      step.slice.openEnd !== 1 ||
+      step.slice.content.childCount !== 2 ||
+      step.slice.size !== 2
+    ) {
+      return false
+    }
+
+    const $split = tr.docs[index].resolve(step.from)
+    return $split.parentOffset === 0 && $split.parent.attrs.blockId === blockId
+  }))
+}
+
 /**
  * Tiptap extension for addressable rich-text blocks (`attrs.blockId`).
  *
@@ -94,15 +112,32 @@ export const BlockId = Extension.create<BlockIdOptions>({
   addProseMirrorPlugins() {
     const typeSet = new Set(this.options.types)
     const generateId = this.options.generateId
+    let internalDrop: DragEvent | null = null
 
     return [
       new Plugin({
         key: BLOCK_ID_PLUGIN_KEY,
 
         props: {
-          transformPasted(slice: Slice, view: EditorView): Slice {
-            // Preserve IDs on internal drag-moves within the same editor; strip on paste or copy-drag.
-            if (view?.dragging?.move) {
+          handleDOMEvents: {
+            drop(view, event) {
+              if (view.dragging) {
+                internalDrop = event
+                queueMicrotask(() => {
+                  if (internalDrop === event) {
+                    internalDrop = null
+                  }
+                })
+              }
+              return false
+            },
+          },
+
+          transformPasted(slice: Slice): Slice {
+            // ProseMirror transforms the internal slice before making its drop-time move decision.
+            // Keep its IDs until the drop transaction shows which original blocks survived.
+            if (internalDrop !== null) {
+              internalDrop = null
               return slice
             }
 
@@ -131,7 +166,12 @@ export const BlockId = Extension.create<BlockIdOptions>({
             const oldPos = oldState.selection.$from.before()
             const oldParent = oldState.selection.$from.parent
             const oldId = oldParent.attrs.blockId
-            if (typeSet.has(oldParent.type.name) && typeof oldId === 'string' && oldId !== '') {
+            if (
+              typeSet.has(oldParent.type.name) &&
+              typeof oldId === 'string' &&
+              oldId !== '' &&
+              hasStartOfBlockSplit(transactions, oldId)
+            ) {
               const firstNew = oldPos < newState.doc.content.size ? newState.doc.nodeAt(oldPos) : null
               if (
                 firstNew &&
@@ -146,6 +186,26 @@ export const BlockId = Extension.create<BlockIdOptions>({
                 }
               }
             }
+          }
+
+          const dropOriginals = new Map<string, number>()
+          if (transactions.some((tr) => tr.getMeta('uiEvent') === 'drop')) {
+            const mapping = new Mapping()
+            for (const tr of transactions) {
+              mapping.appendMapping(tr.mapping)
+            }
+
+            // A copy can land before its source. Reserve IDs for surviving originals at
+            // their mapped positions. A moved block's old position is deleted.
+            oldState.doc.descendants((node, pos) => {
+              const id = node.attrs.blockId
+              if (typeSet.has(node.type.name) && typeof id === 'string' && id !== '') {
+                const mapped = mapping.mapResult(pos, 1)
+                if (!mapped.deleted && newState.doc.nodeAt(mapped.pos)?.attrs.blockId === id) {
+                  dropOriginals.set(id, mapped.pos)
+                }
+              }
+            })
           }
 
           const seen = new Set<string>()
@@ -166,7 +226,13 @@ export const BlockId = Extension.create<BlockIdOptions>({
             }
 
             const existing = node.attrs.blockId
-            if (typeof existing === 'string' && existing !== '' && !seen.has(existing)) {
+            const originalPos = dropOriginals.get(existing)
+            if (
+              typeof existing === 'string' &&
+              existing !== '' &&
+              !seen.has(existing) &&
+              (originalPos === undefined || originalPos === pos)
+            ) {
               seen.add(existing)
 
               return
@@ -175,7 +241,7 @@ export const BlockId = Extension.create<BlockIdOptions>({
             let nextId: string
             do {
               nextId = generateId()
-            } while (nextId === '' || seen.has(nextId))
+            } while (nextId === '' || seen.has(nextId) || dropOriginals.has(nextId))
 
             seen.add(nextId)
             tr.setNodeMarkup(pos, undefined, { ...node.attrs, blockId: nextId })

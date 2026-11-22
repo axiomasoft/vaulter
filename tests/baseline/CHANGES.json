@@ -12647,11 +12647,11 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\CollaborationFeatureGateTest::__pest_evaluable_it_the_collaboration_session_is_refused_when_collaboration_is_off__F_P1_6_01",
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
+      "reason": "Moved with the realtime implementation (P5.1); the current session route returns 409 when no protocol driver is active.",
       "decision": "D1",
       "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Document\\CollaborationFeatureGateTest::__pest_evaluable_it_the_collaboration_session_route_answers_404_when_the_module_is_off"
+        "P\\Tests\\Document\\CollaborationFeatureGateTest::__pest_evaluable_it_the_collaboration_session_route_refuses_an_authorized_reader_with_409_when_no_protocol_driver_is_active"
       ]
     },
     {
@@ -18421,45 +18421,105 @@
       "suite": "documents",
       "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_autosaves_an_opaque_Univer_workbook_on_a_spreadsheet_document",
       "replacement": [
-        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+        "P\\Tests\\Types\\UnknownDocumentTypeFallbackTest::__pest_evaluable_it_round_trips_and_purges_every_storage_row_for__dataset\"dataset \"third-party opaque type\"\""
       ],
-      "reason": "SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2)",
+      "reason": "SpreadsheetDocumentType moved to vaulter-sheets; the base package still covers updating a third-party opaque document.",
       "decision": "1.2"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_creates_a_spreadsheet_document_from_its_type_key",
       "replacement": [
-        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+        "P\\Tests\\Types\\UnknownDocumentTypeFallbackTest::__pest_evaluable_it_round_trips_and_purges_every_storage_row_for__dataset\"dataset \"third-party opaque type\"\""
       ],
-      "reason": "SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2)",
+      "reason": "SpreadsheetDocumentType moved to vaulter-sheets; the base package still covers creating a registered opaque type by key.",
       "decision": "1.2"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_rejects_a_non_doc_create_payload_on_a_rich_text_node__no_type_",
       "replacement": [
-        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+        "P\\Tests\\Document\\DocumentNodeApiTest::__pest_evaluable_it_rejects_invalid_document_create_boundaries_without_persisting_a_node"
       ],
-      "reason": "SpreadsheetContentTest removed with SpreadsheetDocumentType in 1.2; rich-text validation covered by TipTap codec tests",
+      "reason": "The document API boundary test rejects a non-doc create payload with the default type.",
       "decision": "1.2"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_rejects_a_spreadsheet_create_when_the_spreadsheet_type_is_not_registered",
       "replacement": [
-        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+        "P\\Tests\\Document\\DocumentNodeApiTest::__pest_evaluable_it_rejects_invalid_document_create_boundaries_without_persisting_a_node",
+        "P\\Tests\\Types\\DocumentTypeRegistryTest::__pest_evaluable_it_registers_the_configured_types_at_boot_and_freezes_once_the_application_booted"
       ],
-      "reason": "SpreadsheetDocumentType moved to commercial vaulter-sheets package (1.2)",
+      "reason": "The registry excludes spreadsheets by default and the document API rejects creation with an unregistered key.",
       "decision": "1.2"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\SpreadsheetContentTest::__pest_evaluable_it_still_creates_a_rich_text__tiptap__node_and_enforces___type___doc___when_no_type_is_given",
       "replacement": [
-        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_registers_rich_text_and_markdown_by_default"
+        "P\\Tests\\Document\\DocumentNodeTest::__pest_evaluable_it_creates_a_kind_document_node_with_its_aggregate_and_checkpoint__1",
+        "P\\Tests\\Document\\DocumentNodeApiTest::__pest_evaluable_it_rejects_invalid_document_create_boundaries_without_persisting_a_node"
       ],
-      "reason": "SpreadsheetContentTest removed with SpreadsheetDocumentType in 1.2; default rich-text creation covered by BuiltInDocumentTypesTest",
+      "reason": "The document node test covers default rich-text creation and the document API boundary test covers rejection of a non-doc root.",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\VersionFormatCarryForwardTest::__pest_evaluable_it_maps_every_0_2_rich_text_flavour_to_the_one_rich_text_type__P0_4_L3_\"('richtext')\"",
+      "replacement": [
+        "P\\Tests\\Document\\DocumentNodeTest::__pest_evaluable_it_creates_a_kind_document_node_with_its_aggregate_and_checkpoint__1",
+        "P\\Tests\\Document\\VersionFormatCarryForwardTest::__pest_evaluable_it_keeps_a_markdown_document_markdown_across_an_autosave_checkpoint__P0_4_L3_"
+      ],
+      "reason": "The unused prerelease format mapping was removed; current tests cover canonical rich-text creation and type carry-forward across checkpoints.",
+      "decision": "09e147788"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\VersionFormatCarryForwardTest::__pest_evaluable_it_maps_every_0_2_rich_text_flavour_to_the_one_rich_text_type__P0_4_L3_\"('table')\"",
+      "replacement": [
+        "P\\Tests\\Document\\DocumentNodeTest::__pest_evaluable_it_creates_a_kind_document_node_with_its_aggregate_and_checkpoint__1",
+        "P\\Tests\\Document\\VersionFormatCarryForwardTest::__pest_evaluable_it_keeps_a_markdown_document_markdown_across_an_autosave_checkpoint__P0_4_L3_"
+      ],
+      "reason": "The unused prerelease format mapping was removed; current tests cover canonical rich-text creation and type carry-forward across checkpoints.",
+      "decision": "09e147788"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Document\\VersionFormatCarryForwardTest::__pest_evaluable_it_maps_every_0_2_rich_text_flavour_to_the_one_rich_text_type__P0_4_L3_\"('template')\"",
+      "replacement": [
+        "P\\Tests\\Document\\DocumentNodeTest::__pest_evaluable_it_creates_a_kind_document_node_with_its_aggregate_and_checkpoint__1",
+        "P\\Tests\\Document\\VersionFormatCarryForwardTest::__pest_evaluable_it_keeps_a_markdown_document_markdown_across_an_autosave_checkpoint__P0_4_L3_"
+      ],
+      "reason": "The unused prerelease format mapping was removed; current tests cover canonical rich-text creation and type carry-forward across checkpoints.",
+      "decision": "09e147788"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_keeps_the_document_type_contract\"dataset \"spreadsheet\"\"",
+      "replacement": [
+        "P\\Tests\\Types\\DocumentTypeRegistryTest::__pest_evaluable_it_registers_the_configured_types_at_boot_and_freezes_once_the_application_booted",
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_keeps_the_document_type_contract\"dataset \"opaque note\"\""
+      ],
+      "reason": "The spreadsheet contract moved to vaulter-sheets; the same document type contract runs against a third-party opaque type.",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Types\\ContentSizeLimitTest::__pest_evaluable_it_creates_content_of_exactly_the_limit_and_refuses_one_byte_more\"dataset \"spreadsheet, global limit\"\"",
+      "replacement": [
+        "P\\Tests\\Types\\ContentSizeLimitTest::__pest_evaluable_it_creates_content_of_exactly_the_limit_and_refuses_one_byte_more\"dataset \"opaque note, global limit\"\""
+      ],
+      "reason": "The global size limit on create is now tested with a third-party opaque type.",
+      "decision": "1.2"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Types\\ContentSizeLimitTest::__pest_evaluable_it_updates_to_exactly_the_limit_and_refuses_one_byte_more_without_writing\"dataset \"spreadsheet, global limit\"\"",
+      "replacement": [
+        "P\\Tests\\Types\\ContentSizeLimitTest::__pest_evaluable_it_updates_to_exactly_the_limit_and_refuses_one_byte_more_without_writing\"dataset \"opaque note, global limit\"\""
+      ],
+      "reason": "The global size limit on update is now tested with a third-party opaque type.",
       "decision": "1.2"
     },
     {
@@ -19907,7 +19967,7 @@
       ]
     },
     "documents": {
-      "count": 296,
+      "count": 329,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_",
         "P\\Tests\\Arch\\DocumentStateWriterBoundaryTest::__pest_evaluable_it_writes_the_pending_state_marker_only_in_DocumentStateWriter__D26_",
@@ -19918,8 +19978,10 @@
         "P\\Tests\\Arch\\OperationPolicyCoverageTest::__pest_evaluable_it_declares_the_content_PUT_conditional_and_the_comment_writes_receipts_with_their_own_version",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Access_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_DocumentsModule_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Errors_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Idempotency_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Profiles_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Rules_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Schema_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_State_never_uses_the_Testing_namespaces",
         "P\\Tests\\Collaboration\\AcmeOtProtocolContractTest::__pest_evaluable_it_keeps_the_opaque_protocol_contract_through_the_fixture_backend_verifier",
@@ -19952,6 +20014,8 @@
         "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_rejects_missing_stored_compatibility_even_without_a_client_schema\"('collab_state_format', 'foreign')\"",
         "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_rejects_missing_stored_compatibility_even_without_a_client_schema\"('schema_version', 2)\"",
         "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_returns_a_complete_immutable_grant_under_the_configured_TTL_and_scope_ceiling",
+        "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_returns_no_authentication_grant_for_denied_View_while_strict_reference_access_stays_hidden",
+        "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_treats_a_node_id_the_key_column_cannot_hold_as_a_missing_node",
         "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_uses_guarded_profile_flags_and_preserves_metadata_profile_refusal",
         "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_uses_the_highest_guarded_ability_without_exceeding_the_token_ceiling\"('commenter', Vaulter\\Drive\\Enums\\Access\\Ability Enum (Comment, 'comment'), Vaulter\\Documents\\Data\\Collaboration\\CollaborationMode Enum (Read, 'read'))\"",
         "P\\Tests\\Collaboration\\CollaborationAccessPolicyTest::__pest_evaluable_it_uses_the_highest_guarded_ability_without_exceeding_the_token_ceiling\"('reader', Vaulter\\Drive\\Enums\\Access\\Ability Enum (View, 'view'), Vaulter\\Documents\\Data\\Collaboration\\CollaborationMode Enum (Read, 'read'))\"",
@@ -19979,9 +20043,13 @@
         "P\\Tests\\Document\\DocumentStateWriterTest::__pest_evaluable_it_adds_no_revision_when_the_state_a_generation_closes_over_is_already_one__or_holds_no_Yjs_state\"dataset \"no Yjs state\"\"",
         "P\\Tests\\Document\\DocumentStateWriterTest::__pest_evaluable_it_keeps_the_collaborative_state_a_generation_closes_over_in_a_revision_before_replacing_it\"dataset \"restore\"\"",
         "P\\Tests\\Document\\DocumentStateWriterTest::__pest_evaluable_it_keeps_the_collaborative_state_a_generation_closes_over_in_a_revision_before_replacing_it\"dataset \"transition\"\"",
+        "P\\Tests\\Document\\DocumentStateWriterTest::__pest_evaluable_it_reads_streamed_collaboration_state_repeatedly_without_consuming_its_stored_bytes",
         "P\\Tests\\Document\\DocumentStateWriterTest::__pest_evaluable_it_rejects_rich_text_prepared_payload_after_a_locked_Markdown_transition_without_imposing_a_version_CAS_on_normal_updates",
         "P\\Tests\\Document\\DocumentStateWriterTest::__pest_evaluable_it_rolls_back_head_metadata_and_the_checkpoint_when_the_payload_write_fails_its_constraint",
         "P\\Tests\\Document\\DocumentValidatorMatrixTest::__pest_evaluable_it_moves_exactly_the_documented_validators___dataset\"dataset \"update of a snapshot with Yjs state\"\"",
+        "P\\Tests\\Document\\NodeCommentActionTest::__pest_evaluable_it_refuses_a_reply_whose_parent_comment_belongs_to_another_node",
+        "P\\Tests\\Document\\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text_opaque_node_instead_of_rendering_it_blank\"('html')\"",
+        "P\\Tests\\Document\\NodeExportKindNeutralTest::__pest_evaluable_it_refuses_to_export_a_non_rich_text_opaque_node_instead_of_rendering_it_blank\"('markdown')\"",
         "P\\Tests\\Events\\DocumentEventValidatorsTest::__pest_evaluable_it_exposes_the_document_key_of_a_save_and_of_a_restore_apart_from_the_node_key",
         "P\\Tests\\Events\\DocumentJournalTest::__pest_evaluable_it_journals_exactly_the_created__updated_and_restored_document_types_of_the_catalogue",
         "P\\Tests\\Http\\CollaborationSessionV1Test::__pest_evaluable_it_checks_View_before_disclosing_a_missing_driver_or_the_node_kind",
@@ -19992,10 +20060,13 @@
         "P\\Tests\\Http\\CollaborationSessionV1Test::__pest_evaluable_it_serializes_empty_protocol_options_as_an_object",
         "P\\Tests\\Http\\CollaborationSessionV1Test::__pest_evaluable_it_validates_the_request_and_maps_an_invalid_driver_session_to_a_safe_problem",
         "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_answers_a_stranger_who_replays_a_deletion_404__not_the_stored_receipt",
+        "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_bounds_an_anchor_to_sixteen_JSON_levels_and_accepts_the_boundary",
+        "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_bounds_the_encoded_anchor_to_16384_bytes_without_changing_an_accepted_anchor",
         "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_refuses_a_stale_tag_with_412_stale__write_and_changes_nothing",
         "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_refuses_the_same_Idempotency_Key_for_another_comment",
         "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_replays_a_comment_add__a_resolution_and_a_deletion_under_their_Idempotency_Key__even_with_a_stale_If_Match",
         "P\\Tests\\Http\\CommentsV1Test::__pest_evaluable_it_tags_a_comment_with_its_id_and_version__and_the_resolution_raises_the_version_and_the_tag",
+        "P\\Tests\\Http\\DocumentContentV1Test::__pest_evaluable_it_can_write_through_CORS_when_a_gzip_proxy_weakens_the_standard_validator",
         "P\\Tests\\Http\\DocumentContentV1Test::__pest_evaluable_it_creates_a_document__checkpoints_it_and_restores_it_under_an_Idempotency_Key__replaying_each_once",
         "P\\Tests\\Http\\DocumentContentV1Test::__pest_evaluable_it_is_conditional__not_keyed__a_repeat_of_the_same_PUT_after_it_committed_answers_412_and_writes_nothing_more",
         "P\\Tests\\Http\\DocumentContentV1Test::__pest_evaluable_it_refuses_a_PUT_after_another_writer_landed_between_the_read_and_the_write",
@@ -20098,8 +20169,17 @@
         "P\\Tests\\Operations\\CollaborationSessionTest::__pest_evaluable_it_issues_through_the_documents_handle_with_a_typed_principal_and_opaque_verifier_roundtrip",
         "P\\Tests\\Operations\\CollaborationSessionTest::__pest_evaluable_it_keeps_unknown_adapters_unavailable_only_after_visibility_authorization",
         "P\\Tests\\Operations\\CollaborationSessionTest::__pest_evaluable_it_retains_generation_on_read_and_fences_restored_sessions_with_a_fresh_generation",
+        "P\\Tests\\Operations\\CommentOperationsTest::__pest_evaluable_it_refuses_oversized__deeply_nested_or_invalid_UTF_8_anchors_through_the_PHP_operation\"('bytes')\"",
+        "P\\Tests\\Operations\\CommentOperationsTest::__pest_evaluable_it_refuses_oversized__deeply_nested_or_invalid_UTF_8_anchors_through_the_PHP_operation\"('depth')\"",
+        "P\\Tests\\Operations\\CommentOperationsTest::__pest_evaluable_it_refuses_oversized__deeply_nested_or_invalid_UTF_8_anchors_through_the_PHP_operation\"('utf8')\"",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_answers_a_replay_of_a_deletion_with_the_current_authorization__by_the_recorded_basis",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_ask_for_a_version_when_the_caller_gave_none",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_return_a_purged_document_from_an_old_receipt_through_permissions_on_the_root\"('restore') / (false)\"",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_return_a_purged_document_from_an_old_receipt_through_permissions_on_the_root\"('restore') / (true)\"",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_return_a_purged_document_from_an_old_receipt_through_permissions_on_the_root\"('snapshot') / (false)\"",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_return_a_purged_document_from_an_old_receipt_through_permissions_on_the_root\"('snapshot') / (true)\"",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_return_a_purged_document_from_an_old_receipt_through_permissions_on_the_root\"('update') / (false)\"",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_does_not_return_a_purged_document_from_an_old_receipt_through_permissions_on_the_root\"('update') / (true)\"",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_enriches_a_replay_after_a_key_generation_rotation_with_the_fresh_key_while_the_receipt_stays_the_same",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_gives_a_created_document_and_its_replay_the_same_reader_key__which_the_semantic_receipt_does_not_store",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_keeps_the_content_hash__the_state_version_and_the_node_sequence_apart",
@@ -20122,7 +20202,6 @@
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_refuses_a_graph_in_which_two_modules_contribute_the_same_document_type_or_exporter_key\"dataset \"exporter\"\"",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_refuses_a_graph_in_which_two_modules_contribute_the_same_document_type_or_exporter_key\"dataset \"type\"\"",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_shares_the_sanitizer_with_the_existing_scheme_allow_list",
-        "P\\Tests\\Schema\\DocumentAggregateSchemaTest::__pest_evaluable_it_reports_only_unambiguous_historical_Yjs_provenance_without_mutating_facts",
         "P\\Tests\\Schema\\DocumentAggregateSchemaTest::__pest_evaluable_it_requires_complete_payloads_and_optional__internally_consistent_sync_rows_on_heads_and_revisions",
         "P\\Tests\\Schema\\DocumentAggregateSchemaTest::__pest_evaluable_it_requires_every_pending_binding_component_and_permits_a_pending_only_sync_row",
         "P\\Tests\\Schema\\DocumentsKeyColumnsTest::__pest_evaluable_it_adds_the_documents_columns_to_the_key_columns_the_inspector_expects_of_the_whole_installation",
@@ -20133,14 +20212,15 @@
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_emits_no_events_and_preserves_every_aggregate_row_when_transition_CAS_or_pending_recheck_loses\"('version')\"",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_fences_identical_JSON_transitions_and_retains_explicit_user_attribution",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_keeps_pending_data_when_ordinary_Documents_update_has_no_active_drainer",
-        "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_keeps_the_snapshot_generation_on_ordinary_edits_without_an_active_driver\"dataset \"changed JSON\"\"",
-        "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_keeps_the_snapshot_generation_on_ordinary_edits_without_an_active_driver\"dataset \"identical JSON\"\"",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_preserves_Acme_stateless_null_state_through_checkpoint_transition_restore_and_independent_copy",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_propagates_the_authorized_user_or_authenticated_service_actor_and_correlation_to_every_transition_effect\"dataset \"authenticated service\"\"",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_propagates_the_authorized_user_or_authenticated_service_actor_and_correlation_to_every_transition_effect\"dataset \"authorized user\"\"",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_publishes_an_ACKed_historical_schema_checkpoint_without_upgrading_its_stored_projection",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_reads_an_immutable_revision_through_its_source_type_after_a_prepared_cross_type_transition",
         "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_returns_unpublished_without_rows_or_events_when_a_prepared_checkpoint_loses_to_a_noncollaborative_transition",
+        "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_writes_bound_snapshots_and_keeps_their_generation_without_an_active_driver\"dataset \"changed JSON\"\"",
+        "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_writes_bound_snapshots_and_keeps_their_generation_without_an_active_driver\"dataset \"identical JSON with binary state\"\"",
+        "P\\Tests\\State\\CollaborationBindingTransitionTest::__pest_evaluable_it_writes_bound_snapshots_and_keeps_their_generation_without_an_active_driver\"dataset \"identical JSON\"\"",
         "P\\Tests\\State\\CollaborativeStateTest::__pest_evaluable_it_accepts_only_the_issued_object_of_the_current_transaction_attempt_for_every_write",
         "P\\Tests\\State\\CollaborativeStateTest::__pest_evaluable_it_addresses_a_document_by_its_aggregate_id_inside_a_transaction__distinct_from_the_node_id",
         "P\\Tests\\State\\CollaborativeStateTest::__pest_evaluable_it_clears_a_covered_marker_even_when_the_published_state_is_the_one_already_there",
@@ -20202,9 +20282,22 @@
         "P\\Tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_each_independently_lying_verified_credential_without_exposing_it\"dataset \"schema\"\"",
         "P\\Tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_each_independently_lying_verified_credential_without_exposing_it\"dataset \"tenant null versus string\"\"",
         "P\\Tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_each_independently_lying_verified_credential_without_exposing_it\"dataset \"typed principal\"\"",
+        "P\\Tests\\Types\\BuiltInDocumentTypesTest::__pest_evaluable_it_keeps_the_document_type_contract\"dataset \"opaque note\"\"",
+        "P\\Tests\\Types\\ContentSizeLimitTest::__pest_evaluable_it_creates_content_of_exactly_the_limit_and_refuses_one_byte_more\"dataset \"opaque note, global limit\"\"",
+        "P\\Tests\\Types\\ContentSizeLimitTest::__pest_evaluable_it_updates_to_exactly_the_limit_and_refuses_one_byte_more_without_writing\"dataset \"opaque note, global limit\"\"",
         "P\\Tests\\Types\\UnknownDocumentTypeFallbackTest::__pest_evaluable_it_round_trips_and_purges_every_storage_row_for__dataset\"dataset \"markdown\"\"",
         "P\\Tests\\Types\\UnknownDocumentTypeFallbackTest::__pest_evaluable_it_round_trips_and_purges_every_storage_row_for__dataset\"dataset \"rich text\"\"",
-        "P\\Tests\\Types\\UnknownDocumentTypeFallbackTest::__pest_evaluable_it_round_trips_and_purges_every_storage_row_for__dataset\"dataset \"third-party opaque type\"\""
+        "P\\Tests\\Types\\UnknownDocumentTypeFallbackTest::__pest_evaluable_it_round_trips_and_purges_every_storage_row_for__dataset\"dataset \"third-party opaque type\"\"",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_assigns_block_IDs_on_creation_when_enabled__preserves_on_reopen__and_does_not_mutate_on_GET__3_1_A_",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_assigns_unique_blockIds_to_paragraphs_and_headings_and_preserves_existing_valid_ones",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_creates_and_reads_markdown_documents_normally_when_block__ids_is_enabled",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_defaults_vaulter_documents_tiptap_block__ids_to_false",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_keeps_markdown_schema_closed_without_blockId_and_working_as_before__3_1_B_",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_normalizes_legacy_v1_rich_text_document_to_v2_via_CAS__rejects_stale_CAS__advances_epoch_for_bound_docs__and_is_idempotent_on_repeat__3_1_A_",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_preserves_bold_and_link_marks_under_block_p42_in_PHP_serialization_and_rendering__3_1_B_",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_regenerates_all_blockIds_on_copy_semantics",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_rejects_duplicate_or_malformed_blockIds_in_TipTapContent__fromArray",
+        "P\\Tests\\Unit\\BlockIdentityTest::__pest_evaluable_it_restores_block_IDs_from_the_restored_revision_and_advances_collaboration_epoch__3_1_A_"
       ]
     },
     "azguard": {
@@ -20504,7 +20597,7 @@
       ]
     },
     "vue": {
-      "count": 84,
+      "count": 88,
       "names": [
         "tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > writes with the strong validator exposed through gzip and CORS (body=false)",
         "tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > writes with the strong validator exposed through gzip and CORS (body=true)",
@@ -20583,8 +20676,12 @@
         "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > assigns unique blockIds on missing blocks and preserves existing ones",
         "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID and assigns a new ID to the second block on split",
         "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the first block ID on join",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the heading ID when inserting a paragraph before it",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > keeps the original ID on the first block when splitting at the start of a heading",
         "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves block ID when a block is moved within the document",
         "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > preserves bold and link marks under block p42 (3.1-B)",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > uses the drop modifier to resolve block IDs (copy at drop: false)",
+        "tests/tiptap/block-id.test.ts > BlockId Tiptap extension > uses the drop modifier to resolve block IDs (copy at drop: true)",
         "tests/viewers/fallback.test.ts > built-in preview viewers > image preview links the download URL when direct_signed redirects",
         "tests/viewers/fallback.test.ts > built-in preview viewers > image preview shows a failure instead of a broken image when the bytes are unavailable",
         "tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview links the download URL when direct_signed redirects",
