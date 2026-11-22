@@ -43,7 +43,7 @@ final class IdempotencyStore
 
     private const int TOMBSTONE_DAYS = 7;
 
-    /** The bounded wait on a concurrent claim. */
+    /** The bounded lock wait on a claim or receipt read. */
     public const int WAIT_SECONDS = 2;
 
     public function __construct(
@@ -81,7 +81,7 @@ final class IdempotencyStore
             if ($this->withBoundedWait(fn (): bool => $this->database->insertOnce($this->table(), $row, 'scope_digest'))) {
                 return null;
             }
-            $existing = $this->lockedReceipt($digest);
+            $existing = $this->withBoundedWait(fn (): ?StoredReceipt => $this->lockedReceipt($digest));
             if ($existing === null) {
                 continue;
             }
@@ -242,13 +242,16 @@ final class IdempotencyStore
     }
 
     /**
-     * Runs `$insert` with the lock wait bounded to {@see WAIT_SECONDS}; a timeout becomes `operation_in_progress`.
+     * Runs the query with the lock wait bounded to {@see WAIT_SECONDS}; a timeout becomes `operation_in_progress`.
      * Postgres scopes the setting to the transaction (`set_config(…, true)`), MySQL restores the session value.
      * SQLite has a single writer: its busy timeout bounds the wait.
      *
-     * @param Closure(): bool $insert
+     * @template TResult
+     *
+     * @param  Closure(): TResult  $query
+     * @return TResult
      */
-    private function withBoundedWait(Closure $insert): bool
+    private function withBoundedWait(Closure $query): mixed
     {
         $connection = $this->connection();
         $driver = $connection->getDriverName();
@@ -268,7 +271,7 @@ final class IdempotencyStore
         }
 
         try {
-            return $insert();
+            return $query();
         } catch (QueryException $exception) {
             if (self::isLockTimeout($exception)) {
                 // Postgres aborted the transaction: nothing more runs in it, the exception rolls it back (and the

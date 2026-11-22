@@ -39,13 +39,45 @@ def dependency_problems(package, name, licenses):
             yield f'{name}@{version}: below the required version {MINIMUMS[name]}'
 
 
+def composer_runtime_packages(root, lock):
+    packages = {package['name']: package for package in lock['packages'] + lock.get('packages-dev', [])}
+    runtime = {package['name'] for package in lock['packages']}
+
+    # Shipped packages are roots even when installed as development dependencies in the monorepo.
+    shipped = json.loads((root / 'release/packages.json').read_text())['php']
+    seen = {package['name'] for package in shipped}
+    pending = []
+    for package in shipped:
+        manifest = json.loads((root / package['path'] / 'composer.json').read_text())
+        pending.extend(manifest.get('require', {}))
+
+    providers = {}
+    for name, package in packages.items():
+        for alias in package.get('provide', {}).keys() | package.get('replace', {}).keys():
+            providers.setdefault(alias, []).append(name)
+
+    while pending:
+        name = pending.pop()
+        if name in seen:
+            continue
+        seen.add(name)
+        if name in packages:
+            runtime.add(name)
+            pending.extend(packages[name].get('require', {}))
+        else:
+            # The lock does not bind virtual requirements to a single provider.
+            pending.extend(providers.get(name, ()))
+
+    yield from (package for name, package in packages.items() if name in runtime)
+
+
 def scan_lock(path):
-    packages = json.loads(path.read_text())['packages']
+    lock = json.loads(path.read_text())
     if path.name == 'composer.lock':
-        for package in packages:
+        for package in composer_runtime_packages(path.parent, lock):
             yield from dependency_problems(package, package['name'], package.get('license', []))
     else:
-        for location, package in packages.items():
+        for location, package in lock['packages'].items():
             if 'node_modules/' in location and not package.get('link') and not package.get('dev'):
                 name = package.get('name') or location.rsplit('node_modules/', 1)[1]
                 yield from dependency_problems(package, name, [package.get('license') or ''])

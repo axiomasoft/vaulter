@@ -24,6 +24,38 @@ class EngineeringRailsTest(unittest.TestCase):
         self.assertTrue(list(rails.dependency_problems({'version': '1.0.0'}, 'copyleft-package', ['GPL-3.0-only'])))
         self.assertFalse(list(rails.dependency_problems({'version': '1.0.0'}, 'dual-license', ['GPL-3.0-only', 'MIT'])))
 
+    def test_composer_scans_shipped_runtime_dependencies_in_the_dev_lock_section(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'release').mkdir()
+            (root / 'packages/optional').mkdir(parents=True)
+            (root / 'release/packages.json').write_text(json.dumps({
+                'php': [{'name': 'vaulter/optional', 'path': 'packages/optional'}],
+            }))
+            (root / 'packages/optional/composer.json').write_text(json.dumps({
+                'require': {'vendor/runtime': '*'},
+                'require-dev': {'vendor/tool': '*'},
+            }))
+            lock = root / 'composer.lock'
+            lock.write_text(json.dumps({
+                'packages': [
+                    {'name': 'vendor/root', 'version': '1.0', 'license': ['GPL-3.0-only']},
+                ],
+                'packages-dev': [
+                    {'name': 'vaulter/optional', 'version': '1.0', 'license': ['proprietary']},
+                    {'name': 'vendor/runtime', 'version': '1.0', 'license': ['MIT'],
+                     'require': {'vendor/transport': '*'}},
+                    {'name': 'dunglas/mercure', 'version': '1.0', 'license': ['MIT'],
+                     'provide': {'vendor/transport': '1.0'}},
+                    {'name': 'vendor/tool', 'version': '1.0', 'license': ['GPL-3.0-only']},
+                ],
+            }))
+
+            self.assertCountEqual([
+                'vendor/root@1.0: no approved runtime license (GPL-3.0-only)',
+                'dunglas/mercure@1.0: dependency forbidden',
+            ], rails.scan_lock(lock))
+
     def test_frontend_floor_and_exact_license_correction(self):
         self.assertTrue(list(rails.dependency_problems({'version': '3.5.41'}, 'vue', ['MIT'])))
         self.assertFalse(list(rails.dependency_problems({'version': '3.5.42'}, 'vue', ['MIT'])))

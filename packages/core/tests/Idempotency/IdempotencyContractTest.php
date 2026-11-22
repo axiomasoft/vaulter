@@ -6,10 +6,12 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyExpiredException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
+use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
@@ -362,4 +364,54 @@ it('authorizes a replay now, before the receipt is decoded, and answers the hist
         ->and($probe->decodes)->toBe(1)
         ->and(app(IdempotencyOutcome::class)->replayed())->toBeTrue()
         ->and(icRows())->toBe(1);
+});
+
+it('returns operation_in_progress when a completed receipt stays locked on PostgreSQL', function (): void {
+    $connection = app(VaulterDatabase::class)->connection();
+    if ($connection->getDriverName() !== 'pgsql') {
+        $this->markTestSkipped('Requires PostgreSQL row locks and lock_timeout.');
+    }
+
+    $locker = DB::build([...$connection->getConfig(), 'name' => 'idempotency-receipt-locker']);
+    $table = app(IdempotencyStore::class)->table();
+    $probe = icProbe();
+    $runner = icRunner();
+    $context = icContext(icUser('users', '7'), 'locked-receipt');
+    $digest = IdempotencyDigest::scope(IdempotencyDigest::tuple($context, 'core.probe.write', 'locked-receipt'));
+    $write = $probe->write(['name' => 'a']);
+    $replay = fn () => icRun($runner, $context, static fn () => throw new RuntimeException('Replay ran the write.'), $write);
+
+    // Seed a committed receipt that both sessions can see, outside RefreshDatabase's transaction.
+    $connection->rollBack();
+    try {
+        icRun($runner, $context, static fn (): string => 'historical', $write);
+        $locker->beginTransaction();
+        $receipt = $locker->table($table)->where('scope_digest', $digest)->lockForUpdate()->sole();
+        expect($receipt->status)->toBe(IdempotencyStore::COMPLETED);
+
+        $connection->statement("SET lock_timeout = '0'");
+        // Keep a broken locking read from hanging the suite.
+        $connection->statement("SET statement_timeout = '5s'");
+        try {
+            $replay();
+            $this->fail('Expected the receipt lock to time out.');
+        } catch (OperationInProgressException $exception) {
+            expect($exception->httpStatus())->toBe(409)
+                ->and($exception->problemCode())->toBe('operation_in_progress')
+                ->and($exception->problemHeaders())->toBe(['Retry-After' => '1'])
+                ->and($probe->decodes)->toBe(0);
+        }
+
+        expect($connection->transactionLevel())->toBe(0)
+            ->and($connection->selectOne('SHOW lock_timeout')->lock_timeout)->toBe('0');
+        $locker->rollBack();
+        expect($replay())->toBe('historical');
+    } finally {
+        $locker->rollBack();
+        $locker->disconnect();
+        $connection->statement('RESET statement_timeout');
+        $connection->statement('RESET lock_timeout');
+        $connection->table($table)->where('scope_digest', $digest)->delete();
+        $connection->beginTransaction();
+    }
 });

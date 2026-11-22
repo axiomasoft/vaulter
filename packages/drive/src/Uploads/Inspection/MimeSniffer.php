@@ -55,10 +55,13 @@ final class MimeSniffer
             }
             try {
                 $this->zipGuard->check($zip, $path);
+                $this->zipGuard->checkRelationships($zip);
                 $entry = $zip->statName('[Content_Types].xml');
-                if (is_array($entry) && $entry['size'] <= 65536) {
+                if (is_array($entry)) {
+                    if ($entry['size'] > 65536) {
+                        throw ZipCentralDirectoryGuard::invalid();
+                    }
                     $types = $this->zipGuard->readMetadata($zip, '[Content_Types].xml', $entry['size']);
-                    $this->zipGuard->checkRelationships($zip);
                     foreach (['word' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'xl' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ppt' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation'] as $part => $type) {
                         if (str_contains($types, $type.'.main+xml') && $zip->locateName($part.'/'.($part === 'word' ? 'document' : ($part === 'xl' ? 'workbook' : 'presentation')).'.xml') !== false) {
                             return $type;

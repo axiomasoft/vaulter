@@ -236,6 +236,44 @@ it('rejects unsafe ZIP central directory metadata before reading a member', func
     }
 })->with(['symlink', 'traversal', 'duplicate', 'ratio', 'nul']);
 
+it('guards ZIP metadata independently of OOXML classification', function (bool $oversized, ?string $relationship, bool $accepted): void {
+    $path = tempnam(sys_get_temp_dir(), 'vaulter-zip-');
+    expect($path)->toBeString();
+    try {
+        $archive = new ZipArchive;
+        expect($archive->open($path, ZipArchive::OVERWRITE))->toBeTrue();
+        $archive->addFromString('ordinary.txt', 'plain content');
+        if ($oversized) {
+            $archive->addFromString('[Content_Types].xml', str_pad('<Types/>', 65537));
+            expect($archive->setCompressionName('[Content_Types].xml', ZipArchive::CM_STORE))->toBeTrue();
+        }
+        if ($relationship !== null) {
+            $target = $relationship === 'hyperlink' ? 'https://example.invalid/' : 'urn:test:template';
+            $archive->addFromString('_rels/.rels', sprintf(
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/%s" TargetMode="External" Target="%s"/></Relationships>',
+                $relationship,
+                $target,
+            ));
+        }
+        expect($archive->close())->toBeTrue();
+
+        $detect = fn () => app(MimeSniffer::class)->detect($path);
+        if ($accepted) {
+            expect($detect())->toBe('application/zip');
+        } else {
+            expect($detect)->toThrow(ValidationException::class);
+        }
+    } finally {
+        unlink($path);
+    }
+})->with([
+    'forbidden relationship without content types' => [false, 'attachedTemplate', false],
+    'forbidden relationship with oversized content types' => [true, 'attachedTemplate', false],
+    'oversized content types alone' => [true, null, false],
+    'allowed relationship without content types' => [false, 'hyperlink', true],
+    'ordinary ZIP without OOXML metadata' => [false, null, true],
+]);
+
 it('append still refuses offset>0 when staged object was removed', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 12);
     $staged = app(StagedUpload::class);
