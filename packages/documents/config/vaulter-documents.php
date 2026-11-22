@@ -25,7 +25,7 @@ return [
         'extra_attributes' => [],
         'url_attributes' => [],
     ],
-    // The private broadcast channels of a document ("<prefix>.<nodeId>"): the comment events use them, and the
+    // The private broadcast channels of a document (`<prefix>.<nodeId>`): the comment events use them, and the
     // collaboration package authorizes them and names its rooms with the same prefix.
     'broadcast' => ['channel_prefix' => 'vaulter.documents'],
     'models' => [

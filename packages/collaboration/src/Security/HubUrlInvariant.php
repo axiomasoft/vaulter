@@ -25,8 +25,7 @@ final readonly class HubUrlInvariant implements ProductionInvariant
         if ($url === null || trim($url) === '') {
             return null;
         }
-        $scheme = parse_url(trim($url), PHP_URL_SCHEME);
-        if (is_string($scheme) && strtolower($scheme) === 'wss') {
+        if (preg_match('~\Awss://[^/\s?#]+~i', trim($url)) === 1) {
             return null;
         }
 

@@ -16,6 +16,8 @@ use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Exceptions\Http\WeakEtagNotAllowedException;
+use Vaulter\Exceptions\Idempotency\IdempotencyKeyExpiredException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
@@ -46,6 +48,8 @@ final class CoreProblemCodes implements ProblemCodeSource
             // A second registration of a kind, type or exporter at boot: the registry owners raise it with this code.
             'duplicate_registration' => new ProblemSpec(500),
             'extension_failed' => new ProblemSpec(500, InvalidExtensionResult::class),
+            'foreign_key_violation' => new ProblemSpec(409),
+            'idempotency_key_expired' => new ProblemSpec(410, IdempotencyKeyExpiredException::class),
             'idempotency_key_reused' => new ProblemSpec(422, IdempotencyKeyReusedException::class),
             'internal_error' => new ProblemSpec(500),
             'method_not_allowed' => new ProblemSpec(405, MethodNotAllowedHttpException::class),
@@ -62,6 +66,7 @@ final class CoreProblemCodes implements ProblemCodeSource
             // The If-Match of a write names a version that is no longer current: deterministic, so a receipt stores it.
             'stale_write' => new ProblemSpec(412, StaleWriteException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             'validation_failed' => new ProblemSpec(422, ValidationException::class),
+            'weak_etag_not_allowed' => new ProblemSpec(412, WeakEtagNotAllowedException::class, Retryable::AfterRefetch),
             'write_outside_operation' => new ProblemSpec(500, WriteOutsideOperationException::class),
         ];
     }

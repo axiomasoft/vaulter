@@ -142,6 +142,17 @@ it('reports a scanner that cannot be built without quoting its message', functio
     expect($finding->code)->toBe('drive.scan.scanner_unresolvable')->and(json_encode($finding))->not->toContain('hunter2');
 });
 
+it('checks the live ClamAV version reported by the bound scanner', function (string $version, string $code): void {
+    config(['vaulter-drive.scan.mode' => 'all_content', 'vaulter-drive.scan.scanner_key' => 'clamav', 'vaulter-drive.scan.scanner_version' => $version]);
+    scanScanner('clamav', $version);
+
+    expect(scanFindings('drive.scan.scanner')[0]->code)->toBe($code);
+})->with([
+    ['1.5.4', 'drive.scan.clamav_version_unsupported'],
+    ['unknown', 'drive.scan.clamav_version_unsupported'],
+    ['1.5.5', 'drive.scan.scanner_ok'],
+]);
+
 it('finds a drive whose policy cutover is pending, an error in production', function (): void {
     [$drive] = scanFixture();
     expect(scanFindings('drive.scan.policy')[0]->code)->toBe('drive.scan.policy_current');

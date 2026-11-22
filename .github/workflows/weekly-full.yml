@@ -133,7 +133,7 @@ jobs:
     # PostgreSQL 18 stores data under /var/lib/postgresql (not .../data). Both images are digest-pinned.
     services:
       db:
-        image: ${{ matrix.engine == 'pgsql' && 'postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95' || 'mysql:9.7@sha256:df90258da46f6e7ff8574ff84f17618aba0765cac749928299c69fd4e7cb8ad8' }}
+        image: ${{ (matrix.version == '18.7' && 'postgres:18.7-alpine@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71') || (matrix.version == '19.0' && 'postgres:19.0-alpine@sha256:8b0ff4cdf221f0c53d7fcda681d3b461be725c492cd881c5ec9c0ad25023f188') || 'mysql:9.7@sha256:df90258da46f6e7ff8574ff84f17618aba0765cac749928299c69fd4e7cb8ad8' }}
         env:
           POSTGRES_USER: ${{ matrix.username }}
           POSTGRES_PASSWORD: secret
@@ -228,7 +228,7 @@ jobs:
       - name: Setup Node.js 26
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '26'
+          node-version: '26.13.1'
 
       - name: Install dependencies
         run: |
@@ -249,7 +249,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['26']  # only the current Node line is supported (engines.node >=26)
+        node: ['26.13.1']  # only the current Node line is supported (engines.node >=26.13.1)
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -283,7 +283,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['26']  # only the current Node line is supported (engines.node >=26)
+        node: ['26.13.1']  # only the current Node line is supported (engines.node >=26.13.1)
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -323,7 +323,7 @@ jobs:
       - name: Setup Node.js 26
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '26'
+          node-version: '26.13.1'
 
       - name: Install dependencies
         working-directory: ./packages/collaboration/hub

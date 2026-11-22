@@ -284,7 +284,7 @@ final class OpenTelemetryTraceRecorder implements TraceRecorder
 
     private static function ratio(?float $ratio): float
     {
-        $value = $ratio ?? (float) config('vaulter.observability.tracing.ratio', 0.01);
+        $value = $ratio ?? (float) config('load.observability.tracing.ratio', 0.01);
 
         if ($value < 0.0) {
             return 0.0;

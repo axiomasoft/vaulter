@@ -11,6 +11,40 @@ ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('workflow_policy', ROOT / 'scripts' / 'ci' / 'workflow-policy.py')
 policy = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(policy)
+RAILS_SPEC = importlib.util.spec_from_file_location('engineering_rails', ROOT / 'scripts' / 'ci' / 'engineering-rails.py')
+rails = importlib.util.module_from_spec(RAILS_SPEC)
+RAILS_SPEC.loader.exec_module(rails)
+
+
+
+class EngineeringRailsTest(unittest.TestCase):
+    def test_disallowed_and_unlicensed_runtime_dependencies(self):
+        self.assertTrue(list(rails.dependency_problems({'version': '3.0.0'}, '@tiptap-pro/secret', ['MIT'])))
+        self.assertTrue(list(rails.dependency_problems({'version': '1.0.0'}, 'unlicensed-package', ['UNLICENSED'])))
+        self.assertTrue(list(rails.dependency_problems({'version': '1.0.0'}, 'copyleft-package', ['GPL-3.0-only'])))
+        self.assertFalse(list(rails.dependency_problems({'version': '1.0.0'}, 'dual-license', ['GPL-3.0-only', 'MIT'])))
+
+    def test_frontend_floor_and_exact_license_correction(self):
+        self.assertTrue(list(rails.dependency_problems({'version': '3.5.41'}, 'vue', ['MIT'])))
+        self.assertFalse(list(rails.dependency_problems({'version': '3.5.42'}, 'vue', ['MIT'])))
+        name, version, integrity = rails.REDLOCK_MIT
+        self.assertFalse(list(rails.dependency_problems({'version': version, 'integrity': integrity}, name, ['UNLICENSED'])))
+        self.assertTrue(list(rails.dependency_problems({'version': version, 'integrity': 'different'}, name, ['UNLICENSED'])))
+
+    def test_new_suppressions_require_a_real_adr(self):
+        diff = '\n'.join((
+            '+++ b/packages/core/tests/FooTest.php', '@@ -1 +8,4 @@',
+            '-// @phpstan-ignore next', '+// @phpstan-ignore reason',
+            '+test()->skip(true); // ADR-9999',
+            '+test()->skip(true); // ADR-0005',
+            '+// @psalm-suppress Thing',
+        ))
+        result = list(rails.added_suppressions(diff, lambda adr: adr == '0005'))
+        self.assertEqual([8, 9, 11], [int(line.split(':')[1]) for line in result])
+
+    def test_image_rules_refuse_bundled_storage_and_linked_antivirus(self):
+        source = '# minio/minio reference\nFROM minio/minio:latest\nRUN apt-get install libclamav12\nRUN apt-get install clamd'
+        self.assertEqual(['2', '3'], [issue.split(':')[0] for issue in rails.image_problems(source)])
 
 
 def test_doc(**extra):
@@ -362,9 +396,10 @@ class SingleCiTest(unittest.TestCase):
         fast = json.loads(out['fast_matrix'])['include']
         self.assertEqual({('drive', '13.*', '^11.0'), ('documents', '13.*', '^11.0'), ('filament', '13.*', '^11.0')},
                          {(r['package'], r['laravel'], r['testbench']) for r in fast})
-        self.assertEqual([('drive', 'pgsql', '5432', 'vaulter'), ('drive', 'mysql', '3306', 'root')],
-                         [(r['package'], r['engine'], r['port'], r['username']) for r in json.loads(out['db_matrix'])['include']])
-        self.assertEqual(['drive', 'documents'], [r['package'] for r in json.loads(out['serial_matrix'])['include']],
+        self.assertEqual([('drive', 'pgsql', '18.7', '5432', 'vaulter'), ('drive', 'pgsql', '19.0', '5432', 'vaulter'),
+                          ('drive', 'mysql', '9.7', '3306', 'root')],
+                         [(r['package'], r['engine'], r['version'], r['port'], r['username']) for r in json.loads(out['db_matrix'])['include']])
+        self.assertEqual(['drive', 'documents'] * 2, [r['package'] for r in json.loads(out['serial_matrix'])['include']],
                          'serial runs the affected suites that have serial cases; filament has none')
         self.assertEqual('', out['skip_reason'])
         self.assertEqual('true', out['has_quality'])
@@ -404,9 +439,9 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('true', out['has_vue_collaboration'])
         db = json.loads(out['db_matrix'])['include']
         # Every package with database tests on both engines; filament has none, so no db lane.
-        self.assertEqual(16, len(db))
+        self.assertEqual(24, len(db))
         self.assertNotIn('filament', {row['package'] for row in db})
-        self.assertEqual(7, len(json.loads(out['serial_matrix'])['include']))
+        self.assertEqual(14, len(json.loads(out['serial_matrix'])['include']))
         self.assertEqual(6, len(json.loads(out['consumer_matrix'])['include']))
         with self.assertRaises(ValueError):
             policy.plan_outputs(self.support, 'changed')
@@ -421,8 +456,8 @@ class SingleCiTest(unittest.TestCase):
         out = self.plan(selector('ok', 0, ['integration']), pgsql=selector('ok', 0, ['integration']), mysql=selector('ok', 0, ['integration']))
         self.assertEqual({('integration', '13.*')},
                          {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
-        self.assertEqual(['integration'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
-        self.assertEqual([('integration', 'pgsql'), ('integration', 'mysql')],
+        self.assertEqual(['integration'] * 2, [r['package'] for r in json.loads(out['serial_matrix'])['include']])
+        self.assertEqual([('integration', 'pgsql'), ('integration', 'pgsql'), ('integration', 'mysql')],
                          [(r['package'], r['engine']) for r in json.loads(out['db_matrix'])['include']])
         for workflow in ('ci.yml', 'weekly-full.yml'):
             doc = policy.load_workflow(ROOT / '.github' / 'workflows' / workflow)
@@ -444,8 +479,8 @@ class SingleCiTest(unittest.TestCase):
         out = self.plan(selector('ok', 0, ['webhooks']), pgsql=selector('ok', 0, ['webhooks']), mysql=selector('ok', 0, ['webhooks']))
         self.assertEqual({('webhooks', '13.*')},
                          {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
-        self.assertEqual(['webhooks'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
-        self.assertEqual([('webhooks', 'pgsql'), ('webhooks', 'mysql')],
+        self.assertEqual(['webhooks'] * 2, [r['package'] for r in json.loads(out['serial_matrix'])['include']])
+        self.assertEqual([('webhooks', 'pgsql'), ('webhooks', 'pgsql'), ('webhooks', 'mysql')],
                          [(r['package'], r['engine']) for r in json.loads(out['db_matrix'])['include']])
 
     def test_consumer_lane_follows_the_changed_consumer_packages(self):
@@ -538,7 +573,7 @@ class SingleCiTest(unittest.TestCase):
         out = self.plan(selector('ok', 0, ['collaboration']), pgsql=selector('ok', 0, ['collaboration']), mysql=selector('ok', 0, ['collaboration']))
         self.assertEqual({('collaboration', '13.*')},
                          {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
-        self.assertEqual(['collaboration'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
+        self.assertEqual(['collaboration'] * 2, [r['package'] for r in json.loads(out['serial_matrix'])['include']])
         self.assertEqual(['collaboration'], [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
 
     def test_vue_collaboration_lane_follows_its_suite(self):

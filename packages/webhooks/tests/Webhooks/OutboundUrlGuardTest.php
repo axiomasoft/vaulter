@@ -253,7 +253,7 @@ it('blocks IPv4-embedding IPv6, TEST-NET and benchmark addresses by default', fu
 it('keeps public IPv4 and IPv6 destinations and mixed-case scheme as positive controls', function (): void {
     fakeResolver()->set('pub.test', [FakeHostResolver::PUBLIC_IP, '2606:4700:4700::1111']);
 
-    expect(app(OutboundUrlGuard::class)->pin('HtTpS://pub.test./hook')->port)->toBe(443);
+    expect(app(OutboundUrlGuard::class)->pin('HtTpS://pub.test/hook')->port)->toBe(443);
 });
 
 it('rejects a mixed public/private A+AAAA answer and treats userinfo and fragments unambiguously', function (): void {
@@ -319,7 +319,10 @@ it('transport options disable every env proxy, redirects and decoding and keep t
     expect($options['proxy'])->toBe('')
         ->and($options['decode_content'])->toBeFalse()
         ->and($options['curl'][CURLOPT_FOLLOWLOCATION])->toBeFalse()
-        ->and($options['curl'][CURLOPT_RESOLVE][0])->toContain('pub.test:443:'.FakeHostResolver::PUBLIC_IP)
+        ->and($options['curl'][CURLOPT_CONNECT_TO])->toBe(['pub.test:443:'.FakeHostResolver::PUBLIC_IP.':443'])
+        ->and($options['curl'][CURLOPT_FRESH_CONNECT])->toBeTrue()
+        ->and($options['curl'][CURLOPT_FORBID_REUSE])->toBeTrue()
+        ->and($options['curl'])->not->toHaveKey(CURLOPT_RESOLVE)
         ->and($options['sink'])->toBeInstanceOf(StreamInterface::class);
 });
 
@@ -331,4 +334,19 @@ it('re-pins on every attempt after DNS changes', function (): void {
 
     expect($first->ip)->toBe(FakeHostResolver::PUBLIC_IP)
         ->and(fn () => $guard->pin('https://rot.test/'))->toThrow(BlockedOutboundUrlException::class);
+});
+
+it('refuses ambiguous or unapproved authorities before transport', function (string $url): void {
+    fakeResolver()->set('example.com', [FakeHostResolver::PUBLIC_IP]);
+
+    expect(fn () => app(OutboundUrlGuard::class)->pin($url))->toThrow(BlockedOutboundUrlException::class);
+})->with(['https://example.com./hook', 'https://8.8.8.8./hook', 'https://user@example.com/hook', 'https://@example.com/hook', 'https://example.com:8443/hook']);
+
+it('pins an IDNA host and brackets IPv6 endpoints for cURL', function (): void {
+    fakeResolver()->set('xn--bcher-kva.test', ['2606:4700:4700::1111']);
+
+    expect(app(OutboundUrlGuard::class)->pin('https://bücher.test/hook')->curlConnectToEntry())
+        ->toBe('xn--bcher-kva.test:443:[2606:4700:4700::1111]:443')
+        ->and(app(OutboundUrlGuard::class)->pin('https://[2606:4700:4700::1111]/')->curlConnectToEntry())
+        ->toBe('[2606:4700:4700::1111]:443:[2606:4700:4700::1111]:443');
 });

@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * One cache policy for the versioned API, decided here rather than in each controller:
  *
  *  - a single resource with a validator (ETag, or the 304 answering it) is personal and
- *    revalidated on every use: `private, no-cache`, varying on the credentials;
+ *    revalidated on every use: `private, no-cache, no-transform`;
  *  - bytes, signed redirects, lists, mutations, secrets and errors are never stored;
  *  - public share responses are never stored and never leak the token-bearing URL
  *    through the Referer of a page they open.
@@ -38,28 +38,41 @@ final class ApplyResponseCachePolicy
             return $response;
         }
 
+        $etag = $response->headers->get('ETag');
+        $strong = $etag !== null && preg_match('/^"[^"]*"$/D', $etag) === 1;
+        $revalidate = $response->getStatusCode() === 304 || ($request->isMethodSafe() && $response->isSuccessful() && $etag !== null);
+        if ($strong) {
+            $response->headers->set('X-Vaulter-ETag', $etag);
+        }
+        if ($strong || $revalidate) {
+            $vary = array_filter($response->getVary(), is_string(...));
+            $response->setVary(array_values(array_unique(['Authorization', 'Accept', 'Cookie', ...$vary])));
+        }
+
         if (str_starts_with((string) $request->route()?->getName(), self::PUBLIC_SHARE_ROUTES)) {
-            $response->headers->set('Cache-Control', 'private, no-store');
+            $response->headers->set('Cache-Control', $strong ? 'private, no-store, no-transform' : 'private, no-store');
             $response->headers->set('Referrer-Policy', 'no-referrer');
 
             return $response;
         }
 
         if (self::carriesContent($response)) {
-            $response->headers->set('Cache-Control', 'private, no-store');
+            $response->headers->set('Cache-Control', $strong ? 'private, no-store, no-transform' : 'private, no-store');
 
             return $response;
         }
 
         // A mutation answers with the new tag too, but its response is never stored.
-        if ($response->getStatusCode() === 304 || ($request->isMethodSafe() && $response->isSuccessful() && $response->headers->has('ETag'))) {
-            $response->headers->set('Cache-Control', 'private, no-cache');
-            $response->setVary(['Authorization', 'Cookie'], replace: false);
+        if ($revalidate) {
+            $response->headers->set('Cache-Control', 'private, no-cache, no-transform');
 
             return $response;
         }
 
         $response->headers->set('Cache-Control', $request->isMethodSafe() ? 'private, no-store' : 'no-store');
+        if ($strong) {
+            $response->headers->addCacheControlDirective('no-transform');
+        }
 
         return $response;
     }

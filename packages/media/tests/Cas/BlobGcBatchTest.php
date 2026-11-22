@@ -258,19 +258,17 @@ it('uses the same PostgreSQL lock namespace for every batched mark candidate bef
 
     config()->set('database.connections.r21_probe', config('database.connections.testing'));
     $probe = DB::connection('r21_probe');
+    $probe->beginTransaction();
 
     try {
         foreach ($blobs as $blob) {
             $key = 'cas:'.$blob->scope_key.':'.$blob->sha256;
-            $acquired = $probe->selectOne('SELECT pg_try_advisory_lock(hashtext(?)) AS acquired', [$key])->acquired;
-
-            if ($acquired) {
-                $probe->selectOne('SELECT pg_advisory_unlock(hashtext(?))', [$key]);
-            }
+            $acquired = $probe->selectOne('SELECT pg_try_advisory_xact_lock(hashtextextended(?, 0)) AS acquired', [$key])->acquired;
 
             expect($acquired)->toBeFalse();
         }
     } finally {
+        $probe->rollBack();
         DB::purge('r21_probe');
     }
 });

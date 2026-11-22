@@ -101,18 +101,20 @@ export interface components {
     headers: {
         IdempotentReplayed: "true";
         ETag: string;
+        XVaulterETag: string;
+        XVaulterETagRequired: string;
         XVaulterApiVersion: "1";
         XRequestId: string;
-        CacheControlRevalidate: "no-cache, private";
-        CacheControlStore: "no-store, private";
-        CacheControlAny: "no-cache, private" | "no-store, private";
+        CacheControlRevalidate: "no-cache, no-transform, private";
+        CacheControlStore: "no-store, private" | "no-store, no-transform, private";
+        CacheControlAny: "no-cache, no-transform, private" | "no-store, private";
         CacheControlError: "no-store" | "no-store, private";
         Location: string;
         UploadLocation: string;
         ReferrerPolicy: "no-referrer";
         ReferrerPolicyRequired: "no-referrer";
-        VaryRepresentation: "Authorization, Cookie";
-        VaryOptional: "Authorization, Cookie";
+        VaryRepresentation: string;
+        VaryOptional: string;
         XShareSession: string;
         RetryAfter: number;
         XRateLimitLimit: number;
@@ -218,6 +220,17 @@ export interface components {
             };
         };
         Problem410: {
+            headers: {
+                "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                "X-Request-Id": components["headers"]["XRequestId"];
+                "Cache-Control": components["headers"]["CacheControlError"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        ProblemIdempotencyExpired: {
             headers: {
                 "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                 "X-Request-Id": components["headers"]["XRequestId"];
@@ -505,6 +518,7 @@ export interface components {
             schema_version: number;
             state_version: number;
             collab_epoch: number;
+            etag: string;
             revision_id: string | null;
             content: components["schemas"]["DocumentBody"];
         };
@@ -840,7 +854,7 @@ export interface CursorQuery {
 export type DocumentBody = Schemas['DocumentBody'];
 
 // @public
-export type DocumentContent = Schemas['DocumentContent'] & {
+export type DocumentContent = Omit<Schemas['DocumentContent'], 'etag'> & {
     etag: string | null;
 };
 
@@ -998,6 +1012,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1008,6 +1023,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1041,6 +1057,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1051,6 +1068,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1216,6 +1234,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1277,6 +1296,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1287,6 +1307,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1321,6 +1342,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1331,6 +1353,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -1393,6 +1416,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlRevalidate"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     Vary: components["headers"]["VaryRepresentation"];
                     [name: string]: unknown;
                 };
@@ -1406,6 +1430,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlRevalidate"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     Vary: components["headers"]["VaryRepresentation"];
                     [name: string]: unknown;
                 };
@@ -1444,6 +1469,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -1557,6 +1583,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1568,6 +1595,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1641,6 +1669,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -1711,6 +1740,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1722,6 +1752,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -1747,6 +1778,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1758,6 +1790,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1785,6 +1818,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1796,6 +1830,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1852,6 +1887,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -1863,6 +1899,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -1948,6 +1985,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -2068,6 +2106,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2178,6 +2217,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2220,6 +2260,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2231,6 +2272,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -2264,6 +2306,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2344,6 +2387,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -2407,6 +2451,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2418,6 +2463,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -2485,6 +2531,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2496,6 +2543,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2533,6 +2581,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2544,6 +2593,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2579,6 +2629,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2613,6 +2664,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2624,6 +2676,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2686,6 +2739,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlAny"];
                     ETag: components["headers"]["ETag"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETag"];
                     Vary: components["headers"]["VaryOptional"];
                     [name: string]: unknown;
                 };
@@ -2699,6 +2753,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlRevalidate"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     Vary: components["headers"]["VaryRepresentation"];
                     [name: string]: unknown;
                 };
@@ -2729,6 +2784,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2795,6 +2851,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2806,6 +2863,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -2830,6 +2888,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2869,6 +2928,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -2880,6 +2940,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3069,6 +3130,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3139,6 +3201,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3185,6 +3248,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -3220,6 +3284,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -3230,6 +3295,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3266,6 +3332,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -3321,6 +3388,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
                     [name: string]: unknown;
@@ -3460,6 +3528,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             413: components["responses"]["Problem413"];
             422: components["responses"]["Problem422"];
@@ -3594,6 +3663,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
                     "Tus-Resumable": components["headers"]["TusResumable"];
@@ -3693,6 +3763,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -3718,6 +3789,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -3728,6 +3800,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3762,6 +3835,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3825,6 +3899,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -3835,6 +3910,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
@@ -3859,6 +3935,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlRevalidate"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3898,6 +3975,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -3908,6 +3986,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
@@ -3942,6 +4021,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "X-Vaulter-ETag": components["headers"]["XVaulterETagRequired"];
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
@@ -3952,6 +4032,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            410: components["responses"]["ProblemIdempotencyExpired"];
             412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];

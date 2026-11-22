@@ -709,6 +709,16 @@
                     "return": null,
                     "doc": []
                 },
+                "curlConnectToEntry": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "string",
+                    "doc": []
+                },
                 "curlResolveEntry": {
                     "visibility": "public",
                     "static": false,

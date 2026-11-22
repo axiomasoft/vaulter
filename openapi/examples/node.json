@@ -3,9 +3,10 @@
     "status": 200,
     "headers": {
         "content-type": "application/json",
-        "cache-control": "no-cache, private",
+        "cache-control": "no-cache, no-transform, private",
         "etag": "\"3.0.8b455220295bd2e0\"",
-        "vary": "Authorization, Cookie",
+        "x-vaulter-etag": "\"3.0.8b455220295bd2e0\"",
+        "vary": "Authorization, Accept, Cookie",
         "x-vaulter-api-version": "1",
         "x-request-id": "01M4MPFHHRN63TXN2ZCMHX3K56"
     },

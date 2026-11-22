@@ -108,7 +108,7 @@ final class SigningSecretEncryptor
      */
     public function convertToWebhookSecrets(string $table): int
     {
-        return $this->database->connection()->transaction(fn (): int => $this->rewriteSecrets(
+        return $this->database->transaction(fn (): int => $this->rewriteSecrets(
             table: $table,
             convert: static function (string $plain): ?string {
                 if (WebhookSecret::isWebhookSecret($plain)) {
@@ -135,7 +135,7 @@ final class SigningSecretEncryptor
      */
     public function revertFromWebhookSecrets(string $table): int
     {
-        return $this->database->connection()->transaction(fn (): int => $this->rewriteSecrets(
+        return $this->database->transaction(fn (): int => $this->rewriteSecrets(
             table: $table,
             convert: static fn (string $plain): ?string => WebhookSecret::isWebhookSecret($plain) ? WebhookSecret::keyBytes($plain) : null,
         ));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use LogicException;
 use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
@@ -17,7 +18,7 @@ use Vaulter\Database\VaulterDatabase;
  * re-checks the pins before deleting).
  *
  * Per driver:
- *  - pgsql : pg_advisory_xact_lock(hashtext(scope||sha256)) — a real mutex held
+ *  - pgsql : pg_advisory_xact_lock(hashtextextended(key, 0)) — a real mutex held
  *            for the whole transaction, the GC-vs-upload backbone.
  *  - mysql : there is no transaction-advisory lock that survives like PG's, so we
  *            rely on SELECT … FOR UPDATE on the blob row inside the caller's
@@ -52,10 +53,14 @@ final class BlobLock
         if (!$this->isPostgres() || $keys === []) {
             return;
         }
+        $connection = $this->database->connection();
+        if ($connection->transactionLevel() === 0) {
+            throw new LogicException('[Vaulter] CAS locks require an active transaction.');
+        }
 
-        $this->database->connection()->select(
+        $connection->select(
             'SELECT pg_advisory_xact_lock(lock_key) FROM '
-            .'(SELECT DISTINCT hashtext(value) AS lock_key '
+            .'(SELECT DISTINCT hashtextextended(value, 0) AS lock_key '
             .'FROM jsonb_array_elements_text(CAST(? AS jsonb)) ORDER BY lock_key) AS locks',
             [json_encode($keys, JSON_THROW_ON_ERROR)],
         );

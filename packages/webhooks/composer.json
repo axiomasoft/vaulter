@@ -30,6 +30,7 @@
         "axiomasoft/packman-schema": "^0.1",
         "axiomasoft/vaulter-core": "self.version",
         "axiomasoft/vaulter-drive": "self.version",
+        "ext-intl": "*",
         "php": ">=8.4 <8.6"
     },
     "require-dev": {

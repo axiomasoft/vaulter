@@ -51,9 +51,10 @@ final class VaulterDatabase
     public function transaction(Closure $callback, int $attempts = 3): mixed
     {
         $attempt = null;
+        $connection = $this->connection();
 
         try {
-            return $this->connection()->transaction(function (Connection $connection) use ($callback, &$attempt): mixed {
+            return $connection->transaction(function (Connection $connection) use ($callback, &$attempt): mixed {
                 // Laravel repeats the callback when the commit itself fails on a concurrency
                 // error, rolling back without telling its after-commit queue: the callbacks
                 // of the abandoned attempt would still run after the next commit.
@@ -64,18 +65,43 @@ final class VaulterDatabase
                     $attempt = $this->attempt = (object) ['aborted' => false];
                 }
 
-                return $this->scope()->run(static fn (): mixed => $callback($connection));
+                $result = $this->scope()->run(static fn (): mixed => $callback($connection));
+                if ($connection->transactionLevel() === 1 && $connection->getDriverName() === 'pgsql') {
+                    $connection->statement('SET CONSTRAINTS ALL IMMEDIATE');
+                }
+
+                return $result;
             }, $attempts);
         } catch (Throwable $exception) {
             if ($attempt !== null) {
                 $attempt->aborted = true;
+                if ($connection->transactionLevel() === 0) {
+                    $this->cleanFailedCommit($connection);
+                }
             }
 
             throw $exception;
         } finally {
-            if ($this->connection()->transactionLevel() === 0) {
+            if ($connection->transactionLevel() === 0) {
                 $this->attempt = null;
             }
+        }
+    }
+
+    private function cleanFailedCommit(Connection $connection): void
+    {
+        // Laravel #61964 can leave PDO and the callback manager open at level zero.
+        try {
+            $pdo = $connection->getRawPdo();
+            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+        } finally {
+            // Resolve the actual manager of this connection, including Testbench's replacement.
+            $rollback = Closure::bind(function (): void {
+                $this->transactionsManager?->rollback($this->getName() ?? '', 0);
+            }, $connection, Connection::class);
+            $rollback();
         }
     }
 
@@ -199,7 +225,7 @@ final class VaulterDatabase
         $this->requireTransaction('lockAggregateShared');
 
         if ($this->driver() === 'pgsql') {
-            $this->connection()->statement('SELECT pg_advisory_xact_lock_shared(hashtext(?))', ['vaulter:'.$entity.':'.$id]);
+            $this->connection()->statement('SELECT pg_advisory_xact_lock_shared(hashtextextended(?, 0))', ['vaulter:'.$entity.':'.$id]);
 
             return;
         }
@@ -212,7 +238,7 @@ final class VaulterDatabase
         $this->requireTransaction('advisoryLock');
 
         if ($this->driver() === 'pgsql') {
-            $this->connection()->statement('SELECT pg_advisory_xact_lock(hashtext(?))', [$key]);
+            $this->connection()->statement('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', [$key]);
         }
     }
 

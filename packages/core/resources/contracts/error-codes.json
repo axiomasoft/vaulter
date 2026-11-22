@@ -60,6 +60,28 @@
         {
             "package": "axiomasoft/vaulter-core",
             "enum": "Vaulter\\Errors\\VaulterErrorCode",
+            "case": "ForeignKeyViolation",
+            "code": "vaulter.foreign_key_violation",
+            "type": "urn:packman:problem:vaulter.foreign_key_violation",
+            "status": 409,
+            "title": "Foreign key violation",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-core",
+            "enum": "Vaulter\\Errors\\VaulterErrorCode",
+            "case": "IdempotencyKeyExpired",
+            "code": "vaulter.idempotency_key_expired",
+            "type": "urn:packman:problem:vaulter.idempotency_key_expired",
+            "status": 410,
+            "title": "Idempotency key expired",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/vaulter-core",
+            "enum": "Vaulter\\Errors\\VaulterErrorCode",
             "case": "IdempotencyKeyReused",
             "code": "vaulter.idempotency_key_reused",
             "type": "urn:packman:problem:vaulter.idempotency_key_reused",
@@ -318,6 +340,17 @@
             "type": "urn:packman:problem:vaulter.validation_failed",
             "status": 422,
             "title": "Validation failed",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/vaulter-core",
+            "enum": "Vaulter\\Errors\\VaulterErrorCode",
+            "case": "WeakEtagNotAllowed",
+            "code": "vaulter.weak_etag_not_allowed",
+            "type": "urn:packman:problem:vaulter.weak_etag_not_allowed",
+            "status": 412,
+            "title": "Weak ETag not allowed",
             "retryable": false,
             "category": "validation"
         },

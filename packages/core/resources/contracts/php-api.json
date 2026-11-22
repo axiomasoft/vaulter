@@ -2880,6 +2880,14 @@
                     "value": "'vaulter.extension_failed'"
                 },
                 {
+                    "name": "ForeignKeyViolation",
+                    "value": "'vaulter.foreign_key_violation'"
+                },
+                {
+                    "name": "IdempotencyKeyExpired",
+                    "value": "'vaulter.idempotency_key_expired'"
+                },
+                {
                     "name": "IdempotencyKeyReused",
                     "value": "'vaulter.idempotency_key_reused'"
                 },
@@ -2974,6 +2982,10 @@
                 {
                     "name": "ValidationFailed",
                     "value": "'vaulter.validation_failed'"
+                },
+                {
+                    "name": "WeakEtagNotAllowed",
+                    "value": "'vaulter.weak_etag_not_allowed'"
                 },
                 {
                     "name": "WriteOutsideOperation",

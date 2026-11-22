@@ -1077,6 +1077,22 @@
                     "doc_internal": false,
                     "doc": []
                 },
+                "method:curlconnecttoentry": {
+                    "kind": "method",
+                    "name": "curlConnectToEntry",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
                 "method:curlresolveentry": {
                     "kind": "method",
                     "name": "curlResolveEntry",
@@ -1089,7 +1105,7 @@
                     "params": [],
                     "return": "string",
                     "attributes": [],
-                    "deprecated": false,
+                    "deprecated": true,
                     "doc_internal": false,
                     "doc": []
                 },
@@ -1186,7 +1202,8 @@
             ],
             "implements": [],
             "traits": [
-                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars"
+                "Packman\\Foundation\\Concerns\\RegistersPackageRegistrars",
+                "Vaulter\\Modules\\OffersModules"
             ],
             "adaptations": [
                 {

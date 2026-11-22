@@ -211,6 +211,31 @@ it('MagicByteSniffer accepts an empty stream head without contradicting a concre
     }
 });
 
+it('rejects unsafe ZIP central directory metadata before reading a member', function (string $case): void {
+    $path = tempnam(sys_get_temp_dir(), 'vaulter-zip-');
+    expect($path)->toBeString();
+    try {
+        $archive = new ZipArchive;
+        expect($archive->open($path, ZipArchive::OVERWRITE))->toBeTrue();
+        $archive->addFromString('ordinary.txt', 'plain content');
+        match ($case) {
+            'symlink' => $archive->setExternalAttributesName('ordinary.txt', ZipArchive::OPSYS_UNIX, 0120777 << 16),
+            'traversal' => $archive->addFromString('nested/../outside.txt', 'plain content'),
+            'duplicate' => $archive->addFromString('ORDINARY.TXT', 'plain content'),
+            'ratio' => $archive->addFromString('data.txt', str_repeat('a', 128 * 1024)),
+            'nul' => $archive->addFromString('nul-name.txt', 'plain content'),
+        };
+        $archive->close();
+        if ($case === 'nul') {
+            file_put_contents($path, str_replace('nul-name.txt', "nul\0name.txt", (string) file_get_contents($path)));
+        }
+
+        expect(fn () => app(MimeSniffer::class)->detect($path))->toThrow(ValidationException::class);
+    } finally {
+        unlink($path);
+    }
+})->with(['symlink', 'traversal', 'duplicate', 'ratio', 'nul']);
+
 it('append still refuses offset>0 when staged object was removed', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 12);
     $staged = app(StagedUpload::class);

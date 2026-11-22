@@ -74,7 +74,9 @@ outline: deep
 | [`extension_failed`](#extension_failed) | 500 | core | `never` | `never` | `Vaulter\Exceptions\Support\InvalidExtensionResult` |
 | [`file_size_limit_exceeded`](#file_size_limit_exceeded) | 413 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException` |
 | [`folder_children_limit_exceeded`](#folder_children_limit_exceeded) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException` |
+| [`foreign_key_violation`](#foreign_key_violation) | 409 | core | `never` | `never` | — |
 | [`grant_not_found`](#grant_not_found) | 404 | drive | `never` | `never` | — |
+| [`idempotency_key_expired`](#idempotency_key_expired) | 410 | core | `never` | `never` | `Vaulter\Exceptions\Idempotency\IdempotencyKeyExpiredException` |
 | [`idempotency_key_reused`](#idempotency_key_reused) | 422 | core | `never` | `never` | `Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException` |
 | [`internal_error`](#internal_error) | 500 | core | `never` | `never` | — |
 | [`invalid_cursor`](#invalid_cursor) | 400 | drive | `never` | `never` | `Vaulter\Drive\Exceptions\Changes\InvalidCursorException` |
@@ -126,6 +128,7 @@ outline: deep
 | [`upload_offset_mismatch`](#upload_offset_mismatch) | 409 | drive | `after_refetch` | `never` | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
 | [`upload_rejected`](#upload_rejected) | 422 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Files\UploadRejectedException` |
 | [`validation_failed`](#validation_failed) | 422 | core | `never` | `never` | `Illuminate\Validation\ValidationException` |
+| [`weak_etag_not_allowed`](#weak_etag_not_allowed) | 412 | core | `after_refetch` | `never` | `Vaulter\Exceptions\Http\WeakEtagNotAllowedException` |
 | [`webhook_delivery_not_found`](#webhook_delivery_not_found) | 404 | webhooks | `never` | `never` | `Vaulter\Webhooks\Exceptions\WebhookDeliveryNotFoundException` |
 | [`webhook_delivery_not_redeliverable`](#webhook_delivery_not_redeliverable) | 409 | webhooks | `never` | `cacheable` | `Vaulter\Webhooks\Exceptions\WebhookDeliveryNotRedeliverableException` |
 | [`webhook_endpoint_not_found`](#webhook_endpoint_not_found) | 404 | webhooks | `never` | `never` | `Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException` |
@@ -311,11 +314,23 @@ outline: deep
 
 **Папка заполнена** — В папке уже максимально допустимые :limit узлов.
 
+### `foreign_key_violation`
+
+**409** · core · retryable `never` · receipt `never`
+
+**Нарушение внешнего ключа** — Изменение конфликтует со связанным ресурсом.
+
 ### `grant_not_found`
 
 **404** · drive · retryable `never` · receipt `never`
 
 **Доступ не найден** — Выдача доступа не существует или недоступна вам.
+
+### `idempotency_key_expired`
+
+**410** · core · retryable `never` · receipt `never`
+
+**Срок действия ключа идемпотентности истёк** — Окно повтора истекло. Проверьте результат исходного запроса перед отправкой нового ключа.
 
 ### `idempotency_key_reused`
 
@@ -622,6 +637,12 @@ outline: deep
 **422** · core · retryable `never` · receipt `never`
 
 **Ошибка валидации** — Данные запроса некорректны; подробности в поле errors.
+
+### `weak_etag_not_allowed`
+
+**412** · core · retryable `after_refetch` · receipt `never`
+
+**Слабый ETag не допускается** — Заново прочитайте ресурс и передайте его сильный ETag в If-Match.
 
 ### `webhook_delivery_not_found`
 

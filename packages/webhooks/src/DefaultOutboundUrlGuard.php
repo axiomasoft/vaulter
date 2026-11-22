@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use Packman\Attributes\Internal;
+use Uri\WhatWg\Url;
 use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\HostResolver;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
@@ -41,21 +42,27 @@ final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
 
     public function pin(string $url): PinnedOutboundEndpoint
     {
-        $parts = parse_url($url);
-
-        if (!is_array($parts) || !isset($parts['host']) || $parts['host'] === '') {
-            throw BlockedOutboundUrlException::malformed($url);
+        // Reject ambiguous authority syntax on both parsers, including empty userinfo.
+        if (preg_match('~[\x00-\x20\x7f]~', $url) === 1 || str_contains($url, '\\')
+            || preg_match('~\A([a-z][a-z0-9+.-]*)://(\[[a-f0-9:.]+\]|[^:/?#@%\[\]]+)(?::([0-9]{1,5}))?(?=[/?#]|\z)~i', $url, $parts) !== 1) {
+            throw BlockedOutboundUrlException::malformed();
         }
 
-        $scheme = isset($parts['scheme']) ? strtolower($parts['scheme']) : '';
+        $scheme = strtolower($parts[1]);
 
-        if (!in_array($scheme, $this->webhooksConfig->allowedSchemes(), true)) {
+        if (!in_array($scheme, ['http', 'https'], true) || !in_array($scheme, $this->webhooksConfig->allowedSchemes(), true)) {
             throw BlockedOutboundUrlException::scheme($scheme);
         }
 
-        $host = trim($parts['host'], '[]');
+        $defaultPort = $scheme === 'https' ? 443 : 80;
+        $port = isset($parts[3]) ? (int) $parts[3] : $defaultPort;
+        // Nonstandard ports require a host-supplied outbound policy.
+        if ($port !== $defaultPort) {
+            throw BlockedOutboundUrlException::malformed();
+        }
+        $host = $this->asciiHost($url, $parts[2]);
 
-        $ips = $this->resolver->resolve($host);
+        $ips = filter_var($host, FILTER_VALIDATE_IP) === false ? $this->resolver->resolve($host) : [$host];
 
         if ($ips === []) {
             throw BlockedOutboundUrlException::unresolvable($host);
@@ -67,9 +74,38 @@ final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
             }
         }
 
-        $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
-
         return new PinnedOutboundEndpoint(scheme: $scheme, host: $host, ip: $ips[0], port: $port);
+    }
+
+    private function asciiHost(string $url, string $rawHost): string
+    {
+        // WHATWG can canonicalize a dotted IPv4 literal before returning its host.
+        if (preg_match('/[.。．｡]\z/u', $rawHost) === 1) {
+            throw BlockedOutboundUrlException::malformed();
+        }
+        if (class_exists(Url::class)) {
+            $host = Url::parse($url)?->getAsciiHost();
+            $host = $host === null ? false : trim($host, '[]');
+        } elseif (str_starts_with($rawHost, '[')) {
+            $host = substr($rawHost, 1, -1);
+            if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === false) {
+                throw BlockedOutboundUrlException::malformed();
+            }
+        } else {
+            $host = idn_to_ascii($rawHost, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            // Reject unbracketed numeric forms that clients may reinterpret as IPs.
+            if (is_string($host) && preg_match('/(?:^|\.)(?:[0-9]+|0x[a-f0-9]+)$/iD', $host) === 1
+                && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
+                throw BlockedOutboundUrlException::malformed();
+            }
+        }
+
+        if ($host === false || $host === '' || str_ends_with($host, '.')
+            || (filter_var($host, FILTER_VALIDATE_IP) === false && filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false)) {
+            throw BlockedOutboundUrlException::malformed();
+        }
+
+        return strtolower($host);
     }
 
     /**

@@ -171,6 +171,7 @@
             "serial"
           ],
           "files": [
+            "packages/core/tests/Database/FailedCommitTest.php",
             "packages/core/tests/Modules/ExtensionSeamsContractTest.php",
             "packages/core/tests/Tenancy/TenancyWithoutTest.php"
           ]

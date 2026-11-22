@@ -201,7 +201,7 @@ final class LoadServiceProvider extends ServiceProvider
             'vaulter.observability.tracing.recorder' => ($tracingEnabled && $sdkReady)
                 ? OpenTelemetryTraceRecorder::class
                 : null,
-            'vaulter.observability.tracing.ratio' => is_numeric($sampleRatio) ? (float) $sampleRatio : 0.01,
+            'load.observability.tracing.ratio' => is_numeric($sampleRatio) ? (float) $sampleRatio : 0.01,
         ]);
 
         if ($tracingEnabled && $sdkReady) {

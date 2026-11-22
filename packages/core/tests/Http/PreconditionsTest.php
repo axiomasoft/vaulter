@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Exceptions\Http\WeakEtagNotAllowedException;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\Preconditions;
 
@@ -20,13 +21,12 @@ function ifMatchRequest(?string $header): Request
     return $request;
 }
 
-it('matches a strong If-Match tag and refuses a weak or another one', function (string $header, bool $expected): void {
+it('matches a strong If-Match tag and refuses a stale one', function (string $header, bool $expected): void {
     expect(Preconditions::matches(ifMatchRequest($header), '"abc"'))->toBe($expected);
 })->with([
     'the current tag' => ['"abc"', true],
     'one of a list' => ['"zzz", "abc"', true],
     'another tag' => ['"zzz"', false],
-    'a weak tag of the current one' => ['W/"abc"', false],
     'a comma inside quotes stays in its tag' => ['"a,b", "abc"', true],
 ]);
 
@@ -53,4 +53,17 @@ it('no longer knows a node or a document: the owners raise their own refusal', f
     expect(method_exists(Preconditions::class, 'matchNode'))->toBeFalse()
         ->and(method_exists(Preconditions::class, 'matchDocument'))->toBeFalse()
         ->and(method_exists(PageResponse::class, 'listOptions'))->toBeFalse();
+});
+
+it('rejects a weak write validator with its own 412', function (string $header): void {
+    expect(fn (): bool => Preconditions::matches(ifMatchRequest($header), '"abc"'))
+        ->toThrow(WeakEtagNotAllowedException::class);
+})->with(['W/"abc"', '"abc", W/"abc"']);
+
+it('uses the mirrored request validator only when If-Match is absent', function (): void {
+    $request = ifMatchRequest(null);
+    $request->headers->set('X-Vaulter-If-Match', '"abc"');
+    expect(Preconditions::matches($request, '"abc"'))->toBeTrue();
+    $request->headers->set('If-Match', '"stale"');
+    expect(Preconditions::matches($request, '"abc"'))->toBeFalse();
 });

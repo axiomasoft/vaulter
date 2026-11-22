@@ -24,6 +24,7 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 use Vaulter\Configuration\RoutesOptions;
+use Vaulter\Database\DatabaseErrorMapper;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
@@ -191,6 +192,10 @@ final readonly class ProblemRenderer
 
         if ($e instanceof HttpExceptionInterface && $e->getStatusCode() >= 400) {
             return [$e->getStatusCode(), 'http_'.$e->getStatusCode(), [], [], $this->passthrough($e)];
+        }
+
+        if (DatabaseErrorMapper::isForeignKeyViolation($e)) {
+            return [409, 'foreign_key_violation', [], [], []];
         }
 
         return [500, 'internal_error', [], [], []];

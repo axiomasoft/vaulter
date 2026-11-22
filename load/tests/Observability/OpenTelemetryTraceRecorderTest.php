@@ -259,7 +259,7 @@ it('installs the host adapter when tracing is enabled and the sdk is present', f
 
         expect(config('vaulter.observability.tracing.enabled'))->toBeTrue()
             ->and(config('vaulter.observability.tracing.recorder'))->toBe(OpenTelemetryTraceRecorder::class)
-            ->and(config('vaulter.observability.tracing.ratio'))->toBe(0.01)
+            ->and(config('load.observability.tracing.ratio'))->toBe(0.01)
             ->and(app(TraceRecorder::class))->toBeInstanceOf(OpenTelemetryTraceRecorder::class)
             ->and(app(OpenTelemetryTraceRecorder::class)->handle(
                 Request::create('/api/vaulter/nodes', 'GET'),

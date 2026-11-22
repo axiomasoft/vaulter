@@ -69,18 +69,16 @@ function r18PgAdvisoryLockIsHeld(string $scope, string $sha256): bool
     DB::purge('r18_lock_probe');
     $connection = DB::connection('r18_lock_probe');
     $lockKey = 'cas:'.$scope.':'.$sha256;
-    $acquired = (bool) $connection->selectOne(
-        'SELECT pg_try_advisory_lock(hashtext(?)) AS acquired',
-        [$lockKey],
-    )->acquired;
-
-    if ($acquired) {
-        $connection->selectOne('SELECT pg_advisory_unlock(hashtext(?))', [$lockKey]);
+    $connection->beginTransaction();
+    try {
+        return !(bool) $connection->selectOne(
+            'SELECT pg_try_advisory_xact_lock(hashtextextended(?, 0)) AS acquired',
+            [$lockKey],
+        )->acquired;
+    } finally {
+        $connection->rollBack();
+        DB::purge('r18_lock_probe');
     }
-
-    DB::disconnect('r18_lock_probe');
-
-    return !$acquired;
 }
 
 it('records exact mark metrics and suppresses zero-row batch metrics', function (): void {

@@ -20,6 +20,8 @@ use Vaulter\Media\Enums\Cas\ScanMode;
 #[Internal]
 final readonly class ScanScannerCheck implements DoctorCheck
 {
+    private const string MIN_CLAMAV_VERSION = '1.5.5';
+
     public function __construct(private Container $container, private ProfilePolicy $policy, private ProfileRegistry $profiles) {}
 
     public function key(): string
@@ -67,6 +69,16 @@ final readonly class ScanScannerCheck implements DoctorCheck
         }
 
         $findings = [];
+        if (in_array(strtolower($identity[0]), ['clamav', 'clamd'], true)
+            && (preg_match('/\A(?:ClamAV\s+)?(\d+\.\d+\.\d+)(?:[\/\s]|\z)/i', $identity[1], $version) !== 1
+                || version_compare($version[1], self::MIN_CLAMAV_VERSION, '<'))) {
+            $findings[] = DoctorFinding::error(
+                code: 'drive.scan.clamav_version_unsupported',
+                message: 'The bound ClamAV scanner must report daemon version 1.5.5 or newer.',
+                remediation: 'upgrade the external clamd daemon and verify its live VERSION response',
+                evidence: ['scanner_key' => $identity[0], 'scanner_version' => $identity[1]],
+            );
+        }
         foreach ($enabled as $spec) {
             $evidence = ['predicate' => $spec->predicateKey, 'scanner_key' => $spec->scannerKey, 'scanner_version' => $spec->scannerVersion, 'policy_version' => $spec->policyVersion];
             if ($spec->scannerKey === 'none' || $spec->scannerVersion === 'none') {

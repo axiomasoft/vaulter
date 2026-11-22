@@ -12,7 +12,7 @@ First tell **no delivery** from **failed delivery**:
 <!-- snippet: shell -->
 
 ```bash
-php artisan vaulter:doctor --check=core.webhooks
+php artisan vaulter:doctor --check=core.webhooks.deliveries
 ```
 
 Send dead deliveries again. The redelivery keeps the **same `webhook-id`**, so a receiver that
@@ -25,3 +25,9 @@ php artisan vaulter:webhooks:redeliver --endpoint=12 --since="2026-10-01" --stat
 ```
 
 Receivers must accept a repeated event.
+
+## Diagnose and recover
+
+1. Record the event ID, delivery ID, endpoint ID, response status and last safe error classification. Check endpoint state and receiver logs for the same `webhook-id`. Avoid copying signing secrets or URL credentials into the incident record.
+2. Restore the receiver, DNS or network path, and verify that DNS returns only permitted addresses. Use an absolute HTTP(S) URL on its default port and confirm the receiver accepts a signed test delivery without redirecting.
+3. Redeliver the smallest failed window for one endpoint. Monitor delivery state and receiver deduplication, and confirm newly queued deliveries also complete.

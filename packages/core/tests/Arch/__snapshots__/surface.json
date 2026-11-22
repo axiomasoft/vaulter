@@ -4979,6 +4979,22 @@
                     "deprecated": false,
                     "doc": []
                 },
+                "case:ForeignKeyViolation": {
+                    "kind": "case",
+                    "name": "ForeignKeyViolation",
+                    "value": "'vaulter.foreign_key_violation'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:IdempotencyKeyExpired": {
+                    "kind": "case",
+                    "name": "IdempotencyKeyExpired",
+                    "value": "'vaulter.idempotency_key_expired'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
                 "case:IdempotencyKeyReused": {
                     "kind": "case",
                     "name": "IdempotencyKeyReused",
@@ -5167,6 +5183,14 @@
                     "kind": "case",
                     "name": "ValidationFailed",
                     "value": "'vaulter.validation_failed'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:WeakEtagNotAllowed": {
+                    "kind": "case",
+                    "name": "WeakEtagNotAllowed",
+                    "value": "'vaulter.weak_etag_not_allowed'",
                     "attributes": [],
                     "deprecated": false,
                     "doc": []

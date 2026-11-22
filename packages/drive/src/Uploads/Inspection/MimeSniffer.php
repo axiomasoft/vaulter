@@ -24,6 +24,8 @@ use ZipArchive;
 #[Internal]
 final class MimeSniffer
 {
+    public function __construct(private readonly ZipCentralDirectoryGuard $zipGuard = new ZipCentralDirectoryGuard) {}
+
     /**
      * Bytes read from the head of the object for magic-byte detection.
      */
@@ -45,22 +47,26 @@ final class MimeSniffer
             fclose($stream);
         }
         // OOXML refinement requires bounded ZIP metadata, never just the suffix.
-        if ($mime === 'application/zip') {
+        if (is_string($mime) && ($mime === 'application/zip' || str_starts_with($mime, 'application/vnd.openxmlformats-')
+            || str_starts_with($head, "PK\x03\x04") || str_starts_with($head, "PK\x05\x06"))) {
             $zip = new ZipArchive;
-            if ($zip->open($path, ZipArchive::RDONLY) === true) {
-                try {
-                    $entry = $zip->statName('[Content_Types].xml');
-                    if (is_array($entry) && $entry['size'] <= 65536) {
-                        $types = $zip->getFromName('[Content_Types].xml', 65536);
-                        foreach (['word' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'xl' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ppt' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation'] as $part => $type) {
-                            if (is_string($types) && str_contains($types, $type.'.main+xml') && $zip->locateName($part.'/'.($part === 'word' ? 'document' : ($part === 'xl' ? 'workbook' : 'presentation')).'.xml') !== false) {
-                                return $type;
-                            }
+            if ($zip->open($path, ZipArchive::RDONLY | ZipArchive::CHECKCONS) !== true) {
+                throw ZipCentralDirectoryGuard::invalid();
+            }
+            try {
+                $this->zipGuard->check($zip, $path);
+                $entry = $zip->statName('[Content_Types].xml');
+                if (is_array($entry) && $entry['size'] <= 65536) {
+                    $types = $this->zipGuard->readMetadata($zip, '[Content_Types].xml', $entry['size']);
+                    $this->zipGuard->checkRelationships($zip);
+                    foreach (['word' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'xl' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ppt' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation'] as $part => $type) {
+                        if (str_contains($types, $type.'.main+xml') && $zip->locateName($part.'/'.($part === 'word' ? 'document' : ($part === 'xl' ? 'workbook' : 'presentation')).'.xml') !== false) {
+                            return $type;
                         }
                     }
-                } finally {
-                    $zip->close();
                 }
+            } finally {
+                $zip->close();
             }
         }
 

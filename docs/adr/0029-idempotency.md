@@ -61,8 +61,8 @@ key derived from the application key: a body may carry a secret (a share passwor
 must not let a reader of the receipts table test guesses of it without that key. Rotating the application key
 turns a retry within the TTL into `idempotency_key_reused`.
 
-**7. Retention.** A receipt lives `vaulter.idempotency.ttl_seconds` (24 hours); an expired one counts as absent.
-`vaulter:idempotency:prune` (scheduled daily) deletes expired receipts.
+**7. Retention.** A receipt lives `vaulter.idempotency.ttl_seconds` (24 hours); for replay. For the following seven days, a retry returns `410 idempotency_key_expired`.
+`vaulter:idempotency:prune` (scheduled daily) clears the stored response at active expiry and deletes the tombstone after seven more days.
 
 **8. Coverage.** `OperationRunner::write()` takes an `IdempotentWrite` (codec, replay authorizer, fingerprint);
 a key given to a write without one is refused before the transaction. In 1.0 `folders.create` and

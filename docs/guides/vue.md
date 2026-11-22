@@ -138,9 +138,10 @@ await client.nodes.move(node.id, targetId, { etag: node.etag, onConflict: 'renam
 await client.documents.update(node.id, content, { etag: loaded.etag! })
 ```
 
-A method without its `etag` does not type-check. The content of a document carries its validator in the `ETag`
-response header, which the client returns as `content.etag` (`null` when the header is not exposed to the browser:
-add `ETag` to `Access-Control-Expose-Headers` on a cross-origin API).
+Pass the validator as the `etag` option on writes. For document content, the client looks for a strong validator in
+`data.etag`, then `X-Vaulter-ETag`, then `ETag`. On cross-origin deployments, enable Laravel CORS for the Vaulter API path
+and the client origin. Vaulter adds its request and response validator headers to that policy. Proxies should forward
+`X-Vaulter-ETag` and honor `Cache-Control: no-transform`.
 
 The same rule covers the other versioned resources: a drive (`archive`, `unarchive`, `delete`), a share link
 (`update`, `rotate`, `revoke`) and a comment (`resolve`, `remove`) send their own `etag`; a grant revoke and an

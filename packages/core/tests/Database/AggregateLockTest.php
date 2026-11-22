@@ -41,9 +41,9 @@ it('takes the aggregate lock of any entity inside a transaction, on its own tabl
         expect($connection->transactionLevel())->toBe($level)
             ->and($queries)->toHaveCount(3);
         if ($connection->getDriverName() === 'pgsql') {
-            expect($queries[0]->sql)->toContain('pg_advisory_xact_lock(')
-                ->and($queries[1]->sql)->toContain('pg_advisory_xact_lock_shared(')
-                ->and($queries[2]->sql)->toContain('pg_advisory_xact_lock_shared(');
+            expect($queries[0]->sql)->toBe('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))')
+                ->and($queries[1]->sql)->toBe('SELECT pg_advisory_xact_lock_shared(hashtextextended(?, 0))')
+                ->and($queries[2]->sql)->toBe('SELECT pg_advisory_xact_lock_shared(hashtextextended(?, 0))');
             foreach ($queries as $query) {
                 expect($query->bindings)->toBe(['vaulter:'.$entity.':1']);
             }

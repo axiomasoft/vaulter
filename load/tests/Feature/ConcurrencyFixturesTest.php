@@ -26,8 +26,9 @@ it('builds an idempotent fixture with a real int4 collision and distinct payload
 
     expect($left['sha256'])->not->toBe($right['sha256'])
         ->and($left['hashtext'])->toBe($right['hashtext'])
+        ->and($left['lock_key'])->not->toBe($right['lock_key'])
         ->and($normalA['sha256'])->not->toBe($normalB['sha256'])
-        ->and($normalA['hashtext'])->not->toBe($normalB['hashtext'])
+        ->and($normalA['lock_key'])->not->toBe($normalB['lock_key'])
         ->and($manifest['dirty']['dirty-20k']['rows'])->toBe(20_000)
         ->and($manifest['dirty']['dirty-1m']['rows'])->toBe(1_000_000)
         ->and($manifest['dirty']['dirty-1m']['seeded'])->toBeFalse()
@@ -158,7 +159,7 @@ it('detects blob aliasing, torn uploads, tree cycles, lost nodes, and a swept li
     rmdir($directory);
 });
 
-it('matches PostgreSQL 16 hashtext for hello and for the collision pair', function (): void {
+it('matches PostgreSQL hashtextextended for the legacy collision pair', function (): void {
     expect(ConcurrencyHashtext::int4('hello'))->toBe(-1870292951);
 
     $running = trim((string) shell_exec('docker inspect -f {{.State.Running}} vaulter-load-postgres-1 2>/dev/null'));
@@ -173,12 +174,12 @@ it('matches PostgreSQL 16 hashtext for hello and for the collision pair', functi
     foreach (['left', 'right'] as $side) {
         $sha = $pair[$side]['sha256'];
         expect(ctype_xdigit($sha))->toBeTrue();
-        $key = 'p5|'.$sha;
+        $key = 'cas:p5:'.$sha;
         $quoted = str_replace("'", "''", $key);
         $remote = trim((string) shell_exec(
-            'docker exec vaulter-load-postgres-1 psql -U vaulter -d vaulter_load -At -c '.escapeshellarg("SELECT hashtext('{$quoted}')"),
+            'docker exec vaulter-load-postgres-1 psql -U vaulter -d vaulter_load -At -c '.escapeshellarg("SELECT hashtextextended('{$quoted}', 0)"),
         ));
 
-        expect((int) $remote)->toBe($pair[$side]['hashtext']);
+        expect($remote)->toBe((string) ConcurrencyHashtext::int8($key));
     }
 });

@@ -7,10 +7,12 @@ namespace Vaulter\Http\Middleware;
 use Closure;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
 use Illuminate\Validation\ValidationException;
 use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Http\Support\Preconditions;
 use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
 
@@ -50,6 +52,7 @@ final readonly class ReadIdempotencyKey
     {
         $values = $request->headers->all(strtolower(self::HEADER));
         if ($values !== []) {
+            $this->outcome->reset();
             $request->attributes->set(self::KEY_ATTRIBUTE, self::parse($values));
             $request->attributes->set(self::FINGERPRINT_ATTRIBUTE, $this->fingerprint($request));
         }
@@ -144,17 +147,41 @@ final readonly class ReadIdempotencyKey
             }
         }
 
+        $multipart = str_starts_with(strtolower($request->headers->get('Content-Type') ?? ''), 'multipart/form-data');
         $canonical = IdempotencyDigest::canonicalJson([
             'method' => $request->getMethod(),
             'route' => $route instanceof Route ? (string) $route->getName() : $request->path(),
             'parameters' => $parameters,
             'query' => $request->query->all(),
             'body' => $request->isJson() ? $request->json()->all() : $request->request->all(),
-            'if_match' => $request->headers->get('If-Match'),
+            'if_match' => Preconditions::ifMatch($request),
             'destination_if_match' => $request->headers->get(self::DESTINATION_IF_MATCH),
+            ...($multipart ? ['files' => self::fileDigests($request->allFiles())] : []),
         ]);
 
         return hash_hmac('sha256', $canonical, hash_hmac('sha256', 'vaulter.idempotency-request', $this->encrypter->getKey(), true));
+    }
+
+    /**
+     * @param  array<array-key, mixed> $files
+     * @return array<array-key, mixed>
+     */
+    private static function fileDigests(array $files): array
+    {
+        return array_map(static function (mixed $entry): array {
+            if (is_array($entry)) {
+                return self::fileDigests($entry);
+            }
+            if (!$entry instanceof UploadedFile || !$entry->isValid()) {
+                throw ValidationException::withMessages(['files' => ['One or more uploads are invalid.']]);
+            }
+            $digest = hash_file('sha256', $entry->getPathname());
+            if ($digest === false) {
+                throw ValidationException::withMessages(['files' => ['One or more uploads could not be read.']]);
+            }
+
+            return ['sha256' => $digest, 'name' => $entry->getClientOriginalName(), 'type' => $entry->getClientMimeType()];
+        }, $files);
     }
 
     private static function invalid(string $message): ValidationException

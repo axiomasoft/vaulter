@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Providers;
 
+use Fruitcake\Cors\CorsService;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel;
@@ -16,6 +18,7 @@ use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\EnsureModuleActive;
+use Vaulter\Http\Middleware\ExposeVaulterCorsHeaders;
 use Vaulter\Http\Problems\ErrorsReference;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
@@ -35,6 +38,9 @@ final class HttpRegistrar
             $app->make(Translator::class),
         ));
         $app->singleton(ProblemRenderer::class);
+        $app->extend(CorsService::class, static fn (CorsService $cors, Application $app): CorsService => $cors::class === CorsService::class
+            ? new ExposeVaulterCorsHeaders($app, $app->make(Repository::class))
+            : $cors);
         // The reference docs list the codes of every offered module, an opt-in one included.
         $app->bind(ErrorsReference::class, static fn (Application $app): ErrorsReference => new ErrorsReference(new ProblemCatalog(
             static fn (): array => ProblemSources::offered($app),

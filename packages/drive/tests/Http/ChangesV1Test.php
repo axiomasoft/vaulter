@@ -140,7 +140,7 @@ it('varies the node tag with the reader and the key generation and keeps the rea
     $url = V1::url('nodes/'.$folder->id);
 
     $owner = $this->getJson($url)->assertOk()
-        ->assertHeader('Cache-Control', 'no-cache, private')
+        ->assertHeader('Cache-Control', 'no-cache, no-transform, private')
         ->assertHeader('Vary');
     $this->actingAs(V1::user(2));
     $other = $this->getJson($url)->assertOk();

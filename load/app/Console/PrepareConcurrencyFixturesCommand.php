@@ -20,7 +20,7 @@ final class PrepareConcurrencyFixturesCommand extends Command
         {action : prepare|cleanup|verify|check-integrity}
         {--fixture-id= : Stable fixture id}
         {--run-prefix= : Disposable snapshot prefix}
-        {--scope=p5 : CAS lock scope mixed into hashtext(scope|sha256)}
+        {--scope=p5 : CAS lock scope mixed into hashtextextended}
         {--report= : JSON integrity report for check-integrity}';
 
     protected $description = 'Prepare, verify, or clean P5 concurrency fixtures (small payloads, exact cleanup).';
@@ -96,7 +96,7 @@ final class PrepareConcurrencyFixturesCommand extends Command
             return self::FAILURE;
         }
 
-        $this->components->info('Fixture manifest re-verified (sha256 and hashtext).');
+        $this->components->info('Fixture manifest re-verified (sha256 and 64-bit lock keys).');
 
         return self::SUCCESS;
     }

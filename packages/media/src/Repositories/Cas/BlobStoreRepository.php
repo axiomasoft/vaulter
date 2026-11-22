@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Packman\Attributes\Internal;
 use RuntimeException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -27,6 +28,7 @@ final readonly class BlobStoreRepository
     public function __construct(
         private MediaOptions $mediaConfig,
         private BlobLock $lock,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -59,7 +61,7 @@ final readonly class BlobStoreRepository
         }
 
         try {
-            $blob = $this->query()->getConnection()->transaction(fn (): Blob => $this->insertCommitted(
+            $blob = $this->database->transaction(fn (): Blob => $this->insertCommitted(
                 sha256: $sha256,
                 sizeBytes: $sizeBytes,
                 storageKey: $storageKey,

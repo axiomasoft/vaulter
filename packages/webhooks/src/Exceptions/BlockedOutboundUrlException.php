@@ -41,10 +41,10 @@ final class BlockedOutboundUrlException extends VaulterException implements Prob
         );
     }
 
-    public static function malformed(string $url): self
+    public static function malformed(): self
     {
         return new self(
-            sprintf('[Vaulter] Webhook delivery refused: URL [%s] is malformed (no host). ', $url)
+            '[Vaulter] Webhook delivery refused: malformed or disallowed URL authority. '
             .'Why: an outbound target must carry a resolvable host. '
             .'Fix: register a well-formed absolute http(s) URL. '
             .'Docs: '.self::docs('webhook-ssrf'),

@@ -139,9 +139,10 @@ await client.nodes.move(node.id, targetId, { etag: node.etag, onConflict: 'renam
 await client.documents.update(node.id, content, { etag: loaded.etag! })
 ```
 
-Вызов без `etag` не пройдёт проверку типов. Валидатор содержимого документа приходит в заголовке ответа `ETag`;
-клиент отдаёт его как `content.etag` (`null`, если заголовок не виден браузеру: для кросс-доменного API добавьте
-`ETag` в `Access-Control-Expose-Headers`).
+Передавайте валидатор в параметре `etag` при записи. Для содержимого документа клиент ищет сильный валидатор
+в `data.etag`, затем в `X-Vaulter-ETag`, затем в `ETag`. Для междоменных запросов включите Laravel CORS для пути Vaulter API
+и origin клиента. Vaulter добавляет в эту политику заголовки валидаторов. Прокси должен передавать
+`X-Vaulter-ETag` и учитывать `Cache-Control: no-transform`.
 
 То же правило действует для остальных версионируемых ресурсов: диск (`archive`, `unarchive`, `delete`), ссылка доступа
 (`update`, `rotate`, `revoke`) и комментарий (`resolve`, `remove`) отправляют свой `etag`; отзыв гранта и изменение

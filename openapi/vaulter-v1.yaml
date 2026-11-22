@@ -8,7 +8,8 @@ info:
   description: 'Source of truth of the v1 REST contract. Authentication is the host''s: the routes run on the stack the host
     configures (`vaulter.routes.middleware`). Every response carries X-Vaulter-Api-Version and X-Request-Id; every failure
     is `application/problem+json` (RFC 9457) with a stable `code`. Strong ETags are validators of the caller''s representation:
-    opaque, never parsed. Operations that change a node or a document require If-Match (428 without, 412 when stale).'
+    opaque, never parsed. Vaulter also sends X-Vaulter-ETag. Clients can use X-Vaulter-If-Match when If-Match is absent.
+    CORS exposes ETag, X-Vaulter-ETag, Retry-After, Idempotent-Replayed and X-Vaulter-Api-Version on enabled paths.'
   license:
     name: MIT
     identifier: MIT
@@ -132,6 +133,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -168,6 +171,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -210,6 +215,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -222,6 +229,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '412':
@@ -253,6 +262,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -267,6 +278,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -369,6 +382,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -424,6 +439,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -436,6 +453,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '412':
@@ -475,6 +494,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -517,6 +538,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -743,6 +766,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -755,6 +780,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -780,6 +807,8 @@ paths:
               $ref: '#/components/headers/CacheControlRevalidate'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
           content:
             application/json:
               schema:
@@ -833,6 +862,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -847,6 +878,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -883,6 +916,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -912,6 +947,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -926,6 +963,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -966,6 +1005,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -980,6 +1021,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -1055,6 +1098,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -1268,6 +1313,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -1284,6 +1331,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -1313,6 +1362,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -1329,6 +1380,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -1358,6 +1411,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -1374,6 +1429,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -1563,6 +1620,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -1605,6 +1664,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -1619,6 +1680,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -1659,6 +1722,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
           content:
             application/json:
               schema:
@@ -1736,6 +1801,8 @@ paths:
               $ref: '#/components/headers/CacheControlAny'
             ETag:
               $ref: '#/components/headers/ETag'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETag'
             Vary:
               $ref: '#/components/headers/VaryOptional'
           content:
@@ -1753,6 +1820,8 @@ paths:
               $ref: '#/components/headers/CacheControlRevalidate'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Vary:
               $ref: '#/components/headers/VaryRepresentation'
         '401':
@@ -1802,6 +1871,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -1818,6 +1889,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -1861,6 +1934,8 @@ paths:
           $ref: '#/components/responses/Problem412'
         '428':
           $ref: '#/components/responses/Problem428'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -1910,6 +1985,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -1924,6 +2001,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -1952,6 +2031,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
           content:
             application/json:
               schema:
@@ -1983,6 +2064,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
           content:
             application/json:
               schema:
@@ -2040,6 +2123,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -2056,6 +2141,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -2097,6 +2184,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -2111,6 +2200,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -2141,6 +2232,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -2159,6 +2252,8 @@ paths:
           $ref: '#/components/responses/Problem412'
         '428':
           $ref: '#/components/responses/Problem428'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -2206,6 +2301,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -2222,6 +2319,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -2526,6 +2625,8 @@ paths:
           $ref: '#/components/responses/Problem428'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -2603,6 +2704,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -2686,6 +2789,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '413':
           $ref: '#/components/responses/Problem413'
         '422':
@@ -2807,6 +2912,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             X-RateLimit-Limit:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
@@ -3000,6 +3107,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             X-RateLimit-Limit:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
@@ -3063,6 +3172,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -3077,6 +3188,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -3103,6 +3216,8 @@ paths:
               $ref: '#/components/headers/CacheControlRevalidate'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Vary:
               $ref: '#/components/headers/VaryRepresentation'
           content:
@@ -3120,6 +3235,8 @@ paths:
               $ref: '#/components/headers/CacheControlRevalidate'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Vary:
               $ref: '#/components/headers/VaryRepresentation'
         '401':
@@ -3167,6 +3284,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
           content:
             application/json:
               schema:
@@ -3270,6 +3389,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -3375,6 +3496,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -3391,6 +3514,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -3581,6 +3706,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -3593,6 +3720,8 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '500':
@@ -3621,6 +3750,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            X-Vaulter-ETag:
+              $ref: '#/components/headers/XVaulterETagRequired'
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
           content:
@@ -3635,6 +3766,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -3673,6 +3806,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '412':
           $ref: '#/components/responses/Problem412'
+        '410':
+          $ref: '#/components/responses/ProblemIdempotencyExpired'
         '422':
           $ref: '#/components/responses/Problem422'
         '428':
@@ -3691,8 +3826,7 @@ components:
       name: If-Match
       in: header
       required: true
-      description: 'The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag:
-        412. Checked after authorization.'
+      description: 'The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak tag: 412 weak_etag_not_allowed. Stale tag: 412. X-Vaulter-If-Match is the fallback when If-Match is absent. Checked after authorization.'
       schema:
         type: string
     IdempotencyKey:
@@ -3702,7 +3836,7 @@ components:
       description: 'One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared
         exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true)
         after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still
-        running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed.'
+        running under the key answers 409 operation_in_progress with Retry-After. An expired key answers 410 idempotency_key_expired for seven more days. Malformed: 422 validation_failed.'
       schema:
         type: string
         minLength: 1
@@ -3857,6 +3991,17 @@ components:
       schema:
         type: string
         pattern: ^"[^"]+"$
+    XVaulterETag:
+      description: Strong validator mirrored from ETag for use through transforming proxies.
+      schema:
+        type: string
+        pattern: ^"[^"]+"$
+    XVaulterETagRequired:
+      description: Strong validator mirrored from ETag for use through transforming proxies.
+      required: true
+      schema:
+        type: string
+        pattern: ^"[^"]+"$
     XVaulterApiVersion:
       description: Major version of the REST API that answered.
       required: true
@@ -3874,20 +4019,22 @@ components:
       required: true
       schema:
         type: string
-        const: no-cache, private
+        const: no-cache, no-transform, private
     CacheControlStore:
       description: Lists, mutations, sessions, secrets, downloads and errors are never stored.
       required: true
       schema:
         type: string
-        const: no-store, private
+        enum:
+        - no-store, private
+        - no-store, no-transform, private
     CacheControlAny:
-      description: no-cache, private when the response carries an ETag, no-store otherwise.
+      description: no-cache, no-transform, private when the response carries an ETag, no-store otherwise.
       required: true
       schema:
         type: string
         enum:
-        - no-cache, private
+        - no-cache, no-transform, private
         - no-store, private
     CacheControlError:
       description: Errors are never stored.
@@ -3922,12 +4069,12 @@ components:
       required: true
       schema:
         type: string
-        const: Authorization, Cookie
+        pattern: '^Authorization, Accept, Cookie(?:, .+)?$'
     VaryOptional:
       description: Present when the response carries an ETag.
       schema:
         type: string
-        const: Authorization, Cookie
+        pattern: '^Authorization, Accept, Cookie(?:, .+)?$'
     XShareSession:
       description: Share session token; send it back as X-Share-Session on follow-up requests.
       schema:
@@ -4088,8 +4235,21 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    ProblemIdempotencyExpired:
+      description: The idempotency key expired (idempotency_key_expired).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     Problem412:
-      description: 'Precondition failed: the If-Match tag does not match the current representation.'
+      description: 'Precondition failed: the If-Match tag was weak or does not match the current representation.'
       headers:
         X-Vaulter-Api-Version:
           $ref: '#/components/headers/XVaulterApiVersion'
@@ -4256,7 +4416,9 @@ components:
           - extension_failed
           - file_size_limit_exceeded
           - folder_children_limit_exceeded
+          - foreign_key_violation
           - grant_not_found
+          - idempotency_key_expired
           - idempotency_key_reused
           - internal_error
           - invalid_cursor
@@ -4308,6 +4470,7 @@ components:
           - upload_offset_mismatch
           - upload_rejected
           - validation_failed
+          - weak_etag_not_allowed
           - webhook_delivery_not_found
           - webhook_delivery_not_redeliverable
           - webhook_endpoint_not_found
@@ -4359,7 +4522,9 @@ components:
         extension_failed: {status: 500, retryable: never, receipt: never, module: core}
         file_size_limit_exceeded: {status: 413, retryable: never, receipt: cacheable, module: drive}
         folder_children_limit_exceeded: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        foreign_key_violation: {status: 409, retryable: never, receipt: never, module: core}
         grant_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        idempotency_key_expired: {status: 410, retryable: never, receipt: never, module: core}
         idempotency_key_reused: {status: 422, retryable: never, receipt: never, module: core}
         internal_error: {status: 500, retryable: never, receipt: never, module: core}
         invalid_cursor: {status: 400, retryable: never, receipt: never, module: drive}
@@ -4411,6 +4576,7 @@ components:
         upload_offset_mismatch: {status: 409, retryable: after_refetch, receipt: never, module: drive}
         upload_rejected: {status: 422, retryable: never, receipt: cacheable, module: drive}
         validation_failed: {status: 422, retryable: never, receipt: never, module: core}
+        weak_etag_not_allowed: {status: 412, retryable: after_refetch, receipt: never, module: core}
         webhook_delivery_not_found: {status: 404, retryable: never, receipt: never, module: webhooks}
         webhook_delivery_not_redeliverable: {status: 409, retryable: never, receipt: cacheable, module: webhooks}
         webhook_endpoint_not_found: {status: 404, retryable: never, receipt: never, module: webhooks}
@@ -4969,6 +5135,7 @@ components:
       - state_version
       - collab_epoch
       - revision_id
+      - etag
       - content
       properties:
         type:
@@ -4984,6 +5151,9 @@ components:
           description: Opaque; the document ETag carries it.
         collab_epoch:
           type: integer
+        etag:
+          type: string
+          description: Strong validator of this document content, also sent in X-Vaulter-ETag.
         revision_id:
           type:
           - string

@@ -15,7 +15,7 @@ use RuntimeException;
  */
 final class ConcurrencyFixtureSupport
 {
-    public const string SCHEMA_VERSION = 'p5-concurrency-fixtures/v1';
+    public const string SCHEMA_VERSION = 'p5-concurrency-fixtures/v2';
 
     public const int COLLISION_CANDIDATE_LIMIT = 250_000;
 
@@ -45,9 +45,9 @@ final class ConcurrencyFixtureSupport
     }
 
     /**
-     * @return array{sha256: string, hashtext: int, bytes: int, path: string}
+     * @return array{sha256: string, hashtext: int, lock_key: string, bytes: int, path: string}
      */
-    public static function writePayload(string $path, string $bytes): array
+    public static function writePayload(string $path, string $bytes, string $scope = 'p5'): array
     {
         if (strlen($bytes) > self::MAX_PAYLOAD_BYTES) {
             throw new RuntimeException('P5 payloads stay bounded; multi-GiB bodies belong to P4.');
@@ -58,11 +58,11 @@ final class ConcurrencyFixtureSupport
             throw new RuntimeException("Unable to write payload [{$path}].");
         }
 
-        return self::describePayload($path);
+        return self::describePayload($path, $scope);
     }
 
     /**
-     * @return array{sha256: string, hashtext: int, bytes: int, path: string, scope_key: string}
+     * @return array{sha256: string, hashtext: int, lock_key: string, bytes: int, path: string, scope_key: string}
      */
     public static function describePayload(string $path, string $scope = 'p5'): array
     {
@@ -77,26 +77,27 @@ final class ConcurrencyFixtureSupport
         }
 
         $sha = hash('sha256', $raw);
-        $scopeKey = $scope.'|'.$sha;
+        $scopeKey = 'cas:'.$scope.':'.$sha;
 
         return [
             'sha256' => $sha,
-            'hashtext' => self::hashtext($scopeKey),
+            'hashtext' => ConcurrencyHashtext::int4($scopeKey),
+            'lock_key' => self::lockKey($scopeKey),
             'bytes' => strlen($raw),
             'path' => $path,
             'scope_key' => $scopeKey,
         ];
     }
 
-    public static function hashtext(string $key): int
+    public static function lockKey(string $key): string
     {
-        $local = ConcurrencyHashtext::int4($key);
+        $local = (string) ConcurrencyHashtext::int8($key);
 
         if (self::postgresAvailable()) {
-            $row = DB::selectOne('select hashtext(?) as h', [$key]);
-            $remote = (int) $row->h;
+            $row = DB::selectOne('select hashtextextended(?, 0) as h', [$key]);
+            $remote = (string) $row->h;
             if ($remote !== $local) {
-                throw new RuntimeException('PostgreSQL 16 hashtext disagreed with the local int4 function.');
+                throw new RuntimeException('PostgreSQL hashtextextended disagreed with the local int8 function.');
             }
 
             return $remote;
@@ -106,7 +107,7 @@ final class ConcurrencyFixtureSupport
     }
 
     /**
-     * First distinct-sha256 pair whose hashtext(scope|sha256) collides.
+     * First distinct payloads that collide on the legacy int4 CAS key.
      * Stops at 250k candidates instead of inventing a pair.
      *
      * @return array{scope: string, candidates_seen: int, left: array<string, mixed>, right: array<string, mixed>}
@@ -123,7 +124,7 @@ final class ConcurrencyFixtureSupport
         for ($index = 0; $index < $maxCandidates; $index++) {
             $bytes = self::candidateBytes($index);
             $sha = hash('sha256', $bytes);
-            $key = ConcurrencyHashtext::int4($scope.'|'.$sha);
+            $key = ConcurrencyHashtext::int4('cas:'.$scope.':'.$sha);
 
             if (isset($seen[$key]) && $seen[$key]['sha256'] !== $sha) {
                 return [
@@ -168,20 +169,21 @@ final class ConcurrencyFixtureSupport
         $normalRight = self::candidateBytes(1);
 
         $payloads = [
-            'normal-a' => self::writePayload($directory.'/normal-a.bin', $normalLeft),
-            'normal-b' => self::writePayload($directory.'/normal-b.bin', $normalRight),
-            'collision-a' => self::writePayload($directory.'/collision-a.bin', $collision['left']['bytes']),
-            'collision-b' => self::writePayload($directory.'/collision-b.bin', $collision['right']['bytes']),
+            'normal-a' => self::writePayload($directory.'/normal-a.bin', $normalLeft, $scope),
+            'normal-b' => self::writePayload($directory.'/normal-b.bin', $normalRight, $scope),
+            'collision-a' => self::writePayload($directory.'/collision-a.bin', $collision['left']['bytes'], $scope),
+            'collision-b' => self::writePayload($directory.'/collision-b.bin', $collision['right']['bytes'], $scope),
         ];
 
         if ($payloads['normal-a']['sha256'] === $payloads['normal-b']['sha256']
-            || $payloads['normal-a']['hashtext'] === $payloads['normal-b']['hashtext']) {
-            throw new RuntimeException('Normal CAS control must use distinct sha256 and distinct int4 keys.');
+            || $payloads['normal-a']['lock_key'] === $payloads['normal-b']['lock_key']) {
+            throw new RuntimeException('Normal CAS control must use distinct sha256 and distinct 64-bit keys.');
         }
 
         if ($payloads['collision-a']['sha256'] === $payloads['collision-b']['sha256']
-            || $payloads['collision-a']['hashtext'] !== $payloads['collision-b']['hashtext']) {
-            throw new RuntimeException('CAS collision pair must keep distinct bytes and an equal int4 key.');
+            || $payloads['collision-a']['hashtext'] !== $payloads['collision-b']['hashtext']
+            || $payloads['collision-a']['lock_key'] === $payloads['collision-b']['lock_key']) {
+            throw new RuntimeException('CAS collision pair must keep distinct bytes and an equal legacy int4 key and distinct live 64-bit keys.');
         }
 
         $paths = [
@@ -198,7 +200,7 @@ final class ConcurrencyFixtureSupport
             'run_prefix' => $runPrefix,
             'snapshot_id' => self::sanitizeToken($runPrefix).'/'.self::sanitizeToken($fixtureId),
             'scope' => $scope,
-            'hashtext_backend' => self::postgresAvailable() ? 'postgresql-16' : 'postgresql-16-algorithm',
+            'lock_key_backend' => self::postgresAvailable() ? 'postgresql' : 'postgresql-algorithm',
             'payloads' => $payloads,
             'sessions' => self::sessionPlan($fixtureId),
             'trees' => [
@@ -232,8 +234,8 @@ final class ConcurrencyFixtureSupport
             }
 
             $fresh = self::describePayload((string) $described['path'], $scope);
-            foreach (['sha256', 'hashtext', 'bytes'] as $field) {
-                if ($fresh[$field] !== $described[$field]) {
+            foreach (['sha256', 'hashtext', 'lock_key', 'bytes', 'scope_key'] as $field) {
+                if ($fresh[$field] !== ($described[$field] ?? null)) {
                     throw new RuntimeException("Payload [{$name}] {$field} does not match the bytes on disk.");
                 }
             }
@@ -241,13 +243,13 @@ final class ConcurrencyFixtureSupport
 
         $left = $payloads['collision-a'];
         $right = $payloads['collision-b'];
-        if ($left['sha256'] === $right['sha256'] || $left['hashtext'] !== $right['hashtext']) {
+        if ($left['sha256'] === $right['sha256'] || $left['hashtext'] !== $right['hashtext'] || $left['lock_key'] === $right['lock_key']) {
             throw new RuntimeException('Collision pair failed re-verification.');
         }
 
         $normalA = $payloads['normal-a'];
         $normalB = $payloads['normal-b'];
-        if ($normalA['sha256'] === $normalB['sha256'] || $normalA['hashtext'] === $normalB['hashtext']) {
+        if ($normalA['sha256'] === $normalB['sha256'] || $normalA['lock_key'] === $normalB['lock_key']) {
             throw new RuntimeException('Normal CAS control failed re-verification.');
         }
 

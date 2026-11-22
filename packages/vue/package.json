@@ -4,7 +4,7 @@
   "description": "Vue 3 + TypeScript components, composables and API client for Vaulter.",
   "license": "MIT",
   "engines": {
-    "node": ">=26"
+    "node": ">=26.13.1"
   },
   "type": "module",
   "vaulter": {
@@ -56,17 +56,17 @@
     "api:surface:update": "node ../../scripts/release/npm-surface.mjs vue --update"
   },
   "peerDependencies": {
-    "vue": "^3.4",
-    "@tiptap/pm": "^3.0.0"
+    "vue": "^3.5.42",
+    "@tiptap/pm": "^3.34.0"
   },
   "dependencies": {
-    "@tiptap/extension-link": "^3.0.0",
-    "@tiptap/starter-kit": "^3.0.0",
-    "@tiptap/vue-3": "^3.0.0"
+    "@tiptap/extension-link": "^3.34.0",
+    "@tiptap/starter-kit": "^3.34.0",
+    "@tiptap/vue-3": "^3.34.0"
   },
   "devDependencies": {
     "@testing-library/vue": "8.1.0",
-    "@tiptap/pm": "^3.0.0",
+    "@tiptap/pm": "^3.34.0",
     "@vitejs/plugin-vue": "^5.2.0",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.10.6",
@@ -75,7 +75,7 @@
     "vite": "^6.0.0",
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^4.1.10",
-    "vue": "^3.5.0",
+    "vue": "^3.5.42",
     "vue-tsc": "^2.1.0"
   }
 }

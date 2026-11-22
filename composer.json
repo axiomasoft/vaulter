@@ -92,10 +92,12 @@
         "phpstan/phpstan-strict-rules": "^2.0.12",
         "rector/rector": "^2.6",
         "spatie/laravel-permission": "^8.0",
+        "spaze/phpstan-disallowed-calls": "^4.15.1",
         "symfony/yaml": "^8.0"
     },
     "autoload-dev": {
         "psr-4": {
+            "Vaulter\\Ci\\": "scripts/ci/",
             "Vaulter\\Tests\\": "packages/core/tests/",
             "Vaulter\\Integration\\Tests\\": "tests/Integration/",
             "Vaulter\\Documents\\Tests\\": "packages/documents/tests/",
@@ -115,7 +117,8 @@
                 "larastan/larastan",
                 "nesbot/carbon",
                 "pestphp/pest",
-                "phpstan/phpstan-strict-rules"
+                "phpstan/phpstan-strict-rules",
+                "spaze/phpstan-disallowed-calls"
             ]
         }
     },

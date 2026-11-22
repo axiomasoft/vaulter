@@ -29,3 +29,9 @@ php artisan vaulter:scan:rescan --retry-failed --tenant=acme --drive=1 --reason=
 ```
 
 Do not release quarantined revisions in bulk; decide each one individually.
+
+## Diagnose and recover
+
+1. Record the revision, scanner identity, verdict and attempt time. Check the scan queue, daemon socket and live ClamAV version through `vaulter:doctor --check=drive.scan.scanner`.
+2. Restore the worker or daemon and confirm that a harmless permitted sample scans successfully. Preview the failed-revision retry for the affected tenant and drive before applying it.
+3. Verify the new verdict and download policy for each affected revision. Keep unsupported, encrypted and quarantined content subject to the active policy while its owner supplies a safe replacement.

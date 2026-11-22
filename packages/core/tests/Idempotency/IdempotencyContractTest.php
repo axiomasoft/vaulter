@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Idempotency\IdempotencyKeyExpiredException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
 use Vaulter\Idempotency\IdempotencyStore;
@@ -168,6 +172,57 @@ function icRows(): int
 {
     return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count();
 }
+
+it('refuses a key after active expiry, compacts its receipt, then releases the digest after seven days', function (): void {
+    $store = app(IdempotencyStore::class);
+    $db = app(VaulterDatabase::class);
+    $runner = icRunner();
+    $context = icContext(icUser('users', '1'), 'retention');
+    $probe = icProbe();
+    $writes = 0;
+    $attempt = static function () use (&$writes): array {
+        $writes++;
+
+        return ['value' => $writes];
+    };
+    $run = fn () => icRun($runner, $context, $attempt, $probe->write(['input' => 'same']));
+    $run();
+
+    $db->connection()->table($store->table())->update(['expires_at' => now()->subHour()]);
+    expect($run)->toThrow(IdempotencyKeyExpiredException::class)
+        ->and($writes)->toBe(1)
+        ->and($store->prune(10))->toBe(1);
+    $row = $db->connection()->table($store->table())->sole();
+    expect($row->status)->toBe('expired')
+        ->and($row->receipt_body)->toBeNull()
+        ->and($row->receipt_headers)->toBeNull()
+        ->and($row->request_hash)->not->toBeEmpty()
+        ->and($run)->toThrow(IdempotencyKeyExpiredException::class);
+
+    $db->connection()->table($store->table())->update(['expires_at' => now()->subDays(7)->subHour()]);
+    expect($store->prune(10))->toBe(1)->and(icRows())->toBe(0);
+    $run();
+    expect($writes)->toBe(2);
+});
+
+it('fingerprints multipart fields and actual file bytes independently of field order and boundary', function (): void {
+    $middleware = app(ReadIdempotencyKey::class);
+    $fingerprint = static function (string $boundary, array $fields, string $bytes) use ($middleware): string {
+        $request = Request::create('/multipart', 'POST', $fields, files: [
+            'file' => UploadedFile::fake()->createWithContent('data.txt', $bytes),
+        ], server: [
+            'HTTP_IDEMPOTENCY_KEY' => 'multipart',
+            'CONTENT_TYPE' => 'multipart/form-data; boundary='.$boundary,
+        ]);
+        $middleware->handle($request, static fn () => response('', 204));
+
+        return (string) $middleware::requestFingerprint($request);
+    };
+
+    $first = $fingerprint('one', ['z' => 2, 'a' => 1], 'payload');
+    expect($first)->toBe($fingerprint('two', ['a' => 1, 'z' => 2], 'payload'))
+        ->not->toBe($fingerprint('two', ['a' => 1, 'z' => 2], 'different payload'));
+});
 
 it('keeps actors whose type or id holds the delimiter apart, in the tuple and in the scope digest', function (): void {
     $left = IdempotencyDigest::actor(new ActorRef('a|b', 'c'));

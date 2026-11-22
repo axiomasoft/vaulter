@@ -569,7 +569,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-documents.tiptap.extra_marks` | — | `[]` | — |
 | `vaulter-documents.tiptap.extra_attributes` | — | `[]` | — |
 | `vaulter-documents.tiptap.url_attributes` | — | `[]` | — |
-| `vaulter-documents.broadcast` | — | — | The private broadcast channels of a document ("<prefix>.<nodeId>"): the comment events use them, and the collaboration package authorizes them and names its rooms with the same prefix. |
+| `vaulter-documents.broadcast` | — | — | The private broadcast channels of a document (`<prefix>.<nodeId>`): the comment events use them, and the collaboration package authorizes them and names its rooms with the same prefix. |
 | `vaulter-documents.broadcast.channel_prefix` | — | `'vaulter.documents'` | — |
 | `vaulter-documents.models.document_revision` | — | `DocumentRevision::class` | — |
 | `vaulter-documents.models.node_comment` | — | `NodeComment::class` | — |

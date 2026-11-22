@@ -55,6 +55,14 @@ return [
         'title' => 'Grant not found',
         'detail' => 'The grant does not exist or is not visible to you.',
     ],
+    'foreign_key_violation' => [
+        'title' => 'Foreign key violation',
+        'detail' => 'The change conflicts with a related resource.',
+    ],
+    'idempotency_key_expired' => [
+        'title' => 'Idempotency key expired',
+        'detail' => 'The replay window has elapsed. Check the original outcome before sending a new key.',
+    ],
     'idempotency_key_reused' => [
         'title' => 'Idempotency key reused',
         'detail' => 'The idempotency key was already used for a different request; send a new key.',
@@ -217,6 +225,10 @@ return [
     'validation_failed' => [
         'title' => 'Validation failed',
         'detail' => 'The request data is invalid; see the errors field.',
+    ],
+    'weak_etag_not_allowed' => [
+        'title' => 'Weak ETag not allowed',
+        'detail' => 'Refetch the resource and send its strong ETag in If-Match.',
     ],
     'write_outside_operation' => [
         'title' => 'Write outside an operation',

@@ -2,6 +2,10 @@ includes:
     - vendor/axiomasoft/packman-devtools/config/phpstan-base.neon
     - vendor/larastan/larastan/extension.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/spaze/phpstan-disallowed-calls/extension.neon
+
+rules:
+    - Vaulter\Ci\VaulterSqlStopRail
 
 parameters:
     level: max
@@ -23,6 +27,43 @@ parameters:
         - packages/filament/src
 
     inferPrivatePropertyTypeFromConstructor: true
+
+    disallowedStaticCalls:
+        -
+            method: 'Illuminate\Support\Facades\DB::transaction()'
+            message: 'Use VaulterDatabase::transaction().'
+
+    disallowedMethodCalls:
+        -
+            method: 'Illuminate\Database\ConnectionInterface::transaction()'
+            message: 'Use VaulterDatabase::transaction().'
+            allowIn:
+                - packages/core/src/Database/VaulterDatabase.php
+                # The migrator runs DDL on the migration's own connection.
+                - packages/core/src/Console/ModuleUninstallCommand.php
+        -
+            method: 'ZipArchive::extractTo()'
+            message: 'Inspect a bounded ZIP directory before reading entries.'
+
+    disallowedFunctionCalls:
+        -
+            function: 'parse_url()'
+            message: 'Use purpose-specific URL validation.'
+        -
+            function: 'env()'
+            message: 'Read environment variables from configuration files.'
+            allowIn:
+                - '*/config/*.php'
+
+    disallowedNamespaces:
+        -
+            class: 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken'
+            message: 'Use Laravel 13 PreventRequestForgery.'
+
+    disallowedConstants:
+        -
+            constant: CURLOPT_RESOLVE
+            message: 'Pin webhook connections with CURLOPT_CONNECT_TO.'
 
     ignoreErrors:
         # Illuminate\Database\Query\Builder and Staudenmeir\LaravelCte\Query\Builder declare incompatible PHPDoc parameter types for insertUsing/insertOrIgnoreUsing/updateFrom and bare Closure.

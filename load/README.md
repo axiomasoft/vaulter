@@ -408,8 +408,9 @@ after `verify`.
 
 `load:concurrency-fixtures` writes a disposable snapshot keyed by `fixture_id`:
 small same/different tus and S3 session ids, a normal CAS pair, and a searched
-int4 `hashtext(scope|sha256)` collision (distinct sha256, equal int4, fail after
-250k candidates). Tree plans are 1k nodes and restore per repetition. Dirty
+legacy int4 collision on `cas:<scope>:<sha256>` (distinct SHA-256 values, equal
+int4, distinct active `hashtextextended(key, 0)` keys, fail after 250k candidates).
+The v2 manifest records the signed 64-bit lock keys as decimal strings. Tree plans are 1k nodes and restore per repetition. Dirty
 profiles record 20k and 1m rows without seeding them; the 1m profile is not a
 tier-L claim. Cleanup deletes that fixture id or one run-prefix directory.
 

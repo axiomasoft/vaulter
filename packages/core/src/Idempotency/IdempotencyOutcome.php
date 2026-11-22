@@ -15,6 +15,11 @@ final class IdempotencyOutcome
 {
     private bool $replayed = false;
 
+    public function reset(): void
+    {
+        $this->replayed = false;
+    }
+
     public function markReplayed(): void
     {
         $this->replayed = true;

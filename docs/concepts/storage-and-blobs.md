@@ -337,7 +337,7 @@ sweep that wins the lock re-checks pin existence *before* deleting.
 
 Per database driver (`Vaulter\Media\Cas\BlobLock`):
 
-- **PostgreSQL** — `pg_advisory_xact_lock(hashtext(scope||sha256))`, a real mutex
+- **PostgreSQL** — `pg_advisory_xact_lock(hashtextextended(key, 0))`, a real mutex
   held for the whole transaction. The sweep additionally runs `SERIALIZABLE` with
   retry-on-`40001` (up to 5 attempts).
 - **MySQL / MariaDB** — no transaction-advisory lock that survives like PG's, so the

@@ -13,7 +13,7 @@ use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
  * (VAULTER_OPENAPI_EXAMPLES_WRITE=1) and otherwise checked against the schema and against the
  * shape the API answers with today. The client's contract tests read the same files.
  */
-const EXAMPLE_HEADERS = ['content-type', 'cache-control', 'etag', 'vary', 'referrer-policy', 'x-vaulter-api-version', 'x-request-id'];
+const EXAMPLE_HEADERS = ['content-type', 'cache-control', 'etag', 'x-vaulter-etag', 'vary', 'referrer-policy', 'x-vaulter-api-version', 'x-request-id'];
 
 function examplesDirectory(): string
 {

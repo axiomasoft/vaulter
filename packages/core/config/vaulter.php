@@ -60,7 +60,7 @@ return [
         'backoff_cap_seconds' => 3600,
     ],
     // Idempotency-Key receipts: how long a retry with the same key gets the stored outcome.
-    // vaulter:idempotency:prune deletes expired receipts.
+    // vaulter:idempotency:prune compacts expired receipts and removes seven-day tombstones.
     'idempotency' => [
         'ttl_seconds' => 86400,
     ],

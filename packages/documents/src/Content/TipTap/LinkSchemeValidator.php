@@ -87,9 +87,10 @@ final readonly class LinkSchemeValidator
         }
 
         $normalized = trim($stripped);
-        $scheme = parse_url(mb_strtolower($normalized), PHP_URL_SCHEME);
+        preg_match('/\A([a-z][a-z0-9+.-]*):/i', $normalized, $match);
+        $scheme = strtolower($match[1] ?? '');
 
-        if (!is_string($scheme) || !in_array($scheme, self::ALLOWED_SCHEMES, true)) {
+        if (!in_array($scheme, self::ALLOWED_SCHEMES, true)) {
             return null;
         }
 

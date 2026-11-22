@@ -53,6 +53,7 @@ final class DocumentContentResource extends JsonResource
             'state_version' => $document->stateVersion,
             'collab_epoch' => $document->epoch,
             'revision_id' => $document->headRevisionId,
+            'etag' => $this->etag(),
             'content' => self::readable($document->content),
         ];
     }

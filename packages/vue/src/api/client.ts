@@ -1,5 +1,5 @@
 import { VaulterApiError } from './errors'
-import { createTransport, type Transport, type VaulterClientOptions } from './transport'
+import { createTransport, isStrongEtag, type Transport, type VaulterClientOptions } from './transport'
 import {
   abortedError,
   DEFAULT_CHUNK_SIZE,
@@ -336,9 +336,11 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
   /** The content endpoints carry the validator in the ETag header, not in the body. */
   async function documentContent(method: string, path: string, init?: Parameters<Transport['json']>[2]): Promise<DocumentContent> {
     const response = await transport.raw(method, path, init)
-    const body = (await response.json()) as Envelope<Omit<DocumentContent, 'etag'>>
+    const body = (await response.json()) as Envelope<Omit<DocumentContent, 'etag'> & { etag?: string }>
 
-    return { ...body.data, etag: response.headers.get('ETag') }
+    const etag = [body.data.etag, response.headers.get('X-Vaulter-ETag'), response.headers.get('ETag')]
+      .find(isStrongEtag) ?? null
+    return { ...body.data, etag }
   }
 
   function startUpload(driveId: DriveId, file: Blob, opts: StartUploadOptions = {}): ResumableUpload {

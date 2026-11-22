@@ -320,11 +320,11 @@ def check_sca(job: dict) -> list[str]:
     if (job.get('env') or {}).get('AUDIT_SUPPRESSIONS_SHA256') != '${{ vars.AUDIT_SUPPRESSIONS_SHA256 }}':
         errors.append('ci.yml: sca suppression approval must come from protected external variable')
     commands = '\n'.join(str(step.get('run','')) for step in job.get('steps', []))
-    for required in ('composer audit --locked --format=json', 'npm audit --omit=dev --audit-level=high --json', 'input-locks.sha256', 'composer.version', 'npm.version', 'composer.exit', 'npm.exit', 'composer.stderr', 'npm.stderr', 'scripts/ci/audit-gate.py', '--composer-exit=', '--npm-exit=', '--suppressions=release/audit-suppressions.json'):
+    for required in ('composer audit --locked --format=json', 'npm audit --omit=dev --audit-level=high --json', 'input-locks.sha256', 'composer.version', 'npm.version', 'composer.exit', 'npm.exit', 'composer.stderr', 'npm.stderr', 'scripts/ci/audit-gate.py', 'scripts/ci/engineering-rails.py', 'scripts/ci/postgres-fks.sh', '--composer-exit=', '--npm-exit=', '--suppressions=release/audit-suppressions.json'):
         if required not in commands: errors.append('ci.yml: sca missing ' + required)
     for step in job.get('steps', []):
         command = str(step.get('run',''))
-        if 'scripts/ci/audit-gate.py' in command and (step.get('if') or step.get('continue-on-error') or '||' in command):
+        if any(f'scripts/ci/{check}' in command for check in ('audit-gate.py', 'engineering-rails.py', 'postgres-fks.sh')) and (step.get('if') or step.get('continue-on-error') or '||' in command):
             errors.append('ci.yml: sca gate may not be bypassed')
     return errors
 
@@ -910,8 +910,8 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
 
     affected = [pkg for pkg in php if pkg in suites]
     quality = [pkg for pkg in affected]
-    if 'repo' in suites and 'core' not in quality and 'core' in support:
-        quality.insert(0, 'core')  # core's quality is the repository-wide Pint (+ core Larastan), so a harness change needs it
+    if (quality or 'repo' in suites) and 'core' not in quality and 'core' in support:
+        quality.insert(0, 'core')  # Root PHPStan and Pint enforce the shared rules against every PHP package.
 
     def package(pkg: str) -> dict:
         return {'package': pkg, 'dir': support[pkg]['dir'], 'azguard': support[pkg]['azguard']}
@@ -920,9 +920,10 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
             for pkg in affected for line in support[pkg]['lines']]
     quality_matrix = [{**package(pkg), 'rector': support[pkg]['rector']} for pkg in quality]
     db_matrix = [{**package(pkg), 'engine': engine, 'port': '5432' if engine == 'pgsql' else '3306',
-                  'username': 'vaulter' if engine == 'pgsql' else 'root'}
-                 for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine] and support[pkg]['database']]
-    serial = [package(pkg) for pkg in affected if support[pkg]['serial']]
+                  'username': 'vaulter' if engine == 'pgsql' else 'root', 'version': version}
+                 for engine, version in (('pgsql', '18.7'), ('pgsql', '19.0'), ('mysql', '9.7')) for pkg in php if pkg in db_suites[engine] and support[pkg]['database']]
+    serial = [{**package(pkg), 'version': version}
+              for version in ('18.7', '19.0') for pkg in affected if support[pkg]['serial']]
     # A change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
     harness = 'repo' in suites
     consumer = [package(pkg) for pkg in CONSUMER_PACKAGES if pkg in support and (pkg in affected or harness)]

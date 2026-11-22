@@ -81,7 +81,7 @@ export interface CursorQuery {
 }
 
 /** A document's content with the ETag the server sent in the response header. */
-export type DocumentContent = Schemas['DocumentContent'] & {
+export type DocumentContent = Omit<Schemas['DocumentContent'], 'etag'> & {
   /** Opaque validator for `If-Match`; null when the response did not expose the header. */
   etag: string | null
 }

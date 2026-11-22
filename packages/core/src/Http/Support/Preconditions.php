@@ -7,6 +7,7 @@ namespace Vaulter\Http\Support;
 use Illuminate\Http\Request;
 use Packman\Attributes\Internal;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Exceptions\Http\WeakEtagNotAllowedException;
 
 /**
  * Conditional requests of the versioned API (RFC 9110).
@@ -25,19 +26,27 @@ final class Preconditions
 {
     private const string IF_MATCH = 'If-Match';
 
+    public static function ifMatch(Request $request): ?string
+    {
+        return $request->headers->get(self::IF_MATCH) ?? $request->headers->get('X-Vaulter-If-Match');
+    }
+
     /**
-     * The entity tags of a required If-Match, as sent (weak ones keep their W/ prefix).
+     * The strong entity tags of a required If-Match.
      * Missing → 428; `*` → 428 too, because it matches any representation.
      *
      * @return list<string>
      */
     public static function requireIfMatch(Request $request): array
     {
-        $header = $request->headers->get(self::IF_MATCH);
+        $header = self::ifMatch($request);
         if ($header === null || trim($header) === '') {
             throw PreconditionRequiredException::missing(self::IF_MATCH);
         }
         $tags = self::tags($header);
+        if (array_any($tags, static fn (string $tag): bool => str_starts_with($tag, 'W/'))) {
+            throw new WeakEtagNotAllowedException('[Vaulter] If-Match requires a strong entity tag.');
+        }
         if (in_array('*', $tags, true)) {
             throw PreconditionRequiredException::wildcard();
         }
@@ -52,7 +61,7 @@ final class Preconditions
      */
     public static function matches(Request $request, string $currentEtag): bool
     {
-        return self::strongMatch(self::requireIfMatch($request), $currentEtag);
+        return in_array($currentEtag, self::requireIfMatch($request), true);
     }
 
     /** Whether If-None-Match lets the server answer 304 (weak comparison). */
@@ -64,12 +73,6 @@ final class Preconditions
         }
 
         return array_any(self::tags($header), fn (string $tag): bool => $tag === '*' || self::opaque($tag) === self::opaque($currentEtag));
-    }
-
-    /** @param list<string> $tags */
-    private static function strongMatch(array $tags, string $currentEtag): bool
-    {
-        return array_any($tags, fn (string $tag): bool => !str_starts_with($tag, 'W/') && hash_equals($currentEtag, $tag));
     }
 
     /**

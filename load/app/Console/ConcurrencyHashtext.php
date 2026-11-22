@@ -5,21 +5,19 @@ declare(strict_types=1);
 namespace Vaulter\Load\Console;
 
 /**
- * PostgreSQL 16 hashtext() — lookup3 hash_bytes, returned as int4.
- *
- * BlobLock asks for hashtext(scope|sha256). This is that function, not a
- * stand-in: the signed result matches SELECT hashtext(?) on PostgreSQL 16.
+ * PostgreSQL lookup3 hash_bytes_extended with seed zero. The low word also
+ * supplies the legacy int4 collision used by the regression fixtures.
  */
 final class ConcurrencyHashtext
 {
     public static function int4(string $key): int
     {
-        $unsigned = self::hashBytes($key);
+        $unsigned = self::int8($key) & 0xFFFFFFFF;
 
         return $unsigned >= 0x80000000 ? $unsigned - 0x100000000 : $unsigned;
     }
 
-    private static function hashBytes(string $key): int
+    public static function int8(string $key): int
     {
         $length = strlen($key);
         $a = $b = $c = self::u32(0x9E3779B9 + $length + 3923095);
@@ -71,7 +69,7 @@ final class ConcurrencyHashtext
 
         self::finalise($a, $b, $c);
 
-        return self::u32($c);
+        return ($b << 32) | $c;
     }
 
     private static function word(string $key, int $offset): int

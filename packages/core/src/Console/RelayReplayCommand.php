@@ -33,8 +33,8 @@ final class RelayReplayCommand extends Command
     public function handle(OutboxRelay $relay): int
     {
         $consumer = $this->option('consumer');
-        $from = is_scalar($this->option('from')) ? (string) $this->option('from') : null;
-        $to = is_scalar($this->option('to')) ? (string) $this->option('to') : null;
+        $from = $this->option('from');
+        $to = $this->option('to');
         if (!is_string($consumer) || $consumer === '' || !is_string($from) || !is_string($to)
             || preg_match('/^\d+$/', $from) !== 1 || preg_match('/^\d+$/', $to) !== 1 || (int) $from > (int) $to) {
             $this->components->error('--consumer, --from and --to are required; --from and --to are outbox seqs with --from <= --to.');
@@ -43,7 +43,7 @@ final class RelayReplayCommand extends Command
         }
 
         try {
-            $result = $relay->replay($consumer, (int) $from, (int) $to, (bool) $this->option('ack-only'));
+            $result = $relay->replay($consumer, (int) $from, (int) $to, $this->option('ack-only'));
         } catch (LogicException $exception) {
             $this->components->error($exception->getMessage());
 

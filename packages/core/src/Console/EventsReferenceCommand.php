@@ -24,13 +24,13 @@ final class EventsReferenceCommand extends Command
 
     public function handle(EventsReference $reference): int
     {
-        $paths = array_values(array_filter((array) $this->option('path'), is_string(...)));
+        $paths = array_values(array_filter($this->option('path'), is_string(...)));
         if ($paths === []) {
             // The pages live in the monorepo, not in the host application.
             $root = dirname(__DIR__, 4);
             $paths = [$root.'/docs/reference/events.md', $root.'/docs/ru/reference/events.md'];
         }
-        $check = (bool) $this->option('check');
+        $check = $this->option('check');
         $stale = false;
 
         foreach ($paths as $path) {

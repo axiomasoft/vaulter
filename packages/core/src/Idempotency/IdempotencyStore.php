@@ -15,6 +15,7 @@ use stdClass;
 use Throwable;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Idempotency\IdempotencyKeyExpiredException;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -38,6 +39,10 @@ final class IdempotencyStore
 
     public const string COMPLETED = 'completed';
 
+    private const string EXPIRED = 'expired';
+
+    private const int TOMBSTONE_DAYS = 7;
+
     /** The bounded wait on a concurrent claim. */
     public const int WAIT_SECONDS = 2;
 
@@ -48,14 +53,14 @@ final class IdempotencyStore
     ) {}
 
     /**
-     * Claims the digest for this attempt, or returns the committed receipt that already holds it. An expired
-     * receipt counts as absent: it is deleted and the digest claimed anew.
+     * Claims the digest for this attempt, or returns the committed receipt that already holds it.
+     * Recently expired keys are rejected even before the scheduled prune compacts their receipts.
      *
      * @param array<string, string|null> $tuple {@see IdempotencyDigest::tuple()}
      */
     public function claim(array $tuple, string $digest, string $requestHash, int $ttlSeconds): ?StoredReceipt
     {
-        $now = Carbon::now();
+        $now = $this->now();
         $row = [
             'scope_digest' => $digest,
             ...$tuple,
@@ -80,14 +85,20 @@ final class IdempotencyStore
             if ($existing === null) {
                 continue;
             }
-            if ($existing->status !== self::COMPLETED) {
+            if (!in_array($existing->status, [self::COMPLETED, self::EXPIRED], true)) {
                 throw new OperationInProgressException(1);
             }
-            if (Carbon::parse($existing->expiresAt)->lessThanOrEqualTo($now)) {
-                // Still expired: a retry that committed a fresh receipt for this digest meanwhile has a later expiry.
-                $this->query()->where('scope_digest', $digest)->where('status', self::COMPLETED)->where('expires_at', '<=', $now)->delete();
+            $now = $this->now();
+            $expiry = Carbon::parse($existing->expiresAt);
+            if ($expiry->lessThanOrEqualTo($now->copy()->subDays(self::TOMBSTONE_DAYS))) {
+                $this->query()->where('scope_digest', $digest)->delete();
+                $row['created_at'] = $now;
+                $row['expires_at'] = $now->copy()->addSeconds($ttlSeconds);
 
                 continue;
+            }
+            if ($existing->status === self::EXPIRED || $expiry->lessThanOrEqualTo($now)) {
+                throw new IdempotencyKeyExpiredException('[Vaulter] The idempotency key is outside its replay window.');
             }
 
             return $existing;
@@ -146,8 +157,8 @@ final class IdempotencyStore
             ->where('actor_kind', $fields['actor_kind'])
             ->when($fields['actor_id'] === null, static fn (Builder $query): Builder => $query->whereNull('actor_id'), static fn (Builder $query): Builder => $query->where('actor_id', $fields['actor_id']))
             ->where('request_hash', $requestHash)
-            ->where('status', self::COMPLETED)
-            ->where('expires_at', '>', Carbon::now())
+            ->whereIn('status', [self::COMPLETED, self::EXPIRED])
+            ->where('expires_at', '>', $this->now()->subDays(self::TOMBSTONE_DAYS))
             ->limit(2)
             ->get(['scope_kind', 'scope_id']);
         if ($rows->count() !== 1) {
@@ -159,23 +170,39 @@ final class IdempotencyStore
     }
 
     /**
-     * Deletes up to `$limit` expired receipts; returns how many. A claim is never pruned (it is never committed).
+     * Compacts expired receipts and removes elapsed tombstones, processing at most `$limit` rows.
      */
     public function prune(int $limit): int
     {
-        $ids = $this->query()
-            ->where('status', self::COMPLETED)
-            ->where('expires_at', '<=', Carbon::now())
-            ->orderBy('expires_at')
-            ->limit($limit)
-            ->pluck('scope_digest')
-            ->all();
-        if ($ids === []) {
-            return 0;
-        }
+        return $this->database->write(function () use ($limit): int {
+            $now = $this->now();
+            $cutoff = $now->copy()->subDays(self::TOMBSTONE_DAYS);
+            $elapsed = $this->query()
+                ->whereIn('status', [self::COMPLETED, self::EXPIRED])
+                ->where('expires_at', '<=', $cutoff);
+            $delete = (clone $elapsed)->orderBy('expires_at')->limit($limit)->pluck('scope_digest');
+            $deleted = $elapsed->whereIn('scope_digest', $delete)->delete();
+            if ($deleted >= $limit) {
+                return $deleted;
+            }
 
-        // Expired again at delete time: a receipt a retry committed after the read above is not this one.
-        return $this->database->write(fn (): int => $this->query()->whereIn('scope_digest', $ids)->where('status', self::COMPLETED)->where('expires_at', '<=', Carbon::now())->delete());
+            $expired = $this->query()->where('status', self::COMPLETED)
+                ->where('expires_at', '>', $cutoff)->where('expires_at', '<=', $now);
+            $compact = (clone $expired)->orderBy('expires_at')->limit($limit - $deleted)->pluck('scope_digest');
+
+            return $deleted + $expired->whereIn('scope_digest', $compact)->update([
+                'status' => self::EXPIRED,
+                'receipt_kind' => null,
+                'codec_version' => null,
+                'receipt_body' => null,
+                'http_code' => null,
+                'receipt_headers' => null,
+                'resource_kind' => null,
+                'resource_id' => null,
+                'auth_scope_kind' => null,
+                'auth_scope_id' => null,
+            ]);
+        });
     }
 
     public function table(): string
@@ -193,12 +220,21 @@ final class IdempotencyStore
         return $this->database->connection();
     }
 
-    /** The committed receipt under a shared lock (read past any snapshot), or null. */
+    private function now(): Carbon
+    {
+        $connection = $this->connection();
+
+        return $connection->getDriverName() === 'pgsql'
+            ? Carbon::parse(self::setting($connection->selectOne('select clock_timestamp()::timestamp as v', useReadPdo: false)))
+            : Carbon::now();
+    }
+
+    /** The committed receipt under a write lock (read past any snapshot), or null. */
     private function lockedReceipt(string $digest): ?StoredReceipt
     {
         $query = $this->query()->where('scope_digest', $digest);
         if ($this->connection()->getDriverName() !== 'sqlite') {
-            $query->sharedLock();
+            $query->lockForUpdate();
         }
         $row = $query->first();
 

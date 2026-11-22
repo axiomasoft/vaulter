@@ -7,7 +7,7 @@
     "api": "1"
   },
   "engines": {
-    "node": ">=26"
+    "node": ">=26.13.1"
   },
   "type": "module",
   "keywords": [
@@ -51,8 +51,8 @@
   },
   "peerDependencies": {
     "@vaulter/vue": "^1.0",
-    "vue": "^3.4",
-    "yjs": "^13.6"
+    "vue": "^3.5.42",
+    "yjs": "^13.6.33"
   },
   "dependencies": {
     "@hocuspocus/provider": "^4.3"
@@ -64,8 +64,8 @@
     "vite": "^6.0.0",
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^4.1.10",
-    "vue": "^3.5.0",
+    "vue": "^3.5.42",
     "vue-tsc": "^2.1.0",
-    "yjs": "^13.6"
+    "yjs": "^13.6.33"
   }
 }

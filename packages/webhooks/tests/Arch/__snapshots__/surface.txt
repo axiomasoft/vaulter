@@ -65,9 +65,10 @@ Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint api since 1.0 final readonl
   public int $port
   public string $scheme
   public function __construct(string $scheme, string $host, string $ip, int $port)
+  public function curlConnectToEntry(): string
   public function curlResolveEntry(): string
 
-Vaulter\Webhooks\VaulterWebhooksServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars
+Vaulter\Webhooks\VaulterWebhooksServiceProvider api since 1.0 final class extends Illuminate\Support\ServiceProvider uses Packman\Foundation\Concerns\RegistersPackageRegistrars, Vaulter\Modules\OffersModules
   protected const array REGISTRARS = [\Vaulter\Webhooks\Providers\WebhooksPackageRegistrar::class]
   public function boot(): void
   public function register(): void

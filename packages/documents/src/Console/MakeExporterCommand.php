@@ -43,7 +43,7 @@ final class MakeExporterCommand extends Command
         $class = $studly.'Exporter';
         $directory = app_path('Vaulter/Exporters');
         $path = sprintf('%s/%s.php', $directory, $class);
-        if (!(bool) $this->option('force') && $this->files->exists($path)) {
+        if (!$this->option('force') && $this->files->exists($path)) {
             $this->components->error(sprintf('Exporter [App\Vaulter\Exporters\%s] already exists. Pass --force to overwrite.', $class));
 
             return self::FAILURE;
@@ -56,7 +56,7 @@ final class MakeExporterCommand extends Command
             $this->files->get(__DIR__.'/../../stubs/exporter.stub'),
         ));
 
-        $this->writeTest($class, 'App\\Vaulter\\Exporters\\'.$class, (bool) $this->option('force'));
+        $this->writeTest($class, 'App\\Vaulter\\Exporters\\'.$class, $this->option('force'));
         $this->components->task(sprintf('Exporter app/Vaulter/Exporters/%s.php', $class));
         $this->newLine();
         $this->line("Register it in <info>config/vaulter-documents.php</info> under 'exporters':");

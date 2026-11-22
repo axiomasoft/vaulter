@@ -138,6 +138,7 @@ const adrSidebar = [
       { text: '0012 — Dedup scope', link: '/adr/0012-dedup-scope' },
       { text: '0013 — Two sharing channels', link: '/adr/0013-two-sharing-channels' },
       { text: '0014 — Legacy DocVault excise', link: '/adr/0014-legacy-docvault-strangler' },
+      { text: '0015 — Drive and documents package boundaries', link: '/adr/0015-drive-documents-package-split' },
       { text: '0031 — Collaboration package & durability', link: '/adr/0031-collaboration-package-and-durability' },
       { text: '0032 — Operation catalogue & concurrency', link: '/adr/0032-operation-catalog-and-concurrency' },
     ],

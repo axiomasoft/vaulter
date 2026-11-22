@@ -262,13 +262,13 @@ final class ConfigReferenceCommand extends Command
 
     public function handle(): int
     {
-        $paths = array_values(array_filter((array) $this->option('path'), is_string(...)));
+        $paths = array_values(array_filter($this->option('path'), is_string(...)));
         // The pages and the package configs live in the monorepo, not in the host application.
         $root = dirname(__DIR__, 4);
         if ($paths === []) {
             $paths = [$root.'/docs/reference/config.md', $root.'/docs/ru/reference/config.md'];
         }
-        $check = (bool) $this->option('check');
+        $check = $this->option('check');
         $stale = false;
 
         foreach ($paths as $path) {

@@ -1,5 +1,9 @@
 import { VaulterApiError } from './errors'
 
+export function isStrongEtag(value: unknown): value is string {
+  return typeof value === 'string' && /^"[\x21\x23-\x7e\x80-\xff]*"$/.test(value)
+}
+
 export interface VaulterClientOptions {
   /** Base URL of the Vaulter REST API, version segment included (default: `/api/vaulter/v1`). */
   baseUrl?: string
@@ -102,6 +106,9 @@ export function createTransport(options: VaulterClientOptions = {}): Transport {
   async function raw(method: string, path: string, init: RequestInitLike = {}): Promise<Response> {
     if (versionMismatch !== null) {
       throw VaulterApiError.apiVersionMismatch(versionMismatch)
+    }
+    if (init.etag !== undefined && !isStrongEtag(init.etag)) {
+      throw new TypeError('If-Match requires a strong ETag in quotes.')
     }
 
     const hasJson = init.json !== undefined

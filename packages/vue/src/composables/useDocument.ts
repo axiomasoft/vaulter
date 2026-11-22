@@ -38,7 +38,7 @@ export interface UseDocumentReturn {
  * Reactive editing of a document node: load its head content, edit it with a debounced
  * autosave, export it. Saves send the ETag of the content they were based on; a stale tag
  * (412) re-reads the head and sets `conflict` instead of silently overwriting. A missing tag
- * (the response header was not exposed to the browser) is an integration error and throws.
+ * in both the response body and the exposed headers is an integration error and throws.
  */
 export function useDocument(nodeId: NodeId, options: UseDocumentOptions = {}): UseDocumentReturn {
   const client = useVaulterClient()
@@ -137,7 +137,7 @@ export function useDocument(nodeId: NodeId, options: UseDocumentOptions = {}): U
     if (etag === null) {
       throw new Error(
         '[Vaulter] The document ETag is unknown: the server response did not expose it. '
-        + 'Expose the ETag header to the browser (Access-Control-Expose-Headers) and load the document first.',
+        + 'Expose X-Vaulter-ETag and ETag through CORS, then load the document again.',
       )
     }
 

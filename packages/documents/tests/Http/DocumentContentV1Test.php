@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments as Granted;
@@ -46,8 +47,9 @@ it('answers a reader and a writer with the same body and the same tag', function
     expect($reader->json())->toBe($writer->json())
         ->and($reader->headers->get('ETag'))->toBe($writer->headers->get('ETag'))
         ->and($writer->headers->get('ETag'))->toBe('"'.$id.'.'.$epoch.'.'.$version.'"')
-        ->and($writer->json('data'))->toHaveKeys(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'state_version', 'collab_epoch', 'revision_id', 'content'])
-        ->and(array_keys($writer->json('data')))->toHaveCount(8);
+        ->and($writer->json('data'))->toHaveKeys(['type', 'schema_version', 'collab_protocol', 'collab_state_format', 'state_version', 'collab_epoch', 'revision_id', 'etag', 'content'])
+        ->and(array_keys($writer->json('data')))->toHaveCount(9)
+        ->and($writer->json('data.etag'))->toBe($writer->headers->get('X-Vaulter-ETag'));
 });
 
 it('answers 304 to a matching If-None-Match and a fresh body to a stale one', function (): void {
@@ -82,10 +84,56 @@ it('requires If-Match to write: 428 without it or with *, 412 for a weak or stal
 
     $this->putJson($url, ['content' => Docs::doc('x')])->assertStatus(428)->assertJsonPath('code', 'precondition_required')->assertJsonPath('meta.header', 'If-Match');
     $this->putJson($url, ['content' => Docs::doc('x')], ['If-Match' => '*'])->assertStatus(428)->assertJsonPath('meta.reason', 'wildcard_not_allowed');
-    $this->putJson($url, ['content' => Docs::doc('x')], ['If-Match' => 'W/'.$tag])->assertStatus(412)->assertJsonPath('code', 'document_state_mismatch');
+    $this->putJson($url, ['content' => Docs::doc('x')], ['If-Match' => 'W/'.$tag])->assertStatus(412)->assertJsonPath('code', 'weak_etag_not_allowed');
     $this->putJson($url, ['content' => Docs::doc('x')], ['If-Match' => '"'.$id.'.0.999"'])->assertStatus(412);
 
     $this->getJson($url)->assertHeader('ETag', $tag);
+});
+
+it('can write through CORS when a gzip proxy weakens the standard validator', function (): void {
+    [, $id] = sharedDocument();
+    $this->actingAs(AccessTestHelpers::user(1));
+    $url = Docs::url('documents/'.$id.'/content');
+    $origin = 'https://client.example';
+    config([
+        'cors.paths' => ['api/vaulter/v1/*', 'host/*'],
+        'cors.allowed_origins' => [$origin],
+        'cors.allowed_methods' => ['PUT'],
+        'cors.allowed_headers' => ['X-Host-Header'],
+    ]);
+
+    $preflight = $this->call('OPTIONS', $url, server: [
+        'HTTP_ORIGIN' => $origin,
+        'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'PUT',
+        'HTTP_ACCESS_CONTROL_REQUEST_HEADERS' => 'if-match,x-vaulter-if-match,idempotency-key,authorization,content-type',
+    ])->assertNoContent()->assertHeader('Access-Control-Allow-Origin', $origin);
+    $allowed = strtolower((string) $preflight->headers->get('Access-Control-Allow-Headers'));
+    foreach (['if-match', 'x-vaulter-if-match', 'idempotency-key', 'authorization', 'content-type'] as $header) {
+        expect($allowed)->toContain($header);
+    }
+    $this->call('OPTIONS', '/host/probe', server: [
+        'HTTP_ORIGIN' => $origin,
+        'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'PUT',
+        'HTTP_ACCESS_CONTROL_REQUEST_HEADERS' => 'x-host-header',
+    ])->assertNoContent()->assertHeader('Access-Control-Allow-Headers', 'x-host-header');
+
+    $read = $this->getJson($url, ['Origin' => $origin])->assertOk()->assertHeader('Access-Control-Allow-Origin', $origin);
+    $read->headers->set('ETag', 'W/'.$read->headers->get('ETag'));
+    $read->headers->set('Content-Encoding', 'gzip');
+    $strong = $read->headers->get('X-Vaulter-ETag');
+    expect($read->json('data.etag'))->toBe($strong)
+        ->and($read->headers->get('Cache-Control'))->toContain('no-transform')
+        ->and($read->getVary())->toContain('Authorization', 'Accept');
+    $exposed = strtolower((string) $read->headers->get('Access-Control-Expose-Headers'));
+    foreach (['etag', 'x-vaulter-etag', 'retry-after', 'idempotent-replayed', 'x-vaulter-api-version'] as $header) {
+        expect($exposed)->toContain($header);
+    }
+    $body = ['content' => Docs::doc('after gzip')];
+    $this->putJson($url, $body, ['Origin' => $origin, 'If-Match' => $read->headers->get('ETag')])
+        ->assertStatus(412)->assertJsonPath('code', 'weak_etag_not_allowed');
+    $this->putJson($url, $body, ['Origin' => $origin, 'X-Vaulter-If-Match' => $strong])->assertOk();
+    $this->putJson($url, $body, ['Origin' => $origin, 'If-Match' => $strong])
+        ->assertStatus(412)->assertJsonPath('code', 'document_state_mismatch');
 });
 
 it('saves with the current tag, moves the state version by one and answers the new tag', function (): void {
@@ -233,6 +281,12 @@ it('creates a document, checkpoints it and restores it under an Idempotency-Key,
     $again = $this->postJson($restore, [], ['If-Match' => $tag, 'Idempotency-Key' => 'restore-1'])->assertOk()->assertHeader('Idempotent-Replayed', 'true');
 
     expect($again->json('data'))->toBe($first->json('data'))->and(Granted::aggregate($node)->state_version)->toBe($state);
+    $connection = app(VaulterDatabase::class)->connection();
+    $table = app(DatabaseOptions::class)->table('idempotency_keys');
+    $connection->table($table)->where('idempotency_key', base64_encode('restore-1'))->update(['expires_at' => now()->subHour()]);
+    $this->postJson($restore, [], ['If-Match' => $tag, 'Idempotency-Key' => 'restore-1'])
+        ->assertGone()->assertJsonPath('code', 'idempotency_key_expired')->assertHeaderMissing('Idempotent-Replayed');
+    expect(Granted::aggregate($node)->state_version)->toBe($state);
     // Without a key the stale tag stands.
     $this->postJson($restore, [], ['If-Match' => $tag])->assertStatus(412)->assertJsonPath('code', 'document_state_mismatch');
 });

@@ -47,6 +47,8 @@ final class VaulterProblemDefinitions implements ProblemDefinitionProvider
             VaulterErrorCode::DependencyUnavailable => [503, 'Dependency unavailable', true, ErrorCategory::Unavailable, []],
             VaulterErrorCode::DuplicateRegistration => [500, 'Duplicate registration', false, ErrorCategory::Internal, []],
             VaulterErrorCode::ExtensionFailed => [500, 'Extension failed', false, ErrorCategory::Internal, []],
+            VaulterErrorCode::ForeignKeyViolation => [409, 'Foreign key violation', false, ErrorCategory::Conflict, []],
+            VaulterErrorCode::IdempotencyKeyExpired => [410, 'Idempotency key expired', false, ErrorCategory::Conflict, []],
             VaulterErrorCode::IdempotencyKeyReused => [422, 'Idempotency key reused', false, ErrorCategory::Validation, []],
             VaulterErrorCode::InsecureProductionConfiguration => [500, 'Insecure production configuration', false, ErrorCategory::Internal, []],
             VaulterErrorCode::InternalError => [500, 'Internal Vaulter error', false, ErrorCategory::Internal, []],
@@ -71,6 +73,7 @@ final class VaulterProblemDefinitions implements ProblemDefinitionProvider
             VaulterErrorCode::UnknownIdStrategy => [500, 'Unknown ID strategy', false, ErrorCategory::Internal, []],
             VaulterErrorCode::UnknownOperation => [500, 'Unknown Vaulter operation', false, ErrorCategory::Internal, []],
             VaulterErrorCode::ValidationFailed => [422, 'Validation failed', false, ErrorCategory::Validation, []],
+            VaulterErrorCode::WeakEtagNotAllowed => [412, 'Weak ETag not allowed', false, ErrorCategory::Validation, []],
             VaulterErrorCode::WriteOutsideOperation => [500, 'Model write outside Vaulter operation', false, ErrorCategory::Internal, []],
         };
     }

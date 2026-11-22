@@ -19,6 +19,8 @@ enum VaulterErrorCode: string implements ErrorCode
     case DependencyUnavailable = 'vaulter.dependency_unavailable';
     case DuplicateRegistration = 'vaulter.duplicate_registration';
     case ExtensionFailed = 'vaulter.extension_failed';
+    case ForeignKeyViolation = 'vaulter.foreign_key_violation';
+    case IdempotencyKeyExpired = 'vaulter.idempotency_key_expired';
     case IdempotencyKeyReused = 'vaulter.idempotency_key_reused';
     case InsecureProductionConfiguration = 'vaulter.insecure_production_configuration';
     case InternalError = 'vaulter.internal_error';
@@ -43,6 +45,7 @@ enum VaulterErrorCode: string implements ErrorCode
     case UnknownIdStrategy = 'vaulter.unknown_id_strategy';
     case UnknownOperation = 'vaulter.unknown_operation';
     case ValidationFailed = 'vaulter.validation_failed';
+    case WeakEtagNotAllowed = 'vaulter.weak_etag_not_allowed';
     case WriteOutsideOperation = 'vaulter.write_outside_operation';
 
     #[Override]

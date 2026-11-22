@@ -39,8 +39,7 @@ it('refuses If-Match: * with 428 wildcard_not_allowed', function (): void {
 it('never matches a weak tag (strong comparison) → 412', function (): void {
     $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'], ['If-Match' => 'W/'.$this->etag])
         ->assertStatus(412)
-        ->assertJsonPath('code', 'node_sequence_mismatch')
-        ->assertJsonPath('meta.node_id', $this->node->id);
+        ->assertJsonPath('code', 'weak_etag_not_allowed');
 });
 
 it('applies the change with the current tag and returns a new one', function (): void {

@@ -294,6 +294,25 @@ describe('createVaulterClient — preconditions (If-Match)', () => {
     expect((await client.documents.content('5')).etag).toBeNull()
   })
 
+  it.each([true, false])('writes with the strong validator exposed through gzip and CORS (body=%s)', async (includeBody) => {
+    const bodyTag = '"document-1"'
+    const mirror = includeBody ? '"lower-priority"' : bodyTag
+    const fetchMock = fetchSequence(
+      () => jsonResponse({ data: { content: { type: 'doc' }, ...(includeBody ? { etag: bodyTag } : {}) } }, 200, {
+        ETag: 'W/"document-1"',
+        'X-Vaulter-ETag': mirror,
+        'Access-Control-Expose-Headers': 'X-Vaulter-ETag, ETag, X-Vaulter-Api-Version',
+        'Content-Encoding': 'gzip',
+      }),
+      () => jsonResponse({ data: { content: { type: 'doc' }, etag: '"document-2"' } }),
+    )
+    const client = createVaulterClient({ fetch: fetchMock })
+    const current = await client.documents.content('5')
+    expect(current.etag).toBe(bodyTag)
+    await client.documents.update('5', { type: 'doc' }, { etag: current.etag! })
+    expect(call(fetchMock, 1).headers['If-Match']).toBe(bodyTag)
+  })
+
   it('attaches the etag to file revision uploads as multipart', async () => {
     const fetchMock = fetchSequence(() => jsonResponse({ data: { id: 'r2' } }, 201))
     const client = createVaulterClient({ fetch: fetchMock })

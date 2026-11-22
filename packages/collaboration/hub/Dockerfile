@@ -6,10 +6,14 @@
 # syntax=docker/dockerfile:1
 # Debian-slim base: musl/alpine's npm hits "Exit handler never called" on `npm ci`; the
 # deps are pure-JS so glibc-vs-musl is irrelevant, and slim stays small + non-root.
-ARG NODE_VERSION=26-slim
+ARG NODE_VERSION=26.13.1-slim
 
 # ── deps: reproducible production install from the committed lockfile ────────────────
 FROM node:${NODE_VERSION}@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS deps
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 libstdc++6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && node -e "process.exit(0)"
 WORKDIR /app
 COPY package.json package-lock.json ./
 # --no-audit/--no-fund avoid the post-install network steps that can crash alpine's npm
@@ -18,6 +22,10 @@ RUN npm ci --omit=dev --no-audit --no-fund
 
 # ── runtime: minimal, non-root ──────────────────────────────────────────────────────
 FROM node:${NODE_VERSION}@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 libstdc++6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && node -e "process.exit(0)"
 WORKDIR /app
 
 # Secure default: the published image runs as production, so the hub demands an explicit

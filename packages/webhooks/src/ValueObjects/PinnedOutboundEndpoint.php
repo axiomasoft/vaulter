@@ -10,7 +10,7 @@ use Packman\Attributes\Api;
  * The result of validating an outbound webhook URL: the scheme,
  * host and port to dial together with the EXACT IP that passed the range check.
  *
- * Delivery pins {@see curlResolveEntry()} onto the request (CURLOPT_RESOLVE) so the
+ * Delivery pins {@see curlConnectToEntry()} onto the request so the
  * connection lands on the very address the guard vetted — closing the DNS-rebind /
  * TOCTOU window between "resolve + check" and "connect".
  */
@@ -27,9 +27,19 @@ final readonly class PinnedOutboundEndpoint
     /**
      * The curl "HOST:PORT:ADDRESS" override that pins the vetted IP onto the dial,
      * so DNS is never consulted a second time at connect.
+     *
+     * @deprecated Use curlConnectToEntry().
      */
     public function curlResolveEntry(): string
     {
         return "{$this->host}:{$this->port}:{$this->ip}";
+    }
+
+    public function curlConnectToEntry(): string
+    {
+        $host = str_contains($this->host, ':') ? '['.$this->host.']' : $this->host;
+        $ip = str_contains($this->ip, ':') ? '['.$this->ip.']' : $this->ip;
+
+        return "{$host}:{$this->port}:{$ip}:{$this->port}";
     }
 }

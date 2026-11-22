@@ -27,6 +27,7 @@ use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Events\WebhookEndpointDisabled;
+use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\ResponseSizeLimit;
@@ -193,7 +194,7 @@ final class DeliverWebhook implements ShouldQueue
      *
      * SSRF-hardened: the guard resolves + range-checks the
      * URL on the delivery path and hands back the vetted IP, which is PINNED onto the
-     * connection (CURLOPT_RESOLVE) so DNS cannot rebind to an internal address between
+     * connection (CURLOPT_CONNECT_TO) so DNS cannot rebind to an internal address between
      * the check and the dial. The transport is locked to HTTP(S) and the response body
      * is capped. A blocked URL throws and is recorded as a failed attempt —
      * nothing leaves the process.
@@ -241,7 +242,16 @@ final class DeliverWebhook implements ShouldQueue
             ])
             ->withBody($body, 'application/json');
 
-        return $request->post($endpoint->url);
+        // Use the exact canonical authority whose DNS answers were checked and pinned.
+        $host = str_contains($pinned->host, ':') ? '['.$pinned->host.']' : $pinned->host;
+        $defaultPort = $pinned->scheme === 'https' ? 443 : 80;
+        $origin = $pinned->scheme.'://'.$host.($pinned->port === $defaultPort ? '' : ':'.$pinned->port);
+        $url = preg_replace_callback('~\A[a-z][a-z0-9+.-]*://[^/?#]+~i', static fn (): string => $origin, $endpoint->url, count: $rewritten);
+        if ($url === null || $rewritten !== 1) {
+            throw BlockedOutboundUrlException::malformed();
+        }
+
+        return $request->post($url);
     }
 
     /**
@@ -286,12 +296,14 @@ final class DeliverWebhook implements ShouldQueue
         $options = [
             // '' disables the proxy outright: cURL/Guzzle would otherwise take HTTP(S)_PROXY /
             // ALL_PROXY (any case) from the worker environment, and a proxy resolves the name
-            // itself, bypassing the CURLOPT_RESOLVE pin. No config key re-enables one.
+            // itself, bypassing the CURLOPT_CONNECT_TO pin. No config key re-enables one.
             'proxy' => '',
             // The delivery needs only the status: never inflate, so the byte budget is the wire budget.
             'decode_content' => false,
             'curl' => [
-                CURLOPT_RESOLVE => [$pinned->curlResolveEntry()],
+                CURLOPT_CONNECT_TO => [$pinned->curlConnectToEntry()],
+                CURLOPT_FRESH_CONNECT => true,
+                CURLOPT_FORBID_REUSE => true,
                 CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_FOLLOWLOCATION => false,
@@ -441,7 +453,7 @@ final class DeliverWebhook implements ShouldQueue
      */
     private function killWhileInactive(WebhookDelivery $delivery, WebhookEndpoint $endpoint): ?WebhookEndpoint
     {
-        return $delivery->getConnection()->transaction(function () use ($delivery, $endpoint): ?WebhookEndpoint {
+        return $this->database->transaction(function () use ($delivery, $endpoint): ?WebhookEndpoint {
             $locked = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first();
 
             if (!$locked instanceof WebhookEndpoint) {

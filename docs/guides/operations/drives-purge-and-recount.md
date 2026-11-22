@@ -35,3 +35,9 @@ php artisan vaulter:drives:recount --drive=7
 ```
 
 Without `--drive` both commands act on all drives — always preview those runs.
+
+## Diagnose and recover
+
+1. Record the tenant and drive IDs, drive status, time since deletion was requested and the last purge job result. Check scheduler and queue health before starting a manual purge.
+2. Preview a single drive. Confirm the retention and deletion decision, then run the synchronous purge for that same drive. An interrupted purge can be retried after the underlying database or storage error is resolved.
+3. For counter drift, preview recount and compare it with retained revisions. Apply it only to the affected drive, then preview again. Confirm the doctor no longer reports drift or a stalled purge for that drive.

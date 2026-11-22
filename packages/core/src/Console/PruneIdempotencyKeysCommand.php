@@ -9,9 +9,8 @@ use Packman\Attributes\Internal;
 use Vaulter\Idempotency\IdempotencyStore;
 
 /**
- * Delete expired idempotency receipts (`vaulter.idempotency.ttl_seconds`, 24 hours by default), in batches of
- * {@see self::BATCH}. Only completed receipts are deleted: a claim is never committed, so there is none to prune.
- * An expired receipt is already ignored by a retry; pruning only reclaims space. Scheduled daily.
+ * Compact expired idempotency receipts and remove tombstones after their seven-day retention.
+ * Scheduled daily in batches of {@see self::BATCH}.
  */
 #[Internal]
 final class PruneIdempotencyKeysCommand extends Command
@@ -19,9 +18,9 @@ final class PruneIdempotencyKeysCommand extends Command
     public const int BATCH = 1000;
 
     protected $signature = 'vaulter:idempotency:prune
-        {--limit=0 : Stop after deleting this many receipts (0 = all expired)}';
+        {--limit=0 : Stop after processing this many receipts (0 = all expired)}';
 
-    protected $description = 'Delete expired idempotency receipts.';
+    protected $description = 'Compact expired idempotency receipts and remove elapsed tombstones.';
 
     public function handle(IdempotencyStore $store): int
     {
@@ -33,14 +32,14 @@ final class PruneIdempotencyKeysCommand extends Command
         }
         $limit = (int) $limit;
 
-        $deleted = 0;
+        $processed = 0;
         do {
-            $batch = $limit === 0 ? self::BATCH : min(self::BATCH, $limit - $deleted);
+            $batch = $limit === 0 ? self::BATCH : min(self::BATCH, $limit - $processed);
             $count = $batch > 0 ? $store->prune($batch) : 0;
-            $deleted += $count;
+            $processed += $count;
         } while ($count === $batch && $batch > 0);
 
-        $this->components->info(sprintf('Deleted %d expired idempotency receipt(s).', $deleted));
+        $this->components->info(sprintf('Processed %d expired idempotency receipt(s).', $processed));
 
         return self::SUCCESS;
     }

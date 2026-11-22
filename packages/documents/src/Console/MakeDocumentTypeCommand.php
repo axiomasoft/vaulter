@@ -43,7 +43,7 @@ final class MakeDocumentTypeCommand extends Command
         $class = $studly.'DocumentType';
         $directory = app_path('Vaulter/DocumentTypes');
         $path = sprintf('%s/%s.php', $directory, $class);
-        if (!(bool) $this->option('force') && $this->files->exists($path)) {
+        if (!$this->option('force') && $this->files->exists($path)) {
             $this->components->error(sprintf('Document type [App\Vaulter\DocumentTypes\%s] already exists. Pass --force to overwrite.', $class));
 
             return self::FAILURE;
@@ -56,7 +56,7 @@ final class MakeDocumentTypeCommand extends Command
             $this->files->get(__DIR__.'/../../stubs/document-type.stub'),
         ));
 
-        $this->writeTest($class, 'App\\Vaulter\\DocumentTypes\\'.$class, (bool) $this->option('force'));
+        $this->writeTest($class, 'App\\Vaulter\\DocumentTypes\\'.$class, $this->option('force'));
         $this->components->task(sprintf('Document type app/Vaulter/DocumentTypes/%s.php', $class));
         $this->newLine();
         $this->line("Register it in <info>config/vaulter-documents.php</info> under 'types':");

@@ -234,12 +234,12 @@ it('лок двух РАЗНЫХ upload_id, коллизирующих по 32-�
     // в самой PG: 300k проб по пространству 2^32 → ~10 коллизий по парадоксу дней рождения.
     $collision = DB::selectOne(<<<'SQL'
         WITH s AS (
-            SELECT gen_random_uuid()::text AS id FROM generate_series(1, 300000)
+            SELECT md5(i::text)::uuid::text AS id FROM generate_series(1, 300000) AS probe(i)
         ), h AS (
             SELECT id, hashtext('upload:' || id) AS hv FROM s
         )
         SELECT (array_agg(id))[1] AS left_id, (array_agg(id))[2] AS right_id
-        FROM h GROUP BY hv HAVING count(*) > 1 LIMIT 1
+        FROM h GROUP BY hv HAVING count(*) > 1 ORDER BY hv LIMIT 1
     SQL);
 
     expect($collision)->not->toBeNull('Не нашлось коллизии hashtext — увеличьте выборку.');
