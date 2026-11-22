@@ -1,0 +1,128 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2, "blockId": "blk_title" },
+      "content": [{ "type": "text", "text": "Spec title" }]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "blockId": "blk_intro" },
+      "content": [
+        {
+          "type": "text",
+          "text": "the spec",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://example.test/spec",
+                "target": "_blank",
+                "rel": "nofollow",
+                "class": "spec-link",
+                "title": "Spec link"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "blockId": "blk_marked" },
+      "content": [
+        {
+          "type": "text",
+          "text": "marked",
+          "marks": [{ "type": "bold" }, { "type": "italic" }, { "type": "underline" }]
+        }
+      ]
+    },
+    {
+      "type": "orderedList",
+      "attrs": { "start": 2, "type": "1" },
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "blockId": "blk_item" },
+              "content": [{ "type": "text", "text": "Second item" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "attrs": {
+        "src": "https://cdn.example.test/spec.png",
+        "alt": "Spec image",
+        "title": "Spec image title",
+        "width": 120,
+        "height": 80
+      }
+    },
+    {
+      "type": "table",
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": { "colspan": 1, "rowspan": 1, "colwidth": null, "align": null },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": { "blockId": "blk_th" },
+                  "content": [{ "type": "text", "text": "Head" }]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "attrs": { "colspan": 1, "rowspan": 1, "colwidth": null, "align": null },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": { "blockId": "blk_th2" },
+                  "content": [{ "type": "text", "text": "Col" }]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": { "colspan": 1, "rowspan": 1, "colwidth": null, "align": "left" },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": { "blockId": "blk_td" },
+                  "content": [{ "type": "text", "text": "Alpha" }]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": { "colspan": 1, "rowspan": 1, "colwidth": null, "align": "left" },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": { "blockId": "blk_td2" },
+                  "content": [{ "type": "text", "text": "Beta" }]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
