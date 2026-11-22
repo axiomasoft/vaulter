@@ -1,6 +1,6 @@
 # Репозиторий `vaulter-editor-pro` (Review, Comments, Compare и DOCX)
 
-- **Git-репозиторий:** `axiomasoft/vaulter-editor-pro` (новый закрытый репозиторий; пишется с нуля по результатам `plan/tiptap-pro/` как собственная замена Tiptap Pro без зависимости от Tiptap Cloud/Pro)
+- **Git-репозиторий:** `axiomasoft/vaulter-editor-pro` (создан: `https://github.com/axiomasoft/vaulter-editor-pro`, локально `/home/vostrikov/projects/packages/vaulter-editor-pro`; пишется с нуля по результатам `plan/tiptap-pro/` как собственная замена Tiptap Pro без зависимости от Tiptap Cloud/Pro)
 - **Канал поставки:** Private / Proprietary (`FlexCrm`, `Edufy`)
 - **План разработки:** [dev-plans/vaulter-editor-pro.md](../dev-plans/vaulter-editor-pro.md)
 

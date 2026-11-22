@@ -40,5 +40,6 @@ CREATE TABLE v_sheets_commands (
 );
 CREATE INDEX v_sheets_commands_reclaim_idx ON v_sheets_commands (lease_until, created_at) WHERE state = 'running';
 CREATE INDEX v_sheets_commands_expiry_idx ON v_sheets_commands (replay_until) WHERE state IN ('committed','rejected');
+CREATE INDEX v_sheets_commands_evidence_blob_fk_idx ON v_sheets_commands (evidence_blob_id);
 
 COMMIT;

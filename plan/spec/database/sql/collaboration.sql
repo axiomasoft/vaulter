@@ -4,6 +4,7 @@ BEGIN;
 CREATE TABLE v_collaboration_heads (
     document_id uuid NOT NULL,
     generation bigint NOT NULL DEFAULT '0'::bigint,
+    protocol character varying(64) NOT NULL DEFAULT 'yjs/2'::character varying,
     head_seq bigint NOT NULL DEFAULT '0'::bigint,
     checkpoint_seq bigint NOT NULL DEFAULT '0'::bigint,
     checkpoint_version bigint NOT NULL DEFAULT '0'::bigint,
@@ -15,6 +16,7 @@ CREATE TABLE v_collaboration_heads (
     retired_at timestamp(0) without time zone,
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
+    CONSTRAINT v_collaboration_heads_protocol_check CHECK ((protocol ~ '[^[:space:]]'::text)),
     CONSTRAINT v_collaboration_heads_checkpoint_seq_check CHECK (checkpoint_seq BETWEEN 0 AND head_seq),
     CONSTRAINT v_collaboration_heads_compaction_lease CHECK (
         (lease_token IS NULL AND lease_owner IS NULL AND lease_expires_at IS NULL AND lease_through_seq IS NULL)

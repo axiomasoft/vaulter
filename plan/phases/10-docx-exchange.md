@@ -6,7 +6,7 @@
 
 **После** — 1.0, 3.1.
 
-1. В `vaulter-editor-pro/packages/docx` (`@vaulter/editor-pro-docx`) зафиксировать версии OSS XML/ZIP/OOXML библиотек и реализовать версионированный mapping `Tiptap JSON/review ↔ intermediate model ↔ OOXML` с машинно-читаемым отчётом потерь `{profile, source_marker, diagnostics}`.
+1. В `vaulter-editor-pro/packages/docx` (`@vaulter/editor-pro-docx`) зафиксировать пермиссивный изоморфный TS-стек (`docx@9.16.0`, `fflate@0.8.3`, `yauzl@3.4.0`, `saxes@6.0.0` / `fast-xml-parser >= 5.3.5` с `processEntities: false`; `mammoth` и `unzipper` запрещены) и реализовать версионированный mapping `Tiptap JSON/review ↔ intermediate model ↔ OOXML` с машинно-читаемым отчётом потерь `{profile, source_marker, diagnostics}` и генерацией `w14:paraId` / `durableId` строго в диапазоне `00000001..7FFFFFFF` со связкой последнего `<w:p>` в `commentsExtended.xml`/`commentsIds.xml`.
 2. Подготовить синтетический корпус D1 (body/table: widths, header row, 2×2 merge, bold/link), D2 (sections: default/first/even headers/footers, inheritance, page break), D3 (discussions: range replies/resolve, detached, legacy) и D4 (revisions: insert/delete/replace, group metadata, loss report для native formatting revision). Профили D3/D4 включаются после 8.1/8.2 соответственно.
 3. В `packages/vue` (`@vaulter/editor-pro-vue`) добавить локальный экспорт подтверждённой доступной версии с выбором профиля и preview предупреждений без сетевых запросов (проверка через fetch trap).
 
@@ -19,7 +19,7 @@
 
 1. В `vaulter-editor-pro/packages/exchange` (`axiomasoft/vaulter-editor-pro-exchange`) реализовать миграцию `v_document_exchange_jobs` по [DDL](../spec/database/sql/editor-pro-exchange.sql), очередь с lease/fencing, удержание исходного Media blob и неизменяемый output artifact.
 2. Реализовать маршруты `POST /documents/{id}/exchange-jobs`, `GET …/{job}`, `GET …/{job}/file` (с повторной проверкой прав View/export/history) и `POST …/{job}/apply` (атомарное применение через `AtomicDocumentMutation` в snapshot или `CommandJournal` в journal после 3.5 с отдельным `command_id` и контролем поколения).
-3. Ограничить размер распаковки, число entries и отключить external relationships / XXE до разбора архива. В `packages/vue` добавить UI загрузки, статуса после reconnect, отчёта потерь и явного подтверждения apply.
+3. До распаковки и разбора архива DOCX жёстко проверять пути (запрет `..` и ведущих `/`), внешние UNIX-атрибуты ZIP (запрет симлинков `S_IFLNK`), лимиты размера распаковки/коэффициента сжатия/числа entries (Zip-bomb) и отключать external relationships / XXE ([стандарты](../spec/engineering-standards.md#36-s3-карантин-clamav-instream-cas-аренды-и-безопасность-архивов)). В `packages/vue` добавить UI загрузки, статуса после reconnect, отчёта потерь и явного подтверждения apply.
 
 - **10.2-A** Roundtrip import/export, kill worker после записи Media до ссылки (GC убирает orphan, повтор завершает один job), повтор apply и потеря ответа после owner commit возвращают прежнюю квитанцию без дублирования.
-- **10.2-B** Устаревший preview после изменения головы даёт конфликт; битый архив или external rel отклоняются без изменения документа; отзыв прав перед скачиванием или apply закрывает доступ.
+- **10.2-B** Устаревший preview после изменения головы даёт конфликт; битый архив, ZIP с симлинком `S_IFLNK` / Zip Slip или external rel отклоняются до разбора без изменения документа; отзыв прав перед скачиванием или apply закрывает доступ.

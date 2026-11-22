@@ -128,6 +128,7 @@ CREATE INDEX v_document_revisions_history_idx ON v_document_revisions USING btre
 CREATE INDEX v_document_revisions_restored_from_revision_id_index ON v_document_revisions USING btree (restored_from_revision_id);
 CREATE INDEX v_document_revisions_tenant_id_index ON v_document_revisions USING btree (tenant_id);
 CREATE INDEX v_documents_current_revision_id_index ON v_documents USING btree (current_revision_id);
+CREATE INDEX v_documents_head_fk_idx ON v_documents USING btree (current_revision_id, id);
 CREATE INDEX v_documents_node_id_index ON v_documents USING btree (node_id);
 CREATE INDEX v_documents_tenant_id_index ON v_documents USING btree (tenant_id);
 CREATE INDEX v_documents_type_idx ON v_documents USING btree (type);

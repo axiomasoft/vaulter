@@ -28,7 +28,7 @@ CREATE TABLE v_sheets_exchange_jobs (
     keep_until timestamptz NOT NULL,
     UNIQUE (tenant_id, project_scope, subject_type, subject_id, document_id, request_key),
     FOREIGN KEY (document_id, generation, result_receipt_id)
-        REFERENCES v_sheets_commands(document_id, generation, receipt_id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+        REFERENCES v_sheets_commands(document_id, generation, receipt_id) ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE,
     CHECK ((kind = 'import' AND state = 'succeeded') = (result_receipt_id IS NOT NULL)),
     CHECK (kind <> 'export' OR state <> 'succeeded' OR output_blob_id IS NOT NULL),
     CHECK ((worker_token IS NULL) = (lease_until IS NULL)),
@@ -39,5 +39,9 @@ CREATE TABLE v_sheets_exchange_jobs (
 );
 CREATE INDEX v_sheets_exchange_work_idx ON v_sheets_exchange_jobs (state, lease_until, created_at) WHERE state IN ('queued','running');
 CREATE INDEX v_sheets_exchange_gc_idx ON v_sheets_exchange_jobs (keep_until) WHERE state IN ('succeeded','failed');
+CREATE INDEX v_sheets_exchange_jobs_doc_fk_idx ON v_sheets_exchange_jobs (document_id, created_at DESC);
+CREATE INDEX v_sheets_exchange_jobs_receipt_fk_idx ON v_sheets_exchange_jobs (document_id, generation, result_receipt_id);
+CREATE INDEX v_sheets_exchange_jobs_source_blob_fk_idx ON v_sheets_exchange_jobs (source_blob_id);
+CREATE INDEX v_sheets_exchange_jobs_output_blob_fk_idx ON v_sheets_exchange_jobs (output_blob_id);
 
 COMMIT;

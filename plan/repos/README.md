@@ -5,8 +5,8 @@
 | Репозиторий | Статус | Канал | Назначение | Паспорт | План разработки |
 | --- | --- | --- | --- | --- | --- |
 | `vaulter` | Существует (чистка) | Public (FlexCms) | Базовая платформа: Core, Media, Drive, Documents, публичный Vue/Tiptap | [vaulter.md](vaulter.md) | [dev-plans/vaulter.md](../dev-plans/vaulter.md) |
-| `vaulter-collaboration` | Новый (вынос из `vaulter`) | Private | Совместный текст: PHP-журнал, Vue-адаптер, Hocuspocus Hub, strict live-write | [vaulter-collaboration.md](vaulter-collaboration.md) | [dev-plans/vaulter-collaboration.md](../dev-plans/vaulter-collaboration.md) |
-| `vaulter-sheets` | Новый (перенос 1.1 + с нуля) | Private | Электронные книги: PHP Sheets, Vue editor, Node runtime, realtime, Tiptap link | [vaulter-sheets.md](vaulter-sheets.md) | [dev-plans/vaulter-sheets.md](../dev-plans/vaulter-sheets.md) |
+| `vaulter-collaboration` | Новый (вынос из `vaulter`) | Private | Универсальный движок совместных комнат (`protocol`: `yjs/2`, `univer-sheets/1`, будущие `univer-docs/1`/`slides`), PHP-журнал/fencing/JWT, Vue-адаптер и Hocuspocus Hub | [vaulter-collaboration.md](vaulter-collaboration.md) | [dev-plans/vaulter-collaboration.md](../dev-plans/vaulter-collaboration.md) |
+| `vaulter-sheets` | Новый (перенос 1.1 + с нуля) | Private | Электронные книги на Univer OSS (Apache-2.0): PHP Sheets, Vue editor, Node runtime (CAS-вынос >512 КБ), Zero-Pro realtime поверх `vaulter-collaboration`, Tiptap link | [vaulter-sheets.md](vaulter-sheets.md) | [dev-plans/vaulter-sheets.md](../dev-plans/vaulter-sheets.md) |
 | `vaulter-ai` | Новый (с нуля) | Private | Офисный AI SDK v1, P/Q согласование, возобновляемый AI-чат SSE, исполнители | [vaulter-ai.md](vaulter-ai.md) | [dev-plans/vaulter-ai.md](../dev-plans/vaulter-ai.md) |
 | `vaulter-editor-pro` | Новый (с нуля) | Private | Замена Tiptap Pro: Range Comments, Compare, Tracked Changes, DOCX import/export | [vaulter-editor-pro.md](vaulter-editor-pro.md) | [dev-plans/vaulter-editor-pro.md](../dev-plans/vaulter-editor-pro.md) |
 
@@ -22,6 +22,7 @@ flowchart TD
 
     VC --> V
     VS --> V
+    VS -. "опц. unified realtime journal (6.1)" .-> VC
     VE --> V
     VE -. "опц. live journal (8.3 / 10.2)" .-> VC
     VA --> V

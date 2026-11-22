@@ -422,6 +422,7 @@ CREATE INDEX v_file_revisions_sha256_index ON v_file_revisions USING btree (sha2
 CREATE INDEX v_file_revisions_status_index ON v_file_revisions USING btree (status);
 CREATE INDEX v_file_revisions_tenant_id_index ON v_file_revisions USING btree (tenant_id);
 CREATE INDEX v_files_current_revision_id_index ON v_files USING btree (current_revision_id);
+CREATE INDEX v_files_head_fk_idx ON v_files USING btree (current_revision_id, id);
 CREATE INDEX v_files_node_id_index ON v_files USING btree (node_id);
 CREATE INDEX v_files_tenant_id_index ON v_files USING btree (tenant_id);
 CREATE INDEX v_node_grants_expires_at_index ON v_node_grants USING btree (expires_at);

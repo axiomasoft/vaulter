@@ -66,6 +66,8 @@ CREATE TABLE v_document_suggestions (
 );
 CREATE INDEX v_document_suggestions_doc_open
     ON v_document_suggestions (document_id, generation, group_id) WHERE state = 'open';
+CREATE INDEX v_document_suggestions_doc_fk_idx
+    ON v_document_suggestions (document_id, generation);
 CREATE INDEX v_document_suggestions_proposal
     ON v_document_suggestions (proposal_id) WHERE proposal_id IS NOT NULL;
 

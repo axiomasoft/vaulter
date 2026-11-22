@@ -40,21 +40,25 @@ install_modules office webhooks collaboration
 "${psql[@]}" -d office -f "$root/plan/checks/collaboration/lease-schema.sql"
 echo 'OK collaboration before agent extension: checkpoint 41 preserves pending update 42'
 install_modules office collaboration-agent sheets sheets-exchange sheets-projections sheets-realtime ai-documents ai-core ai-chat editor-pro-review editor-pro-exchange
-count_tables office 72 all-packages
+count_tables office 71 all-packages
 "${psql[@]}" -d office -f "$root/plan/checks/collaboration/command-schema.sql"
 "${psql[@]}" -d office -f "$root/plan/checks/database/sheets.sql"
 "${psql[@]}" -d office -f "$root/plan/checks/database/ai.sql"
+"${psql[@]}" -d office -f "$root/plan/checks/database/unindexed-fks.sql"
 "$bin/createdb" ai_service
 install_modules ai_service ai-core
 count_tables ai_service 10 independent-ai-core
 install_modules ai_service ai-chat
 count_tables ai_service 14 independent-ai-core-with-chat
+"${psql[@]}" -d ai_service -f "$root/plan/checks/database/unindexed-fks.sql"
 "$bin/createdb" editor_pro_owner
 install_modules editor_pro_owner "${base[@]}" editor-pro-review editor-pro-exchange
 count_tables editor_pro_owner 35 editor-pro-without-ai-or-sheets
+"${psql[@]}" -d editor_pro_owner -f "$root/plan/checks/database/unindexed-fks.sql"
 "$bin/createdb" content_owner
 install_modules content_owner "${base[@]}" ai-documents
 count_tables content_owner 35 text-owner-without-ai-core
+"${psql[@]}" -d content_owner -f "$root/plan/checks/database/unindexed-fks.sql"
 "$bin/createdb" book_owner
 install_modules book_owner "${base[@]}" sheets
 count_tables book_owner 32 book-commands-only
@@ -63,4 +67,5 @@ count_tables book_owner 39 book-projections-without-exchange-ai-or-realtime
 install_modules book_owner sheets-exchange
 count_tables book_owner 40 book-owner-with-exchange-without-ai-and-realtime
 "${psql[@]}" -d book_owner -f "$root/plan/checks/database/sheets.sql"
-echo 'OK documents, live commands, books and AI constraints; isolated installations.'
+"${psql[@]}" -d book_owner -f "$root/plan/checks/database/unindexed-fks.sql"
+echo 'OK documents, live commands, books, AI constraints, and 0 unindexed FKs; isolated installations.'

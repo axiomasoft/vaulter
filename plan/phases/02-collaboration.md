@@ -4,14 +4,14 @@
 
 ### 2.0 Вынести коллаборацию в закрытый репозиторий
 
-**После** — 0.1.
+**После** — 0.1, 0.3.
 
-1. Создать закрытый репозиторий `vaulter-collaboration` и перенести в него `packages/collaboration` (`axiomasoft/vaulter-collaboration`), `packages/vue-collaboration` (`@vaulter/vue-collaboration`), `packages/collaboration/hub` → `packages/hub` (`ghcr.io/axiomasoft/vaulter-collaboration-hub`) и коллаборационный стенд `e2e/` (`CollabEditor.vue`, `collab.spec.ts`, `docker-compose.yml`).
-2. Проверить установку пары архивов «публичный `vaulter` + закрытый `vaulter-collaboration`» в изолированном потребителе. После подтверждения удалить приватные пакеты коллаборации, legacy-каталоги `hocuspocus-server/` и `packages/azgard/` (если не в `release/packages.json`) и приватные записи из `release/packages.json` в `vaulter`.
-3. Обновить `composer.json`, `package.json` и `scripts/release/archive-check.php` в `vaulter`, чтобы базовый репозиторий не содержал приватного кода коллаборации и собирался полностью автономно для FlexCms.
+1. Создать закрытый репозиторий `vaulter-collaboration` и перенести в него `packages/collaboration` (`axiomasoft/vaulter-collaboration`), `packages/vue-collaboration` (`@vaulter/vue-collaboration`), `packages/collaboration/hub` → `packages/hub` (`ghcr.io/axiomasoft/vaulter-collaboration-hub`, в Dockerfile обязательно установить `libatomic1`/`libatomic` для Node 26 LTS) и коллаборационный стенд `e2e/` (`CollabEditor.vue`, `collab.spec.ts`, `docker-compose.yml`).
+2. Заменить 217-байтовые заглушки полноценными руководствами `docs/guides/collaboration.md` и `docs/guides/hub.md` (EN + RU) внутри `vaulter-collaboration`: Room Capability JWT, `protocol=2`, бинарное хранение Yjs (`bytea`, запрет JSON round-trip пересоздания `Y.Doc`), compaction lease, epoch fencing (`4409`), отзыв прав и строгий профиль `3.5`. Проверить установку пары архивов «публичный `vaulter` + закрытый `vaulter-collaboration`» в изолированном потребителе. После подтверждения удалить приватные пакеты коллаборации, legacy-каталоги `hocuspocus-server/` и `packages/azgard/` (если не в `release/packages.json`) и приватные записи из `release/packages.json` в `vaulter`.
+3. Обновить `composer.json`, `package.json`, CI-стоп-краны по [engineering-standards.md](../spec/engineering-standards.md) и `scripts/release/archive-check.php` в `vaulter`, чтобы базовый репозиторий не содержал приватного кода коллаборации и собирался полностью автономно для FlexCms.
 
 - **2.0-A** Базовый `vaulter` собирается и проходит тесты без закрытого кода коллаборации; в `release/packages.json` `vaulter` остаются только публичные пакеты.
-- **2.0-B** Закрытый `vaulter-collaboration` собирает все три артефакта (`axiomasoft/vaulter-collaboration`, `@vaulter/vue-collaboration`, образ Hub), проходит собственные unit-тесты (Vue Collaboration + Hub) и устанавливается поверх публичных архивов `vaulter`.
+- **2.0-B** Закрытый `vaulter-collaboration` собирает все три артефакта (`axiomasoft/vaulter-collaboration`, `@vaulter/vue-collaboration`, образ Hub на Node 26.13+ с `libatomic`), содержит полную документацию `docs/guides/{collaboration,hub}.md`, проходит собственные unit-тесты (Vue Collaboration + Hub) и устанавливается поверх публичных архивов `vaulter`.
 
 ### 2.1 Исправить версию при открытии WebSocket
 

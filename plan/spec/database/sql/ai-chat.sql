@@ -33,6 +33,8 @@ CREATE TABLE v_ai_chat_messages (
 );
 CREATE UNIQUE INDEX v_ai_chat_messages_run
     ON v_ai_chat_messages (run_id) WHERE role = 'user' AND run_id IS NOT NULL;
+CREATE INDEX v_ai_chat_messages_run_fk_idx
+    ON v_ai_chat_messages (run_id);
 
 CREATE TABLE v_ai_chat_events (
     session_id uuid NOT NULL REFERENCES v_ai_chat_sessions(session_id) ON DELETE CASCADE,
@@ -50,7 +52,7 @@ CREATE TABLE v_ai_chat_events (
     PRIMARY KEY (session_id, seq),
     CHECK ((key_id IS NULL) = (encrypted_payload IS NULL))
 );
-CREATE INDEX v_ai_chat_events_run ON v_ai_chat_events (run_id, seq) WHERE run_id IS NOT NULL;
+CREATE INDEX v_ai_chat_events_run ON v_ai_chat_events (run_id, seq);
 
 CREATE TABLE v_ai_tool_calls (
     run_id uuid NOT NULL REFERENCES v_ai_runs(run_id) ON DELETE CASCADE,
@@ -75,5 +77,9 @@ CREATE TABLE v_ai_tool_calls (
 );
 CREATE INDEX v_ai_tool_calls_lease
     ON v_ai_tool_calls (lease_until, run_id, call_id) WHERE lease_until IS NOT NULL;
+CREATE INDEX v_ai_tool_calls_proposal_fk_idx
+    ON v_ai_tool_calls (proposal_id);
+CREATE INDEX v_ai_tool_calls_step_fk_idx
+    ON v_ai_tool_calls (run_id, step_id);
 
 COMMIT;

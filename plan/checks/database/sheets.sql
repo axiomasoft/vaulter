@@ -31,10 +31,10 @@ BEGIN
         (doc_a,73,node_a,'vaulter/spreadsheet',2),
         (doc_b,73,node_b,'vaulter/spreadsheet',2);
     UPDATE v_documents SET collab_epoch=2, state_version=4 WHERE id=doc_a;
-    IF to_regclass('v_sheets_realtime_epochs') IS NOT NULL THEN
+    IF to_regclass('v_sheets_realtime_links') IS NOT NULL THEN
         UPDATE v_documents SET write_mode='journal' WHERE id=doc_a;
-        INSERT INTO v_sheets_realtime_epochs(document_id,generation,profile_id,fence,owner_id,lease_until,checkpoint_position,checkpoint,checkpoint_sha256)
-        VALUES(doc_a,2,'fixture',1,worker,now()+interval '1 minute',4,decode('01','hex'),repeat('a',64));
+        INSERT INTO v_collaboration_heads(document_id,generation,protocol,profile,owner_fence,owner_id,owner_expires_at,head_seq,checkpoint_seq,checkpoint_version)
+        VALUES(doc_a,2,'univer-sheets/1','strict',1,worker,now()+interval '1 minute',0,0,4);
     END IF;
     INSERT INTO v_sheets_projection_builds(
         id,document_id,generation,source_position,source_sha256,projector_version,profile_id,locale,state,completed_at,calculated_position
@@ -122,19 +122,24 @@ BEGIN
         SET CONSTRAINTS ALL IMMEDIATE;
         RAISE EXCEPTION 'exchange job bound to another workbook receipt';
     EXCEPTION WHEN foreign_key_violation THEN NULL; END;
-    IF to_regclass('v_sheets_realtime_epochs') IS NOT NULL THEN
-        UPDATE v_sheets_realtime_epochs SET head_seq=1 WHERE document_id=doc_a AND generation=2 AND fence=1 AND owner_id=worker AND head_seq=0;
+    IF to_regclass('v_sheets_realtime_links') IS NOT NULL THEN
+        UPDATE v_collaboration_heads SET head_seq=1
+        WHERE document_id=doc_a AND generation=2 AND protocol='univer-sheets/1' AND owner_fence=1 AND owner_id=worker AND head_seq=0;
         GET DIAGNOSTICS affected = ROW_COUNT;
         ASSERT affected=1, 'current writer lost its head';
-        INSERT INTO v_sheets_realtime_changes(document_id,generation,seq,mutation_id,payload,payload_sha256,source_position,receipt_id,fence)
-        VALUES(doc_a,2,1,'native-1',decode('ac','hex'),repeat('a',64),5,receipt,1);
-        UPDATE v_sheets_realtime_epochs SET fence=2,owner_id=uuidv7() WHERE document_id=doc_a AND generation=2 AND fence=1;
-        UPDATE v_sheets_realtime_epochs SET head_seq=2 WHERE document_id=doc_a AND generation=2 AND fence=1 AND owner_id=worker;
+        INSERT INTO v_collaboration_updates(document_id,generation,seq,update_id,payload,sha256)
+        VALUES(doc_a,2,1,'00000000-0000-7000-8000-000000000001',decode('ac','hex'),repeat('a',64));
+        INSERT INTO v_sheets_realtime_links(document_id,generation,seq,source_position,receipt_id,fence)
+        VALUES(doc_a,2,1,5,receipt,1);
+        UPDATE v_collaboration_heads SET owner_fence=2,owner_id=uuidv7()
+        WHERE document_id=doc_a AND generation=2 AND protocol='univer-sheets/1' AND owner_fence=1;
+        UPDATE v_collaboration_heads SET head_seq=2
+        WHERE document_id=doc_a AND generation=2 AND protocol='univer-sheets/1' AND owner_fence=1 AND owner_id=worker;
         GET DIAGNOSTICS affected = ROW_COUNT;
-        ASSERT affected=0, 'old fence advanced the log';
+        ASSERT affected=0, 'old fence advanced the unified collaboration log';
         BEGIN
-            INSERT INTO v_sheets_realtime_changes(document_id,generation,seq,mutation_id,payload,payload_sha256,source_position,receipt_id,fence)
-            VALUES(doc_a,2,2,'native-1',decode('ac','hex'),repeat('a',64),5,receipt,2);
+            INSERT INTO v_collaboration_updates(document_id,generation,seq,update_id,payload,sha256)
+            VALUES(doc_a,2,2,'00000000-0000-7000-8000-000000000001',decode('ac','hex'),repeat('a',64));
             RAISE EXCEPTION 'physical replay was appended twice';
         EXCEPTION WHEN unique_violation THEN NULL; END;
     END IF;

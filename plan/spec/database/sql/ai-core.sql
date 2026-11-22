@@ -94,6 +94,8 @@ CREATE TABLE v_ai_owner_routes (
 CREATE UNIQUE INDEX v_ai_routes_by_receipt
     ON v_ai_owner_routes (tenant_id, project_scope, effective_subject, resource_id, receipt_id) WHERE receipt_id IS NOT NULL;
 CREATE INDEX v_ai_routes_dedupe_until ON v_ai_owner_routes (dedupe_until);
+CREATE INDEX v_ai_owner_routes_proposal_fk_idx
+    ON v_ai_owner_routes (tenant_id, project_scope, effective_subject, resource_id, proposal_id);
 
 CREATE TABLE v_ai_dispatches (
     event_id uuid PRIMARY KEY DEFAULT uuidv7(),

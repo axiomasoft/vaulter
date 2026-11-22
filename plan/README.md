@@ -5,12 +5,12 @@
 | Репозиторий | Поставка и назначение | Паспорт | План разработки |
 | --- | --- | --- | --- |
 | `vaulter` | Чистая публичная база для FlexCms: Core, Media, Drive, Documents (`write_mode`, `blockId`, `AtomicDocumentMutation`), публичный `@vaulter/vue` и одиночный Tiptap | [repos/vaulter.md](repos/vaulter.md) | [dev-plans/vaulter.md](dev-plans/vaulter.md) |
-| `vaulter-collaboration` | Закрытая совместная работа текста (вынос из `vaulter`): PHP-журнал, `@vaulter/vue-collaboration`, Hocuspocus Hub, strict live-write A42 | [repos/vaulter-collaboration.md](repos/vaulter-collaboration.md) | [dev-plans/vaulter-collaboration.md](dev-plans/vaulter-collaboration.md) |
-| `vaulter-sheets` | Закрытые электронные книги: PHP Sheets, `@vaulter/sheets-vue`, Node runtime, XLSX/CSV, realtime и Tiptap `WorkbookReference` | [repos/vaulter-sheets.md](repos/vaulter-sheets.md) | [dev-plans/vaulter-sheets.md](dev-plans/vaulter-sheets.md) |
+| `vaulter-collaboration` | Единый протокольно-нейтральный движок совместных комнат (`yjs/2`, `univer-sheets/1`, будущие `univer-docs/1`/`slides`): PHP-журнал/fencing/JWT, `@vaulter/vue-collaboration`, Hocuspocus Hub, strict live-write A42 | [repos/vaulter-collaboration.md](repos/vaulter-collaboration.md) | [dev-plans/vaulter-collaboration.md](dev-plans/vaulter-collaboration.md) |
+| `vaulter-sheets` | Закрытые электронные книги на Univer OSS (Apache-2.0): PHP Sheets, `@vaulter/sheets-vue`, Node runtime (CAS-вынос > 512 КБ), Zero-Pro XLSX/CSV, realtime поверх `vaulter-collaboration` и Tiptap `WorkbookReference` | [repos/vaulter-sheets.md](repos/vaulter-sheets.md) | [dev-plans/vaulter-sheets.md](dev-plans/vaulter-sheets.md) |
 | `vaulter-ai` | Закрытый Office SDK v1, адаптеры (documents/sheets/collaboration), P/Q согласование, возобновляемый AI-чат SSE, Laravel AI, AgenTools, Python-клиент | [repos/vaulter-ai.md](repos/vaulter-ai.md) | [dev-plans/vaulter-ai.md](dev-plans/vaulter-ai.md) |
 | `vaulter-editor-pro` | Закрытая собственная замена Tiptap Pro: History Preview/Compare, Range Comments, Tracked Changes / Structural Review, DOCX import/export | [repos/vaulter-editor-pro.md](repos/vaulter-editor-pro.md) | [dev-plans/vaulter-editor-pro.md](dev-plans/vaulter-editor-pro.md) |
 
-Долгосрочный ориентир — офис уровня Univer.ai для документов и книг без зависимости от Tiptap Pro/Cloud. Первый сквозной результат — агент по поручению пользователя меняет условие договора или заполняет выбранные строки формулами и возвращает проверяемую квитанцию. Приёмка проходит в изолированных потребителях. Подключение к продуктовым приложениям (FlexCms, FlexCrm, Edufy) относится к последующим работам.
+Долгосрочный ориентир — собственный коммерчески независимый аналог **Google Workspace** (Docs, Sheets, Slides и AI-агенты) на **100% пермиссивном открытом стеке (MIT / Apache-2.0 / BSD / ISC)** без лицензионных отчислений сторонним вендорам (без Tiptap Pro/Cloud, `@univerjs-pro/*`, Handsontable, HyperFormula и GPL/AGPL). Продуктовая граница: **FlexCms** (открытая коробка) устанавливает только публичный `vaulter` (одиночный редактор без Hub/Excel/AI/Editor Pro), а закрытые продукты (**FlexCrm**, **Edufy**) подключают нужные закрытые репозитории поверх единого движково-независимого хранилища (`v_documents` + `v_document_payloads` / CAS-вынос > 512 КБ + проекции) и единого протокольно-нейтрального PHP-движка коллаборации (`vaulter-collaboration`: `yjs/2`, `univer-sheets/1`, с возможностью без переделки БД и бэкенда подключать в будущем `univer-docs/1` и `univer-slides/1`). Первый сквозной результат — агент по поручению пользователя меняет условие договора или заполняет выбранные строки формулами и возвращает проверяемую квитанцию. Приёмка проходит в изолированных потребителях. Подключение к продуктовым приложениям (FlexCms, FlexCrm, Edufy) относится к последующим работам.
 
 ## Фазы (`00–10`)
 
@@ -18,7 +18,7 @@
 
 | Фаза | Сдаваемый результат |
 | --- | --- |
-| [0. Исходное состояние](phases/00-baseline.md) | Установка из архивов, контрольные сценарии и исходная схема БД |
+| [0. Исходное состояние](phases/00-baseline.md) | Установка из архивов, контрольные сценарии, исходная схема БД и инженерное укрепление базы (`0.3`: 64-bit locks, ETag/proxy, SSRF, ZIP `S_IFLNK`, CI stop-rails) |
 | [1. Документы](phases/01-documents.md) | Универсальная голова документа (`write_mode`) и типизированные данные, перенос пакета книги, чистый базовый редактор |
 | [2. Коллаборация](phases/02-collaboration.md) | Вынос `vaulter-collaboration`, исправление `protocol=2`, два пишущих браузера, compaction lease, рестарт и восстановление поколения |
 | [3. Текстовый SDK](phases/03-text-sdk.md) | Адресуемые блоки `blockId`, API агента, квитанции, исполнители и отдельно доказанная запись в живую комнату (A42) |
@@ -36,8 +36,9 @@
 | --- | --- |
 | [repos/README.md](repos/README.md) | Короткие паспорта всех 5 репозиториев: имена, пакеты, границы и зависимости |
 | [dev-plans/](dev-plans/vaulter.md) | Автономные планы разработки для каждого из 5 репозиториев |
-| [execution/models-and-orchestration.md](execution/models-and-orchestration.md) | Назначение моделей (**Astra**, **GPT-6.2 Sol**, **Gemini Neon**, **Gemini Carbon**, **Gemini Argon**), волны W0–W7, handoff и порядок ревью |
-| [audit-report.md](audit-report.md) | Реестр найденных и закрытых дыр плана |
+| [execution/models-and-orchestration.md](execution/models-and-orchestration.md) | Глобальная оркестрация (`SKM orch.py` + `Antigravity run_workflow`), 4 эшелона моделей (**Grok**, **Gemini Neon**, **GPT-6.2 Sol**, **Astra**), жёсткое `Исполнитель ≠ Ревьюер`, волны W0–W7, треки `MVP-1`/`MVP-2` и протокол анти-залипания (Max-2 цикла + [polish-backlog.md](polish-backlog.md)) |
+| [audit-report.md](audit-report.md) | Реестр найденных и закрытых дыр плана и согласование внешнего архитектурного аудита |
+| [spec/engineering-standards.md](spec/engineering-standards.md) | Матрица рантаймов 2026 (PHP 8.4/8.5, Laravel 13, PG 18/19, Node 26 LTS + `libatomic`, Vue 3.5, Filament 5), 10 постоянных стоп-кранов CI, RLS/PgBouncer/Octane, S3/ClamAV/ZIP и таблица согласования аудита |
 | [spec/implementation/vaulter.md](spec/implementation/vaulter.md) | Существующие PHP/Vue/Hub файлы, изменения и владельцы, переносы и удаления |
 | [spec/implementation/sheets.md](spec/implementation/sheets.md) | Целевое дерево `vaulter-sheets`, PHP/Node/Vue, realtime, ссылки и XLSX |
 | [spec/implementation/ai.md](spec/implementation/ai.md) | Целевое дерево `vaulter-ai`, порты, очереди, возобновляемый AI-чат SSE, Laravel AI, AgenTools, Python |

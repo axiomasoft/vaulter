@@ -86,7 +86,7 @@ CREATE TABLE v_collaboration_commands (
 CREATE INDEX v_collaboration_commands_pending
     ON v_collaboration_commands (document_id, generation, registered_at, id) WHERE state = 'running';
 CREATE INDEX v_collaboration_commands_doc_fk
-    ON v_collaboration_commands (document_id) WHERE document_id IS NOT NULL;
+    ON v_collaboration_commands (document_id);
 CREATE INDEX v_collaboration_commands_expiring
     ON v_collaboration_commands (evidence_expires_at, id)
     WHERE state = 'committed' AND redacted_at IS NULL;

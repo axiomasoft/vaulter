@@ -41,5 +41,11 @@ CREATE INDEX v_document_exchange_jobs_queue
     ON v_document_exchange_jobs (state, lease_until, created_at) WHERE state IN ('queued', 'running');
 CREATE INDEX v_document_exchange_jobs_doc
     ON v_document_exchange_jobs (document_id, created_at DESC);
+CREATE INDEX v_document_exchange_jobs_source_blob_fk_idx
+    ON v_document_exchange_jobs (source_blob_id);
+CREATE INDEX v_document_exchange_jobs_source_rev_fk_idx
+    ON v_document_exchange_jobs (source_revision_id);
+CREATE INDEX v_document_exchange_jobs_output_blob_fk_idx
+    ON v_document_exchange_jobs (output_blob_id);
 
 COMMIT;

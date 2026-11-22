@@ -26,7 +26,7 @@ CREATE TABLE v_ai_text_commands (
     UNIQUE (tenant_id, project_scope, effective_subject, resource_id, command_id),
     UNIQUE (tenant_id, project_scope, effective_subject, resource_id, proposal_id)
 );
-CREATE INDEX v_ai_text_commands_document ON v_ai_text_commands (document_id) WHERE document_id IS NOT NULL;
+CREATE INDEX v_ai_text_commands_document ON v_ai_text_commands (document_id);
 CREATE INDEX v_ai_text_commands_dedupe_until ON v_ai_text_commands (dedupe_until);
 
 CREATE TABLE v_ai_text_command_evidence (

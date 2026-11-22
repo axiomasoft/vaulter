@@ -1,6 +1,6 @@
 # Репозиторий `vaulter-ai` (Офисный AI SDK, чат и исполнители)
 
-- **Git-репозиторий:** `axiomasoft/vaulter-ai` (новый закрытый репозиторий; пишется с нуля по контрактам `plan/spec/agent-sdk.md` и `plan/spec/implementation/ai.md`)
+- **Git-репозиторий:** `axiomasoft/vaulter-ai` (создан: `https://github.com/axiomasoft/vaulter-ai`, локально `/home/vostrikov/projects/packages/vaulter-ai`; пишется с нуля по контрактам `plan/spec/agent-sdk.md` и `plan/spec/implementation/ai.md`)
 - **Канал поставки:** Private / Proprietary (`FlexCrm`, `Edufy`)
 - **План разработки:** [dev-plans/vaulter-ai.md](../dev-plans/vaulter-ai.md)
 

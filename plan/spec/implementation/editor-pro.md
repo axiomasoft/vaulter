@@ -28,7 +28,8 @@
 
 ### 2.2. Правила жизненного цикла якорей
 - **Вставка перед диапазоном / сдвиг:** якорь следует за текстом (`yjs_relative` в journal; однозначный remap по `block_id` + UTF-16 + контекст в snapshot).
-- **Вставка на границе:** единая affinity (внутрь или наружу) на всех клиентах.
+- **Вставка на границе (`assoc`-геометрия):** левый якорь `assoc = 0` (первый символ внутри), правый `assoc = -1` (последний символ внутри), чтобы ввод вплотную снаружи границ не расширял комментарий.
+- **Обход бага `@tiptap/y-tiptap@3.0.10 #8614` (`pos === 1`):** `relativePositionToAbsolutePosition` возвращает `null` для валидного якоря на первом символе документа (например, после удаления текста перед комментарием). Обязательный защитный хелпер `safeResolveRelativePos`: при `null` вызывать `Y.createAbsolutePositionFromRelativePosition(relPos, ydoc)` и, если вернулся валидный `Y.XmlText` с `index === 0` в первом блоке, возвращать `pos = 1`.
 - **Частичное удаление:** диапазон сужается, discussion и replies сохраняются.
 - **Полное удаление цели или неоднозначный remap в snapshot:** `anchor_state = detached`; discussion и replies **не удаляются**, сохраняются `quote_text` и `source_position`. Доступна явная команда `reanchor`.
 - **Copy/paste текста:** по умолчанию текст копируется без discussion identity.
@@ -38,28 +39,30 @@
 ### 2.3. Read-only Preview и Structural Compare
 - Preview и Compare монтируются в **отдельном изолированном `EditorView`** поверх двух неизменяемых ревизий (никогда не вызывать `setContent` с diff на активном пишущем редакторе).
 - Гарантия: **0 live updates** и 0 cleanup callbacks.
-- Structural diff сравнивает нормализованные ProseMirror nodes, marks и attrs (включая `blockId` для перемещённых блоков).
+- Structural diff реализуется двухэтапно на **`prosemirror-changeset >= 2.4.4`** (MIT): этап 1 — выравнивание блоков верхнего уровня, элементов списков и строк таблиц по `attrs.blockId` (fallback для узлов без `blockId`: LCS по сигнатуре типа + текстовый `simhash`); этап 2 — `ChangeSet` внутри пар с кодированием активных marks в токены + декорации `attr_change` (`level`, `colwidth`, `align`).
 
 ---
 
 ## 3. Фазы 8.2 и 8.3: Tracked Changes и Structural Review
 
-### 3.1. Модель данных и три проекции
+### 3.1. Гибридная модель хранения и три проекции
 - Хранение: `v_document_suggestions` (`id`, `document_id`, `group_id`, `proposal_id`, `generation`, `base_position`, `schema_version`, `author_subject`, `provenance_json`, `kind`, `target_block_id`, `target_selector`, `payload`, `state`, `version`, `receipt_id`).
+- **Гибридная схема:** AI-предложения `P/Q` до одобрения хранятся строго во внешней таблице (никогда не мутируют `Y.Doc`); живые Tracked Changes хранят в `Y.Doc` только минимальные маркеры `{ suggestionId, kind, parentId }`, тогда как авторитетные `author_subject`, время и права accept/reject хранятся исключительно в PostgreSQL `v_document_suggestions`.
 - Связь с AI/Office SDK: `proposal_id → suggestion_ids[]` (одно бизнес-предложение `P` может визуализироваться несколькими suggestions; принятие `P` идёт через доверенный handler `ResolveProposal`, а не через клиентскую кнопку).
 - **Три обязательные чистые проекции** (без мутации live editor):
   1. `original` — принятый документ (без pending suggestions). **Источник по умолчанию для `office.read` в AI SDK.**
   2. `proposed(selectedIds)` — документ с гипотетическим принятием выбранных предложений.
   3. `review` — визуальная разметка с decorations/marks и метаданными.
 
-### 3.2. Клиентский перехват и обратимость (Tiptap OSS / ProseMirror)
-- Перехват локальной транзакции выполняется **на контролируемой границе dispatch до публикации в Yjs** (не полагаться на `filterTransaction` для подмены или на `appendTransaction`, который успевает пропустить промежуточную untracked правку).
-- Remote Yjs updates, undo/redo и внутренние review-транзакции помечаются собственным origin и **никогда не переотслеживаются** (запрет рекурсивного re-tracking).
+### 3.2. Клиентский перехват (`@tiptap/core >= 3.34.0`), IME и вложенность
+- **Перехват через официальный хук `dispatchTransaction({ transaction, next })`** (введён в `@tiptap/core@3.27.0`; требуется минимум **`>= 3.34.0`** из-за CVE-2026-104847). Использование `filterTransaction` или `appendTransaction` запрещено (в `appendTransaction` неотслеженная правка успевает пройти через `y-prosemirror`, уничтожая `Y.RelativePosition` комментариев).
+- **Bypass-метаключи:** не переписывать транзакцию, если `!transaction.docChanged`, review выключен, либо присутствуют `transaction.getMeta(ySyncPluginKey)`, `transaction.getMeta('y-undo')`, `transaction.getMeta('history')` или `'vaulter:untracked'` (учитывать регрессию прилипания `addToHistory: false` в `@tiptap/y-tiptap@3.0.10`).
+- **Буферизация IME (`view.composing === true`):** на `compositionstart` сохранять `(preComposeDoc, preComposeSelection)`; во время композиции пропускать сырой ввод в локальный `EditorView` без отправки в Yjs; в первом кадре после `compositionend` вычислить чистую дельту `preComposeDoc → state.doc`, откатить сырой ввод и одним атомарным dispatch с `'vaulter:untracked'` применить финальную suggestion-транзакцию.
 - **Обратимые виды операций:**
   - Фаза `8.2` (текст): `insert`, `delete` (удерживает удалённый текст до решения), `replace` (две половины связаны единым `group_id`; общий префикс/суффикс можно оставлять обычным текстом).
-  - Фаза `8.3` (структура): `mark_change` (хранит точные `markName`/`markAttrs` и направление `added`/`removed`), `attr_change` (хранит `oldValue`/`newValue`; возврат к `oldValue` снимает предложение), `block_split` (**различать `structural` — склеить при reject — и `insertion` — удалить пустой блок при reject**), `block_join`, `list_change`, `table_change` (текстовые таблицы).
+  - Фаза `8.3` (структура): `mark_change` (хранит точные `markName`/`markAttrs` и направление `added`/`removed`), `attr_change` (хранит `oldValue`/`newValue`; возврат к `oldValue` снимает предложение), `block_split` (**различать `structural` — склеить через `tr.join` при reject — и `insertion` — удалить пустой блок при reject**), `block_join`, `list_change`, `table_change` (текстовые таблицы).
 - **Ограничение live collab:** `nodeTypeChangeTypes` в v1 пуст (`[]`), так как конкурентная смена wrapper-типа узла в Yjs не поддерживается без отдельной спецификации.
-- **Группировка и пересечения:** соседние правки одного автора группируются; чужая вставка внутри чужой вставки получает отдельный ID (поддержка нескольких `reviewSuggestion` marks на одном text node). В v1 при пересечении двух предложений accept первого оставляет второе в состоянии `open` с явным конфликтом и сохранением исходного автора.
+- **Группировка, пересечения и вложенный `parentId`:** группировать соседние правки строго по **смежности (adjacency), автору и типу** (без хрупкого `suggestionGroupingTimeout`). Для *частично пересекающихся* предложений v1 сохраняет второе в состоянии `open` с явным конфликтом и исходным автором; для *строго вложенных* правок (`parentId: A`, когда Автор Б правит внутри вставки Автора А) reject внутренней Б откатывает только Б, а reject внешней вставки А переводит дочерние в `superseded` и удаляет каскадно.
 - **Атомарный accept/reject:** заново находит актуальные ranges, проверяет права, поколение и CAS, и фиксирует изменение через `AtomicDocumentMutation` (snapshot) или `CommandJournal` (strict journal, 3.5) с выдачей `receipt_id`.
 
 ---
@@ -67,11 +70,12 @@
 ## 4. Фазы 10.1 и 10.2: DOCX OOXML и серверный обмен
 
 ### 4.1. Единый версионированный mapping (`@vaulter/editor-pro-docx`)
-- Пайплайн: `Tiptap JSON / Review ↔ Intermediate Model (versioned) ↔ OOXML (ZIP/XML)`.
-- Открытая основа: MIT-библиотека `docx` (для генерации) + строгий XML/ZIP парсер для прямого разбора OOXML parts и relationships (без потери структуры через HTML-посредник).
-- **Реестр единиц (единый для import, editor и export):** `15 twips/px`, `20 twips/pt`, `9525 EMU/px`, `240 units` (proportional line spacing), `50 units/%` (table width), `8 units/pt` (borders). `null` означает наследование стиля, а не `0`.
+- Пайплайн: `Tiptap JSON / Review ↔ Intermediate Model (versioned) ↔ OOXML (ZIP/XML)` на едином изоморфном TypeScript-ядре (браузерный Web Worker + Node 26).
+- **Утверждённый OSS-стек (ноябрь 2026):** **`docx@9.16.0`** (MIT, генерация/патчинг) + **`fflate@0.8.3`** (MIT, браузерный/изоморфный ZIP) + **`yauzl@3.4.0`** (MIT, серверный Node ZIP с проверкой непересечения байтовых диапазонов) + **`saxes@6.0.0`** (ISC) / **`fast-xml-parser >= 5.3.5`** (MIT, строго `processEntities: false`, закрывает GHSA-m7jm-9gc2-mpf2). `mammoth`, `docx-preview`, `unzipper` и Rust/WASM-дубликаты запрещены.
+- **Связывание комментариев и `paraId` (совместимость Word ↔ LibreOffice ↔ Google Docs):** MS Word связывает `word/comments.xml` с `commentsExtended.xml` (`w15:commentEx`, `w15:done="1"`) и `commentsIds.xml` (`w16cid`) по 8-символьному hex `w14:paraId` **последнего `<w:p>`** внутри комментария. Все `paraId`/`durableId` генерировать строго в **`00000001..7FFFFFFF`** (старший бит = 0, иначе Word требует ремонта файла). При импорте без `commentsExtended.xml` (LibreOffice) откатываться к группировке по координатам `commentRangeStart`/`End`; при экспорте всегда писать полную тройку XML-частей + `document.xml.rels`. Внутри `<w:del>` писать `<w:delText>`, для краевых/кратных пробелов обязательно `xml:space="preserve"`, `block_join` кодировать пустым `<w:del/>` в `<w:pPr><w:rPr>`.
+- **Реестр единиц и стилей:** `15 dxa/px`, `20 dxa/pt`, `9525 EMU/px` (всегда `Math.round()` до целого!), `240` при `w:lineRule="auto"` (дефолт при отсутствии атрибута!), `50 pct/%` (принимать `"5000"` и `"100%"`, писать `"5000"`), шрифт `w:sz` в `1/2 pt` (`24 = 12 pt`), рамки `w:bdr/@w:sz` в `1/8 pt` (`4 = 0.5 pt`, `2..96`). Каскад `styles.xml` (`docDefaults → tblStyle → pStyle(basedOn <= 16) → rStyle → numPr → inline`). `null` означает наследование, а не `0`.
 - **Отчёт потерь:** `{profile, source_marker, diagnostics: [{code, severity, feature, location, action}]}`. Обязательное свойство со статусом `error` блокирует публикацию выбранного профиля.
-- **Локальный экспорт (10.1):** выполняется полностью в браузере из уже разрешённого подтверждённого snapshot без сетевых запросов (проверяется `fetch trap = 0`).
+- **Локальный экспорт (10.1):** выполняется полностью в браузерном Web Worker из уже разрешённого подтверждённого snapshot без сетевых запросов (`fetch trap = 0`).
 
 ### 4.2. Корпус испытаний D1–D4
 | Корпус | Обязательно сохраняется при roundtrip | Допустимые потери (в diagnostics) |
