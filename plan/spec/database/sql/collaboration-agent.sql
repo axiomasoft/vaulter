@@ -3,6 +3,7 @@
 BEGIN;
 
 ALTER TABLE v_collaboration_heads
+    ADD COLUMN profile varchar(32) NOT NULL DEFAULT 'standard' CHECK (profile IN ('standard', 'strict')),
     ADD COLUMN owner_fence bigint NOT NULL DEFAULT 0 CHECK (owner_fence >= 0),
     ADD COLUMN owner_id uuid,
     ADD COLUMN owner_expires_at timestamptz,
@@ -10,6 +11,22 @@ ALTER TABLE v_collaboration_heads
         (owner_id IS NULL AND owner_expires_at IS NULL)
         OR (owner_id IS NOT NULL AND owner_expires_at IS NOT NULL AND owner_fence > 0)
     );
+
+CREATE TABLE v_collaboration_client_ids (
+    document_id uuid NOT NULL REFERENCES v_documents(id) ON DELETE CASCADE,
+    generation bigint NOT NULL CHECK (generation BETWEEN 0 AND 9007199254740991),
+    client_id bigint NOT NULL CHECK (client_id BETWEEN 1 AND 4294967295),
+    tenant_id bigint NOT NULL,
+    writer_kind varchar(16) NOT NULL CHECK (writer_kind IN ('browser', 'server', 'historical')),
+    effective_subject varchar(255) COLLATE "C",
+    session_id uuid,
+    issued_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (document_id, generation, client_id),
+    CHECK ((writer_kind = 'historical' AND effective_subject IS NULL)
+        OR (writer_kind IN ('browser', 'server') AND effective_subject IS NOT NULL AND octet_length(effective_subject) BETWEEN 1 AND 255))
+);
+CREATE INDEX v_collaboration_client_ids_session
+    ON v_collaboration_client_ids (document_id, generation, session_id) WHERE session_id IS NOT NULL;
 
 CREATE TABLE v_collaboration_commands (
     id uuid PRIMARY KEY,

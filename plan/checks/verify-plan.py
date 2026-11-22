@@ -12,6 +12,7 @@ SPEC = Path(__file__).resolve().parents[1]
 PHASES = (
     "00-baseline", "01-documents", "02-collaboration", "03-text-sdk",
     "04-sheets", "05-sheet-sdk", "06-extensions", "07-agent-workspace",
+    "08-editor-pro-review", "09-ai-chat", "10-docx-exchange",
 )
 TASK = r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
 GATE = rf"{TASK}-[A-Z][A-Z0-9]*"
@@ -28,7 +29,7 @@ def read_phases():
     index = (SPEC / "README.md").read_text()
     linked = {link.removeprefix("./") for link in re.findall(r"\]\(([^\s)#]+)(?:#[^)]*)?\)", index)}
     phases = sorted((SPEC / "phases").glob("*.md"))
-    require([p.stem for p in phases] == list(PHASES), "файлы фаз должны соответствовать фазам 00–07")
+    require([p.stem for p in phases] == list(PHASES), "файлы фаз должны соответствовать фазам 00–10")
     dependencies, gates = {}, {}
     for phase in phases:
         require(f"phases/{phase.name}" in linked, f"README не ссылается на {phase.name}")

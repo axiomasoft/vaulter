@@ -4,7 +4,7 @@
 
 | Дистрибутив | Путь миграции в vaulter-ai | Роль и проверка |
 | --- | --- | --- |
-| `axiomasoft/vaulter-ai-core` | `packages/core/database/migrations/0001_01_01_000700_create_office_core_tables.php`, определения в `packages/core/src/Schema/OfficeCoreSchema.php` | Может установиться независимо от текстового/табличного писателя. Владеет заданиями, запросами чтения, предложениями, решением и маршрутом команды |
+| `axiomasoft/vaulter-ai-core` | `packages/core/database/migrations/0001_01_01_000700_create_office_core_tables.php` и `0001_01_01_000702_create_office_chat_tables.php`, определения в `packages/core/src/Schema/OfficeCoreSchema.php` | Может установиться независимо от текстового/табличного писателя. Владеет заданиями, запросами чтения, предложениями, решением, маршрутом команды и (с фазы 09) таблицами возобновляемого AI-чата ([ai-chat.sql](sql/ai-chat.sql), 4 таблицы: `v_ai_chat_sessions`, `v_ai_chat_messages`, `v_ai_chat_events`, `v_ai_tool_calls`) |
 | `axiomasoft/vaulter-ai-documents` | `packages/documents/database/migrations/0001_01_01_000701_create_ai_documents_tables.php`, определения в `packages/documents/src/Schema/AiDocumentsSchema.php` | Ставится после Vaulter Documents. Владеет адресной текстовой проекцией и результатом одиночной записи. Если connection этой миграции и DocumentStateWriter различаются, активировать писатель нельзя |
 | `axiomasoft/vaulter-ai-sheets`, `-collaboration`, `-laravel-ai`, `-agentools` | Собственных продуктовых таблиц в v1 нет | Таблицы книги и подтверждённых обновлений совместного документа создают владельцы содержимого. Пакеты исполнителей используют историю ядра. [Книга](sql/sheets.sql) · [Совместные команды](sql/collaboration-agent.sql) |
 
