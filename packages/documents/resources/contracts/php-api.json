@@ -8934,6 +8934,16 @@
                     "doc": [],
                     "hooks": []
                 },
+                "tenantId": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "trashed": {
                     "flags": 1,
                     "type": "bool",
@@ -8945,6 +8955,16 @@
                     "hooks": []
                 },
                 "type": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "writeMode": {
                     "flags": 1,
                     "type": "string",
                     "readonly": true,

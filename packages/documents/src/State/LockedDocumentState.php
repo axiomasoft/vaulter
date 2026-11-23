@@ -40,5 +40,7 @@ final readonly class LockedDocumentState
         public array $content,
         public ?DriveStatus $driveStatus = null,
         public ?int $collabStateSize = null,
+        public string $writeMode = 'snapshot',
+        public ?string $tenantId = null,
     ) {}
 }

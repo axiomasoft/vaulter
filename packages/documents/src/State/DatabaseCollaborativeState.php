@@ -104,6 +104,8 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             content: $document->payload->content ?? [],
             driveStatus: $driveStatus instanceof DriveStatus ? $driveStatus : null,
             collabStateSize: $document->syncState?->collab_state_size,
+            writeMode: $document->write_mode->value,
+            tenantId: $current->tenant_id === null ? null : Identity::stringify($current->tenant_id),
         );
         $this->issued[$state] = [$this->database->connection(), $this->transactionRecord()];
 
