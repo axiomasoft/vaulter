@@ -31,6 +31,8 @@ use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
+use Vaulter\Documents\Contracts\RevisionPruneProtection;
+use Vaulter\Documents\Contracts\SnapshotWriteHook;
 use Vaulter\Documents\Doctor\DocumentTypesCheck;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Errors\DocumentsProblemDefinitions;
@@ -171,6 +173,8 @@ final class DocumentsModule implements ExtensionPlugin, WithCapabilities, WithCo
             DocumentExporter::class => $handler,
             CollaborationProtocolDriver::class => $handler,
             PendingStateDrainer::class => $handler,
+            SnapshotWriteHook::class => $handler,
+            RevisionPruneProtection::class => $handler,
         ];
     }
 

@@ -41,7 +41,7 @@ use Vaulter\Support\Identity;
  * Comments on any node of one drive: `Documents::comments($drive)`.
  *
  * Reading a thread needs View, writing in it needs Comment. Resolving a thread needs
- * Comment and either authorship or Edit; deleting a comment needs authorship or Manage.
+ * Comment and either authorship or Edit to resolve or reopen; deleting a comment needs authorship or Manage.
  * A comment id is resolved only inside the addressed node, so another node's comment
  * is "not found" (comment_not_found). The drive profile must enable comments.
  *
@@ -101,6 +101,21 @@ final readonly class CommentOperations implements DriveExtension
 
     public function resolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion = null): CommentSnapshot
     {
+        [$attempt, $receipt] = $this->resolution($node, $comment, $expectedVersion, reopen: false);
+
+        return $this->write('resolve', $attempt, $receipt);
+    }
+
+    public function reopen(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion = null): CommentSnapshot
+    {
+        [$attempt, $receipt] = $this->resolution($node, $comment, $expectedVersion, reopen: true);
+
+        return $this->write('reopen', $attempt, $receipt);
+    }
+
+    /** @return array{Closure(): CommentSnapshot, IdempotentWrite} */
+    private function resolution(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion, bool $reopen): array
+    {
         $nodeId = self::idOf($node);
         $authorizer = CommentReplayAuthorizer::forResolve($this->context, $this->locator, $this->guard, $this->profiles, $nodeId);
         $idempotency = new IdempotentWrite(
@@ -109,15 +124,17 @@ final readonly class CommentOperations implements DriveExtension
             fingerprint: ['node' => $nodeId, 'comment' => self::commentId($comment), 'expected_version' => $expectedVersion],
         );
 
-        return $this->write('resolve', function () use ($node, $comment, $expectedVersion, $authorizer): CommentSnapshot {
+        $attempt = function () use ($node, $comment, $expectedVersion, $authorizer, $reopen): CommentSnapshot {
             [, $row, $byAuthor] = $this->authorizedForResolve($node, $comment);
             if ($byAuthor) {
                 // A refusal past this point (412 stale_write) is stored on the authorship it proved, not on Edit.
                 $authorizer->provedByAuthorship();
             }
 
-            return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row, $expectedVersion)));
-        }, $idempotency);
+            return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row, $expectedVersion), $reopen));
+        };
+
+        return [$attempt, $idempotency];
     }
 
     public function delete(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion = null): void

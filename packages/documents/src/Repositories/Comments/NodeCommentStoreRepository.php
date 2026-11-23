@@ -54,6 +54,13 @@ final class NodeCommentStoreRepository
         return $comment;
     }
 
+    public function reopen(NodeComment $comment): NodeComment
+    {
+        $comment->forceFill(['resolved_at' => null, 'resolved_by' => null, 'updated_at' => Carbon::now()])->save();
+
+        return $comment;
+    }
+
     public function delete(NodeComment $comment): void
     {
         $comment->delete();

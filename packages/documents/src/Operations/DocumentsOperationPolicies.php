@@ -34,6 +34,7 @@ final class DocumentsOperationPolicies implements OperationPolicySource
             'documents.documents.set_retention' => new OperationPolicy('documents.revision', ConcurrencyPolicy::Natural, IdempotencyPolicy::Natural, ['documents.revisions.update']),
             'documents.comments.add' => new OperationPolicy('documents.comment', ConcurrencyPolicy::Append, IdempotencyPolicy::Receipt, ['comments.store']),
             'documents.comments.resolve' => new OperationPolicy('documents.comment', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['comments.resolve']),
+            'documents.comments.reopen' => new OperationPolicy('documents.comment', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt),
             'documents.comments.delete' => new OperationPolicy('documents.comment', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['comments.destroy']),
         ];
     }

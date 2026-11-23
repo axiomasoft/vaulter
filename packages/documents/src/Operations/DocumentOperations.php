@@ -18,6 +18,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Access\CollaborationAccessPolicy;
 use Vaulter\Documents\Actions\Documents\ChangeDocumentWriteModeAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Actions\Documents\InitializeBlockIdsAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
@@ -118,6 +119,7 @@ final readonly class DocumentOperations implements DriveExtension
         private DocumentTypeRegistry $types,
         private ContentDecoder $decoder,
         private CreateDocumentAction $create,
+        private DocumentWriteLock $writeLock,
         private UpdateDocumentContentAction $update,
         private InitializeBlockIdsAction $initializeBlockIds,
         private ChangeDocumentWriteModeAction $changeWriteMode,
@@ -410,6 +412,22 @@ final readonly class DocumentOperations implements DriveExtension
 
             return $this->mapper->revision($changed, $this->query->document($node));
         });
+    }
+
+    /**
+     * Hold the document write lock for a dependent write until the current Vaulter transaction completes.
+     * Call this before taking related row locks and authorize the dependent write in its owning module.
+     */
+    public function lockForRelatedWrite(NodeSnapshot|string|int $document): void
+    {
+        if ($this->database->connection()->transactionLevel() === 0) {
+            throw new LogicException('[Vaulter] Locking a document for a related write requires an active transaction.');
+        }
+
+        $node = $this->document($document, Ability::View, OperationKind::Mutation);
+        $current = $this->writeLock->lockNode($this->context, $node->id);
+        $this->guard->authorize($this->context, Ability::View, $current, OperationKind::Mutation);
+        $this->writeLock->lockDocument($current);
     }
 
     /**

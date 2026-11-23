@@ -7,12 +7,15 @@ namespace Vaulter\Documents\Repositories\Revisions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Packman\Attributes\Internal;
-use Vaulter\Documents\Content\ManagedDocumentPayloads;
 use Vaulter\Documents\Configuration\DocumentsOptions;
+use Vaulter\Documents\Content\ManagedDocumentPayloads;
+use Vaulter\Documents\Contracts\RevisionPruneProtection;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Models\Revisions\DocumentRevisionPayload;
 use Vaulter\Documents\Models\Revisions\DocumentRevisionSyncState;
+use Vaulter\Kernel;
+use Vaulter\Support\Identity;
 
 /**
  * Write-side row work for the immutable checkpoints in v_document_revisions:
@@ -26,6 +29,7 @@ final class DocumentRevisionStoreRepository
     public function __construct(
         private readonly DocumentsOptions $documentsConfig,
         private readonly ManagedDocumentPayloads $references,
+        private readonly Kernel $kernel,
     ) {}
 
     /**
@@ -62,7 +66,7 @@ final class DocumentRevisionStoreRepository
 
     /**
      * Prune a document's history down to the $max most recent checkpoints,
-     * NEVER deleting a keep_forever checkpoint nor the head. Returns the number of
+     * excluding the head, keep_forever checkpoints and protected references. Returns the number of
      * pruned rows. $max <= 0 means unlimited. revision_count is not lowered, so a
      * number is never handed out twice.
      */
@@ -73,6 +77,11 @@ final class DocumentRevisionStoreRepository
         }
 
         $model = $this->documentsConfig->model('document_revision');
+        $documentId = Identity::stringify($document->getKey());
+        $protected = [];
+        foreach ($this->kernel->extensions()->resolve(RevisionPruneProtection::class) as $protection) {
+            $protected += array_fill_keys($protection->protectedRevisionIds($documentId), true);
+        }
 
         /** @var Collection<int, DocumentRevision> $prunable */
         $prunable = $model::query()
@@ -85,10 +94,11 @@ final class DocumentRevisionStoreRepository
             ->orderByDesc('number')
             ->get();
 
-        // keep_forever rows and the head were excluded above, so they never count
-        // against the window and are never deleted.
         /** @var Collection<int, DocumentRevision> $excess */
-        $excess = $prunable->slice($max)->values();
+        $excess = $prunable
+            ->reject(static fn (DocumentRevision $revision): bool => isset($protected[Identity::stringify($revision->getKey())]))
+            ->slice($max)
+            ->values();
 
         if ($excess->isEmpty()) {
             return 0;

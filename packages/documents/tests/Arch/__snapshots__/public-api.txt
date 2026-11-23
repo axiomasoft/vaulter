@@ -41,8 +41,23 @@ Vaulter\Documents\Contracts\LockedDocumentMutation
   replace(\Vaulter\Documents\Contracts\DocumentContent $content, int $expectedStateVersion): \Vaulter\Documents\Data\Documents\DocumentMutationState
   snapshot(): \Vaulter\Documents\Data\Documents\DocumentMutationState
 
+Vaulter\Documents\Contracts\ManagedDocumentCodec
+  decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
+  decodeStored(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
+  maxSizeBytes(): ?int
+  prepare(\Vaulter\Documents\Contracts\DocumentContent $content, \Vaulter\Drive\Operations\DriveContext $context): \Vaulter\Documents\Contracts\DocumentContent
+  replacePayloadReference(string $kind, string $id, ?array $previous, ?array $next): void
+  storagePayload(\Vaulter\Documents\Contracts\DocumentContent $content): array
+
 Vaulter\Documents\Contracts\RequiresCommandWrite
 
+
+Vaulter\Documents\Contracts\RevisionPruneProtection
+  protectedRevisionIds(string $documentId): array
+
+Vaulter\Documents\Contracts\SnapshotWriteHook
+  replaceSnapshot(string $documentId, int $generation, \Vaulter\Documents\Contracts\DocumentContent $previous, \Vaulter\Documents\Contracts\DocumentContent $next): void
+  supportsDocumentType(string $type): bool
 
 Vaulter\Documents\Contracts\SupportsCollaboration
   collaborationProtocol(): string
@@ -231,6 +246,7 @@ Vaulter\Documents\DocumentsManager
   __construct(\Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Export\DocumentExporterRegistry $exporters)
   comments(\Vaulter\Drive\Contracts\DriveHandle $drive): \Vaulter\Documents\Operations\CommentOperations
   exporters(): \Vaulter\Documents\Export\DocumentExporterRegistry
+  forContext(\Vaulter\Drive\Operations\DriveContext $context): \Vaulter\Documents\Operations\DocumentOperations
   in(\Vaulter\Drive\Contracts\DriveHandle $drive): \Vaulter\Documents\Operations\DocumentOperations
   types(): \Vaulter\Documents\Types\DocumentTypeRegistry
 
@@ -240,6 +256,7 @@ Vaulter\Documents\Operations\DocumentOperations
   create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Drive\Data\CreateFolderOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
   export(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport
   initializeBlockIds(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+  lockForRelatedWrite(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document): void
   restore(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   revisions(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
   setRetention(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
@@ -250,6 +267,7 @@ Vaulter\Documents\Operations\CommentOperations
   add(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Comments\AddCommentInput $input): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
   delete(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment, ?int $expectedVersion = null): void
   list(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  reopen(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment, ?int $expectedVersion = null): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
   resolve(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment, ?int $expectedVersion = null): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
 
 Vaulter\Documents\Data\Snapshots\DocumentSnapshot

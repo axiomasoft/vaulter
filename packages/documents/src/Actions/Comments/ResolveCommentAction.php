@@ -20,7 +20,7 @@ use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 
 /**
- * Mark a node comment thread resolved. Stamps (resolved_at,
+ * Change a node comment thread's resolution. Stamps or clears (resolved_at,
  * resolved_by = the operation's actor, null for the system) under T (shared) → N → the
  * comment row, with the drive writable and the node live ({@see AddCommentAction}).
  * {@see CommentResolved} is delivered after the outermost commit.
@@ -38,11 +38,11 @@ final readonly class ResolveCommentAction
         private DocumentSnapshotMapper $documentSnapshots,
     ) {}
 
-    public function execute(DriveContext $context, ResolveCommentInput $data): NodeComment
+    public function execute(DriveContext $context, ResolveCommentInput $data, bool $reopen = false): NodeComment
     {
         $resolvedBy = $context->actor->ref()->id;
 
-        return $this->database->transaction(function () use ($context, $data, $resolvedBy): NodeComment {
+        return $this->database->transaction(function () use ($context, $data, $resolvedBy, $reopen): NodeComment {
             $driveId = $context->driveId();
             $nodeId = $data->comment->node_id;
             $this->database->lockAggregateShared('drives', $driveId);
@@ -57,10 +57,12 @@ final readonly class ResolveCommentAction
             // in between is a 412, never a silent second write.
             $this->versions->assertExpected($row, 'version', $data->expectedVersion, NodeComment::AGGREGATE);
 
-            $resolved = $this->comments->resolve($row, $resolvedBy);
+            $resolved = $reopen ? $this->comments->reopen($row) : $this->comments->resolve($row, $resolvedBy);
             $this->versions->bump($resolved, 'version', NodeComment::AGGREGATE);
             $resolved->setRelation('node', $current);
-            $this->recorder->record(new CommentResolved(comment: $resolved, actor: $context->actor->ref(), correlationId: $context->correlationId, documents: $this->documentSnapshots));
+            if (!$reopen) {
+                $this->recorder->record(new CommentResolved(comment: $resolved, actor: $context->actor->ref(), correlationId: $context->correlationId, documents: $this->documentSnapshots));
+            }
 
             return $resolved;
         });
