@@ -245,6 +245,14 @@ Vaulter\Documents\Data\Comments\AddCommentInput api since 1.0 final readonly cla
   public int|null|string $parentId
   public function __construct(string $body, int|null|string $parentId = null, ?array $anchor = null)
 
+Vaulter\Documents\Data\Documents\DocumentMetadata api since 1.0 final readonly class
+  public string $documentId
+  public int $generation
+  public int $schemaVersion
+  public int $stateVersion
+  public string $type
+  public string $writeMode
+
 Vaulter\Documents\Data\Documents\DocumentMutationState api since 1.0 final readonly class
   public const int MAX_WIRE_COUNTER = 9007199254740991
   public Vaulter\Documents\Contracts\DocumentContent $content
@@ -658,6 +666,8 @@ Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly cla
   public function export(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\ValueObjects\DocumentExport
   public function initializeBlockIds(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function lockForRelatedWrite(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document): void
+  public function metadata(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document): Vaulter\Documents\Data\Documents\DocumentMetadata
+  public function mutateForRelatedWrite(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Closure $operation): mixed
   public function restore(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function revisions(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?Vaulter\Drive\Data\ListOptions $options = null): Vaulter\Data\Page
   public function setRetention(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot

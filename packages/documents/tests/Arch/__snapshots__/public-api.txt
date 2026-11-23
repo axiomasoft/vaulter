@@ -257,6 +257,8 @@ Vaulter\Documents\Operations\DocumentOperations
   export(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport
   initializeBlockIds(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   lockForRelatedWrite(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document): void
+  metadata(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document): \Vaulter\Documents\Data\Documents\DocumentMetadata
+  mutateForRelatedWrite(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Closure $operation): mixed
   restore(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   revisions(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
   setRetention(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
@@ -313,6 +315,15 @@ Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
   readonly string $id
   readonly string $nodeId
   readonly string $type
+
+Vaulter\Documents\Data\Documents\DocumentMetadata
+
+  readonly int $generation
+  readonly int $schemaVersion
+  readonly int $stateVersion
+  readonly string $documentId
+  readonly string $type
+  readonly string $writeMode
 
 Vaulter\Documents\Data\Documents\DocumentMutationState
   __construct(string $nodeId, string $documentId, string $type, int $schemaVersion, int $generation, int $position, string $writeMode, ?string $protocol, bool $pending, \Vaulter\Documents\Contracts\DocumentContent $content)

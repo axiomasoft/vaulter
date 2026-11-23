@@ -45,26 +45,39 @@ final readonly class RunAtomicDocumentMutation implements AtomicDocumentMutation
         return $this->runner->write(
             new OperationSpec('documents.documents.atomic_mutation', new ModuleId('documents')),
             $context->operation,
-            function () use ($context, $nodeId, $operation): mixed {
-                try {
-                    if ($nodeId === '' || !Identity::fitsKey($context->drive->nodes()->getRelated(), $nodeId)) {
-                        throw NodeNotFoundException::forId($nodeId);
-                    }
-                    $node = $this->lock->lockNode($context, $nodeId);
-                    // Resolve current grants after any transaction holding N has finished.
-                    $this->guard->authorize($context, Ability::Edit, $node, OperationKind::Mutation);
-                    $document = $this->lock->lockDocument($node);
-                } catch (NodeNotFoundException|NotADocumentException|PermissionDeniedException|ProfileRestrictionException|DriveArchivedException) {
-                    throw NodeNotFoundException::forId('document');
-                }
-
-                $locked = new LockedMutation($this->database->connection(), $context, $node, $document, $this->decoder, $this->writer);
-                try {
-                    return $operation($locked);
-                } finally {
-                    $locked->close();
-                }
-            },
+            fn (): mixed => $this->withinWrite($context, $nodeId, $operation),
         );
+    }
+
+    /**
+     * @template TResult
+     *
+     * @param  Closure(LockedDocumentMutation): TResult $operation
+     * @return TResult
+     */
+    public function withinWrite(DriveContext $context, int|string $nodeId, Closure $operation): mixed
+    {
+        if ($this->database->connection()->transactionLevel() === 0 || !$this->runner->inOperation()) {
+            throw new LogicException('[Vaulter] Related document mutation requires an active write operation.');
+        }
+
+        try {
+            if ($nodeId === '' || !Identity::fitsKey($context->drive->nodes()->getRelated(), $nodeId)) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            $node = $this->lock->lockNode($context, $nodeId);
+            // Resolve current grants after any transaction holding N has finished.
+            $this->guard->authorize($context, Ability::Edit, $node, OperationKind::Mutation);
+            $document = $this->lock->lockDocument($node);
+        } catch (NodeNotFoundException|NotADocumentException|PermissionDeniedException|ProfileRestrictionException|DriveArchivedException) {
+            throw NodeNotFoundException::forId('document');
+        }
+
+        $locked = new LockedMutation($this->database->connection(), $context, $node, $document, $this->decoder, $this->writer);
+        try {
+            return $operation($locked);
+        } finally {
+            $locked->close();
+        }
     }
 }

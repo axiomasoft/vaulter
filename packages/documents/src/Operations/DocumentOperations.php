@@ -20,6 +20,7 @@ use Vaulter\Documents\Actions\Documents\ChangeDocumentWriteModeAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Actions\Documents\InitializeBlockIdsAction;
+use Vaulter\Documents\Actions\Documents\RunAtomicDocumentMutation;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
@@ -29,10 +30,12 @@ use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Contracts\LockedDocumentMutation;
 use Vaulter\Documents\Contracts\ManagedDocumentCodec;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Data\Documents\DocumentMetadata;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
@@ -52,6 +55,7 @@ use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Idempotency\DocumentRevisionSnapshotCodec;
 use Vaulter\Documents\Idempotency\DocumentSnapshotCodec;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
@@ -428,6 +432,39 @@ final readonly class DocumentOperations implements DriveExtension
         $current = $this->writeLock->lockNode($this->context, $node->id);
         $this->guard->authorize($this->context, Ability::View, $current, OperationKind::Mutation);
         $this->writeLock->lockDocument($current);
+    }
+
+    public function metadata(NodeSnapshot|string|int $document): DocumentMetadata
+    {
+        $node = $this->document($document, Ability::View, OperationKind::Metadata);
+
+        return self::metadataOf($this->query->document($node, withPayload: false));
+    }
+
+    /**
+     * Edit under the caller's active Vaulter write operation and its receipt, if any.
+     *
+     * @template TResult
+     *
+     * @param  Closure(LockedDocumentMutation): TResult $operation
+     * @return TResult
+     */
+    public function mutateForRelatedWrite(NodeSnapshot|string|int $document, Closure $operation): mixed
+    {
+        return $this->container->make(RunAtomicDocumentMutation::class)
+            ->withinWrite($this->context, self::idOf($document), $operation);
+    }
+
+    private static function metadataOf(Document $document): DocumentMetadata
+    {
+        return new DocumentMetadata(
+            (string) $document->id,
+            $document->type,
+            $document->write_mode->value,
+            $document->schema_version,
+            $document->collab_epoch,
+            $document->state_version,
+        );
     }
 
     /**
