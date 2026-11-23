@@ -73,6 +73,22 @@ final readonly class ContentDecoder
         return $content;
     }
 
+    /** Revalidate an owner-prepared payload, including references produced by its managed codec. */
+    public function decodePrepared(DocumentType $type, DocumentContent $prepared, int $schemaVersion): DocumentContent
+    {
+        $codec = $type->codec();
+        if (!$codec instanceof ManagedDocumentCodec) {
+            return $this->decode($type, $prepared->toArray(), $schemaVersion);
+        }
+        $content = $codec->decodeStored($codec->storagePayload($prepared), $schemaVersion);
+        $limit = $codec->maxSizeBytes() ?? $this->container->make(DocumentsOptions::class)->content->maxSizeKb * 1024;
+        if ($limit > 0 && $content->sizeInBytes() > $limit) {
+            throw InvalidDocumentContentException::tooLargeBytes($content->sizeInBytes(), $limit);
+        }
+
+        return $content;
+    }
+
     public function storagePayload(string $typeKey, ?DocumentContent $content): ?array
     {
         $codec = $this->types->find($typeKey)?->codec();

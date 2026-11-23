@@ -14,6 +14,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\SnapshotWriteHook;
+use Vaulter\Documents\Contracts\RequiresCommandWrite;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
@@ -113,7 +114,8 @@ final readonly class DocumentStateWriter
         $format = $sync?->collab_state_format;
         if ($change->cause === StateWriteCause::Create) {
             $type = $this->decoder->writable($locked->type);
-            if ($type instanceof SupportsCollaboration) {
+            // Command-owned types install their binding during their managed write-mode transition.
+            if ($type instanceof SupportsCollaboration && !$type instanceof RequiresCommandWrite) {
                 $protocol = $type->collaborationProtocol();
                 $format = $type->collaborationStateFormat();
             }

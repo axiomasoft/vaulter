@@ -6,6 +6,7 @@ namespace Vaulter\Documents\State;
 
 use InvalidArgumentException;
 use Packman\Attributes\Api;
+use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
@@ -27,6 +28,7 @@ final readonly class CheckpointPublication
         public ?string $collabState,
         public array $content,
         public ?ActorRef $actor = null,
+        public ?DocumentContent $preparedContent = null,
     ) {
         if ($expectedStateVersion < 0 || $coveredThrough < 0) {
             throw new InvalidArgumentException('[Vaulter] A checkpoint names a generation, a state version and a covered sequence of at least 0.');

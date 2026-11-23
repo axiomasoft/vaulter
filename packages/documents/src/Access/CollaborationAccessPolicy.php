@@ -162,8 +162,8 @@ final readonly class CollaborationAccessPolicy
         return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
     }
 
-    /** The live node, drive and tenant checks shared by strict reads and authentication. */
-    private function referenceContext(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId): DriveContext
+    /** Resolve a trusted room reference to an operation context. Callers still authorize the requested operation. */
+    public function referenceContext(Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId): DriveContext
     {
         if ($actor->isSystem() || $actor->ref()->id === null) {
             throw MissingActorException::required();

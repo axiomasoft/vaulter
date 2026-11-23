@@ -178,7 +178,9 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         $document->setRelation('node', $node);
         // A checkpoint drains ACKed history in its stored schema; it is not a current-schema user write.
         $type = $this->decoder->writable($document->type);
-        $content = $this->decoder->decode($type, $publication->content, $publication->binding->schemaVersion);
+        $content = $publication->preparedContent === null
+            ? $this->decoder->decode($type, $publication->content, $publication->binding->schemaVersion)
+            : $this->decoder->decodePrepared($type, $publication->preparedContent, $publication->binding->schemaVersion);
 
         $result = $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Collaboration,
@@ -233,7 +235,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
                 || $type->collaborationProtocol() !== $transition->protocol || $type->collaborationStateFormat() !== $transition->stateFormat))) {
             throw new CollaborationUnavailableException('unsupported_binding', $transition->documentType);
         }
-        $content = $this->decoder->decode($type, $transition->content->toArray());
+        $content = $this->decoder->decodePrepared($type, $transition->content, $transition->schemaVersion);
         $node = $document->node()->firstOrFail();
         $document->setRelation('node', $node);
         $result = $this->writer->write($document, new DocumentStateChange(
@@ -246,6 +248,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             documentType: $transition->documentType,
             protocol: $transition->protocol,
             stateFormat: $transition->stateFormat,
+            writeMode: $transition->writeMode,
         ));
         $revision = $result->checkpoint ?? throw new LogicException('[Vaulter] A transition requires a checkpoint.');
         $this->recorder->record(new DocumentRevisionCreated(
