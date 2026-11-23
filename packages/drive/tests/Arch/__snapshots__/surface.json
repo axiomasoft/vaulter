@@ -30203,6 +30203,70 @@
                 }
             }
         },
+        "Vaulter\\Drive\\Http\\Support\\NodeRequestContext": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Call)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:resolve": {
+                    "kind": "method",
+                    "name": "resolve",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "request",
+                            "type": "Illuminate\\Http\\Request",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "node",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Drive\\Operations\\DriveContext",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
         "Vaulter\\Drive\\Naming\\NamePolicy": {
             "kind": "interface",
             "surface": "Spi:Implement",
@@ -31389,6 +31453,161 @@
                         }
                     ],
                     "return": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Drive\\Operations\\NodeEditAccess": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Call)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:canedit": {
+                    "kind": "method",
+                    "name": "canEdit",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "context",
+                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "node",
+                            "type": "int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Drive\\Operations\\NodeJobContext": {
+            "kind": "class",
+            "surface": "Spi:Call",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Call)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:run": {
+                    "kind": "method",
+                    "name": "run",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "driveId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "tenantId",
+                            "type": "null|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "actor",
+                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "node",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "operation",
+                            "type": "Closure",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "void",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,

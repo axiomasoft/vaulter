@@ -19,8 +19,6 @@ parameters:
         - packages/drive/database
         - packages/documents/src
         - packages/documents/database
-        - packages/collaboration/src
-        - packages/collaboration/database
         - packages/webhooks/src
         - packages/webhooks/database
         - packages/azguard/src

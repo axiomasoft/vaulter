@@ -1608,6 +1608,9 @@ Vaulter\Drive\Facades\Vaulter api since 1.0 final class extends Illuminate\Suppo
 Vaulter\Drive\Handlers\AbstractFileHandler spi:implement since 1.0 abstract class implements Vaulter\Drive\Contracts\Handlers\FileHandler
   public function extensions(): array
 
+Vaulter\Drive\Http\Support\NodeRequestContext spi:call since 1.0 final readonly class
+  public function resolve(Illuminate\Http\Request $request, string $node): Vaulter\Drive\Operations\DriveContext
+
 Vaulter\Drive\Naming\NamePolicy spi:implement since 1.0 interface
   public function apply(string $name): string
   public function key(): string
@@ -1655,6 +1658,12 @@ Vaulter\Drive\Operations\FileOperations api since 1.0 final readonly class imple
 
 Vaulter\Drive\Operations\FolderOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\FolderOperations
   public function create(string $name, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Drive\Data\CreateFolderOptions $options = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Operations\NodeEditAccess spi:call since 1.0 final readonly class
+  public function canEdit(Vaulter\Drive\Operations\DriveContext $context, int|string $node): bool
+
+Vaulter\Drive\Operations\NodeJobContext spi:call since 1.0 final readonly class
+  public function run(string $driveId, ?string $tenantId, Vaulter\ValueObjects\Access\ActorRef $actor, string $node, Closure $operation): void
 
 Vaulter\Drive\Operations\NodeOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\NodeOperations
   public function abilities(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Drive\Access\ValueObjects\NodeAbilities

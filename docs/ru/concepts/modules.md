@@ -30,7 +30,6 @@ outline: deep
 // config/vaulter.php
 'modules' => [
     'webhooks' => true,       // включить исходящие вебхуки
-    'collaboration' => true,  // включить редактирование в реальном времени (нужны URL хаба и два секрета)
 ],
 ```
 
@@ -42,7 +41,7 @@ drive (`'drive' => false`) убирает его целиком — маршру
 (`vaulter.features.webhooks` не существует; конфиг хоста, который его задаёт, падает при загрузке с указанием на
 ключ модуля). Пакет нужно установить заранее: `composer require axiomasoft/vaulter-webhooks`. Коллаборация
 переключается только ключом `vaulter.modules.collaboration`; активный opt-in модуль без обязательной конфигурации (URL
-хаба и два секрета) — ошибка загрузки, а не тихий no-op ([Совместное редактирование](/ru/guides/collaboration)).
+хаба и два секрета) — ошибка загрузки, а не тихий no-op ([Совместное редактирование](/ru/extending/collaboration-protocols)).
 
 ## Невалидный граф модулей
 

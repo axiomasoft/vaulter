@@ -6,8 +6,8 @@
 #        verify-split-tags.sh --excluded     # split repositories left out of this release
 #   expected-splits.json: {"axiomasoft/vaulter-core": "<commit sha>", ...}
 #   The manifest is schema vaulter.release/v2: every php entry needs a public|private channel and a tag_prefix, otherwise
-#   this refuses (exit 2). The tag selects the entries whose tag_prefix + strict SemVer it is, so `collaboration-v1.0.2`
-#   checks only the private split and `v1.2.3` only the public ones; a tag no prefix fits is refused.
+#   this refuses (exit 2). The tag must match the declared prefix and a strict SemVer. Public tags such as
+#   `v1.2.3` select the public PHP splits. An unknown prefix is refused.
 # Env:   SPLIT_REMOTE_BASE (default https://github.com), RELEASE_MANIFEST (default release/packages.json)
 set -euo pipefail
 

@@ -237,6 +237,62 @@
                     ],
                     "return": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationAccessDecision",
                     "doc": []
+                },
+                "referenceContext": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "actor",
+                            "type": "Vaulter\\ValueObjects\\Access\\Actor",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "driveId",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "nodeId",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "tenant",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "correlationId",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Drive\\Operations\\DriveContext",
+                    "doc": []
                 }
             },
             "properties": {},
@@ -2646,6 +2702,152 @@
             "enum_backing": null,
             "enum_cases": []
         },
+        "Vaulter\\Documents\\Contracts\\ManagedDocumentCodec": {
+            "kind": "interface",
+            "layer": "spi",
+            "since": "1.0",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [
+                "Vaulter\\Documents\\Contracts\\DocumentCodec"
+            ],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "decodeStored": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "raw",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "schemaVersion",
+                            "type": "int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                    "doc": []
+                },
+                "prepare": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "content",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "context",
+                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                    "doc": []
+                },
+                "replacePayloadReference": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "kind",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "id",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "previous",
+                            "type": "?array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "next",
+                            "type": "?array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
+                "storagePayload": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "content",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "array",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "implement"
+        },
         "Vaulter\\Documents\\Contracts\\RequiresCommandWrite": {
             "kind": "interface",
             "layer": "spi",
@@ -2658,6 +2860,131 @@
             "uses": [],
             "doc": [],
             "methods": {},
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "implement"
+        },
+        "Vaulter\\Documents\\Contracts\\RevisionPruneProtection": {
+            "kind": "interface",
+            "layer": "spi",
+            "since": "1.0",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "protectedRevisionIds": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "documentId",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "array",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "implement"
+        },
+        "Vaulter\\Documents\\Contracts\\SnapshotWriteHook": {
+            "kind": "interface",
+            "layer": "spi",
+            "since": "1.0",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "replaceSnapshot": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "documentId",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "generation",
+                            "type": "int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "previous",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "next",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
+                "supportsDocumentType": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "type",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "bool",
+                    "doc": []
+                }
+            },
             "properties": {},
             "constants": [],
             "enum_backing": null,
@@ -3191,6 +3518,84 @@
                 }
             },
             "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Vaulter\\Documents\\Data\\Documents\\DocumentMetadata": {
+            "kind": "class",
+            "layer": "api",
+            "since": "1.0",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {},
+            "properties": {
+                "documentId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "generation": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "schemaVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "stateVersion": {
+                    "flags": 1,
+                    "type": "int",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "type": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "writeMode": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -4076,6 +4481,26 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "Vaulter\\Documents\\Export\\DocumentExporterRegistry",
+                    "doc": []
+                },
+                "forContext": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "context",
+                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Operations\\DocumentOperations",
                     "doc": []
                 },
                 "in": {
@@ -7686,6 +8111,44 @@
                     "return": "Vaulter\\Data\\Page",
                     "doc": []
                 },
+                "reopen": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "node",
+                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "comment",
+                            "type": "Vaulter\\Documents\\Data\\Snapshots\\CommentSnapshot|string|int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "expectedVersion",
+                            "type": "?int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Data\\Snapshots\\CommentSnapshot",
+                    "doc": []
+                },
                 "resolve": {
                     "visibility": "public",
                     "static": false,
@@ -7923,6 +8386,75 @@
                         }
                     ],
                     "return": "Vaulter\\Documents\\Data\\Snapshots\\DocumentSnapshot",
+                    "doc": []
+                },
+                "lockForRelatedWrite": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "document",
+                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
+                "metadata": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "document",
+                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Documents\\Data\\Documents\\DocumentMetadata",
+                    "doc": []
+                },
+                "mutateForRelatedWrite": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "document",
+                            "type": "Vaulter\\Drive\\Data\\Snapshots\\NodeSnapshot|string|int",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "operation",
+                            "type": "Closure",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "mixed",
                     "doc": []
                 },
                 "restore": {
@@ -8394,6 +8926,15 @@
                             "optional": true,
                             "default": "null",
                             "flags": 1
+                        },
+                        {
+                            "name": "preparedContent",
+                            "type": "?Vaulter\\Documents\\Contracts\\DocumentContent",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 1
                         }
                     ],
                     "return": null,
@@ -8789,6 +9330,15 @@
                             "variadic": false,
                             "optional": false,
                             "default": null,
+                            "flags": 1
+                        },
+                        {
+                            "name": "writeMode",
+                            "type": "?Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
                             "flags": 1
                         }
                     ],

@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; use Vaulter\Support\LoadTier; final class X { public function f(): string { return LoadTier::REQUEST_ATTRIBUTE; } }

@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; final class X { public function f(callable $c): void { call_user_func($c); } }

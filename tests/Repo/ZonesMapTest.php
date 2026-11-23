@@ -55,9 +55,7 @@ function z_test_files(): array
     foreach ($inventory['suites'] as $name => $suite) {
         $files[$name] = match (true) {
             $suite['kind'] === 'pest' => z_files($suite['tests_dir'], '*Test.php'),
-            $name === 'hub' => [...z_files('packages/collaboration/hub/test', '*.test.js'), ...z_files('packages/collaboration/hub/test/e2e', '*.e2e.js')],
             $name === 'vue' => z_files('packages/vue/tests', '*.test.ts'),
-            $name === 'vue-collaboration' => z_files('packages/vue-collaboration/tests', '*.test.ts'),
             default => [],
         };
         $files[$name] = array_values(array_unique($files[$name]));
@@ -66,14 +64,14 @@ function z_test_files(): array
     return $files;
 }
 
-/** @return array<int, string> every source root: a package's src entries, the hub, the Vue client, the load app */
+/** @return array<int, string> every source root: a package's src entries, the Vue client, the load app */
 function z_src_roots(): array
 {
     $roots = [];
     foreach (glob(z_root().'/packages/*/src/*') ?: [] as $entry) {
         $roots[] = substr($entry, strlen(z_root()) + 1);
     }
-    foreach (['packages/collaboration/hub/src', 'packages/vue/src', 'packages/vue-collaboration/src', 'load/app'] as $root) {
+    foreach (['packages/vue/src', 'load/app'] as $root) {
         $roots[] = $root;
     }
     sort($roots);
@@ -276,7 +274,6 @@ it('goes red on a dead path, a dead tests entry and a suite without a zone', fun
 
     $orphan = z_broken(static function (array &$map): void {
         unset($map['zones']['vue']);
-        $map['zones']['vue-collaboration']['uses'] = [];
         $map['harness'] = array_values(array_filter($map['harness'], static fn (array $entry): bool => $entry['zones'] !== ['vue']));
     });
     expect($orphan['problems'])->toContain('suite vue is represented by no zone');

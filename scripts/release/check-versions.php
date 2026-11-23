@@ -148,34 +148,6 @@ foreach (RELEASE_KINDS as $kind) {
     }
 }
 
-// The declared wire/state tuples equal what the runtime code announces, accepts and produces.
-$declared = $manifest['compatibility']['collaboration'] ?? null;
-$runtime = runtimeWireState($root);
-if (!is_array($declared)) {
-    $errors[] = 'manifest compatibility.collaboration (produced/accepted wire+state tuples) is missing';
-} else {
-    $sorted = static function (array $rows): array {
-        usort($rows, static fn (array $x, array $y): int => strcmp(json_encode($x), json_encode($y)));
-
-        return $rows;
-    };
-    foreach (['protocol', 'version'] as $field) {
-        if (($declared[$field] ?? null) !== $runtime[$field] || $runtime[$field] === '') {
-            $errors[] = "compatibility.collaboration.{$field} is ".var_export($declared[$field] ?? null, true).', runtime says '.var_export($runtime[$field], true);
-        }
-    }
-    foreach (['accepted', 'produced'] as $field) {
-        if ($runtime[$field] === [] || $sorted($declared[$field] ?? []) !== $runtime[$field]) {
-            $errors[] = "compatibility.collaboration.{$field} differs from runtime ".json_encode($runtime[$field]);
-        }
-    }
-    foreach ($runtime['produced'] as $tuple) {
-        if (!in_array($tuple, $runtime['accepted'], true)) {
-            $errors[] = 'runtime produces a state tuple its driver does not accept: '.json_encode($tuple);
-        }
-    }
-}
-
 // Private floors must be satisfiable by the ACTUAL version the public line carries (branch-alias / package version).
 $satisfies = static fn (string $range, string $version): bool => preg_match('/^\^(\d+)\.(\d+)$/', $range, $r) === 1
     && preg_match('/^(\d+)\.(\d+)/', $version, $v) === 1 && (int) $v[1] === (int) $r[1] && (int) $v[2] >= (int) $r[2];

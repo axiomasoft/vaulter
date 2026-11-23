@@ -15,19 +15,9 @@
                 "vaulter"
             ]
         },
-        "php-collaboration": {
-            "owners": [
-                "collaboration"
-            ]
-        },
         "npm-vue": {
             "owners": [
                 "vue"
-            ]
-        },
-        "npm-vue-collaboration": {
-            "owners": [
-                "vue-collaboration"
             ]
         }
     },
@@ -40,19 +30,6 @@
             "release_line": "php-public",
             "inputs": [
                 "packages/azguard/tests/Arch/__snapshots__/surface.json"
-            ],
-            "required": true,
-            "status": "current",
-            "coverage": "Api/Spi roots with their full ancestor graph (Internal ancestors included) by FQCN and member key; signature guard only, no runtime or variance proof."
-        },
-        {
-            "id": "php:collaboration",
-            "adapter": "php-surface",
-            "schema_version": 1,
-            "owner": "collaboration",
-            "release_line": "php-collaboration",
-            "inputs": [
-                "packages/collaboration/tests/Arch/__snapshots__/surface.json"
             ],
             "required": true,
             "status": "current",
@@ -249,20 +226,6 @@
             "inputs": [
                 "packages/vue/etc/index.api.md",
                 "packages/vue/etc/components.surface.txt"
-            ],
-            "required": true,
-            "status": "current",
-            "coverage": "API Extractor report per exported entrypoint plus the props/emits of exported .vue components (declaration-only); types only, no runtime, ESM/CJS, tgz or Vue behavior (P8.2)."
-        },
-        {
-            "id": "npm:vue-collaboration",
-            "adapter": "npm-surface",
-            "schema_version": 1,
-            "owner": "vue-collaboration",
-            "release_line": "npm-vue-collaboration",
-            "inputs": [
-                "packages/vue-collaboration/etc/index.api.md",
-                "packages/vue-collaboration/etc/components.surface.txt"
             ],
             "required": true,
             "status": "current",

@@ -39,7 +39,7 @@ const SCENARIO_TAG_MAP = {
 };
 
 // §2 G-1..G-3 — the only sequential gates expressible as a single-metric k6 threshold.
-// `class` here IS the literal tag scenarios already set (tree.js/docs-collab.js =
+// `class` here IS the literal tag scenarios already set (tree.js/documents.js =
 // interactive; tus-upload/s3-multipart/single-shot/download = streaming; mixed.js sets it
 // per-request) — no translation needed, unlike SCENARIO_TAG_MAP above.
 const SEQUENTIAL = {

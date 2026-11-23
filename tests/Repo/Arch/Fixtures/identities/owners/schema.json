@@ -189,30 +189,6 @@
         },
         {
             "match": "exact",
-            "value": "table:v_collaboration_heads",
-            "owner": "collaboration",
-            "why": "D26: collaboration owns the side tables of its update log (heads, updates, receipts), FK to v_documents only"
-        },
-        {
-            "match": "exact",
-            "value": "table:v_collaboration_updates",
-            "owner": "collaboration",
-            "why": "D26: collaboration owns the side tables of its update log (heads, updates, receipts), FK to v_documents only"
-        },
-        {
-            "match": "exact",
-            "value": "table:v_collaboration_receipts",
-            "owner": "collaboration",
-            "why": "D26: collaboration owns the side tables of its update log (heads, updates, receipts), FK to v_documents only"
-        },
-        {
-            "match": "exact",
-            "value": "table:v_collaboration_permission_versions",
-            "owner": "collaboration",
-            "why": "D46: collaboration owns the permission versions of the drives (drive:<id>|global), no FK and no drive column"
-        },
-        {
-            "match": "exact",
             "value": "table:v_drive_change_heads",
             "owner": "drive",
             "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"

@@ -17,12 +17,12 @@ final class Plan
 {
     public const TARGET_MAP = 'tests/Repo/Arch/Fixtures/target-map.json';
 
-    public const OWNERS = ['drive', 'media', 'webhooks', 'documents', 'collaboration'];
+    public const OWNERS = ['drive', 'media', 'webhooks', 'documents'];
 
-    /** The phase whose target-map moves an owner receives: collaboration is carved out of documents in P5, the rest in P4. */
+    /** The phase whose target-map moves an owner receives. */
     public static function phaseOf(string $owner): string
     {
-        return $owner === 'collaboration' ? 'P5' : 'P4';
+        return 'P4';
     }
 
     /**

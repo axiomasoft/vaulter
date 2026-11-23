@@ -43,8 +43,6 @@ final class OpenTelemetryTraceRecorder implements TraceRecorder
         'cas.gc',
         'upload.sweep',
         'webhook.pipeline',
-        'collaboration.session',
-        'collaboration.snapshot',
     ];
 
     private const array LAYERS = ['controller', 'action', 'repository', 'command', 'job'];

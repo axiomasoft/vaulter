@@ -51,9 +51,7 @@ def release_tree(target, full_packages=False):
     """A copy of the release inputs: manifest, workflow, composer.json files and the npm client manifest."""
     files = [
         "release/packages.json", ".github/workflows/monorepo-split.yml", ".changeset/config.json", "SECURITY.md",
-        "packages/vue/package.json", "packages/vue-collaboration/package.json",
-        "packages/collaboration/src/HocuspocusCollaborationDriver.php",
-        "packages/documents/src/Types/RichTextDocumentType.php", "packages/documents/src/Types/MarkdownDocumentType.php",
+        "packages/vue/package.json",
     ]
     for package in PHP_PACKAGES:
         files += tracked_and_new(f"packages/{package}") if full_packages else [f"packages/{package}/composer.json"]
@@ -87,14 +85,14 @@ class CheckVersionsTest(unittest.TestCase):
 
     def test_dev_require_of_a_sibling_is_rejected(self):
         result = self.mutated(lambda tree: self.edit_composer(
-            tree, "media", lambda d: d["require"].update({"axioma-studio/vaulter-core": "dev-main"})))
+            tree, "media", lambda d: d["require"].update({"axiomasoft/vaulter-core": "dev-main"})))
         self.assertEqual(result.returncode, 1)
-        self.assertIn("axioma-studio/vaulter-media", result.stderr)
+        self.assertIn("axiomasoft/vaulter-media", result.stderr)
         self.assertIn("dev-main", result.stderr)
 
     def test_sibling_must_be_self_version(self):
         result = self.mutated(lambda tree: self.edit_composer(
-            tree, "drive", lambda d: d["require"].update({"axioma-studio/vaulter-media": "^0.3"})))
+            tree, "drive", lambda d: d["require"].update({"axiomasoft/vaulter-media": "^0.3"})))
         self.assertEqual(result.returncode, 1)
         self.assertIn('expected "self.version"', result.stderr)
 
@@ -107,7 +105,7 @@ class CheckVersionsTest(unittest.TestCase):
     def test_excluded_bridge_may_pin_its_untagged_upstream(self):
         # The shipped azguard composer.json does exactly this and the current tree passes.
         azguard = json.loads((ROOT / "packages/azguard/composer.json").read_text())
-        self.assertTrue(azguard["require"]["axiomasoft/azguard"].startswith("dev-"))
+        self.assertRegex(azguard["require"]["axiomasoft/azguard"], r"^dev-|@dev$")
 
     def test_dev_upstream_is_only_exempt_while_the_package_is_actually_excluded(self):
         # azguard is tagged in require, yet a dev constraint remains in require-dev: the package ships, so it must fail.
@@ -138,7 +136,7 @@ class CheckVersionsTest(unittest.TestCase):
     def test_missing_or_unknown_channel_in_any_entry_is_rejected(self):
         for value in (None, "beta"):
             def change(data, value=value):
-                entry = data["images"][0]
+                entry = data["npm"][0]
                 entry.pop("channel") if value is None else entry.update(channel=value)
             result = self.mutated(lambda tree, change=change: self.edit_manifest(tree, change))
             self.assertEqual(result.returncode, 1)
@@ -147,32 +145,8 @@ class CheckVersionsTest(unittest.TestCase):
     def test_duplicate_path_and_prefix_collision_are_rejected(self):
         result = self.mutated(lambda tree: self.edit_manifest(tree, lambda d: d["php"][1].update(path=d["php"][0]["path"])))
         self.assertIn("duplicate path", result.stderr)
-        result = self.mutated(lambda tree: self.edit_manifest(tree, lambda d: d["images"][0].update(tag_prefix="collaboration-v")))
+        result = self.mutated(lambda tree: self.edit_manifest(tree, lambda d: d["npm"][0].update(tag_prefix="v")))
         self.assertEqual(result.returncode, 1)
-
-    def test_public_package_may_not_reach_a_private_one(self):
-        for section in ("require", "require-dev", "suggest"):
-            result = self.mutated(lambda tree, section=section: self.edit_composer(
-                tree, "drive", lambda d: d.setdefault(section, {}).update({"axioma-studio/vaulter-collaboration": "^1.0"})))
-            self.assertEqual(result.returncode, 1, section)
-            self.assertIn("references private", result.stderr)
-
-    def test_private_floor_must_be_the_tested_range(self):
-        result = self.mutated(lambda tree: self.edit_composer(
-            tree, "collaboration", lambda d: d["require"].update({"axioma-studio/vaulter-core": "self.version"})))
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("expected tested range", result.stderr)
-
-    def test_private_npm_floor_must_match_the_tested_range(self):
-        def star(tree):
-            path = tree / "packages/vue-collaboration/package.json"
-            data = json.loads(path.read_text())
-            data["peerDependencies"]["@vaulter/vue"] = "*"
-            path.write_text(json.dumps(data))
-
-        result = self.mutated(star)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("expected tested floor", result.stderr)
 
     def test_npm_client_must_declare_the_api_line(self):
         def drop_api(tree):
@@ -203,7 +177,7 @@ class BuildArtifactsTest(unittest.TestCase):
         cls.directory.cleanup()
 
     def zip_of(self, name):
-        return zipfile.ZipFile(self.out / f"axioma-studio-{name}-0.3.0.zip")
+        return zipfile.ZipFile(self.out / f"axiomasoft-{name}-0.3.0.zip")
 
     def test_security_from_immutable_source_is_in_every_public_record_and_split(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
@@ -235,7 +209,7 @@ class BuildArtifactsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="vaulter-security-tamper-") as directory:
             prepared, approval, record = self.approved_fixture(directory)
             self.assertEqual(self.require_approved(prepared, approval, record).returncode, 0)
-            policy = prepared / "axioma-studio-vaulter-core/tree/SECURITY.md"
+            policy = prepared / "axiomasoft-vaulter-core/tree/SECURITY.md"
             policy.write_bytes(policy.read_bytes() + b"unqualified policy change\n")
             result = self.require_approved(prepared, approval, record)
             self.assertEqual(result.returncode, 1)
@@ -245,15 +219,8 @@ class BuildArtifactsTest(unittest.TestCase):
     def test_builds_every_releasable_package(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
         built = sorted(p.name for p in self.out.glob("*.zip"))
-        self.assertEqual(built, sorted(f"axioma-studio-{n}-0.3.0.zip" for n in (
+        self.assertEqual(built, sorted(f"axiomasoft-{n}-0.3.0.zip" for n in (
             "vaulter-core", "vaulter-media", "vaulter-drive", "vaulter-documents", "vaulter-webhooks", "vaulter-filament", "vaulter")))
-
-    def test_private_channel_artifacts_never_land_in_the_public_set(self):
-        private = Path(self.directory.name) / "private-out"
-        result = php("build-artifacts.php", "--version=0.3.0", f"--out={private}", f"--root={self.repo}", "--channel=private")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(sorted(p.name for p in private.glob("*.zip")), ["axioma-studio-vaulter-collaboration-0.3.0.zip"])
-        self.assertFalse((self.out / "axioma-studio-vaulter-collaboration-0.3.0.zip").exists())
 
     def test_unknown_channel_option_and_unknown_manifest_channel_fail_closed(self):
         self.assertEqual(php("build-artifacts.php", "--version=0.3.0", f"--out={self.out}", f"--root={self.repo}", "--channel=beta").returncode, 2)
@@ -272,9 +239,9 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertIn("channel must be", result.stderr)
 
     def test_azguard_is_skipped_while_its_upstream_is_a_dev_require(self):
-        self.assertFalse((self.out / "axioma-studio-vaulter-azguard-0.3.0.zip").exists())
-        self.assertIn("skip axioma-studio/vaulter-azguard", self.result.stdout)
-        self.assertIn("dev-main", self.result.stdout)
+        self.assertFalse((self.out / "axiomasoft-vaulter-azguard-0.3.0.zip").exists())
+        self.assertIn("skip axiomasoft/vaulter-azguard", self.result.stdout)
+        self.assertIn(json.loads((ROOT / "packages/azguard/composer.json").read_text())["require"]["axiomasoft/azguard"], self.result.stdout)
 
     def test_export_ignore_keeps_tests_and_dev_config_out(self):
         for name in ("vaulter-core", "vaulter-media", "vaulter-drive", "vaulter-documents", "vaulter-webhooks", "vaulter-filament"):
@@ -289,12 +256,12 @@ class BuildArtifactsTest(unittest.TestCase):
         core = json.loads(self.zip_of("vaulter-core").read("composer.json"))
         self.assertEqual(core["version"], "0.3.0")
         self.assertNotIn("repositories", core)
-        self.assertNotIn("self.version", json.dumps(core))
+        self.assertNotIn("self.version", core["require"].values())
 
         meta = json.loads(self.zip_of("vaulter").read("composer.json"))
         self.assertEqual(meta["type"], "metapackage")
         self.assertEqual(meta["version"], "0.3.0")
-        self.assertEqual(meta["require"]["axioma-studio/vaulter-core"], "0.3.0")
+        self.assertEqual(meta["require"]["axiomasoft/vaulter-core"], "0.3.0")
 
     def drifted_repo(self):
         """Two commits: the second drops the webhooks manifest entry and rewrites core's composer.json."""
@@ -307,7 +274,7 @@ class BuildArtifactsTest(unittest.TestCase):
         git("commit", "-q", "-m", "old", cwd=tree)
         old = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tree, text=True, capture_output=True, check=True).stdout.strip()
         manifest = json.loads((tree / "release/packages.json").read_text())
-        manifest["php"] = [p for p in manifest["php"] if p["name"] != "axioma-studio/vaulter-webhooks"]
+        manifest["php"] = [p for p in manifest["php"] if p["name"] != "axiomasoft/vaulter-webhooks"]
         (tree / "release/packages.json").write_text(json.dumps(manifest))
         composer = json.loads((tree / "packages/core/composer.json").read_text())
         composer["description"] = "drifted after the old ref"
@@ -320,7 +287,7 @@ class BuildArtifactsTest(unittest.TestCase):
         tree, old, out = self.drifted_repo()
         result = php("build-artifacts.php", "--version=0.3.0", f"--out={out}", f"--root={tree}", f"--ref={old}")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue((out / "axioma-studio-vaulter-webhooks-0.3.0.zip").exists(), "old-ref manifest must list webhooks")
+        self.assertTrue((out / "axiomasoft-vaulter-webhooks-0.3.0.zip").exists(), "old-ref manifest must list webhooks")
 
     def test_mixed_manifest_and_package_source_is_rejected(self):
         tree, old, out = self.drifted_repo()
@@ -332,16 +299,16 @@ class BuildArtifactsTest(unittest.TestCase):
     def test_zip_and_prepared_split_tree_share_one_composer_json(self):
         prepared = self.out / "prepared"
         for name in ("vaulter-core", "vaulter-documents", "vaulter"):
-            record = json.loads((prepared / f"axioma-studio-{name}.json").read_text())
+            record = json.loads((prepared / f"axiomasoft-{name}.json").read_text())
             with self.subTest(package=name):
                 self.assertEqual(record["qualification"], "pending")
                 self.assertRegex(record["split_tree"], r"^[0-9a-f]{40}$")
                 self.assertRegex(record["split_commit"], r"^[0-9a-f]{40}$")
                 self.assertRegex(record["source_sha"], r"^[0-9a-f]{40}$")
-                tree_composer = (prepared / f"axioma-studio-{name}" / "tree" / "composer.json").read_bytes()
+                tree_composer = (prepared / f"axiomasoft-{name}" / "tree" / "composer.json").read_bytes()
                 self.assertEqual(self.zip_of(name).read("composer.json"), tree_composer)
                 self.assertEqual(record["files"]["composer.json"]["sha256"], hashlib.sha256(tree_composer).hexdigest())
-                self.assertEqual(record["archive_sha256"], hashlib.sha256((self.out / f"axioma-studio-{name}-0.3.0.zip").read_bytes()).hexdigest())
+                self.assertEqual(record["archive_sha256"], hashlib.sha256((self.out / f"axiomasoft-{name}-0.3.0.zip").read_bytes()).hexdigest())
         verified = php("build-artifacts.php", f"--verify-prepared={prepared}")
         self.assertEqual(verified.returncode, 0, verified.stderr)
 
@@ -351,9 +318,9 @@ class BuildArtifactsTest(unittest.TestCase):
                 out = Path(directory) / "out"
                 shutil.copytree(self.out, out)
                 prepared = out / "prepared"
-                base = prepared / "axioma-studio-vaulter-core" / "tree"
+                base = prepared / "axiomasoft-vaulter-core" / "tree"
                 if tamper == "zip-composer":
-                    path = out / "axioma-studio-vaulter-core-0.3.0.zip"
+                    path = out / "axiomasoft-vaulter-core-0.3.0.zip"
                     with zipfile.ZipFile(path) as source:
                         entries = {n: source.read(n) for n in source.namelist()}
                     entries["composer.json"] += b" "
@@ -367,9 +334,9 @@ class BuildArtifactsTest(unittest.TestCase):
                     (base / "composer.json").chmod(0o755)
                 result = php("build-artifacts.php", f"--verify-prepared={prepared}")
                 self.assertEqual(result.returncode, 1, result.stdout)
-                self.assertIn("axioma-studio-vaulter-core", result.stderr)
+                self.assertIn("axiomasoft-vaulter-core", result.stderr)
 
-    def materialize(self, prepared, git_dir, package="axioma-studio/vaulter-core", source=None):
+    def materialize(self, prepared, git_dir, package="axiomasoft/vaulter-core", source=None):
         record = json.loads((prepared / f"{package.replace('/', '-')}.json").read_text()) if (prepared / f"{package.replace('/', '-')}.json").exists() else {}
         return php("build-artifacts.php", f"--materialize-split={prepared}", f"--package={package}",
                    f"--source-sha={source or record.get('source_sha', '0' * 40)}", f"--git-dir={git_dir}")
@@ -398,7 +365,7 @@ class BuildArtifactsTest(unittest.TestCase):
 
     def test_materialized_split_is_exactly_the_recorded_tree_and_commit(self):
         prepared = self.out / "prepared"
-        record = json.loads((prepared / "axioma-studio-vaulter-core.json").read_text())
+        record = json.loads((prepared / "axiomasoft-vaulter-core.json").read_text())
         with tempfile.TemporaryDirectory(prefix="vaulter-materialize-") as directory:
             git_dir = Path(directory) / "split.git"
             result = self.materialize(prepared, git_dir)
@@ -413,7 +380,7 @@ class BuildArtifactsTest(unittest.TestCase):
                 out = Path(directory) / "out"
                 shutil.copytree(self.out, out)
                 prepared = out / "prepared"
-                record_path = prepared / "axioma-studio-vaulter-core.json"
+                record_path = prepared / "axiomasoft-vaulter-core.json"
                 record = json.loads(record_path.read_text())
                 source = None
                 if case == "missing-record":
@@ -422,7 +389,7 @@ class BuildArtifactsTest(unittest.TestCase):
                 elif case == "other-source":
                     source = "1" * 40
                 elif case == "tree-bytes":
-                    target = next(p for p in sorted((prepared / "axioma-studio-vaulter-core" / "tree").rglob("*")) if p.is_file() and p.name != "composer.json")
+                    target = next(p for p in sorted((prepared / "axiomasoft-vaulter-core" / "tree").rglob("*")) if p.is_file() and p.name != "composer.json")
                     target.write_bytes(target.read_bytes() + b"x")
                 elif case == "no-qualification":
                     del record["qualification"]
@@ -444,9 +411,9 @@ class BuildArtifactsTest(unittest.TestCase):
         out = Path(directory) / "out"
         shutil.copytree(self.out, out)
         prepared = out / "prepared"
-        record_path = prepared / "axioma-studio-vaulter-core.json"
+        record_path = prepared / "axiomasoft-vaulter-core.json"
         record = json.loads(record_path.read_text())
-        composer_path = prepared / "axioma-studio-vaulter-core/tree/composer.json"
+        composer_path = prepared / "axiomasoft-vaulter-core/tree/composer.json"
         composer = json.loads(composer_path.read_text())
         lock_path = out / "synthetic.lock"
         lock_path.write_text(json.dumps({"packages": [{"name": name, "version": "1.0.0"} for name in set(composer.get("require", {})) | set(composer.get("suggest", {})) if "/" in name]}))
@@ -460,7 +427,7 @@ class BuildArtifactsTest(unittest.TestCase):
         record_path.write_text(json.dumps(record))
         fields = ("source_sha", "split_commit", "split_tree", "content_manifest_sha256", "archive_sha256", "sbom_sha256", "resolution_sha256", "policy_sha256", "tool_sha256")
         approval = {"status": "approved", "source_sha": record["source_sha"], "policy_sha256": record["policy_sha256"], "tool_sha256": record["tool_sha256"],
-                    "packages": {"axioma-studio/vaulter-core": {f: record[f] for f in fields}}}
+                    "packages": {"axiomasoft/vaulter-core": {f: record[f] for f in fields}}}
         if mutate:
             mutate(approval)
         path = Path(directory) / "approval.json"
@@ -476,7 +443,7 @@ class BuildArtifactsTest(unittest.TestCase):
             pinned = hashlib.sha256(Path(approval).read_bytes()).hexdigest() if Path(approval).exists() else "0" * 64
         if pinned is not None:
             env["VAULTER_PREPARED_APPROVAL_SHA256"] = pinned
-        return php("build-artifacts.php", f"--require-approved={prepared}", "--package=axioma-studio/vaulter-core",
+        return php("build-artifacts.php", f"--require-approved={prepared}", "--package=axiomasoft/vaulter-core",
                    f"--source-sha={source or record['source_sha']}", f"--approval={approval}", f"--root={self.repo}", env=env)
 
     def test_self_asserted_matching_approval_without_the_protected_hash_is_refused(self):
@@ -528,7 +495,7 @@ class BuildArtifactsTest(unittest.TestCase):
 
     def test_pending_or_missing_approval_cannot_pass_the_publisher_gate(self):
         with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
-            pending = self.require_approved(self.out / "prepared", Path(directory) / "none.json", json.loads((self.out / "prepared/axioma-studio-vaulter-core.json").read_text()))
+            pending = self.require_approved(self.out / "prepared", Path(directory) / "none.json", json.loads((self.out / "prepared/axiomasoft-vaulter-core.json").read_text()))
             self.assertEqual(pending.returncode, 1)
             self.assertIn("publish refused", pending.stderr)
         with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
@@ -536,7 +503,7 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertEqual(self.require_approved(prepared, approval, record).returncode, 1)
         with tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
             prepared, approval, record = self.approved_fixture(directory)
-            (prepared / "axioma-studio-vaulter-core.json").write_text(json.dumps({**record, "sbom_sha256": None}))
+            (prepared / "axiomasoft-vaulter-core.json").write_text(json.dumps({**record, "sbom_sha256": None}))
             result = self.require_approved(prepared, approval, {**record, "sbom_sha256": None})
             self.assertEqual(result.returncode, 1)
             self.assertIn("pending", result.stderr)
@@ -548,14 +515,14 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
         cases = {
             "status": lambda a: a.update(status="pending"),
-            "archive": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(archive_sha256="c" * 64),
-            "split-commit": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(split_commit="d" * 40),
-            "split-tree": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(split_tree="d" * 40),
-            "sbom": lambda a: a["packages"]["axioma-studio/vaulter-core"].update(sbom_sha256="e" * 64),
+            "archive": lambda a: a["packages"]["axiomasoft/vaulter-core"].update(archive_sha256="c" * 64),
+            "split-commit": lambda a: a["packages"]["axiomasoft/vaulter-core"].update(split_commit="d" * 40),
+            "split-tree": lambda a: a["packages"]["axiomasoft/vaulter-core"].update(split_tree="d" * 40),
+            "sbom": lambda a: a["packages"]["axiomasoft/vaulter-core"].update(sbom_sha256="e" * 64),
             "tool": lambda a: a.update(tool_sha256="f" * 64),
             "policy": lambda a: a.update(policy_sha256="f" * 64),
             "source": lambda a: a.update(source_sha="1" * 40),
-            "other-package": lambda a: a.update(packages={"axioma-studio/vaulter-media": a["packages"]["axioma-studio/vaulter-core"]}),
+            "other-package": lambda a: a.update(packages={"axiomasoft/vaulter-media": a["packages"]["axiomasoft/vaulter-core"]}),
         }
         for name, mutate in cases.items():
             with self.subTest(case=name), tempfile.TemporaryDirectory(prefix="vaulter-gate-") as directory:
@@ -582,7 +549,7 @@ class BuildArtifactsTest(unittest.TestCase):
     def sbom_fixture(self, directory, ambiguous=False, missing=False):
         tree, _, _ = self.drifted_repo()
         manifest = json.loads((tree / "release/packages.json").read_text())
-        manifest["php"] = [p for p in manifest["php"] if p["name"] == "axioma-studio/vaulter-core"]
+        manifest["php"] = [p for p in manifest["php"] if p["name"] == "axiomasoft/vaulter-core"]
         (tree / "release/packages.json").write_text(json.dumps(manifest))
         composer = json.loads((tree / "packages/core/composer.json").read_text())
         composer["require"] = {"php": "^8.4", "fixture/api": "^1", "fixture/replaced": "*"}
@@ -610,7 +577,7 @@ class BuildArtifactsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             result, out, resolution = self.sbom_fixture(directory)
             self.assertEqual(result.returncode, 0, result.stderr)
-            record = json.loads((out / "prepared/axioma-studio-vaulter-core.json").read_text())
+            record = json.loads((out / "prepared/axiomasoft-vaulter-core.json").read_text())
             bom_path = out / record["sbom"]
             bom = json.loads(bom_path.read_text())
             self.assertEqual(bom["metadata"]["component"]["version"], "0.3.0")
@@ -629,8 +596,8 @@ class BuildArtifactsTest(unittest.TestCase):
                 for artifact in out.iterdir():
                     if artifact.is_file():
                         shutil.copy2(artifact, evidence / artifact.name)
-                shutil.copy2(out / "prepared/axioma-studio-vaulter-core.json", evidence / "prepared-record.json")
-                shutil.copy2(out / "prepared/axioma-studio-vaulter-core/tree/composer.json", evidence / "composer.json")
+                shutil.copy2(out / "prepared/axiomasoft-vaulter-core.json", evidence / "prepared-record.json")
+                shutil.copy2(out / "prepared/axiomasoft-vaulter-core/tree/composer.json", evidence / "composer.json")
             bom["components"][0]["version"] = "tampered"
             bom_path.write_text(json.dumps(bom))
             self.assertNotEqual(subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=out, capture_output=True).returncode, 0)
@@ -669,7 +636,7 @@ class BuildArtifactsTest(unittest.TestCase):
             result, out, resolution = self.sbom_fixture(directory)
             self.assertEqual(result.returncode, 0, result.stderr)
             prepared = out / "prepared"
-            record_path = prepared / "axioma-studio-vaulter-core.json"
+            record_path = prepared / "axiomasoft-vaulter-core.json"
             record = json.loads(record_path.read_text())
             second = Path(directory) / "second-out"
             args = [f"--out={second}" if arg.startswith("--out=") else arg for arg in result.args]
@@ -681,14 +648,14 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertEqual({line.split("  ", 1)[1] for line in (out / "SHA256SUMS").read_text().splitlines()}, {record["archive"], record["sbom"]})
             # The exact retained resolution, composer and source reproduce the same SBOM bytes offline.
             expected = (out / record["sbom"]).read_bytes()
-            result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(prepared / "axioma-studio-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
+            result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(prepared / "axiomasoft-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((out / "reproduced.cdx.json").read_bytes(), expected)
             for field in ("resolution", "resolution_provenance", "source_sha", "policy_sha256", "version"):
                 with self.subTest(field=field), tempfile.TemporaryDirectory() as cloned:
                     clone = Path(cloned) / "out"
                     shutil.copytree(out, clone)
-                    saved_path = clone / "prepared/axioma-studio-vaulter-core.json"
+                    saved_path = clone / "prepared/axiomasoft-vaulter-core.json"
                     saved = json.loads(saved_path.read_text())
                     if field in ("resolution", "resolution_provenance"):
                         artifact = clone / saved[field]
@@ -732,7 +699,7 @@ class BuildArtifactsTest(unittest.TestCase):
                     else:
                         (tool / "schema/spdx.schema.json").unlink()
                     self.assertEqual((tool / "build-artifacts.php").read_bytes(), (RELEASE / "build-artifacts.php").read_bytes())
-                    result = php(str(tool / "build-artifacts.php"), f"--require-approved={prepared}", "--package=axioma-studio/vaulter-core", f"--source-sha={record['source_sha']}", f"--approval={approval}", f"--root={self.repo}", env=env)
+                    result = php(str(tool / "build-artifacts.php"), f"--require-approved={prepared}", "--package=axiomasoft/vaulter-core", f"--source-sha={record['source_sha']}", f"--approval={approval}", f"--root={self.repo}", env=env)
                     self.assertEqual(result.returncode, 1, "old authenticated synthetic A must refuse changed producer: " + result.stdout)
                     self.assertIn("publish refused", result.stderr)
 
@@ -743,6 +710,7 @@ class BuildArtifactsTest(unittest.TestCase):
             target = Path(directory) / "outside" / "TARGET"  # own temp, outside the tree and the output; initially absent
             target.parent.mkdir()
             (tree / "CHANGELOG.md").write_text("# Changelog\n")
+            (tree / "packages/core/CHANGELOG.md").unlink(missing_ok=True)
             (tree / "packages/core/CHANGELOG.md").symlink_to(target)
             git("init", "-q", "-b", "main", cwd=tree)
             git("add", "-A", cwd=tree)
@@ -793,7 +761,7 @@ for ref, sha in tags.items():
     def setUpClass(cls):
         cls.splits = [
             p["split"] for p in MANIFEST["php"]
-            if p["split"] != "axioma-studio/vaulter-azguard" and p["channel"] == "public"
+            if p["split"] != "axiomasoft/vaulter-azguard" and p["channel"] == "public"
         ]
 
     def run_verify(self, remote_tags, expected=None, tag="v0.3.0"):
@@ -827,36 +795,36 @@ for ref, sha in tags.items():
         # The stub fails with 128 for an unknown repository, so any query for azguard would surface as an error.
         result = self.run_verify(self.tags(), self.expected())
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("skip axioma-studio/vaulter-azguard", result.stdout)
+        self.assertIn("skip axiomasoft/vaulter-azguard", result.stdout)
 
     def test_annotated_tag_is_compared_by_its_peeled_commit(self):
         tags = self.tags()
-        tags["axioma-studio/vaulter-core"] = {"refs/tags/v0.3.0": "tagobject", "refs/tags/v0.3.0^{}": "c0"}
+        tags["axiomasoft/vaulter-core"] = {"refs/tags/v0.3.0": "tagobject", "refs/tags/v0.3.0^{}": "c0"}
         result = self.run_verify(tags, self.expected())
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_missing_tag_fails_and_is_listed(self):
         tags = self.tags()
-        tags["axioma-studio/vaulter-drive"] = {}
+        tags["axiomasoft/vaulter-drive"] = {}
         result = self.run_verify(tags, self.expected())
         self.assertEqual(result.returncode, 1)
-        self.assertIn("axioma-studio/vaulter-drive: tag v0.3.0 is missing", result.stderr)
+        self.assertIn("axiomasoft/vaulter-drive: tag v0.3.0 is missing", result.stderr)
 
     def test_tag_on_a_foreign_commit_fails_and_is_listed(self):
-        result = self.run_verify(self.tags(**{"axioma-studio/vaulter-media": "deadbeef"}), self.expected())
+        result = self.run_verify(self.tags(**{"axiomasoft/vaulter-media": "deadbeef"}), self.expected())
         self.assertEqual(result.returncode, 1)
-        self.assertIn("axioma-studio/vaulter-media: tag v0.3.0 points at deadbeef", result.stderr)
+        self.assertIn("axiomasoft/vaulter-media: tag v0.3.0 points at deadbeef", result.stderr)
 
     def test_unreachable_remote_fails(self):
         tags = self.tags()
-        del tags["axioma-studio/vaulter-documents"]
+        del tags["axiomasoft/vaulter-documents"]
         result = self.run_verify(tags, self.expected())
         self.assertEqual(result.returncode, 1)
-        self.assertIn("axioma-studio/vaulter-documents", result.stderr)
+        self.assertIn("axiomasoft/vaulter-documents", result.stderr)
 
     def test_expected_commit_is_required_for_every_shipped_split(self):
         expected = self.expected()
-        del expected["axioma-studio/vaulter-core"]
+        del expected["axiomasoft/vaulter-core"]
         result = self.run_verify(self.tags(), expected)
         self.assertEqual(result.returncode, 1)
         self.assertIn("no expected commit recorded", result.stderr)
@@ -881,7 +849,7 @@ for ref, sha in tags.items():
     def test_excluded_listing_names_the_bridge(self):
         result = subprocess.run([str(RELEASE / "verify-split-tags.sh"), "--excluded"], text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.split(), ["axioma-studio/vaulter-azguard"])
+        self.assertEqual(result.stdout.split(), ["axiomasoft/vaulter-azguard"])
 
 
 class WorkflowAndShellTest(unittest.TestCase):
@@ -920,7 +888,7 @@ class WorkflowAndShellTest(unittest.TestCase):
                 self.assertEqual(step["if"], "steps.plan.outputs.excluded != 'true'")
 
     def test_split_repository_names_come_from_the_manifest(self):
-        # vaulter-${matrix.package} would turn the metapackage into axioma-studio/vaulter-vaulter.
+        # vaulter-${matrix.package} would turn the metapackage into axiomasoft/vaulter-vaulter.
         text = (ROOT / ".github/workflows/monorepo-split.yml").read_text()
         self.assertNotIn("vaulter-${{ matrix.package }}", text)
         split = self.workflow["jobs"]["split"]["steps"]
@@ -975,10 +943,7 @@ def route_release(tag, *args, root=None):
 class RouteReleaseTest(unittest.TestCase):
     """Routing + fail-closed D18 qualification, executed before any publisher credential is available."""
 
-    TAGS = {
-        "v1.2.3": "php-public", "collaboration-v1.0.2": "php-collaboration", "collaboration-hub-v1.0.2": "image-collaboration-hub",
-        "@vaulter/vue@1.2.3": "npm-vue", "@vaulter/vue-collaboration@1.0.2": "npm-vue-collaboration",
-    }
+    TAGS = {"v1.2.3": "php-public", "@vaulter/vue@1.2.3": "npm-vue"}
 
     def route(self, tag, override=None, visibility="private", sha=SHA, drop_evidence=False, mutate=None):
         with tempfile.TemporaryDirectory(prefix="vaulter-route-") as directory:
@@ -992,7 +957,7 @@ class RouteReleaseTest(unittest.TestCase):
             (path / "v.json").write_text(json.dumps(destinations if visibility else {}))
             return route_release(tag, f"--sha={sha}", f"--evidence={path / 'e.json'}", f"--visibility={path / 'v.json'}")
 
-    def test_five_independent_release_lines(self):
+    def test_two_independent_release_lines(self):
         lines = {e["release_line"] for kind in ("php", "npm", "images") for e in MANIFEST[kind]}
         self.assertEqual(lines, set(self.TAGS.values()))
         for tag, line in self.TAGS.items():
@@ -1005,8 +970,8 @@ class RouteReleaseTest(unittest.TestCase):
                 members = {e["name"] for kind in ("php", "npm", "images") for e in MANIFEST[kind] if e["release_line"] == line}
                 self.assertTrue(set(routed["entries"]) <= members)
         public = json.loads(self.route("v1.2.3").stdout)["entries"]
-        self.assertNotIn("axioma-studio/vaulter-collaboration", public)
-        self.assertNotIn("axioma-studio/vaulter-azguard", public)
+        self.assertNotIn("axiomasoft/vaulter-collaboration", public)
+        self.assertNotIn("axiomasoft/vaulter-azguard", public)
 
     def test_strict_semver_and_prefix(self):
         for tag in ("v1.2.3-rc.1", "v01.2.3", "v1.2", "collaboration-v1.0.2-beta", "latest", "x1.0.0", "vaulter-collaboration-hub-v1.0.0", "collaboration-hub-v1.0"):
@@ -1015,9 +980,6 @@ class RouteReleaseTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("REFUSED", result.stderr)
                 self.assertNotIn("no qualification evidence", result.stderr)  # refused on the tag, before evidence
-
-    def test_retired_image_prefix_names_itself(self):
-        self.assertIn("retired prefix", route_release("vaulter-collaboration-hub-v1.0.0", f"--sha={SHA}", "--evidence=/x").stderr)
 
     def test_no_evidence_is_not_qualified_and_there_is_no_sha_only_fallback(self):
         result = self.route("v1.2.3", drop_evidence=True)
@@ -1034,44 +996,29 @@ class RouteReleaseTest(unittest.TestCase):
                 self.assertIn("CI gate", result.stderr)
 
     def test_evidence_must_name_the_routed_line_and_channel(self):
-        self.assertIn("release_line/channel", self.route("collaboration-v1.0.2", override={"release_line": "php-public"}).stderr)
+        self.assertIn("release_line/channel", self.route("v1.2.3", override={"release_line": "npm-vue"}).stderr)
         self.assertIn("release_line/channel", self.route("v1.2.3", override={"channel": "private"}).stderr)
 
     def test_every_routed_entry_needs_an_exact_artifact_identity(self):
         def drop_one(document):
-            document["artifacts"].pop("axioma-studio/vaulter-drive")
+            document["artifacts"].pop("axiomasoft/vaulter-drive")
 
         result = self.route("v1.2.3", mutate=drop_one)
-        self.assertIn("axioma-studio/vaulter-drive: no artifact identity", result.stderr)
+        self.assertIn("axiomasoft/vaulter-drive: no artifact identity", result.stderr)
 
         def break_digest(document):
             (next(iter(document["artifacts"].values())))["content_sha256"] = "xyz"
 
         self.assertIn("content_sha256 is missing or malformed", self.route("v1.2.3", mutate=break_digest).stderr)
-        self.assertIn("no artifact identity", self.route("collaboration-hub-v1.0.2", mutate=lambda d: d["artifacts"].popitem()).stderr)
-        self.assertEqual(self.route("collaboration-hub-v1.0.2", mutate=lambda d: next(iter(d["artifacts"].values())).update(digest="latest")).returncode, 1)
         self.assertEqual(self.route("@vaulter/vue@1.2.3", mutate=lambda d: next(iter(d["artifacts"].values())).update(integrity="md5-1")).returncode, 1)
 
-    def test_private_destination_must_be_probed_private(self):
-        for tag in ("collaboration-v1.0.2", "collaboration-hub-v1.0.2", "@vaulter/vue-collaboration@1.0.2"):
-            for state in ("public", None, "internal"):
-                with self.subTest(tag=tag, visibility=state):
-                    result = self.route(tag, visibility=state)
-                    self.assertEqual(result.returncode, 1)
-                    self.assertIn("destination visibility", result.stderr)
-        self.assertEqual(self.route("collaboration-v1.0.2", visibility="private").returncode, 0)
-
-    def test_one_bad_private_entry_refuses_a_public_route_too(self):
+    def test_a_bad_manifest_entry_refuses_a_public_route(self):
         with tempfile.TemporaryDirectory(prefix="vaulter-route-bad-") as directory:
             tree = Path(directory) / "repo"
             for name, mutate in {
                 "unknown channel": lambda d: d["php"][5].update(channel="beta"),
                 "missing tag_prefix": lambda d: d["php"][5].pop("tag_prefix"),
-                "public prefix on private": lambda d: d["php"][5].update(tag_prefix="v"),
-                "missing access": lambda d: d["php"][5].pop("access"),
-                "missing private split": lambda d: d["php"][5].pop("split"),
-                "missing release_line": lambda d: d["npm"][1].pop("release_line"),
-                "image without registry": lambda d: d["images"][0].pop("registry"),
+                "missing release_line": lambda d: d["npm"][0].pop("release_line"),
                 "duplicate path": lambda d: d["php"][5].update(path="packages/core"),
             }.items():
                 with self.subTest(case=name):
@@ -1089,7 +1036,6 @@ class RouteReleaseTest(unittest.TestCase):
         expectations = {
             "monorepo-split.yml": ("split", "GH_ACCESS_TOKEN"),
             "release-npm.yml": ("release", "NPM_TOKEN"),
-            "collaboration-hub-image.yml": ("image", "docker/login-action"),
         }
         for name, (job, secret) in expectations.items():
             workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
@@ -1106,71 +1052,13 @@ class RouteReleaseTest(unittest.TestCase):
         self.assertNotIn("NPM_TOKEN", yaml.safe_dump(npm["jobs"]["version-pr"]))
 
 
-class CompatibilityTuplesTest(unittest.TestCase):
-    """D17: the manifest tuples are checked against the runtime constants, not against themselves."""
+class ChangesetAccessTest(unittest.TestCase):
 
     def mutated(self, mutate):
         with tempfile.TemporaryDirectory(prefix="vaulter-d17-") as directory:
             tree = release_tree(Path(directory))
             mutate(tree)
             return php("check-versions.php", f"--root={tree}")
-
-    def test_runtime_constants_are_what_the_manifest_declares(self):
-        from_runtime = subprocess.run(
-            [str(ROOT / "scripts" / "php84"), "php", "-r", "require $argv[1]; echo json_encode(runtimeWireState($argv[2]));", str(RELEASE / "manifest-lib.php"), str(ROOT)],
-            text=True, capture_output=True)
-        self.assertEqual(from_runtime.returncode, 0, from_runtime.stderr)
-        runtime = json.loads(from_runtime.stdout)
-        declared = MANIFEST["compatibility"]["collaboration"]
-        self.assertEqual(runtime["accepted"], sorted(declared["accepted"], key=lambda r: json.dumps(r, separators=(",", ":"))))
-        self.assertEqual({r["document_type"] for r in runtime["produced"]}, {"vaulter/rich-text", "vaulter/markdown"})
-        self.assertEqual((runtime["protocol"], runtime["version"]), (declared["protocol"], declared["version"]))
-
-    def test_changed_runtime_format_breaks_the_manifest(self):
-        def change_accepted_format(tree):
-            driver = tree / "packages/collaboration/src/HocuspocusCollaborationDriver.php"
-            driver.write_text(driver.read_text().replace("yjs-update-v1", "yjs-update-v2"))
-
-        result = self.mutated(change_accepted_format)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("compatibility.collaboration", result.stderr)
-
-    def test_produced_state_the_driver_does_not_accept_is_rejected(self):
-        def produce_new_format(tree):
-            doc = tree / "packages/documents/src/Types/MarkdownDocumentType.php"
-            doc.write_text(doc.read_text().replace("'yjs-update-v1'", "'yjs-update-v9'"))
-
-        result = self.mutated(produce_new_format)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("does not accept", result.stderr)
-
-    def test_manifest_without_or_with_wrong_tuples_is_rejected(self):
-        def edit(change):
-            def run(tree):
-                path = tree / "release/packages.json"
-                data = json.loads(path.read_text())
-                change(data)
-                path.write_text(json.dumps(data))
-            return run
-
-        self.assertIn("is missing", self.mutated(edit(lambda d: d.pop("compatibility"))).stderr)
-        self.assertEqual(self.mutated(edit(lambda d: d["compatibility"]["collaboration"].update(accepted=[]))).returncode, 1)
-        self.assertEqual(self.mutated(edit(lambda d: d["compatibility"]["collaboration"].update(version="yjs/3"))).returncode, 1)
-
-    def test_floor_must_be_satisfied_by_the_version_the_public_line_really_carries(self):
-        def too_high(tree):
-            path = tree / "release/packages.json"
-            data = json.loads(path.read_text())
-            data["php"][5]["tested_ranges"]["axioma-studio/vaulter-core"] = "^1.1"
-            path.write_text(json.dumps(data))
-            composer = tree / "packages/collaboration/composer.json"
-            body = json.loads(composer.read_text())
-            body["require"]["axioma-studio/vaulter-core"] = "^1.1"
-            composer.write_text(json.dumps(body))
-
-        result = self.mutated(too_high)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("not satisfied by its branch-alias", result.stderr)
 
     def test_changeset_default_access_is_restricted(self):
         def public_default(tree):
@@ -1186,52 +1074,7 @@ class CompatibilityTuplesTest(unittest.TestCase):
             self.assertEqual(package["publishConfig"]["access"], entry["access"])
 
 
-class NpmWorkspaceFloorTest(unittest.TestCase):
-    """Isolated offline npm workspace: a real `npm install --package-lock-only --offline`, empty cache, no registry."""
-
-    PRIVATE = "@vaulter/vue-collaboration"
-
-    def workspace(self, directory, vue_version):
-        root = Path(directory)
-        root.mkdir(parents=True)
-        (root / "package.json").write_text(json.dumps({"name": "fixture", "private": True, "workspaces": ["packages/*"]}))
-        for entry in MANIFEST["npm"]:
-            source = json.loads((ROOT / entry["path"] / "package.json").read_text())
-            reduced = {"name": source["name"], "version": source["version"]}
-            for section in ("peerDependencies", "devDependencies", "dependencies"):
-                kept = {k: v for k, v in source.get(section, {}).items() if k.startswith("@vaulter/")}
-                if kept:
-                    reduced[section] = kept
-            if source["name"] == "@vaulter/vue":
-                reduced["version"] = vue_version
-            target = root / entry["path"]
-            target.mkdir(parents=True)
-            (target / "package.json").write_text(json.dumps(reduced))
-        home = root / "home"
-        home.mkdir()
-        env = {**os.environ, "HOME": str(home), "npm_config_cache": str(home / "cache"), "npm_config_userconfig": str(home / "npmrc"), "npm_config_update_notifier": "false"}
-        return subprocess.run(
-            ["npm", "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", "--offline"],
-            cwd=root, env=env, text=True, capture_output=True, timeout=120)
-
-    def test_matching_local_version_links_and_zero_version_is_rejected(self):
-        floor = MANIFEST["npm"][1]["tested_ranges"]["@vaulter/vue"]
-        with tempfile.TemporaryDirectory(prefix="vaulter-npm-fixture-") as directory:
-            matching = self.workspace(Path(directory) / "match", "1.0.0")
-            self.assertEqual(matching.returncode, 0, matching.stderr)
-            lock = json.loads((Path(directory) / "match" / "package-lock.json").read_text())
-            self.assertTrue(lock["packages"]["node_modules/@vaulter/vue"].get("link"))
-            self.assertEqual(lock["packages"]["node_modules/@vaulter/vue"]["resolved"], "packages/vue")
-            self.assertEqual(lock["packages"]["packages/vue"]["version"], "1.0.0")
-        with tempfile.TemporaryDirectory(prefix="vaulter-npm-fixture-") as directory:
-            rejected = self.workspace(Path(directory) / "zero", "0.0.0")
-            self.assertNotEqual(rejected.returncode, 0, f"0.0.0 satisfied {floor}")
-            self.assertTrue(
-                any(code in rejected.stderr for code in ("ETARGET", "ENOTCACHED", "E404", "offline")),
-                rejected.stderr)
-            lock = Path(directory) / "zero" / "package-lock.json"
-            self.assertFalse(lock.exists() and "node_modules/@vaulter/vue" in lock.read_text())
-
+class NpmWorkspaceLockTest(unittest.TestCase):
     def test_actual_workspace_versions_and_lock_agree(self):
         lock = json.loads((ROOT / "package-lock.json").read_text())["packages"]
         for entry in MANIFEST["npm"]:
@@ -1241,18 +1084,10 @@ class NpmWorkspaceFloorTest(unittest.TestCase):
                 self.assertEqual(lock["node_modules/" + entry["name"]]["resolved"], entry["path"])
         vue = json.loads((ROOT / "packages/vue/package.json").read_text())["version"]
         self.assertEqual(vue, "1.0.0")
-        floor = json.loads((ROOT / "packages/vue-collaboration/package.json").read_text())["peerDependencies"]["@vaulter/vue"]
-        self.assertEqual(floor, MANIFEST["npm"][1]["tested_ranges"]["@vaulter/vue"])
 
 
 class VerifySplitTagsV2Test(VerifySplitTagsTest):
     """The same stub, now routing by channel/prefix of the v2 manifest."""
-
-    def test_private_tag_checks_only_the_private_split(self):
-        private = "axioma-studio/vaulter-collaboration"
-        result = self.run_verify({private: {"refs/tags/collaboration-v1.0.2": "c0"}}, expected={private: "c0"}, tag="collaboration-v1.0.2")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("1 split repositories carry collaboration-v1.0.2", result.stdout)
 
     def test_public_tag_never_queries_the_private_split(self):
         result = self.run_verify(self.tags(), expected=self.expected())

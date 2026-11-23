@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; final class X { public function f($app): mixed { return $app["vaulter.undeclared"]; } }

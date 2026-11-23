@@ -42,22 +42,6 @@
             "tag_prefix": "v"
         },
         {
-            "name": "axiomasoft/vaulter-collaboration",
-            "path": "packages/collaboration",
-            "split": "axiomasoft/vaulter-collaboration",
-            "channel": "private",
-            "release_line": "php-collaboration",
-            "tag_prefix": "collaboration-v",
-            "license": "proprietary",
-            "access": "restricted",
-            "tested_ranges": {
-                "axiomasoft/vaulter-core": "^1.0",
-                "axiomasoft/vaulter-drive": "^1.0",
-                "axiomasoft/vaulter-documents": "^1.0",
-                "axiomasoft/vaulter-media": "^1.0"
-            }
-        },
-        {
             "name": "axiomasoft/vaulter-filament",
             "path": "packages/filament",
             "split": "axiomasoft/vaulter-filament",
@@ -95,61 +79,7 @@
             "tag_prefix": "@vaulter/vue@",
             "registry": "https://registry.npmjs.org",
             "access": "public"
-        },
-        {
-            "name": "@vaulter/vue-collaboration",
-            "path": "packages/vue-collaboration",
-            "api": "1",
-            "channel": "private",
-            "release_line": "npm-vue-collaboration",
-            "tag_prefix": "@vaulter/vue-collaboration@",
-            "registry": "https://registry.npmjs.org",
-            "access": "restricted",
-            "tested_ranges": {
-                "@vaulter/vue": "^1.0"
-            }
         }
     ],
-    "images": [
-        {
-            "name": "ghcr.io/axiomasoft/vaulter-collaboration-hub",
-            "path": "packages/collaboration/hub",
-            "channel": "private",
-            "release_line": "image-collaboration-hub",
-            "tag_prefix": "collaboration-hub-v",
-            "registry": "ghcr.io",
-            "access": "restricted",
-            "legacy_tag_prefix_rejected": "vaulter-collaboration-hub-v"
-        }
-    ],
-    "compatibility": {
-        "collaboration": {
-            "protocol": "yjs",
-            "version": "yjs/2",
-            "accepted": [
-                {
-                    "document_type": "vaulter/markdown",
-                    "state_format": "yjs-update-v1",
-                    "schema_version": 1
-                },
-                {
-                    "document_type": "vaulter/rich-text",
-                    "state_format": "yjs-update-v1",
-                    "schema_version": 1
-                }
-            ],
-            "produced": [
-                {
-                    "document_type": "vaulter/markdown",
-                    "state_format": "yjs-update-v1",
-                    "schema_version": 1
-                },
-                {
-                    "document_type": "vaulter/rich-text",
-                    "state_format": "yjs-update-v1",
-                    "schema_version": 1
-                }
-            ]
-        }
-    }
+    "images": []
 }

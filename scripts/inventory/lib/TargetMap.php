@@ -25,7 +25,7 @@ final class TargetMap
     /** The commit the inventory is taken at. */
     public const BASE = '35718fd2';
 
-    public const OWNERS = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azguard', 'filament'];
+    public const OWNERS = ['core', 'media', 'drive', 'documents', 'webhooks', 'azguard', 'filament'];
 
     public const ACTIONS = ['keep', 'move', 'split', 'replace', 'delete'];
 
@@ -52,7 +52,7 @@ final class TargetMap
 
     /** @var array<string, string> owner => namespace segment of its package */
     private const OWNER_NAMESPACES = [
-        'core' => '', 'media' => 'Media', 'drive' => 'Drive', 'documents' => 'Documents', 'collaboration' => 'Collaboration',
+        'core' => '', 'media' => 'Media', 'drive' => 'Drive', 'documents' => 'Documents',
         'webhooks' => 'Webhooks', 'azguard' => 'AzGuard', 'filament' => 'Filament',
     ];
 
@@ -469,7 +469,7 @@ final class TargetMap
     {
         $rule = $winner['rule'];
         $action = isset($rule['action']) ? (string) $rule['action'] : ($owner === $package ? 'keep' : 'move');
-        $phase = isset($rule['phase']) ? (string) $rule['phase'] : ($action === 'keep' ? 'stay' : ($owner === 'collaboration' ? 'P5' : 'P4'));
+        $phase = isset($rule['phase']) ? (string) $rule['phase'] : ($action === 'keep' ? 'stay' : 'P4');
         $where = "{$label} (rule {$winner['id']})";
 
         if (!in_array($action, self::ACTIONS, true)) {

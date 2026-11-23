@@ -20,7 +20,6 @@ Vaulter ships as a set of packages — install the ones your app needs:
 - **`axiomasoft/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
 - Realtime editing is available as a commercial add-on.
 - **`@vaulter/vue`** — the Vue 3 + TypeScript components, composables and API client.
-- **`@vaulter/vue-collaboration`** — the browser side of realtime editing (update queue, save status).
 
 A Filament 5 admin plugin (`axiomasoft/vaulter-filament`) is available separately. See
 [Installation](/getting-started/installation) for the exact `composer require` per feature set.

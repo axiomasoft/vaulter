@@ -232,7 +232,7 @@ it('selects the repo suite and keeps the default suites free of load', function 
     expect($plan['suites'])->toBe(['repo'])->and($plan['steps'][0]['files'])->toBe($inventory['suites']['repo']['partitions'][0]['files']);
 
     $default = t_plan(['sqlite']);
-    expect($default['suites'])->toBe(['core', 'integration', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azguard', 'filament', 'repo', 'hub', 'vue', 'vue-collaboration']);
+    expect($default['suites'])->toBe(['core', 'integration', 'media', 'drive', 'webhooks', 'documents', 'azguard', 'filament', 'repo', 'vue']);
 });
 
 it('runs a package path from the package cwd with a generated config holding only the selected files', function (): void {
@@ -546,6 +546,18 @@ it('does not count a test that moved in from another suite as an addition, and s
         ->and($ledger['additions']['beta']['count'])->toBe(1)
         ->and($ledger['entries'][0]['new_suite'])->toBe('beta')
         ->and(file_get_contents($fx['root'].'/tests/baseline/CHANGES.md'))->toContain('[`beta`] `P\\B::two`');
+});
+
+it('accepts a retired case only with an explicit decision and no replacement', function (): void {
+    $fixture = t_baseline_fixture(['alpha' => ['P\\A::one', 'P\\A::two']], ['alpha' => ['P\\A::one'], 'beta' => []]);
+    $entry = ['suite' => 'alpha', 'old' => 'P\\A::two', 'reason' => 'Moved out of the repository', 'decision' => 'Task 2.0', 'retired' => true];
+    t_ledger($fixture, [$entry]);
+    expect(t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fixture), $fixture['root'])[0])->toBe(0);
+
+    foreach ([['decision' => ''], ['new' => 'P\\A::one']] as $invalid) {
+        t_ledger($fixture, [array_replace($entry, $invalid)]);
+        expect(t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fixture), $fixture['root'])[0])->toBe(1);
+    }
 });
 
 it('writes current lists and ledger additions without ever rewriting an original', function (): void {

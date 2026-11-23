@@ -10,7 +10,6 @@ const CELL_SPECS = [
   ['product-realistic', 'upload-s3', 'different-resource', SATURATION_N],
   ['product-realistic', 'cas-lock', 'normal-key', SATURATION_N],
   ['product-realistic', 'subtree-move', 'disjoint-tree', SATURATION_N],
-  ['product-realistic', 'collab-issuance', 'issuance-burst', SATURATION_N],
   ['product-realistic', 'sweeper-overlap', 'live-patch-overlap', [1, 8, 32]],
   ['product-worst-case', 'upload-tus', 'same-resource', SATURATION_N],
   ['product-worst-case', 'upload-s3', 'same-resource', SATURATION_N],
@@ -30,7 +29,6 @@ const PRODUCT_OP = {
   'upload-s3': { op: 'OP-06', slo: 'SLO-43' },
   'cas-lock': { op: null, slo: null },
   'subtree-move': { op: 'OP-20', slo: 'SLO-13' },
-  'collab-issuance': { op: 'OP-34', slo: 'SLO-28' },
   'sweeper-overlap': { op: 'OP-44', slo: null },
 };
 

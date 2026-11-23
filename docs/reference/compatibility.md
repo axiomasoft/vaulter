@@ -147,8 +147,7 @@ they are exercised on Postgres in CI so they cannot regress:
   containment queries; other engines store plain `json`/text and skip the gin index.
 - **Binary document state.** The protocol-specific checkpoint (`collab_state`) is a binary column. Vaulter
   stores it so it round-trips losslessly on every engine, including Postgres `bytea` (which
-  otherwise truncates binary at the first NUL byte through a plain string bind). The collaboration update log
-  (`v_collaboration_updates.payload`) is stored the same way.
+  otherwise truncates binary at the first NUL byte through a plain string bind).
 
 None of this needs configuration — point Vaulter at Postgres and it applies automatically.
 
@@ -299,7 +298,6 @@ Each `TestCase` migrates its own schema on start, so run one schema group per in
 | PHP SPI (`#[Spi]`) | same snapshots (`surface.json` and readable `surface.txt`) | no new required members on an implement-SPI; extend via a new interface or explicit decision | machine drift | owner qualification |
 | Internal | `#[Internal]` / Internal namespace | none | attribute scan | n/a |
 | REST (public) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR is forbidden; includes confidential cursors and bounded grants/shares pages (paging to `next_cursor=null`, empty page with continuation) | machine drift | consumer-runtime |
-| REST (private hub) | `packages/collaboration/openapi/hub.yaml`; protocol claim `protocol` | version via claim; private, no 1.x promise to hosts | machine drift | owner qualification |
 | Problem codes | `vaulter:errors`, `x-vaulter-problems` | codes not removed, status unchanged | command output | manual / not_checked |
 | Events | event catalog; no machine payload schema yet | fields not removed; new fields optional; envelope versioned | not_checked (no machine snapshot) | manual; no schema path invented |
 | Config / env / publish tags | `tests/Repo/Arch/Fixtures/identities/*` | keys not removed without an alias cycle | identities-config drift | owner qualification |
@@ -310,9 +308,8 @@ Each `TestCase` migrates its own schema on start, so run one schema group per in
 | Document type keys, viewer, protocols | identities-protocol / ledger | stable keys | machine drift | owner qualification |
 | Storage key/layout and integrity versions | manual / not_checked (no machine snapshot) | layout and integrity version not changed in 1.x without migration | not_checked | owner: `packages/media` (CAS), line 1.x |
 | Queued job / receipt serialization, retry/drain | manual / not_checked | serialized jobs and receipts from 1.x readable by later 1.x; retry/drain semantics unchanged. A passing signature check does not qualify rolling workers: mixed versions need a drain-old-workers policy or an owner tuple test | not_checked | owner: `packages/drive`/`core`, line 1.x; no BC pass claimed |
-| Persisted document schema, protocol wire versions | manual / not_checked | versions only grow compatibly | not_checked | owner: `packages/documents`/`collaboration`, line 1.x |
-| Hub/image environment variables | `packages/collaboration/hub` source/config and private docs; manual / not_checked, Docker runtime is owner qualification | names not removed without alias | not_checked | owner: `packages/collaboration`, line 1.x |
-| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | each package’s `etc/index.api.md`, `etc/components.surface.txt`, public entrypoints and consumer type fixtures | removed exports are BREAK; changed declarations, required props or emits are REVIEW | `api:surface:check` checks declaration freshness in each Vue CI job; the trusted `npm-surface` coordinator compares with the independent release-line predecessor | declaration guard only; packed/runtime qualification is owner work |
+| Persisted document schema, protocol wire versions | manual / not_checked | versions only grow compatibly | not_checked | owner: `packages/documents`, line 1.x |
+| npm `@vaulter/vue` | each package’s `etc/index.api.md`, `etc/components.surface.txt`, public entrypoints and consumer type fixtures | removed exports are BREAK; changed declarations, required props or emits are REVIEW | `api:surface:check` checks declaration freshness in each Vue CI job; the trusted `npm-surface` coordinator compares with the independent release-line predecessor | declaration guard only; packed/runtime qualification is owner work |
 | Root-only `composer.json` keys | root `composer.json` | split packages do not inherit root-only keys; not a package promise | not_checked | manual |
 
 Named arguments are part of the API for `#[Api]` types; unstable constructors are `#[Internal]` (`tests/Repo/Arch/SurfaceRulesTest.php`). Attributes do not guarantee behavior.
@@ -339,8 +336,7 @@ only on a repository whose owner provisioned the trusted host: when neither
 notice. Such a run makes no BC claim. Once either variable is set the lane runs and
 blocks, and an incomplete setup fails it. The standalone
 OpenAPI workflow calls the same externally provisioned host bootstrap. Both public
-`openapi/vaulter-v1.yaml` (core / php-public) and private hub spec (collaboration /
-php-collaboration) use their resolved release-line bases. Local referenced files and
+`openapi/vaulter-v1.yaml` uses the resolved public PHP release base. Local referenced files and
 JSON-pointer fragments must resolve on both sides, including shared schemas. Remote
 refs, missing inputs and an unavailable oasdiff are `not_checked` / exit 2 in CI.
 The transitional tested pin is `tufin/oasdiff:v1.33.0`, in the trusted wrapper's
@@ -374,9 +370,7 @@ release lines and contains no approvals:
 | Required line | Tag family | Pinned major |
 |:--|:--|:--|
 | `php-public` | `v<version>` | 1 |
-| `php-collaboration` | `collaboration-v<version>` | 1 |
 | `npm-vue` | `@vaulter/vue@<version>` | 1 |
-| `npm-vue-collaboration` | `@vaulter/vue-collaboration@<version>` | 0 |
 
 The npm majors follow the actual independent package versions (currently 1.0.0 and
 0.0.0); the release manifest’s `api: 1` does not make the private package version 1.x.

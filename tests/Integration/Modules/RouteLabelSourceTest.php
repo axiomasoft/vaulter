@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -27,16 +26,15 @@ it('defines the RouteLabelSource slot in the kernel as a contributor slot', func
 });
 
 it('labels the routes of every active module from its own contribution', function (): void {
-    $app = FreshApplication::boot(['vaulter.modules.collaboration' => true], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
+    $app = FreshApplication::boot([], after: [VaulterDocumentsServiceProvider::class]);
     $operations = $app->make(VaulterHttpOperationMap::class);
     $throttled = $app->make(VaulterThrottledRouteMap::class);
 
     expect($operations->operationFor('vaulter.v1.nodes.show'))->toBe('point_read')
         ->and($operations->operationFor('vaulter.v1.documents.content.update'))->toBe('doc_write')
-        ->and($operations->operationFor('vaulter.v1.collaboration.hub.append'))->toBe('collab_append')
         ->and($operations->operationFor('vaulter.v1.no-such-route'))->toBeNull()
         ->and($throttled->routeFor('vaulter.v1.uploads.store'))->toBe('uploads.tus_create')
-        ->and($throttled->routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate')
+        ->and($throttled->routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBeNull()
         ->and($throttled->routeFor('vaulter.v1.nodes.show'))->toBeNull();
 });
 

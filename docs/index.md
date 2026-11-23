@@ -33,7 +33,7 @@ features:
     link: /concepts/access-model
   - title: Realtime collaboration
     details: Protocol-neutral session and adapter contracts, with realtime editing available as a commercial add-on.
-    link: /guides/collaboration
+    link: /extending/collaboration-protocols
   - title: Vue + Filament
     details: The @vaulter/vue Drive UI and a Filament 5 admin plugin, ready to embed.
     link: /guides/vue

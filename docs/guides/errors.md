@@ -53,14 +53,7 @@ Codes are a stable public contract (AD29).
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
 | `document_state_pending` | 409 | `Vaulter\Documents\Exceptions\DocumentStatePendingException` |
-| `collaboration_epoch_mismatch` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException` |
-| `collaboration_seed_conflict` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException` |
-| `collaboration_unavailable` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationUnavailableException` |
-| `collaboration_protocol_mismatch` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException` |
-| `collaboration_checkpoint_conflict` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException` |
-| `collaboration_update_mismatch` | 422 | `Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException` |
-| `collaboration_update_too_large` | 413 | `Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException` |
-| `collaboration_draining` | 503 | `Vaulter\Collaboration\Exceptions\CollaborationDrainingException` |
+| `collaboration_unavailable` | 409 | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
 | `document_state_too_large` | 413 | `Vaulter\Documents\Exceptions\DocumentStateTooLargeException` |
 | `unknown_export_format` | 422 | `Vaulter\Documents\Exceptions\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` |
@@ -88,7 +81,7 @@ The response also preserves `errors.name` for name conflicts and invalid names, 
 outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
 include `reason`: `mime_mismatch`, `invalid_tiptap`, `invalid_json`, `too_large` or
 `unsupported_content` (`missing_projection` for a collaboration store without the JSON its type
-needs). `document_state_mismatch` and `collaboration_epoch_mismatch` include
+needs). `document_state_mismatch` includes
 `context.expected` and `context.actual`; `collaboration_unavailable` includes `context.reason`
 (`disabled`, `unsupported_type`); `document_state_too_large` includes `context.size_bytes` and
 `context.max_bytes`; `document_type_unavailable` and

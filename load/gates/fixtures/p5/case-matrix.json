@@ -210,58 +210,6 @@
       ]
     },
     {
-      "cell_id": "product-realistic.collab-issuance.issuance-burst.n1",
-      "http_5xx_success": false,
-      "op": "OP-34",
-      "slo": "SLO-28",
-      "error_budget": "section-0.4-5xx",
-      "expected_409": "not-expected",
-      "progress_owners": null,
-      "tier_l_claim": false,
-      "expected_statuses": [
-        200
-      ]
-    },
-    {
-      "cell_id": "product-realistic.collab-issuance.issuance-burst.n8",
-      "http_5xx_success": false,
-      "op": "OP-34",
-      "slo": "SLO-28",
-      "error_budget": "section-0.4-5xx",
-      "expected_409": "not-expected",
-      "progress_owners": null,
-      "tier_l_claim": false,
-      "expected_statuses": [
-        200
-      ]
-    },
-    {
-      "cell_id": "product-realistic.collab-issuance.issuance-burst.n32",
-      "http_5xx_success": false,
-      "op": "OP-34",
-      "slo": "SLO-28",
-      "error_budget": "section-0.4-5xx",
-      "expected_409": "not-expected",
-      "progress_owners": null,
-      "tier_l_claim": false,
-      "expected_statuses": [
-        200
-      ]
-    },
-    {
-      "cell_id": "product-realistic.collab-issuance.issuance-burst.n200",
-      "http_5xx_success": false,
-      "op": "OP-34",
-      "slo": "SLO-28",
-      "error_budget": "section-0.4-5xx",
-      "expected_409": "not-expected",
-      "progress_owners": null,
-      "tier_l_claim": false,
-      "expected_statuses": [
-        200
-      ]
-    },
-    {
       "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n1",
       "http_5xx_success": false,
       "op": "OP-02+OP-44",
@@ -709,7 +657,6 @@
     "product-realistic.upload-s3.different-resource.n1",
     "product-realistic.cas-lock.normal-key.n1",
     "product-realistic.subtree-move.disjoint-tree.n1",
-    "product-realistic.collab-issuance.issuance-burst.n1",
     "product-realistic.sweeper-overlap.live-patch-overlap.n1",
     "primitive-control.advisory-primitive.xact-release.n1",
     "primitive-control.pgbouncer-queue.pool-queue.n1"

@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; use Vaulter\Documents\State\CollaborativeState; final class X { public function __construct(private CollaborativeState $state) {} public function f(string $id): mixed { return $this->state->lockByDocumentId($id); } }

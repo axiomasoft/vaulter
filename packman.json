@@ -159,32 +159,6 @@
             ]
         },
         {
-            "name": "axiomasoft/vaulter-collaboration",
-            "path": "packages/collaboration",
-            "namespace": "Vaulter\\Collaboration\\",
-            "profile": "laravel-package",
-            "layer": "L4",
-            "type": "addon",
-            "owns": [
-                "Configuration",
-                "Console",
-                "Contracts",
-                "Data",
-                "Doctor",
-                "Drain",
-                "Errors",
-                "Exceptions",
-                "Http",
-                "Operations",
-                "Persistence",
-                "Providers",
-                "Revocation",
-                "Schema",
-                "Security",
-                "Testing"
-            ]
-        },
-        {
             "name": "axiomasoft/vaulter-webhooks",
             "path": "packages/webhooks",
             "namespace": "Vaulter\\Webhooks\\",
@@ -265,7 +239,6 @@
                 "axiomasoft/vaulter-media",
                 "axiomasoft/vaulter-drive",
                 "axiomasoft/vaulter-documents",
-                "axiomasoft/vaulter-collaboration",
                 "axiomasoft/vaulter-webhooks",
                 "axiomasoft/vaulter-azguard",
                 "axiomasoft/vaulter-filament"

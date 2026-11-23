@@ -12,7 +12,6 @@ const N = Number(__ENV.P5_N || '1');
 const ACTOR_BASE = Number(__ENV.P5_ACTOR_BASE || '1');
 const STORAGE = __ENV.P5_STORAGE_ID || '1';
 const SHARED_UPLOAD = __ENV.P5_UPLOAD_ID || '';
-const DOCUMENT = __ENV.P5_DOCUMENT_ID || '';
 const MOVE_TARGET = __ENV.P5_MOVE_TARGET || '';
 const NODE_LIST = (__ENV.P5_NODE_IDS || '').split(',').filter(Boolean);
 const BODY = __ENV.P5_BODY_B64 || '';
@@ -147,15 +146,6 @@ function operation() {
       JSON.stringify({ parent_id: Number(MOVE_TARGET) }),
       { headers: headers(), timeout: '30s' },
     );
-    tally(response, 'operation');
-    return;
-  }
-
-  if (SURFACE === 'collab-issuance') {
-    const response = http.post(`${API}/nodes/${DOCUMENT}/collab/token`, null, {
-      headers: headers(),
-      timeout: '30s',
-    });
     tally(response, 'operation');
   }
 }

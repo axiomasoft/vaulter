@@ -30,7 +30,7 @@ export interface VaulterPluginOptions extends VaulterClientOptions {
   /** UI language and message overrides for the strings the package renders. */
   i18n?: VaulterI18nOptions
   /**
-   * Realtime editing: `createCollaborationAdapter()` of `@vaulter/vue-collaboration`. Without it
+   * Realtime editing uses a host-supplied adapter. Without it
    * every document is edited through the REST autosave.
    */
   collaboration?: CollaborationAdapter

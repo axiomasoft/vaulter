@@ -36,7 +36,6 @@ base rules first, then each route. Errors are described in the
     'middleware' => [
         'authenticated' => ['api', 'auth:sanctum'],
         'public' => ['api'],
-        'hub' => ['api'],
     ],
 ],
 ```
@@ -51,7 +50,6 @@ cache policy. On a host route these middleware do nothing.
 |---|---|---|
 | `authenticated` | everything except the two below | — |
 | `public` | `shares/{token}*` | `throttle:vaulter-public`, `ResolveShareToken` |
-| `hub` | `collaboration/hub/*` | `throttle:vaulter-public`, `ResolveCollaborationCall` |
 
 ### Resolution and authorization
 
@@ -553,7 +551,7 @@ A document's **content** has its own validator, independent of the node's `seque
 `ETag: "{node}.{collab_epoch}.{state_version}"`. It does not depend on the caller, so a reader
 and an editor receive the same body and the same tag, and a rename or move leaves it unchanged.
 Routes marked **If-Match** need that tag; a stale or weak one is
-`412 document_state_mismatch` — also when the collaboration hub stored a newer state in
+`412 document_state_mismatch` — also when an adapter stored a newer state in
 between.
 
 #### `POST v1/drives/{drive}/documents` — `documents.store`
@@ -966,5 +964,5 @@ golden with `UPDATE_GOLDEN=1` and the examples with `VAULTER_OPENAPI_EXAMPLES_WR
 
 - [Drive](/concepts/nodes-and-revisions) — the `DriveHandle` handle the Drive routes wrap
 - [Trash & restore](/guides/trash) — the trash routes' lifecycle
-- [Uploads](/guides/uploads) · [Sharing](/guides/sharing) · [Collaboration](/guides/collaboration)
+- [Uploads](/guides/uploads) · [Sharing](/guides/sharing) · [Collaboration](/extending/collaboration-protocols)
 - [Events reference](/reference/events) · [Enums reference](/reference/php-api)

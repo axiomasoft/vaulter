@@ -70,7 +70,7 @@ final readonly class TipTapSchema
      * `@tiptap/starter-kit ^3`): Link declares `class` alongside href/target/rel, so ANY
      * document containing a link could not be saved; OrderedList declares `start` and
      * `type`. A later pass found the same gap on `link.title`, `image.width`/`height` and
-     * `tableCell`/`tableHeader` `align`: the hub's projection (packages/collaboration/hub) carries
+     * `tableCell`/`tableHeader` `align`: the editor projection carries
      * them as `null`s, so they are on the list, and the shared fixture pins the attribute
      * sets of both sides (TipTapSchemaFixtureTest ↔ hub test/schema-parity.test.js).
      *

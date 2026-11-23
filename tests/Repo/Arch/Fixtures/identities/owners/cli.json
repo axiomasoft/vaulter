@@ -50,12 +50,6 @@
             "why": "relay/retry/redeliver/prune of webhooks -> webhooks"
         },
         {
-            "match": "prefix",
-            "value": "command:vaulter:collaboration:",
-            "owner": "collaboration",
-            "why": "prune of closed generations (and the managed drain) of the collaboration log -> collaboration"
-        },
-        {
             "match": "exact",
             "value": "command:vaulter:make:document-type",
             "owner": "documents",

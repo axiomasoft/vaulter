@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; use Vaulter\Database\VaulterDatabase; final class X { public function f(VaulterDatabase $d): void { $d->insertOnce("t", [], "k"); } }

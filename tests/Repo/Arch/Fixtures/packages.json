@@ -16,24 +16,6 @@
                 "drive"
             ]
         },
-        "collaboration": {
-            "composer": "axiomasoft/vaulter-collaboration",
-            "current_require": [
-                "core",
-                "documents",
-                "drive"
-            ],
-            "dir": "packages/collaboration",
-            "exists": true,
-            "psr4": {
-                "Vaulter\\Collaboration\\": "src/"
-            },
-            "target_require": [
-                "core",
-                "documents",
-                "drive"
-            ]
-        },
         "core": {
             "composer": "axiomasoft/vaulter-core",
             "current_require": [],

@@ -20,8 +20,7 @@ HTML/Markdown, see [Export](./export.md).
 
 ::: info Documents are enabled by installing the package
 Install `axiomasoft/vaulter-documents`. Editing, revisions and document routes
-are available without a `document_versions` flag. Real-time collaboration is the separate, opt-in package
-a commercial add-on; the public contract is [collaboration protocols](/extending/collaboration-protocols).
+are available without a `document_versions` flag. Real-time collaboration is provided by adapters implementing [collaboration protocols](/extending/collaboration-protocols).
 :::
 
 ## The data model
@@ -335,7 +334,7 @@ $doc = Documents::in($drive)->update(
 The PUT returns `200` with the new working state and its new `ETag`; `update()` returns the new
 `DocumentSnapshot`. Over HTTP the write needs `If-Match` with the content tag you read: without it
 `428 precondition_required` (so does `*`), with a stale or weak one `412 document_state_mismatch`
-— for instance after the collaboration hub published a newer checkpoint in between. Only the JSON
+— for instance after an adapter published a newer checkpoint in between. Only the JSON
 `content` travels; binary state is written only through CollaborativeState. When the save changed something the action fires `DocumentContentUpdated` after
 commit: `version` is the head checkpoint after the save and `created` tells whether this save
 took it. The event's `actorId` is the acting user (null for the system).
@@ -561,7 +560,6 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 | `Documents\Exceptions\InvalidDocumentContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
 | `Documents\Exceptions\DocumentRevisionNotFoundException` | A revision id that does not belong to the node's document. |
 | `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` no longer matches (`412 document_state_mismatch`). |
-| `Collaboration\Exceptions\CollaborationEpochMismatchException` | A collaboration write from an older room generation (`409 collaboration_epoch_mismatch`). |
 | `Documents\Exceptions\DocumentStatePendingException` | Saved collaboration edits are not in the content yet; the read, export, replace or restore was refused untouched (`409 document_state_pending`, retry later). |
 | `Exceptions\Drive\NodeNameConflictException` | A create collides with a sibling name. |
 

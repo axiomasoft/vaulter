@@ -66,7 +66,6 @@ HTTP_OP_TO_METRIC = {
     'OP-31': {'doc_write'},
     'OP-32': {'doc_write'},
     'OP-33': {'doc_export'},
-    'OP-34': {'collab_issue'},
     'OP-35': {'doc_write'},
     'OP-36': {'doc_write'},
     'OP-37': {'comment'},

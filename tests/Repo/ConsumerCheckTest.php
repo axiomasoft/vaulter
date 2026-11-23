@@ -146,7 +146,7 @@ PHP;
     return ['CONSUMER_COMPOSER' => $dir.'/composer', 'CONSUMER_FAKE_LOG' => $dir, 'CONSUMER_FAKE_EXTRA' => $extraPackage];
 }
 
-dataset('consumer packages', ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']);
+dataset('consumer packages', ['core', 'media', 'drive', 'documents', 'webhooks']);
 
 it('plans the declared siblings of every consumer package of the repository and touches nothing', function (string $package): void {
     $work = c_tmp();
@@ -166,16 +166,6 @@ it('lists exactly the declared siblings for webhooks and no other package', func
     preg_match('/^  repositories: (.*)$/m', $out, $match);
     expect($match[1] ?? '')->toBe('axiomasoft/vaulter-core axiomasoft/vaulter-drive axiomasoft/vaulter-media')
         ->and($out)->not->toContain('vaulter-documents')
-        ->and($out)->not->toContain('vaulter-filament');
-});
-
-it('lists exactly the declared siblings for collaboration, its dev sibling included, and no other package', function (): void {
-    [$code, $out, $err] = c_run(['collaboration', '--dry-run']);
-
-    expect($code)->toBe(0, $out.$err);
-    preg_match('/^  repositories: (.*)$/m', $out, $match);
-    expect($match[1] ?? '')->toBe('axiomasoft/vaulter-core axiomasoft/vaulter-documents axiomasoft/vaulter-drive axiomasoft/vaulter-media')
-        ->and($out)->not->toContain('vaulter-webhooks')
         ->and($out)->not->toContain('vaulter-filament');
 });
 

@@ -2,8 +2,7 @@
 
 Public documents owns `POST documents/{node}/collaboration/session` and
 `Documents::in($drive)->collaborationSession($node)`. The public client consumes a neutral
-session; a host connector owns protocol transport. Yjs is provided by the commercial add-on
-`axiomasoft/vaulter-collaboration`.
+session; a host connector owns protocol transport.
 
 ## Register an adapter
 

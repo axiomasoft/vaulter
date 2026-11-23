@@ -18,7 +18,7 @@ function rcErrors(array $owners, array $files, array $allowlist): array
             $private[] = $owner['manifest']['name'] ?? $owner['name'];
         }
     }
-    $patterns = array_unique([...$private, 'Vaulter\\Collaboration\\', 'Vaulter\\\\Collaboration\\\\', 'collaboration-hub', 'Hocuspocus', 'hocuspocus']);
+    $patterns = array_unique([...$private, 'axiomasoft/vaulter-collaboration', '@vaulter/vue-collaboration', 'Vaulter\\Collaboration\\', 'Vaulter\\\\Collaboration\\\\', 'collaboration-hub', 'Hocuspocus', 'hocuspocus']);
     foreach ($owners as $owner) {
         $manifest = $owner['manifest'];
         $expected = $owner['channel'] === 'public' ? 'MIT' : ($owner['kind'] === 'php' ? 'proprietary' : 'UNLICENSED');
@@ -77,6 +77,7 @@ it('keeps manifest owners licenses dependencies and shipped public files within 
     $files = [];
     foreach (['php' => 'composer.json', 'npm' => 'package.json'] as $kind => $filename) {
         foreach ($release[$kind] as $owner) {
+            expect($owner['channel'])->toBe('public', $owner['name']);
             $owner['kind'] = $kind;
             $owner['manifest'] = json_decode(file_get_contents($root.'/'.$owner['path'].'/'.$filename), true, flags: JSON_THROW_ON_ERROR);
             $owners[] = $owner;
@@ -94,11 +95,7 @@ it('keeps manifest owners licenses dependencies and shipped public files within 
             }
         }
     }
-    foreach ($release['images'] as $owner) {
-        $owner['kind'] = 'npm';
-        $owner['manifest'] = json_decode(file_get_contents($root.'/'.$owner['path'].'/package.json'), true, flags: JSON_THROW_ON_ERROR);
-        $owners[] = $owner;
-    }
+    expect($release['images'])->toBe([]);
     $allowlist = json_decode(file_get_contents(__DIR__.'/Fixtures/allowlists/private-mentions.json'), true, flags: JSON_THROW_ON_ERROR);
     expect(rcErrors($owners, $files, $allowlist))->toBe([]);
 });
@@ -107,6 +104,8 @@ it('rejects private edges metadata contents licenses and stale or namespace exce
     $public = ['name' => 'public/pkg', 'path' => 'packages/public', 'kind' => 'php', 'channel' => 'public', 'manifest' => ['license' => 'MIT']];
     $private = ['name' => 'private/addon', 'path' => 'packages/private', 'kind' => 'npm', 'channel' => 'private', 'manifest' => ['license' => 'UNLICENSED']];
     expect(rcErrors([$public, $private], [], []))->toBe([]);
+    expect(rcErrors([$public], ['packages/public/README.md' => '@vaulter/vue-collaboration'], []))
+        ->toBe(['private mention: packages/public/README.md: @vaulter/vue-collaboration']);
     foreach (['require', 'require-dev', 'suggest', 'dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as $field) {
         $bad = $public;
         $bad['manifest'][$field]['private/addon'] = '^1.0';

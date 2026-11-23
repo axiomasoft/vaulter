@@ -128,7 +128,6 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | возвращается из `ContentStore::stage()` |
 | Cas | `BlobPins` | контракт media, через который владелец связи с блобом (drive) ставит и снимает пины |
-| Collaboration | `HostUserResolver` (collaboration) | привязка в контейнере |
 | Collaboration | `CollaborativeState` (documents) | публичный контракт состояния, через который пишет журнал коллаборации (API, не точка расширения) |
 | Collaboration | `PendingStateDrainer` (documents) | реализуется модулем коллаборации; documents вызывает его перед выдачей или заменой pending-документа |
 | Handlers | `FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` |
@@ -388,7 +387,7 @@ drive, node, tenant, correlation id, потолок режима и необяз
 транзакции перед restore, REST replace, чтением контента или экспортом pending-документа, затем сам перечитывает маркер и
 отвечает `409 document_state_pending`, если он всё ещё стоит.
 
-См. [Совместное редактирование](/ru/guides/collaboration).
+См. [Совместное редактирование](/ru/extending/collaboration-protocols).
 
 ---
 

@@ -1,6 +1,6 @@
 # Tests
 
-Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every suite is run through one entry,
+Pest on Orchestra Testbench (PHP) and Vitest (Vue). Every suite is run through one entry,
 `scripts/t`. Two machine files describe the layout and are the single source for the runner, the selector and CI:
 
 - `tests/zones.json` — **zones**: an index over existing directories (it never moves a test). Used by
@@ -16,9 +16,7 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 | `media`, `drive`, `webhooks`, `documents`, `azguard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, webhooks and documents use core+media+drive, …) |
 | `integration` | repo root | `tests/Integration`; consumes every PHP package, preserves each schema partition and group |
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
-| `hub` | `packages/collaboration/hub` | Node tests of the collaboration hub (not Pest) |
 | `vue` | `packages/vue` | the TypeScript client (not Pest) |
-| `vue-collaboration` | `packages/vue-collaboration` | the Yjs/Hocuspocus adapter of the client: envelopes, queue, save status (Vitest, not Pest); uses `vue` |
 | `load` | repo root | `load/tests`; **explicit only** (`-p load` or `stand`), never in `all` |
 
 Paths are repo-relative for `core`, `integration`, `load` and `repo`, package-relative for the others. Zones of the core suite and
@@ -53,7 +51,7 @@ All commands accept `--dry-run [--json]`: it prints the plan (suites, partitions
 | `scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql\|mysql]` | The zones touched by `base...HEAD` plus staged, unstaged and untracked files, and their consumers; `--quick` keeps only the touched zones. An unknown path or a harness change is refused with exit 2 and the full affected plan is printed; prose-only (`README.md`, `CONTRIBUTING.md`, `docs/`, `plans/`) is a plan of zero runs and is not a pass. |
 | `scripts/t <engine> -p <pkg> --full` | Parallel pass without `nofull,serial`, then one `serial` pass. |
 | `scripts/t <engine> -p <pkg> --group=serial -j1 --no-skips` | The serial pass only. |
-| `scripts/t stand` | Stand-group tests plus the real-process scripts (`scripts/collab-e2e.sh`, `scripts/collab-stand.sh`). Never part of fast/full/all; k6 and benchmarks are not started by any command here. |
+| `scripts/t stand` | Stand-group load tests. Never part of fast/full/all; k6 and benchmarks are not started by any command here. |
 | `scripts/t baseline --write\|--compare [-p …]` | Discovery of test names against `tests/baseline/` (nothing is executed). |
 
 Other flags: `-j N` workers inside a partition (default half the CPUs, at most 8), `--junit=DIR`, `--no-skips`,
@@ -71,7 +69,7 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 | Fast | `ci.yml` (`fast`), per package and Laravel version | `scripts/t sqlite -p <pkg>`; which packages run comes from `scripts/t --changed --dry-run --json` |
 | Database | `ci.yml` (`db`), after `fast` is green | `scripts/t <engine> -p <pkg> --group=database` on PostgreSQL and MySQL services |
 | Serial | `ci.yml` (`serial`), after `fast` is green | `scripts/t pgsql -p <pkg> --group=serial -j1 --no-skips` |
-| Repo, hub, vue, openapi | `ci.yml` | harness tests, Node tests, spec validation |
+| Repo, Vue, OpenAPI | `ci.yml` | harness tests, Vue tests, spec validation |
 | Consumer isolation (I14) | `ci.yml` (`consumer-isolation`), blocking, per `core`, `media`, `drive`, `documents`, `webhooks` | `scripts/release/consumer-check.sh <pkg>`: the package in an empty directory with path repositories only on the siblings it declares (no repository `vendor/`, no `packages/core/tests`), then its fast sqlite set; `--dry-run` prints the plan and runs only the static refusal (an undeclared sibling class, `../core/tests`, `Vaulter\Tests`). Tested in `tests/Repo/ConsumerCheckTest.php`; the zip archives of a release are qualified in PLAN4 |
 | Gate | `ci.yml` (`ci-gate`) | the single required status |
 | Weekly full | `weekly-full.yml` (Monday) | `--full` on every engine, coverage, the stand |
@@ -89,7 +87,7 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 - A test that writes into the Testbench skeleton (publishes config, the bootstrap cache) runs `-j1` with its own
   `TESTBENCH_APP_BASE_PATH`; the runner does that for the partitions marked so in `suites.json`.
 - A dataset that multiplies a dimension no code reads is a loop in one test, or no dimension at all.
-- Removing or merging a living test needs the owner's decision and a replacement: `scripts/t baseline --compare`
+- Removing or merging a living test needs the owner's decision and either a replacement or an explicit retirement: `scripts/t baseline --compare`
   fails on a missing original name that has no entry in the ledger.
 
 ## Testing kit (PLAN3 P4.2, D14)
@@ -128,7 +126,7 @@ scripts/php84 php scripts/inventory/move-types.php --owner=<drive|media|webhooks
 - It rewrites the namespace of a moved file, `use` imports (group imports are split), fully qualified, imported and namespace-relative names, the type part of docblock tags, string literals and comments, and the docs, JSON, neon, yml and `phpunit.xml` files that name a moved class. A name that resolved through the namespace and no longer does gets an import. Run `scripts/php84 php vendor/bin/pint <paths>` on the touched files afterwards (import order).
 - Exit: 0 done, 1 a failure while reading or applying (a file that does not parse), 2 usage, conflict (a target file exists), empty selection or a `replace`/`split` type.
 - `--tests=<old-dir>:<new-dir>` moves a whole test directory: `Vaulter\Tests\…` classes become `Vaulter\<Package>\Tests\…`, `tests/suites.json` lists each file in the partition of the same TestCase key of the new package's suite (no such partition: exit 2), `tests/zones.json` forgets the old directory, and `tests/baseline/CHANGES.json` gets one entry per moved Pest case (`suite`, `old`, `new`, `new_suite`, `reason`, `decision`). Afterwards run `scripts/t baseline --write -p <old>,<new>` for the current lists and additions.
-- A ledger entry with `new_suite` moves a test to another suite: `scripts/t baseline --compare` looks for `new`/`replacement[]` in the current discovery of `new_suite` (discovered on demand), and `--write` does not count such a name as an addition of `new_suite`. An unknown `new_suite`, a missing replacement and a stale entry fail the comparison.
+- A ledger entry with `new_suite` moves a test to another suite: `scripts/t baseline --compare` looks for `new`/`replacement[]` in the current discovery of `new_suite` (discovered on demand), and `--write` does not count such a name as an addition of `new_suite`. An unknown `new_suite`, a missing replacement and a stale entry fail the comparison. For a deliberate retirement, record `retired: true` with the owner decision and reason, and omit replacement fields.
 - Tests: `scripts/t sqlite -p repo tests/Repo/Arch/MoveTypesTest.php` (fixture tree `tests/Repo/Fixtures/move-types`, PHP kept as `*.php.stub`) and the cross-suite cases of `tests/Repo/TestRunnerTest.php`.
 
 ## Which run when
@@ -143,7 +141,7 @@ Pick the **smallest** row that covers the change; a bigger row is never a substi
 | The change touches SQL, a migration, a transaction or locking | `scripts/t pgsql -p <pkg> --group=database` | engine-dependent tests of the package on pgsql | mysql | 20 s – 1 min per package |
 | Before a push of a schema/query change | `make test-db` (= `scripts/t pgsql --group=database`) | every engine-dependent test of every suite, pgsql | mysql, `serial`, `extended` | 2 min 43 s |
 | MySQL-specific doubt (collation, locking, DDL) | `make test-db-mysql` (= `scripts/t mysql --group=database`, local server in Docker on tmpfs) | every engine-dependent test, mysql | pgsql, `serial`, `extended` | 10 min (was hours with a native mysqld on disk) |
-| All default suites on SQLite (harness change, wide refactor) | `make test` (= `scripts/t sqlite`) | every default suite, SQLite fast lane, vue, hub | servers, `serial`, `extended`, `stand` | 3 min 52 s |
+| All default suites on SQLite (harness change, wide refactor) | `make test` (= `scripts/t sqlite`) | every default suite, SQLite fast lane and Vue | servers, `serial`, `extended`, `stand` | 3 min 52 s |
 | Closing a plan, before a release (frozen code) | `make test-full` (= `scripts/t all --full`) | the whole matrix: sqlite+pgsql+mysql, `serial`, `extended` (full seeds) | `stand`, coverage, load | see below² |
 | Owner's explicit request only | `scripts/t stand`; `make test-coverage`; `load.yml` | external services, coverage, k6 | — | long |
 

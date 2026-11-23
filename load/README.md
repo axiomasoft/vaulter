@@ -115,7 +115,7 @@ nothing to read/write against and every check fails.
 | `k6/lib/metrics.js` | the five custom metrics, names byte-for-byte from `slo-gates.md` §1 |
 | `k6/lib/expected.js` | 409/429 as protocol, not `http_req_failed` (`slo.md` §0.4) |
 | `k6/lib/nodes.js`, `discovery.js` | node-tree HTTP helpers + one-time setup() discovery (a downloadable-file pool, the seeded `documents` folder's node ids, a bootstrap share token) — the manifest carries only a few anchor ids, not a full id-list per kind (Known Deviations) |
-| `k6/scenarios/{tus-upload,s3-multipart,single-shot,download,tree,docs-collab,mixed}.js` | the 7 scenarios (Scope Included, P2.4) |
+| `k6/scenarios/{tus-upload,s3-multipart,single-shot,download,tree,documents,mixed}.js` | the 7 scenarios (Scope Included, P2.4) |
 | `k6/smoke.js` | contract smoke — every scenario once, DB/storage post-conditions checked from `run.sh`/manually, not inside k6 |
 
 ## Gate: thresholds + perf-assert (P2.5)

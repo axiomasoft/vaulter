@@ -15,6 +15,4 @@
 /scripts/release/ @academici
 /scripts/test-release-tools.py @academici
 /openapi/ @academici
-/packages/collaboration/ @academici
-/packages/vue-collaboration/ @academici
 /SECURITY.md @academici

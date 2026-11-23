@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # scripts/t — the single entry for every test suite of the monorepo (PLAN3 P1.3).
 #
-#   scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,webhooks,documents,collaboration,azguard,filament,load,repo,hub,vue,vue-collaboration]
+#   scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,webhooks,documents,azguard,filament,load,repo,vue]
 #             [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G]
 #             [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql|mysql] [--dry-run [--json]] [-j N] [--junit=DIR] [--no-skips] [-- pest flags]
-#   scripts/t stand [-p load,collab-e2e,collab-stand] [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
+#   scripts/t stand [-p load] [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t baseline --write|--compare [-p ...]
 #   scripts/t --help
 #
@@ -33,7 +33,7 @@
 #     nofull = stand: the fast lane excludes nofast, --full excludes nofull (and runs serial once), nothing else is ever hidden.
 #     Selecting `--group=extended` or `--group=stand` drops the exclusion that group implies, so it never selects nothing.
 #   * stand: the stand-group tests (load/tests, SQLite, one process) plus the real-process scripts listed under "stand" in
-#     tests/suites.json (scripts/collab-e2e.sh, scripts/collab-stand.sh). It is its own command, never part of fast/full/all; k6 and benchmarks are
+#     tests/suites.json. It is its own command, never part of fast/full/all; k6 and benchmarks are
 #     not tests of this runner and no command here starts them.
 #
 # --changed: scripts/test-select.php turns `git diff <merge-base of --base (default main)>..HEAD` + staged/unstaged/untracked
@@ -285,7 +285,7 @@ discover() { # suite -> sorted names on stdout
     if [[ "$kind" == pest ]]; then
         local -a args
         mapfile -t args < <(jq -r --arg s "$name" '.suites[$s].discovery[]' "$inventory")
-        (cd "$root/$cwd" && "$root/scripts/php84" php "$(jq -r --arg s "$name" '.suites[$s].vendor' "$inventory")" "${args[@]}") \
+        (cd "$root/$cwd" && "$root/scripts/php84" php "$(jq -r --arg s "$name" '.suites[$s].vendor' "$inventory")" --bootstrap="$root/vendor/autoload.php" "${args[@]}") \
             | sed -n 's/^ - //p' | LC_ALL=C sort
     elif jq -e --arg s "$name" '.suites[$s].list_glob' "$inventory" >/dev/null; then
         # Node22 `node --test` has no discovery-only mode: the manifest globs, as file paths (metric = test_files).
@@ -367,15 +367,15 @@ render_changes_md() {
         echo '# Baseline changes (view of CHANGES.json)'
         echo
         echo 'Machine ledger: `tests/baseline/CHANGES.json`. A test name that is in `original/<suite>.list` and not in the current discovery'
-        echo 'must have an entry (`old`, `new` or `replacement[]`, `reason`, `decision` = decision id or owner grant) whose replacement'
-        echo 'exists in the current list; prose alone hides nothing. `original/` is immutable.'
+        echo 'must have a ledger entry with a reason and decision. Its replacement must exist in the current list,'
+        echo 'or the entry must explicitly mark an owner-approved retirement. `original/` is immutable.'
         echo
         echo '## Entries'
         echo
         if [[ "$(jq '.entries | length' "$ledger")" == 0 ]]; then
             echo '_none_'
         else
-            jq -r '.entries[] | "- `\(.suite)` `\(.old)` → \(if .new_suite then "[`\(.new_suite)`] " else "" end)\(if .new then "`\(.new)`" else "replacement " + ((.replacement // []) | map("`" + . + "`") | join(", ")) end) — \(.reason) (\(.decision))"' "$ledger"
+            jq -r '.entries[] | "- `\(.suite)` `\(.old)` → \(if .retired then "retired" elif .new_suite then "[`\(.new_suite)`] " else "" end)\(if .retired then "" elif .new then "`\(.new)`" else "replacement " + ((.replacement // []) | map("`" + . + "`") | join(", ")) end) — \(.reason) (\(.decision))"' "$ledger"
         fi
         echo
         echo '## Additions (current − original)'
@@ -410,7 +410,7 @@ compare_suite() { # suite current-list
         fi
         jq -c --arg t "$target" --rawfile l "$(dirname "$cur")/$target.list" '. + {($t): ($l | split("\n") | map(select(length > 0)))}' "$others" >"$others.new" && mv "$others.new" "$others"
     done < <(jq -r --arg s "$name" '[.entries[] | select(.suite == $s) | .new_suite // empty] | unique[]' "$ledger")
-    # every missing name needs a complete ledger entry whose replacement is present; every entry must still be live
+    # Every missing name needs a verified replacement or an explicit retirement with a decision.
     report="$(jq -r --arg s "$name" --slurpfile others "$others" --rawfile missing <(printf '%s\n' "$missing") --rawfile cur "$cur" --rawfile orig "$orig" '
         ($missing | split("\n") | map(select(length > 0))) as $m
         | ($cur | split("\n") | map(select(length > 0))) as $c
@@ -423,7 +423,10 @@ compare_suite() { # suite current-list
             | if $x == null then "missing without ledger entry: \($n)"
               elif (($x.decision // "") | length) == 0 or (($x.reason // "") | length) == 0 then "ledger entry lacks decision/reason: \($n)"
               else ([($x.new // empty)] + ($x.replacement // [])) as $r
-                | if ($r | length) == 0 then "ledger entry has no new/replacement: \($n)"
+                | if $x.retired == true then
+                    if ($r | length) != 0 or $x.new_suite != null then "retired ledger entry names a replacement: \($n)"
+                    else empty end
+                  elif ($r | length) == 0 then "ledger entry has no new/replacement: \($n)"
                   elif ((if ($x.new_suite // $s) == $s then $cset else (($others[0][$x.new_suite] // []) | map({(.): true}) | add // {}) end) as $target
                         | $r | map(select($target[.] != true)) | length) > 0 then "replacement not in the current list\(if $x.new_suite then " of [\($x.new_suite)]" else "" end) for: \($n)"
                   else empty end

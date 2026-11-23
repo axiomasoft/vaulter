@@ -2,6 +2,8 @@
 
 exports[`public exports > matches the export snapshot 1`] = `
 [
+  "BLOCK_ID_TYPES",
+  "BlockId",
   "MAX_NAME_LENGTH",
   "NAME_REASONS",
   "VIEWER_KEYS",
@@ -27,6 +29,7 @@ exports[`public exports > matches the export snapshot 1`] = `
   "createViewerRegistry",
   "default",
   "filenameFromDisposition",
+  "generateBlockId",
   "humanByteSize",
   "nodeIconKind",
   "portableNameReason",

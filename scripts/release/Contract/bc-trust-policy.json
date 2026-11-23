@@ -6,17 +6,9 @@
       "prefix": "v",
       "major": 1
     },
-    "php-collaboration": {
-      "prefix": "collaboration-v",
-      "major": 1
-    },
     "npm-vue": {
       "prefix": "@vaulter/vue@",
       "major": 1
-    },
-    "npm-vue-collaboration": {
-      "prefix": "@vaulter/vue-collaboration@",
-      "major": 0
     }
   },
   "known_releases": [],

@@ -13,8 +13,7 @@ from pathlib import Path
 TOOL = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(TOOL / 'vendor/python'))
 
-SPECS = {'php-public': 'openapi/vaulter-v1.yaml',
-         'php-collaboration': 'packages/collaboration/openapi/hub.yaml'}
+SPECS = {'php-public': 'openapi/vaulter-v1.yaml'}
 
 
 def tool_image():
@@ -118,7 +117,7 @@ def run(root, candidate, report):
             prefix = tmp if binary else '/work'
             result = subprocess.run(args + ['breaking', prefix + '/base/' + spec, prefix + '/candidate/' + spec, '--fail-on', 'ERR'], capture_output=True)
             exit_code = result.returncode if result.returncode in (0, 1) else 2
-            rows.append({'line': line, 'owner': 'collaboration' if line == 'php-collaboration' else 'core', 'spec': spec, 'base_sha': base, 'candidate_sha': candidate, 'status': 'compared' if exit_code < 2 else 'not_checked', 'exit': exit_code, 'qualification': 'pending_P8.2'})
+            rows.append({'line': line, 'owner': 'core', 'spec': spec, 'base_sha': base, 'candidate_sha': candidate, 'status': 'compared' if exit_code < 2 else 'not_checked', 'exit': exit_code, 'qualification': 'pending_P8.2'})
             code = max(code, exit_code)
     return {'exit': code, 'openapi': rows, 'signature_guard_only': True, 'actual_runtime_qualification': False}
 

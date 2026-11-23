@@ -13,10 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Assert;
-use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
-use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers as Documents;
-use Vaulter\Collaboration\Tests\Support\ValidateReleaseOpenApiResponses;
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -29,6 +25,7 @@ use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\SignedContentUrl;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
+use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
@@ -36,28 +33,23 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookSigner;
 
-require_once dirname(__DIR__, 3).'/packages/collaboration/tests/Support/DocumentTestHelpers.php';
-require_once dirname(__DIR__, 3).'/packages/collaboration/tests/Collaboration/HubTestHelpers.php';
-require_once dirname(__DIR__, 3).'/packages/collaboration/tests/Support/ValidateReleaseOpenApiResponses.php';
-
 abstract class RedactionTestCase extends TestCase
 {
     protected function validateOpenApiResponses(mixed $app): void
     {
         if ((string) env('VAULTER_OPENAPI_VALIDATE') === '1') {
-            $app->make(Kernel::class)->pushMiddleware(ValidateReleaseOpenApiResponses::class);
+            $app->make(Kernel::class)->pushMiddleware(ValidateOpenApiResponses::class);
         }
     }
 
     protected function getPackageProviders($app): array
     {
-        return [...parent::getPackageProviders($app), VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class];
+        return [...parent::getPackageProviders($app), VaulterDocumentsServiceProvider::class];
     }
 
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);
-        $app['config']->set('vaulter.modules.collaboration', true);
         $app['config']->set('vaulter.modules.webhooks', true);
     }
 }
@@ -152,19 +144,6 @@ it('issues and replays a share credential while keeping failures and validation 
     $this->collector->problem($this->postJson($url, ['role' => $password, 'password' => $password])->assertUnprocessable());
     $this->collector->capture($this->getJson($url)->assertOk()->json());
     $this->collector->assertAbsent([$token, $key, $password]);
-});
-
-it('issues a session with private document content and rejects a bearer credential safely', function (): void {
-    Hub::configure();
-    $content = 'private-document +/='.bin2hex(random_bytes(32));
-    $node = Hub::document(content: Documents::content($content));
-    $session = $this->postJson(V1::url('documents/'.$node->getKey().'/collaboration/session'))->assertCreated();
-    $token = $session->json('data.token');
-    expect($token)->toBeString()->not->toBeEmpty();
-    $bad = $token.'rejected';
-    $this->collector->problem(Hub::call('authenticate', ['room' => Hub::room($node)], $bad)->assertUnauthorized());
-    $this->collector->problem($this->postJson(V1::url('documents/'.$node->getKey().'/collaboration/session'), ['schema_version' => $content])->assertUnprocessable());
-    $this->collector->assertAbsent([$token, $bad, 'Bearer '.$bad, $content]);
 });
 
 it('returns a signed direct URL only in the successful download contract', function (): void {

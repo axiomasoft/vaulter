@@ -569,8 +569,6 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:blobs:scrub` | Verify the size and sha256 of a sample of stored blobs and mark the damaged ones | `[--limit [LIMIT]] [--max-bytes [MAX-BYTES]] [--max-seconds [MAX-SECONDS]] [--scope [SCOPE]] [--dry-run]` |
 | `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
 | `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
-| `vaulter:collaboration:drain` | Refuse new collaboration updates and checkpoint every pending document through the hub before the module is switched off. | `[--deadline [DEADLINE]] [--release]` |
-| `vaulter:collaboration:prune` | Delete the log and receipts of closed collaboration generations past their grace. | `[--dry-run]` |
 | `vaulter:commands:reference` | Generate the command table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:config:reference` | Generate the config key table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:doctor` | Diagnose the Vaulter setup of this host (read-only) | `[--production] [--json] [--check [CHECK]] [--sample [SAMPLE]] [--probe-storage]` |

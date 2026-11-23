@@ -50,7 +50,7 @@ export type { UseDocumentOptions, UseDocumentReturn } from './composables/useDoc
 export { useRevisions } from './composables/useRevisions'
 export type { UseRevisionsReturn } from './composables/useRevisions'
 
-// Collaboration seam (the implementation is @vaulter/vue-collaboration)
+// Collaboration seam
 export { VaulterCollaborationKey } from './collaboration-adapter'
 export type {
   CollaborationAdapter,

@@ -33,14 +33,8 @@ final class Allowlist
     /** The phase from which an invariant blocks (architecture#invariants); an entry must be gone by then. */
     public const BLOCKS_FROM = ['I1' => 'P4', 'I2' => 'P4', 'I3' => 'P4', 'I4' => 'P3', 'I13' => 'P7'];
 
-    /** Allowed to outlive the blocking phase: jwt-optional is removed when P5 makes collaboration a require. */
+    /** Allowed to outlive the blocking phase: jwt-optional may remain during the transition. */
     public const LATE_CATEGORIES = ['jwt-optional'];
-
-    /**
-     * The owners of a package that extracts. An I2 entry naming one of them as `target_owner` may outlive the
-     * blocking phase (removed_in P5): documents refers to collaboration types until the package exists.
-     */
-    public const LATE_TARGET_OWNERS = ['collaboration'];
 
     /** @var array<string, array{count: int, entry: Entry}> */
     private array $entries = [];
@@ -60,22 +54,21 @@ final class Allowlist
             // A blocking list keeps only what may outlive the blocking phase: permanent entries and late categories.
             foreach ($this->entries as $key => $item) {
                 $entry = $item['entry'];
-                if ($entry['removed_in'] !== 'never' && !self::isLate($invariant, $entry)) {
-                    throw new InventoryError("{$invariant} allowlist: mode \"block\" admits only \"never\", ".implode(', ', self::LATE_CATEGORIES).' and (I2) target_owner '.implode(', ', self::LATE_TARGET_OWNERS).' entries, found '.$key);
+                if ($entry['removed_in'] !== 'never' && !self::isLate($entry)) {
+                    throw new InventoryError("{$invariant} allowlist: mode \"block\" admits only \"never\", ".implode(', ', self::LATE_CATEGORIES).' entries, found '.$key);
                 }
             }
         }
     }
 
     /**
-     * May the entry outlive the blocking phase: a late category, or a reference to a package P5 extracts.
+     * May the entry outlive the blocking phase: a late category.
      *
      * @param array<string, mixed> $entry
      */
-    private static function isLate(string $invariant, array $entry): bool
+    private static function isLate(array $entry): bool
     {
-        return in_array($entry['category'] ?? null, self::LATE_CATEGORIES, true)
-            || ($invariant === 'I2' && in_array($entry['target_owner'] ?? null, self::LATE_TARGET_OWNERS, true));
+        return in_array($entry['category'] ?? null, self::LATE_CATEGORIES, true);
     }
 
     public static function load(Repo $repo, string $relative): self
@@ -211,7 +204,7 @@ final class Allowlist
             throw new InventoryError("{$where} (".self::key($raw).'): I4 needs a "category" of '.implode(', ', self::I4_CATEGORIES));
         }
         $blocksFrom = self::BLOCKS_FROM[$this->invariant] ?? null;
-        if ($blocksFrom !== null && $removedIn !== 'never' && $removedIn > $blocksFrom && !self::isLate($this->invariant, $raw)) {
+        if ($blocksFrom !== null && $removedIn !== 'never' && $removedIn > $blocksFrom && !self::isLate($raw)) {
             throw new InventoryError("{$where} (".self::key($raw)."): \"removed_in\" {$removedIn} is later than {$this->invariant} blocks ({$blocksFrom})");
         }
         $count = $raw['count'] ?? 1;

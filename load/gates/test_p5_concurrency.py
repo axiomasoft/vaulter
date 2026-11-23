@@ -223,7 +223,7 @@ class P5ConcurrencyGateTest(unittest.TestCase):
             'docker=no db-write=no',
         ):
             self.assertIn(token, completed.stdout)
-        self.assertIn('cells=56', completed.stdout)
+        self.assertIn('cells=52', completed.stdout)
 
     def test_snapshot_syntax(self) -> None:
         for name in ('p5-postgres-snapshot.sh', 'p5-pgbouncer-snapshot.sh'):

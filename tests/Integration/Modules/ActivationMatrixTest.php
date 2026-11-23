@@ -17,7 +17,6 @@ use Packman\Plugins\Contracts\Registry\PluginInspector;
 use Packman\Plugins\Laravel\ExtensionRegistrar;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Vaulter\AzGuard\VaulterAzGuardServiceProvider;
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
@@ -479,7 +478,6 @@ it('executes imperative ExtensionPlugin::register() middleware from a third-part
 it('keeps vaulter-media and optional package translation namespaces isolated when all providers boot together', function (): void {
     $app = FreshApplication::boot(
         after: [
-            VaulterCollaborationServiceProvider::class,
             VaulterWebhooksServiceProvider::class,
             VaulterAzGuardServiceProvider::class,
             VaulterFilamentServiceProvider::class,
@@ -489,7 +487,6 @@ it('keeps vaulter-media and optional package translation namespaces isolated whe
     $translator = $app->make('translator');
 
     expect($translator->get('vaulter-media::problems.blob_unavailable.title'))->not->toBe('vaulter-media::problems.blob_unavailable.title')
-        ->and($translator->get('vaulter-collaboration::problems.collaboration_draining.title'))->toBe('Collaboration draining')
         ->and($translator->get('vaulter-webhooks::problems.invalid_webhook_signature.title'))->toBe('Invalid webhook signature');
 });
 

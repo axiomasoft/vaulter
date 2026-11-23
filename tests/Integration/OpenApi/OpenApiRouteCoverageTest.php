@@ -53,8 +53,6 @@ it('mounts the contract under the documented server url', function (): void {
 
 it('assigns every registered endpoint to exactly its owner spec with closed references', function (): void {
     ReleaseOpenApi::assertContract(OpenApiContract::shared(), v1Routes());
-    ReleaseOpenApi::assertContract(ReleaseOpenApi::privateContract(), ReleaseOpenApi::routes(Route::getRoutes()->getRoutes(), 'private'));
-    ReleaseOpenApi::assertSharedPrimitives(OpenApiContract::shared(), ReleaseOpenApi::privateContract());
     expect(OpenApiContract::shared()->operation('documents.collaboration.session'))->not->toBeNull();
 });
 

@@ -694,7 +694,7 @@ arch('the FileHandler contract seam is kind-neutral and never depends on vaulter
 arch('DB facade only in Database and Schema (AD25)')
     ->expect('Illuminate\Support\Facades\DB')
     ->toOnlyBeUsedIn(['Vaulter\Database', 'Vaulter\Schema'])
-    ->ignoring(['Vaulter\Tests', 'Vaulter\Integration\Tests', 'Vaulter\Media\Tests', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Collaboration\Tests', 'Vaulter\Webhooks\Tests', 'Vaulter\AzGuard\Tests', 'Vaulter\Filament\Tests', 'Vaulter\Testing', 'Vaulter\Load']);
+    ->ignoring(['Vaulter\Tests', 'Vaulter\Integration\Tests', 'Vaulter\Media\Tests', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Webhooks\Tests', 'Vaulter\AzGuard\Tests', 'Vaulter\Filament\Tests', 'Vaulter\Testing', 'Vaulter\Load']);
 
 arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Exceptions')

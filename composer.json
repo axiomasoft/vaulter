@@ -1,6 +1,6 @@
 {
     "name": "axiomasoft/vaulter-monorepo",
-    "description": "Vaulter — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
+    "description": "Vaulter — embeddable document management for Laravel (monorepo dev workspace).",
     "type": "project",
     "license": "MIT",
     "homepage": "https://github.com/axiomasoft/vaulter",
@@ -19,7 +19,6 @@
                 "versions": {
                     "axiomasoft/vaulter": "1.0.x-dev",
                     "axiomasoft/vaulter-azguard": "1.0.x-dev",
-                    "axiomasoft/vaulter-collaboration": "1.0.x-dev",
                     "axiomasoft/vaulter-core": "1.0.x-dev",
                     "axiomasoft/vaulter-documents": "1.0.x-dev",
                     "axiomasoft/vaulter-drive": "1.0.x-dev",
@@ -71,11 +70,9 @@
         "axiomasoft/packman-devtools": "^0.1",
         "axiomasoft/packman-testkit": "^0.1",
         "axiomasoft/vaulter-azguard": "@dev",
-        "axiomasoft/vaulter-collaboration": "@dev",
         "axiomasoft/vaulter-filament": "@dev",
         "axiomasoft/vaulter-webhooks": "@dev",
         "driftingly/rector-laravel": "^2.7",
-        "firebase/php-jwt": "^7.0",
         "larastan/larastan": "^3.12",
         "laravel/pao": "^1.1",
         "laravel/pint": "^1.32",
@@ -105,7 +102,6 @@
             "Vaulter\\Load\\Tests\\": "load/tests/",
             "Vaulter\\Media\\Tests\\": "packages/media/tests/",
             "Vaulter\\Drive\\Tests\\": "packages/drive/tests/",
-            "Vaulter\\Collaboration\\Tests\\": "packages/collaboration/tests/",
             "Vaulter\\Webhooks\\Tests\\": "packages/webhooks/tests/",
             "Vaulter\\AzGuard\\Tests\\": "packages/azguard/tests/",
             "Vaulter\\Filament\\Tests\\": "packages/filament/tests/"

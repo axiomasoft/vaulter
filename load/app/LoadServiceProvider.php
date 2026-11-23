@@ -21,8 +21,6 @@ use Illuminate\Support\ServiceProvider;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 use PDO;
 use Throwable;
-use Vaulter\Collaboration\Contracts\HostUserResolver;
-use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -50,7 +48,6 @@ use Vaulter\Load\Listeners\RecordCommandPeakMemory;
 use Vaulter\Load\Listeners\RecordFailedJob;
 use Vaulter\Load\Listeners\RecordQueueLifecycle;
 use Vaulter\Load\Listeners\RecordThrottledResponse;
-use Vaulter\Load\Observability\CollaborationRoomMetrics;
 use Vaulter\Load\Observability\DownloadStreamMetrics;
 use Vaulter\Load\Observability\LoadExpositionRecorder;
 use Vaulter\Load\Observability\LoadStateMetrics;
@@ -88,7 +85,6 @@ final class LoadServiceProvider extends ServiceProvider
             'vaulter-drive.features.share_links' => true,
             'vaulter-drive.uploads.resumable.enabled' => true,
             'vaulter-documents.comments.enabled' => true,
-            'vaulter.modules.collaboration' => true,
 
             'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => env('VAULTER_LOAD_ID_STRATEGY', 'bigint'),
@@ -217,11 +213,6 @@ final class LoadServiceProvider extends ServiceProvider
             ]);
         }
 
-        // The collab webhook carries only the JWT `sub` (actor id) — materialise a
-        // TestUser by it, same shim as E2eServiceProvider (a real host binds its own
-        // HostUserResolver against its own user table).
-        $this->app->bind(HostUserResolver::class, static fn (): FakeHostUserResolver => new FakeHostUserResolver);
-
         if ($this->app->runningUnitTests()) {
             return;
         }
@@ -326,7 +317,6 @@ final class LoadServiceProvider extends ServiceProvider
         Route::get('/load/health', static fn () => response()->json(['status' => 'ok']));
 
         Route::get('/load/metrics-snapshot', function (): JsonResponse {
-            app(CollaborationRoomMetrics::class)->observeActiveRooms();
             app(LoadStateMetrics::class)->observeUploadSessions();
             app(LoadStateMetrics::class)->observeOutboxBacklog();
             app(DownloadStreamMetrics::class)->observeActiveStreams();

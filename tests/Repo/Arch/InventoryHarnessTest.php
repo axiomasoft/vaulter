@@ -16,7 +16,7 @@ use Vaulter\Inventory\SourceIndex;
 
 require_once dirname(__DIR__, 3).'/scripts/inventory/bootstrap.php';
 
-const INV_PSR4 = ['Vaulter\\' => 'core', 'Vaulter\\Media\\' => 'media', 'Vaulter\\Drive\\' => 'drive', 'Vaulter\\Collaboration\\' => 'collaboration'];
+const INV_PSR4 = ['Vaulter\\' => 'core', 'Vaulter\\Media\\' => 'media', 'Vaulter\\Drive\\' => 'drive'];
 
 function inv_root(): string
 {
@@ -491,7 +491,6 @@ it('follows extends through the index to Eloquent Model and finds the package by
         ->and($index->isEloquent('Unknown\Thing'))->toBeFalse()
         ->and($index->packageOf('Vaulter\Models\Node'))->toBe('core')
         ->and($index->packageOf('Vaulter\Drive\Access\X'))->toBe('drive')
-        ->and($index->packageOf('Vaulter\Collaboration\Hub'))->toBe('collaboration')
         ->and($index->packageOf('Illuminate\X'))->toBeNull();
 });
 
@@ -590,15 +589,9 @@ it('bounds removed_in by the phase an invariant blocks from and requires an I4 c
         ->and(inv_list([inv_entry(['removed_in' => 'P5', 'category' => 'jwt-optional'])], invariant: 'I4')->entries())->toHaveCount(1);
 });
 
-it('D32: an I2 entry naming a package P5 extracts as target_owner may outlive the blocking phase, nothing else may', function (): void {
-    $late = ['removed_in' => 'P5', 'category' => 'reverse-edge', 'target_owner' => 'collaboration'];
-
-    expect(inv_list([inv_entry($late)], invariant: 'I2')->entries()[0]['target_owner'])->toBe('collaboration')
-        ->and(inv_list([inv_entry($late)], 'block', 'I2')->mode)->toBe('block')
-        ->and(fn () => inv_list([inv_entry([...$late, 'target_owner' => 'drive'])], invariant: 'I2'))->toThrow(InventoryError::class, 'later than I2 blocks (P4)')
-        ->and(fn () => inv_list([inv_entry([...$late, 'removed_in' => 'P4', 'target_owner' => 'drive'])], 'block', 'I2'))->toThrow(InventoryError::class, 'admits only')
-        ->and(fn () => inv_list([inv_entry($late)], invariant: 'I1'))->toThrow(InventoryError::class, 'later than I1 blocks (P4)')
-        ->and(fn () => inv_list([inv_entry([...$late, 'removed_in' => 'P3', 'target_owner' => ''])], invariant: 'I2'))->toThrow(InventoryError::class, 'target_owner');
+it('rejects a reverse edge past the phase that blocks I2', function (): void {
+    $late = ['removed_in' => 'P5', 'category' => 'reverse-edge', 'target_owner' => 'drive'];
+    expect(fn () => inv_list([inv_entry($late)], invariant: 'I2'))->toThrow(InventoryError::class, 'later than I2 blocks (P4)');
 });
 
 // --- Rules ----------------------------------------------------------------------------------------------------

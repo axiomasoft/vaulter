@@ -151,7 +151,6 @@ class RouteGateTest(unittest.TestCase):
             (tree / "release-evidence").mkdir()
             if evidence is not None:
                 (tree / "release-evidence/php-public.json").write_text(json.dumps(evidence))
-                (tree / "release-evidence/php-collaboration.json").write_text(json.dumps(evidence))
             if visibility is not None:
                 (tree / "release-evidence/visibility.json").write_text(json.dumps(visibility))
             shim = Path(directory) / "bin"
@@ -200,14 +199,10 @@ class RouteGateTest(unittest.TestCase):
             "green gate of another sha": dict(tag="v1.0.0", evidence=dict(good, ci_gate={"sha": "2" * 40, "conclusion": "success"})),
             "red gate": dict(tag="v1.0.0", evidence=dict(good, ci_gate={"sha": self.SHA, "conclusion": "failure"})),
             "missing artifact identity": dict(tag="v1.0.0", evidence=dict(good, artifacts={})),
-            "wrong release line": dict(tag="v1.0.0", evidence=dict(good, release_line="php-collaboration")),
+            "wrong release line": dict(tag="v1.0.0", evidence=dict(good, release_line="npm-vue")),
             "prerelease tag": dict(tag="v1.0.0-rc.1", evidence=good),
             "unknown prefix": dict(tag="release-1.0.0", evidence=good),
-            "private tag, public destination": dict(
-                tag="collaboration-v1.0.0", evidence=self.evidence("php-collaboration", "private", ["axioma-studio/vaulter-collaboration"]),
-                visibility={"axioma-studio/vaulter-collaboration": "public"}),
-            "private tag, unprobed destination": dict(
-                tag="collaboration-v1.0.0", evidence=self.evidence("php-collaboration", "private", ["axioma-studio/vaulter-collaboration"])),
+            "retired add-on tag": dict(tag="collaboration-v1.0.0", evidence=good),
         }
         for name, arguments in cases.items():
             with self.subTest(case=name):
@@ -215,15 +210,6 @@ class RouteGateTest(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0, name)
                 self.assertNotIn("qualified=true", output)
                 self.assertIn("REFUSED", result.stderr)
-
-    def test_private_tag_with_a_probed_private_destination_routes_only_the_private_split(self):
-        result, output = self.run_route(
-            "collaboration-v1.0.0", self.evidence("php-collaboration", "private", ["axioma-studio/vaulter-collaboration"]),
-            visibility={"axioma-studio/vaulter-collaboration": "private"})
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('matrix=["collaboration"]', output)
-        self.assertIn("channel=private", output)
-
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

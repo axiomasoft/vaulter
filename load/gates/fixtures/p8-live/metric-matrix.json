@@ -1,5 +1,5 @@
 {
-  "expected": 50,
+  "expected": 47,
   "families": [
     {
       "name": "vaulter_activity_feed_duration_seconds",
@@ -84,57 +84,6 @@
         "zero_ok": false
       },
       "trigger_class": "Host gauges",
-      "type": "histogram"
-    },
-    {
-      "name": "vaulter_collab_room_active",
-      "scrape": {
-        "job": "vaulter-sut",
-        "present": true,
-        "stale": false,
-        "status": "present",
-        "type_ok": true
-      },
-      "trigger": {
-        "command": "trigger:vaulter_collab_room_active",
-        "ran": true,
-        "zero_ok": false
-      },
-      "trigger_class": "Collaboration rooms",
-      "type": "gauge"
-    },
-    {
-      "name": "vaulter_collab_session_issued_total",
-      "scrape": {
-        "job": "vaulter-sut",
-        "present": true,
-        "stale": false,
-        "status": "present",
-        "type_ok": true
-      },
-      "trigger": {
-        "command": "trigger:vaulter_collab_session_issued_total",
-        "ran": true,
-        "zero_ok": false
-      },
-      "trigger_class": "HTTP happy-path",
-      "type": "counter"
-    },
-    {
-      "name": "vaulter_collab_snapshot_duration_seconds",
-      "scrape": {
-        "job": "vaulter-sut",
-        "present": true,
-        "stale": false,
-        "status": "present",
-        "type_ok": true
-      },
-      "trigger": {
-        "command": "trigger:vaulter_collab_snapshot_duration_seconds",
-        "ran": true,
-        "zero_ok": false
-      },
-      "trigger_class": "HTTP happy-path",
       "type": "histogram"
     },
     {
@@ -852,6 +801,6 @@
       "type": "histogram"
     }
   ],
-  "observed": 50,
+  "observed": 47,
   "verdict": "green"
 }

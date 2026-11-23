@@ -91,8 +91,8 @@ class LiveGateTest(unittest.TestCase):
             metrics_enabled=True,
         ))
 
-    def test_catalog_is_fifty(self):
-        self.assertEqual(len(self.families), 50)
+    def test_catalog_matches_public_metrics(self):
+        self.assertEqual(len(self.families), 47)
         self.assertEqual(len(self.rows), 96)
 
     def test_verify_valid_twice_byte_identical(self):
@@ -110,7 +110,7 @@ class LiveGateTest(unittest.TestCase):
             self._write_valid(directory)
             matrix = gate.load_json(directory / 'metric-matrix.json')
             matrix['families'] = matrix['families'][:-1]
-            matrix['expected'] = 49
+            matrix['expected'] = gate.EXPECTED_FAMILIES - 1
             gate.dump_json(directory / 'metric-matrix.json', matrix)
             with self.assertRaises(gate.GateError) as caught:
                 gate.verify_artifacts(directory)

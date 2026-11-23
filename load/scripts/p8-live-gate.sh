@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One LOAD_RUN_ID, live Prometheus scrape, 50-family matrix, perf-assert, on/off overhead.
+# One LOAD_RUN_ID, live Prometheus scrape, 47-family matrix, perf-assert, on/off overhead.
 # Usage:
 #   TIER=S0 ./load/scripts/p8-live-gate.sh gate --profile smoke-perf
 #   TIER=S  ./load/scripts/p8-live-gate.sh overhead --baseline <baseline.md>
@@ -187,12 +187,6 @@ run_triggers() {
     record_trigger vaulter_upload_conflict_total "k6 mixed conflict path" true
     record_trigger vaulter_throttled_total "k6 mixed throttle path" true
 
-    if [ -f k6/dataset.json ] || ls -t seed/out/vlt-load-*.json >/dev/null 2>&1; then
-        MANIFEST="$(ls -t seed/out/vlt-load-*.json | head -n1)"
-        cp "$MANIFEST" k6/dataset.json
-        node "$REPO_ROOT/load/scripts/p8-collab-join.mjs" --backend "$APP_URL" --dataset k6/dataset.json --limit 4 --duration 15s >/dev/null 2>&1 || true
-    fi
-    record_trigger vaulter_collab_room_active "p8-collab-join.mjs" true
 }
 
 mark_http_triggers() {
@@ -204,8 +198,6 @@ mark_http_triggers() {
         vaulter_activity_feed_duration_seconds \
         vaulter_activity_write_total \
         vaulter_export_duration_seconds \
-        vaulter_collab_session_issued_total \
-        vaulter_collab_snapshot_duration_seconds \
         vaulter_upload_bytes_total \
         vaulter_upload_chunk_duration_seconds \
         vaulter_assemble_bytes_total \

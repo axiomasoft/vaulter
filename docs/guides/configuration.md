@@ -131,7 +131,6 @@ and the installed Documents handlers.
     'middleware' => [
         'authenticated' => ['api', 'auth:sanctum'],
         'public' => ['api'],
-        'hub' => ['api'],
     ],
     'rate_limits' => ['public' => 60, 'uploads' => 120],
 ],
@@ -148,10 +147,9 @@ and the installed Documents handlers.
 ],
 ```
 
-The authenticated stack protects actor routes; public share links use `public`, and signed
-collaboration callbacks use `hub`. Request metrics are appended automatically. The
-`middleware` setting affects only the authenticated stack; configure public middleware
-explicitly. Install Sanctum or replace `auth:sanctum` with your host's guard.
+The authenticated stack protects actor routes, and public share links use `public`. Vaulter
+adds request metrics to both stacks. The `middleware` setting affects the authenticated stack.
+Configure public middleware explicitly. Install Sanctum or replace `auth:sanctum` with your host's guard.
 
 ## Webhooks {#webhooks}
 

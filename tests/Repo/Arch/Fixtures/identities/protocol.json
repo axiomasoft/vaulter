@@ -60,20 +60,6 @@
         {
             "change": "redefined",
             "decision": "D25",
-            "id": "problem:collaboration_epoch_mismatch",
-            "kind": "protocol",
-            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
-        },
-        {
-            "change": "redefined",
-            "decision": "D25",
-            "id": "problem:collaboration_seed_conflict",
-            "kind": "protocol",
-            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
-        },
-        {
-            "change": "redefined",
-            "decision": "D25",
             "id": "problem:collaboration_unavailable",
             "kind": "protocol",
             "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
@@ -1243,58 +1229,9 @@
         {
             "change": "added",
             "decision": "D26",
-            "id": "problem:collaboration_protocol_mismatch",
-            "kind": "protocol",
-            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "problem:collaboration_update_mismatch",
-            "kind": "protocol",
-            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "problem:collaboration_update_too_large",
-            "kind": "protocol",
-            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "problem:collaboration_checkpoint_conflict",
-            "kind": "protocol",
-            "reason": "P5.5: 409, retryable after_refetch, receipt never — a checkpoint publication that lost its CAS (lease, coverage or checkpoint version); nothing changes, the hub takes a new lease"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
-            "id": "problem:collaboration_draining",
-            "kind": "protocol",
-            "reason": "P5.6: 503, retryable with_backoff, receipt never — an append while vaulter:collaboration:drain drains the log before the module is switched off; nothing is written, the hub keeps the update"
-        },
-        {
-            "change": "redefined",
-            "decision": "D26",
-            "id": "problem:collaboration_seed_conflict",
-            "kind": "protocol",
-            "reason": "P5.7: answered by collaboration.hub.append for a seed over a generation that already has a record or a checkpoint, or over JSON whose state version moved (the protocol 1 store that answered it is gone)"
-        },
-        {
-            "change": "added",
-            "decision": "D26",
             "id": "event:drive.access.effective_permissions_changed",
             "kind": "protocol",
             "reason": "P5.10: durable drive event of a change of effective permissions {drive_id|null, scope: node|subtree|drive|global, node_id|null, reason}, recorded in the transaction of grant/inheritance/share/move/trash/restore/purge/archive/unarchive/delete and by AccessInvalidation::changed() for the host; subject access (drive:<id>|global), no activity, not external, no journal"
-        },
-        {
-            "change": "redefined",
-            "decision": "D26",
-            "id": "format:jwt-claims-room",
-            "kind": "protocol",
-            "reason": "P5.10: claims sub, document_id, drive_id, tenant, generation, schema_version, scope (read|write), permissions_version {drive, global} (D46), room, iat, exp (iat + token_ttl, accepted up to clock_skew past it), jti; node/drive/epoch/mode are gone"
         },
         {
             "change": "redefined",
@@ -1463,27 +1400,6 @@
             "id": "problem:collaboration_protocol_contract",
             "kind": "protocol",
             "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
-        },
-        {
-            "change": "redefined",
-            "decision": "PLAN4-D16",
-            "id": "format:jwt-claims-room",
-            "kind": "protocol",
-            "reason": "P3.7 typed principal, complete state binding and grant-bounded expiry verified by production resolver."
-        },
-        {
-            "change": "added",
-            "decision": "PLAN4-D16",
-            "id": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
-            "kind": "protocol",
-            "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
-        },
-        {
-            "change": "added",
-            "decision": "PLAN4-D16",
-            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
-            "kind": "protocol",
-            "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
         },
         {
             "change": "added",
@@ -2256,16 +2172,6 @@
             }
         },
         {
-            "format": "X-Vaulter-Collab-Timestamp (unix seconds) and X-Vaulter-Collab-Signature (lowercase hex HMAC-SHA256 of \"<timestamp>.<raw body>\" with the hub webhook secret); a replayed signature is refused",
-            "id": "format:header-collab-signature",
-            "manual": true,
-            "owner": "collaboration",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationCallResolver.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
-            }
-        },
-        {
             "format": "X-Vaulter-Destination-If-Match request header of a move: the strong ETag of the destination folder as the caller reads it (the drive root for a null destination); a mismatch answers 412 node_sequence_mismatch and the folder sequence is checked again under the tree lock; part of the move fingerprint",
             "id": "format:header-destination-if-match",
             "manual": true,
@@ -2323,16 +2229,6 @@
             "source": {
                 "file": "packages/core/src/Http/Support/Preconditions.php",
                 "symbol": "Vaulter\\Http\\Support\\Preconditions::requireIfMatch"
-            }
-        },
-        {
-            "format": "HS256 JWT: sub, sub_type (trusted host morph type), document_id, drive_id, tenant (exact nullable string), protocol, state_format, generation, schema_version, scope (read|write ceiling), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (min(iat + hub.token_ttl, grant.notAfter); now < exp + hub.clock_skew, actual skew 0..60 default30), jti",
-            "id": "format:jwt-claims-room",
-            "manual": true,
-            "owner": "collaboration",
-            "source": {
-                "file": "packages/collaboration/src/RoomTokens.php",
-                "symbol": "Vaulter\\Collaboration\\RoomTokens::mint"
             }
         },
         {
@@ -2503,36 +2399,6 @@
             "source": {
                 "file": "packages/azguard/src/Testing/FakeAzGuardGuard.php",
                 "symbol": "Vaulter\\AzGuard\\Testing\\FakeAzGuardGuard::entityKey"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
-            "owner": "collaboration",
-            "source": {
-                "file": "packages/collaboration/src/HostUserResolver.php",
-                "symbol": "Vaulter\\Collaboration\\HostUserResolver::find"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser::getMorphClass#getMorphClass",
-            "owner": "collaboration",
-            "source": {
-                "file": "packages/collaboration/src/Testing/Fixtures/CollaborationTestUser.php",
-                "symbol": "Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser::getMorphClass"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
-            "owner": "collaboration",
-            "source": {
-                "file": "packages/collaboration/src/Testing/Fixtures/FakeHostUserResolver.php",
-                "symbol": "Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find"
             }
         },
         {
@@ -2822,42 +2688,6 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationCheckpointConflictException",
-            "id": "problem:collaboration_checkpoint_conflict",
-            "owner": "collaboration",
-            "receipt": "never",
-            "retryable": "after_refetch",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 409
-        },
-        {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationDrainingException",
-            "id": "problem:collaboration_draining",
-            "owner": "collaboration",
-            "receipt": "never",
-            "retryable": "with_backoff",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 503
-        },
-        {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationEpochMismatchException",
-            "id": "problem:collaboration_epoch_mismatch",
-            "owner": "collaboration",
-            "receipt": "cacheable",
-            "retryable": "after_refetch",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 409
-        },
-        {
             "exception": "Vaulter\\Documents\\Exceptions\\CollaborationProtocolContractException",
             "id": "problem:collaboration_protocol_contract",
             "owner": "documents",
@@ -2870,30 +2700,6 @@
             "status": 503
         },
         {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationProtocolMismatchException",
-            "id": "problem:collaboration_protocol_mismatch",
-            "owner": "collaboration",
-            "receipt": "never",
-            "retryable": "never",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 409
-        },
-        {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationSeedConflictException",
-            "id": "problem:collaboration_seed_conflict",
-            "owner": "collaboration",
-            "receipt": "cacheable",
-            "retryable": "after_refetch",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 409
-        },
-        {
             "exception": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
             "id": "problem:collaboration_unavailable",
             "owner": "documents",
@@ -2904,30 +2710,6 @@
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
             },
             "status": 409
-        },
-        {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateMismatchException",
-            "id": "problem:collaboration_update_mismatch",
-            "owner": "collaboration",
-            "receipt": "never",
-            "retryable": "never",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 422
-        },
-        {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateTooLargeException",
-            "id": "problem:collaboration_update_too_large",
-            "owner": "collaboration",
-            "receipt": "never",
-            "retryable": "never",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
-            },
-            "status": 413
         },
         {
             "exception": "Vaulter\\Documents\\Exceptions\\CommentNotFoundException",

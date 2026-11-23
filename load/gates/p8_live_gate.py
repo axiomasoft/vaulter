@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CATALOG = REPO_ROOT / 'load' / 'app' / 'Observability' / 'MetricFamilyCatalog.php'
 SLO_GATES_MD = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'slo-gates.md'
 DELTA = 0.10
-EXPECTED_FAMILIES = 50
+EXPECTED_FAMILIES = 47
 UUID_RE = re.compile(r'\b[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b', re.I)
 SECRET_RE = re.compile(r'(vaulter-load-secret|MINIO_ROOT_PASSWORD|POSTGRES_PASSWORD|password\s*[:=])', re.I)
 TYPE_RE = re.compile(r'^# TYPE (vaulter_[a-z0-9_]+) (counter|gauge|histogram)\s*$', re.M)
@@ -39,9 +39,6 @@ TRIGGER_CLASS = {
     'vaulter_activity_feed_duration_seconds': 'HTTP happy-path',
     'vaulter_activity_write_total': 'HTTP happy-path',
     'vaulter_export_duration_seconds': 'HTTP happy-path',
-    'vaulter_collab_session_issued_total': 'HTTP happy-path',
-    'vaulter_collab_snapshot_duration_seconds': 'HTTP happy-path',
-    'vaulter_collab_room_active': 'Collaboration rooms',
     'vaulter_broadcast_queue_wait_seconds': 'Host gauges',
     'vaulter_upload_session_active': 'Host gauges',
     'vaulter_request_peak_memory_bytes': 'Host gauges',
@@ -328,7 +325,7 @@ def verify_artifacts(directory: Path) -> dict:
     families = expected_families()
     matrix = artifacts['metric-matrix.json']
     if matrix.get('expected') != EXPECTED_FAMILIES or len(matrix.get('families', [])) != EXPECTED_FAMILIES:
-        raise GateError('MATRIX_COUNT', 'metric matrix is not 50/50')
+        raise GateError('MATRIX_COUNT', f'metric matrix is not {EXPECTED_FAMILIES}/{EXPECTED_FAMILIES}')
     names = [row['name'] for row in matrix['families']]
     if names != sorted(families):
         raise GateError('MATRIX_NAMES', 'metric matrix names drift from catalog')

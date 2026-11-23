@@ -3,8 +3,7 @@ import type { VaulterClient } from './api/client'
 import type { NodeId } from './api/types'
 
 // The seam between the document editor and a realtime stack. Types and one injection key only:
-// `@vaulter/vue` never imports `yjs` or `@hocuspocus/*`. The implementation is
-// `createCollaborationAdapter()` of `@vaulter/vue-collaboration`; a host without it edits
+// The host supplies an implementation. A host without an adapter edits
 // documents through the REST autosave.
 
 /**

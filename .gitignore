@@ -13,8 +13,6 @@ dist/
 package-lock.json
 !/package-lock.json
 pnpm-lock.yaml
-# …but the hub image needs its lockfile committed for a reproducible `npm ci` build.
-!packages/collaboration/hub/package-lock.json
 *.log
 
 # VitePress
@@ -37,7 +35,7 @@ __pycache__
 /_create_project_drive_drive_tables.php
 /2026_09_24_135041_create_project_drive_drive_tables.php
 
-# e2e / Playwright local artifacts (browser-driven collab stand)
+# Playwright local artifacts
 .playwright-mcp/
 e2e/.playwright-mcp/
 e2e/test-results/

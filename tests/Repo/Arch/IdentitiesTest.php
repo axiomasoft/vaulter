@@ -353,8 +353,6 @@ describe('committed fixtures', function (): void {
         expect($schema['presets'])->toBe(48)
             ->and($schema['engines'])->toBe(['pgsql', 'mysql', 'sqlite'])
             ->and(count($tables))->toBe(33)
-            ->and($tables['v_collaboration_heads'] ?? null)->toBe('collaboration')
-            ->and($tables['v_collaboration_permission_versions'] ?? null)->toBe('collaboration')
             ->and(array_column(array_filter($schema['items'], static fn (array $i): bool => str_starts_with($i['id'], 'migration:')), 'id'))->toBe(array_map(static fn (string $b): string => 'migration:'.$b, $migrations));
         foreach ($schema['items'] as $item) {
             if (isset($item['table'])) {
@@ -395,11 +393,8 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(35)
+        expect(count($items))->toBe(33)
             ->and($items['command:vaulter:operations']['owner'])->toBe('core')
-            ->and($items['command:vaulter:collaboration:prune']['owner'])->toBe('collaboration')
-            ->and($items['command:vaulter:collaboration:drain']['owner'])->toBe('collaboration')
-            ->and(array_column($items['command:vaulter:collaboration:drain']['options'], 'default', 'name'))->toBe(['deadline' => '30', 'release' => false])
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
             ->and(array_column($doctor['options'], 'accepts_value', 'name')['sample'])->toBeTrue()
@@ -413,19 +408,17 @@ describe('committed fixtures', function (): void {
         $http = id_fixture('http');
         $items = array_column($http['items'], null, 'id');
 
-        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter.modules.collaboration'])
+        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links'])
             ->and($http['flags'])->not->toHaveKey('vaulter.features.webhooks')
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.modules.webhooks'])
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['middleware'])->toContain('vaulter.module:webhooks')
-            ->and($items['route:vaulter.v1.collaboration.hub.load']['requires'])->toBe(['vaulter.modules.collaboration'])
-            ->and($items['route:vaulter.v1.collaboration.hub.load']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.grants.index'])->toMatchArray(['methods' => ['GET'], 'owner' => 'drive', 'openapi' => ['path' => '/nodes/{node}/grants', 'operation_id' => 'grants.index']])
             ->and($items['route:vaulter.v1.grants.index']['requires'] ?? [])->toBe([])
             ->and($items['route:vaulter.v1.documents.collaboration.session']['owner'])->toBe('documents')
             ->and($items['route:vaulter.v1.documents.collaboration.session'])->not->toHaveKey('class_owner')
             ->and($items['route:vaulter.v1.uploads.tus.head']['methods'])->toBe(['HEAD'])
-            ->and(array_values(array_filter(array_column($http['items'], 'id'), static fn (string $id): bool => !str_starts_with($id, 'route:vaulter.v1.collaboration.hub.') && (str_starts_with($id, 'openapi:') || ($items[$id]['route_only'] ?? false)))))->toBe([]);
+            ->and(array_values(array_filter(array_column($http['items'], 'id'), static fn (string $id): bool => (str_starts_with($id, 'openapi:') || ($items[$id]['route_only'] ?? false)))))->toBe([]);
     });
 
     it('list the event types, problem codes, queues, casts and hand-written formats', function (): void {
@@ -434,11 +427,8 @@ describe('committed fixtures', function (): void {
 
         expect($count('event:'))->toBe(33)
             ->and($items['event:drive.access.effective_permissions_changed'])->toMatchArray(['owner' => 'drive', 'subject' => 'access', 'sinks' => ['activity' => false, 'external' => false, 'journal' => null]])
-            ->and($count('problem:'))->toBe(86)
+            ->and($count('problem:'))->toBe(83)
             ->and($items['problem:stale_write'])->toMatchArray(['status' => 412, 'owner' => 'core', 'retryable' => 'after_refetch', 'receipt' => 'cacheable'])
-            ->and($items['problem:collaboration_draining'])->toMatchArray(['status' => 503, 'owner' => 'collaboration', 'retryable' => 'with_backoff', 'receipt' => 'never'])
-            ->and($items['problem:collaboration_checkpoint_conflict'])->toMatchArray(['status' => 409, 'owner' => 'collaboration', 'retryable' => 'after_refetch', 'receipt' => 'never'])
-            ->and($items['problem:collaboration_update_too_large'])->toMatchArray(['status' => 413, 'owner' => 'collaboration', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['problem:document_state_pending'])->toMatchArray(['status' => 409, 'owner' => 'documents', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:blob_unavailable'])->toMatchArray(['status' => 409, 'owner' => 'media', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'external' => true, 'journal' => 'upsert'])
@@ -450,8 +440,7 @@ describe('committed fixtures', function (): void {
             ->and($items['problem:permission_denied']['owner'])->toBe('core')
             ->and($items['serialized:queue:Vaulter\Webhooks\Jobs\DeliverWebhook']['owner'])->toBe('webhooks')
             ->and($items['serialized:config:vaulter-drive.models.node']['fqcns'])->toBe(['Vaulter\Drive\Models\Node'])
-            ->and($items['format:cas-key']['manual'])->toBeTrue()
-            ->and($items['format:jwt-claims-room']['owner'])->toBe('collaboration');
+            ->and($items['format:cas-key']['manual'])->toBeTrue();
     });
 
     it('fail loudly when the owners file is unusable', function (): void {

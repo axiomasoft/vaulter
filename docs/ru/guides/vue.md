@@ -381,4 +381,3 @@ app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumen
 - [Справочник REST API](/ru/reference/rest-api) — контракт, из которого генерируется этот пакет.
 - [Файлы и папки](/ru/concepts/nodes-and-revisions) — маршруты Drive за этими composable-функциями.
 - [Авторизация](/ru/concepts/access-model) — права, на которых гейтятся компоненты.
-- [Совместное редактирование в реальном времени](/ru/guides/collaboration) — Yjs-транспорт, который открывает `@vaulter/vue-collaboration`.

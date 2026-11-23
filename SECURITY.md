@@ -22,14 +22,7 @@ these are response targets, not guaranteed remediation deadlines. Coordinate
 publication with the maintainer after a fix is available; agree GHSA/CVE handling
 and redact personal data and private customer details before disclosure.
 
-Public MIT packages are in scope. Commercial collaboration artifacts use their
-existing customer support channel and private distribution entitlements; if that
-channel is unavailable, use the author contact to arrange private routing. Do
-not post private source or commercial reports publicly. Public fixes are obtained
-from the public package release channel; private fixes require the existing
-Private Packagist, restricted npm or private image entitlement described in
-CONTRIBUTING.md. Provisioning customer access and recovery remains an owner
-prerequisite; this document grants no access or commercial license.
+Public MIT packages are in scope. Updates are distributed through the public release channel.
 
 Please test only systems you own or have permission to assess, minimize data
 access, and stop if customer data is exposed. Responsible private reporting is

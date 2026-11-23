@@ -14,12 +14,11 @@ FORBIDDEN = {
     'exceljs', 'unzipper', 'mammoth', 'libclamav', 'filament/blueprint',
 }
 FORBIDDEN_PREFIXES = ('@tiptap-pro/', '@univerjs-pro/', '@univer-cli/')
-MINIMUMS = {'@tiptap/core': (3, 34, 0), 'vue': (3, 5, 42), '@hocuspocus/server': (4, 9, 0), 'yjs': (13, 6, 33)}
-# This exact npm tarball ships an MIT LICENSE.md despite its UNLICENSED manifest.
-REDLOCK_MIT = (
-    '@sesamecare-oss/redlock', '1.4.0',
-    'sha512-2z589R+yxKLN4CgKxP1oN4dsg6Y548SE4bVYam/R0kHk7Q9VrQ9l66q+k1ehhSLLY4or9hcchuF9/MhuuZdjJg==',
-)
+PRIVATE_COLLABORATION = {
+    'axiomasoft/vaulter-collaboration', '@vaulter/vue-collaboration',
+    '@vaulter/collaboration-hub', 'yjs', 'y-protocols', 'y-prosemirror', '@tiptap/y-tiptap',
+}
+MINIMUMS = {'@tiptap/core': (3, 34, 0), 'vue': (3, 5, 42)}
 
 
 def dependency_problems(package, name, licenses):
@@ -29,7 +28,7 @@ def dependency_problems(package, name, licenses):
             or 'registry.tiptap.dev' in source or (name, version) == ('xlsx', '0.18.5')):
         yield f'{name}@{version}: dependency forbidden'
     # Composer license lists offer a choice. Only an approved license may be chosen.
-    if (name, version, package.get('integrity')) != REDLOCK_MIT and not any(
+    if not any(
         PERMISSIVE.fullmatch(license_id) for license_id in licenses
     ):
         yield f'{name}@{version}: no approved runtime license ({", ".join(licenses)})'
@@ -74,12 +73,17 @@ def composer_runtime_packages(root, lock):
 def scan_lock(path):
     lock = json.loads(path.read_text())
     if path.name == 'composer.lock':
+        for package in lock['packages'] + lock.get('packages-dev', []):
+            if package['name'] in PRIVATE_COLLABORATION:
+                yield f"{package['name']}: private collaboration dependency"
         for package in composer_runtime_packages(path.parent, lock):
             yield from dependency_problems(package, package['name'], package.get('license', []))
     else:
         for location, package in lock['packages'].items():
+            name = package.get('name') or location.rsplit('node_modules/', 1)[-1]
+            if name in PRIVATE_COLLABORATION or name.startswith('@hocuspocus/'):
+                yield f'{name}: private collaboration dependency'
             if 'node_modules/' in location and not package.get('link') and not package.get('dev'):
-                name = package.get('name') or location.rsplit('node_modules/', 1)[1]
                 yield from dependency_problems(package, name, [package.get('license') or ''])
 
 
@@ -121,12 +125,12 @@ def main():
     diff = subprocess.check_output(['git', 'diff', '--unified=0', base, '--', 'packages', 'tests', 'load'], text=True)
     adr_exists = lambda number: any(Path('docs/adr').glob(f'{number}-*.md'))
     findings = list(added_suppressions(diff, adr_exists))
-    files = [Path('composer.lock'), Path('package-lock.json'), Path('packages/collaboration/hub/package-lock.json')]
+    files = [Path('composer.lock'), Path('package-lock.json')]
     for file in files:
         findings.extend(f'{file}: {problem}' for problem in scan_lock(file))
     tracked = subprocess.check_output(['git', 'ls-files', '-z', '--', 'packages'], text=True).split('\0')
     for file in map(Path, tracked):
-        if file.name.startswith('Dockerfile'):
+        if file.name.startswith('Dockerfile') and file.is_file():
             findings.extend(f'{file}:{problem}' for problem in image_problems(file.read_text()))
     for file in Path('packages').glob('*/src/**'):
         if file.name in ('Helpers', 'Utils', 'Common', 'Misc', 'Traits'):

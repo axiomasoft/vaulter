@@ -18038,6 +18038,54 @@
             "enum_cases": [],
             "spi_kind": "implement"
         },
+        "Vaulter\\Drive\\Http\\Support\\NodeRequestContext": {
+            "kind": "class",
+            "layer": "spi",
+            "since": "1.0",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "resolve": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "request",
+                            "type": "Illuminate\\Http\\Request",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "node",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Vaulter\\Drive\\Operations\\DriveContext",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "call"
+        },
         "Vaulter\\Drive\\Naming\\NamePolicy": {
             "kind": "interface",
             "layer": "spi",
@@ -18904,6 +18952,129 @@
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
+        },
+        "Vaulter\\Drive\\Operations\\NodeEditAccess": {
+            "kind": "class",
+            "layer": "spi",
+            "since": "1.0",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "canEdit": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "context",
+                            "type": "Vaulter\\Drive\\Operations\\DriveContext",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "node",
+                            "type": "int|string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "bool",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "call"
+        },
+        "Vaulter\\Drive\\Operations\\NodeJobContext": {
+            "kind": "class",
+            "layer": "spi",
+            "since": "1.0",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "run": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "driveId",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "tenantId",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "actor",
+                            "type": "Vaulter\\ValueObjects\\Access\\ActorRef",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "node",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "operation",
+                            "type": "Closure",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "call"
         },
         "Vaulter\\Drive\\Operations\\NodeOperations": {
             "kind": "class",

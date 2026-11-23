@@ -32,7 +32,7 @@ final class Http
     public const OPENAPI = 'openapi/vaulter-v1.yaml';
 
     /** Switches besides `vaulter-drive.features.*` that mount routes; their default is read from the package config. */
-    public const EXTRA_FLAGS = ['vaulter.modules.webhooks' => false, 'vaulter.modules.collaboration' => false];
+    public const EXTRA_FLAGS = ['vaulter.modules.webhooks' => false];
 
     private const OPENAPI_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
@@ -42,7 +42,7 @@ final class Http
         $problems = [];
         foreach (['azguard', 'filament'] as $package) {
             if (is_dir($repo->path("packages/{$package}/routes"))) {
-                $problems[] = ['code' => 'unscanned-routes', 'message' => "http: packages/{$package}/routes exists — the boot lists only core, media, drive, documents, collaboration and webhooks; add the package to boot/routes.php", 'exit' => 1];
+                $problems[] = ['code' => 'unscanned-routes', 'message' => "http: packages/{$package}/routes exists — the boot lists only core, media, drive, documents and webhooks; add the package to boot/routes.php", 'exit' => 1];
             }
         }
 

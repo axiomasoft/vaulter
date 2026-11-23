@@ -9,8 +9,7 @@ trap 'pg_ctl -D "$work/db" -m fast -w stop >/dev/null' EXIT
 initdb -D "$work/db" --no-locale --encoding=UTF8 --auth-local=trust --auth-host=reject >/dev/null
 pg_ctl -D "$work/db" -l "$work/log" -o "-k $work -c listen_addresses=''" -w start >/dev/null
 export PGHOST="$work" PGDATABASE=postgres
-for module in core media drive documents webhooks collaboration collaboration-agent sheets sheets-exchange \
-    sheets-projections sheets-realtime ai-documents ai-core ai-chat editor-pro-review editor-pro-exchange; do
+for module in core media drive documents webhooks; do
     psql -Xq -v ON_ERROR_STOP=1 -f "/spec/spec/database/sql/$module.sql"
 done
 gate=/spec/checks/database/unindexed-fks.sql

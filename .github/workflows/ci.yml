@@ -16,7 +16,7 @@ name: CI
 #   azguard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
-#   frontend.yml vue and hocuspocus ......................... vue, hub (+ vue-collaboration)
+#   frontend.yml Vue ....................................... vue
 #   openapi.yml oasdiff breaking ........................... contract-bc (blocking where the BC host is provisioned)
 #   new: mysql lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation)
@@ -37,7 +37,7 @@ permissions:
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
   # Laravel 13 pairs with Testbench ^11. One line for every package, including filament.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"database":true,"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"database":false,"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"database":true,"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"database":false,"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   changes:
@@ -53,8 +53,6 @@ jobs:
       has_serial: ${{ steps.plan.outputs.has_serial }}
       has_consumer: ${{ steps.plan.outputs.has_consumer }}
       has_vue: ${{ steps.plan.outputs.has_vue }}
-      has_vue_collaboration: ${{ steps.plan.outputs.has_vue_collaboration }}
-      has_hub: ${{ steps.plan.outputs.has_hub }}
       has_repo: ${{ steps.plan.outputs.has_repo }}
       has_openapi: ${{ steps.plan.outputs.has_openapi }}
       has_contract_bc: ${{ steps.plan.outputs.has_contract_bc }}
@@ -542,93 +540,6 @@ jobs:
       - name: Build
         run: npm run build --workspace @vaulter/vue
 
-  vue-collaboration:
-    name: "@vaulter/vue-collaboration (Node ${{ matrix.node }})"
-    needs: changes
-    if: needs.changes.outputs.has_vue_collaboration == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        # Only the current Node line is supported (engines.node >=26.13.1).
-        node: ['26.13.1']
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Smoke test the Node runtime
-        run: |
-          sudo apt-get install -y libatomic1 libstdc++6
-          node -e "process.exit(0)"
-
-      - name: Install dependencies
-        run: npm ci
-
-      # The package imports the built types of its peer @vaulter/vue (a workspace link to its dist/).
-      - name: Build @vaulter/vue (peer)
-        run: npm run build --workspace @vaulter/vue
-
-      - name: Private declaration surface is current
-        run: npm run api:surface:check --workspace @vaulter/vue-collaboration
-
-      - name: Type-check
-        run: npm run typecheck --workspace @vaulter/vue-collaboration
-
-      - name: Test
-        run: npm run test --workspace @vaulter/vue-collaboration
-
-  hub:
-    name: "@vaulter/collaboration-hub (Node ${{ matrix.node }})"
-    needs: changes
-    if: needs.changes.outputs.has_hub == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        # Only the current Node line is supported (engines.node >=26.13.1).
-        node: ['26.13.1']
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Smoke test the Node runtime
-        run: |
-          sudo apt-get install -y libatomic1 libstdc++6
-          node -e "process.exit(0)"
-
-      - name: Install dependencies
-        working-directory: ./packages/collaboration/hub
-        run: npm ci
-
-      # Syntax gate: every source module parses (mirrors the `check` script).
-      - name: Syntax check
-        working-directory: ./packages/collaboration/hub
-        run: npm run check
-
-      # Behaviour gate: the node:test suite, incl. websocket-hardening.test.js, so the collab-hub security
-      # invariants (frame cap, Throttle armed, JWT/webhook/Origin/expiry seams) cannot silently regress.
-      - name: Test
-        working-directory: ./packages/collaboration/hub
-        run: npm test
-
   repo:
     name: Repo harness, workflow policy, actionlint
     needs: changes
@@ -792,7 +703,7 @@ jobs:
       BC_RUNTIME_APPROVAL_SHA256: ${{ vars.BC_RUNTIME_APPROVAL_SHA256 }}
       BC_SOURCE_ROOT: ${{ github.workspace }}
       BC_SOURCE_SHA: ${{ github.sha }}
-      BC_REQUIRED_LINES: php-public,php-collaboration,npm-vue,npm-vue-collaboration
+      BC_REQUIRED_LINES: php-public,npm-vue
       BC_SELECTED_LINES: all
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -878,7 +789,7 @@ jobs:
   ci-gate:
     name: CI gate
     if: always()
-    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, vue-collaboration, hub, repo, openapi, contract-bc, sca]
+    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, repo, openapi, contract-bc, sca]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

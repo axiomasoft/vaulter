@@ -17,7 +17,7 @@ import { run as tusUploadRun } from './tus-upload.js';
 import { run as s3MultipartRun } from './s3-multipart.js';
 import { run as singleShotRun } from './single-shot.js';
 import { run as treeRun } from './tree.js';
-import { run as docsCollabRun } from './docs-collab.js';
+import { run as documentsRun } from './documents.js';
 import { run as downloadRun } from './download.js';
 
 const TAGS = { scenario: 'mixed', tier: TIER };
@@ -67,7 +67,7 @@ function activityFeed() {
 }
 
 export function interactive(data) {
-  // operations-catalog.md: tree navigation/mutation is the base rate, docs-collab a
+  // operations-catalog.md: tree navigation/mutation is the base rate, documents a
   // close second (autosave is itself "Высокая"), the activity feed the low-frequency
   // read tail.
   const roll = Math.random();
@@ -75,7 +75,7 @@ export function interactive(data) {
   if (roll < 0.45) {
     treeRun();
   } else if (roll < 0.85) {
-    docsCollabRun(data);
+    documentsRun(data);
   } else {
     activityFeed();
   }

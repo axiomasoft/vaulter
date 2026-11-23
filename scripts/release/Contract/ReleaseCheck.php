@@ -108,7 +108,7 @@ final class ReleaseCheck
         $surfaces = SnapshotManifest::union($base, $head);
         $current = array_filter($surfaces, static fn (array $s): bool => $s['status'] === 'current');
         // The PHP graph is loaded from EVERY current php-surface of EVERY line before the per-line filter: a root of one line
-        // may extend a class of another (collaboration → core), and an ancestor outside the line is resolved, not unresolved.
+        // may extend a class of another (documents → core), and an ancestor outside the line is resolved, not unresolved.
         $php = ['base' => [], 'head' => []];
         $declared = [];
         foreach ($current as $id => $surface) {

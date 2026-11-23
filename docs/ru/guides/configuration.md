@@ -132,7 +132,6 @@ preview/download и обработчики установленного Document
     'middleware' => [
         'authenticated' => ['api', 'auth:sanctum'],
         'public' => ['api'],
-        'hub' => ['api'],
     ],
     'rate_limits' => ['public' => 60, 'uploads' => 120],
 ],
@@ -149,8 +148,8 @@ preview/download и обработчики установленного Document
 ],
 ```
 
-Стек `authenticated` защищает маршруты акторов; публичные ссылки используют `public`,
-подписанные callback-запросы коллаборации — `hub`. Метрики запросов добавляются автоматически.
+Стек `authenticated` защищает маршруты акторов. Публичные ссылки используют `public`.
+Vaulter добавляет метрики запросов в оба стека.
 `middleware` влияет только на `authenticated`; публичный стек настройте отдельно.
 Установите Sanctum или замените `auth:sanctum` аутентификацией хоста.
 

@@ -563,7 +563,6 @@ Purge документа из корзины удаляет его чекпои�
 | `Documents\Exceptions\InvalidDocumentContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
 | `Documents\Exceptions\DocumentRevisionNotFoundException` | Id ревизии не принадлежит документу узла. |
 | `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` больше не совпадает (`412 document_state_mismatch`). |
-| `Collaboration\Exceptions\CollaborationEpochMismatchException` | Запись коллаборации из старого поколения комнаты (`409 collaboration_epoch_mismatch`). |
 | `Documents\Exceptions\DocumentStatePendingException` | Сохранённые правки коллаборации ещё не в контенте; чтение, экспорт, замена или восстановление отвергнуты без изменений (`409 document_state_pending`, повторите позже). |
 | `Exceptions\Drive\NodeNameConflictException` | Создание сталкивается с именем соседа. |
 

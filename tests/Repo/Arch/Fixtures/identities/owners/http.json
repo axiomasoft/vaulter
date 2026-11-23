@@ -93,12 +93,6 @@
         },
         {
             "match": "prefix",
-            "value": "route:vaulter.v1.collaboration.",
-            "owner": "collaboration",
-            "why": "the hub backend endpoints are the collaboration package (knowledge/collaboration)"
-        },
-        {
-            "match": "prefix",
             "value": "route:vaulter.v1.webhook-",
             "owner": "webhooks",
             "why": "webhook admin HTTP -> webhooks"

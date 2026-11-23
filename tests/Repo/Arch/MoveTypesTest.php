@@ -354,20 +354,20 @@ it('moves files with git mv when the root is a repository', function (): void {
         ->and($git('status', '--porcelain'))->toMatch('#^R. packages/core/src/Roles/Role\.php -> packages/drive/src/Roles/Role\.php$#m');
 });
 
-it('selects the phase P5 moves of the owner collaboration and renames the namespace of tests that leave a package other than core', function (): void {
+it('selects the phase P4 moves of the owner documents and renames the namespace of tests that leave a package other than core', function (): void {
     $root = mt_root();
 
     $packages = json_decode(mt_read($root, 'tests/Repo/Arch/Fixtures/packages.json'), true);
-    $packages['packages']['collaboration'] = ['dir' => 'packages/collaboration', 'exists' => true, 'psr4' => ['Acme\\Collaboration\\' => 'src/']];
+    $packages['packages']['documents'] = ['dir' => 'packages/documents', 'exists' => true, 'psr4' => ['Acme\\Documents\\' => 'src/']];
     file_put_contents($root.'/tests/Repo/Arch/Fixtures/packages.json', json_encode($packages));
 
     $map = json_decode(mt_read($root, 'tests/Repo/Arch/Fixtures/target-map.json'), true);
-    $map['types'][] = ['action' => 'move', 'file' => 'packages/drive/src/Rooms/Room.php', 'fqcn' => 'Acme\\Drive\\Rooms\\Room', 'owner' => 'collaboration', 'phase' => 'P5', 'rule' => 'other:fqcn:Acme\\Drive\\Rooms\\Room', 'target_fqcn' => 'Acme\\Collaboration\\Rooms\\Room'];
-    $map['types'][] = ['action' => 'move', 'file' => 'packages/drive/src/Rooms/Door.php', 'fqcn' => 'Acme\\Drive\\Rooms\\Door', 'owner' => 'collaboration', 'phase' => 'P4', 'rule' => 'other:fqcn:Acme\\Drive\\Rooms\\Door', 'target_fqcn' => 'Acme\\Collaboration\\Rooms\\Door'];
+    $map['types'][] = ['action' => 'move', 'file' => 'packages/drive/src/Rooms/Room.php', 'fqcn' => 'Acme\\Drive\\Rooms\\Room', 'owner' => 'documents', 'phase' => 'P4', 'rule' => 'other:fqcn:Acme\\Drive\\Rooms\\Room', 'target_fqcn' => 'Acme\\Documents\\Rooms\\Room'];
+    $map['types'][] = ['action' => 'move', 'file' => 'packages/drive/src/Rooms/Door.php', 'fqcn' => 'Acme\\Drive\\Rooms\\Door', 'owner' => 'documents', 'phase' => 'P5', 'rule' => 'other:fqcn:Acme\\Drive\\Rooms\\Door', 'target_fqcn' => 'Acme\\Documents\\Rooms\\Door'];
     file_put_contents($root.'/tests/Repo/Arch/Fixtures/target-map.json', json_encode($map));
 
     $zones = json_decode(mt_read($root, 'tests/zones.json'), true);
-    $zones['zones']['collaboration'] = ['suite' => 'collaboration', 'src' => ['packages/collaboration/src'], 'tests' => ['packages/collaboration/tests/Other']];
+    $zones['zones']['documents'] = ['suite' => 'documents', 'src' => ['packages/documents/src'], 'tests' => ['packages/documents/tests/Other']];
     file_put_contents($root.'/tests/zones.json', json_encode($zones, JSON_PRETTY_PRINT));
 
     mkdir($root.'/packages/drive/src/Rooms', 0775, true);
@@ -378,21 +378,21 @@ it('selects the phase P5 moves of the owner collaboration and renames the namesp
 
     $suites = json_decode(mt_read($root, 'tests/suites.json'), true);
     $suites['suites']['drive']['partitions'][0]['files'] = ['packages/drive/tests/Rooms/RoomCheck.php'];
-    $suites['suites']['collaboration'] = [...$suites['suites']['drive'], 'cwd' => 'packages/collaboration', 'tests_dir' => 'packages/collaboration/tests'];
-    $suites['suites']['collaboration']['partitions'][0]['files'] = [];
+    $suites['suites']['documents'] = [...$suites['suites']['drive'], 'cwd' => 'packages/documents', 'tests_dir' => 'packages/documents/tests'];
+    $suites['suites']['documents']['partitions'][0]['files'] = [];
     file_put_contents($root.'/tests/suites.json', json_encode($suites));
 
-    [$code, $report, , $err] = mt_run($root, ['--owner=collaboration', '--apply', '--tests=packages/drive/tests/Rooms:packages/collaboration/tests/Rooms']);
+    [$code, $report, , $err] = mt_run($root, ['--owner=documents', '--apply', '--tests=packages/drive/tests/Rooms:packages/documents/tests/Rooms']);
 
     // Only the phase P5 type is selected: the one is not a move of this owner.
     expect($code)->toBe(0, $err)
         ->and(array_column($report['moved'], 'old'))->toBe(['Acme\\Drive\\Rooms\\Room'])
-        ->and(file_exists($root.'/packages/collaboration/src/Rooms/Room.php'))->toBeTrue()
+        ->and(file_exists($root.'/packages/documents/src/Rooms/Room.php'))->toBeTrue()
         ->and(file_exists($root.'/packages/drive/src/Rooms/Door.php'))->toBeTrue()
-        ->and(mt_read($root, 'packages/collaboration/src/Rooms/Room.php'))->toContain("namespace Acme\\Collaboration\\Rooms;\n");
+        ->and(mt_read($root, 'packages/documents/src/Rooms/Room.php'))->toContain("namespace Acme\\Documents\\Rooms;\n");
 
-    $moved = mt_read($root, 'packages/collaboration/tests/Rooms/RoomCheck.php');
-    expect($moved)->toContain("namespace Vaulter\\Collaboration\\Tests\\Rooms;\n")
-        ->and($moved)->toContain('use Acme\\Collaboration\\Rooms\\Room;')
-        ->and(json_decode(mt_read($root, 'tests/suites.json'), true)['suites']['collaboration']['partitions'][0]['files'])->toBe(['packages/collaboration/tests/Rooms/RoomCheck.php']);
+    $moved = mt_read($root, 'packages/documents/tests/Rooms/RoomCheck.php');
+    expect($moved)->toContain("namespace Vaulter\\Documents\\Tests\\Rooms;\n")
+        ->and($moved)->toContain('use Acme\\Documents\\Rooms\\Room;')
+        ->and(json_decode(mt_read($root, 'tests/suites.json'), true)['suites']['documents']['partitions'][0]['files'])->toBe(['packages/documents/tests/Rooms/RoomCheck.php']);
 });

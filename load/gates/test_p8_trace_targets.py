@@ -207,7 +207,7 @@ class TraceTargetReducerTest(unittest.TestCase):
                 raw=self.raw, report=self.reports['P5'], validity='limitation', notes='n/a',
             ),
             _row(
-                evidence_id='P6:dlq', target_id='collaboration.snapshot', producer='P6',
+                evidence_id='P6:dlq', target_id='webhook.pipeline', producer='P6',
                 raw=self.raw, report=self.reports['P6'], validity='limitation', notes='n/a',
             ),
         ]
@@ -302,7 +302,7 @@ class TraceTargetReducerTest(unittest.TestCase):
             for index, (target_id, producer) in enumerate(ids)
         ]
         rows.extend([
-            _row(evidence_id='P5:blob', target_id='collaboration.session', producer='P5',
+            _row(evidence_id='P5:blob', target_id='cas.gc', producer='P5',
                  raw=self.raw, report=self.reports['P5'], validity='limitation', notes='n/a'),
             _row(evidence_id='P6:dlq', target_id='webhook.pipeline', producer='P6',
                  raw=self.raw, report=self.reports['P6'], validity='limitation', notes='n/a'),

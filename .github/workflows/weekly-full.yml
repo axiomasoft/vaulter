@@ -23,7 +23,7 @@ permissions:
 
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"database":true,"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"database":false,"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"integration":{"dir":".","lines":["13"],"database":true,"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["13"],"database":true,"serial":true,"types":true,"rector":false,"azguard":false},"azguard":{"dir":"packages/azguard","lines":["13"],"database":true,"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"database":false,"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   plan:
@@ -225,17 +225,10 @@ jobs:
       - name: Prepare pinned Composer workspace repositories
         run: scripts/ci/checkout-ecosystem.sh
 
-      - name: Setup Node.js 26
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '26.13.1'
-
       - name: Install dependencies
-        run: |
-          composer install --prefer-dist --no-interaction --no-progress
-          npm ci --prefix packages/collaboration/hub
+        run: composer install --prefer-dist --no-interaction --no-progress
 
-      # An absent or skipped stand is a failure, not a green run: --no-skips and the job has no continue-on-error.
+      # Fail if the stand suite skips a test.
       - name: Stand
         run: |
           PHP84_BIN="$(command -v php)"
@@ -275,67 +268,6 @@ jobs:
 
       - name: Build
         run: npm run build --workspace @vaulter/vue
-
-  vue-collaboration:
-    name: "@vaulter/vue-collaboration (Node ${{ matrix.node }})"
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        node: ['26.13.1']  # only the current Node line is supported (engines.node >=26.13.1)
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build @vaulter/vue (peer)
-        run: npm run build --workspace @vaulter/vue
-
-      - name: Type-check
-        run: npm run typecheck --workspace @vaulter/vue-collaboration
-
-      - name: Test
-        run: npm run test --workspace @vaulter/vue-collaboration
-
-      - name: Build
-        run: npm run build --workspace @vaulter/vue-collaboration
-
-  hub:
-    name: "@vaulter/collaboration-hub (Node 26)"
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js 26
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '26.13.1'
-
-      - name: Install dependencies
-        working-directory: ./packages/collaboration/hub
-        run: npm ci
-
-      - name: Syntax check
-        working-directory: ./packages/collaboration/hub
-        run: npm run check
-
-      - name: Test
-        working-directory: ./packages/collaboration/hub
-        run: npm test
 
   repo:
     name: Repo harness, workflow policy, actionlint
@@ -384,7 +316,7 @@ jobs:
   full-gate:
     name: Full qualification gate
     if: always()
-    needs: [plan, full, engines, coverage, stand, vue, vue-collaboration, hub, repo]
+    needs: [plan, full, engines, coverage, stand, vue, repo]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

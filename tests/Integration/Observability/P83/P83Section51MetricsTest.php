@@ -6,7 +6,6 @@ use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Jobs\SyncJob;
-use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -20,7 +19,6 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Listeners\RecordBroadcastQueueWait;
-use Vaulter\Load\Observability\CollaborationRoomMetrics;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Testing\Fixtures\TestUser;
@@ -144,17 +142,4 @@ it('records vaulter_subtree_nodes_touched during move cycle guard', function ():
         name: 'vaulter_subtree_nodes_touched',
         labels: ['operation' => 'subtree_mutate'],
     );
-});
-
-it('records vaulter_collab_room_active from hub stats', function (): void {
-    Http::fake([
-        'http://collab.test/stats' => Http::response(['rooms' => 2, 'connections' => 3]),
-    ]);
-
-    putenv('VAULTER_COLLAB_STATS_URL=http://collab.test/stats');
-
-    $fake = app(MetricsRecorder::class);
-    new CollaborationRoomMetrics($fake)->observeActiveRooms();
-
-    $fake->assertGauge(name: 'vaulter_collab_room_active');
 });

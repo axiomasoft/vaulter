@@ -23,7 +23,7 @@ installs only if it needs to migrate existing MediaLibrary collections into Driv
 (`spreadsheets` feature) — creating/autosaving an opaque Univer workbook snapshot works today.
 What's deferred: **mounting the Univer editor UI** in a consumer app (that's host-side, not
 this repo) and **multi-user Univer collaboration** (Univer's own OT engine, not Yjs — a
-separate real-time transport from the Hocuspocus/Yjs path TipTap uses).
+separate real-time transport from the text editor).
 - Seam: `DocumentHandlerRegistry` (format-extensibility, H.5) — a new capability/driver slots
   in without core changes.
 
@@ -52,11 +52,6 @@ The append-only `v_activity` feed is flat today (one row per event, §2.9). Hash
 (tamper-evidence) and time-based partitioning are noted as future, not needed at current
 scale.
 
-### Realtime collab: Redis multi-instance, per-tenant concurrency caps
-The Hocuspocus hub currently runs single-instance. `VAULTER_COLLAB_REDIS_URL` would enable the
-Redis extension for horizontal scaling; per-tenant/per-document concurrent-connection caps are
-backlog, not built.
-
 ## Admin UI
 
 ### `vaulter-filament` — engine-aware resources
@@ -83,15 +78,11 @@ Splitting into a deeper information architecture is optional — only worth doin
 structure becomes hard to navigate as content grows.
 
 ### Full ru translation
-The core path (introduction/quick-start/installation/configuration/collaboration + concepts)
+The core path (introduction/quick-start/installation/configuration + concepts)
 is translated. `reference/*`, recipes, filament, vue and internals guides remain English-only.
 Large, mechanical, not release-blocking.
 
 ## Infra
-
-### Distroless hocuspocus image
-After the current Alpine-based image proves stable in production, consider a distroless base
-for a smaller attack surface.
 
 ## After 1.0 — extension points
 

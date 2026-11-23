@@ -149,7 +149,7 @@ Vaulter на Postgres.
 - **Бинарное состояние документа.** Чекпоинт конкретного протокола (`collab_state`) — бинарная колонка. Vaulter
   хранит её так, чтобы она без потерь ходила туда-обратно на любом движке, включая Postgres
   `bytea` (который иначе через обычный строковый bind обрезал бы бинарные данные на первом
-  NUL-байте). Журнал обновлений коллаборации (`v_collaboration_updates.payload`) хранится так же.
+  NUL-байте).
 
 Ничего из этого не требует настройки — направьте Vaulter на Postgres, и всё применится
 автоматически.
@@ -248,7 +248,6 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 | PHP SPI (`#[Spi]`) | те же снимки (`surface.json` и читаемый `surface.txt`) | не добавлять обязательные члены в implement-SPI; расширять новым интерфейсом или явным решением | машинный дрейф | квалификация владельца |
 | Internal | `#[Internal]` / Internal-namespace | без обещаний | скан атрибутов | н/п |
 | REST (публичный) | `openapi/vaulter-v1.yaml` | oasdiff breaking = ERR запрещён; включает confidential-курсоры и ограниченные страницы grants/shares (пейджинг до `next_cursor=null`, пустая страница с продолжением) | машинный дрейф | consumer-runtime |
-| REST (приватный хаб) | `packages/collaboration/openapi/hub.yaml`; claim `protocol` | версия в claim; приватный, обещаний хостам в 1.x нет | машинный дрейф | квалификация владельца |
 | Problem codes | `vaulter:errors`, `x-vaulter-problems` | коды не удаляются, статус не меняется | вывод команды | вручную / not_checked |
 | События | каталог событий; машинной схемы payload пока нет | поля не удаляются; новые — опциональные; envelope версионируется | not_checked (нет машинного снимка) | вручную; путь схемы не выдуман |
 | Конфиг / env / publish-теги | `tests/Repo/Arch/Fixtures/identities/*` | ключи не удаляются без alias-цикла | дрейф identities-config | квалификация владельца |
@@ -259,9 +258,8 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 | Ключи типов документов, viewer, протоколов | identities-protocol / ledger | ключи стабильны | машинный дрейф | квалификация владельца |
 | Ключи/layout хранилища и версии целостности | вручную / not_checked (машинного снимка нет) | layout и версия целостности не меняются в 1.x без миграции | not_checked | владелец: `packages/media` (CAS), линия 1.x |
 | Сериализованные задачи/receipt, retry/drain | вручную / not_checked | задачи и receipt из 1.x читаются последующими 1.x; семантика retry/drain неизменна. Прохождение проверки сигнатур не квалифицирует rolling workers: смешанные версии требуют политики drain старых workers или owner tuple-теста | not_checked | владелец: `packages/drive`/`core`, линия 1.x; BC-pass не заявляется |
-| Схема сохранённых документов, wire-версии протокола | вручную / not_checked | версии растут только совместимо | not_checked | владелец: `packages/documents`/`collaboration`, линия 1.x |
-| Env хаба/образа | исходники/конфиг `packages/collaboration/hub` и приватные docs; вручную / not_checked, Docker runtime — квалификация владельца | имена не удаляются без alias | not_checked | владелец: `packages/collaboration`, линия 1.x |
-| npm `@vaulter/vue` / `@vaulter/vue-collaboration` | `etc/index.api.md`, `etc/components.surface.txt` каждого пакета, публичные entrypoints и consumer type fixtures | удаление экспорта — BREAK; изменение деклараций, обязательных props или emits — REVIEW | `api:surface:check` сверяет декларации с кодом в обоих Vue jobs; trusted-координатор `npm-surface` сравнивает их с предшественником независимой release-line | только декларации; packed/runtime-квалификация — за владельцем |
+| Схема сохранённых документов, wire-версии протокола | вручную / not_checked | версии растут только совместимо | not_checked | владелец: `packages/documents`, линия 1.x |
+| npm `@vaulter/vue` | `etc/index.api.md`, `etc/components.surface.txt` каждого пакета, публичные entrypoints и consumer type fixtures | удаление экспорта — BREAK; изменение деклараций, обязательных props или emits — REVIEW | `api:surface:check` сверяет декларации с кодом в обоих Vue jobs; trusted-координатор `npm-surface` сравнивает их с предшественником независимой release-line | только декларации; packed/runtime-квалификация — за владельцем |
 | Root-only ключи `composer.json` | корневой `composer.json` | split-пакеты не наследуют root-only ключи; не обещание пакета | not_checked | вручную |
 
 Именованные аргументы — часть API для типов `#[Api]`; нестабильные конструкторы — `#[Internal]` (`tests/Repo/Arch/SurfaceRulesTest.php`). Атрибуты не гарантируют поведение.
@@ -288,8 +286,7 @@ schema-группе за вызов (задача CI `test-pgsql` именно �
 пропуск с уведомлением. Такой прогон ничего не утверждает о BC. Как только задана любая
 из переменных, линия запускается и блокирует, а неполная настройка её валит.
 Отдельный OpenAPI workflow вызывает тот же внешне подготовленный host bootstrap.
-Публичный `openapi/vaulter-v1.yaml` (core / php-public) и приватная спецификация хаба
-(collaboration / php-collaboration) используют свои вычисленные базы release-line.
+Публичный `openapi/vaulter-v1.yaml` использует вычисленную базу линии php-public.
 Локальные файлы по ссылкам и JSON-pointer фрагменты должны разрешаться с обеих сторон,
 включая общие схемы. Удалённые ссылки, отсутствующие входы и недоступный oasdiff в CI
 дают `not_checked` / exit 2. Переходный проверенный pin — `tufin/oasdiff:v1.33.0` в
@@ -324,9 +321,7 @@ Trusted policy `Contract/bc-trust-policy.json` требует четыре не�
 | Обязательная линия | Семейство тегов | Зафиксированный major |
 |:--|:--|:--|
 | `php-public` | `v<version>` | 1 |
-| `php-collaboration` | `collaboration-v<version>` | 1 |
 | `npm-vue` | `@vaulter/vue@<version>` | 1 |
-| `npm-vue-collaboration` | `@vaulter/vue-collaboration@<version>` | 0 |
 
 Major npm берётся из независимой версии соответствующего пакета: сейчас 1.0.0 и 0.0.0.
 Поле `api: 1` release manifest не означает версию 1.x приватного пакета. Новый major

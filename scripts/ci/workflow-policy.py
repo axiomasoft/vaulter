@@ -19,7 +19,7 @@ PLAN3 P1.6 adds the single-CI contract:
 * weekly-full.yml runs on schedule `0 4 * * 1`, by hand and as a reusable workflow; monorepo-split.yml qualifies the
   exact tagged SHA through it and through `CI gate` before anything is published, and never polls for a green run.
 
-PLAN3 P4.19 adds the I14 lane: `consumer-isolation` (a matrix of core, media, drive, documents, webhooks, collaboration from the
+PLAN3 P4.19 adds the I14 lane: `consumer-isolation` (a matrix of core, media, drive, documents, webhooks from the
 planned `consumer_matrix`) runs scripts/release/consumer-check.sh for real and blocks - `ci-gate` needs it like every other job.
 
 Two more subcommands run inside ci.yml (they are the logic the workflow would otherwise inline as shell):
@@ -45,7 +45,7 @@ from pathlib import Path
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
 # The single CI.
-PHP_PACKAGES = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament']
+PHP_PACKAGES = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'azguard', 'filament']
 TESTBENCH_TO_LARAVEL = {'10': '12', '11': '13'}  # the Testbench major that supports each Laravel major
 LARAVEL_TO_TESTBENCH = {'12': '^10.0', '13': '^11.0'}
 REMOVED_WORKFLOWS = [
@@ -54,14 +54,14 @@ REMOVED_WORKFLOWS = [
 ]
 GATE_JOB = 'ci-gate'
 GATE_CHECK_NAME = 'CI gate'
-LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboration', 'hub', 'repo', 'openapi', 'contract_bc']
+LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'repo', 'openapi', 'contract_bc']
 # Packages whose split archive must stand alone. azguard is the external gate, filament has its
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
-CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
+CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks']
 # The repository variables that provision the trusted BC host; the plan step of ci.yml reads them.
 BC_HOST_VARIABLES = ('BC_HOST_BOOTSTRAP', 'BC_HOST_PYTHON')
-LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration', 'contract_bc': 'contract-bc'}
-REQUIRED_BC_LINES = ('php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration')
+LANE_JOBS = {'consumer': 'consumer-isolation', 'contract_bc': 'contract-bc'}
+REQUIRED_BC_LINES = ('php-public', 'npm-vue')
 
 
 def complete_bc_lines(value: object) -> bool:
@@ -299,8 +299,7 @@ def check_ci(doc: dict, root: Path) -> list[str]:
             errors.append(f'{name}: job {job_id} does not need `changes`')
     errors += check_contract_bc(jobs.get('contract-bc') or {})
     errors += check_sca(jobs.get('sca') or {})
-    for job_id, workspace, lane in (('vue', '@vaulter/vue', 'vue'), ('vue-collaboration', '@vaulter/vue-collaboration', 'vue_collaboration')):
-        errors += check_npm_declaration_job(job_id, workspace, lane, jobs.get(job_id) or {})
+    errors += check_npm_declaration_job('vue', '@vaulter/vue', 'vue', jobs.get('vue') or {})
     for output in ('has_contract_bc', 'contract_bc_provisioned', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
         if (jobs.get('changes', {}).get('outputs') or {}).get(output) != '${{ steps.plan.outputs.' + output + ' }}':
             errors.append(f'{name}: changes must expose {output} from the actual plan')
@@ -348,9 +347,9 @@ def check_contract_bc(job: dict) -> list[str]:
     required = str(env.get('BC_REQUIRED_LINES', '')).split(',')
     selected = env.get('BC_SELECTED_LINES')
     if not complete_bc_lines(required):
-        errors.append('ci.yml: contract-bc BC_REQUIRED_LINES must include all four PHP/npm lines')
+        errors.append('ci.yml: contract-bc BC_REQUIRED_LINES must include both PHP/npm lines')
     if selected != 'all' and not complete_bc_lines(str(selected).split(',')):
-        errors.append('ci.yml: contract-bc BC_SELECTED_LINES must select all four PHP/npm lines')
+        errors.append('ci.yml: contract-bc BC_SELECTED_LINES must select both PHP/npm lines')
     if job.get('if') != "needs.changes.outputs.has_contract_bc == 'true'":
         errors.append('ci.yml: contract-bc must follow the actual planned condition')
     return errors
@@ -381,7 +380,7 @@ def check_bc_release_policy(root: Path) -> list[str]:
         manifest = json.loads((root / 'release/packages.json').read_text())
         lines = policy['lines']
         if set(lines) != set(REQUIRED_BC_LINES):
-            return ['ci.yml: trusted BC policy must require all four PHP/npm release lines']
+            return ['ci.yml: trusted BC policy must require both PHP/npm release lines']
         errors = []
         for entry in manifest['php'] + manifest['npm']:
             definition = lines.get(entry['release_line'], {})
@@ -457,7 +456,6 @@ def check_split(doc: dict) -> list[str]:
 # publishing credential; the credentialed job needs that job.
 PUBLISHERS = {
     'release-npm.yml': ('release', ('NPM_TOKEN',)),
-    'collaboration-hub-image.yml': ('image', ('docker/login-action', 'attest-build-provenance', 'build-push-action')),
 }
 
 
@@ -561,30 +559,6 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
                 errors.append(f'{name}: the npm credential belongs to the publish step only')
         if isinstance(version, dict) and any(token in json.dumps(version) for token in NPM_CREDENTIALS):
             errors.append(f'{name}: version-pr must not hold the registry token')
-    elif name == 'collaboration-hub-image.yml':
-        image = jobs.get('image')
-        if not isinstance(image, dict):
-            return [f'{name}: needs an image promotion job']
-        runs, uses = _runs(image), _uses(image)
-        if 'build-push-action' in uses or re.search(r'docker\s+(buildx\s+)?build\b', runs):
-            errors.append(f'{name}: image promotes the tested digest and must not build')
-        for command in re.findall(r'imagetools create[^\n]*', runs):
-            if not re.search(r'@(\$\{|sha256:)', command):
-                errors.append(f'{name}: imagetools create must promote an exact @digest, not a tag')
-        steps = image.get('steps') or []
-        gate = next((i for i, step in enumerate(steps) if 'artifact-gate.py oci' in str(step.get('run', ''))), None)
-        login = next((i for i, step in enumerate(steps) if 'docker/login-action' in str(step.get('uses', ''))), None)
-        if gate is None or login is None or gate > login:
-            errors.append(f'{name}: artifact-gate.py oci must accept the tested digest before the registry login')
-        else:
-            errors += _check_approval_gate(name, steps[gate], 'VAULTER_ARTIFACT_APPROVAL_SHA256', ('secrets.',))
-            if any('secrets.' in json.dumps(step) for step in steps[:gate]):
-                errors.append(f'{name}: no secret may be read before the approval gate')
-        attest = [step for step in steps if 'attest-build-provenance' in str(step.get('uses', ''))]
-        if any('VAULTER_ATTESTATIONS' not in str(step.get('if', '')) for step in attest):
-            errors.append(f'{name}: attestation must run only under vars.VAULTER_ATTESTATIONS')
-        if not any('unavailable' in json.dumps(step) and 'VAULTER_ATTESTATIONS' in str(step.get('if', '')) for step in steps):
-            errors.append(f'{name}: a false vars.VAULTER_ATTESTATIONS must be recorded as attestation unavailable')
     elif name == 'monorepo-split.yml':
         prepare, split = jobs.get('prepare'), jobs.get('split')
         if not isinstance(prepare, dict) or not isinstance(split, dict):
@@ -716,58 +690,6 @@ def pushes_checkout(job: dict) -> bool:
                for step in job.get('steps', []))
 
 
-def authenticated_oci_promotion(name: str, doc: dict, job_id: str) -> bool:
-    """A structural permission justification, never proof that owner A or protected variables exist at runtime."""
-    if name != 'collaboration-hub-image.yml' or job_id != 'image':
-        return False
-    events = doc.get('on') or {}
-    if not isinstance(events, dict) or set(events) - {'push', 'workflow_dispatch'}:
-        return False
-    if (events.get('push') or {}).get('tags') != ['collaboration-hub-v*']:
-        return False
-    jobs = doc.get('jobs') or {}
-    route, image = jobs.get('route') or {}, jobs.get(job_id) or {}
-    if _needs(image) != ['route'] or image.get('if') != "needs.route.outputs.qualified == 'true'":
-        return False
-    if route.get('if') != "github.event_name != 'workflow_dispatch'":
-        return False
-    route_permissions = route.get('permissions') or doc.get('permissions') or {}
-    if any(v == 'write' or k == 'id-token' for k, v in route_permissions.items()):
-        return False
-    if 'secrets.' in json.dumps(route) or 'route-release.php' not in _runs(route):
-        return False
-    if check_route_before_credentials(name, doc, 'image', 'route', ('docker/login-action',)) or check_artifacts(name, doc):
-        return False
-    steps = image.get('steps') or []
-    gate = next((i for i, s in enumerate(steps) if 'artifact-gate.py oci' in str(s.get('run', ''))), None)
-    if gate is None:
-        return False
-    verify = steps[gate]
-    if verify.get('if') or verify.get('continue-on-error') or image.get('continue-on-error'):
-        return False
-    run = str(verify.get('run', ''))
-    required = ('--approval', '--source-sha', '--digest', '--platforms', '--sbom-sha256',
-                '--policy-sha256', '--tool-sha256', '--channel', '--visibility')
-    if not verify.get('id') or any(option not in run for option in required):
-        return False
-    if '||' in run or 'continue-on-error' in run or '"${GITHUB_SHA}"' not in run:
-        return False
-    digest_output = '${{ steps.' + verify['id'] + '.outputs.digest }}'
-    promotions = [s for s in steps if 'imagetools create' in str(s.get('run', ''))]
-    if len(promotions) != 1:
-        return False
-    promotion = promotions[0]
-    if steps.index(promotion) <= gate or (promotion.get('env') or {}).get('DIGEST') != digest_output:
-        return False
-    if '"${REGISTRY}/${IMAGE_NAME}@${DIGEST}"' not in str(promotion.get('run', '')):
-        return False
-    for step in steps:
-        if 'attest-build-provenance' in str(step.get('uses', '')):
-            if step.get('if') != "vars.VAULTER_ATTESTATIONS == 'true'" or (step.get('with') or {}).get('subject-digest') != digest_output:
-                return False
-    return True
-
-
 def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
     errors = []
     top = doc.get('permissions')
@@ -796,14 +718,6 @@ def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
         if 'docker/build-push-action@' in refs: allowed |= {'packages'}
         if 'actions/attest-build-provenance@' in refs: allowed |= {'attestations', 'id-token'}
         if 'CodelyTV/pr-size-labeler@' in refs: allowed |= {'pull-requests'}
-        if name == 'collaboration-hub-image.yml':
-            # Build-only smoke, route, prepare and arbitrary jobs acquire no publisher capabilities.
-            # The publisher needs the complete authenticated, non-rebuilding same-digest flow.
-            allowed = set()
-            if authenticated_oci_promotion(name, doc, job_id):
-                allowed.add('packages')
-                if 'actions/attest-build-provenance@' in refs:
-                    allowed |= {'attestations', 'id-token'}
         permissions = job.get('permissions', {})
         if not isinstance(permissions, dict) or any(v not in ('read', 'none', 'write') or (v == 'write' and k not in allowed) for k,v in permissions.items()):
             errors.append(f'{name}:{job_id}: pin unjustified write permissions')
@@ -868,10 +782,8 @@ def check_dir(directory: Path) -> list[str]:
             errors += check_split(doc)
         elif path.name in PUBLISHERS:
             errors += check_publisher(path.name, doc)
-        if path.name in ('monorepo-split.yml', 'release-npm.yml', 'collaboration-hub-image.yml'):
+        if path.name in ('monorepo-split.yml', 'release-npm.yml'):
             errors += check_artifacts(path.name, doc, path.read_text())
-    dockerfile = root / 'packages/collaboration/hub/Dockerfile'
-    if dockerfile.exists(): errors += check_docker_pins(dockerfile.read_text())
     return errors
 
 
@@ -891,7 +803,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     php = [pkg for pkg in PHP_PACKAGES if pkg in support]
     skip_reason = ''
     if mode == 'all':
-        suites = set(php) | {'repo', 'vue', 'vue-collaboration', 'hub'}
+        suites = set(php) | {'repo', 'vue'}
         db_suites = {'pgsql': set(php), 'mysql': set(php)}
     elif mode == 'changed':
         if changes is None or db is None:
@@ -931,7 +843,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     flags = {
         'quality': bool(quality_matrix), 'fast': bool(fast), 'db': bool(db_matrix), 'serial': bool(serial),
         'consumer': bool(consumer),
-        'vue': 'vue' in suites, 'vue_collaboration': 'vue-collaboration' in suites, 'hub': 'hub' in suites, 'repo': 'repo' in suites,
+        'vue': 'vue' in suites, 'repo': 'repo' in suites,
         'openapi': skip_reason == '', 'contract_bc': skip_reason == '' and bc_provisioned,
     }
     out = {'skip_reason': skip_reason, 'mode': mode}
@@ -961,7 +873,7 @@ def gate_errors(needs: dict) -> list[str]:
     # Only an explicit `false` from the plan excuses the contract gate: a missing output still requires it.
     bc_provisioned = outputs.get('contract_bc_provisioned') != 'false'
     if not skip_reason and any(expected.values()) and not expected['contract_bc'] and bc_provisioned:
-        errors.append('contract_bc: every active CI plan requires the four-line contract gate')
+        errors.append('contract_bc: every active CI plan requires the required contract gate')
     if expected['contract_bc']:
         for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
             try:
@@ -969,7 +881,7 @@ def gate_errors(needs: dict) -> list[str]:
             except (TypeError, ValueError):
                 value = None
             if not complete_bc_lines(value):
-                errors.append(f'contract_bc: {field} must include all four PHP/npm release lines')
+                errors.append(f'contract_bc: {field} must include both PHP/npm release lines')
     if skip_reason and any(expected.values()):
         errors.append(f'changes: skip_reason {skip_reason!r} yet lanes are expected: {[lane for lane, on in expected.items() if on]}')
     if not skip_reason and not any(expected.values()):

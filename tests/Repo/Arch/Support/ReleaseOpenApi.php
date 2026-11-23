@@ -65,11 +65,6 @@ final class ReleaseOpenApi
         return $owned;
     }
 
-    public static function privateContract(): OpenApiContract
-    {
-        return OpenApiContract::fromFile(self::root().'/packages/collaboration/openapi/hub.yaml');
-    }
-
     /** A structural contract report, not a compatibility classifier. */
     public static function report(OpenApiContract $contract): string
     {

@@ -11,19 +11,19 @@ import subprocess
 import sys
 import tempfile
 
-REQUIRED_BC_LINES = ('php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration')
+REQUIRED_BC_LINES = ('php-public', 'npm-vue')
 
 
 def selected_lines(policy, selected='all', required=None):
     """Host-owned mandatory coverage; neither candidate selectors nor an old PHP-only policy can narrow it."""
     expected = set(REQUIRED_BC_LINES)
     if not isinstance(policy.get('lines'), dict) or set(policy['lines']) != expected:
-        raise ValueError('trusted policy must require all four PHP/npm release lines')
+        raise ValueError('trusted policy must require both PHP/npm release lines')
     for value in (required, selected if selected != 'all' else None):
         if value is not None:
             lines = value.split(',')
             if len(lines) != len(expected) or set(lines) != expected:
-                raise ValueError('required/selected BC lines must include all four PHP/npm release lines')
+                raise ValueError('required/selected BC lines must include both PHP/npm release lines')
     return REQUIRED_BC_LINES
 
 

@@ -4,14 +4,12 @@
         "Vaulter\\Drive\\",
         "Vaulter\\Documents\\",
         "Vaulter\\Documents\\Database\\Factories\\",
-        "Vaulter\\Collaboration\\",
         "Vaulter\\Webhooks\\",
         "Vaulter\\AzGuard\\",
         "Vaulter\\Filament\\",
         "path:packages/media/",
         "path:packages/drive/",
         "path:packages/documents/",
-        "path:packages/collaboration/",
         "path:packages/webhooks/",
         "path:packages/azguard/",
         "path:packages/filament/"
@@ -206,30 +204,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#packages (D6): the vaulter-webhooks namespace stays in the webhooks package (outbox consumer, endpoint management, signing, delivery, retries); CLI/HTTP are identity surfaces, not PHP API"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Collaboration\\",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#packages (D1, D6): the vaulter-collaboration namespace stays in the collaboration package (Hocuspocus driver, sessions, hub endpoints); CLI/HTTP are identity surfaces, not PHP API"
-        },
-        {
-            "match": "file",
-            "value": "packages/collaboration/config/vaulter-collaboration.php",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#packages (D1, P5.1): the collaboration section of the configuration is the vaulter-collaboration root of the collaboration package"
-        },
-        {
-            "match": "file",
-            "value": "packages/collaboration/routes/collaboration.php",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#packages (D1, P5.1): the session and hub routes live in the collaboration package"
         },
         {
             "match": "file",
@@ -599,38 +573,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#persistence: v_document_revision_sync_states is created by the migration of documents"
-        },
-        {
-            "match": "file",
-            "value": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#persistence + D26 (P5.4): v_collaboration_heads is created by the migration of collaboration"
-        },
-        {
-            "match": "file",
-            "value": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#persistence + D26 (P5.4): v_collaboration_updates is created by the migration of collaboration"
-        },
-        {
-            "match": "file",
-            "value": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#persistence + D26 (P5.4): v_collaboration_receipts is created by the migration of collaboration"
-        },
-        {
-            "match": "file",
-            "value": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
-            "owner": "collaboration",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#persistence + D46 (P5.10): v_collaboration_permission_versions is created by the migration of collaboration"
         },
         {
             "match": "file",

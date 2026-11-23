@@ -80,16 +80,6 @@ ALLOWLIST = {
         'span_chain': 'command/job root → relay/retry/delivery child',
         'source': ['OutboxRelay', 'WebhookRetryDispatcher', 'DeliverWebhook'],
     },
-    'collaboration.session': {
-        'producers': frozenset({'P5', 'P7'}),
-        'span_chain': 'active HTTP SERVER → vaulter.action.collaboration.session',
-        'source': ['CollaborationSessionService'],
-    },
-    'collaboration.snapshot': {
-        'producers': frozenset({'P6', 'P7'}),
-        'span_chain': 'job/root → vaulter.action.collaboration.snapshot',
-        'source': ['PersistYjsSnapshotAction'],
-    },
 }
 
 INTEGRITY_RANK = {

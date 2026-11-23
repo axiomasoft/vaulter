@@ -80,15 +80,15 @@ it('rejects composer identity license and public private dependency drift', func
     expect(ac_errors($files))->not->toBe([]);
 })->with(['name', 'license', 'dependency']);
 
-it('allows private collaboration docs while rejecting its separate hub', function (): void {
+it('rejects bundled documentation and standalone server files', function (): void {
     $files = ac_files(true);
     $composer = json_decode($files['composer.json'], true);
     $composer['license'] = 'proprietary';
     $files['composer.json'] = json_encode($composer);
-    $package = [...ac_package(true, 'private'), 'path' => 'packages/collaboration'];
-    expect(ac_errors([...$files, 'docs/api.md' => 'private API'], $package))->toBe([])
-        ->and(ac_errors([...$files, 'hub/package.json' => '{}'], $package))->not->toBe([])
-        ->and(ac_errors([...ac_files(), 'docs/api.md' => 'private API']))->not->toBe([]);
+    $retiredPackage = [...ac_package(true, 'private'), 'path' => 'packages/collaboration'];
+
+    expect(ac_errors([...$files, 'docs/api.md' => 'guide'], $retiredPackage))->toContain('forbidden member: docs/api.md')
+        ->and(ac_errors([...ac_files(), 'hub/index.js' => '// standalone server']))->toContain('forbidden member: hub/index.js');
 });
 
 it('reads canonical prepared ZIP bytes from a dirty isolated snapshot', function (): void {

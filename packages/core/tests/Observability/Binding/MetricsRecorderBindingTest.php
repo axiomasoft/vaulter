@@ -71,7 +71,7 @@ it('NullMetricsRecorder executes timing callbacks without recording emissions', 
     $null = new NullMetricsRecorder;
 
     $null->counter(name: 'vaulter_http_request_duration_seconds', amount: 1, labels: ['operation' => 'list']);
-    $null->gauge(name: 'vaulter_collab_room_active', value: 3);
+    $null->gauge(name: 'vaulter_upload_sessions_active', value: 3);
     $null->histogram(name: 'vaulter_tree_query_duration_seconds', value: 0.5, labels: ['query_kind' => 'children']);
 
     expect($null->timing(name: 'vaulter_export_duration_seconds', operation: fn (): int => 42, labels: ['format' => 'html']))
@@ -93,13 +93,13 @@ it('records normalized emissions and supports assert helpers on FakeMetricsRecor
     $fake = new FakeMetricsRecorder;
 
     $fake->counter(name: 'vaulter_activity_write_total', amount: 2, labels: ['verb' => 'created']);
-    $fake->gauge(name: 'vaulter_collab_room_active', value: 4);
+    $fake->gauge(name: 'vaulter_upload_sessions_active', value: 4);
     $fake->histogram(name: 'vaulter_tree_query_duration_seconds', value: 0.25, labels: ['tier' => 'S', 'query_kind' => 'search']);
     $fake->timing(name: 'vaulter_export_duration_seconds', operation: fn (): string => 'ok', labels: ['format' => 'md', 'tier' => 'S']);
 
     expect($fake->emissions())->toHaveCount(4);
     $fake->assertCounter(name: 'vaulter_activity_write_total', labels: ['verb' => 'created']);
-    $fake->assertGauge(name: 'vaulter_collab_room_active');
+    $fake->assertGauge(name: 'vaulter_upload_sessions_active');
     $fake->assertHistogram(name: 'vaulter_tree_query_duration_seconds', labels: ['query_kind' => 'search', 'tier' => 'S']);
     $fake->assertHistogram(name: 'vaulter_export_duration_seconds');
 });

@@ -62,7 +62,7 @@ export function discoverDocumentsFolderId() {
 
 /**
  * The seeded document-kind node ids (seeded by SeedLoadDatasetCommand) — the shared pool
- * docs-collab.js co-edits, exactly the contention the scenario means to exercise.
+ * documents.js, exactly the contention the scenario means to exercise.
  */
 export function discoverDocumentNodeIds(limit) {
   const documentsFolderId = discoverDocumentsFolderId();

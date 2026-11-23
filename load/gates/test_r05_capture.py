@@ -151,11 +151,11 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const source = fs.readFileSync('load/k6/scenarios/concurrency-live.js', 'utf8');
 const results = [];
-for (const surface of ['upload-tus','upload-s3','cas-lock','subtree-move','collab-issuance']) {
+for (const surface of ['upload-tus','upload-s3','cas-lock','subtree-move']) {
   for (const status of [200,403,429,503]) {
     const logs = [];
     const requests = [];
-    const context = vm.createContext({__ENV: {P5_SURFACE: surface, P5_ACTOR_BASE: '100', P5_DOCUMENT_ID: '1', P5_NODE_IDS: '1', P5_MOVE_TARGET: '2'},
+    const context = vm.createContext({__ENV: {P5_SURFACE: surface, P5_ACTOR_BASE: '100', P5_NODE_IDS: '1', P5_MOVE_TARGET: '2'},
       console: {log: value => logs.push(value)}, Uint8Array});
     const response = {status, headers: {'Retry-After': '9'}};
     const http = {post: (url, body, options) => {

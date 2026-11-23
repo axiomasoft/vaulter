@@ -7,7 +7,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Middleware\EnsureModuleActive;
@@ -44,7 +43,7 @@ const I5_DECLARED_ELSEWHERE = [];
  */
 const I5_SHARED_CONFIG_ROOTS = [];
 
-/** Routes of the inventory a default installation does not mount even with every module active (none left: the collaboration module mounts its own). */
+/** Routes of the inventory a default installation does not mount even with every module active (none left). */
 const I5_UNMOUNTED_ROUTES = [];
 
 /**
@@ -59,7 +58,7 @@ function i5App(): Application
 {
     static $app = null;
 
-    return $app ??= FreshApplication::boot(['vaulter.modules' => ['webhooks' => true, 'collaboration' => true]], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
+    return $app ??= FreshApplication::boot(['vaulter.modules' => ['webhooks' => true]], after: [VaulterDocumentsServiceProvider::class]);
 }
 
 /**
@@ -112,7 +111,7 @@ it('compiles the full set with every module active', function (): void {
 
     expect($kernel->isValid())->toBeTrue(implode('; ', $kernel->reasons()))
         ->and(array_values(array_filter($kernel->modules(), static fn (ModuleState $s): bool => !$s->active)))->toBe([])
-        ->and(array_keys(i5Builders()))->toBe(['collaboration', 'core', 'documents', 'drive', 'media', 'webhooks']);
+        ->and(array_keys(i5Builders()))->toBe(['core', 'documents', 'drive', 'media', 'webhooks']);
 });
 
 it('gives every problem code the owner of the inventory', function (): void {
@@ -268,7 +267,7 @@ it('keeps every table in the migrations and the schema class of the module that 
     $withSchema = array_keys($schemas->all());
     sort($withSchema);
 
-    expect($schemaModules)->toBe(['collaboration', 'core', 'documents', 'drive', 'media', 'webhooks'])
+    expect($schemaModules)->toBe(['core', 'documents', 'drive', 'media', 'webhooks'])
         ->and(array_keys($tables))->toBe($withSchema);
     foreach ($schemas->all() as $module => $schema) {
         expect(count($tables[$module]))->toBe(count($schema->entities()), $module);
@@ -277,7 +276,7 @@ it('keeps every table in the migrations and the schema class of the module that 
 
 it('numbers the create-migrations in the block of the owner and in the order of the foreign keys (D40)', function (): void {
     $root = dirname(__DIR__, 3);
-    $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499], 'collaboration' => [501, 599]];
+    $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499]];
     $numbers = [];
     foreach (glob($root.'/packages/*/database/migrations/*.php') ?: [] as $file) {
         expect(preg_match('/^0001_01_01_(\d{6})_create_(v_[a-z_]+)_table\.php$/', basename($file), $m))->toBe(1, $file);

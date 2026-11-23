@@ -2,28 +2,18 @@
 # /app/testbench.yaml (docker-compose.load.yml); found via TESTBENCH_WORKING_PATH=/app
 # (load/docker/php-fpm.conf `env[TESTBENCH_WORKING_PATH]`) — see that file's comment for
 # why a plain php-fpm request needs this (unlike `testbench serve`, which curates it
-# itself). Mirrors e2e/docker/testbench.pgsql.yaml, swapping the
-# e2e host provider for LoadServiceProvider and adding vaulter-documents (docs-collab
-# scenario).
+# itself).
 providers:
   - Vaulter\VaulterServiceProvider
   - Vaulter\Media\VaulterMediaServiceProvider
   - Vaulter\Drive\VaulterDriveServiceProvider
   - Vaulter\Documents\VaulterDocumentsServiceProvider
-  - Vaulter\Collaboration\VaulterCollaborationServiceProvider
   - Vaulter\Webhooks\VaulterWebhooksServiceProvider
   - Vaulter\Load\LoadServiceProvider
 
 env:
   - APP_KEY="base64:lRknxO3IznrZODHVPvLNKylvYP19ch+EXZ8dM+i3OlY="
   - APP_URL="http://localhost:8080"
-  # OP-34 (collab-session issuance, docs-collab.js) needs a Hocuspocus signing
-  # secret or CollaborationSessionService::issue() throws CollaborationConfigException
-  # (config(vaulter.collaboration.drivers.hocuspocus.secret)) before a single k6
-  # request runs. A fixed dev-only value — this stand never talks to a real hub.
-  - VAULTER_COLLAB_JWT_KEYS="load-1:vlt-load-dev-collab-jwt-key-not-for-production"
-  - VAULTER_COLLAB_JWT_ACTIVE_KID="load-1"
-  - VAULTER_COLLAB_WEBHOOK_SECRET="vlt-load-dev-collab-webhook-not-for-production"
   - QUEUE_CONNECTION="redis"
   - CACHE_STORE="redis"
   - REDIS_HOST="redis"

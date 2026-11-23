@@ -390,7 +390,6 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | Ключ | По умолчанию |
 |---|---|
 | `vaulter-documents.comments.enabled` | `true` |
-| `vaulter.modules.collaboration` | `false` (opt-in; [Совместное редактирование](/ru/guides/collaboration)) |
 | `vaulter-documents.tiptap.extra_nodes` | `[]` |
 | `vaulter-documents.tiptap.extra_marks` | `[]` |
 | `vaulter-documents.tiptap.extra_attributes` | `[]` |
@@ -400,7 +399,6 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter-drive.listing.scan_budget` | `1000` |
 | `routes.middleware.authenticated` | `['api', 'auth:sanctum']` |
 | `routes.middleware.public` | `['api']` |
-| `routes.middleware.hub` | `['api']` |
 | `routes.rate_limits.public` | `60` (`VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE`) |
 | `routes.rate_limits.uploads` | `120` (`VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE`) |
 | `vaulter-drive.sharing.default_ttl_hours` | `72` (`VAULTER_SHARE_DEFAULT_TTL_HOURS`) |
@@ -445,39 +443,6 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter-azguard.permissions.manage` | — | `'documents.manage'` | — |
 | `vaulter-azguard.create_permission` | `VAULTER_AZGUARD_CREATE_PERMISSION` | `'documents.create'` | — |
 
-### `vaulter-collaboration`
-
-| Key | Env | Default | Description |
-|---|---|---|---|
-| `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
-| `vaulter-collaboration.hub.jwt_keys` | `VAULTER_COLLAB_JWT_KEYS` | `null` | The room-token keys (Laravel only, never given to the hub): `kid => secret`, HS256, each at least 32 bytes and different from the webhook secret the hub holds. The environment value is "kid:secret" pairs, comma-separated; a PHP array is accepted too. Tokens are signed with jwt_active_kid and verified with any key of the set: add the new key, switch the active kid, remove the old key once its tokens have expired (docs/key-rotation.md). |
-| `vaulter-collaboration.hub.jwt_active_kid` | `VAULTER_COLLAB_JWT_ACTIVE_KID` | `null` | — |
-| `vaulter-collaboration.hub.issuer` | `VAULTER_COLLAB_ISSUER` | `null` | The `iss` of a room token, compared as an exact string with the server configuration (null: app.url). |
-| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
-| `vaulter-collaboration.hub.token_ttl` | — | `300` | The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no control message reaches the hub, because a renewal checks the rights again. |
-| `vaulter-collaboration.hub.clock_skew` | — | `30` | The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds, 0..30); part of the exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance). |
-| `vaulter-collaboration.hub.timestamp_tolerance` | — | `300` | — |
-| `vaulter-collaboration.control` | — | — | How a change of effective permissions (drive.access.effective_permissions_changed) reaches the hubs at once: `redis` publishes on the channel vaulter:collab:control of the connection below, `http` POSTs to the management control endpoint of every hub listed (signed with hub.webhook_secret), `none` sends nothing — the hubs then learn of it on the next append or renewal. A lost message is never replayed: the token lifetime bounds the exposure. |
-| `vaulter-collaboration.control.transport` | `VAULTER_COLLAB_CONTROL_TRANSPORT` | `'none'` | — |
-| `vaulter-collaboration.control.redis.connection` | `VAULTER_COLLAB_CONTROL_REDIS` | `'default'` | — |
-| `vaulter-collaboration.control.http.urls` | `VAULTER_COLLAB_CONTROL_URLS` | `''` | The management base URLs of the hubs (comma-separated in the environment), e.g. http://hub-1:1235. |
-| `vaulter-collaboration.control.http.timeout` | — | `2` | — |
-| `vaulter-collaboration.max_state_bytes` | — | `16777216` | The largest binary Yjs state one hub store may write (413 above it). |
-| `vaulter-collaboration.mode` | `VAULTER_COLLAB_MODE` | `'buffered'` | When an edit counts as saved (protocol 2): `buffered` — the hub may sync it before the backend committed it; `durable` — the hub acknowledges an edit only with the backend receipt. |
-| `vaulter-collaboration.limits.update_bytes` | — | `1048576` | The largest decoded Yjs update one append carries, and the largest append request body (413 above either, checked before the body is decoded). |
-| `vaulter-collaboration.limits.request_bytes` | — | `2097152` | — |
-| `vaulter-collaboration.compaction` | — | — | The hub's compaction worker leases a document with uncheckpointed edits once its log holds this many updates, this many bytes of them, or its oldest one is this many seconds old; a drain request always qualifies. A lease lasts lease_ttl seconds. |
-| `vaulter-collaboration.compaction.trigger_updates` | — | `500` | — |
-| `vaulter-collaboration.compaction.trigger_bytes` | — | `1048576` | — |
-| `vaulter-collaboration.compaction.trigger_age` | — | `600` | — |
-| `vaulter-collaboration.compaction.lease_ttl` | — | `60` | — |
-| `vaulter-collaboration.drain.restore_deadline` | — | `10` | How long a restore, REST replace, content read or export of a document with uncheckpointed edits waits for the hub to compact them (seconds); after it the request answers 409 document_state_pending. |
-| `vaulter-collaboration.drain.cache_store` | — | `null` | The cache store of the draining flag vaulter:collaboration:drain sets (null: the default store). Every PHP process must see it, so not an `array` or `null` store (the doctor reports one as an error). |
-| `vaulter-collaboration.drain.max_append_tx` | — | `5` | The longest an append transaction lasts, lock waits included (seconds): a drain reports its outcome no earlier than this after it set the flag, so an append that read the flag before it was set has committed by then. |
-| `vaulter-collaboration.retention.retired_generation_days` | — | `7` | Days the log and receipts of a closed generation stay after its last token and retry could still arrive. |
-| `vaulter-collaboration.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
-| `vaulter-collaboration.schedule.collaboration_prune` | — | `'dailyAt:03:40'` | — |
-
 ### `vaulter`
 
 | Key | Env | Default | Description |
@@ -498,7 +463,6 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter.routes.prefix` | `VAULTER_ROUTE_PREFIX` | `'api/vaulter'` | — |
 | `vaulter.routes.middleware.authenticated` | — | `['api', 'auth:sanctum']` | — |
 | `vaulter.routes.middleware.public` | — | `['api']` | — |
-| `vaulter.routes.middleware.hub` | — | `['api']` | — |
 | `vaulter.routes.rate_limits.public` | `VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE` | `60` | — |
 | `vaulter.routes.rate_limits.uploads` | `VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE` | `120` | — |
 | `vaulter.outbox` | — | — | The transactional outbox: every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |

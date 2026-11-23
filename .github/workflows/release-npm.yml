@@ -1,6 +1,6 @@
 name: Release (npm)
 
-# Prepares (version-pr) and publishes the npm packages (@vaulter/vue, @vaulter/vue-collaboration, later @vaulter/client).
+# Prepares (version-pr) and publishes the npm packages (@vaulter/vue).
 # The Version Packages PR is opened without any registry credential. Publishing is a separate job that runs only after
 # `route` has selected the channel/line from the manifest and found the qualification evidence of this exact SHA
 # No evidence, no publish, no SHA-only fallback. The registry token is read by the publish job alone. The source repository is currently private, so npm provenance

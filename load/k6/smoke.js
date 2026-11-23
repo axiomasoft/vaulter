@@ -11,7 +11,7 @@ import { setup as tusUploadSetup, run as tusUploadRun } from './scenarios/tus-up
 import { setup as s3MultipartSetup, run as s3MultipartRun } from './scenarios/s3-multipart.js';
 import { setup as singleShotSetup, run as singleShotRun } from './scenarios/single-shot.js';
 import { setup as treeSetup, run as treeRun } from './scenarios/tree.js';
-import { setup as docsCollabSetup, run as docsCollabRun } from './scenarios/docs-collab.js';
+import { setup as documentsSetup, run as documentsRun } from './scenarios/documents.js';
 import { setup as downloadSetup, run as downloadRun } from './scenarios/download.js';
 import { interactive as mixedInteractive, upload as mixedUpload, download as mixedDownload, setup as mixedSetup } from './scenarios/mixed.js';
 
@@ -38,7 +38,7 @@ export function handleSummary(data) {
 export function setup() {
   return {
     download: downloadSetup(),
-    docsCollab: docsCollabSetup(),
+    documents: documentsSetup(),
     mixed: mixedSetup(),
   };
 }
@@ -63,7 +63,7 @@ export function run(data) {
   treeSetup();
   treeRun();
 
-  const docsCollab = docsCollabRun(data.docsCollab);
+  const documents = documentsRun(data.documents);
 
   const download = downloadRun(data.download);
 
@@ -71,5 +71,5 @@ export function run(data) {
   mixedUpload(data.mixed);
   mixedDownload(data.mixed);
 
-  return { tus, s3, single, docsCollab, download };
+  return { tus, s3, single, documents, download };
 }

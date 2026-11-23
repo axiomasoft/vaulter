@@ -170,12 +170,6 @@
             "why": "D23: a pin refused because the bytes of the blob are gone — the media pin protocol"
         },
         {
-            "match": "prefix",
-            "value": "problem:collaboration_",
-            "owner": "collaboration",
-            "why": "realtime codes belong to the collaboration package"
-        },
-        {
             "match": "exact",
             "value": "problem:collaboration_unavailable",
             "owner": "documents",
@@ -336,24 +330,6 @@
             "value": "problem:collaboration_protocol_contract",
             "owner": "documents",
             "why": "PLAN4-D16 P3.2 documents validates protocol sessions"
-        },
-        {
-            "match": "exact",
-            "value": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
-            "owner": "collaboration",
-            "why": "P3.7 trusted provider morph identity for typed principal resolution; PLAN4-D16/D17."
-        },
-        {
-            "match": "exact",
-            "value": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
-            "owner": "collaboration",
-            "why": "P3.7 trusted provider morph identity for typed principal resolution; PLAN4-D16/D17."
-        },
-        {
-            "match": "exact",
-            "value": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser::getMorphClass#getMorphClass",
-            "owner": "collaboration",
-            "why": "P3.8 addon-owned test user keeps the morph identity the host grants its test users under; PLAN4-D17."
         }
     ],
     "formats": [
@@ -448,16 +424,6 @@
             "why": "kernel correlation id"
         },
         {
-            "id": "format:header-collab-signature",
-            "owner": "collaboration",
-            "format": "X-Vaulter-Collab-Timestamp (unix seconds) and X-Vaulter-Collab-Signature (lowercase hex HMAC-SHA256 of \"<timestamp>.<raw body>\" with the hub webhook secret); a replayed signature is refused",
-            "source": {
-                "file": "packages/collaboration/src/CollaborationCallResolver.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
-            },
-            "why": "the hub's call authentication (the collaboration package, D1)"
-        },
-        {
             "id": "format:header-tus",
             "owner": "drive",
             "format": "Tus 1.0.0 resumable uploads: Tus-Resumable, Tus-Version, Tus-Extension (creation,termination), Tus-Max-Size, Upload-Offset, Upload-Length, Upload-Metadata",
@@ -466,16 +432,6 @@
                 "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController"
             },
             "why": "the upload protocol headers"
-        },
-        {
-            "id": "format:jwt-claims-room",
-            "owner": "collaboration",
-            "format": "HS256 JWT: sub, sub_type (trusted host morph type), document_id, drive_id, tenant (exact nullable string), protocol, state_format, generation, schema_version, scope (read|write ceiling), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (min(iat + hub.token_ttl, grant.notAfter); now < exp + hub.clock_skew, actual skew 0..60 default30), jti",
-            "source": {
-                "file": "packages/collaboration/src/RoomTokens.php",
-                "symbol": "Vaulter\\Collaboration\\RoomTokens::mint"
-            },
-            "why": "the room token the hub relays and the backend verifies and renews"
         },
         {
             "id": "format:webhook-envelope",

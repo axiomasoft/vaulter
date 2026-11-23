@@ -35,7 +35,6 @@ editLink: false
     'middleware' => [
         'authenticated' => ['api', 'auth:sanctum'],
         'public' => ['api'],
-        'hub' => ['api'],
     ],
 ],
 ```
@@ -50,7 +49,6 @@ editLink: false
 |---|---|---|
 | `authenticated` | все, кроме двух ниже | — |
 | `public` | `shares/{token}*` | `throttle:vaulter-public`, `ResolveShareToken` |
-| `hub` | `collaboration/hub/*` | `throttle:vaulter-public`, `ResolveCollaborationCall` |
 
 ### Резолв и авторизация
 
@@ -941,5 +939,5 @@ epoch или prune — `410 cursor_expired`. Оба требуют нового 
 
 - [Drive](/ru/concepts/nodes-and-revisions) — хэндл `DriveHandle`, который оборачивают маршруты Drive
 - [Корзина и восстановление](/ru/guides/trash) — жизненный цикл маршрутов корзины
-- [Загрузки](/ru/guides/uploads) · [Публичные ссылки](/ru/guides/sharing) · [Совместное редактирование](/ru/guides/collaboration)
+- [Загрузки](/ru/guides/uploads) · [Публичные ссылки](/ru/guides/sharing) · [Совместное редактирование](/ru/extending/collaboration-protocols)
 - [Справочник событий](/ru/reference/events) · [Справочник enum'ов](/ru/reference/php-api)

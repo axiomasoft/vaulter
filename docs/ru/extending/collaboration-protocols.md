@@ -2,8 +2,7 @@
 
 Публичный пакет documents обслуживает `POST documents/{node}/collaboration/session` и
 `Documents::in($drive)->collaborationSession($node)`. Клиент получает нейтральную сессию;
-транспорт протокола реализует коннектор приложения. Yjs предоставляет коммерческое дополнение
-`axiomasoft/vaulter-collaboration`.
+транспорт протокола реализует коннектор приложения.
 
 ## Регистрация адаптера
 

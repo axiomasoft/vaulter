@@ -17,7 +17,7 @@ use Vaulter\Inventory\TargetMap;
 require_once dirname(__DIR__, 3).'/scripts/inventory/bootstrap.php';
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/TargetMap.php';
 
-const TM_PSR4 = ['Vaulter\\' => 'core', 'Vaulter\\Media\\' => 'media', 'Vaulter\\Drive\\' => 'drive', 'Vaulter\\Documents\\' => 'documents', 'Vaulter\\Filament\\' => 'filament', 'Vaulter\\Collaboration\\' => 'collaboration'];
+const TM_PSR4 = ['Vaulter\\' => 'core', 'Vaulter\\Media\\' => 'media', 'Vaulter\\Drive\\' => 'drive', 'Vaulter\\Documents\\' => 'documents', 'Vaulter\\Filament\\' => 'filament'];
 
 /** @return array<string, string> a small core with a model, a contract, a service, SchemaBuilder and a migration */
 function tm_sources(): array
@@ -112,9 +112,7 @@ it('rule engine: default target drops the owner segment after the top directory 
         ->and(TargetMap::defaultTarget('Vaulter\Contracts\Webhooks\X', 'Vaulter\\', 'webhooks'))->toBe('Vaulter\Webhooks\Contracts\X')
         ->and(TargetMap::defaultTarget('Vaulter\Contracts\Cas\BlobStore', 'Vaulter\\', 'media'))->toBe('Vaulter\Media\Contracts\Cas\BlobStore')
         ->and(TargetMap::defaultTarget('Vaulter\Webhooks\Endpoint', 'Vaulter\\', 'webhooks'))->toBe('Vaulter\Webhooks\Endpoint')
-        ->and(TargetMap::defaultTarget('Vaulter\VaulterManager', 'Vaulter\\', 'drive'))->toBe('Vaulter\Drive\VaulterManager')
-        ->and(TargetMap::defaultTarget('Vaulter\Documents\Collaboration\Hub', 'Vaulter\Documents\\', 'collaboration'))->toBe('Vaulter\Collaboration\Hub')
-        ->and(TargetMap::defaultTarget('Vaulter\Documents\Http\Controllers\Collaboration\C', 'Vaulter\Documents\\', 'collaboration'))->toBe('Vaulter\Collaboration\Http\Controllers\Collaboration\C');
+        ->and(TargetMap::defaultTarget('Vaulter\VaulterManager', 'Vaulter\\', 'drive'))->toBe('Vaulter\Drive\VaulterManager');
 });
 
 it('rule engine: an fqcn rule beats the longest prefix and may name an explicit target', function (): void {
@@ -323,7 +321,6 @@ it('classifies the special cases of the architecture by name', function (): void
         ->and($types['Vaulter\Media\Contracts\Cas\BlobStore']['owner'])->toBe('media')
         ->and($types['Vaulter\Tenancy\Tenancy'])->toMatchArray(['owner' => 'core', 'action' => 'keep', 'surface' => 'Api'])
         ->and($types['Vaulter\Drive\Doctor\DiskSet']['owner'])->toBe('drive')
-        ->and($types['Vaulter\Collaboration\CollaborationHub'])->toMatchArray(['owner' => 'collaboration', 'phase' => 'stay', 'action' => 'keep'])
         ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive');
 });
 

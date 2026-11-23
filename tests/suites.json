@@ -248,7 +248,6 @@
             "tests/Integration/Unit/AccessEnumsTest.php",
             "tests/Integration/Unit/DatabaseCompatibilityDocsGuardTest.php",
             "tests/Integration/Unit/DatabaseSchemaReuseTest.php",
-            "tests/Integration/Unit/EnumTest.php",
             "tests/Integration/Unit/GatePermissionResolverDocGuardTest.php",
             "tests/Integration/Unit/InstallationDocsGuardTest.php"
           ]
@@ -503,7 +502,6 @@
             "tests/Integration/Schema/HotPathIndexesTest.php",
             "tests/Integration/Schema/KeyColumnTypesTest.php",
             "tests/Integration/Schema/SchemaSnapshotTest.php",
-            "tests/Integration/Support/CollaborationDefaultsGuardTest.php",
             "tests/Integration/Support/ContractsDocFqcnGuardTest.php",
             "tests/Integration/Support/DocsDriftGuardTest.php",
             "tests/Integration/Support/DomainExceptionStatusTest.php",
@@ -598,6 +596,7 @@
             "tests/Integration/Modules/InvalidModuleGraphConsoleTest.php",
             "tests/Integration/Modules/ModulesCommandTest.php",
             "tests/Integration/Modules/OwnershipRegistryTest.php",
+            "tests/Integration/Modules/PackmanDiagnosticsTest.php",
             "tests/Integration/Modules/RouteLabelSourceTest.php",
             "tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php",
             "tests/Integration/Operations/OperationCatalogTest.php",
@@ -1810,224 +1809,6 @@
         }
       ]
     },
-    "collaboration": {
-      "kind": "pest",
-      "cwd": "packages/collaboration",
-      "vendor": "../../vendor/bin/pest",
-      "config": "phpunit.xml",
-      "tests_dir": "packages/collaboration/tests",
-      "path_base": "package",
-      "default": true,
-      "discovery": [
-        "--list-tests"
-      ],
-      "partitions": [
-        {
-          "key": "CollaborationEnabledTestCase+DatabaseMigrations",
-          "fingerprint": "218c1de8d453",
-          "lifecycle": "migrations",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "parallel",
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Concurrency/AppendRaceTest.php",
-            "packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php",
-            "packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php",
-            "packages/collaboration/tests/Concurrency/CompactionRaceTest.php",
-            "packages/collaboration/tests/Disable/ManagedDrainTest.php",
-            "packages/collaboration/tests/Disable/UninstallGuardTest.php",
-            "packages/collaboration/tests/Restore/RestoreFenceTest.php",
-            "packages/collaboration/tests/Restore/RestorePendingTest.php"
-          ]
-        },
-        {
-          "key": "CollaborationEnabledTestCase+RefreshDatabase",
-          "fingerprint": "498be69c043e",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Collaboration/CollaborationGrantVerificationTest.php",
-            "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
-            "packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php",
-            "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
-            "packages/collaboration/tests/Collaboration/NodeCollaborationTokenTest.php",
-            "packages/collaboration/tests/Collaboration/RoomTokenClaimsTest.php",
-            "packages/collaboration/tests/Collaboration/TipTapSchemaFixtureTest.php",
-            "packages/collaboration/tests/Console/PruneGenerationsTest.php",
-            "packages/collaboration/tests/Doctor/CollaborationCheckTest.php",
-            "packages/collaboration/tests/Document/CollaborationSessionTest.php",
-            "packages/collaboration/tests/Http/CollaborationRouteLabelsTest.php",
-            "packages/collaboration/tests/Http/CollaborationSessionV1Test.php",
-            "packages/collaboration/tests/Http/ContentFenceV1Test.php",
-            "packages/collaboration/tests/Http/HubAppendV2Test.php",
-            "packages/collaboration/tests/Http/HubOpenApiBoundaryTest.php",
-            "packages/collaboration/tests/Http/HubV1RoutesTest.php",
-            "packages/collaboration/tests/Http/ProtocolVersionTest.php",
-            "packages/collaboration/tests/Http/TypedPrincipalTest.php",
-            "packages/collaboration/tests/Operations/CollaborationOperationsTest.php",
-            "packages/collaboration/tests/Persistence/AppendIdempotencyTest.php",
-            "packages/collaboration/tests/Persistence/AppendValidationTest.php",
-            "packages/collaboration/tests/Persistence/CompactionCasTest.php",
-            "packages/collaboration/tests/Persistence/CompactionLeaseTest.php",
-            "packages/collaboration/tests/Persistence/GenerationFenceTest.php",
-            "packages/collaboration/tests/Persistence/LockingReadsTest.php",
-            "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php",
-            "packages/collaboration/tests/Revocation/AppendRevokedTest.php",
-            "packages/collaboration/tests/Revocation/ControlConsumerTest.php",
-            "packages/collaboration/tests/Revocation/EffectivePermissionsTest.php",
-            "packages/collaboration/tests/Revocation/PermissionVersionsTest.php",
-            "packages/collaboration/tests/Revocation/RenewTest.php"
-          ]
-        },
-        {
-          "key": "CollaborationEnabledTestCase+WithoutDatabaseSchema",
-          "fingerprint": "ebfe4eb78046",
-          "lifecycle": "none",
-          "database": false,
-          "engines": [
-            "sqlite"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Arch/BoundaryTest.php",
-            "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
-            "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
-            "packages/collaboration/tests/Arch/OperationPolicyCoverageTest.php",
-            "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
-          ]
-        },
-        {
-          "key": "DatabaseMigrations+TestCase",
-          "fingerprint": "c83ff6c62f49",
-          "lifecycle": "migrations",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Disable/RawDisableTest.php"
-          ]
-        },
-        {
-          "key": "HubMiddlewareStackTestCase+RefreshDatabase",
-          "fingerprint": "6ee96fcb4341",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Feature/HubMiddlewareStackV1Test.php"
-          ]
-        },
-        {
-          "key": "RefreshDatabase+TestCase",
-          "fingerprint": "555a082c1a50",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Document/CollaborationFeatureGateTest.php"
-          ]
-        },
-        {
-          "key": "TestCase",
-          "fingerprint": "20db02f08b7a",
-          "lifecycle": "custom",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Module/CollaborationModuleTest.php"
-          ]
-        },
-        {
-          "key": "TestCase+WithoutDatabaseSchema",
-          "fingerprint": "ebfe4eb78046",
-          "lifecycle": "none",
-          "database": false,
-          "engines": [
-            "sqlite"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Configuration/CollaborationBootMatrixTest.php",
-            "packages/collaboration/tests/Configuration/CollaborationConfigTest.php",
-            "packages/collaboration/tests/Configuration/CollaborationSecretsTest.php",
-            "packages/collaboration/tests/Configuration/CollaborationWiringBoundaryTest.php",
-            "packages/collaboration/tests/Providers/CollaborationRegistrarTest.php"
-          ]
-        },
-        {
-          "key": "CollaborationEnabledTestCase+CollaborationProtocolContractTests+RefreshDatabase",
-          "fingerprint": "498be69c043e",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/collaboration/tests/Collaboration/YjsProtocolContractTest.php"
-          ]
-        }
-      ]
-    },
     "azguard": {
       "kind": "pest",
       "cwd": "packages/azguard",
@@ -2328,7 +2109,6 @@
             "tests/Repo/Arch/MoveTypesTest.php",
             "tests/Repo/Arch/MutationContractCoverageTest.php",
             "tests/Repo/Arch/OperationsBoundaryTest.php",
-            "tests/Repo/Arch/PrivateConsumerBoundaryTest.php",
             "tests/Repo/Arch/ReleaseChannelsTest.php",
             "tests/Repo/Arch/RevisionBlobLinksBoundaryTest.php",
             "tests/Repo/Arch/SurfaceManifestTest.php",
@@ -2345,21 +2125,6 @@
         }
       ]
     },
-    "hub": {
-      "kind": "node",
-      "cwd": "packages/collaboration/hub",
-      "command": [
-        "npm",
-        "test",
-        "--"
-      ],
-      "default": true,
-      "list_glob": [
-        "packages/collaboration/hub/test/*.test.js",
-        "packages/collaboration/hub/test/e2e/*.e2e.js"
-      ],
-      "partitions": []
-    },
     "vue": {
       "kind": "node",
       "cwd": "packages/vue",
@@ -2375,42 +2140,7 @@
         "list"
       ],
       "partitions": []
-    },
-    "vue-collaboration": {
-      "kind": "node",
-      "cwd": "packages/vue-collaboration",
-      "command": [
-        "npm",
-        "test",
-        "--"
-      ],
-      "default": true,
-      "discovery": [
-        "npx",
-        "vitest",
-        "list"
-      ],
-      "partitions": []
     }
   },
-  "stand": [
-    {
-      "name": "collab-e2e",
-      "cwd": ".",
-      "command": [
-        "bash",
-        "scripts/collab-e2e.sh"
-      ],
-      "note": "Collaboration protocol 2 against real processes: testbench serve + the Hocuspocus hub; needs npm ci in packages/collaboration/hub"
-    },
-    {
-      "name": "collab-stand",
-      "cwd": ".",
-      "command": [
-        "bash",
-        "scripts/collab-stand.sh"
-      ],
-      "note": "I17 scenarios 2, 3, 10 in docker: PostgreSQL, Redis, testbench serve and two hubs (SIGKILL, two hubs, SIGTERM drain); needs docker compose and npm ci in packages/collaboration/hub"
-    }
-  ]
+  "stand": []
 }

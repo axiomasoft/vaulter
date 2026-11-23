@@ -1,38 +1,27 @@
 # Contributing to Vaulter
 
 Thanks for your interest in Vaulter! This is a monorepo containing a Laravel package,
-Vue components, a Node collaboration hub (`packages/collaboration/hub`) and the documentation site.
+Vue components and the documentation site.
 
 ## Package channels and local development
 
 The public MIT channel includes core, media, drive, documents, webhooks, filament, the
 `axioma-studio/vaulter` metapackage and `@vaulter/vue`. The AzGuard bridge is public but remains
 excluded from release artifacts until its upstream has a stable tag. The metapackage requires
-only core, media, drive and documents; commercial collaboration is installed separately.
-
-The private channel contains `axioma-studio/vaulter-collaboration` (`proprietary`, private split
-and Private Packagist for Vendors), `@vaulter/vue-collaboration` (`UNLICENSED`, restricted npm,
-provenance disabled), and the collaboration hub (`UNLICENSED`, `private: true`, image-only,
-private GHCR). Their own LICENSE files are placeholders that grant no license. Axioma Studio
-must supply the commercial agreement and final legal text separately. Preserve third-party
-licenses and notices when working on these artifacts.
+only core, media, drive and documents.
 
 Public PHP packages share a version line, use `self.version` for siblings and expose
-`dev-main` as `1.0.x-dev`. Private artifacts have independent release lines: the PHP add-on
-requires public core, drive and documents at `^1.0`, with media at `^1.0` for development;
-the Vue add-on depends on `@vaulter/vue` at `^1.0`. The private PHP branch alias does not
-couple its release schedule to the public line.
+`dev-main` as `1.0.x-dev`.
 
 Package-local Composer `path` repositories and `minimum-stability: dev` remain for monorepo
 development. Composer reads these settings from the root package of an installation; they
-are ignored when that package is installed as a dependency. Monorepo contributors need
-access to the private source; public consumers can install the public packages independently.
+are ignored when that package is installed as a dependency.
 
 ## Prerequisites
 
 - PHP `^8.4` with `composer`
 - Node `>=26` with `npm`
-- Docker (optional — only for the collaboration hub stands, `scripts/collab-stand.sh`)
+- Docker for container-based database checks
 
 ## Setup
 
@@ -40,7 +29,7 @@ access to the private source; public consumers can install the public packages i
 git clone https://github.com/axioma-studio/vaulter.git
 cd vaulter
 composer install     # path-linked packages under packages/*
-npm install          # npm workspaces (packages/vue, packages/vue-collaboration, packages/collaboration/hub) + docs
+npm install          # the Vue workspace and docs
 ```
 
 ## Development workflow (PHP)
@@ -77,20 +66,6 @@ make test-db                         # schema/query change: every database test 
 ```
 
 Full, coverage and load runs are not part of a pull request.
-
-### The collaboration hub and `@vaulter/vue-collaboration`
-
-The Node hub lives in `packages/collaboration/hub` (image `ghcr.io/axiomasoft/vaulter-collaboration-hub`, workflow
-`.github/workflows/collaboration-hub-image.yml`). Its fast checks are plain `node:test` and need no running stack:
-
-```bash
-cd packages/collaboration/hub && npm run check && npm test   # syntax + the unit suite against a stub backend
-npm --prefix packages/vue-collaboration run typecheck && npm --prefix packages/vue-collaboration test
-```
-
-The scenarios that need real processes — `scripts/collab-e2e.sh` (one hub) and `scripts/collab-stand.sh` (PostgreSQL, Redis,
-two hubs: kill after retry, two hubs, `SIGTERM` drain) — need Docker and are not part of a pull request; see
-[Collaboration hub](packages/collaboration/docs/guides/hub.md#local-development-and-the-stands).
 
 ### Concurrency tests
 
@@ -246,12 +221,10 @@ npm run docs:dev     # VitePress docs dev server
 
 The release set lives in `release/packages.json`; `monorepo-split.yml` splits exactly those packages
 (`scripts/release/check-versions.php` fails when the matrix and the manifest disagree).
-Each artifact declares its public or private channel, independent release line and tag prefix.
-Public PHP tags use `v`, private PHP tags use `collaboration-v`, npm lines use their package
-names followed by `@`, and hub image tags use `collaboration-hub-v`.
+Each artifact declares its public release line and tag prefix. PHP tags use `v` and npm tags
+use the package name followed by `@`.
 
-- `scripts/php84 scripts/release/check-versions.php` — public siblings use `self.version`, private dependencies
-  match their declared public compatibility ranges, and channels and tag prefixes match the manifest. Nothing
+- `scripts/php84 scripts/release/check-versions.php` — public siblings use `self.version`, and channels and tag prefixes match the manifest. Nothing
   shipped requires a `dev-*` constraint (the excluded AzGuard bridge may pin its untagged upstream), and
   `@vaulter/vue` declares the REST API line.
 - `scripts/php84 scripts/release/build-artifacts.php --version=X.Y.Z --out=DIR` — one zip per package from `git archive`

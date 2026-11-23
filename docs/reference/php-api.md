@@ -128,7 +128,6 @@ signatures and the binding point you swap it through.
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | returned by `ContentStore::stage()` |
 | Cas | `BlobPins` | the media contract the owner of a blob link (the drive) pins and unpins through |
-| Collaboration | `HostUserResolver` (collaboration) | container binding |
 | Collaboration | `CollaborativeState` (documents) | the public state contract the collaboration log writes through (API, not an extension point) |
 | Collaboration | `PendingStateDrainer` (documents) | implemented by the collaboration module; documents calls it before it serves or replaces a pending document |
 | Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
@@ -462,7 +461,7 @@ implemented by the collaboration module: documents calls it outside any transact
 content read or export of a pending document, then re-reads the marker itself and answers `409 document_state_pending`
 if it is still set.
 
-See [Realtime Collaboration](/guides/collaboration).
+See [Realtime Collaboration](/extending/collaboration-protocols).
 
 ---
 

@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; final class X { public function f(): void { \Vaulter\Drive\Repositories\NodeReadRepository::class; new \Vaulter\Drive\Models\Node; } }

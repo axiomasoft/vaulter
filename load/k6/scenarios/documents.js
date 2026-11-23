@@ -1,6 +1,6 @@
-// Docs collaboration (OP-28 read content, OP-29 autosave, OP-30 list
-// versions, OP-31 named-version snapshot, OP-32 restore, OP-33 export, OP-34
-// collab-session issuance, OP-38 comment + broadcast). Operates on the SEEDED
+// Document editing (OP-28 read content, OP-29 autosave, OP-30 list
+// versions, OP-31 named-version snapshot, OP-32 restore, OP-33 export,
+// OP-38 comment + broadcast). Operates on the SEEDED
 // document-kind nodes (the seeded `documents` folder) — a shared pool, deliberately: co-edit
 // contention is exactly what this scenario means to exercise, not something to avoid.
 // The activity feed (OP-25/26) is Scope Excluded here — it lives in mixed.js, run
@@ -14,12 +14,12 @@ import { discoverDocumentNodeIds } from '../lib/discovery.js';
 import { ttfbMs } from '../lib/metrics.js';
 import { trackProtocolStatus } from '../lib/expected.js';
 
-const TAGS = { scenario: 'docs-collab', tier: TIER, class: 'interactive' };
+const TAGS = { scenario: 'documents', tier: TIER, class: 'interactive' };
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 export const options = {
   scenarios: {
-    docs_collab: { executor: 'constant-vus', vus: VUS_INTERACTIVE, duration: DURATION, exec: 'run' },
+    documents: { executor: 'constant-vus', vus: VUS_INTERACTIVE, duration: DURATION, exec: 'run' },
   },
 };
 
@@ -40,14 +40,6 @@ export function run(data) {
   ttfbMs.add(contentRes.timings.waiting, TAGS);
   trackProtocolStatus(contentRes, TAGS);
   check(contentRes, { 'docs content 200': (r) => r.status === 200 });
-
-  // OP-34: issue a realtime collab session for the same open.
-  const tokenRes = http.post(`${API}/nodes/${nodeId}/collab/token`, null, {
-    headers,
-    tags: { ...TAGS, op: 'OP-34' },
-  });
-  trackProtocolStatus(tokenRes, TAGS);
-  check(tokenRes, { 'docs collab token 200': (r) => r.status === 200 });
 
   // OP-29: autosave (the dominant op, operations-catalog.md "Высокая").
   const autosaveRes = http.patch(

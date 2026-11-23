@@ -9,7 +9,7 @@ name: Monorepo split (PHP)
 # PREREQUISITES (one-time, NOT done here):
 #   1. Create the empty target repos: axioma-studio/vaulter (metapackage), axioma-studio/vaulter-core,
 #      axioma-studio/vaulter-media, axioma-studio/vaulter-drive, axioma-studio/vaulter-documents,
-#      axioma-studio/vaulter-webhooks, axioma-studio/vaulter-collaboration, axioma-studio/vaulter-filament, axioma-studio/vaulter-azguard.
+#      axioma-studio/vaulter-webhooks, axioma-studio/vaulter-filament, axioma-studio/vaulter-azguard.
 #   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
 #      those split repos.
 #   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-azguard
@@ -34,7 +34,6 @@ on:
   push:
     tags:
       - 'v*'
-      - 'collaboration-v*'
 
 permissions:
   contents: read

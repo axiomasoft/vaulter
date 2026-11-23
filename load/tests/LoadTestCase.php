@@ -7,7 +7,6 @@ namespace Vaulter\Load\Tests;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Storage;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Load\LoadServiceProvider;
@@ -40,7 +39,6 @@ abstract class LoadTestCase extends OrchestraTestCase
             VaulterMediaServiceProvider::class,
             VaulterDriveServiceProvider::class,
             VaulterDocumentsServiceProvider::class,
-            VaulterCollaborationServiceProvider::class,
             VaulterWebhooksServiceProvider::class,
             LoadServiceProvider::class,
         ];

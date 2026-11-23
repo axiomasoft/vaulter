@@ -445,9 +445,8 @@ it('manifest: the committed contract-snapshots manifest names every surface with
         $counts[$id] = [count($files), $changes];
     }
 
-    expect(array_keys($counts))->toContain('php:core', 'php:collaboration', 'identities:protocol', 'identities:schema', 'schema:sqlite', 'schema:pgsql', 'npm:vue', 'npm:vue-collaboration')
+    expect(array_keys($counts))->toContain('php:core', 'identities:protocol', 'identities:schema', 'schema:sqlite', 'schema:pgsql', 'npm:vue')
         ->and(array_filter($counts, static fn (array $c): bool => $c[0] === 0 || $c[1] !== []))->toBe([])
-        ->and($manifest['surfaces']['php:collaboration']['release_line'])->toBe('php-collaboration')
         ->and($manifest['surfaces']['schema:sqlite']['status'])->toBe('current')
         ->and($manifest['surfaces']['schema:pgsql']['status'])->toBe('pending')
         ->and($manifest['surfaces']['schema:mysql']['status'])->toBe('pending');
@@ -538,8 +537,8 @@ function bc_npm_rows(callable $edit, string $package = 'vue'): array
 }
 
 it('npm: the committed declaration reports are no change against themselves, and a removed export is a BREAK (bc-npm, scenario 8)', function (): void {
-    foreach (['vue', 'vue-collaboration'] as $package) {
-        $f = bc_npm_files($package);
+    $f = bc_npm_files();
+    foreach (['vue', 'vue-fixture'] as $package) {
         $surface = NpmSurface::load($f['report'], $f['components'], $package);
         expect(NpmSurface::compare("npm:{$package}", $surface, $surface))->toBe([]);
     }
@@ -587,7 +586,7 @@ function bc_git(string $dir, array $args): string
 }
 
 /**
- * main = A → B → C. Public v1.9.0=A, v1.10.0=B, annotated v1.11.0=C, v1.99.0=C, prerelease v1.12.0-rc.1=C; private collaboration-v2.0.0=A.
+ * main = A → B → C. Public v1.9.0=A, v1.10.0=B, annotated v1.11.0=C, v1.99.0=C, prerelease v1.12.0-rc.1=C; private addon-v2.0.0=A.
  * C removes Port::read, which A and B have.
  *
  * @return array{dir: string, A: string, B: string, C: string}
@@ -611,7 +610,7 @@ function bc_release_repo(bool $removeInC = true): array
     $a = $commit($with);
     $b = $commit($with.' ');
     $c = $commit($removeInC ? '#[Api] final class Port {}' : $with);
-    foreach ([['v1.9.0', $a], ['v1.10.0', $b], ['v1.99.0', $c], ['v1.12.0-rc.1', $c], ['collaboration-v2.0.0', $a]] as [$tag, $sha]) {
+    foreach ([['v1.9.0', $a], ['v1.10.0', $b], ['v1.99.0', $c], ['v1.12.0-rc.1', $c], ['addon-v2.0.0', $a]] as [$tag, $sha]) {
         bc_git($dir, ['tag', $tag, $sha]);
     }
     bc_git($dir, ['tag', '-a', 'v1.11.0', '-m', 'release', $c]);
@@ -640,7 +639,7 @@ it('release line base: the candidate is excluded under any tag alias, prerelease
     expect($base($r['C']))->toBe('v1.10.0')
         ->and($base($r['B']))->toBe('v1.9.0')
         ->and($base($r['A']))->toBeNull()
-        ->and($base($r['C'], 'collaboration-v', 2))->toBe('collaboration-v2.0.0')
+        ->and($base($r['C'], 'addon-v', 2))->toBe('addon-v2.0.0')
         ->and(ReleaseBases::semver('1.2.3-rc.1+b.5'))->toBe(['major' => 1, 'minor' => 2, 'patch' => 3, 'pre' => 'rc.1', 'build' => 'b.5'])
         ->and(ReleaseBases::semver('1.2'))->toBeNull()
         ->and(ReleaseBases::semver('01.2.3'))->toBeNull();
@@ -725,7 +724,7 @@ it('exception: only an exact, unexpired exception bound by an external approval 
         ->and($apply([$exception], $withApproval($digests), ['tool_digest' => 'other'] + $digests))->toBe(1)
         ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['subject' => 'Vaulter\Port::write()'] + $change))->toBe(1)
         ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['after_hash' => str_repeat('1', 64)] + $change))->toBe(1)
-        ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['release_line' => 'php-collaboration'] + $change))->toBe(1)
+        ->and($apply([$exception], $withApproval($digests), $digests, '2026-10-28', ['release_line' => 'php-addon'] + $change))->toBe(1)
         ->and(bc_exit(static fn (): array => TrustPolicy::exceptions(bc_exceptions_json([['subject' => 'Vaulter\*'] + $exception]), $policy)))->toBe(2)
         ->and(bc_exit(static fn (): array => TrustPolicy::exceptions(bc_exceptions_json([['decision' => 'PLAN4-D99'] + $exception]), $policy)))->toBe(2)
         ->and(count(TrustPolicy::exceptions($json, $policy)))->toBe(1);
@@ -806,12 +805,12 @@ function bc_review_npm_surface(string $package, string $status = 'current'): arr
     return ['id' => "npm:{$package}", 'adapter' => 'npm-surface', 'schema_version' => 1, 'owner' => $package, 'release_line' => "npm-{$package}", 'inputs' => ["packages/{$package}/etc/index.api.md", "packages/{$package}/etc/components.surface.txt"], 'required' => true, 'status' => $status];
 }
 
-/** @return array<string, string> the npm files of both libraries (the committed reports) plus the manifest */
+/** @return array<string, string> the npm files of both test libraries (using the committed Vue report) plus the manifest */
 function bc_review_npm_files(string $manifest, array $edit = []): array
 {
     $files = [SnapshotManifest::PATH => $manifest];
-    foreach (['vue', 'vue-collaboration'] as $package) {
-        $f = bc_npm_files($package);
+    $f = bc_npm_files();
+    foreach (['vue', 'vue-fixture'] as $package) {
         $files["packages/{$package}/etc/index.api.md"] = $f['report'];
         $files["packages/{$package}/etc/components.surface.txt"] = $f['components'];
     }
@@ -821,51 +820,51 @@ function bc_review_npm_files(string $manifest, array $edit = []): array
 
 function bc_review_npm_policy(): array
 {
-    return bc_policy([], [], ['npm-vue' => ['prefix' => '@vaulter/vue@', 'major' => 1], 'npm-vue-collaboration' => ['prefix' => '@vaulter/vue-collaboration@', 'major' => 0]]);
+    return bc_policy([], [], ['npm-vue' => ['prefix' => '@vaulter/vue@', 'major' => 1], 'npm-vue-fixture' => ['prefix' => '@vaulter/vue-fixture@', 'major' => 0]]);
 }
 
-it('review_release: an npm export removed is a BREAK on its own line, a prop turned required and an event change are REVIEW, and the unchanged private npm line stays empty end to end', function (): void {
-    $manifest = bc_review_manifest_json(['npm-vue' => ['owners' => ['vue']], 'npm-vue-collaboration' => ['owners' => ['vue-collaboration']]], [bc_review_npm_surface('vue'), bc_review_npm_surface('vue-collaboration')]);
+it('review_release: an npm export removed is a BREAK on its own line, a prop turned required and an event change are REVIEW, and the unchanged second npm line stays empty end to end', function (): void {
+    $manifest = bc_review_manifest_json(['npm-vue' => ['owners' => ['vue']], 'npm-vue-fixture' => ['owners' => ['vue-fixture']]], [bc_review_npm_surface('vue'), bc_review_npm_surface('vue-fixture')]);
     $base = bc_review_npm_files($manifest);
     $vue = bc_npm_files('vue');
-    $collab = bc_npm_files('vue-collaboration');
+    $fixture = bc_npm_files();
     $repo = bc_review_repo([
         $base,
         bc_review_npm_files($manifest, ['packages/vue/etc/index.api.md' => str_replace("export function createVaulterClient(options?: VaulterClientOptions): VaulterClient;\n", '', $vue['report'])]),
         bc_review_npm_files($manifest, ['packages/vue/etc/components.surface.txt' => str_replace('prop path?: { id: string; name: string; }[] | undefined', 'prop path: { id: string; name: string; }[]', $vue['components'])]),
         bc_review_npm_files($manifest, ['packages/vue/etc/components.surface.txt' => str_replace('emit (event: "navigate", nodeId: string | null): void', 'emit (event: "navigate", nodeId: string): void', $vue['components'])]),
-        bc_review_npm_files($manifest, ['packages/vue-collaboration/etc/index.api.md' => str_replace('createCollaborationAdapter', 'createCollaborationAdapter2', $collab['report'])]),
+        bc_review_npm_files($manifest, ['packages/vue-fixture/etc/index.api.md' => str_replace('createVaulterClient', 'createVaulterClient2', $fixture['report'])]),
         $base,
-    ], ['@vaulter/vue@1.0.0' => 0, '@vaulter/vue-collaboration@0.1.0' => 0, '@vaulter/vue@1.1.0-rc.1' => 5]);
+    ], ['@vaulter/vue@1.0.0' => 0, '@vaulter/vue-fixture@0.1.0' => 0, '@vaulter/vue@1.1.0-rc.1' => 5]);
     $policy = bc_review_npm_policy();
 
     $removed = bc_review_run($repo, 1, $policy);
     expect($removed['exit'])->toBe(1)
-        ->and($removed['lines'])->toBe(['npm-vue' => ['admission' => 'compared', 'base' => '@vaulter/vue@1.0.0'], 'npm-vue-collaboration' => ['admission' => 'compared', 'base' => '@vaulter/vue-collaboration@0.1.0']])
+        ->and($removed['lines'])->toBe(['npm-vue' => ['admission' => 'compared', 'base' => '@vaulter/vue@1.0.0'], 'npm-vue-fixture' => ['admission' => 'compared', 'base' => '@vaulter/vue-fixture@0.1.0']])
         ->and(bc_review_rows($removed))->toBe(['BREAK export:function:createVaulterClient export-removed npm-vue'])
         ->and(bc_review_rows(bc_review_run($repo, 2, $policy)))->toBe(['REVIEW prop:VaulterBreadcrumb.path prop-required npm-vue'])
         ->and(bc_review_rows(bc_review_run($repo, 3, $policy)))->toBe(['REVIEW emit:VaulterBreadcrumb@navigate event-changed npm-vue'])
-        ->and(bc_review_rows(bc_review_run($repo, 4, $policy)))->toBe(['BREAK export:function:createCollaborationAdapter export-removed npm-vue-collaboration', 'ADD export:function:createCollaborationAdapter2 export-added npm-vue-collaboration'])
+        ->and(bc_review_rows(bc_review_run($repo, 4, $policy)))->toBe(['BREAK export:function:createVaulterClient export-removed npm-vue-fixture', 'ADD export:function:createVaulterClient2 export-added npm-vue-fixture'])
         ->and(bc_review_run($repo, 4, $policy)['exit'])->toBe(1)
         ->and(bc_review_run($repo, 5, $policy))->toMatchArray(['exit' => 0, 'changes' => []]);
 });
 
 it('review_release: a malformed or missing npm report or components snapshot, an unknown npm shape, a downgraded npm surface and a release line missing from the manifest are tooling errors, never green', function (): void {
-    $lines = ['npm-vue' => ['owners' => ['vue']], 'npm-vue-collaboration' => ['owners' => ['vue-collaboration']]];
-    $manifest = bc_review_manifest_json($lines, [bc_review_npm_surface('vue'), bc_review_npm_surface('vue-collaboration')]);
-    $pending = bc_review_manifest_json($lines, [bc_review_npm_surface('vue', 'pending'), bc_review_npm_surface('vue-collaboration')]);
+    $lines = ['npm-vue' => ['owners' => ['vue']], 'npm-vue-fixture' => ['owners' => ['vue-fixture']]];
+    $manifest = bc_review_manifest_json($lines, [bc_review_npm_surface('vue'), bc_review_npm_surface('vue-fixture')]);
+    $pending = bc_review_manifest_json($lines, [bc_review_npm_surface('vue', 'pending'), bc_review_npm_surface('vue-fixture')]);
     $oneLine = bc_review_manifest_json(['npm-vue' => ['owners' => ['vue']]], [bc_review_npm_surface('vue')]);
-    $shape = bc_review_manifest_json($lines, [['inputs' => ['packages/vue/etc/index.api.md', 'packages/vue/etc/index.api.md.bak']] + bc_review_npm_surface('vue'), bc_review_npm_surface('vue-collaboration')]);
+    $shape = bc_review_manifest_json($lines, [['inputs' => ['packages/vue/etc/index.api.md', 'packages/vue/etc/index.api.md.bak']] + bc_review_npm_surface('vue'), bc_review_npm_surface('vue-fixture')]);
     $variants = [
         'malformed report' => bc_review_npm_files($manifest, ['packages/vue/etc/index.api.md' => 'not a report']),
         'garbage component row' => bc_review_npm_files($manifest, ['packages/vue/etc/components.surface.txt' => "VaulterBreadcrumb garbage\n"]),
         'missing components file' => array_diff_key(bc_review_npm_files($manifest), ['packages/vue/etc/components.surface.txt' => 1]),
-        'missing report' => array_diff_key(bc_review_npm_files($manifest), ['packages/vue-collaboration/etc/index.api.md' => 1]),
+        'missing report' => array_diff_key(bc_review_npm_files($manifest), ['packages/vue-fixture/etc/index.api.md' => 1]),
         'downgraded to pending' => bc_review_npm_files($pending),
         'line missing from the manifest' => bc_review_npm_files($oneLine),
         'unknown npm shape' => bc_review_npm_files($shape, ['packages/vue/etc/index.api.md.bak' => 'x']),
     ];
-    $repo = bc_review_repo([bc_review_npm_files($manifest), ...array_values($variants)], ['@vaulter/vue@1.0.0' => 0, '@vaulter/vue-collaboration@0.1.0' => 0]);
+    $repo = bc_review_repo([bc_review_npm_files($manifest), ...array_values($variants)], ['@vaulter/vue@1.0.0' => 0, '@vaulter/vue-fixture@0.1.0' => 0]);
     $policy = bc_review_npm_policy();
 
     foreach (array_keys($variants) as $i => $name) {
@@ -874,21 +873,21 @@ it('review_release: a malformed or missing npm report or components snapshot, an
     }
 });
 
-it('review_release: a byte-identical private collaboration line has zero ancestor-unresolved noise because the PHP graph spans every line, while a removed core method is still a BREAK on its own line', function (): void {
+it('review_release: a byte-identical second PHP line has zero ancestor-unresolved noise because the PHP graph spans every line, while a removed core method is still a BREAK on its own line', function (): void {
     $sources = static fn (string $coreBody): array => [
         'packages/core/src/Base.php' => "<?php\nnamespace Vaulter;\nuse Packman\\Attributes\\Api;\n#[Api] abstract class Base { {$coreBody} }",
-        'packages/collaboration/src/Child.php' => "<?php\nnamespace Vaulter\\Collaboration;\nuse Packman\\Attributes\\Api;\nuse Vaulter\\Base;\n#[Api] final class Child extends Base {}",
+        'packages/documents/src/Child.php' => "<?php\nnamespace Vaulter\\Documents;\nuse Packman\\Attributes\\Api;\nuse Vaulter\\Base;\n#[Api] final class Child extends Base {}",
     ];
-    $lines = ['php-public' => ['owners' => ['core']], 'php-collaboration' => ['owners' => ['collaboration']]];
+    $lines = ['php-public' => ['owners' => ['core']], 'php-addon' => ['owners' => ['documents']]];
     $php = static fn (string $package, string $line): array => ['id' => "php:{$package}", 'adapter' => 'php-surface', 'schema_version' => 1, 'owner' => $package, 'release_line' => $line, 'inputs' => ["packages/{$package}/surface.json"], 'required' => true];
-    $manifest = bc_review_manifest_json($lines, [$php('collaboration', 'php-collaboration'), $php('core', 'php-public')]);
+    $manifest = bc_review_manifest_json($lines, [$php('documents', 'php-addon'), $php('core', 'php-public')]);
     $files = static function (string $coreBody) use ($sources, $manifest): array {
         $structures = Surface::structures(Surface::fromSources($sources($coreBody)));
 
-        return [SnapshotManifest::PATH => $manifest, 'packages/core/surface.json' => $structures['core'], 'packages/collaboration/surface.json' => $structures['collaboration']];
+        return [SnapshotManifest::PATH => $manifest, 'packages/core/surface.json' => $structures['core'], 'packages/documents/surface.json' => $structures['documents']];
     };
-    $repo = bc_review_repo([$files('public function read(): void {}'), $files('public function read(): void {}'), $files('')], ['v1.0.0' => 0, 'collaboration-v1.0.0' => 0]);
-    $policy = bc_policy([], [], ['php-public' => ['prefix' => 'v', 'major' => 1], 'php-collaboration' => ['prefix' => 'collaboration-v', 'major' => 1]]);
+    $repo = bc_review_repo([$files('public function read(): void {}'), $files('public function read(): void {}'), $files('')], ['v1.0.0' => 0, 'addon-v1.0.0' => 0]);
+    $policy = bc_policy([], [], ['php-public' => ['prefix' => 'v', 'major' => 1], 'php-addon' => ['prefix' => 'addon-v', 'major' => 1]]);
 
     $removed = bc_review_run($repo, 2, $policy);
     expect(bc_review_run($repo, 1, $policy))->toMatchArray(['exit' => 0, 'changes' => []])
@@ -896,14 +895,11 @@ it('review_release: a byte-identical private collaboration line has zero ancesto
         ->and(array_filter(bc_review_rows($removed), static fn (string $r): bool => str_contains($r, 'unresolved')))->toBe([]);
 });
 
-it('OpenAPI: both owners and shared ref closure use the resolved line bases, missing refs and unavailable tools fail closed (case 11)', function (): void {
+it('OpenAPI: the public owner and shared ref closure use the resolved line base, missing refs and unavailable tools fail closed (case 11)', function (): void {
     $r = bc_release_repo(false);
     $spec = "openapi: 3.0.3\npaths: {}\ncomponents:\n  schemas:\n    Shared:\n      \$ref: '../../shared.yaml#/Value'\n";
-    foreach (['openapi/vaulter-v1.yaml', 'packages/collaboration/openapi/hub.yaml'] as $path) {
-        @mkdir(dirname($r['dir'].'/'.$path), 0777, true);
-        $ref = $path === 'openapi/vaulter-v1.yaml' ? '../shared.yaml' : '../../../shared.yaml';
-        file_put_contents($r['dir'].'/'.$path, str_replace('../../shared.yaml', $ref, $spec));
-    }
+    mkdir($r['dir'].'/openapi');
+    file_put_contents($r['dir'].'/openapi/vaulter-v1.yaml', str_replace('../../shared.yaml', '../shared.yaml', $spec));
     file_put_contents($r['dir'].'/shared.yaml', "Value:\n  type: string\n");
     bc_git($r['dir'], ['add', '.']);
     bc_git($r['dir'], ['commit', '-qm', 'specs']);
@@ -912,7 +908,7 @@ it('OpenAPI: both owners and shared ref closure use the resolved line bases, mis
     file_put_contents($r['dir'].'/shared.yaml', "Value:\n  type: integer\n");
     bc_git($r['dir'], ['commit', '-qam', 'shared edit']);
     $candidate = bc_git($r['dir'], ['rev-parse', 'HEAD']);
-    $scratch = bc_scratch(['fake' => "#!/bin/sh\nprintf '%s\\n' \"\$@\" >> \"\$BC_ARGV\"\nexit \"\${BC_FAKE_EXIT:-0}\"\n", 'report.json' => json_encode(['exit' => 0, 'lines' => ['php-public' => ['admission' => 'compared', 'base' => 'spec-base'], 'php-collaboration' => ['admission' => 'compared', 'base' => 'spec-base']]])]);
+    $scratch = bc_scratch(['fake' => "#!/bin/sh\nprintf '%s\\n' \"\$@\" >> \"\$BC_ARGV\"\nexit \"\${BC_FAKE_EXIT:-0}\"\n", 'report.json' => json_encode(['exit' => 0, 'lines' => ['php-public' => ['admission' => 'compared', 'base' => 'spec-base']]])]);
     chmod($scratch.'/fake', 0755);
     $run = static function (string $binary, string $exit = '0', bool $trustedParser = false) use ($r, $candidate, $scratch): array {
         $env = ['PATH' => '/usr/bin:/bin', 'BC_PYTHON' => '/usr/bin/python3', 'BC_OASDIFF_BIN' => $binary, 'BC_ARGV' => $scratch.'/argv', 'BC_FAKE_EXIT' => $exit];
@@ -925,10 +921,10 @@ it('OpenAPI: both owners and shared ref closure use the resolved line bases, mis
     };
     [$exit, $report] = $run($scratch.'/fake');
     expect($exit)->toBe(0)
-        ->and(array_column($report['openapi'], 'owner'))->toBe(['core', 'collaboration'])
-        ->and(array_column($report['openapi'], 'base_sha'))->toBe([$base, $base])
+        ->and(array_column($report['openapi'], 'owner'))->toBe(['core'])
+        ->and(array_column($report['openapi'], 'base_sha'))->toBe([$base])
         ->and($report['actual_runtime_qualification'])->toBeFalse()
-        ->and(substr_count(file_get_contents($scratch.'/argv'), '--fail-on'))->toBe(2)
+        ->and(substr_count(file_get_contents($scratch.'/argv'), '--fail-on'))->toBe(1)
         ->and($run($scratch.'/fake', '1')[0])->toBe(1)
         ->and($run($scratch.'/fake', '0', true)[0])->toBe(2)
         ->and($run($scratch.'/missing')[0])->toBe(2);

@@ -6,6 +6,7 @@ Vaulter\Documents\Access\CollaborationAccessPolicy api since 1.0 final readonly 
   public function evaluate(Vaulter\Drive\Operations\DriveContext $context, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
   public function evaluateAuthenticationReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): ?Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
   public function evaluateReference(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
+  public function referenceContext(Vaulter\ValueObjects\Access\Actor $actor, string $driveId, string $nodeId, ?string $tenant, string $correlationId): Vaulter\Drive\Operations\DriveContext
 
 Vaulter\Documents\Configuration\DocumentsBroadcastOptions api since 1.0 final readonly class
   public string $channelPrefix
@@ -699,7 +700,8 @@ Vaulter\Documents\State\CheckpointPublication api since 1.0 final readonly class
   public array $content
   public int $coveredThrough
   public int $expectedStateVersion
-  public function __construct(Vaulter\Documents\State\CollaborationStateBinding $binding, int $expectedStateVersion, int $coveredThrough, ?string $collabState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null)
+  public ?Vaulter\Documents\Contracts\DocumentContent $preparedContent
+  public function __construct(Vaulter\Documents\State\CollaborationStateBinding $binding, int $expectedStateVersion, int $coveredThrough, ?string $collabState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null, ?Vaulter\Documents\Contracts\DocumentContent $preparedContent = null)
 
 Vaulter\Documents\State\CollaborationStateBinding api since 1.0 final readonly class
   public int $generation
@@ -728,7 +730,8 @@ Vaulter\Documents\State\CollaborativeStateTransition api since 1.0 final readonl
   public ?string $protocol
   public int $schemaVersion
   public ?string $stateFormat
-  public function __construct(?Vaulter\Documents\State\CollaborationStateBinding $expectedBinding, int $expectedStateVersion, string $documentType, int $schemaVersion, ?string $protocol, ?string $stateFormat, Vaulter\Documents\Contracts\DocumentContent $content, ?string $collabState, Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId)
+  public ?Vaulter\Documents\Enums\Documents\DocumentWriteMode $writeMode
+  public function __construct(?Vaulter\Documents\State\CollaborationStateBinding $expectedBinding, int $expectedStateVersion, string $documentType, int $schemaVersion, ?string $protocol, ?string $stateFormat, Vaulter\Documents\Contracts\DocumentContent $content, ?string $collabState, Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?Vaulter\Documents\Enums\Documents\DocumentWriteMode $writeMode = null)
 
 Vaulter\Documents\State\LockedDocumentState api since 1.0 final readonly class
   public ?Vaulter\Documents\State\CollaborationStateBinding $binding

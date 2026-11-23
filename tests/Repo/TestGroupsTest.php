@@ -20,7 +20,6 @@ function g_suites(): array
         'drive' => 'packages/drive/tests',
         'webhooks' => 'packages/webhooks/tests',
         'documents' => 'packages/documents/tests',
-        'collaboration' => 'packages/collaboration/tests',
         'azguard' => 'packages/azguard/tests',
         'filament' => 'packages/filament/tests',
         'load' => 'load/tests',
@@ -68,7 +67,7 @@ function g_files(string $suite, string $entry): array
 function g_listed(string $cwd, string $group, array $paths = []): array
 {
     $process = proc_open(
-        [g_root().'/scripts/php84', 'php', g_root().'/vendor/bin/pest', '--list-tests', '--group='.$group, ...$paths],
+        [g_root().'/scripts/php84', 'php', g_root().'/vendor/bin/pest', '--bootstrap='.g_root().'/vendor/autoload.php', '--list-tests', '--group='.$group, ...$paths],
         [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
         $pipes,
         $cwd,
@@ -197,10 +196,10 @@ it('gives every serial and stand test the umbrella groups the lanes exclude (nof
         ->and(array_diff($stand, g_listed(g_root(), 'nofull', ['load/tests'])))->toBe([]);
 });
 
-it('plans stand as its own command: load tests and real-process scripts, SQLite, one process, never k6 or a benchmark', function (): void {
+it('plans stand as its own command: load tests, SQLite, one process, never k6 or a benchmark', function (): void {
     [$code, $plan, $err] = g_t(['stand']);
     expect($code)->toBe(0, $err)->and($plan['mode'])->toBe('stand')->and($plan['engines'])->toBe(['sqlite'])
-        ->and($plan['suites'])->toBe(['load', 'collab-e2e', 'collab-stand']);
+        ->and($plan['suites'])->toBe(['load']);
 
     $pest = array_values(array_filter($plan['steps'], static fn (array $step): bool => $step['kind'] === 'pest'));
     expect($pest)->not->toBe([]);
@@ -211,7 +210,7 @@ it('plans stand as its own command: load tests and real-process scripts, SQLite,
 
     foreach ([['sqlite'], ['sqlite', '--full'], ['all', '--full']] as $args) {
         [$other, $otherPlan] = g_t($args);
-        expect($other)->toBe(0)->and($otherPlan['suites'])->not->toContain('load')->and($otherPlan['suites'])->not->toContain('collab-e2e')->and($otherPlan['suites'])->not->toContain('collab-stand');
+        expect($other)->toBe(0)->and($otherPlan['suites'])->not->toContain('load');
     }
 });
 

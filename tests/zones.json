@@ -128,6 +128,7 @@
             "tests": [
                 "packages/core/tests/Concurrency/ForkRaceTest.php",
                 "packages/core/tests/Database/AggregateLockTest.php",
+                "packages/core/tests/Database/FailedCommitTest.php",
                 "packages/core/tests/HostKeyMysql",
                 "packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php",
                 "packages/core/tests/IdStrategy/IdStrategyResolverTest.php",
@@ -231,24 +232,6 @@
                 "drive"
             ]
         },
-        "collaboration": {
-            "suite": "collaboration",
-            "src": [
-                "packages/collaboration/src",
-                "packages/collaboration/config",
-                "packages/collaboration/resources",
-                "packages/collaboration/routes"
-            ],
-            "tests": [
-                "packages/collaboration/tests"
-            ],
-            "uses": [
-                "core",
-                "media",
-                "drive",
-                "documents"
-            ]
-        },
         "azguard": {
             "suite": "azguard",
             "src": [
@@ -307,14 +290,6 @@
             ],
             "uses": []
         },
-        "hub": {
-            "suite": "hub",
-            "src": [
-                "packages/collaboration/hub"
-            ],
-            "tests": [],
-            "uses": []
-        },
         "vue": {
             "suite": "vue",
             "src": [
@@ -322,16 +297,6 @@
             ],
             "tests": [],
             "uses": []
-        },
-        "vue-collaboration": {
-            "suite": "vue-collaboration",
-            "src": [
-                "packages/vue-collaboration"
-            ],
-            "tests": [],
-            "uses": [
-                "vue"
-            ]
         },
         "integration": {
             "suite": "integration",
@@ -345,7 +310,6 @@
                 "drive",
                 "documents",
                 "webhooks",
-                "collaboration",
                 "azguard",
                 "filament"
             ]
@@ -605,42 +569,6 @@
             ]
         },
         {
-            "path": "packages/collaboration/composer.json",
-            "zones": [
-                "collaboration"
-            ]
-        },
-        {
-            "path": "packages/collaboration/phpunit.xml",
-            "zones": [
-                "collaboration"
-            ]
-        },
-        {
-            "path": "packages/collaboration/tests/Pest.php",
-            "zones": [
-                "collaboration"
-            ]
-        },
-        {
-            "path": "packages/collaboration/tests/TestCase.php",
-            "zones": [
-                "collaboration"
-            ]
-        },
-        {
-            "path": "packages/collaboration/tests/Support",
-            "zones": [
-                "collaboration"
-            ]
-        },
-        {
-            "path": "packages/collaboration/tests/Fixtures",
-            "zones": [
-                "collaboration"
-            ]
-        },
-        {
             "path": "packages/azguard/composer.json",
             "zones": [
                 "azguard"
@@ -707,18 +635,6 @@
             ]
         },
         {
-            "path": "packages/collaboration/hub/package.json",
-            "zones": [
-                "hub"
-            ]
-        },
-        {
-            "path": "packages/collaboration/hub/package-lock.json",
-            "zones": [
-                "hub"
-            ]
-        },
-        {
             "path": "packages/vue/package.json",
             "zones": [
                 "vue"
@@ -743,30 +659,6 @@
             ]
         },
         {
-            "path": "packages/vue-collaboration/package.json",
-            "zones": [
-                "vue-collaboration"
-            ]
-        },
-        {
-            "path": "packages/vue-collaboration/vite.config.ts",
-            "zones": [
-                "vue-collaboration"
-            ]
-        },
-        {
-            "path": "packages/vue-collaboration/tsconfig.json",
-            "zones": [
-                "vue-collaboration"
-            ]
-        },
-        {
-            "path": "packages/vue-collaboration/tests/support",
-            "zones": [
-                "vue-collaboration"
-            ]
-        },
-        {
             "path": "tests/Integration/TestCase.php",
             "zones": [
                 "integration"
@@ -776,14 +668,6 @@
     "database": [
         "packages/azguard/tests/RealAzGuard",
         "packages/azguard/tests/RealAzGuardIsolated",
-        "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
-        "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
-        "packages/collaboration/tests/Concurrency",
-        "packages/collaboration/tests/Console/PruneGenerationsTest.php",
-        "packages/collaboration/tests/Disable",
-        "packages/collaboration/tests/Persistence",
-        "packages/collaboration/tests/Restore",
-        "packages/collaboration/tests/Revocation",
         "packages/core/tests/Concurrency/ForkRaceTest.php",
         "packages/core/tests/Database/AggregateLockTest.php",
         "packages/core/tests/HostKeyMysql/HostKeyColumnsMysqlTest.php",

@@ -1,5 +1,0 @@
-{
-  "suite": "vue-collaboration",
-  "introduced": "P5",
-  "note": "The vue-collaboration suite does not exist at the base commit c64bba25 (the collaboration client code and its tests lived in the vue suite until P5.12); its immutable original is empty by construction. The moved cases are recorded in CHANGES.json as vue -> vue-collaboration, every other case counts as an addition."
-}

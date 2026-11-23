@@ -32,8 +32,8 @@ features:
     details: Собственный ACL-движок Vaulter плюс сменные драйверы ролей (database, Gate, Spatie, AzGuard).
     link: /ru/concepts/access-model
   - title: Совместное редактирование
-    details: TipTap/Yjs через opt-in пакет и хаб Hocuspocus, с квитанциями сохранения и ограниченной ревокацией.
-    link: /ru/getting-started/introduction
+    details: Независимые от транспорта контракты сеансов и адаптеров.
+    link: /ru/extending/collaboration-protocols
   - title: Vue + Filament
     details: UI-диск @vaulter/vue и админ-плагин для Filament 5, готовые к встраиванию.
     link: /ru/getting-started/introduction

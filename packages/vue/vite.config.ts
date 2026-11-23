@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
 
 // Library build: type-check + emit declarations, externalize Vue (and the editor stack),
-// ship ES + UMD bundles. The realtime stack lives in @vaulter/vue-collaboration.
+// ship ES + UMD bundles.
 export default defineConfig({
   plugins: [
     vue(),

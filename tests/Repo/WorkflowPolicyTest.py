@@ -18,6 +18,14 @@ RAILS_SPEC.loader.exec_module(rails)
 
 
 class EngineeringRailsTest(unittest.TestCase):
+    def test_public_lock_rejects_a_transitive_collaboration_dev_dependency(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / 'package-lock.json'
+            lock.write_text(json.dumps({'packages': {
+                'node_modules/tool/node_modules/yjs': {'version': '13.6.33', 'license': 'MIT', 'dev': True},
+            }}))
+            self.assertEqual(['yjs: private collaboration dependency'], list(rails.scan_lock(lock)))
+
     def test_disallowed_and_unlicensed_runtime_dependencies(self):
         self.assertTrue(list(rails.dependency_problems({'version': '3.0.0'}, '@tiptap-pro/secret', ['MIT'])))
         self.assertTrue(list(rails.dependency_problems({'version': '1.0.0'}, 'unlicensed-package', ['UNLICENSED'])))
@@ -56,12 +64,9 @@ class EngineeringRailsTest(unittest.TestCase):
                 'dunglas/mercure@1.0: dependency forbidden',
             ], rails.scan_lock(lock))
 
-    def test_frontend_floor_and_exact_license_correction(self):
+    def test_frontend_version_floor(self):
         self.assertTrue(list(rails.dependency_problems({'version': '3.5.41'}, 'vue', ['MIT'])))
         self.assertFalse(list(rails.dependency_problems({'version': '3.5.42'}, 'vue', ['MIT'])))
-        name, version, integrity = rails.REDLOCK_MIT
-        self.assertFalse(list(rails.dependency_problems({'version': version, 'integrity': integrity}, name, ['UNLICENSED'])))
-        self.assertTrue(list(rails.dependency_problems({'version': version, 'integrity': 'different'}, name, ['UNLICENSED'])))
 
     def test_new_suppressions_require_a_real_adr(self):
         diff = '\n'.join((
@@ -195,7 +200,6 @@ def ci_doc():
     jobs['consumer-isolation'] = consumer_job()
     jobs['contract-bc'] = contract_job()
     jobs['vue'] = npm_job('@vaulter/vue', 'vue')
-    jobs['vue-collaboration'] = npm_job('@vaulter/vue-collaboration', 'vue_collaboration')
     jobs['changes']['outputs'] = {output: '${{ steps.plan.outputs.' + output + ' }}' for output in ('has_contract_bc', 'contract_bc_provisioned', 'contract_bc_required_lines', 'contract_bc_selected_lines')}
     jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes + ['sca'],
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
@@ -240,7 +244,7 @@ def selector(status='ok', exit_code=0, suites=(), errors=()):
 def needs(results, **outputs):
     """toJSON(needs) of ci-gate: `results` maps job to result, `outputs` are the outputs of `changes`."""
     base = {'skip_reason': '', 'has_quality': 'false', 'has_fast': 'false', 'has_db': 'false', 'has_serial': 'false',
-            'has_consumer': 'false', 'has_vue': 'false', 'has_vue_collaboration': 'false', 'has_hub': 'false', 'has_repo': 'false', 'has_openapi': 'false', 'has_contract_bc': 'false'}
+            'has_consumer': 'false', 'has_vue': 'false', 'has_repo': 'false', 'has_openapi': 'false', 'has_contract_bc': 'false'}
     base.update({k: v for k, v in outputs.items()})
     if not base['skip_reason'] and any(base.get('has_' + lane) == 'true' for lane in policy.LANES):
         base['has_contract_bc'] = outputs.get('has_contract_bc', 'true')
@@ -387,7 +391,7 @@ class SingleCiTest(unittest.TestCase):
         doc['jobs']['route']['steps'][0]['env'] = {'T': '${{ secrets.GH_ACCESS_TOKEN }}'}
         self.assertTrue(any('must not hold the publisher credential GH_ACCESS_TOKEN' in e for e in policy.check_split(doc)))
 
-    def test_npm_and_image_publishers_route_before_any_credential(self):
+    def test_npm_publisher_route_before_any_credential(self):
         for name, (publisher, credentials) in policy.PUBLISHERS.items():
             doc = publisher_doc(publisher, credentials[0])
             self.assertEqual([], policy.check_publisher(name, doc), name)
@@ -439,16 +443,13 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('true', out['has_openapi'])
 
     def test_exit_2_plan_is_the_full_affected_set(self):
-        suites = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azguard', 'filament', 'load', 'repo', 'hub', 'vue',
-                  'vue-collaboration']
+        suites = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'azguard', 'filament', 'load', 'repo', 'vue']
         out = self.plan(selector('unknown', 2, suites))
         self.assertEqual('true', out['has_vue'])
-        self.assertEqual('true', out['has_vue_collaboration'])
-        self.assertEqual('true', out['has_hub'])
         self.assertEqual('true', out['has_repo'])
-        self.assertEqual(9, len(json.loads(out['fast_matrix'])['include']))  # one Laravel 13 line for each package
-        self.assertEqual(9, len(json.loads(out['quality_matrix'])['include']))
-        self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration'],
+        self.assertEqual(8, len(json.loads(out['fast_matrix'])['include']))  # one Laravel 13 line for each package
+        self.assertEqual(8, len(json.loads(out['quality_matrix'])['include']))
+        self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks'],
                          [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
 
     def test_harness_change_still_runs_the_repository_wide_pint(self):
@@ -468,13 +469,12 @@ class SingleCiTest(unittest.TestCase):
         out = policy.plan_outputs(self.support, 'all')
         self.assertEqual('', out['skip_reason'])
         self.assertEqual('true', out['has_fast'])
-        self.assertEqual('true', out['has_vue_collaboration'])
         db = json.loads(out['db_matrix'])['include']
-        # Every package with database tests on both engines; filament has none, so no db lane.
-        self.assertEqual(24, len(db))
+        # Every package with database tests on the configured engines; filament has none, so no db lane.
+        self.assertEqual(21, len(db))
         self.assertNotIn('filament', {row['package'] for row in db})
-        self.assertEqual(14, len(json.loads(out['serial_matrix'])['include']))
-        self.assertEqual(6, len(json.loads(out['consumer_matrix'])['include']))
+        self.assertEqual(12, len(json.loads(out['serial_matrix'])['include']))
+        self.assertEqual(5, len(json.loads(out['consumer_matrix'])['include']))
         with self.assertRaises(ValueError):
             policy.plan_outputs(self.support, 'changed')
 
@@ -498,7 +498,7 @@ class SingleCiTest(unittest.TestCase):
             doc['env']['PHP_SUPPORT'] = json.dumps(declared)
             self.assertTrue(any('PHP_SUPPORT[integration]' in error for error in policy.check_support(workflow, doc, ROOT)))
         matrix = (ROOT / 'scripts' / 't-matrix').read_text()
-        for package in ('integration', 'webhooks', 'collaboration'):
+        for package in ('integration', 'webhooks'):
             self.assertIn(package, matrix.split('packages=', 1)[1].splitlines()[0].split(','))
 
     def test_webhooks_is_a_php_package_of_every_lane(self):
@@ -528,7 +528,7 @@ class SingleCiTest(unittest.TestCase):
     def test_harness_or_manifest_change_rechecks_every_consumer(self):
         # scripts/release/*, tests/ or the manifest (an unknown path plans the whole set)
         out = self.plan(selector('ok', 0, ['repo']))
-        self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration'],
+        self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks'],
                          [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
         self.assertEqual('true', out['has_consumer'])
 
@@ -584,85 +584,21 @@ class SingleCiTest(unittest.TestCase):
     def test_gate_is_red_when_an_expected_consumer_lane_did_not_succeed(self):
         for result in ('failure', 'cancelled', 'skipped'):
             red = needs({'quality': 'skipped', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': result,
-                         'vue': 'skipped', 'vue-collaboration': 'skipped', 'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+                         'vue': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
                         has_consumer='true', has_openapi='true', consumer_matrix=self.matrix(2))
             self.assertEqual([f'consumer: required lane is {result}'], policy.gate_errors(red), result)
 
         empty = needs({'quality': 'skipped', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped',
-                       'vue': 'skipped', 'vue-collaboration': 'skipped', 'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+                       'vue': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
                       has_consumer='true', has_openapi='true', consumer_matrix=self.matrix(0))
         self.assertIn('consumer: required lane has an empty matrix', policy.gate_errors(empty))
 
-    # -- collaboration: PHP package, hub image, @vaulter/vue-collaboration -------------------------------
-
-    def test_collaboration_is_a_php_package_of_every_lane(self):
-        support = self.support
-        self.assertEqual(['13'], support['collaboration']['lines'])
-        self.assertTrue(support['collaboration']['serial'], 'its groups.php declares serial cases (pgsql races)')
-        self.assertTrue(support['collaboration']['types'])
-        self.assertFalse(support['collaboration']['azguard'])
-
-        out = self.plan(selector('ok', 0, ['collaboration']), pgsql=selector('ok', 0, ['collaboration']), mysql=selector('ok', 0, ['collaboration']))
-        self.assertEqual({('collaboration', '13.*')},
-                         {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
-        self.assertEqual(['collaboration'] * 2, [r['package'] for r in json.loads(out['serial_matrix'])['include']])
-        self.assertEqual(['collaboration'], [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
-
-    def test_vue_collaboration_lane_follows_its_suite(self):
-        out = self.plan(selector('ok', 0, ['vue-collaboration']))
-        self.assertEqual('true', out['has_vue_collaboration'])
-        self.assertEqual('false', out['has_vue'])
-        self.assertEqual('false', out['has_hub'])
-        out = self.plan(selector('ok', 0, ['vue']))
-        self.assertEqual('false', out['has_vue_collaboration'])
-
-    def test_repository_ci_has_the_collaboration_node_jobs(self):
+    def test_public_workflows_do_not_schedule_retired_addons(self):
         for name in ('ci.yml', 'weekly-full.yml'):
             doc = policy.load_workflow(ROOT / '.github' / 'workflows' / name)
-            self.assertIn('vue-collaboration', doc['jobs'], name)
-            self.assertIn('@vaulter/vue-collaboration', doc['jobs']['vue-collaboration']['name'], name)
-            self.assertEqual('@vaulter/collaboration-hub (Node 26)' if name == 'weekly-full.yml' else '@vaulter/collaboration-hub (Node ${{ matrix.node }})',
-                             doc['jobs']['hub']['name'], name)
-        ci = policy.load_workflow(ROOT / '.github' / 'workflows' / 'ci.yml')
-        self.assertIn('vue-collaboration', ci['jobs']['ci-gate']['needs'])
-        self.assertIn('has_vue_collaboration', ci['jobs']['changes']['outputs'])
-        weekly = policy.load_workflow(ROOT / '.github' / 'workflows' / 'weekly-full.yml')
-        self.assertIn('vue-collaboration', weekly['jobs']['full-gate']['needs'])
-
-    def test_hub_image_workflow_is_named_for_the_collaboration_hub(self):
-        workflows = ROOT / '.github' / 'workflows'
-        self.assertFalse((workflows / 'hocuspocus-image.yml').exists())
-        doc = policy.load_workflow(workflows / 'collaboration-hub-image.yml')
-        self.assertEqual(['collaboration-hub-v*'], doc['on']['push']['tags'])
-        self.assertTrue(doc['env']['IMAGE_NAME'].endswith('/vaulter-collaboration-hub'))
-        smoke = doc['jobs']['smoke']
-        self.assertEqual("github.event_name == 'workflow_dispatch'", smoke['if'])
-        build = next(s for s in smoke['steps'] if 'docker/build-push-action@' in s.get('uses', ''))
-        self.assertEqual('./packages/collaboration/hub', build['with']['context'])
-        self.assertIs(False, build['with']['push'])
-        self.assertEqual({'contents': 'read'}, smoke['permissions'])
-        steps = doc['jobs']['image']['steps']
-        self.assertFalse(any('build-push-action' in s.get('uses', '') for s in steps))
-        self.assertTrue(any('imagetools create' in s.get('run', '') and '@${DIGEST}' in s['run'] for s in steps))
-        manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
-        self.assertEqual(['ghcr.io/axiomasoft/vaulter-collaboration-hub'], [i['name'] for i in manifest['images']])
-        self.assertEqual(('private', 'collaboration-hub-v'), (manifest['images'][0]['channel'], manifest['images'][0]['tag_prefix']))
-
-    def test_release_manifest_lists_collaboration_once_and_the_npm_package(self):
-        manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
-        entries = [p for p in manifest['php'] if p['path'] == 'packages/collaboration']
-        self.assertEqual(1, len(entries))
-        self.assertEqual('axiomasoft/vaulter-collaboration', entries[0]['name'])
-        self.assertEqual(entries[0]['name'], entries[0]['split'])
-        npm = [p for p in manifest['npm'] if p['name'] == '@vaulter/vue-collaboration']
-        self.assertEqual([('packages/vue-collaboration', '1', 'private', 'restricted')],
-                         [(p['path'], p['api'], p['channel'], p['access']) for p in npm])
-        self.assertEqual('private', entries[0]['channel'])
-        meta = json.loads((ROOT / 'packages' / 'vaulter' / 'composer.json').read_text(encoding='utf-8'))
-        self.assertEqual([], [name for name in meta.get('require', {}) if 'collaboration' in name], 'D6: the metapackage does not include collaboration')
-        split = policy.load_workflow(ROOT / '.github' / 'workflows' / 'monorepo-split.yml')
-        self.assertEqual('${{ fromJSON(needs.route.outputs.matrix) }}', split['jobs']['split']['strategy']['matrix']['package'])
-        self.assertEqual('collaboration-v', entries[0]['tag_prefix'])
+            self.assertTrue({'vue', 'repo'} <= set(doc['jobs']))
+            self.assertTrue({'vue-collaboration', 'hub'}.isdisjoint(doc['jobs']))
+        self.assertNotIn('collaboration', self.support)
 
     # -- the release manifest and the split matrix carry webhooks -----------------------------------------------------
 
@@ -693,31 +629,31 @@ class SingleCiTest(unittest.TestCase):
         return json.dumps({'include': [{'package': 'core'}] * rows})
 
     def test_gate_green_when_every_expected_lane_succeeded(self):
-        green = needs({'quality': 'success', 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped', 'vue-collaboration': 'skipped',
-                       'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+        green = needs({'quality': 'success', 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
+                       'repo': 'skipped', 'openapi': 'success'},
                       has_quality='true', has_fast='true', has_openapi='true',
                       quality_matrix=self.matrix(1), fast_matrix=self.matrix(2))
         self.assertEqual([], policy.gate_errors(green))
 
     def test_gate_red_on_failure_cancel_and_unexpected_skip(self):
         for result in ('failure', 'cancelled', 'skipped'):
-            red = needs({'quality': result, 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped', 'vue-collaboration': 'skipped',
-                         'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+            red = needs({'quality': result, 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
+                         'repo': 'skipped', 'openapi': 'success'},
                         has_quality='true', has_fast='true', has_openapi='true',
                         quality_matrix=self.matrix(1), fast_matrix=self.matrix(2))
             self.assertEqual([f'quality: required lane is {result}'], policy.gate_errors(red), result)
 
     def test_gate_red_when_an_unexpected_lane_failed_or_changes_failed(self):
-        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'failure', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped', 'vue-collaboration': 'skipped',
-                     'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'failure', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
+                     'repo': 'skipped', 'openapi': 'success'},
                     has_quality='true', has_openapi='true', quality_matrix=self.matrix(1))
         self.assertEqual(['db: failure'], policy.gate_errors(red))
         self.assertTrue(policy.gate_errors(needs({'changes': 'failure'})))
         self.assertTrue(policy.gate_errors(needs({'changes': 'cancelled'})))
 
     def test_gate_red_on_an_empty_required_matrix(self):
-        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped', 'vue-collaboration': 'skipped',
-                     'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
+                     'repo': 'skipped', 'openapi': 'success'},
                     has_quality='true', has_fast='true', has_openapi='true', quality_matrix=self.matrix(1), fast_matrix=self.matrix(0))
         errors = policy.gate_errors(red)
         self.assertIn('fast: required lane has an empty matrix', errors)
@@ -738,9 +674,9 @@ class SingleCiTest(unittest.TestCase):
 
 
 class ContractBoundaryTest(unittest.TestCase):
-    def test_review_npm_both_ci_jobs_require_a_blocking_declaration_guard(self):
+    def test_review_npm_ci_job_requires_a_blocking_declaration_guard(self):
         actual = policy.load_workflow(ROOT / '.github/workflows/ci.yml')
-        for job_id, workspace in (('vue', '@vaulter/vue'), ('vue-collaboration', '@vaulter/vue-collaboration')):
+        for job_id, workspace in (('vue', '@vaulter/vue'),):
             command = f'npm run api:surface:check --workspace {workspace}'
             configured = copy.deepcopy(actual)
             configured['jobs'][job_id]['steps'].append({'run': command})
@@ -758,7 +694,7 @@ class ContractBoundaryTest(unittest.TestCase):
         green_jobs = {policy.lane_job(lane): 'success' for lane in policy.LANES}
         for field in ('contract_bc_required_lines', 'contract_bc_selected_lines'):
             outputs = copy.deepcopy(planned)
-            outputs[field] = json.dumps(['php-public', 'php-collaboration'])
+            outputs[field] = json.dumps(['php-public'])
             errors = policy.gate_errors(needs(green_jobs, **outputs))
             self.assertTrue(any(field in e for e in errors), (field, errors))
 
@@ -767,12 +703,12 @@ class ContractBoundaryTest(unittest.TestCase):
                 outputs = dict(planned, **{field: missing})
                 self.assertTrue(any(field in e for e in policy.gate_errors(needs(green_jobs, **outputs))))
         bypass = dict(planned, has_contract_bc='false')
-        self.assertTrue(any('four-line contract gate' in e for e in policy.gate_errors(needs(green_jobs, **bypass))))
+        self.assertTrue(any('required contract gate' in e for e in policy.gate_errors(needs(green_jobs, **bypass))))
         self.assertEqual([], policy.gate_errors(needs(green_jobs, **planned)))
 
-    def test_review_npm_trusted_policy_has_four_independent_release_lines(self):
+    def test_review_npm_trusted_policy_has_two_independent_release_lines(self):
         policy_doc = json.loads((ROOT / 'scripts/release/Contract/bc-trust-policy.json').read_text())
-        self.assertEqual({'php-public', 'php-collaboration', 'npm-vue', 'npm-vue-collaboration'}, set(policy_doc['lines']))
+        self.assertEqual({'php-public', 'npm-vue'}, set(policy_doc['lines']))
         manifest = json.loads((ROOT / 'release/packages.json').read_text())
         for entry in manifest['npm']:
             version = json.loads((ROOT / entry['path'] / 'package.json').read_text())['version']
@@ -781,7 +717,7 @@ class ContractBoundaryTest(unittest.TestCase):
     def test_review_npm_real_workflow_preserves_guards_conditions_and_gate_dependencies(self):
         actual = policy.load_workflow(ROOT / '.github/workflows/ci.yml')
         self.assertEqual([], policy.check_ci(actual, ROOT))
-        for job_id in ('vue', 'vue-collaboration', 'contract-bc'):
+        for job_id in ('vue', 'contract-bc'):
             broken = copy.deepcopy(actual)
             broken['jobs']['ci-gate']['needs'].remove(job_id)
             self.assertTrue(any('does not need' in e for e in policy.check_ci(broken, ROOT)))
@@ -793,13 +729,13 @@ class ContractBoundaryTest(unittest.TestCase):
             self.assertTrue(policy.check_ci(broken, ROOT))
         for field in ('BC_REQUIRED_LINES', 'BC_SELECTED_LINES'):
             broken = copy.deepcopy(actual)
-            broken['jobs']['contract-bc']['env'][field] = 'php-public,php-collaboration'
+            broken['jobs']['contract-bc']['env'][field] = 'php-public'
             self.assertTrue(any(field in e for e in policy.check_ci(broken, ROOT)))
         for output in ('has_contract_bc', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
             broken = copy.deepcopy(actual)
             del broken['jobs']['changes']['outputs'][output]
             self.assertTrue(any(output in e for e in policy.check_ci(broken, ROOT)))
-        for job_id in ('vue', 'vue-collaboration'):
+        for job_id in ('vue',):
             for mutate in (lambda j: j.update(permissions={'contents': 'write'}),
                            lambda j: j.update(env={'TOKEN': '${{ secrets.NPM_TOKEN }}'}),
                            lambda j: j['steps'][0]['with'].update({'persist-credentials': True})):
@@ -819,10 +755,10 @@ class ContractBoundaryTest(unittest.TestCase):
         policy_doc = json.loads((ROOT / 'scripts/release/Contract/bc-trust-policy.json').read_text())
         self.assertEqual(tuple(policy.REQUIRED_BC_LINES), host.selected_lines(policy_doc))
         for field in ('required', 'selected'):
-            for value in ('php-public,php-collaboration', '', 'php-public,php-public,php-public,php-public'):
+            for value in ('php-public', '', 'php-public,php-public,php-public,php-public'):
                 with self.assertRaises(ValueError):
                     host.selected_lines(policy_doc, **{field: value})
-        for line in ('npm-vue', 'npm-vue-collaboration'):
+        for line in ('npm-vue',):
             broken = copy.deepcopy(policy_doc)
             del broken['lines'][line]
             with self.assertRaises(ValueError): host.selected_lines(broken)
@@ -886,7 +822,7 @@ class ContractBoundaryTest(unittest.TestCase):
         self.assertEqual([], policy.gate_errors(needs({**green, 'contract-bc': 'skipped'}, **out)))
         # The skip is excused by the plan's explicit `false` alone: without it the gate still requires the lane.
         unexplained = {key: value for key, value in out.items() if key != 'contract_bc_provisioned'}
-        self.assertTrue(any('four-line contract gate' in e for e in policy.gate_errors(needs({**green, 'contract-bc': 'skipped'}, **unexplained))))
+        self.assertTrue(any('required contract gate' in e for e in policy.gate_errors(needs({**green, 'contract-bc': 'skipped'}, **unexplained))))
         # Provisioned, the lane is planned and blocks like every other.
         provisioned = policy.plan_outputs(support, 'all', bc_provisioned=True)
         self.assertEqual('true', provisioned['has_contract_bc'])
@@ -1204,7 +1140,7 @@ class TrustedManifestPinTest(unittest.TestCase):
              patch.object(module.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as process:
             observed = module.run('/candidate', 'a' * 40, report)
             self.assertEqual(0, observed['exit'])
-            self.assertEqual(2, process.call_count)
+            self.assertEqual(1, process.call_count)
             for call in process.call_args_list:
                 argv = call.args[0]
                 self.assertEqual(['docker', 'run', '--rm'], argv[:3])
@@ -1255,7 +1191,7 @@ class ScaWorkflowTest(unittest.TestCase):
         return policy.check_artifacts(name, doc, json.dumps(doc))
 
     def test_artifact_repository_publishers_satisfy_the_single_artifact_rules(self):
-        for name in ('monorepo-split.yml', 'release-npm.yml', 'collaboration-hub-image.yml'):
+        for name in ('monorepo-split.yml', 'release-npm.yml'):
             with self.subTest(workflow=name):
                 self.assertEqual([], self.artifact_errors(name, self.artifact_doc(name)))
 
@@ -1286,23 +1222,6 @@ class ScaWorkflowTest(unittest.TestCase):
                 doc = copy.deepcopy(base)
                 mutate(doc)
                 self.assertTrue(self.artifact_errors('release-npm.yml', doc), label)
-
-    def test_artifact_oci_promotes_the_exact_tested_digest_without_rebuild_or_tag(self):
-        base = self.artifact_doc('collaboration-hub-image.yml')
-        for label, mutate in {
-            'publisher builds': lambda d: d['jobs']['image']['steps'].append({'uses': 'docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8', 'with': {'push': True}}),
-            'publisher promotes a tag': lambda d: d['jobs']['image']['steps'].append({'run': 'docker buildx imagetools create -t ghcr.io/x/y:1.0.0 ghcr.io/x/y:latest'}),
-            'oci gate is compare-only': lambda d: [s.update(run=s['run'].replace('--approval release-evidence/artifact-approval.json', '--tested-digest sha256:x')) for s in d['jobs']['image']['steps'] if 'artifact-gate.py oci' in str(s.get('run', ''))],
-            'oci approval hash from the candidate': lambda d: [s['env'].update(VAULTER_ARTIFACT_APPROVAL_SHA256='${{ env.COMPUTED }}') for s in d['jobs']['image']['steps'] if 'artifact-gate.py oci' in str(s.get('run', ''))],
-            'secret before the oci gate': lambda d: d['jobs']['image']['steps'].insert(0, {'run': 'true', 'env': {'T': '${{ secrets.GITHUB_TOKEN }}'}}),
-            'publisher skips the digest gate': lambda d: d['jobs']['image']['steps'].__setitem__(slice(None), [s for s in d['jobs']['image']['steps'] if 'artifact-gate.py' not in json.dumps(s)]),
-            'attestation is unconditional': lambda d: [s.pop('if', None) for s in d['jobs']['image']['steps'] if 'attest-build-provenance' in str(s.get('uses', ''))],
-            'attestation flag false is not reported unavailable': lambda d: d['jobs']['image']['steps'].__setitem__(slice(None), [s for s in d['jobs']['image']['steps'] if 'unavailable' not in json.dumps(s)]),
-        }.items():
-            with self.subTest(case=label):
-                doc = copy.deepcopy(base)
-                mutate(doc)
-                self.assertTrue(self.artifact_errors('collaboration-hub-image.yml', doc), label)
 
     def test_artifact_php_publisher_consumes_the_prepared_record_after_the_external_approval(self):
         base = self.artifact_doc('monorepo-split.yml')
@@ -1463,53 +1382,3 @@ class ScaWorkflowTest(unittest.TestCase):
             result = self.run_artifact_gate('npm', '--tgz', str(odd), '--approval', str(approval), '--source-sha', self.SOURCE, '--channel', 'private', '--visibility', 'private', '--emit-verified', str(Path(tmp) / 'v2.txt'), pin=pin)
             self.assertEqual(1, result.returncode)
             self.assertIn('control characters', result.stderr)
-
-
-class OciPromotionPermissionTest(unittest.TestCase):
-    def doc(self):
-        return policy.load_workflow(ROOT / '.github/workflows/collaboration-hub-image.yml')
-
-    def permission_errors(self, doc):
-        return [e for e in policy.check_pins('collaboration-hub-image.yml', doc)
-                if 'unjustified write permissions' in e]
-
-    def test_authenticated_same_digest_publisher_has_required_registry_permission(self):
-        doc = self.doc()
-        self.assertEqual('write', doc['jobs']['image']['permissions']['packages'])
-        self.assertTrue(policy.authenticated_oci_promotion('collaboration-hub-image.yml', doc, 'image'))
-        self.assertEqual([], self.permission_errors(doc))
-
-    def test_permission_requires_authentication_order_route_digest_and_no_rebuild(self):
-        def gate(d):
-            return next(s for s in d['jobs']['image']['steps'] if 'artifact-gate.py oci' in s.get('run', ''))
-
-        def promote(d):
-            return next(s for s in d['jobs']['image']['steps'] if 'imagetools create' in s.get('run', ''))
-
-        mutations = {
-            'fork candidate event': lambda d: d['on'].update(pull_request={}),
-            'unqualified publisher': lambda d: d['jobs']['image'].pop('if'),
-            'missing route dependency': lambda d: d['jobs']['image'].pop('needs'),
-            'unprotected approval hash': lambda d: gate(d)['env'].update(VAULTER_ARTIFACT_APPROVAL_SHA256='candidate'),
-            'compare only': lambda d: gate(d).update(run=gate(d)['run'].replace('--approval', '--expect-approval')),
-            'gate may skip': lambda d: gate(d).update({'if': 'false'}),
-            'gate may fail': lambda d: gate(d).update({'continue-on-error': True}),
-            'tag replaces digest': lambda d: promote(d).update(run=promote(d)['run'].replace('@${DIGEST}', ':latest')),
-            'different digest output': lambda d: promote(d)['env'].update(DIGEST='sha256:' + 'a' * 64),
-            'rebuild in publisher': lambda d: d['jobs']['image']['steps'].append({'run': 'docker build .'}),
-            'login precedes approval': lambda d: d['jobs']['image']['steps'].insert(0, {'uses': 'docker/login-action@' + 'a' * 40}),
-            'unconditional attestation': lambda d: [s.pop('if', None) for s in d['jobs']['image']['steps'] if 'attest-build-provenance' in s.get('uses', '')],
-        }
-        for label, mutate in mutations.items():
-            with self.subTest(label=label):
-                doc = self.doc()
-                mutate(doc)
-                self.assertTrue(self.permission_errors(doc), label)
-
-    def test_route_smoke_preparer_and_candidate_jobs_cannot_gain_publisher_writes(self):
-        for job in ('route', 'smoke', 'prepare', 'candidate'):
-            for permission in ('packages', 'id-token', 'contents', 'attestations'):
-                with self.subTest(job=job, permission=permission):
-                    doc = self.doc()
-                    doc['jobs'].setdefault(job, {'steps': []}).setdefault('permissions', {})[permission] = 'write'
-                    self.assertTrue(self.permission_errors(doc))

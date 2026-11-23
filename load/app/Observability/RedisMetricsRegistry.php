@@ -50,7 +50,7 @@ final class RedisMetricsRegistry
 
     private const array OPERATIONS = [
         'point_read', 'tree_list', 'search', 'tree_mutate', 'subtree_mutate', 'activity_feed',
-        'doc_read', 'doc_write', 'doc_export', 'collab_issue', 'collab_persist', 'comment',
+        'doc_read', 'doc_write', 'doc_export', 'comment',
         'upload_session', 'tus_patch', 's3_putpart', 's3_complete', 'single_shot', 'download',
     ];
 
@@ -90,9 +90,6 @@ final class RedisMetricsRegistry
         'vaulter_activity_feed_duration_seconds' => ['type' => 'histogram', 'help' => 'Activity feed query duration.', 'labels' => ['filtered' => ['true', 'false'], 'tier' => self::TIERS], 'buckets' => self::HTTP_BUCKETS],
         'vaulter_activity_write_total' => ['type' => 'counter', 'help' => 'Activity records written.', 'labels' => ['verb' => self::VERBS]],
         'vaulter_export_duration_seconds' => ['type' => 'histogram', 'help' => 'Document export duration.', 'labels' => ['format' => ['html', 'markdown'], 'tier' => self::TIERS], 'buckets' => self::HTTP_BUCKETS],
-        'vaulter_collab_session_issued_total' => ['type' => 'counter', 'help' => 'Collaboration sessions issued.', 'labels' => ['driver' => ['reverb', 'hocuspocus'], 'ability' => ['view', 'download', 'comment', 'edit']]],
-        'vaulter_collab_snapshot_duration_seconds' => ['type' => 'histogram', 'help' => 'Collaboration snapshot persistence duration.', 'labels' => ['tier' => self::TIERS], 'buckets' => self::HTTP_BUCKETS],
-        'vaulter_collab_room_active' => ['type' => 'gauge', 'help' => 'Active collaboration rooms.', 'labels' => [], 'aggregation' => 'set'],
         'vaulter_broadcast_queue_wait_seconds' => ['type' => 'histogram', 'help' => 'Broadcast queue wait duration.', 'labels' => [], 'buckets' => self::HTTP_BUCKETS],
         'vaulter_upload_session_active' => ['type' => 'gauge', 'help' => 'Active upload sessions.', 'labels' => ['protocol' => ['tus', 's3', 'single']], 'aggregation' => 'set'],
         'vaulter_request_peak_memory_bytes' => ['type' => 'gauge', 'help' => 'Peak request memory usage.', 'labels' => ['operation' => self::OPERATIONS, 'tier' => self::TIERS], 'aggregation' => 'max'],

@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 // `@vaulter/vue` does not pull the realtime stack into a host's bundle. It talks to a
-// collaboration adapter (src/collaboration-adapter.ts, types only); the Yjs / Hocuspocus code lives
-// in `@vaulter/vue-collaboration`. Type-only imports count as well.
+// collaboration adapter (src/collaboration-adapter.ts, types only). This rule includes type-only imports.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const src = join(root, 'src')
 

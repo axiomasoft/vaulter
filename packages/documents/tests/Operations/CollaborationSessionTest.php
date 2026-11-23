@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
@@ -15,6 +16,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Kernel;
+use Vaulter\Testing\FakeMetricsRecorder;
 
 uses(WithAcme::class);
 
@@ -23,6 +25,8 @@ beforeEach(function (): void {
 });
 
 it('issues through the documents handle with a typed principal and opaque verifier roundtrip', function (): void {
+    $metrics = new FakeMetricsRecorder;
+    app()->instance(MetricsRecorder::class, $metrics);
     $drive = Docs::drive();
     $node = Documents::in($drive)->create('Acme', type: 'acme/ot');
     AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
@@ -35,6 +39,7 @@ it('issues through the documents handle with a typed principal and opaque verifi
         ->and($grant->tenant)->toBeNull()->and($grant->stateFormat)->toBe('acme-ot-v1')
         ->and($session->expiresAt)->toBeLessThanOrEqual($grant->notAfter)
         ->and(fn () => app(AcmeDriver::class)->verify('tampered'))->toThrow(InvalidArgumentException::class);
+    $metrics->assertCounter(name: 'vaulter_collab_session_issued_total', labels: ['protocol' => 'acme-ot', 'ability' => 'edit']);
 });
 
 it('retains generation on read and fences restored sessions with a fresh generation', function (): void {

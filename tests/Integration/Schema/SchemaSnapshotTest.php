@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Collaboration\Schema\CollaborationSchema;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Schema\DocumentsSchema;
@@ -26,14 +25,11 @@ function schemaSnapshotFixture(string $kind, string $driver, string $preset): ar
 it('installs exactly the expected schema of the current preset', function (): void {
     $connection = app(VaulterDatabase::class)->connection();
     $preset = SchemaPresets::current(config());
-    // The documents and collaboration modules are not offered by this harness, so their migrations did not run; the
-    // snapshot is the schema of an installation that has them, built by the schema classes their migrations call (the
-    // collaboration tables reference v_documents, so documents first).
-    foreach ([app(DocumentsSchema::class), app(CollaborationSchema::class)] as $schema) {
-        foreach ($schema->entities() as $entity) {
-            if (!$connection->getSchemaBuilder()->hasTable(app(DatabaseOptions::class)->table($entity))) {
-                $schema->create($entity);
-            }
+    // The harness omits documents, so build its tables using the same schema as the migrations.
+    $schema = app(DocumentsSchema::class);
+    foreach ($schema->entities() as $entity) {
+        if (!$connection->getSchemaBuilder()->hasTable(app(DatabaseOptions::class)->table($entity))) {
+            $schema->create($entity);
         }
     }
 
@@ -67,10 +63,6 @@ it('keeps the original tables and adds the declared tables in every preset', fun
 
     $added = [
         'blob_references',
-        'collaboration_heads',
-        'collaboration_permission_versions',
-        'collaboration_receipts',
-        'collaboration_updates',
         'document_payloads',
         'document_revision_payloads',
         'document_revision_sync_states',

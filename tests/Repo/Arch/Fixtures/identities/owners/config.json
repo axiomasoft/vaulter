@@ -111,12 +111,6 @@
         },
         {
             "match": "prefix",
-            "value": "config:vaulter-collaboration.",
-            "owner": "collaboration",
-            "why": "D1, D6 (P5.1): the vaulter-collaboration root belongs to the collaboration package (driver, hub, state limit)"
-        },
-        {
-            "match": "prefix",
             "value": "config:vaulter-azguard.",
             "owner": "azguard",
             "why": "architecture#packages: azguard owns its adapter config"
@@ -162,12 +156,6 @@
             "value": "publish:vaulter-documents-",
             "owner": "documents",
             "why": "tags of the documents provider"
-        },
-        {
-            "match": "prefix",
-            "value": "publish:vaulter-collaboration-",
-            "owner": "collaboration",
-            "why": "tags of the collaboration provider"
         },
         {
             "match": "prefix",

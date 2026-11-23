@@ -5,15 +5,14 @@ declare(strict_types=1);
 /*
  * scripts/php84 php scripts/inventory/boot/routes.php [--set=<config.key>=<json value>…]
  *
- * Boots a Testbench application with the core, media, drive, documents and collaboration providers (as testbench.yaml, without the
- * E2eServiceProvider) and prints the registered routes as one JSON list on stdout. A separate process by design:
+ * Boots a Testbench application with the core, media, drive, documents and webhooks providers
+ * and prints the registered routes as one JSON list on stdout. A separate process by design:
  * the inventory itself never boots Laravel (database-free, CLI exit 2 on an unusable boot).
  */
 
 use Illuminate\Routing\Route;
 use Illuminate\Support\ServiceProvider;
 use Orchestra\Testbench\Foundation\Application as Testbench;
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
@@ -50,7 +49,6 @@ $app = Testbench::create(basePath: null, options: ['extra' => ['providers' => [
     VaulterMediaServiceProvider::class,
     VaulterDriveServiceProvider::class,
     VaulterDocumentsServiceProvider::class,
-    VaulterCollaborationServiceProvider::class,
     VaulterWebhooksServiceProvider::class,
 ]], 'load_environment_variables' => false]);
 

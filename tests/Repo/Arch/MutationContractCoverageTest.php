@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Collaboration\Operations\CollaborationOperationPolicies;
 use Vaulter\Documents\Operations\DocumentsOperationPolicies;
 use Vaulter\Drive\Operations\DriveOperationPolicies;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
@@ -26,7 +25,6 @@ const MCC_SOURCES = [
     'drive' => DriveOperationPolicies::class,
     'documents' => DocumentsOperationPolicies::class,
     'webhooks' => WebhooksOperationPolicies::class,
-    'collaboration' => CollaborationOperationPolicies::class,
 ];
 
 /**

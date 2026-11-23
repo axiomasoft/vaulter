@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Integration\Tests\Support\OpenApi;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Integration\Tests\TestCase;
 
 /**
- * Boots every package that owns v1 routes (core, drive, documents) with the opt-in hub stack
- * on, so one application carries the whole route table the contract describes.
+ * Boots every package that owns v1 routes, so one application carries the whole route table the contract describes.
  */
 abstract class OpenApiTestCase extends TestCase
 {
@@ -22,17 +20,6 @@ abstract class OpenApiTestCase extends TestCase
     #[\Override]
     protected function getPackageProviders($app): array
     {
-        return [...parent::getPackageProviders($app), VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class];
-    }
-
-    /**
-     * @param Application $app
-     */
-    #[\Override]
-    protected function defineEnvironment($app): void
-    {
-        parent::defineEnvironment($app);
-
-        $app['config']->set('vaulter.modules.collaboration', true);
+        return [...parent::getPackageProviders($app), VaulterDocumentsServiceProvider::class];
     }
 }

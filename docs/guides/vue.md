@@ -381,4 +381,3 @@ app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumen
 - [REST API reference](/reference/rest-api) — the contract this package is generated from.
 - [Files & folders](/concepts/nodes-and-revisions) — the Drive routes behind these composables.
 - [Authorization](/concepts/access-model) — the abilities the components gate on.
-- [Realtime collaboration](/guides/collaboration) — the Yjs transport `@vaulter/vue-collaboration` opens.

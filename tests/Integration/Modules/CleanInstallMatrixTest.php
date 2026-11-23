@@ -216,9 +216,6 @@ it('installs a set from nothing, rolls it back to an empty database without a pi
 
                 cleanArtisan($app, 'migrate');
                 expect(cleanTables())->toBe($expected, "{$set->id} $preset: the tables of the set");
-                // +collaboration: its update log, receipts, heads and permission versions come with the set, and go before the documents.
-                $collaboration = array_map(static fn (string $entity): string => $app->make(SchemaHelpers::class)->table($entity), ['collaboration_heads', 'collaboration_permission_versions', 'collaboration_receipts', 'collaboration_updates']);
-                expect(array_values(array_intersect($expected, $collaboration)))->toBe(in_array('collaboration', $set->modules, true) ? $collaboration : [], "{$set->id} $preset: the collaboration tables");
                 if ($set->id === 'full') {
                     // The whole installation is the schema of the raw catalog oracle of this engine.
                     expect(SchemaSnapshot::differences(cleanExpectedSnapshot($preset), SchemaSnapshot::capture(DB::connection())))->toBe([], "$preset: the schema differs from its snapshot");

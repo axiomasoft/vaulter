@@ -20,7 +20,6 @@ Vaulter поставляется набором пакетов — подклю�
 - **`axiomasoft/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
 - Совместное редактирование доступно как коммерческое дополнение.
 - **`@vaulter/vue`** — компоненты Vue 3 + TypeScript, composable-функции и API-клиент.
-- **`@vaulter/vue-collaboration`** — браузерная часть редактирования в реальном времени (очередь обновлений, статус сохранения).
 
 Админ-плагин для Filament 5 (`axiomasoft/vaulter-filament`) поставляется отдельно. Точные
 команды `composer require` под нужный набор функций — в [Установке](/ru/getting-started/installation).

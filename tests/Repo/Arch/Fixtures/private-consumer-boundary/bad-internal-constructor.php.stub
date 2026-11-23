@@ -1,1 +1,0 @@
-<?php namespace Vaulter\Collaboration; use Vaulter\Configuration\ScheduleConfig; final class X { public function f($c): void { new ScheduleConfig($c); } }

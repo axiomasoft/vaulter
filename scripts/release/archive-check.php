@@ -38,8 +38,7 @@ function archiveContentErrors(string $path, array $package, array $manifest): ar
         $denied = array_intersect($parts, ['tests', 'vendor', 'node_modules', '.git', '.env', 'hub', 'phpunit.xml', 'pint.json', 'rector.php', 'composer.lock']);
         $rootAllowed = preg_match('/^(composer\.json|LICENSE[^\/]*|README\.md|CHANGELOG\.md|UPGRADE\.md|SECURITY\.md)$/', $name) === 1;
         $dirAllowed = count($parts) > 1 && in_array($parts[0], ['src', 'config', 'database', 'routes', 'resources', 'lang', 'stubs', 'bin'], true);
-        $privateDocs = ($package['channel'] ?? '') === 'private' && ($package['path'] ?? '') === 'packages/collaboration' && count($parts) > 1 && $parts[0] === 'docs';
-        if (array_filter($parts, static fn (string $p): bool => str_starts_with($p, '.env.')) !== [] || $denied !== [] || str_ends_with($name, '.cache') || (!$rootAllowed && !$dirAllowed && !$privateDocs)) {
+        if (array_filter($parts, static fn (string $p): bool => str_starts_with($p, '.env.')) !== [] || $denied !== [] || str_ends_with($name, '.cache') || (!$rootAllowed && !$dirAllowed)) {
             $errors[] = "forbidden member: {$name}";
         }
     }
@@ -94,10 +93,10 @@ function archiveContentErrors(string $path, array $package, array $manifest): ar
         if ($short === 'core') {
             $required[] = 'resources/schemas/doctor-v1.schema.json';
         }
-        if (in_array($short, ['drive', 'documents', 'webhooks', 'collaboration'], true)) {
+        if (in_array($short, ['drive', 'documents', 'webhooks'], true)) {
             $required[] = 'routes/'.$short.'.php';
         }
-        if (in_array($short, ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration'], true)) {
+        if (in_array($short, ['core', 'media', 'drive', 'documents', 'webhooks'], true)) {
             $migrations = array_filter(array_keys($files), static fn (string $f): bool => str_starts_with($f, 'database/migrations/') && str_ends_with($f, '.php') && $files[$f] !== '');
             if ($migrations === []) {
                 $errors[] = 'missing database migrations';

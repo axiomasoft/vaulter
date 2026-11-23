@@ -27,7 +27,6 @@ PRODUCT_OP = {
     'upload-s3': ('OP-06', 'SLO-43'),
     'cas-lock': (None, None),
     'subtree-move': ('OP-20', 'SLO-13'),
-    'collab-issuance': ('OP-34', 'SLO-28'),
     'sweeper-overlap': ('OP-44', None),
 }
 

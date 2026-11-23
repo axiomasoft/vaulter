@@ -291,6 +291,68 @@
                     "name": "evaluateState",
                     "visibility": "public",
                     "internal": true
+                },
+                "method:referencecontext": {
+                    "kind": "method",
+                    "name": "referenceContext",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "actor",
+                            "type": "Vaulter\\ValueObjects\\Access\\Actor",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "driveId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "nodeId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "tenant",
+                            "type": "null|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "correlationId",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Drive\\Operations\\DriveContext",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
                 }
             }
         },
@@ -14026,6 +14088,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "preparedContent",
+                            "type": "Vaulter\\Documents\\Contracts\\DocumentContent|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -14143,6 +14214,25 @@
                     "abstract": false,
                     "final": false,
                     "type": "int",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:preparedContent": {
+                    "kind": "property",
+                    "name": "preparedContent",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "Vaulter\\Documents\\Contracts\\DocumentContent|null",
                     "default": null,
                     "hooks": [],
                     "attributes": [],
@@ -14699,6 +14789,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "writeMode",
+                            "type": "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -14890,6 +14989,25 @@
                     "abstract": false,
                     "final": false,
                     "type": "null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:writeMode": {
+                    "kind": "property",
+                    "name": "writeMode",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode|null",
                     "default": null,
                     "hooks": [],
                     "attributes": [],

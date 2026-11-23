@@ -13,7 +13,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 /**
  * Test authentication for the load stand (NOT for production).
  *
- * Mirrors tests/Integration/E2E/E2eActingAs.php: a real host
+ * The load stand acts as a host
  * plugs its own auth layer, this stand takes the actor id from `X-Load-Actor` — k6
  * (executor split, operations-catalog.md many-grant actor) walks in as N
  * distinct users by varying this header per VU/session, no session/CSRF/login needed.

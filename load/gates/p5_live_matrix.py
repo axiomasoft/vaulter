@@ -221,7 +221,6 @@ def run_matrix(out: Path, run_id: str) -> None:
     verdicts = []
     baseline: dict = {}
     dump = out / 'postgres' / 'pre-dirty.sql'
-    document_id = ensure_document()
     tree = ensure_tree()
     ns = time.monotonic_ns()
 
@@ -245,7 +244,7 @@ def run_matrix(out: Path, run_id: str) -> None:
                 (out / 'integrity-before.json').write_text(json.dumps(baseline, sort_keys=True) + '\n', encoding='utf-8')
                 write_dump(dump)
             try:
-                row, extra = execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, out)
+                row, extra = execute_cell(cell, attempt, run_id, fingerprint, tree, clock, out)
             except (gate.EvidenceInvalid, subprocess.TimeoutExpired, OSError) as exc:
                 if isinstance(exc, SweeperCaptureTimeout):
                     raise
@@ -346,19 +345,6 @@ def preflight(out: Path, run_id: str) -> dict:
     return fingerprint
 
 
-def ensure_document() -> str:
-    name = f'p5-collab-{time.time_ns()}'
-    status, payload, _ = http_json(
-        'POST',
-        '/api/vaulter/storages/1/documents',
-        json.dumps({'name': name, 'content': {'type': 'doc', 'content': []}}).encode(),
-        {'Content-Type': 'application/json'},
-    )
-    if status != 201 or not isinstance(payload, dict):
-        raise gate.EvidenceInvalid(f'document create failed: {status}')
-    return str(payload['data']['id'])
-
-
 def ensure_tree() -> dict[str, str]:
     psql("DELETE FROM v_nodes WHERE name = 'p5-tree-parent' OR name LIKE 'p5-tree-%';")
     parent_lines = [
@@ -394,7 +380,7 @@ def restore_dump(path: Path) -> None:
     psql("DELETE FROM v_upload_sessions WHERE target_name LIKE 'p5-dirty-%';")
 
 
-def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, out):
+def execute_cell(cell, attempt, run_id, fingerprint, tree, clock, out):
     pre_ns = clock()
     pre_deadlocks = int(psql('SELECT deadlocks FROM pg_stat_database WHERE datname = current_database();').strip())
     pre_cursor = log_cursor()
@@ -404,7 +390,7 @@ def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, o
     elif cell['plane'] == 'primitive-control':
         actor = run_primitive(cell)
     else:
-        actor = run_k6(cell, attempt, run_id, document_id, tree, out)
+        actor = run_k6(cell, attempt, run_id, tree, out)
     during = actor.get('during_samples') or []
     chosen = max(
         during,
@@ -707,7 +693,7 @@ def grant_actors(base: int, n: int) -> None:
         raise gate.EvidenceInvalid(f'actor grant seed inserted {len(inserted)} of {n + 1}')
 
 
-def run_k6(cell, attempt, run_id, document_id, tree, out) -> dict:
+def run_k6(cell, attempt, run_id, tree, out) -> dict:
     summary = LOAD / 'results' / f"p5-{cell['cell_id']}-a{attempt}.json"
     summary.parent.mkdir(parents=True, exist_ok=True)
     summary.unlink(missing_ok=True)
@@ -718,7 +704,6 @@ def run_k6(cell, attempt, run_id, document_id, tree, out) -> dict:
         'P5_SHAPE': cell['shape'],
         'P5_N': str(cell['n']),
         'P5_ACTOR_BASE': str(base),
-        'P5_DOCUMENT_ID': document_id,
         'P5_NODE_IDS': tree['nodes'],
         'P5_MOVE_TARGET': tree['parent'],
         'P5_SUMMARY': f"/results/{summary.name}",

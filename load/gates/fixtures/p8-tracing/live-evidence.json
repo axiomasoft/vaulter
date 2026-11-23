@@ -293,42 +293,6 @@
       "notes": "state-machine dead matches config; product business_dead=0; Laravel failed_jobs is not package DLQ; no terminal-dead measurement obligation"
     },
     {
-      "evidence_id": "P5:L-P5-02:collab-other",
-      "target_id": "collaboration.session",
-      "producer": "P5",
-      "report": "plans/VLT-LOAD/concurrency-report.md",
-      "raw_ids": [
-        "plans/VLT-LOAD/artifacts/P5/attempts/product-realistic.collab-issuance.issuance-burst.n1.attempt-1.json",
-        "plans/VLT-LOAD/findings/P5-concurrency.md"
-      ],
-      "validity": "limitation",
-      "severity": "minor",
-      "slo_red": false,
-      "integrity_class": "other",
-      "observed_duration_ns": null,
-      "observation_window_ns": null,
-      "finding_id": "L-P5-02",
-      "notes": "collab issuance class=other; HTTP status not persisted; report limitation cannot select a target"
-    },
-    {
-      "evidence_id": "P6:collab-snapshot-unmeasured",
-      "target_id": "collaboration.snapshot",
-      "producer": "P6",
-      "report": "plans/VLT-LOAD/queue-report.md",
-      "raw_ids": [
-        "plans/VLT-LOAD/queue-report.md",
-        "plans/VLT-LOAD/findings/P6-queue-semantics.md"
-      ],
-      "validity": "limitation",
-      "severity": "observation",
-      "slo_red": false,
-      "integrity_class": "other",
-      "observed_duration_ns": null,
-      "observation_window_ns": null,
-      "finding_id": "P6-no-snapshot",
-      "notes": "P6 measured outbox/webhook only; PersistYjsSnapshotAction was not a cell"
-    },
-    {
       "evidence_id": "P7:empty-get-probes",
       "target_id": "download.stream",
       "producer": "P7",
@@ -351,13 +315,17 @@
     "blob_dedup_hit_total": {
       "enabled": false,
       "producer": "P5",
-      "evidence_ids": ["P5:L-07:unconfirmed"],
+      "evidence_ids": [
+        "P5:L-07:unconfirmed"
+      ],
       "reason": "L-07 unconfirmed; no measured dedup-hit incidence needed to interpret it"
     },
     "webhook_dlq_total": {
       "enabled": false,
       "producer": "P6",
-      "evidence_ids": ["P6:dead-control"],
+      "evidence_ids": [
+        "P6:dead-control"
+      ],
       "reason": "P6 did not adopt a terminal-dead measurement obligation; business_dead=0 on product cells; failed_jobs is not package DLQ"
     }
   }

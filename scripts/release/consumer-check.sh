@@ -5,7 +5,7 @@
 # `../core/tests`, fails here instead of passing on the monorepo's shared vendor/.
 #
 # Usage: consumer-check.sh <package> [--dry-run] [--root=DIR] [--work-dir=DIR]
-#   <package>        core | media | drive | documents | webhooks | collaboration (directory under packages/ or the Composer name)
+#   <package>        core | media | drive | documents | webhooks (directory under packages/ or the Composer name)
 #   --dry-run        print the plan (repositories, requires, command) after the static checks; install and run nothing
 #   --root=DIR       the monorepo to read (default: this checkout); packages/, release/packages.json, tests/ come from it
 #   --work-dir=DIR   where the consumer is built (default: <root>/var/consumer/<package>, wiped first)
@@ -270,7 +270,7 @@ else
 fi
 
 for item in "${harness_files[@]}"; do
-    # merged into the package's own directory of that name (collaboration ships openapi/hub.yaml)
+    # merged into the package's own directory of that name
     [[ ! -d "$root/$item" ]] || { mkdir -p "$work/$item" && cp -R "$root/$item/." "$work/$item/"; }
 done
 

@@ -8,7 +8,7 @@ import { useVaulterClient } from '../composables/useVaulterClient'
 
 // The headless editing shell of a document node (the built-in `vaulter/tiptap` viewer): it
 // loads the head content with its ETag, runs the debounced autosave, and — when the host installed
-// a collaboration adapter (`@vaulter/vue-collaboration`) and the node's presentation says it is
+// a collaboration adapter and the node's presentation says it is
 // collaborative — opens a realtime session through it. The EDITOR is the host's: fill the default
 // slot (or register your own viewer under the key), bind `ydoc` to TipTap via the Collaboration
 // extension in collaborative mode, and call `set-content` otherwise.

@@ -3,18 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Vaulter monorepo — Vue components, Hocuspocus collaboration server and VitePress documentation.",
+  "description": "Vaulter monorepo — Vue components and VitePress documentation.",
   "workspaces": [
-    "packages/vue",
-    "packages/vue-collaboration",
-    "packages/collaboration/hub"
+    "packages/vue"
   ],
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "build": "npm run build --workspace @vaulter/vue && npm run build --workspace @vaulter/vue-collaboration",
-    "test": "npm run test --workspace @vaulter/vue && npm run test --workspace @vaulter/vue-collaboration",
+    "build": "npm run build --workspace @vaulter/vue",
+    "test": "npm run test --workspace @vaulter/vue",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"
