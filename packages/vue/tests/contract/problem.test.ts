@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createVaulterClient } from '../../src/api/client'
 import { VaulterApiError } from '../../src/api/errors'
-import type { Problem } from '../../src/api/types'
+import type { IfMatch, Problem } from '../../src/api/types'
 import type { Wide } from '../support/wide'
 import { fetchSequence, problemResponse } from '../support/http'
 import problem412 from '../../../../openapi/examples/problem-412.json'
@@ -32,8 +32,9 @@ describe('problem+json examples', () => {
       fetch: fetchSequence(() => problemResponse(problem428Body, 428)),
     })
 
-    const error = await client.nodes.trash('26', { etag: '' }).catch((caught: unknown) => caught) as VaulterApiError
+    const error = await client.nodes.trash('26', {} as IfMatch).catch((caught: unknown) => caught) as VaulterApiError
 
+    expect(error).toBeInstanceOf(VaulterApiError)
     expect(error.code).toBe('precondition_required')
     expect(error.status).toBe(428)
     expect(error.meta).toEqual({ header: 'If-Match', reason: 'missing' })

@@ -16,7 +16,7 @@ import changePageExample from '../../../../openapi/examples/change-page.json'
 // type disagree on keys, nullability or primitive types; the tests below pin the enums.
 const node: Wide<Node> = nodeExample.body.data
 const drive: Wide<Drive> = driveExample.body.data
-const documentContent: Wide<Omit<DocumentContent, 'etag'>> = documentContentExample.body.data
+const documentContent: Wide<DocumentContent> = documentContentExample.body.data
 const grant: Wide<Grant> = grantExample.body.data
 const share: Wide<Share> = shareExample.body.data
 const revisions: Array<Wide<FileRevision>> = fileRevisionsExample.body.data
@@ -45,6 +45,7 @@ describe('openapi examples are assignable to the generated client types', () => 
     expect(revisions.length).toBeGreaterThan(0)
     expect(['upsert', 'remove']).toContain(changePage.data[0].operation)
     expect(documentContent.collab_epoch).toEqual(expect.any(Number))
+    expect(typeof documentContent.etag).toBe('string')
   })
 })
 
@@ -60,14 +61,19 @@ describe('the client returns what the server sent', () => {
     expect(result.etag).toBe(nodeExample.body.data.etag)
   })
 
-  it('documents.content keeps the body keys and adds only the etag', async () => {
+  it('documents.content yields an object with exactly the keys of the example and its etag', async () => {
     const client = createVaulterClient({
-      fetch: fetchSequence(() => jsonResponse(documentContentExample.body, 200, { ETag: '"1.1.1"' })),
+      fetch: fetchSequence(() => jsonResponse(
+        documentContentExample.body,
+        documentContentExample.status,
+        documentContentExample.headers,
+      )),
     })
 
     const result = await client.documents.content('1')
 
-    expect(Object.keys(result).sort()).toEqual([...Object.keys(documentContentExample.body.data), 'etag'].sort())
+    expect(Object.keys(result).sort()).toEqual(Object.keys(documentContentExample.body.data).sort())
+    expect(result.etag).toBe(documentContentExample.body.data.etag)
   })
 
   it('drives.get and shares/grants lists unwrap the data envelope', async () => {
