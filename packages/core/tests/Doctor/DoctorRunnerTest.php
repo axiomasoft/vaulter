@@ -207,3 +207,41 @@ it('escalates a warning only under --production', function (): void {
         ->and(doctorContext(production: true)->mayProbeStorage())->toBeTrue()
         ->and(doctorContext()->mayProbeStorage())->toBeFalse();
 });
+
+it('validates PgBouncer PDO::ATTR_EMULATE_PREPARES and max_prepared_statements in PgBouncerDoctorCheck', function (): void {
+    $runner = app(DoctorRunner::class);
+    $previousDefault = config('database.default');
+
+    try {
+        // SQLite explicit: not applicable.
+        config()->set('database.default', 'sqlite');
+        $sqlite = $runner->run(doctorContext(), ['core.database.pgbouncer']);
+        expect($sqlite->checks[0]->findings[0]->code)->toBe('core.database.pgbouncer.not_applicable');
+
+        // PGSQL with emulate_prepares => true and invalid max_prepared_statements => error.
+        config()->set('database.default', 'pg_bad');
+        config()->set('database.connections.pg_bad', [
+            'driver' => 'pgsql',
+            'database' => 'vaulter_test',
+            'options' => [PDO::ATTR_EMULATE_PREPARES => true],
+            'pgbouncer' => ['enabled' => true, 'max_prepared_statements' => 0],
+        ]);
+        $bad = $runner->run(doctorContext(), ['core.database.pgbouncer']);
+        $badCodes = array_map(static fn ($f): string => $f->code, $bad->checks[0]->findings);
+        expect($badCodes)->toContain('core.database.pgbouncer.emulate_prepares_enabled')
+            ->and($badCodes)->toContain('core.database.pgbouncer.max_prepared_statements_invalid');
+
+        // PGSQL with emulate_prepares => false and max_prepared_statements => 200 => ok.
+        config()->set('database.default', 'pg_good');
+        config()->set('database.connections.pg_good', [
+            'driver' => 'pgsql',
+            'database' => 'vaulter_test',
+            'options' => [PDO::ATTR_EMULATE_PREPARES => false],
+            'pgbouncer' => ['enabled' => true, 'max_prepared_statements' => 200],
+        ]);
+        $good = $runner->run(doctorContext(), ['core.database.pgbouncer']);
+        expect($good->checks[0]->findings[0]->code)->toBe('core.database.pgbouncer.ok');
+    } finally {
+        config()->set('database.default', $previousDefault);
+    }
+});

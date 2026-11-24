@@ -3556,6 +3556,21 @@
             }
         },
         {
+            "default": {
+                "default": false,
+                "env": "VAULTER_TENANCY_RLS"
+            },
+            "env": "VAULTER_TENANCY_RLS",
+            "id": "config:vaulter.tenancy.rls",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "config_keys": [],
             "defaults": [
                 null
@@ -4070,6 +4085,20 @@
                 "v_"
             ],
             "id": "env:VAULTER_TABLE_PREFIX",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.tenancy.rls"
+            ],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_TENANCY_RLS",
             "owner": "core",
             "source": {
                 "file": "packages/core/config/vaulter.php",

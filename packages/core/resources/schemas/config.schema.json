@@ -284,6 +284,10 @@
                                 "null"
                             ],
                             "default": null
+                        },
+                        "rls": {
+                            "type": "boolean",
+                            "default": false
                         }
                     },
                     "additionalProperties": false

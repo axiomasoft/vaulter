@@ -119,7 +119,8 @@ Vaulter\Configuration\TenancyOptions api since 1.0 final readonly class implemen
   public const string COLUMN = 'tenant_id'
   public bool $enabled
   public ?string $resolver
-  public function __construct(bool $enabled = false, ?string $resolver = null)
+  public bool $rls
+  public function __construct(bool $enabled = false, ?string $resolver = null, bool $rls = false)
   public static function fromArray(array $config, string $path = 'vaulter.tenancy'): self
   public function requireResolver(): string
 
@@ -201,6 +202,19 @@ Vaulter\Data\Page api since 1.0 final readonly class implements Countable, Itera
   public function getIterator(): Traversable
   public function hasMore(): bool
 
+Vaulter\Database\RlsPolicyBuilder api since 1.0 final readonly class
+  public const string DEFAULT_COLUMN = 'tenant_id'
+  public const string DEFAULT_MIGRATOR_ROLE = 'vaulter_migrator'
+  public const string DEFAULT_RUNTIME_ROLE = 'vaulter_runtime'
+  public const string DEFAULT_SCHEMA = 'public'
+  public function __construct(Vaulter\Database\VaulterDatabase $database)
+  public function buildPlan(string $prefix, string $schema = self::DEFAULT_SCHEMA, string $runtimeRole = self::DEFAULT_RUNTIME_ROLE, string $migratorRole = self::DEFAULT_MIGRATOR_ROLE, bool $withRoles = false): array
+  public function discoverTargets(Illuminate\Database\Connection $connection, string $prefix, string $schema = self::DEFAULT_SCHEMA, string $column = self::DEFAULT_COLUMN): array
+  public function install(string $prefix, string $schema = self::DEFAULT_SCHEMA, string $runtimeRole = self::DEFAULT_RUNTIME_ROLE, string $migratorRole = self::DEFAULT_MIGRATOR_ROLE, bool $withRoles = false): array
+  public function statementForView(string $view, string $schema = self::DEFAULT_SCHEMA): string
+  public function statementsForRoles(array $tables, array $views = [], string $schema = self::DEFAULT_SCHEMA, string $migratorRole = self::DEFAULT_MIGRATOR_ROLE, string $runtimeRole = self::DEFAULT_RUNTIME_ROLE): array
+  public function statementsForTable(string $table, string $columnType, string $schema = self::DEFAULT_SCHEMA, string $column = self::DEFAULT_COLUMN, string $role = self::DEFAULT_RUNTIME_ROLE): array
+
 Vaulter\Database\VaulterDatabase api since 1.0 final class
   public function advisoryLock(string $key): void
   public function afterCommit(Closure $callback): void
@@ -209,6 +223,15 @@ Vaulter\Database\VaulterDatabase api since 1.0 final class
   public function lockAggregate(string $entity, int|string $id): void
   public function lockAggregateShared(string $entity, int|string $id): void
   public function transaction(Closure $callback, int $attempts = 3): mixed
+
+Vaulter\Database\WaitForLsn api since 1.0 final readonly class
+  public const int DEFAULT_TIMEOUT_MS = 120
+  public const int MIN_PG_VERSION_NUM = 190000
+  public function __construct(Vaulter\Configuration\DatabaseOptions $databaseOptions, Illuminate\Database\DatabaseManager $db)
+  public function currentPrimaryLsn(?string $primaryConnection = null): ?string
+  public function readAfterLsn(string $lsn, Closure $readCallback, ?string $standbyConnection = null, ?string $primaryConnection = null, int $timeoutMs = self::DEFAULT_TIMEOUT_MS): mixed
+  public function supportsWaitForLsn(Illuminate\Database\Connection $connection): bool
+  public function wait(Illuminate\Database\Connection $standby, string $lsn, int $timeoutMs = self::DEFAULT_TIMEOUT_MS): bool
 
 Vaulter\Doctor\DoctorCheckResult api since 1.0 final readonly class
   public ?string $detail
@@ -863,6 +886,12 @@ Vaulter\Support\Identity api since 1.0 final class
 
 Vaulter\Support\LoadTier spi:call since 1.0 final class
   public static function label(): string
+
+Vaulter\Tenancy\RestoreTenantContext api since 1.0 final readonly class
+  public const string CONTEXT_KEY = 'vaulter.tenant_id'
+  public function __construct(?Illuminate\Contracts\Container\Container $container = null)
+  public static function current(): ?string
+  public function handle(mixed $passable, Closure $next): mixed
 
 Vaulter\Tenancy\Tenancy api since 1.0 final class
   public static function without(Closure $callback): mixed

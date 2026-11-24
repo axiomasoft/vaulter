@@ -14,7 +14,11 @@ use Packman\Attributes\Internal;
 use stdClass;
 use Throwable;
 use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Configuration\TenancyOptions;
+use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
+use Vaulter\Support\Identity;
+use Vaulter\Tenancy\TenancyBypass;
 
 #[Api]
 final class VaulterDatabase
@@ -63,6 +67,9 @@ final class VaulterDatabase
                 }
                 if ($connection->transactionLevel() === 1) {
                     $attempt = $this->attempt = (object) ['aborted' => false];
+                    if ($connection->getDriverName() === 'pgsql') {
+                        $this->applyPostgresTenantContext($connection);
+                    }
                 }
 
                 $result = $this->scope()->run(static fn (): mixed => $callback($connection));
@@ -295,5 +302,23 @@ final class VaulterDatabase
         if ($this->connection()->transactionLevel() === 0) {
             throw new LogicException('[Vaulter] '.$method.'() must run inside VaulterDatabase::transaction().');
         }
+    }
+
+    private function applyPostgresTenantContext(Connection $connection): void
+    {
+        $tenancy = $this->container->make(TenancyOptions::class);
+        if (!$tenancy->rls) {
+            return;
+        }
+
+        $bypass = $this->container->make(TenancyBypass::class);
+        if ($bypass->active()) {
+            $tenantValue = '';
+        } else {
+            $tenantId = $this->container->make(TenantResolver::class)->current();
+            $tenantValue = $tenantId === null ? '' : Identity::stringify($tenantId);
+        }
+
+        $connection->select("SELECT set_config('vaulter.tenant_id', ?, true)", [$tenantValue]);
     }
 }

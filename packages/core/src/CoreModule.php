@@ -31,6 +31,7 @@ use Vaulter\Console\DoctorCommand;
 use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\InstallCommand;
+use Vaulter\Console\InstallRlsCommand;
 use Vaulter\Console\ModulesCommand;
 use Vaulter\Console\ModuleUninstallCommand;
 use Vaulter\Console\OperationsReferenceCommand;
@@ -49,6 +50,7 @@ use Vaulter\Doctor\Checks\OutboxDeadLettersCheck;
 use Vaulter\Doctor\Checks\OutboxLagCheck;
 use Vaulter\Doctor\Checks\OutboxLeasesCheck;
 use Vaulter\Doctor\Checks\OutboxSettleWindowCheck;
+use Vaulter\Doctor\Checks\PgBouncerDoctorCheck;
 use Vaulter\Doctor\Checks\ProductionInvariantsCheck;
 use Vaulter\Doctor\Checks\QueueCheck;
 use Vaulter\Doctor\Checks\SchedulerCheck;
@@ -73,6 +75,7 @@ use Vaulter\Providers\EventsRegistrar;
 use Vaulter\Schema\CoreSchemaSets;
 use Vaulter\Schema\KernelSchema;
 use Vaulter\Security\TenancyInvariant;
+use Vaulter\Tenancy\RestoreTenantContext;
 
 /**
  * The kernel's own Packman extension plugin (`vaulter.core`), owning the `vaulter` config root,
@@ -90,6 +93,7 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */
     private const array DOCTOR_CHECKS = [
         'core.database.connection' => DatabaseConnectionCheck::class,
+        'core.database.pgbouncer' => PgBouncerDoctorCheck::class,
         'core.schema.tables' => SchemaTablesCheck::class,
         'core.schema.key_types' => SchemaKeyTypesCheck::class,
         'core.config.valid' => ConfigValidCheck::class,
@@ -229,12 +233,15 @@ final class CoreModule implements ExtensionPlugin, WithCapabilities, WithConfigu
         return new PluginModuleSpec(
             plugin: self::class,
             translations: ['vaulter' => dirname(__DIR__).'/resources/lang'],
-            commands: [InstallCommand::class, DoctorCommand::class, ModulesCommand::class,
+            commands: [InstallCommand::class, InstallRlsCommand::class, DoctorCommand::class, ModulesCommand::class,
                 ModuleUninstallCommand::class, EventsReferenceCommand::class, ErrorsReferenceCommand::class,
                 OperationsReferenceCommand::class, ConfigReferenceCommand::class, CommandsReferenceCommand::class,
                 PruneIdempotencyKeysCommand::class, RelayCommand::class, RelayReplayCommand::class, PruneOutboxCommand::class],
             schedules: [IdempotencySchedule::class, OutboxSchedule::class],
-            routeMiddleware: [ReadIdempotencyKey::ALIAS => ReadIdempotencyKey::class],
+            routeMiddleware: [
+                ReadIdempotencyKey::ALIAS => ReadIdempotencyKey::class,
+                'vaulter.tenant' => RestoreTenantContext::class,
+            ],
             bindings: [BindingsRegistrar::class, EventsRegistrar::class],
             problems: [CoreProblemCodes::class],
         );

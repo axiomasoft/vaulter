@@ -156,6 +156,12 @@
             "value": "command:vaulter:events:",
             "owner": "core",
             "why": "reference commands are kernel (architecture#packages)"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:rls:install",
+            "owner": "core",
+            "why": "PostgreSQL RLS installation command belongs to core"
         }
     ]
 }

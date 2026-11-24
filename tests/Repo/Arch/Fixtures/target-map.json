@@ -1006,6 +1006,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Console/InstallRlsCommand.php",
+            "fqcn": "Vaulter\\Console\\InstallRlsCommand",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Console\\InstallRlsCommand",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Console\\InstallRlsCommand"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Console/ModuleUninstallCommand.php",
             "fqcn": "Vaulter\\Console\\ModuleUninstallCommand",
             "kind": "final-class",
@@ -1300,6 +1314,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Database/RlsPolicyBuilder.php",
+            "fqcn": "Vaulter\\Database\\RlsPolicyBuilder",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Database\\RlsPolicyBuilder",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Database\\RlsPolicyBuilder"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Database/VaulterDatabase.php",
             "fqcn": "Vaulter\\Database\\VaulterDatabase",
             "kind": "final-class",
@@ -1310,6 +1338,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Database\\VaulterDatabase",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Database\\VaulterDatabase"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Database/WaitForLsn.php",
+            "fqcn": "Vaulter\\Database\\WaitForLsn",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Database\\WaitForLsn",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Database\\WaitForLsn"
         },
         {
             "action": "keep",
@@ -1450,6 +1492,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Doctor\\Checks\\OutboxSettleWindowCheck",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Doctor\\Checks\\OutboxSettleWindowCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Doctor/Checks/PgBouncerDoctorCheck.php",
+            "fqcn": "Vaulter\\Doctor\\Checks\\PgBouncerDoctorCheck",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\Checks\\PgBouncerDoctorCheck",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Doctor\\Checks\\PgBouncerDoctorCheck"
         },
         {
             "action": "keep",
@@ -16290,6 +16346,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Support\\RequestContext",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Support\\RequestContext"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Tenancy/RestoreTenantContext.php",
+            "fqcn": "Vaulter\\Tenancy\\RestoreTenantContext",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Tenancy\\RestoreTenantContext",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Tenancy\\RestoreTenantContext"
         },
         {
             "action": "keep",

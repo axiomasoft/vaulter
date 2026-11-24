@@ -2018,6 +2018,46 @@
             "action": "keep",
             "phase": "stay",
             "why": "Core HTTP CORS header middleware."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\InstallRlsCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core PostgreSQL RLS installation CLI command."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\RlsPolicyBuilder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core PostgreSQL RLS policy and role DDL builder."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\WaitForLsn",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core PostgreSQL 19+ WAIT FOR LSN standby replay helper."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\PgBouncerDoctorCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core Doctor check for PgBouncer and PDO::ATTR_EMULATE_PREPARES."
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Tenancy\\RestoreTenantContext",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "Core Octane/queue tenant Context propagation middleware."
         }
     ]
 }

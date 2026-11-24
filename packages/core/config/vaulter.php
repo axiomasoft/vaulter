@@ -24,7 +24,12 @@ return [
             'uuid7' => Uuid7Ids::class,
         ],
     ],
-    'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false), 'resolver' => null],
+    'tenancy' => [
+        'enabled' => env('VAULTER_TENANT_ENABLED', false),
+        'resolver' => null,
+        // Enable transaction-local PostgreSQL RLS GUC (`SELECT set_config('vaulter.tenant_id', ?, true)`).
+        'rls' => env('VAULTER_TENANCY_RLS', false),
+    ],
     // id => nonempty reason: production invariants a host knowingly accepts (ADR-0036); never a structural error.
     'security' => ['accepted_risks' => []],
     // Module activation overrides: module id => true|false. Auto modules (media, drive, documents…)

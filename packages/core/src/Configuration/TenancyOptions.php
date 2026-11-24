@@ -22,6 +22,7 @@ final readonly class TenancyOptions implements OptionsFactory
     public function __construct(
         public bool $enabled = false,
         public ?string $resolver = null,
+        public bool $rls = false,
     ) {}
 
     /** @param array<array-key, mixed> $config */
@@ -29,7 +30,7 @@ final readonly class TenancyOptions implements OptionsFactory
     public static function fromArray(array $config, string $path = 'vaulter.tenancy'): self
     {
         $validator = new ConfigurationValidator;
-        $validator->rejectUnknownKeys($config, ['enabled', 'resolver'], $path);
+        $validator->rejectUnknownKeys($config, ['enabled', 'resolver', 'rls'], $path);
 
         $rawEnabled = $config['enabled'] ?? false;
         $enabled = false;
@@ -49,9 +50,17 @@ final readonly class TenancyOptions implements OptionsFactory
             }
         }
 
+        $rawRls = $config['rls'] ?? false;
+        $rls = false;
+        if (!is_bool($rawRls)) {
+            $validator->add(path: $path.'.rls', message: 'must be a boolean');
+        } else {
+            $rls = $rawRls;
+        }
+
         $validator->failIfAny();
 
-        return new self(enabled: $enabled, resolver: $resolver);
+        return new self(enabled: $enabled, resolver: $resolver, rls: $rls);
     }
 
     /** @return class-string<TenantResolver> */

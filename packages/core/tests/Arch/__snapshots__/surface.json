@@ -2698,6 +2698,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "rls",
+                            "type": "bool",
+                            "default": "false",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -2794,6 +2803,25 @@
                     "abstract": false,
                     "final": false,
                     "type": "null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:rls": {
+                    "kind": "property",
+                    "name": "rls",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "bool",
                     "default": null,
                     "hooks": [],
                     "attributes": [],
@@ -4512,6 +4540,455 @@
                 }
             }
         },
+        "Vaulter\\Database\\RlsPolicyBuilder": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "constant:DEFAULT_COLUMN": {
+                    "kind": "constant",
+                    "name": "DEFAULT_COLUMN",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'tenant_id'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "constant:DEFAULT_MIGRATOR_ROLE": {
+                    "kind": "constant",
+                    "name": "DEFAULT_MIGRATOR_ROLE",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'vaulter_migrator'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "constant:DEFAULT_RUNTIME_ROLE": {
+                    "kind": "constant",
+                    "name": "DEFAULT_RUNTIME_ROLE",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'vaulter_runtime'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "constant:DEFAULT_SCHEMA": {
+                    "kind": "constant",
+                    "name": "DEFAULT_SCHEMA",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'public'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "database",
+                            "type": "Vaulter\\Database\\VaulterDatabase",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:buildplan": {
+                    "kind": "method",
+                    "name": "buildPlan",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "prefix",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schema",
+                            "type": "string",
+                            "default": "self::DEFAULT_SCHEMA",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "runtimeRole",
+                            "type": "string",
+                            "default": "self::DEFAULT_RUNTIME_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "migratorRole",
+                            "type": "string",
+                            "default": "self::DEFAULT_MIGRATOR_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "withRoles",
+                            "type": "bool",
+                            "default": "false",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array{tables: list<string>, views: list<string>, statements: list<string>}"
+                    ]
+                },
+                "method:discovertargets": {
+                    "kind": "method",
+                    "name": "discoverTargets",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "connection",
+                            "type": "Illuminate\\Database\\Connection",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "prefix",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schema",
+                            "type": "string",
+                            "default": "self::DEFAULT_SCHEMA",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "column",
+                            "type": "string",
+                            "default": "self::DEFAULT_COLUMN",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array{tables: list<array{table: string, type: string}>, views: list<string>}"
+                    ]
+                },
+                "method:install": {
+                    "kind": "method",
+                    "name": "install",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "prefix",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schema",
+                            "type": "string",
+                            "default": "self::DEFAULT_SCHEMA",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "runtimeRole",
+                            "type": "string",
+                            "default": "self::DEFAULT_RUNTIME_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "migratorRole",
+                            "type": "string",
+                            "default": "self::DEFAULT_MIGRATOR_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "withRoles",
+                            "type": "bool",
+                            "default": "false",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array{tables: list<string>, views: list<string>, statements: list<string>}"
+                    ]
+                },
+                "method:statementforview": {
+                    "kind": "method",
+                    "name": "statementForView",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "view",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schema",
+                            "type": "string",
+                            "default": "self::DEFAULT_SCHEMA",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:statementsforroles": {
+                    "kind": "method",
+                    "name": "statementsForRoles",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "tables",
+                            "type": "array",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "views",
+                            "type": "array",
+                            "default": "[]",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schema",
+                            "type": "string",
+                            "default": "self::DEFAULT_SCHEMA",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "migratorRole",
+                            "type": "string",
+                            "default": "self::DEFAULT_MIGRATOR_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "runtimeRole",
+                            "type": "string",
+                            "default": "self::DEFAULT_RUNTIME_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param list<string> $tables",
+                        "@param list<string> $views",
+                        "@return list<string>"
+                    ]
+                },
+                "method:statementsfortable": {
+                    "kind": "method",
+                    "name": "statementsForTable",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "table",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "columnType",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "schema",
+                            "type": "string",
+                            "default": "self::DEFAULT_SCHEMA",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "column",
+                            "type": "string",
+                            "default": "self::DEFAULT_COLUMN",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "role",
+                            "type": "string",
+                            "default": "self::DEFAULT_RUNTIME_ROLE",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return list<string>"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Database\\VaulterDatabase": {
             "kind": "class",
             "surface": "Api",
@@ -4758,6 +5235,252 @@
                     "name": "write",
                     "visibility": "public",
                     "internal": true
+                }
+            }
+        },
+        "Vaulter\\Database\\WaitForLsn": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "constant:DEFAULT_TIMEOUT_MS": {
+                    "kind": "constant",
+                    "name": "DEFAULT_TIMEOUT_MS",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "int",
+                    "value": "120",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "constant:MIN_PG_VERSION_NUM": {
+                    "kind": "constant",
+                    "name": "MIN_PG_VERSION_NUM",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "int",
+                    "value": "190000",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "databaseOptions",
+                            "type": "Vaulter\\Configuration\\DatabaseOptions",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "db",
+                            "type": "Illuminate\\Database\\DatabaseManager",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:currentprimarylsn": {
+                    "kind": "method",
+                    "name": "currentPrimaryLsn",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "primaryConnection",
+                            "type": "null|string",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "null|string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:readafterlsn": {
+                    "kind": "method",
+                    "name": "readAfterLsn",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "lsn",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "readCallback",
+                            "type": "Closure",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "standbyConnection",
+                            "type": "null|string",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "primaryConnection",
+                            "type": "null|string",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "timeoutMs",
+                            "type": "int",
+                            "default": "self::DEFAULT_TIMEOUT_MS",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "mixed",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param Closure(Connection):",
+                        "@return TReturn",
+                        "@template TReturn"
+                    ]
+                },
+                "method:supportswaitforlsn": {
+                    "kind": "method",
+                    "name": "supportsWaitForLsn",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "connection",
+                            "type": "Illuminate\\Database\\Connection",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:wait": {
+                    "kind": "method",
+                    "name": "wait",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "standby",
+                            "type": "Illuminate\\Database\\Connection",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "lsn",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "timeoutMs",
+                            "type": "int",
+                            "default": "self::DEFAULT_TIMEOUT_MS",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
                 }
             }
         },
@@ -17620,6 +18343,123 @@
                     "name": "set",
                     "visibility": "public",
                     "internal": true
+                }
+            }
+        },
+        "Vaulter\\Tenancy\\RestoreTenantContext": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api(since: '1.0')"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "constant:CONTEXT_KEY": {
+                    "kind": "constant",
+                    "name": "CONTEXT_KEY",
+                    "visibility": "public",
+                    "internal": false,
+                    "final": false,
+                    "type": "string",
+                    "value": "'vaulter.tenant_id'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:current": {
+                    "kind": "method",
+                    "name": "current",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "null|string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:handle": {
+                    "kind": "method",
+                    "name": "handle",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "passable",
+                            "type": "mixed",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "next",
+                            "type": "Closure",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "mixed",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@param Closure(mixed):",
+                        "@return TReturn",
+                        "@template TReturn"
+                    ]
                 }
             }
         },

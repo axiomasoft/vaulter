@@ -1206,6 +1206,79 @@
         },
         {
             "arguments": [],
+            "class": "Vaulter\\Console\\InstallRlsCommand",
+            "description": "Install PostgreSQL Row-Level Security policies, security_invoker views and roles for Vaulter tables.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:rls:install",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "public",
+                    "description": "PostgreSQL schema to configure",
+                    "name": "schema",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Table and view name prefix (defaults to vaulter.database.table_prefix)",
+                    "name": "prefix",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "vaulter_runtime",
+                    "description": "PostgreSQL runtime role for RLS policies",
+                    "name": "role",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "vaulter_migrator",
+                    "description": "PostgreSQL migrator role for optional role DDL",
+                    "name": "migrator-role",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Create/update vaulter_migrator and vaulter_runtime roles and grants",
+                    "name": "roles",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Output DDL statements without executing them",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/InstallRlsCommand.php",
+                "symbol": "Vaulter\\Console\\InstallRlsCommand"
+            }
+        },
+        {
+            "arguments": [],
             "class": "Vaulter\\Drive\\Console\\ReconcileScanWorkCommand",
             "description": "Recover bounded scan intents, backfill discovery and committed upload cleanup.",
             "exit_codes": [],

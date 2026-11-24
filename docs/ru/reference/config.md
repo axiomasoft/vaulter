@@ -457,12 +457,14 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter.ids.strategies.uuid7` | — | `Uuid7Ids::class` | — |
 | `vaulter.tenancy.enabled` | `VAULTER_TENANT_ENABLED` | `false` | — |
 | `vaulter.tenancy.resolver` | — | `null` | — |
+| `vaulter.tenancy.rls` | `VAULTER_TENANCY_RLS` | `false` | Enable transaction-local PostgreSQL RLS GUC (`SELECT set_config('vaulter.tenant_id', ?, true)`). |
 | `vaulter.security` | — | — | id => nonempty reason: production invariants a host knowingly accepts (ADR-0036); never a structural error. |
 | `vaulter.security.accepted_risks` | — | `[]` | — |
 | `vaulter.modules` | — | `[]` | Module activation overrides: module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
 | `vaulter.routes.prefix` | `VAULTER_ROUTE_PREFIX` | `'api/vaulter'` | — |
 | `vaulter.routes.middleware.authenticated` | — | `['api', 'auth:sanctum']` | — |
 | `vaulter.routes.middleware.public` | — | `['api']` | — |
+| `vaulter.routes.middleware.hub` | — | `['api']` | — |
 | `vaulter.routes.rate_limits.public` | `VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE` | `60` | — |
 | `vaulter.routes.rate_limits.uploads` | `VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE` | `120` | — |
 | `vaulter.outbox` | — | — | The transactional outbox: every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
@@ -475,7 +477,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter.outbox.max_attempts` | — | `10` | — |
 | `vaulter.outbox.backoff_base_seconds` | — | `2` | — |
 | `vaulter.outbox.backoff_cap_seconds` | — | `3600` | — |
-| `vaulter.idempotency` | — | — | Idempotency-Key receipts: how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune deletes expired receipts. |
+| `vaulter.idempotency` | — | — | Idempotency-Key receipts: how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune compacts expired receipts and removes seven-day tombstones. |
 | `vaulter.idempotency.ttl_seconds` | — | `86400` | — |
 | `vaulter.schedule` | — | — | Maintenance tasks put on the host scheduler. Value: null (off) \| everyMinute \| everyFiveMinutes hourly \| daily \| weekly \| 'dailyAt:HH:MM' \| 'hourlyAt:M' \| 'weeklyOn:D,HH:MM' \| a 5-field cron expression. Set enabled to false when the host schedules the commands itself. |
 | `vaulter.schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | — |
@@ -492,7 +494,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 
 | Key | Env | Default | Description |
 |---|---|---|---|
-| `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add your own here. |
+| `vaulter-documents.types` | — | `[RichTextDocumentType::class, MarkdownDocumentType::class]` | Document type classes; add your own DocumentType implementations here. |
 | `vaulter-documents.default_type` | — | `'vaulter/rich-text'` | — |
 | `vaulter-documents.collaboration.session_ttl` | — | `300` | — |
 | `vaulter-documents.content.max_size_kb` | — | `5120` | — |
@@ -500,6 +502,7 @@ Opt-in `vaulter.modules.webhooks` включает consumer outbox `webhooks.fan
 | `vaulter-documents.revisions.checkpoint_interval_seconds` | — | `300` | — |
 | `vaulter-documents.comments.enabled` | — | `true` | — |
 | `vaulter-documents.exporters` | — | `[HtmlExporter::class, MarkdownExporter::class]` | Document exporter classes, resolved by (document type, format). |
+| `vaulter-documents.tiptap.block_ids` | — | `false` | — |
 | `vaulter-documents.tiptap.extra_nodes` | — | `[]` | — |
 | `vaulter-documents.tiptap.extra_marks` | — | `[]` | — |
 | `vaulter-documents.tiptap.extra_attributes` | — | `[]` | — |

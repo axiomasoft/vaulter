@@ -393,7 +393,7 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(33)
+        expect(count($items))->toBe(34)
             ->and($items['command:vaulter:operations']['owner'])->toBe('core')
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
