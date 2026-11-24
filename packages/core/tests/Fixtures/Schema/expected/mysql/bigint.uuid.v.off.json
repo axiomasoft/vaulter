@@ -3344,7 +3344,7 @@
                         }
                     ]
                 },
-                "v_files_head_fk": {
+                "v_files_head_fk_idx": {
                     "unique": false,
                     "type": "BTREE",
                     "visible": "YES",
@@ -3433,7 +3433,7 @@
                     ]
                 }
             },
-            "create_sql": "CREATE TABLE `v_files` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` bigint unsigned NOT NULL,\n  `current_revision_id` bigint unsigned DEFAULT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `revision_count` int unsigned NOT NULL DEFAULT '0',\n  `created_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_files_node_uniq` (`node_id`),\n  KEY `v_files_tenant_id_index` (`tenant_id`),\n  KEY `v_files_node_id_index` (`node_id`),\n  KEY `v_files_current_revision_id_index` (`current_revision_id`),\n  KEY `v_files_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `v_files_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `v_file_revisions` (`id`, `file_id`) ON DELETE RESTRICT,\n  CONSTRAINT `v_files_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_files` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` bigint unsigned NOT NULL,\n  `current_revision_id` bigint unsigned DEFAULT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `revision_count` int unsigned NOT NULL DEFAULT '0',\n  `created_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_files_node_uniq` (`node_id`),\n  KEY `v_files_head_fk_idx` (`current_revision_id`,`id`),\n  KEY `v_files_tenant_id_index` (`tenant_id`),\n  KEY `v_files_node_id_index` (`node_id`),\n  KEY `v_files_current_revision_id_index` (`current_revision_id`),\n  CONSTRAINT `v_files_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `v_file_revisions` (`id`, `file_id`) ON DELETE RESTRICT,\n  CONSTRAINT `v_files_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_idempotency_keys": {
             "columns": [

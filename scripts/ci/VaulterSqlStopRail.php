@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Ci;
 
-use Illuminate\Support\Facades\DB;
 use PhpParser\Node;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
@@ -14,6 +13,13 @@ use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+
+if (PHP_SAPI === 'cli' && !interface_exists(Rule::class)) {
+    $pharAutoload = 'phar://'.dirname(__DIR__, 2).'/vendor/phpstan/phpstan/phpstan.phar/vendor/autoload.php';
+    if (is_file($pharAutoload)) {
+        require_once $pharAutoload;
+    }
+}
 
 /** @implements Rule<Node> */
 final class VaulterSqlStopRail implements Rule
@@ -28,7 +34,7 @@ final class VaulterSqlStopRail implements Rule
         // Larastan resolves facade methods against the forwarded object. Also
         // inspect the written facade call, whose owning source type is stable.
         if ($node instanceof StaticCall && $node->class instanceof Name && $node->name instanceof Identifier
-            && strcasecmp($scope->resolveName($node->class), DB::class) === 0 && strtolower($node->name->toString()) === 'transaction') {
+            && strcasecmp($scope->resolveName($node->class), 'Illuminate\Support\Facades\DB') === 0 && strtolower($node->name->toString()) === 'transaction') {
             return [RuleErrorBuilder::message('Use VaulterDatabase::transaction() instead of DB::transaction().')
                 ->identifier('vaulter.rawTransaction')->build()];
         }

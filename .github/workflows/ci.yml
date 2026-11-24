@@ -122,7 +122,7 @@ jobs:
             args+=(--changes "$RUNNER_TEMP/changes.json" --db-pgsql "$RUNNER_TEMP/db-pgsql.json" --db-mysql "$RUNNER_TEMP/db-mysql.json")
           fi
 
-          python3 scripts/ci/workflow-policy.py plan "${args[@]}" | tee "$RUNNER_TEMP/plan.out" >> "$GITHUB_OUTPUT"
+          python3 scripts/ci/workflow-policy.py plan "${args[@]}" --php 8.4,8.5 | tee "$RUNNER_TEMP/plan.out" >> "$GITHUB_OUTPUT"
           {
             echo '### CI plan'
             echo '```'
@@ -131,7 +131,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   quality:
-    name: Quality / ${{ matrix.package }}
+    name: Quality / ${{ matrix.package }} / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_quality == 'true'
     runs-on: ubuntu-latest
@@ -145,10 +145,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_sqlite, sqlite3
           coverage: none
           tools: composer:v2
@@ -193,7 +193,7 @@ jobs:
         run: vendor/bin/rector process --dry-run --no-progress-bar
 
   fast:
-    name: Fast / ${{ matrix.package }} / Laravel ${{ matrix.laravel }}
+    name: Fast / ${{ matrix.package }} / Laravel ${{ matrix.laravel }} / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_fast == 'true'
     runs-on: ubuntu-latest
@@ -208,10 +208,10 @@ jobs:
           persist-credentials: false
 
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
@@ -322,10 +322,10 @@ jobs:
           persist-credentials: false
 
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_mysql, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
@@ -402,10 +402,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
@@ -445,7 +445,7 @@ jobs:
   # Blocking: ci-gate needs it. The lane follows `changes`: a consumer package that changed (or its dependants), and
   # every consumer package when the manifest, scripts/ or the workflows changed. Zip-archive qualification is not part of this workflow.
   consumer-isolation:
-    name: Consumer isolation / ${{ matrix.package }}
+    name: Consumer isolation / ${{ matrix.package }} / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_consumer == 'true'
     runs-on: ubuntu-latest
@@ -459,10 +459,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
@@ -541,21 +541,25 @@ jobs:
         run: npm run build --workspace @vaulter/vue
 
   repo:
-    name: Repo harness, workflow policy, actionlint
+    name: Repo harness, workflow policy, actionlint / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_repo == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
           coverage: none
           tools: composer:v2
@@ -738,6 +742,7 @@ jobs:
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql
           tools: composer:v2
           coverage: none
 
@@ -760,6 +765,9 @@ jobs:
           CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           python3 scripts/ci/engineering-rails.py --base "$CHANGE_BASE"
+
+      - name: Install dependencies for PostgreSQL migration FK check
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Check PostgreSQL foreign key indexes
         run: |

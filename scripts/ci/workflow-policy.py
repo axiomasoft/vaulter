@@ -797,7 +797,7 @@ def _bool(value: bool) -> str:
     return 'true' if value else 'false'
 
 
-def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict | None = None, bc_provisioned: bool = True) -> dict[str, str]:
+def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict | None = None, bc_provisioned: bool = True, php_versions: tuple[str, ...] = ()) -> dict[str, str]:
     """Matrices and lane flags of ci.yml. `all` (no usable base commit) is every default lane; `changed` follows the selector.
     `bc_provisioned` is false on a repository without the trusted BC host: contract-bc is then not planned."""
     php = [pkg for pkg in PHP_PACKAGES if pkg in support]
@@ -839,6 +839,13 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     # A change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
     harness = 'repo' in suites
     consumer = [package(pkg) for pkg in CONSUMER_PACKAGES if pkg in support and (pkg in affected or harness)]
+
+    if php_versions:
+        quality_matrix = [{**row, 'php': version} for version in php_versions for row in quality_matrix]
+        fast = [{**row, 'php': version} for version in php_versions for row in fast]
+        db_matrix = [{**row, 'php': version} for version in php_versions for row in db_matrix]
+        serial = [{**row, 'php': version} for version in php_versions for row in serial]
+        consumer = [{**row, 'php': version} for version in php_versions for row in consumer]
 
     flags = {
         'quality': bool(quality_matrix), 'fast': bool(fast), 'db': bool(db_matrix), 'serial': bool(serial),
@@ -920,10 +927,13 @@ def main_plan(argv: list[str]) -> int:
     def read(flag: str) -> dict:
         return json.loads(Path(options[flag]).read_text(encoding='utf-8'))
 
+    php_arg = options.get('--php', '').strip()
+    php_versions = tuple(v.strip() for v in php_arg.split(',') if v.strip()) if php_arg else ()
+
     changes = read('--changes') if mode == 'changed' else None
     db = {'pgsql': read('--db-pgsql'), 'mysql': read('--db-mysql')} if mode == 'changed' else None
     try:
-        outputs = plan_outputs(support, mode, changes, db, bc_provisioned)
+        outputs = plan_outputs(support, mode, changes, db, bc_provisioned, php_versions)
     except ValueError as exc:
         print(f'plan: {exc}', file=sys.stderr)
         return 1

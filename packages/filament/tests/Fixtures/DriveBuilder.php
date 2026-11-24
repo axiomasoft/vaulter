@@ -115,7 +115,7 @@ final class DriveBuilder
     public static function user(int $id = 1): TestUser
     {
         $user = new TestUser;
-        $user->forceFill(['id' => $id]);
+        $user->forceFill(['id' => $id, 'name' => 'Panel User '.$id]);
         $user->exists = true;
 
         return $user;

@@ -27,8 +27,11 @@ test('vaulter-filament configuration API matches the frozen golden (P2.5)', func
         }
 
         $return = $method->getReturnType();
+        $returnType = $return instanceof ReflectionNamedType && $return->getName() === $reflection->getName()
+            ? ($return->allowsNull() ? '?' : '').'self'
+            : (string) $return;
         $methods[] = '  '.$method->getName().'('.implode(', ', $parameters).')'
-            .($return !== null ? ': '.$return : '');
+            .($return !== null ? ': '.$returnType : '');
     }
 
     sort($methods);

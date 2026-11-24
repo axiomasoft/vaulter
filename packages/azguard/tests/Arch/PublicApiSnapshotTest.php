@@ -20,21 +20,21 @@ if (!function_exists('vaulterSnapshotType')) {
      * intersection members are sorted so a source-level reorder (not a BC change) does
      * not redden the build. Non-builtin types carry a leading `\` for an unambiguous FQCN.
      */
-    function vaulterSnapshotType(?ReflectionType $type): string
+    function vaulterSnapshotType(?ReflectionType $type, ?string $declaringClass = null): string
     {
         if ($type === null) {
             return '';
         }
 
         if ($type instanceof ReflectionUnionType) {
-            $parts = array_map(vaulterSnapshotType(...), $type->getTypes());
+            $parts = array_map(static fn (ReflectionType $part): string => vaulterSnapshotType($part, $declaringClass), $type->getTypes());
             sort($parts);
 
             return implode('|', $parts);
         }
 
         if ($type instanceof ReflectionIntersectionType) {
-            $parts = array_map(vaulterSnapshotType(...), $type->getTypes());
+            $parts = array_map(static fn (ReflectionType $part): string => vaulterSnapshotType($part, $declaringClass), $type->getTypes());
             sort($parts);
 
             return implode('&', $parts);
@@ -42,6 +42,9 @@ if (!function_exists('vaulterSnapshotType')) {
 
         /** @var ReflectionNamedType $type */
         $name = $type->getName();
+        if (!$type->isBuiltin() && $declaringClass !== null && $name === $declaringClass) {
+            $name = 'self';
+        }
         $lower = strtolower($name);
         $prefix = ($type->allowsNull() && $lower !== 'null' && $lower !== 'mixed') ? '?' : '';
 
@@ -102,7 +105,7 @@ if (!function_exists('vaulterSnapshotMethod')) {
             $params[] = trim($piece);
         }
 
-        $return = vaulterSnapshotType($method->getReturnType());
+        $return = vaulterSnapshotType($method->getReturnType(), $method->getDeclaringClass()->getName());
 
         return $method->getName().'('.implode(', ', $params).')'.($return !== '' ? ': '.$return : '');
     }

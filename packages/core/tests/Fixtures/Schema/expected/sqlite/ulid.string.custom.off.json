@@ -2807,6 +2807,24 @@
                     ],
                     "sql": "CREATE INDEX \"custom_files_current_revision_id_index\" on \"custom_files\" (\"current_revision_id\")"
                 },
+                "custom_files_head_fk_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "current_revision_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"custom_files_head_fk_idx\" on \"custom_files\" (\"current_revision_id\", \"id\")"
+                },
                 "custom_files_node_id_index": {
                     "unique": 0,
                     "origin": "c",

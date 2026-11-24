@@ -2677,6 +2677,7 @@
             ],
             "indexes": {
                 "v_files_current_revision_id_index": "CREATE INDEX v_files_current_revision_id_index ON public.v_files USING btree (current_revision_id)",
+                "v_files_head_fk_idx": "CREATE INDEX v_files_head_fk_idx ON public.v_files USING btree (current_revision_id, id)",
                 "v_files_node_id_index": "CREATE INDEX v_files_node_id_index ON public.v_files USING btree (node_id)",
                 "v_files_node_uniq": "CREATE UNIQUE INDEX v_files_node_uniq ON public.v_files USING btree (node_id)",
                 "v_files_pkey": "CREATE UNIQUE INDEX v_files_pkey ON public.v_files USING btree (id)",

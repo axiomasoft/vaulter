@@ -29757,9 +29757,22 @@
                     ],
                     "method": "BTREE",
                     "unique": false
+                },
+                "pgsql": {
+                    "definition": "(current_revision_id, id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "current_revision_id",
+                        "id"
+                    ],
+                    "origin": "c",
+                    "unique": false
                 }
             },
-            "id": "index:v_files.v_files_head_fk",
+            "id": "index:v_files.v_files_head_fk_idx",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/database/migrations/0001_01_01_000203_create_v_files_table.php",
@@ -33834,6 +33847,17 @@
             },
             "tables": [
                 "v_drive_changes"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000219_add_head_fk_index_to_v_files_table.php",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000219_add_head_fk_index_to_v_files_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_files"
             ]
         },
         {

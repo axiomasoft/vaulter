@@ -91,6 +91,9 @@ final class Schema
         $migrationOf = [];
         $migrationDir = [];
         foreach ($migrations as $basename => $migration) {
+            if (!($migration['create'] ?? true)) {
+                continue;
+            }
             foreach ($migration['tables'] as $table) {
                 $migrationOf[$table] = $basename;
                 $migrationDir[$table] = $migration['dir'];
@@ -697,7 +700,9 @@ final class Schema
         foreach ($files as $path) {
             $basename = basename($path);
             if (preg_match('/_create_(v_[a-z0-9_]+)_table\.php$/', $basename, $m) === 1) {
-                $migrations[$basename] = ['tables' => [$m[1]], 'dir' => substr(dirname($path), strlen($repo->path('')))];
+                $migrations[$basename] = ['tables' => [$m[1]], 'dir' => substr(dirname($path), strlen($repo->path(''))), 'create' => true];
+            } elseif (preg_match('/_to_(v_[a-z0-9_]+)_table\.php$/', $basename, $m) === 1) {
+                $migrations[$basename] = ['tables' => [$m[1]], 'dir' => substr(dirname($path), strlen($repo->path(''))), 'create' => false];
             }
         }
 

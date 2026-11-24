@@ -26,4 +26,4 @@ it('renders the node list page', function (): void {
     $this->actingAs(DriveBuilder::user());
 
     $this->get(NodeResource::getUrl('index'))->assertOk();
-})->skip('Filament 5 + Livewire + Testbench: SupportValidation::render builds a ViewErrorBag from a null component error bag (reproduces over real HTTP too) — upstream, covered render-free.');
+});

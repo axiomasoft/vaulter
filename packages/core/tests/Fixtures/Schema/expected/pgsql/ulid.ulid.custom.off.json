@@ -2677,6 +2677,7 @@
             ],
             "indexes": {
                 "custom_files_current_revision_id_index": "CREATE INDEX custom_files_current_revision_id_index ON public.custom_files USING btree (current_revision_id)",
+                "custom_files_head_fk_idx": "CREATE INDEX custom_files_head_fk_idx ON public.custom_files USING btree (current_revision_id, id)",
                 "custom_files_node_id_index": "CREATE INDEX custom_files_node_id_index ON public.custom_files USING btree (node_id)",
                 "custom_files_node_uniq": "CREATE UNIQUE INDEX custom_files_node_uniq ON public.custom_files USING btree (node_id)",
                 "custom_files_pkey": "CREATE UNIQUE INDEX custom_files_pkey ON public.custom_files USING btree (id)",

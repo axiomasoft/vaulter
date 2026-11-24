@@ -348,6 +348,21 @@ class SingleCiTest(unittest.TestCase):
         broken['jobs']['full-gate']['needs'].remove('stand')
         self.assertTrue(any("does not need ['stand']" in e for e in policy.check_weekly(broken, ROOT)))
 
+    def test_php_matrix_expansion_and_weekly_86_advisory(self):
+        out = policy.plan_outputs(self.support, 'all', php_versions=('8.4', '8.5'))
+        fast = json.loads(out['fast_matrix'])['include']
+        self.assertEqual(16, len(fast))
+        self.assertEqual({'8.4', '8.5'}, {row['php'] for row in fast})
+
+        ci = policy.load_workflow(ROOT / '.github' / 'workflows' / 'ci.yml')
+        self.assertIn('--php 8.4,8.5', ci['jobs']['changes']['steps'][-1]['run'])
+        self.assertEqual(['8.4', '8.5'], ci['jobs']['repo']['strategy']['matrix']['php'])
+
+        weekly = policy.load_workflow(ROOT / '.github' / 'workflows' / 'weekly-full.yml')
+        self.assertIn('--php 8.4,8.5,8.6', weekly['jobs']['plan']['steps'][-1]['run'])
+        self.assertEqual("${{ matrix.php == '8.6' }}", weekly['jobs']['full']['continue-on-error'])
+        self.assertEqual(['8.4', '8.5', '8.6'], weekly['jobs']['repo']['strategy']['matrix']['php'])
+
     # -- the release handshake ------------------------------------------------------------------------------------
 
     def test_release_handshake(self):

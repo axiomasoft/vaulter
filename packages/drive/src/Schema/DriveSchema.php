@@ -246,6 +246,7 @@ final class DriveSchema implements ModuleSchema
         $table->timestamps();
 
         $table->unique('node_id', $table->getTable().'_node_uniq');
+        $table->index(['current_revision_id', 'id'], $table->getTable().'_head_fk_idx');
 
         $table->foreign('node_id')
             ->references('id')
@@ -976,6 +977,39 @@ final class DriveSchema implements ModuleSchema
      *
      * Public so the upgrade migration adds the same index to an existing table.
      */
+    public function addFilesHeadForeignKeyIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('files');
+
+        if (!$schema->hasTable($table) || $schema->hasIndex($table, $table.'_head_fk_idx')) {
+            return;
+        }
+
+        $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->index(['current_revision_id', 'id'], $table.'_head_fk_idx');
+        });
+    }
+
+    public function dropFilesHeadForeignKeyIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('files');
+
+        if (!$schema->hasTable($table) || !$schema->hasIndex($table, $table.'_head_fk_idx')) {
+            return;
+        }
+
+        // When rolling back a fresh install, 000204::down() drops head_fk afterwards, and 000203::down() drops the table.
+        if ($this->helpers->dbConnection()->getDriverName() === 'mysql' && $this->helpers->hasForeignKey($table, $table.'_head_fk')) {
+            return;
+        }
+
+        $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->dropIndex($table.'_head_fk_idx');
+        });
+    }
+
     public function addSingleRootIndex(string $table): void
     {
         $driver = $this->helpers->schemaConnection()->getConnection()->getDriverName();
