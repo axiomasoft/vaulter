@@ -33,9 +33,9 @@ uses(TestCase::class, RefreshDatabase::class)->in(...array_values(array_filter(
 // their own top-level folder so the Activity binding above does not also claim them (Pest forbids two test cases for one path).
 uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in('ActivityGate');
 
-// Панели живут отдельной директорией, потому что им нужен ДРУГОЙ TestCase: панель обязана
-// попасть в конфиг ДО boot'а (ProfileRegistry резолвится в packageBooted), а Pest
-// разрешает ровно один базовый TestCase на директорию.
+// Panels live in their own directory because they need a DIFFERENT TestCase: the panel must
+// be in the config BEFORE boot (ProfileRegistry is resolved in packageBooted), and Pest
+// allows exactly one base TestCase per directory.
 uses(PanelTestCase::class, RefreshDatabase::class)->in('Panels');
 
 // The spatie-driver tests boot the package alongside spatie/laravel-permission with the v8 teams feature; kept in their own

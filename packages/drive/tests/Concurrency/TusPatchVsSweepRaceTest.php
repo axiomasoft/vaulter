@@ -17,47 +17,47 @@ use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 
 /**
- * гонка PATCH ↔ sweep. Лок offset закрыл гонку PATCH↔PATCH, но лок
- * сессии не покрывал уборщика: `SweepUploadsCommand` → `expire()` сносил staged-объект и
- * переводил сессию в Expired БЕЗ лока, параллельно с идущим PATCH. Итог (тот самый
- * тот же класс, только пара акторов другая): PATCH дописывал свой чанк в
- * пустоту (`append()` был fail-open), `advanceReceived()` форсил статус обратно в
- * Uploading — терминальная сессия воскресала, первые N байт файла исчезали, а
- * клиент получал регрессировавший offset и дошлёт «хвост» в файл с дырой.
+ * The PATCH ↔ sweep race. The offset lock closed the PATCH↔PATCH race, but the session
+ * lock did not cover the sweeper: `SweepUploadsCommand` → `expire()` removed the staged object and
+ * moved the session to Expired WITHOUT a lock, in parallel with a running PATCH. The result (the
+ * same class of bug, only with a different pair of actors): PATCH appended its chunk into
+ * nothing (`append()` failed open), `advanceReceived()` forced the status back to
+ * Uploading, so the terminal session came back to life, the first N bytes of the file vanished, and
+ * the client got a regressed offset and would send the "tail" into a file with a hole.
  *
- * SQLite сериализует записи и показал бы зелёное на дефектном коде (pre-mortem R4),
- * поэтому здесь — РЕАЛЬНАЯ конкуренция: два форкнутых процесса на PostgreSQL,
- * отпущенные общим барьером.
+ * SQLite serializes writes and would show green on the broken code, so this
+ * test uses REAL concurrency: two forked processes on PostgreSQL,
+ * released by a shared barrier.
  *
- * Provisioning: DB_CONNECTION=pgsql (+ DB_HOST/PORT/DATABASE/USERNAME/PASSWORD) на сборке
- * PHP с pdo_pgsql и pcntl. Иначе — skip (лейн `drive-pgsql`, .github/workflows/drive.yml).
+ * Provisioning: DB_CONNECTION=pgsql (+ DB_HOST/PORT/DATABASE/USERNAME/PASSWORD) on a PHP
+ * build with pdo_pgsql and pcntl. Otherwise skipped (the PostgreSQL lane of .github/workflows/ci.yml).
  */
 it('PATCH and sweep of one session: exactly one wins, the file is not truncated, a terminal session does not come back', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
-        $this->markTestSkipped('Гонка PATCH↔sweep наблюдаема только на PostgreSQL (SQLite сериализует записи).');
+        $this->markTestSkipped('The PATCH↔sweep race is observable only on PostgreSQL (SQLite serializes writes).');
     }
 
     if (!function_exists('pcntl_fork') || !function_exists('posix_kill')) {
-        $this->markTestSkipped('Тесту конкурентности нужны расширения pcntl + posix.');
+        $this->markTestSkipped('The concurrency test needs the pcntl and posix extensions.');
     }
 
     config()->set('vaulter-drive.uploads.resumable.chunk_size', 256 * 1024 * 1024);
     config()->set('vaulter-drive.uploads.max_file_size', 0);
     Storage::fake('local');
 
-    // Чанк намеренно ТОЛСТЫЙ: append стримит prefix+chunk несколько сот миллисекунд, тогда
-    // как expire() отрабатывает за единицы. Уборщик стартует с небольшой задержкой — так он
-    // гарантированно попадает ВНУТРЬ окна PATCH (между чтением offset и записью байт), а не
-    // до/после него. Без этого гонка просто не материализуется, и тест зелен даже на
-    // дефектном коде — то есть НИЧЕГО не доказывает.
+    // The chunk is deliberately LARGE: append streams prefix+chunk for several hundred milliseconds,
+    // while expire() takes a few. The sweeper starts after a small delay so that it
+    // reliably lands INSIDE the PATCH window (between reading the offset and writing the bytes) rather
+    // than before or after it. Without this the race never materializes and the test is green even on
+    // the broken code, i.e. it proves NOTHING.
     $prefixLen = 16 * 1024 * 1024;
     $chunkLen = 64 * 1024 * 1024;
     $sweepDelayUs = 25_000;
     $prefix = str_repeat('A', $prefixLen);
     $chunk = str_repeat('B', $chunkLen);
 
-    // Сессия с УЖЕ принятым префиксом и истёкшим TTL: она одновременно и валидный
-    // кандидат для sweep, и активная загрузка, которую клиент продолжает.
+    // A session with an ALREADY accepted prefix and an expired TTL: it is at once a valid
+    // sweep candidate and an active upload the client keeps going.
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: $prefixLen + $chunkLen);
 
@@ -73,13 +73,13 @@ it('PATCH and sweep of one session: exactly one wins, the file is not truncated,
     $connection = DB::getDefaultConnection();
     $pids = [];
 
-    // Актор 0 — клиентский PATCH (дошлёт свой чанк на offset=prefixLen).
-    // Актор 1 — фоновый уборщик (vaulter:uploads:sweep по той же сессии).
+    // Actor 0: the client PATCH (sends its chunk at offset=prefixLen).
+    // Actor 1: the background sweeper (vaulter:uploads:sweep over the same session).
     foreach ([0, 1] as $actor) {
         $pid = pcntl_fork();
 
         if ($pid === -1) {
-            $this->fail('Не удалось форкнуть процесс для теста конкурентности.');
+            $this->fail('Could not fork a process for the concurrency test.');
         }
 
         if ($pid === 0) {
@@ -89,7 +89,7 @@ it('PATCH and sweep of one session: exactly one wins, the file is not truncated,
                 DB::purge($connection);
                 DB::reconnect($connection);
 
-                // Барьер: оба актора стартуют одновременно, чтобы окна реально пересеклись.
+                // Barrier: both actors start at once so the windows really overlap.
                 file_put_contents("$dir/ready.$actor", '1');
                 $spins = 0;
                 while (count(glob("$dir/ready.*") ?: []) < 2 && $spins++ < 50_000) {
@@ -105,7 +105,7 @@ it('PATCH and sweep of one session: exactly one wins, the file is not truncated,
 
                     $outcome = 'patch:ok';
                 } else {
-                    // Пусть PATCH успеет войти в критическую секцию и начать писать байты.
+                    // Let PATCH enter the critical section and start writing bytes.
                     usleep($sweepDelayUs);
 
                     Artisan::call('vaulter:uploads:sweep');
@@ -143,10 +143,10 @@ it('PATCH and sweep of one session: exactly one wins, the file is not truncated,
     $context = "patch: {$patchResult} | sweep: {$sweepResult} | status: {$final->status->value} | ".
         "received: {$final->received_bytes} | staged: {$stagedSize}";
 
-    // Легальны РОВНО два исхода, и оба сохраняют целостность.
+    // EXACTLY two outcomes are legal, and both keep integrity.
     if ($patchResult === 'patch:ok') {
-        // (а) PATCH выиграл: файл цел (префикс + чанк), offset монотонно вырос, сессия
-        //     осталась открытой; sweep её пропустил, а не снёс.
+        // (a) PATCH won: the file is intact (prefix + chunk), the offset grew monotonically, the session
+        //     stayed open; the sweep skipped it instead of removing it.
         expect($final->status)->toBe(UploadStatus::Uploading, $context)
             ->and($final->received_bytes)->toBe($prefixLen + $chunkLen, $context)
             ->and($stagedSize)->toBe($prefixLen + $chunkLen, $context);
@@ -154,9 +154,9 @@ it('PATCH and sweep of one session: exactly one wins, the file is not truncated,
         return;
     }
 
-    // (б) sweep выиграл: сессия терминальна, staged снесён, PATCH отвергнут конфликтом.
-    //     Дефектный код давал третий исход: Expired → снова Uploading, received_bytes
-    //     РЕГРЕССИРОВАЛ до len(chunk), префикс файла потерян навсегда.
+    // (b) sweep won: the session is terminal, staged bytes removed, PATCH rejected with a conflict.
+    //     The broken code produced a third outcome: Expired → Uploading again, received_bytes
+    //     REGRESSED to len(chunk), and the file prefix was lost for good.
     expect($final->status)->toBe(UploadStatus::Expired, $context)
         ->and($stagedSize)->toBe(0, $context)
         ->and($final->received_bytes)->toBeLessThanOrEqual($prefixLen, $context)
@@ -164,19 +164,19 @@ it('PATCH and sweep of one session: exactly one wins, the file is not truncated,
 });
 
 /**
- * commit-путь обязан входить в ТУ ЖЕ критическую секцию, что и
- * PATCH. До фикса `markAssembled()` + `CommitUploadAction::execute()` шли ВНЕ лока, а
- * `scopeSweepable` включает Assembled: уборщик брал лок беспрепятственно и сносил
- * staged-объект ПОСЕРЕДИНЕ стрима в BlobStore.commit — коммит либо падал на «нет
- * staged-байтов», либо фиксировал УСЕЧЁННЫЙ блоб (CAS честно перехэшировал обрезанные
- * байты, и поймать это было нечем).
+ * The commit path must enter THE SAME critical section as
+ * PATCH. Before the fix `markAssembled()` + `CommitUploadAction::execute()` ran OUTSIDE the lock, and
+ * `scopeSweepable` includes Assembled: the sweeper took the lock unhindered and removed the
+ * staged object in the MIDDLE of the stream into BlobStore.commit, so the commit either failed on "no
+ * staged bytes" or recorded a TRUNCATED blob (CAS honestly rehashed the cut
+ * bytes, and nothing could catch it).
  *
- * Наблюдаемость лока требует ДВУХ сеансов (advisory-лок реентрантен внутри одного) —
- * поэтому здесь второе независимое соединение, а не форк.
+ * Observing the lock takes TWO sessions (an advisory lock is reentrant within one),
+ * hence a second independent connection here instead of a fork.
  */
 it('commitAssembled() takes the same critical section: while another session holds the lock, the commit is rejected', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
-        $this->markTestSkipped('Неблокирующий лок сессии наблюдаем только на PostgreSQL (SQLite сериализует записи).');
+        $this->markTestSkipped('The non-blocking session lock is observable only on PostgreSQL (SQLite serializes writes).');
     }
 
     Storage::fake('local');
@@ -193,18 +193,18 @@ it('commitAssembled() takes the same critical section: while another session hol
     DB::connection($default)->beginTransaction();
 
     try {
-        // Сеанс A (уборщик/второй PATCH) держит лок сессии.
+        // Session A (the sweeper or a second PATCH) holds the session lock.
         app(UploadSessionStoreRepository::class)->acquireForPatch($session->refresh());
 
         DB::setDefaultConnection('vlt_commit_second');
         DB::connection('vlt_commit_second')->beginTransaction();
 
         try {
-            // Сеанс B — контроллер, дошедший до assemble→commit. До фикса он не брал лок
-            // вовсе и спокойно коммитил параллельно с реклеймом.
+            // Session B: the controller that reached assemble→commit. Before the fix it took no lock
+            // at all and committed calmly in parallel with the reclaim.
             expect(fn () => app(UploadSessionManager::class)->commitAssembled(
                 $session->refresh(),
-                static fn (UploadSession $locked): Node => throw new RuntimeException('коммит не должен идти без лока сессии'),
+                static fn (UploadSession $locked): Node => throw new RuntimeException('the commit must not run without the session lock'),
             ))->toThrow(UploadConflictException::class);
         } finally {
             DB::connection('vlt_commit_second')->rollBack();
@@ -217,21 +217,21 @@ it('commitAssembled() takes the same critical section: while another session hol
 });
 
 /**
- * ключ advisory-лока. `hashtext()` отдаёт int4, поэтому два
- * РАЗНЫХ upload_id делят один ключ лока с вероятностью дня рождения по 2^32 — и PATCH
- * невиновной сессии B получает ложный 409, потому что лок держит сессия A.
+ * The advisory lock key. `hashtext()` returns int4, so two
+ * DIFFERENT upload_ids share one lock key with birthday probability over 2^32, and the PATCH of
+ * an innocent session B gets a false 409 because session A holds the lock.
  *
- * Тест не «проверяет формулу», а ищет РЕАЛЬНУЮ коллизию int4 в самой PG и доказывает, что
- * два таких upload_id больше не мешают друг другу: лок берётся из ДВУХ независимых
- * соединений (advisory-лок реентрантен внутри одного сеанса — одного соединения тут мало).
+ * The test does not "check the formula": it finds a REAL int4 collision in PostgreSQL itself and proves that
+ * two such upload_ids no longer interfere: the lock is taken from TWO independent
+ * connections (an advisory lock is reentrant within one session, so one connection is not enough).
  */
 it('locks for two DIFFERENT upload_ids that collide on 32-bit hashtext are granted to both', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
-        $this->markTestSkipped('Ключ advisory-лока существует только на PostgreSQL.');
+        $this->markTestSkipped('The advisory lock key exists only on PostgreSQL.');
     }
 
-    // Настоящая коллизия hashtext (int4) на РЕАЛЬНЫХ upload_id (колонка — uuid), найденная
-    // в самой PG: 300k проб по пространству 2^32 → ~10 коллизий по парадоксу дней рождения.
+    // A real hashtext (int4) collision on REAL upload_ids (the column is uuid), found
+    // in PostgreSQL itself: 300k samples over a 2^32 space give ~10 collisions by the birthday paradox.
     $collision = DB::selectOne(<<<'SQL'
         WITH s AS (
             SELECT md5(i::text)::uuid::text AS id FROM generate_series(1, 300000) AS probe(i)
@@ -242,7 +242,7 @@ it('locks for two DIFFERENT upload_ids that collide on 32-bit hashtext are grant
         FROM h GROUP BY hv HAVING count(*) > 1 ORDER BY hv LIMIT 1
     SQL);
 
-    expect($collision)->not->toBeNull('Не нашлось коллизии hashtext — увеличьте выборку.');
+    expect($collision)->not->toBeNull('No hashtext collision found; increase the sample.');
 
     /** @var object{left_id: string, right_id: string} $collision */
     $storage = UploadTestHelpers::storage();
@@ -256,23 +256,23 @@ it('locks for two DIFFERENT upload_ids that collide on 32-bit hashtext are grant
     $repository = app(UploadSessionStoreRepository::class);
     $default = DB::getDefaultConnection();
 
-    // Второе НЕЗАВИСИМОЕ соединение к той же БД: advisory-лок реентрантен внутри одного
-    // сеанса, так что ложный конфликт наблюдаем только между двумя сеансами.
+    // A second INDEPENDENT connection to the same database: an advisory lock is reentrant within one
+    // session, so a false conflict is observable only between two sessions.
     config(['database.connections.vlt_second' => config("database.connections.{$default}")]);
 
     DB::connection($default)->beginTransaction();
 
     try {
-        // Сеанс A держит лок сессии LEFT.
+        // Session A holds the lock of session LEFT.
         $repository->acquireForPatch($left);
 
         DB::setDefaultConnection('vlt_second');
         DB::connection('vlt_second')->beginTransaction();
 
         try {
-            // Сеанс B берёт лок сессии RIGHT. На 32-битном ключе (код ДО фикса) обе
-            // сессии делят ключ → лок не выдан → UploadConflictException на невиновной
-            // сессии. На 64-битном hashtextextended ключи различны → лок выдан.
+            // Session B takes the lock of session RIGHT. With a 32-bit key (the code BEFORE the fix) both
+            // sessions share the key, so the lock is not granted and the innocent session gets an
+            // UploadConflictException. With the 64-bit hashtextextended the keys differ and the lock is granted.
             $locked = $repository->acquireForPatch($right);
 
             expect($locked->upload_id)->toBe($collision->right_id);

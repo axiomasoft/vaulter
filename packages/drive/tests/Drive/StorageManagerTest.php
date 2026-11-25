@@ -46,8 +46,8 @@ it('is idempotent: a second access returns the same storage', function (): void 
         ->and(Node::query()->where('kind', NodeKind::Folder->value)->count())->toBe(1);
 });
 
-// Разведение storage по панелям переехало в StoragePanelSeparationTest: панель обязана быть
-// в конфиге ДО boot'а (ProfileRegistry резолвится в packageBooted) — см. PanelTestCase.
+// Keeping storages apart per panel moved to StoragePanelSeparationTest: the panel must be
+// in the config BEFORE boot (ProfileRegistry is resolved in packageBooted), see PanelTestCase.
 
 it('applies the default disk from config to a new storage', function (): void {
     config()->set('vaulter-media.disk', 'spaces');

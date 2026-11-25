@@ -84,17 +84,17 @@ it('accepts the full allowed node/mark set', function (): void {
     expect($content)->toBeInstanceOf(TipTapContent::class);
 });
 
-// ─── allow-list ⇄ пресет редактора: контракт, не список ──
+// ─── allow-list ⇄ editor preset: a contract, not a list ──
 
 /*
- * Норма — не литеральный перечень узлов, а КЛАСС: каждый TipTap-тип документа отдаёт
- * редактору пресет (viewer vaulter/tiptap, props.preset), и схема типа обязана принимать
- * характерный узел/марку КАЖДОГО extension этого пресета. До фикса allow-list отвергал
- * image, table и underline — узлы, которые пакет САМ отдаёт тулбару, — и документ было
- * НЕВОЗМОЖНО СОХРАНИТЬ. Добавят extension в пресет, забыв про схему, — тест покраснеет здесь.
+ * The rule is not a literal list of nodes but a CLASS: every TipTap document type hands the
+ * editor a preset (viewer vaulter/tiptap, props.preset), and the type's schema must accept the
+ * characteristic node or mark of EACH extension of that preset. Before the fix the allow-list rejected
+ * image, table and underline, nodes the package ITSELF gives the toolbar, so the document
+ * could NOT BE SAVED. Add an extension to the preset and forget the schema, and this test turns red.
  */
 it('each preset schema accepts a characteristic node of EACH of its extensions', function (TipTapSchema $schema, array $extensions): void {
-    // Характерный узел/марка на extension: то, ради чего его подключают.
+    // The characteristic node or mark per extension: what it is enabled for.
     $probes = [
         'StarterKit' => ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'x']]],
         'Image' => ['type' => 'image', 'attrs' => ['src' => 'https://x.test/a.png']],
@@ -141,25 +141,25 @@ it('reports loss on read: lossless only when nothing was dropped', function (): 
 });
 
 /*
- * Тест выше берёт пробы ВРУЧНУЮ — а значит, структурно не ловит дрейф АТРИБУТОВ: он пишет
- * link только с href, и что редактор шлёт что-то ещё, узнать неоткуда.
+ * The test above picks its samples BY HAND, so structurally it cannot catch ATTRIBUTE drift: it writes
+ * link with href only, and has no way of knowing that the editor sends anything else.
  *
- * А шлёт он ВЕСЬ мешок: ProseMirror-овский toJSON() выгружает все ключи, объявленные в
- * addAttributes() расширения, вместе с дефолтами и null'ами. Пробы ниже — форма, которую
- * сериализует РЕАЛЬНЫЙ редактор на тех версиях, что пакет и отгружает (@tiptap/extension-link
- * ^3, @tiptap/starter-kit ^3): у Link это href/target/rel/class, у OrderedList — start/type.
- * До фикса allow-list синхронизировали с ИМЕНАМИ extension'ов, а не с их атрибутами, и на
- * `class` он спотыкался: ЛЮБОЙ документ со ссылкой было невозможно сохранить — ровно на
- * один атрибут в сторону.
+ * And it sends the WHOLE bag: ProseMirror's toJSON() dumps every key declared in the
+ * extension's addAttributes(), defaults and nulls included. The samples below are the shape the
+ * REAL editor serializes on the versions the package ships (@tiptap/extension-link
+ * ^3, @tiptap/starter-kit ^3): href/target/rel/class for Link, start/type for OrderedList.
+ * Before the fix the allow-list was synced with the extension NAMES rather than their attributes, and
+ * it tripped on `class`: ANY document with a link could not be saved, by exactly
+ * one attribute.
  *
- * Ограничение (честно): node_modules этой среде недоступен, поэтому пробы сняты с
- * документированного addAttributes() расширений, а не с живого round-trip'а редактора.
+ * A stated limitation: the samples come from the documented addAttributes() of the extensions,
+ * not from a live editor round trip, because the PHP suite does not run the editor.
  */
 it('the store-time allow-list accepts the ATTRIBUTES an extension actually serializes', function (array $node): void {
     expect(fn (): TipTapContent => TipTapContent::fromArray(['type' => 'doc', 'content' => [$node]]))
         ->not->toThrow(InvalidDocumentContentException::class);
 })->with([
-    'Link: весь мешок марки, включая class=null' => [[
+    'Link: the whole mark bag, class=null included' => [[
         'type' => 'paragraph',
         'content' => [[
             'type' => 'text',
@@ -179,7 +179,7 @@ it('the store-time allow-list accepts the ATTRIBUTES an extension actually seria
     ]],
 ]);
 
-// ─── аддитивный конфиг-шов allow-list ────────────────────────────────
+// ─── additive config seam of the allow-list ─────────────────────────
 
 it('the config seam ADDS host nodes, marks and attributes to the allow-list', function (): void {
     $doc = ['type' => 'doc', 'content' => [
@@ -198,23 +198,23 @@ it('the config seam ADDS host nodes, marks and attributes to the allow-list', fu
 });
 
 it('the config seam is ADDITIVE: config cannot strike the canon out', function (): void {
-    // Хост «переопределил» список своим — канон обязан выжить, иначе он молча сломает
-    // сохранение любого документа.
+    // The host "overrode" the list with its own; the canon must survive, otherwise it silently breaks
+    // saving of every document.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['mention']);
 
     expect(TipTapContent::allowedNodeTypes())->toContain('doc', 'text', 'paragraph', 'image', 'table', 'mention');
 });
 
-// ─── конфиг-шов не отменяет санитизацию URL ──────────────────────────
+// ─── the config seam does not cancel URL sanitization ──────────────
 //
-// Расширение allow-list — вкус хоста; проверка схемы URL — инвариант безопасности.
-// Раньше карта URL-несущих атрибутов была хардкодом (link.href + image.src), поэтому
-// для узла, добавленного хостом через шов, не работал НИ store-time-контроль схемы,
-// НИ read-path-скраб — и javascript: доезжал до редактора через readableContent().
+// Extending the allow-list is the host's taste; checking the URL scheme is a security invariant.
+// The map of URL-bearing attributes used to be hard-coded (link.href + image.src), so
+// for a node the host added through the seam NEITHER the store-time scheme check
+// NOR the read-path scrub worked, and javascript: reached the editor through readableContent().
 
 it('config seam: a HOST URL-bearing attribute is scheme-checked on write', function (string $url): void {
-    // Хост объявил свой узел с атрибутом src и НЕ регистрировал его как URL-несущий.
-    // Барьер обязан сработать сам: имя атрибута URL-несущее — значит, схема проверяется.
+    // The host declared its own node with a src attribute and did NOT register it as URL-bearing.
+    // The barrier must fire on its own: the attribute name is URL-bearing, so the scheme is checked.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src']]);
 
@@ -229,8 +229,8 @@ it('config seam: a HOST URL-bearing attribute is scheme-checked on write', funct
 ]);
 
 it('config seam: a URL attribute under a non-obvious name is checked when the host declares it', function (): void {
-    // Имя `location` само по себе ни о чём не говорит — для таких случаев есть шов
-    // vaulter-documents.tiptap.url_attributes: объявленный URL-атрибут проходит ту же проверку.
+    // The name `location` says nothing by itself; for such cases there is the
+    // vaulter-documents.tiptap.url_attributes seam: a declared URL attribute gets the same check.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => ['location']]);
     config()->set('vaulter-documents.tiptap.url_attributes', ['embed' => ['location']]);
@@ -242,7 +242,7 @@ it('config seam: a URL attribute under a non-obvious name is checked when the ho
 });
 
 it('config seam: a host URL attribute with an allowed scheme is accepted', function (): void {
-    // Барьер не должен превращаться в отказ в обслуживании: https проходит.
+    // The barrier must not turn into a denial of service: https passes.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src', 'title']]);
 
@@ -255,9 +255,9 @@ it('config seam: a host URL attribute with an allowed scheme is accepted', funct
 });
 
 it('config seam: withSanitizedUrls() scrubs a host URL attribute on read', function (): void {
-    // Легаси-снимок (записан до барьера / при другом конфиге) декеится на чтении с
-    // сохранением значений — и уходит в редактор через DocumentRevisionResource.
-    // Скраб JSON-пути обязан покрывать и хостовые URL-атрибуты, а не только канон.
+    // A legacy snapshot (written before the barrier or under another config) decays on read
+    // keeping its values, and goes to the editor through DocumentRevisionResource.
+    // The scrub of the JSON path must cover host URL attributes too, not only the canon.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src']]);
 
@@ -266,13 +266,13 @@ it('config seam: withSanitizedUrls() scrubs a host URL attribute on read', funct
         'content' => [['type' => 'iframe', 'attrs' => ['src' => 'javascript:alert(1)']]],
     ])->withSanitizedUrls();
 
-    // Атрибута нет — а раз он был у узла единственным, нет и самого ключа attrs.
+    // The attribute is gone, and since it was the node's only one, so is the attrs key itself.
     expect($scrubbed->toArray()['content'][0]['attrs'] ?? [])->not->toHaveKey('src');
 });
 
 it('the config seam does NOT widen the schemes of URL-bearing attributes', function (): void {
-    // Инвариант безопасности, а не вкус хоста: даже объявив href «своим» атрибутом,
-    // хост не может протащить javascript:.
+    // A security invariant, not the host's taste: even after declaring href as its "own" attribute
+    // the host cannot smuggle javascript: in.
     config()->set('vaulter-documents.tiptap.extra_attributes', ['link' => ['href']]);
 
     expect(fn (): TipTapContent => TipTapContent::fromArray([
@@ -328,7 +328,7 @@ it('accepts http, https and mailto link href schemes', function (string $href): 
     'mailto' => ['mailto:a@x.test'],
 ]);
 
-// ─── decayFrom(): чтение деградирует, а не бросает ────────────────────
+// ─── decayFrom(): reads degrade instead of throwing ────────────────
 
 it('decayFrom() strips unknown nodes, marks and attributes and does NOT throw', function (): void {
     $content = TipTapContent::decayFrom([
@@ -352,8 +352,8 @@ it('decayFrom() strips unknown nodes, marks and attributes and does NOT throw', 
 });
 
 it('decayFrom() KEEPS attribute values (they feed the render-time sanitizer)', function (): void {
-    // Значение href НЕ вычищается на чтении: его обезвреживает render-time санитайзер.
-    // Вычистить здесь — значит оставить эшелон 2 без входа и сделать его непроверяемым.
+    // The href value is NOT scrubbed on read: the render-time sanitizer neutralizes it.
+    // Scrubbing it here would leave the second line of defence without input and make it untestable.
     $content = TipTapContent::decayFrom([
         'type' => 'doc',
         'content' => [[
@@ -375,49 +375,49 @@ it('decayFrom() on a garbage root returns an empty doc instead of throwing', fun
     'content is a scalar' => [['type' => 'doc', 'content' => 'oops']],
 ]);
 
-// ─── круг чтение→сохранение и fail-closed по ЗНАЧЕНИЮ ────────────────
+// ─── read→save round trip and fail-closed by VALUE ─────────────────
 //
-// Два инварианта, которые прежние проверки оставили открытыми:
+// Two invariants the earlier checks left open:
 //
-//  1. То, что пакет САМ отдал редактору (DocumentRevisionResource::readableContent() =
-//     decayFrom() + withSanitizedUrls()), обязано сохраняться обратно. Скраб, который
-//     выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты — оставлял узел без них, и fromArray()
-//     ронял PATCH: любой легаси-документ с относительной ссылкой становился НЕСОХРАНЯЕМЫМ.
-//  2. XSS-барьер обязан покрывать и то, что хост добавил через шов. Эвристика по ИМЕНИ
-//     атрибута fail-OPEN для всего, чего в списке имён нет ('source', 'dataSrc', …).
+//  1. What the package ITSELF gave the editor (DocumentRevisionResource::readableContent() =
+//     decayFrom() + withSanitizedUrls()) must save back. A scrub that
+//     cut href/src, REQUIRED attributes, left the node without them, and fromArray()
+//     failed the PATCH: any legacy document with a relative link became UNSAVABLE.
+//  2. The XSS barrier must also cover what the host added through the seam. A heuristic on the attribute
+//     NAME fails OPEN for everything missing from the name list ('source', 'dataSrc', …).
 
 it('read then save: content given to the editor is accepted back on write', function (array $legacy): void {
     $readable = TipTapContent::decayFrom($legacy)->withSanitizedUrls()->toArray();
 
     expect(TipTapContent::fromArray($readable))->toBeInstanceOf(TipTapContent::class);
 })->with([
-    'относительная ссылка' => [['type' => 'doc', 'content' => [[
+    'relative link' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => '/pricing', 'target' => '_blank']]]]],
     ]]]],
-    'анкор' => [['type' => 'doc', 'content' => [[
+    'anchor' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => '#top']]]]],
     ]]]],
-    'javascript: в href' => [['type' => 'doc', 'content' => [[
+    'javascript: in href' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
     ]]]],
-    'ссылка вовсе без href' => [['type' => 'doc', 'content' => [[
+    'link without any href' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['target' => '_blank']]]]],
     ]]]],
-    'относительный src картинки' => [['type' => 'doc', 'content' => [
+    'relative image src' => [['type' => 'doc', 'content' => [
         ['type' => 'image', 'attrs' => ['src' => '/img/logo.png', 'alt' => 'logo']],
     ]]],
-    'картинка без атрибутов' => [['type' => 'doc', 'content' => [['type' => 'image']]]],
-    'битый level заголовка' => [['type' => 'doc', 'content' => [
+    'image without attributes' => [['type' => 'doc', 'content' => [['type' => 'image']]]],
+    'broken heading level' => [['type' => 'doc', 'content' => [
         ['type' => 'heading', 'attrs' => ['level' => 'два'], 'content' => [['type' => 'text', 'text' => 'x']]],
     ]]],
 ]);
 
 it('read then save: the scrub drops the link MARK instead of leaving it without href', function (): void {
-    // Марка уходит целиком — текст остаётся читаемым, документ сохраняем.
+    // The mark goes away entirely: the text stays readable and the document can be saved.
     $readable = TipTapContent::decayFrom(['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
@@ -439,8 +439,8 @@ it('read then save: the scrub drops an image NODE without a usable src', functio
 });
 
 it('fail-closed by value: a dangerous scheme in ANY host attribute is rejected on write', function (string $attribute, string $value): void {
-    // Имя атрибута ни о чём не говорит — решает ЗНАЧЕНИЕ: браузер резолвит javascript:
-    // независимо от того, как хост назвал атрибут в своём расширении.
+    // The attribute name says nothing; the VALUE decides: a browser resolves javascript:
+    // regardless of what the host named the attribute in its extension.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
     config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => [$attribute]]);
 
@@ -451,8 +451,8 @@ it('fail-closed by value: a dangerous scheme in ANY host attribute is rejected o
 })->with([
     'source' => ['source', 'javascript:alert(1)'],
     'dataSrc' => ['dataSrc', 'vbscript:msgbox(1)'],
-    'data URI под чужим именем' => ['payload', 'data:text/html,<script>alert(1)</script>'],
-    'обфускация табом' => ['source', "java\tscript:alert(1)"],
+    'data URI under a foreign name' => ['payload', 'data:text/html,<script>alert(1)</script>'],
+    'tab obfuscation' => ['source', "java\tscript:alert(1)"],
 ]);
 
 it('fail-closed by value: a dangerous scheme in a host attribute is scrubbed on read', function (): void {

@@ -28,10 +28,10 @@ function sampleDocument(): TipTapContent
 }
 
 /**
- * Все цели ссылок/картинок из markdown-вывода: и `](...)`, и угловая форма `](<...>)`.
- * Свойство, а не подстрока: тест доказывает, что КАЖДАЯ реально выведенная цель имеет
- * разрешённую схему — ассерт «в выводе нет javascript:alert(1)» подгоняется под конкретный
- * вектор и пропускает соседний.
+ * Every link and image target of the markdown output, both `](...)` and the angle form `](<...>)`.
+ * A property, not a substring: the test proves that EVERY target actually emitted has an
+ * allowed scheme, whereas an assertion like "the output has no javascript:alert(1)" fits one
+ * vector and lets the neighbouring one through.
  *
  * @return list<string>
  */
@@ -93,8 +93,8 @@ it('renders the newer contract nodes (image, table) and the underline mark', fun
 
     $renderer = app(TipTapRenderer::class);
 
-    // Форма тегов — уже ПОСЛЕ санитайзера (он нормализует `<img>` в `<img />` и достраивает
-    // `<tbody>`): проверяем то, что реально уходит потребителю.
+    // The tag shape is the one AFTER the sanitizer (it normalizes `<img>` to `<img />` and adds
+    // `<tbody>`): the test checks what actually reaches the consumer.
     expect($renderer->toHtml($doc))
         ->toContain('<img src="https://x.test/a.png" alt="pic" />')
         ->toContain('<u>u</u>')
@@ -160,13 +160,13 @@ it('rejects an unknown attribute at store time, F-P1.11-02', function (): void {
     ]);
 })->throws(InvalidDocumentContentException::class);
 
-// ─── второй эшелон (render-time HTML-санитайзер) ──────────────────
+// ─── second line of defence (render-time HTML sanitizer) ───────────
 
 /*
- * Раньше эшелон 2 был НЕДОСТИЖИМ: единственный вход в TipTapContent — строгий fromArray(),
- * который отвергал опасный контент раньше, чем санитайзер успевал его увидеть, — а «тесты
- * эшелона 2» на деле пиннили store-time. С decay-on-read легаси-снапшот с
- * javascript:-href РЕАЛЬНО доходит до рендерера, и его обезвреживает symfony/html-sanitizer.
+ * The second line of defence used to be UNREACHABLE: the only way into TipTapContent was the strict fromArray(),
+ * which rejected dangerous content before the sanitizer could see it, so the "second line
+ * tests" actually pinned the store-time check. With decay on read a legacy snapshot with a
+ * javascript: href REALLY reaches the renderer, and symfony/html-sanitizer neutralizes it.
  */
 function legacyHostileSnapshot(): array
 {
@@ -187,15 +187,15 @@ function legacyHostileSnapshot(): array
 it('a legacy snapshot with a javascript: href reaches the renderer and is neutralized by the sanitizer', function (): void {
     $html = app(TipTapRenderer::class)->toHtml(TipTapContent::decayFrom(legacyHostileSnapshot()));
 
-    // Санитайзер снял опасный href/src; текст ссылки при этом сохранён.
+    // The sanitizer removed the dangerous href/src; the link text is kept.
     expect($html)->not->toContain('javascript:')
         ->and($html)->toContain('click me');
 });
 
 it('the second line of defence is REACHABLE: with a pass-through sanitizer the same snapshot leaks', function (): void {
-    // Доказательство красноты (D19-форма): подменяем санитайзер прозрачным стабом. Если бы
-    // рендерер сам резал href раньше санитайзера, эшелон был бы фикцией и этот тест остался
-    // бы зелёным — он обязан пасть, показав, что вход у эшелона реальный.
+    // Proof that the test can go red: replace the sanitizer with a transparent stub. If the
+    // renderer cut href itself before the sanitizer, the second line would be fiction and this test would
+    // stay green; it must fail, showing that the second line has a real input.
     app()->instance(HtmlSanitizerInterface::class, new class implements HtmlSanitizerInterface
     {
         public function sanitize(string $input): string
@@ -214,11 +214,11 @@ it('the second line of defence is REACHABLE: with a pass-through sanitizer the s
     expect($html)->toContain('javascript:alert(1)');
 });
 
-// ─── markdown-путь ──────────────────────────────
+// ─── markdown path ──────────────────────────────
 
 it('markdown export: the scheme of EVERY emitted link target is allowed', function (string $label, string $href): void {
-    // Легаси-снапшот (decay, не fromArray): store-time href мог быть легальным, а вредонос
-    // — в ЛЕЙБЛЕ; либо href легальной схемы несёт ')' и закрывает цель раньше времени.
+    // A legacy snapshot (decay, not fromArray): the store-time href could be legal while the payload
+    // sits in the LABEL; or an href with a legal scheme carries ')' and closes the target early.
     $markdown = app(TipTapRenderer::class)->toMarkdown(TipTapContent::decayFrom([
         'type' => 'doc',
         'content' => [[
@@ -236,23 +236,23 @@ it('markdown export: the scheme of EVERY emitted link target is allowed', functi
         markdownLinkTargets($markdown),
     );
 
-    // Одна проверка, которая исполняется ВСЕГДА (в т.ч. когда целей не осталось вовсе):
-    // множество схем выведенных целей не имеет ничего вне allow-list.
+    // One check that ALWAYS runs (including when no targets are left at all):
+    // the set of schemes of the emitted targets has nothing outside the allow-list.
     expect(array_values(array_diff($schemes, ['http', 'https', 'mailto'])))
-        ->toBe([], "опасная схема в целях markdown-ссылок; вывод: [{$markdown}]");
+        ->toBe([], "dangerous scheme in the markdown link targets; output: [{$markdown}]");
 })->with([
-    // Вектор A: инъекция через label.
-    'label закрывает ссылку' => ['click](javascript:alert(1))', 'https://ok.example'],
-    // Вектор B: ')' внутри разрешённой https-схемы.
-    'href со скобкой' => ['safe', 'https://a.example/) [pwn](javascript:alert(1)'],
+    // Vector A: injection through the label.
+    'label closes the link' => ['click](javascript:alert(1))', 'https://ok.example'],
+    // Vector B: ')' inside an allowed https scheme.
+    'href with a parenthesis' => ['safe', 'https://a.example/) [pwn](javascript:alert(1)'],
     'javascript' => ['x', 'javascript:alert(1)'],
     'data' => ['x', 'data:text/html,<script>alert(1)</script>'],
     'vbscript' => ['x', 'vbscript:msgbox(1)'],
     'file' => ['x', 'file:///etc/passwd'],
-    'обфускация табом' => ['x', "java\tscript:alert(1)"],
-    'обфускация регистром' => ['x', 'JaVaScRiPt:alert(1)'],
-    'обфускация процентами' => ['x', '%6a%61%76%61script:alert(1)'],
-    'изображение в label' => ['![x](javascript:alert(1))', 'https://ok.example'],
+    'tab obfuscation' => ['x', "java\tscript:alert(1)"],
+    'case obfuscation' => ['x', 'JaVaScRiPt:alert(1)'],
+    'percent obfuscation' => ['x', '%6a%61%76%61script:alert(1)'],
+    'image in the label' => ['![x](javascript:alert(1))', 'https://ok.example'],
 ]);
 
 it('markdown export: a dangerous image src is not emitted', function (): void {
@@ -265,8 +265,8 @@ it('markdown export: a dangerous image src is not emitted', function (): void {
 });
 
 it('escapes raw text in markdown export, F-P1.11-04', function (): void {
-    // Литеральный "<script>" — легитимный текст (не инъекция на уровне TipTap-JSON), и
-    // store-time его не отвергает. Экспорт обязан отдать его инертным.
+    // A literal "<script>" is legitimate text (not an injection at the TipTap JSON level), and
+    // the store-time check does not reject it. The export must emit it inert.
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -279,7 +279,7 @@ it('escapes raw text in markdown export, F-P1.11-04', function (): void {
 
     expect($markdown)
         ->not->toContain('<script>alert(1)</script>')
-        // Markdown-экранирование, а не HTML: `\<script\>`, НЕ `&lt;script&gt;`.
+        // Markdown escaping, not HTML: `\<script\>`, NOT `&lt;script&gt;`.
         ->toContain('\<script\>')
         ->not->toContain('&lt;');
 });
@@ -298,22 +298,22 @@ it('markdown export does NOT print HTML entities: & in URLs and < in text', func
 
     $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
 
-    // URL доезжает целым (было: https://x.test/?a=1&amp;b=2 — сломанная ссылка).
+    // The URL arrives whole (it used to be https://x.test/?a=1&amp;b=2, a broken link).
     expect(markdownLinkTargets($markdown))->toBe(['https://x.test/?a=1&b=2'])
-        // Текст не показывает литеральные сущности (было: `a &lt; b &amp; c`).
+        // The text shows no literal entities (it used to be `a &lt; b &amp; c`).
         ->and($markdown)->not->toContain('&lt;')
         ->and($markdown)->not->toContain('&amp;');
 });
 
-// ─── code-span и таблица: два пути в обход escapeMarkdown ─────────────
+// ─── code span and table: two ways around escapeMarkdown ───────────
 
 /*
- * Ветка `code` — единственная, которая НЕ проходит через escapeMarkdown (внутри code-span
- * бэкслеши литеральны), и потому выпускала текст СЫРЫМ. Спан инертен ровно до тех пор, пока
- * он смыкается, а пустая строка закрывает не спан, а весь АБЗАЦ: всё, что после неё, падает
- * в .md как markup верхнего уровня. Store-time такой payload принимает — это легитимный
- * ТЕКСТ, а не инъекция на уровне TipTap-JSON. Ровно тот класс, который
- * соседняя ветка text экранированием `<`/`>` и закрывает.
+ * The `code` branch is the only one that does NOT go through escapeMarkdown (backslashes are literal
+ * inside a code span), so it emitted text RAW. A span is inert only as long as it
+ * closes, and a blank line closes not the span but the whole PARAGRAPH: everything after it lands
+ * in the .md as top-level markup. The store-time check accepts such a payload; it is legitimate
+ * TEXT, not an injection at the TipTap JSON level. Exactly the class the
+ * neighbouring text branch closes by escaping `<`/`>`.
  */
 it('markdown export: a code mark does not let raw HTML out through a paragraph break', function (): void {
     $doc = TipTapContent::fromArray([
@@ -331,22 +331,22 @@ it('markdown export: a code mark does not let raw HTML out through a paragraph b
     $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
     $span = trim($markdown);
 
-    // До фикса: "`a\n\n<script>alert(1)</script>`" — пустая строка рвала абзац, спан не
-    // смыкался, и <script> выходил в .md ЖИВЫМ блоком сырого HTML.
+    // Before the fix: "`a\n\n<script>alert(1)</script>`": the blank line broke the paragraph, the span did not
+    // close, and <script> came out in the .md as a LIVE block of raw HTML.
     expect($markdown)->not->toContain("\n\n")
-        // Ровно ОДИН сомкнутый code-span на весь вывод…
+        // Exactly ONE closed code span in the whole output…
         ->and(substr_count($span, '`'))->toBe(2)
         ->and($span)->toStartWith('`')
         ->and($span)->toEndWith('`')
-        // …и payload целиком внутри него — а значит инертен.
+        // …and the whole payload inside it, hence inert.
         ->and($span)->toContain('<script>alert(1)</script>');
 });
 
 /*
- * Пайп экранировался ДВАЖДЫ: escapeMarkdown уже отдаёт `\|`, а ячейка сверху делала
- * str_replace('|', '\|') → `\\|`. GFM читает `\\` как экранированный обратный слэш, а
- * следующий `|` — как ЖИВОЙ разделитель: ячейка разваливается на лишнюю колонку и сдвигает
- * все следующие. Та самая column-injection, которую комментарий обещал предотвращать.
+ * The pipe was escaped TWICE: escapeMarkdown already returns `\|`, and the cell on top ran
+ * str_replace('|', '\|'), giving `\\|`. GFM reads `\\` as an escaped backslash and the
+ * following `|` as a LIVE separator: the cell splits into an extra column and shifts
+ * all the following ones. The very column injection the comment promised to prevent.
  */
 it('markdown export: a pipe in a cell does not add a column', function (): void {
     $cell = static fn (string $type, string $text, bool $code = false): array => [
@@ -363,7 +363,7 @@ it('markdown export: a pipe in a cell does not add a column', function (): void 
             'content' => [
                 ['type' => 'tableRow', 'content' => [$cell('tableHeader', 'h1'), $cell('tableHeader', 'h2')]],
                 ['type' => 'tableRow', 'content' => [$cell('tableCell', 'a|b'), $cell('tableCell', 'c')]],
-                // code-span — вторая дорога в ячейку мимо escapeMarkdown.
+                // A code span is the second way into a cell around escapeMarkdown.
                 ['type' => 'tableRow', 'content' => [$cell('tableCell', 'x|y', code: true), $cell('tableCell', 'z')]],
             ],
         ]],
@@ -371,28 +371,28 @@ it('markdown export: a pipe in a cell does not add a column', function (): void 
 
     $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
 
-    // Двойного экранирования нет ни на одном пути…
+    // There is no double escaping on any path…
     expect($markdown)->not->toContain('\\\\|')
         ->and($markdown)->toContain('| a\|b | c |')
         ->and($markdown)->toContain('| `x\|y` | z |');
 
-    // …и каждая строка таблицы несёт РОВНО две колонки (заголовок задаёт ширину).
+    // …and every table row carries EXACTLY two columns (the header sets the width).
     foreach (explode("\n", trim($markdown)) as $line) {
-        expect(substr_count($line, '|') - substr_count($line, '\|'))->toBe(3, "строка таблицы сломана: [{$line}]");
+        expect(substr_count($line, '|') - substr_count($line, '\|'))->toBe(3, "broken table row: [{$line}]");
     }
 });
 
 /*
- * ревью (тот же класс, соседний путь) — markdown-ветка codeBlock печатала
- * `'```'.attrs.language."\n".plainText($children)."\n```"`, СЫРЫМИ обе половины. Тело
- * кодоблока, содержащее собственный fence, закрывает его раньше времени, и всё, что дальше,
- * падает в .md как markup верхнего уровня — ЖИВОЙ сырой HTML. Store-time такой контент
- * принимает: это легитимный ТЕКСТ. Ровно то, что уже закрыто для inline-марки code
- * (markdownCodeSpan), но узел-брат codeBlock остался сырым.
+ * Found in review (the same class, a neighbouring path): the codeBlock markdown branch printed
+ * `'```'.attrs.language."\n".plainText($children)."\n```"`, both halves RAW. A code block
+ * body that contains its own fence closes it early, and everything after it
+ * lands in the .md as top-level markup, LIVE raw HTML. The store-time check accepts such content:
+ * it is legitimate TEXT. Exactly what is already closed for the inline code mark
+ * (markdownCodeSpan), while its sibling node codeBlock stayed raw.
  *
- * Свойство, а не подстрока: открывающий и закрывающий fence одинаковы и длиннее любой
- * последовательности бэктиков в теле (CommonMark) — тогда тело инертно ЦЕЛИКОМ, чем бы оно
- * ни было.
+ * A property, not a substring: the opening and closing fences are identical and longer than any
+ * backtick run in the body (CommonMark), so the body is inert AS A WHOLE, whatever it
+ * is.
  */
 it('markdown export: a codeBlock body does not close its fence or let raw HTML out', function (): void {
     $body = "innocent\n```\n<script>alert(1)</script>\n```";
@@ -408,17 +408,17 @@ it('markdown export: a codeBlock body does not close its fence or let raw HTML o
     $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
     $lines = explode("\n", trim($markdown));
 
-    // Fence — длиннее самого длинного прогона бэктиков в теле (3) → минимум 4.
+    // The fence is longer than the longest backtick run in the body (3), so at least 4.
     expect($lines[0])->toBe('````')
         ->and($lines[array_key_last($lines)])->toBe('````')
-        // Тело доехало дословно и целиком лежит МЕЖДУ ограждениями → инертно.
+        // The body arrived verbatim and lies entirely BETWEEN the fences, hence inert.
         ->and(implode("\n", array_slice($lines, 1, -1)))->toBe($body);
 });
 
 /*
- * вторая половина: attrs.language — в CANONICAL_ATTRIBUTES, store-time его ЗНАЧЕНИЕ не
- * валидирует. Info-string печаталась сырой, поэтому `"php\n```\n<img src=x onerror=alert(1)>"`
- * закрывал fence переводом строки и выпускал живой <img onerror> в .md.
+ * The second half: attrs.language is in CANONICAL_ATTRIBUTES, and the store-time check does not validate its
+ * VALUE. The info string was printed raw, so `"php\n```\n<img src=x onerror=alert(1)>"`
+ * closed the fence with a newline and let a live <img onerror> out into the .md.
  */
 it('markdown export: the codeBlock language is validated, not printed raw', function (string $language, string $expectedFence): void {
     $doc = TipTapContent::fromArray([
@@ -438,13 +438,13 @@ it('markdown export: the codeBlock language is validated, not printed raw', func
         ->and($lines[1])->toBe('echo 1;')
         ->and($markdown)->not->toContain('onerror');
 })->with([
-    // Легальный язык доезжает как info-string.
-    'обычный язык' => ['php', '```php'],
-    'дефис и плюс' => ['objective-c++', '```objective-c++'],
-    // Всё, что несёт что-то вне [A-Za-z0-9_+-], инфо-строкой не становится вовсе.
-    'перевод строки + payload' => ["php\n```\n<img src=x onerror=alert(1)>", '```'],
-    'пробел и разметка' => ['php <img src=x onerror=alert(1)>', '```'],
-    'бэктик' => ['php`', '```'],
+    // A legal language arrives as the info string.
+    'plain language' => ['php', '```php'],
+    'hyphen and plus' => ['objective-c++', '```objective-c++'],
+    // Anything carrying a character outside [A-Za-z0-9_+-] never becomes an info string.
+    'newline + payload' => ["php\n```\n<img src=x onerror=alert(1)>", '```'],
+    'space and markup' => ['php <img src=x onerror=alert(1)>', '```'],
+    'backtick' => ['php`', '```'],
 ]);
 
 it('keeps a valid link and drops disallowed link schemes in markdown export, F-P1.11-04', function (): void {
@@ -466,9 +466,9 @@ it('keeps a valid link and drops disallowed link schemes in markdown export, F-P
 });
 
 /**
- * Ширина каждой строки GFM-таблицы в КОЛОНКАХ — по неэкранированным '|', ровно как их
- * читает GFM. Свойство, а не подстрока: тест доказывает, что ни одна ячейка не может
- * добавить таблице колонку, каким бы путём в неё ни попал '|'.
+ * The width of every GFM table row in COLUMNS, counted by unescaped '|', exactly as
+ * GFM reads them. A property, not a substring: the test proves that no cell can
+ * add a column to the table, however the '|' got into it.
  *
  * @return list<int>
  */
@@ -493,7 +493,7 @@ function markdownTableWidths(string $markdown): array
 }
 
 /**
- * Таблица 2×2 с произвольным содержимым первой ячейки тела.
+ * A 2×2 table with arbitrary content in the first body cell.
  *
  * @param array<string, mixed> $cellContent
  */
@@ -523,15 +523,15 @@ function tableWithCell(array $cellContent): TipTapContent
 }
 
 it('markdown export: a pipe in a link or image TARGET does not add table columns', function (array $cellContent): void {
-    // Схема легальна (http) — store-time такой URL принимает; но цель ссылки идёт мимо
-    // escapeMarkdown(), а markdownDestination() кодировал только <, > и пробел. GFM читал
-    // '| [x](https://a.example/?a=1|2|3) | y |' как ЧЕТЫРЕ колонки и сдвигал всё дальше.
+    // The scheme is legal (http) and the store-time check accepts the URL, but the link target bypasses
+    // escapeMarkdown(), and markdownDestination() encoded only <, > and space. GFM read
+    // '| [x](https://a.example/?a=1|2|3) | y |' as FOUR columns and shifted everything after it.
     $markdown = app(TipTapRenderer::class)->toMarkdown(tableWithCell($cellContent));
 
-    // header + разделитель + строка тела — все ровно по 2 колонки.
+    // header + separator + body row, each exactly 2 columns.
     expect(markdownTableWidths($markdown))->toBe([2, 2, 2]);
 })->with([
-    'ссылка' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://a.example/?a=1|2|3']]]]],
-    'картинка' => [['type' => 'image', 'attrs' => ['src' => 'https://a.example/i.png?a=1|2', 'alt' => 'x']]],
-    'ссылка со скобкой и пайпом' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://a.example/(x)?a=1|2']]]]],
+    'link' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://a.example/?a=1|2|3']]]]],
+    'image' => [['type' => 'image', 'attrs' => ['src' => 'https://a.example/i.png?a=1|2', 'alt' => 'x']]],
+    'link with a parenthesis and a pipe' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://a.example/(x)?a=1|2']]]]],
 ]);

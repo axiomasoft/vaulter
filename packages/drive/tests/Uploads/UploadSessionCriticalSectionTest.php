@@ -27,21 +27,21 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * критическая секция upload-сессии. Это ДЕТЕРМИНИРОВАННЫЕ братья
- * форк-теста гонки PATCH↔sweep (tests/Concurrency/TusPatchVsSweepRaceTest.php, только
- * PG): здесь каждый механизм из цепочки порчи файла проверяется по отдельности, без
- * реальной конкуренции, поэтому они гоняются и в SQLite-лейне.
+ * The upload-session critical section. These are the DETERMINISTIC siblings of the
+ * PATCH↔sweep race fork test (tests/Concurrency/TusPatchVsSweepRaceTest.php, PostgreSQL
+ * only): each mechanism in the file-corruption chain is checked on its own here, without
+ * real concurrency, so they also run in the SQLite lane.
  */
 beforeEach(function (): void {
     Storage::fake('local');
 });
 
 /*
- * fail-CLOSED. До фикса append() переносил уже принятые байты только под
- * условием `if ($offset > 0 && $disk->exists($key))`: нет staged-объекта — ветка молча
- * пропускалась, и в ключ писался ОДИН новый чанк. Вызывающий принимал его длину за новый
- * authoritative offset, префикс файла исчезал навсегда. Путь целостности данных обязан
- * отказывать, а не усекать.
+ * Fail CLOSED. Before the fix append() carried the already accepted bytes over only under
+ * `if ($offset > 0 && $disk->exists($key))`: without a staged object the branch was silently
+ * skipped and ONE new chunk was written to the key. The caller took its length as the new
+ * authoritative offset and the file prefix was gone for good. A data-integrity path must
+ * refuse, not truncate.
  */
 it('append() at offset > 0 with the staged object gone REFUSES instead of truncating the file', function (): void {
     $storage = UploadTestHelpers::storage();
@@ -49,31 +49,31 @@ it('append() at offset > 0 with the staged object gone REFUSES instead of trunca
 
     $staged = app(StagedUpload::class);
 
-    // Приняли 10 байт штатно.
+    // 10 bytes accepted normally.
     expect($staged->append($session, UploadTestHelpers::streamFor('0123456789'), 0))->toBe(10);
 
-    // Кто-то снёс staged-объект (sweep/abort/ручная чистка бакета) — сессия всё ещё
-    // считает, что у неё 10 байт.
+    // Something removed the staged object (sweep, abort or a manual bucket cleanup) while the
+    // session still believes it holds 10 bytes.
     Storage::disk('local')->delete($staged->keyFor($session));
 
     expect(fn () => $staged->append($session, UploadTestHelpers::streamFor('ABCDE'), 10))
         ->toThrow(StagedUploadMissingException::class);
 
-    // Ключевое: до фикса здесь лежали бы 5 байт 'ABCDE' и append вернул бы 5 —
-    // регрессировавший offset. Сейчас байты не записаны вовсе.
+    // The key point: before the fix this would hold the 5 bytes 'ABCDE' and append would return 5,
+    // a regressed offset. Now no bytes are written at all.
     expect($staged->size($session->fresh()))->toBe(0);
 });
 
 /*
- * advanceReceived() форсил `status => Uploading` безусловно, минуя
- * UploadStatus::canTransitionTo, и был механизмом ВОСКРЕШЕНИЯ терминальной сессии в
- * гонке PATCH ↔ sweep. Compare-and-set по открытым статусам: 0 затронутых строк → конфликт.
+ * advanceReceived() forced `status => Uploading` unconditionally, bypassing
+ * UploadStatus::canTransitionTo, and was the mechanism that RESURRECTED a terminal session in
+ * the PATCH ↔ sweep race. Compare-and-set on the open statuses: 0 affected rows means a conflict.
  */
 it('advanceReceived() does NOT resurrect a terminal session (CAS on the open statuses)', function (UploadStatus $terminal): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
-    // Сессия ушла в терминальный статус (sweep/abort/commit) — как в гонке PATCH ↔ sweep.
+    // The session went terminal (sweep, abort or commit), as in the PATCH ↔ sweep race.
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => $terminal])->save());
 
     expect(fn () => app(UploadSessionStoreRepository::class)->advanceReceived($session, 42))
@@ -81,7 +81,7 @@ it('advanceReceived() does NOT resurrect a terminal session (CAS on the open sta
 
     $after = UploadSession::query()->findOrFail($session->getKey());
 
-    // До фикса: status → uploading, received_bytes → 42. Терминальная сессия воскресла.
+    // Before the fix: status → uploading, received_bytes → 42. The terminal session came back to life.
     expect($after->status)->toBe($terminal)
         ->and($after->received_bytes)->toBe(0);
 })->with([
@@ -91,23 +91,23 @@ it('advanceReceived() does NOT resurrect a terminal session (CAS on the open sta
 ]);
 
 /*
- * Детерминированная половина гонки PATCH ↔ sweep: expire()/abort() обязаны входить в ту же
- * критическую секцию, что и PATCH, и ПЕРЕЧИТЫВАТЬ статус под локом. Здесь проверяется
- * второй инвариант: сессия, уже ушедшая в терминал между выборкой кандидата и локом, НЕ
- * трогается повторно — байты чужой (новой) стадии не сносятся, событие не дублируется.
+ * The deterministic half of the PATCH ↔ sweep race: expire() and abort() must enter the same
+ * critical section as PATCH and REREAD the status under the lock. This checks the
+ * second invariant: a session that went terminal between the candidate selection and the lock is
+ * NOT touched again, so the bytes of another (newer) stage are not removed and no event is duplicated.
  */
 it('expire() rereads the status under the lock and leaves an already terminal session alone', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
-    // Кандидат, выбранный sweep'ом ДО того, как клиент сам её оборвал.
+    // A candidate the sweep selected BEFORE the client aborted it itself.
     $stale = UploadSession::query()->findOrFail($session->getKey());
 
     app(UploadSessionManager::class)->abort($session);
     expect(UploadSession::query()->findOrFail($session->getKey())->status)->toBe(UploadStatus::Aborted);
 
-    // Sweep приходит со СТАРЫМ снимком: статус перечитывается под локом → no-op,
-    // сессия остаётся Aborted (а не переписывается в Expired).
+    // The sweep arrives with a STALE snapshot: the status is reread under the lock, so it is a no-op
+    // and the session stays Aborted (instead of being rewritten to Expired).
     $result = app(UploadSessionManager::class)->expire($stale);
 
     expect($result->status)->toBe(UploadStatus::Aborted)
@@ -115,9 +115,9 @@ it('expire() rereads the status under the lock and leaves an already terminal se
 });
 
 /*
- * Sweep обязан сносить именно СТУХШИЕ сессии. Санити на не-конфликтном пути
- * (пропуск залоченной сессии требует реального второго соединения — он в
- * tests/Concurrency/TusPatchVsSweepRaceTest.php, PG-лейн).
+ * The sweep must remove exactly the STALE sessions. A sanity check on the conflict-free path
+ * (skipping a locked session needs a real second connection; that lives in
+ * tests/Concurrency/TusPatchVsSweepRaceTest.php, the PostgreSQL lane).
  */
 it('vaulter:uploads:sweep reclaims a stale session and cleans the staged bytes', function (): void {
     $storage = UploadTestHelpers::storage();
@@ -135,11 +135,11 @@ it('vaulter:uploads:sweep reclaims a stale session and cleans the staged bytes',
 });
 
 /*
- * markCommitted() был ЕДИНСТВЕННЫМ писателем статуса, которому не досталось
- * compare-and-set: голый forceFill('committed'). Пока commit-путь шёл ВНЕ
- * критической секции, sweep успевал реклеймить Assembled-сессию (scopeSweepable её
- * включает) прямо во время коммита — и markCommitted воскрешал терминальную строку в
- * Committed, дорисовывая ей assembled_blob_id. CAS по Assembled: 0 строк → конфликт.
+ * markCommitted() was the ONLY status writer without a
+ * compare-and-set: a bare forceFill('committed'). While the commit path ran OUTSIDE the
+ * critical section, the sweep could reclaim an Assembled session (scopeSweepable
+ * includes it) in the middle of the commit, and markCommitted resurrected the terminal row as
+ * Committed, adding an assembled_blob_id. CAS on Assembled: 0 rows means a conflict.
  */
 it('markCommitted() does NOT resurrect a reclaimed session (CAS on Assembled)', function (UploadStatus $terminal): void {
     $storage = UploadTestHelpers::storage();
@@ -152,8 +152,8 @@ it('markCommitted() does NOT resurrect a reclaimed session (CAS on Assembled)', 
 
     $after = UploadSession::query()->findOrFail($session->getKey());
 
-    // До фикса: status → committed, assembled_blob_id → 777. Сессия, у которой sweep уже
-    // снёс staged-байты, объявлялась успешно закоммиченной.
+    // Before the fix: status → committed, assembled_blob_id → 777. A session whose staged bytes the
+    // sweep had already removed was declared successfully committed.
     expect($after->status)->toBe($terminal)
         ->and($after->assembled_blob_id)->toBeNull();
 })->with([
@@ -162,10 +162,10 @@ it('markCommitted() does NOT resurrect a reclaimed session (CAS on Assembled)', 
 ]);
 
 /*
- * Сквозной случай: сессия, реклеймленная ПОКА её байты ещё лежат на стадии (ровно окно
- * между markAssembled и BlobStore.commit), не должна закоммититься. До фикса
- * CommitUploadAction спокойно доводил её до конца: узел создавался, а терминальная строка
- * воскресала в Committed — sweep и commit молча делили одни и те же байты.
+ * The end-to-end case: a session reclaimed WHILE its bytes are still in the staging area (exactly the
+ * window between markAssembled and BlobStore.commit) must not commit. Before the fix
+ * CommitUploadAction carried it through: the node was created and the terminal row
+ * came back as Committed, so sweep and commit silently shared the same bytes.
  */
 it('committing a reclaimed session is rejected: no node is created and the status is not resurrected', function (): void {
     $storage = UploadTestHelpers::storage();
@@ -177,8 +177,8 @@ it('committing a reclaimed session is rejected: no node is created and the statu
 
     $nodesBefore = Node::query()->count();
 
-    // Sweep успел перевести сессию в терминал, но staged-объект ещё читается (discard и
-    // commit — одно и то же окно; на реальной гонке байты исчезают ПОСЕРЕДИНЕ стрима).
+    // The sweep already moved the session to a terminal status, but the staged object is still readable (discard and
+    // commit share one window; in a real race the bytes disappear in the MIDDLE of the stream).
     UploadSession::query()->whereKey($session->getKey())->update(['status' => UploadStatus::Expired->value]);
 
     expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh()))
@@ -192,10 +192,10 @@ it('committing a reclaimed session is rejected: no node is created and the statu
 });
 
 /*
- * commitAssembled() (шов, которым контроллер загоняет assemble→commit в ТУ ЖЕ
- * критическую секцию, что и PATCH) обязан перечитывать статус под локом: сессия, ушедшая
- * в терминал между последним чанком и коммитом, отбивается конфликтом, а сам коммит не
- * вызывается вовсе.
+ * commitAssembled() (the seam through which the controller runs assemble→commit in THE SAME
+ * critical section as PATCH) must reread the status under the lock: a session that went
+ * terminal between the last chunk and the commit is rejected with a conflict, and the commit itself
+ * is never called.
  */
 it('commitAssembled() rereads the status under the lock and does not commit a terminal session', function (): void {
     $storage = UploadTestHelpers::storage();
@@ -204,33 +204,33 @@ it('commitAssembled() rereads the status under the lock and does not commit a te
     app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('abcdef'), 0);
     app(UploadSessionStoreRepository::class)->advanceReceived($session, 6);
 
-    // Снимок, с которым контроллер пришёл коммитить; строка уже реклеймлена уборщиком.
+    // The snapshot the controller came to commit with; the row has already been reclaimed by the sweeper.
     $stale = UploadSession::query()->findOrFail($session->getKey());
     app(UploadSessionManager::class)->expire($session->refresh());
 
     expect(fn () => app(UploadSessionManager::class)->commitAssembled(
         $stale,
-        static fn (UploadSession $locked): Node => throw new RuntimeException('коммит терминальной сессии не должен быть вызван'),
+        static fn (UploadSession $locked): Node => throw new RuntimeException('the commit of a terminal session must not be called'),
     ))->toThrow(UploadConflictException::class);
 
     expect(UploadSession::query()->findOrFail($session->getKey())->status)->toBe(UploadStatus::Expired);
 });
 
 /*
- * putPart() (S3-multipart) остался ВНЕ критической секции: он не брал лок и проверял
- * isOpen() на снимке, прочитанном контроллером ДО авторизации. Сессия, реклеймленная между
- * этим чтением и записью части, проходила проверку по УСТАРЕВШЕЙ модели, и part-объект
- * ложился на диск уже терминальной сессии: scopeSweepable её больше не выберет → байты
- * осиротели навсегда. Тот же класс гонки, что закрыт для PATCH/expire/abort/commit.
+ * putPart() (S3 multipart) stayed OUTSIDE the critical section: it took no lock and checked
+ * isOpen() on the snapshot the controller had read BEFORE authorization. A session reclaimed between
+ * that read and the part write passed the check against a STALE model, and the part object
+ * landed on disk for an already terminal session: scopeSweepable never selects it again, so the bytes
+ * were orphaned forever. The same class of race that is closed for PATCH/expire/abort/commit.
  */
 it('putPart() rereads the status under the lock: a part of a terminal session is not written', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 100);
 
-    // Снимок, с которым контроллер пришёл писать часть.
+    // The snapshot the controller came to write the part with.
     $stale = UploadSession::query()->findOrFail($session->getKey());
 
-    // Пока часть летела по сети, sweep реклеймил сессию: staged-байты снесены, статус терминальный.
+    // While the part was in flight the sweep reclaimed the session: staged bytes removed, status terminal.
     app(UploadSessionManager::class)->expire($session->refresh());
 
     expect(fn () => app(S3MultipartHandler::class)->putPart(
@@ -240,15 +240,15 @@ it('putPart() rereads the status under the lock: a part of a terminal session is
         chunk: UploadTestHelpers::streamFor('0123456789'),
     ))->toThrow(ValidationException::class);
 
-    // До фикса: part-строка и part-объект на диске у Expired-сессии — осиротевшие байты.
+    // Before the fix: a part row and a part object on disk for an Expired session, orphaned bytes.
     expect(UploadPart::query()->count())->toBe(0)
         ->and(Storage::disk('local')->exists("tmp/uploads/{$stale->upload_id}.parts/1"))->toBeFalse()
         ->and(UploadSession::query()->findOrFail($session->getKey())->status)->toBe(UploadStatus::Expired);
 });
 
 /*
- * Санити: штатный PATCH после фикса по-прежнему работает (CAS пропускает открытую
- * сессию, append находит staged-объект) — фикс не сломал happy-path.
+ * Sanity: a regular PATCH still works after the fix (the CAS lets an open session
+ * through and append finds the staged object), so the fix did not break the happy path.
  */
 it('the regular PATCH sequence still works', function (): void {
     $storage = UploadTestHelpers::storage();

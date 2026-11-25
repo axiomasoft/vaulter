@@ -13,18 +13,18 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * ГЛАВНЫЙ путь чтения контента (GET documents/{node}/content → DocumentContentResource), тот самый, который монтирует в редактор SPA-компонент
+ * The MAIN content read path (GET documents/{node}/content → DocumentContentResource), the one the SPA editor component mounts
  * VaulterDocumentNode.vue.
  *
- * Оба эшелона защиты от stored XSS мимо него: первый (store-time TipTapContent)
- * не видит строк, записанных ДО его появления, второй (symfony/html-sanitizer) стоит
- * только на TipTapRenderer::toHtml() — то есть на экспорте/превью. Ресурс же отдавал
- * СЫРОЙ `$version->content`, поэтому легаси-строка с `link.href="javascript:…"`
- * приезжала в редактор как есть.
+ * Both lines of defence against stored XSS missed it: the first (store-time TipTapContent)
+ * does not see rows written BEFORE it existed, and the second (symfony/html-sanitizer) sits
+ * only on TipTapRenderer::toHtml(), i.e. on export and preview. The resource returned the
+ * RAW `$version->content`, so a legacy row with `link.href="javascript:…"`
+ * reached the editor as is.
  *
- * Контракт после фикса: TipTap-контент на чтении ДЕКЕЙЯТСЯ (неизвестные узлы/марки/
- * атрибуты срезаются) и его URL-атрибуты ПРОСКРЕБАЮТСЯ по LinkSchemeValidator; опаковый
- * снимок не-rich-text хендлера (Univer и т.п.) по-прежнему возвращается дословно.
+ * The contract after the fix: TipTap content DECAYS on read (unknown nodes, marks and
+ * attributes are stripped) and its URL attributes are SCRUBBED by LinkSchemeValidator; the opaque
+ * snapshot of a non-rich-text handler (Univer and the like) is still returned verbatim.
  */
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
@@ -36,8 +36,8 @@ function readPathStorage(): Drive
 }
 
 /**
- * Легаси-строка: писалась до появления store-time allow-list, поэтому несёт и опасный
- * href, и узел/атрибут, которых в каноне нет.
+ * A legacy row: written before the store-time allow-list existed, so it carries both a dangerous
+ * href and a node and an attribute that are not in the canon.
  *
  * @param array<string, mixed> $content
  */
@@ -81,27 +81,27 @@ it('serves legacy content with a javascript: link sanitized, not raw', function 
 
     $encoded = (string) json_encode($content);
 
-    // До фикса ресурс отдавал строку дословно: и javascript:-href, и обойдённый через
-    // управляющий символ `java\tscript:`, и левый узел `script`, и левый атрибут.
+    // Before the fix the resource returned the row verbatim: the javascript: href, the one bypassed with
+    // the control character `java\tscript:`, the stray `script` node and the stray attribute.
     expect($encoded)->not->toContain('javascript:')
         ->and($encoded)->not->toContain('script:alert')
         ->and($encoded)->not->toContain('onclick')
         ->and($encoded)->not->toContain('"script"');
 
-    // Картинка с опасным src уходит ЦЕЛИКОМ (узел без обязательного src не сохраняем —
-    // см. round-trip ниже), а соседняя честная — остаётся.
+    // An image with a dangerous src goes away ENTIRELY (a node without its required src is not kept,
+    // see the round trip below), while the honest one next to it stays.
     expect($encoded)->not->toContain('"alt":"evil"');
 
-    // Декей — не выжженная земля: текст и разрешённые атрибуты на месте.
+    // Decay is not scorched earth: the text and the allowed attributes are in place.
     expect($encoded)->toContain('click')
         ->and($encoded)->toContain('"alt":"x"');
 });
 
 it('read then save round trip: what the resource gave the editor it accepts back', function (array $legacy): void {
-    // Скраб URL выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты, — и редактор получал
-    // из GET узел вроде {"type":"link","attrs":{"target":"_blank"}}. PUT ровно этого же
-    // payload'а падал 500 (store-time требует href): любой легаси-документ с относительной
-    // ссылкой становился НЕСОХРАНЯЕМЫМ навсегда. Тест гоняет ровно этот круг по живым роутам.
+    // The URL scrub used to cut href/src, REQUIRED attributes, so the editor got
+    // a node like {"type":"link","attrs":{"target":"_blank"}} from GET. A PUT of exactly that
+    // payload failed with 500 (store time requires href): any legacy document with a relative
+    // link became UNSAVABLE forever. The test runs exactly that round trip over the live routes.
     $drive = readPathStorage()->getKey();
 
     $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), ['name' => 'Legacy'])->assertCreated()->json('data.id');
@@ -113,15 +113,15 @@ it('read then save round trip: what the resource gave the editor it accepts back
     // Accepted back as-is; an unchanged document is a no-op, a changed one autosaves.
     Docs::put($nodeId, $content)->assertOk();
 })->with([
-    'относительная ссылка' => [['type' => 'doc', 'content' => [[
+    'relative link' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'pricing', 'marks' => [['type' => 'link', 'attrs' => ['href' => '/pricing', 'target' => '_blank']]]]],
     ]]]],
-    'javascript: в ссылке' => [['type' => 'doc', 'content' => [[
+    'javascript: in a link' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
         'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
     ]]]],
-    'относительный src картинки' => [['type' => 'doc', 'content' => [
+    'relative image src' => [['type' => 'doc', 'content' => [
         ['type' => 'image', 'attrs' => ['src' => '/img/logo.png', 'alt' => 'logo']],
     ]]],
 ]);

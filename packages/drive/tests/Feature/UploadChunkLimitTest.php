@@ -13,13 +13,13 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**
- * Per-chunk hard cap на ПУТИ ДОСТАВКИ вреда.
+ * Per-chunk hard cap ON THE PATH where the damage happens.
  *
- * Докблок StagedUpload::assertChunkWithinLimit() обещает отказ «BEFORE any bytes are staged»,
- * но барьер стоял ПОЗАДИ места вреда: контроллер сначала делал
- * `fwrite($stream, $request->getContent())` — всё тело PATCH материализовалось в PHP-строку, —
- * и только потом append() спрашивал про лимит. Плюс сам ключ был выключен по умолчанию
- * (max_chunk_bytes = 0) при max_bytes = 5 GiB: один авторизованный PATCH клал воркер по памяти.
+ * The StagedUpload::assertChunkWithinLimit() docblock promises a refusal "BEFORE any bytes are staged",
+ * but the barrier stood BEHIND the point of damage: the controller first ran
+ * `fwrite($stream, $request->getContent())`, materializing the whole PATCH body into a PHP string,
+ * and only then did append() ask about the limit. On top of that the key was off by default
+ * (max_chunk_bytes = 0) with max_bytes = 5 GiB: one authorized PATCH could exhaust a worker's memory.
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
@@ -32,8 +32,8 @@ function chunkLimitStorage(): Drive
 }
 
 it('max_chunk_bytes has a non-empty default, so chunks are bounded out of the box', function (): void {
-    // Config-honesty: до фикса дефолт был 0 = «кап отключён», то есть обещанная защита из
-    // коробки не стояла вовсе.
+    // Config honesty: before the fix the default was 0 ("cap disabled"), so the promised
+    // protection was not there out of the box at all.
     expect(app(DriveOptions::class)->uploads->resumable->maxChunkSize)->toBeGreaterThan(0)
         ->and(config('vaulter-drive.uploads.resumable.max_chunk_size'))->toBeGreaterThan(0);
 });
@@ -62,7 +62,7 @@ it('a tus PATCH with Content-Length above max_chunk_bytes is rejected BEFORE the
         $body,
     )->assertStatus(413);
 
-    // Ни байта не осело на стадии.
+    // Not a single byte reached the staging area.
     expect(StorageFacade::disk('local')->exists("tmp/uploads/{$uploadId}"))->toBeFalse();
 });
 
@@ -95,9 +95,9 @@ it('a chunk without a declared length (an unstatable stream such as php://input)
     $storage = chunkLimitStorage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
-    // Эмуляция php://input: сокет-пара нестатируема (fstat даёт size 0), ровно как тело
-    // реального запроса. Проверка «по fstat» на таком потоке НЕ срабатывает — барьер обязан
-    // стоять на самом копировании.
+    // Emulates php://input: a socket pair cannot be stat-ed (fstat reports size 0), exactly like
+    // a real request body. A check "by fstat" does NOT fire on such a stream, so the barrier must
+    // sit on the copy itself.
     [$reader, $writer] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
     fwrite($writer, str_repeat('x', 64));
     fclose($writer);

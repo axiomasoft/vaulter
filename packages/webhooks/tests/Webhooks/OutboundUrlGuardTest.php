@@ -130,15 +130,15 @@ it('does not follow a redirect onto a private address, F-P1.7-01', function (): 
 });
 
 /*
- * Барьер держался ИСКЛЮЧИТЕЛЬНО на дефолте `false` конфиг-ключа
- * `webhooks.follow_redirects`: включив его, хост снимал SSRF-защиту целиком — `CURLOPT_RESOLVE`
- * пинит только ИСХОДНЫЙ host:port, а redirect-хоп резолвится заново, без guard'а и без пина.
- * Приёмник отвечает `302 Location: http://169.254.169.254/…` — и запрос уходит на metadata.
- * Ключ УДАЛЁН, редиректы не следуются безусловно. Тест бьёт ровно в эту точку: хост ПЫТАЕТСЯ
- * их включить.
+ * The barrier used to rest ENTIRELY on the `false` default of the
+ * `webhooks.follow_redirects` config key: by enabling it a host dropped the SSRF protection — `CURLOPT_RESOLVE`
+ * pins only the ORIGINAL host:port, while a redirect hop is resolved again, without the guard or the pin.
+ * The receiver answers `302 Location: http://169.254.169.254/…` and the request goes to the metadata service.
+ * The key is REMOVED and redirects are never followed. The test hits exactly that point: the host TRIES
+ * to enable them.
  */
 it('legacy follow_redirects=true key does NOT enable redirects: a 302 to metadata is not followed', function (): void {
-    // Хост (или его легаси-конфиг) пытается вернуть старое поведение.
+    // A host (or its legacy config) tries to bring the old behaviour back.
     expect(fn (): WebhooksOptions => WebhooksOptions::fromArray(['delivery' => ['follow_redirects' => true]]))
         ->toThrow(InvalidConfiguration::class, 'vaulter-webhooks.delivery.follow_redirects');
 
@@ -152,11 +152,11 @@ it('legacy follow_redirects=true key does NOT enable redirects: a 302 to metadat
 
     deliverGuarded($delivery);
 
-    // На коде ДО фикса Guzzle-овский redirect-middleware (Http::fake строит стек через
-    // HandlerStack::create()) реально шёл по 302 → сюда прилетал запрос к metadata.
+    // Before the fix the Guzzle redirect middleware (Http::fake builds the stack through
+    // HandlerStack::create()) really followed the 302, so a request to metadata arrived here.
     Http::assertNotSent(static fn (Request $request): bool => str_contains($request->url(), '169.254.169.254'));
 
-    // 302 — финальный не-2xx ответ: доставка не считается успешной.
+    // The 302 is a final non-2xx answer: the delivery does not count as successful.
     expect($delivery->refresh()->status)->toBe('failed');
 });
 

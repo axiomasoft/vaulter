@@ -11,12 +11,12 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
- * Сквозной GC-конвейер БЕЗ ручного стампинга delete_after_at. Раньше mark-фаза
- * сканировала по `delete_after_at < now`, который ни один путь коммита/детача не
- * взводит на committed-блобе, — значит реально осиротевший блоб не попадал в скан
- * и байты текли навсегда. Эти тесты гоняют настоящую цепочку
- * commit → attach → detach → reconcile → gc и доказывают, что осиротевший блоб
- * собирается БЕЗ единого forceFill в тесте.
+ * The end-to-end GC pipeline WITHOUT stamping delete_after_at by hand. The mark phase used
+ * to scan by `delete_after_at < now`, which no commit or detach path ever sets on a
+ * committed blob, so a really orphaned blob never entered the scan and its bytes leaked
+ * forever. These tests run the real chain
+ * commit → attach → detach → reconcile → gc and prove that an orphaned blob is
+ * collected WITHOUT a single forceFill in the test.
  */
 beforeEach(function (): void {
     Storage::fake('local');
@@ -28,21 +28,21 @@ it('real pipeline: detach, reconcile and mark tombstone an orphaned committed bl
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    // Коммитим блоб и навешиваем настоящее ребро — блоб живой.
+    // Commit a blob and attach a real edge: the blob is live.
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 
-    // Снимаем единственное ребро: блоб осиротел, но ref_count-КЭШ ещё врёт.
+    // Remove the only edge: the blob is orphaned, but the ref_count CACHE still lies.
     CasTestHelpers::unpin($blob, $version);
 
-    // Реконсиляция перестраивает кэш из числа рёбер → ref_count = 0.
+    // Reconciliation rebuilds the cache from the edge count, so ref_count = 0.
     $reconciler->reconcile();
     expect($blob->fresh()->ref_count)->toBe(0)
         ->and($blob->fresh()->delete_after_at)->toBeNull();
 
-    // Mark обязан подобрать committed ∧ ref_count<=0 и затомбствить с grace-дедлайном —
-    // НИКАКОГО ручного delete_after_at до этого не было.
+    // Mark must pick up committed ∧ ref_count<=0 and tombstone it with a grace deadline;
+    // NO delete_after_at was set by hand before this point.
     $result = $gc->mark(graceHours: 24);
 
     expect($result['tombstoned'])->toBe(1)
@@ -63,7 +63,7 @@ it('real pipeline: sweep leaves a fresh tombstone alone during grace and deletes
 
     $reconciler->reconcile();
 
-    // Mark с маленьким (но >=1ч после флора) grace — байты ещё на диске, sweep ждёт.
+    // Mark with a small grace (but >= 1h after the floor): the bytes are still on disk, sweep waits.
     $gc->mark(graceHours: 1);
     $key = $blob->storage_key;
     Storage::disk('local')->assertExists($key);
@@ -72,7 +72,7 @@ it('real pipeline: sweep leaves a fresh tombstone alone during grace and deletes
         ->and($blob->fresh()->status)->toBe(BlobStatus::Tombstoned);
     Storage::disk('local')->assertExists($key);
 
-    // Перематываем время за grace-окно — теперь sweep вправе физически удалить.
+    // Travel past the grace window: now the sweep may delete physically.
     $this->travel(2)->hours();
 
     $result = $gc->sweep();
@@ -92,7 +92,7 @@ it('real pipeline: mark skips a blob that is still referenced (liveness is the e
     $version = CasTestHelpers::reference();
     CasTestHelpers::pin($blob, $version);
 
-    // Реконсиляция выставит ref_count=1 — в скан кандидатов он не попадёт вовсе.
+    // Reconciliation sets ref_count=1, so the blob never enters the candidate scan.
     $reconciler->reconcile();
     expect($blob->fresh()->ref_count)->toBe(1);
 

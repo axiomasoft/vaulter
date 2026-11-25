@@ -7,11 +7,11 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
- * Один владелец, две панели — два РАЗНЫХ storage. Панель регистрируется в
- * PanelTestCase::defineEnvironment(), то есть ДО boot'а: ProfileRegistry резолвится
- * в packageBooted() (fail-loud на битой панели), поэтому рантаймовый
- * config()->set('vaulter-drive.profiles.providers') после boot'а уже не подхватывается. Раньше тест держался
- * именно на нём — и упал, как только реестр стал строиться на boot'е.
+ * One owner, two panels, two DIFFERENT storages. The panel is registered in
+ * PanelTestCase::defineEnvironment(), i.e. BEFORE boot: ProfileRegistry is resolved
+ * in packageBooted() (failing loudly on a broken panel), so a runtime
+ * config()->set('vaulter-drive.profiles.providers') after boot is no longer picked up. The test
+ * used to rely on exactly that, and broke as soon as the registry started being built at boot.
  */
 it('keeps one owner storages apart across panels', function (): void {
     $host = DriveTestHelpers::host();

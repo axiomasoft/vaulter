@@ -13,15 +13,15 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
- * ВТОРОЙ, более тяжёлый удар строгой проверки контента: он бил не
- * только по записи, но и по ЧТЕНИЮ. `DocumentRevision::tipTapContent()` гидрировал
- * снапшот из БД тем же строгим `fromArray()`, и ЛЮБАЯ версия, сохранённая до неё и
- * содержащая image/table/underline/textStyle/highlight, БРОСАЛА исключение при открытии,
- * превью и экспорте — вопреки собственному докблоку метода («decays to an empty doc rather
- * than throwing on read»). Один старый документ ронял весь UI.
+ * The SECOND, heavier impact of strict content validation: it hit not only
+ * writes but also READS. `DocumentRevision::tipTapContent()` hydrated the
+ * snapshot from the database with the same strict `fromArray()`, so ANY revision saved before it
+ * that contained image/table/underline/textStyle/highlight THREW on open,
+ * preview and export, contrary to the method's own docblock ("decays to an empty doc rather
+ * than throwing on read"). One old document took the whole UI down.
  *
- * Контракт владельца: чтение ДЕГРАДИРУЕТ (strip неизвестного), запись остаётся
- * строгой. Данные в БД не мигрируются — decay работает на чтении.
+ * The owner's contract: reads DEGRADE (unknown content is stripped), writes stay
+ * strict. Stored data is not migrated; decay happens on read.
  */
 function legacyVersion(array $content): DocumentRevision
 {
@@ -36,8 +36,8 @@ function legacyVersion(array $content): DocumentRevision
 
     $headId = Document::query()->where('node_id', $node->getKey())->value('current_revision_id');
 
-    // Перезаписываем снапшот «как он лежал в старом формате» прямо в БД (ревизии неизменяемы
-    // через модель) — миграции данных нет, версия остаётся такой, какой её записал старый код.
+    // Overwrite the snapshot "as it was stored in the old format" directly in the database (revisions are
+    // immutable through the model): there is no data migration, the revision stays as the old code wrote it.
     app(VaulterDatabase::class)->write(fn () => DocumentRevision::query()->whereKey($headId)->firstOrFail()->payload()->update(['content' => json_encode($content)]));
 
     return DocumentRevision::query()->whereKey($headId)->firstOrFail();
@@ -54,7 +54,7 @@ it('a legacy revision with unknown nodes IS read (decay) instead of throwing', f
         ],
     ]);
 
-    // До фикса — InvalidDocumentContentException прямо здесь.
+    // Before the fix this threw InvalidDocumentContentException right here.
     $content = $version->tipTapContent();
 
     expect($content)->toBeInstanceOf(TipTapContent::class)
@@ -65,7 +65,7 @@ it('a legacy revision with unknown nodes IS read (decay) instead of throwing', f
             ],
         ]);
 
-    // И она рендерится (превью/экспорт не падают) — то, ради чего decay и нужен.
+    // And it renders (preview and export do not fail), which is what decay exists for.
     expect(app(TipTapRenderer::class)->toHtml($content))->toContain('жив');
 });
 
@@ -104,8 +104,8 @@ it('a legacy revision with a javascript: href is read and neutralized at render'
     $renderer = app(TipTapRenderer::class);
     $content = $version->tipTapContent();
 
-    // Опасное ЗНАЧЕНИЕ доезжает до рендерера — и оба выхода его гасят: HTML —
-    // санитайзером (эшелон 2), Markdown — allow-list схем.
+    // The dangerous VALUE reaches the renderer and both outputs neutralize it: HTML through
+    // the sanitizer (the second line of defence), Markdown through the scheme allow-list.
     expect($renderer->toHtml($content))->not->toContain('javascript:')
         ->and($renderer->toMarkdown($content))->not->toContain('javascript:');
 });

@@ -8,19 +8,19 @@ use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 
 /*
- * Критическая секция upload-сессии обещает ОДНО на всех движках: «не смог взять лок» — это
- * ОТВЕТ, а не ожидание. PATCH превращает его в немедленный 409, sweeper — в «пропусти, сессия
- * живая» (тот же контракт записан в UPGRADE.md и в комментарии SweepUploadsCommand).
+ * The upload-session critical section promises ONE thing on every engine: "could not take the lock" is
+ * an ANSWER, not a wait. PATCH turns it into an immediate 409, the sweeper into "skip it, the session
+ * is alive" (the same contract is written in UPGRADE.md and in the SweepUploadsCommand comment).
  *
- * На pgsql это держал pg_try_advisory_xact_lock, а на MySQL стоял ПРОСТОЙ блокирующий
- * lockForUpdate() — и контракт там молча ломался: sweeper не получал UploadConflictException,
- * а ВСТАВАЛ на row-локе идущего PATCH'а и на innodb_lock_wait_timeout ловил сырой
- * QueryException, которого SweepUploadsCommand не ждёт. Одна живая заливка роняла ВЕСЬ
- * плановый sweep, и остальные протухшие сессии оставались неубранными.
+ * On pgsql pg_try_advisory_xact_lock kept that promise, while MySQL used a PLAIN blocking
+ * lockForUpdate(), and the contract silently broke there: the sweeper got no UploadConflictException
+ * but WAITED on the row lock of a running PATCH and, at innodb_lock_wait_timeout, caught a raw
+ * QueryException that SweepUploadsCommand does not expect. One live upload took the WHOLE
+ * scheduled sweep down, and the other stale sessions stayed uncleaned.
  *
- * MySQL-лейн в CI нет (сьют идёт на sqlite/pgsql), поэтому проверяем ровно то, что можно
- * проверить без сервера: SQL, который репозиторий выпускает на mysql-грамматике. pretend()
- * логирует запрос, не исполняя его.
+ * CI has no MySQL lane for this suite (it runs on sqlite/pgsql), so the test checks exactly what can
+ * be checked without a server: the SQL the repository emits with the mysql grammar. pretend()
+ * logs the query without executing it.
  */
 it('acquireForPatch on MySQL takes a NON-blocking lock (FOR UPDATE NOWAIT)', function (string $driver): void {
     $default = (string) config('database.default');
@@ -34,7 +34,7 @@ it('acquireForPatch on MySQL takes a NON-blocking lock (FOR UPDATE NOWAIT)', fun
     // pretend() still quotes string bindings for its log. Use only the isolated test PDO for that escaping;
     // the connection keeps its MySQL/MariaDB grammar and executes no query.
     $connection = DB::connection($driver)->setPdo($pdo)->setReadPdo($pdo);
-    // Репозиторий ветвится по драйверу ДЕФОЛТНОГО соединения — переключаем на время замера.
+    // The repository branches on the driver of the DEFAULT connection, so switch it for the measurement.
     config()->set('database.default', $driver);
 
     $model = app(DriveOptions::class)->model('upload_session');
@@ -46,18 +46,18 @@ it('acquireForPatch on MySQL takes a NON-blocking lock (FOR UPDATE NOWAIT)', fun
             try {
                 app(UploadSessionStoreRepository::class)->acquireForPatch($session);
             } catch (ModelNotFoundException) {
-                // pretend() не исполняет SELECT — строки не будет; нам нужен только SQL.
+                // pretend() does not execute the SELECT, so there is no row; only the SQL matters.
             }
         });
     } finally {
-        // Обязательно ДО teardown: RefreshDatabase откатывает транзакцию на дефолтном
-        // соединении по ИМЕНИ, и с mysql-дефолтом полез бы за живым сервером.
+        // This must happen BEFORE teardown: RefreshDatabase rolls back the transaction on the default
+        // connection by NAME, and with a mysql default it would reach for a live server.
         config()->set('database.default', $default);
     }
 
     expect($queries)->not->toBeEmpty();
 
-    // До фикса: «... for update» — блокирующий лок. Sweeper не получал конфликт, а ВСТАВАЛ
-    // в очередь за row-локом идущего PATCH'а.
+    // Before the fix: "... for update", a blocking lock. The sweeper got no conflict and instead
+    // QUEUED behind the row lock of the running PATCH.
     expect(strtolower((string) $queries[0]['query']))->toContain('for update nowait');
 })->with(['mysql', 'mariadb']);
