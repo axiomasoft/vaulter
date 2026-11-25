@@ -45,7 +45,7 @@ jobs:
   verify-release-sha:
     name: Verify release SHA
     needs: qualification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -90,7 +90,7 @@ jobs:
   route:
     name: Route and qualify the tag
     needs: verify-release-sha
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -136,7 +136,7 @@ jobs:
     name: Prepare the canonical split trees
     needs: route
     if: needs.route.outputs.qualified == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -165,7 +165,7 @@ jobs:
     name: Split packages/${{ matrix.package }}
     needs: [route, prepare]
     if: needs.route.outputs.qualified == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     strategy:
@@ -267,7 +267,7 @@ jobs:
   verify-tags:
     name: Verify split tags
     needs: split
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read

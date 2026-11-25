@@ -42,7 +42,7 @@ env:
 jobs:
   changes:
     name: Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       skip_reason: ${{ steps.plan.outputs.skip_reason }}
@@ -134,7 +134,7 @@ jobs:
     name: Quality / ${{ matrix.package }} / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_quality == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -203,7 +203,7 @@ jobs:
     name: Fast / ${{ matrix.package }} / Laravel ${{ matrix.laravel }} / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_fast == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -292,7 +292,7 @@ jobs:
     if: >-
       !cancelled() && needs.changes.outputs.has_db == 'true'
       && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -376,7 +376,7 @@ jobs:
     if: >-
       !cancelled() && needs.changes.outputs.has_serial == 'true'
       && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -455,7 +455,7 @@ jobs:
     name: Consumer isolation / ${{ matrix.package }} / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_consumer == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -502,7 +502,7 @@ jobs:
     name: "@vaulter/vue (Node ${{ matrix.node }})"
     needs: changes
     if: needs.changes.outputs.has_vue == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -551,7 +551,7 @@ jobs:
     name: Repo harness, workflow policy, actionlint / PHP ${{ matrix.php }}
     needs: changes
     if: needs.changes.outputs.has_repo == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -631,7 +631,7 @@ jobs:
     name: OpenAPI spec validation
     needs: changes
     if: needs.changes.outputs.has_openapi == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -699,7 +699,7 @@ jobs:
     name: Contract BC (trusted policy)
     needs: changes
     if: needs.changes.outputs.has_contract_bc == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -733,7 +733,7 @@ jobs:
   sca:
     name: Locked dependency advisory gate
     needs: changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -804,7 +804,7 @@ jobs:
     name: CI gate
     if: always()
     needs: [changes, quality, fast, db, serial, consumer-isolation, vue, repo, openapi, contract-bc, sca]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout

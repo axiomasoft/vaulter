@@ -26,7 +26,7 @@ jobs:
       pull-requests: write
     if: github.repository == 'axiomasoft/vaulter'
     name: Version Packages PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -51,7 +51,7 @@ jobs:
   route:
     if: github.repository == 'axiomasoft/vaulter'
     name: Route and qualify npm lines
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -84,7 +84,7 @@ jobs:
     if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
     needs: route
     name: Pack the accepted tgz once
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -124,7 +124,7 @@ jobs:
     if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
     needs: [route, pack]
     name: Publish the accepted tgz
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:

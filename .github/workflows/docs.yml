@@ -21,7 +21,7 @@ jobs:
     # GitHub Pages for the docs site is the canonical repository. A CI mirror
     # does not have that environment, and a failed deploy must not paint main red.
     if: github.repository == 'axiomasoft/vaulter'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -55,7 +55,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Deploy to GitHub Pages

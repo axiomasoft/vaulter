@@ -4,7 +4,7 @@ name: Load Gate
 # workflow_dispatch — no PR, push or schedule trigger. Class A (error-rate, checks,
 # streaming throughput, unbounded-scan counters) is BLOCKING; class B (latency) is
 # advisory everywhere outside `lab`. Profile S0 is the ONLY profile that fits
-# ubuntu-latest's 4 vCPU / ~14 GiB disk (tiers S/M/L run on the lab-box only,
+# the hosted ubuntu-24.04 runner's 4 vCPU / ~14 GiB disk (tiers S/M/L run on the lab-box only,
 # `slo-gates.md` §7). Jobs, selected by `inputs.run`:
 #
 #   smoke-perf     — S0 stand, one k6 run.
@@ -37,7 +37,7 @@ jobs:
   smoke-perf:
     if: inputs.run != 'regression'
     name: smoke-perf (S0, class A blocking)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # 25, not 15: on a real runner the job also pays for `composer
     # install` and a cold `docker build` — neither is visible on a laptop with a warm
     # cache.
@@ -174,7 +174,7 @@ jobs:
   regression:
     if: inputs.run != 'smoke-perf'
     name: regression (median-3)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       TIER: S0
@@ -343,7 +343,7 @@ jobs:
 
   baseline-guard:
     name: 'baseline diff requires the rebaseline input'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
