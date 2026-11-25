@@ -16,7 +16,7 @@ fetch_dependency() {
 }
 
 fetch_dependency packman https://github.com/axiomasoft/packman.git "refs/tags/v$packman_version"
-fetch_dependency azguard https://github.com/axiomasoft/azguard-private.git "$azguard_ref"
+fetch_dependency azguard https://github.com/axiomasoft/azguard.git "$azguard_ref"
 
 # Composer ignores repositories declared by dependencies. Make these same pinned
 # packages available when a split package or its isolated fixture is the root.
