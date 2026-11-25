@@ -54,7 +54,7 @@ it('writes the pending-state marker only in DocumentStateWriter (D26)', function
     expect(documentsSourcesMatching('/\'pending_(generation|through_seq)\'\s*=>|->pending_(generation|through_seq)\s*=[^=>]/', ['Content/DocumentStateWriter.php']))->toBe([]);
 });
 
-it('lets only the writer, aggregate creation, copy and retention use the document stores', function (): void {
+it('lets only the writer, aggregate creation, copy, purge and retention use the document stores', function (): void {
     expect(documentsSourcesMatching('/\bDocumentStoreRepository\b/', [
         'Content/DocumentStateWriter.php',
         'Actions/Documents/CreateDocumentAction.php',
@@ -63,6 +63,8 @@ it('lets only the writer, aggregate creation, copy and retention use the documen
     ]))->toBe([])
         ->and(documentsSourcesMatching('/\bDocumentRevisionStoreRepository\b/', [
             'Content/DocumentStateWriter.php',
+            // Node purge deletes the history through the store so the CAS payload references are released.
+            'Content/DocumentContentLifecycle.php',
             'Actions/Revisions/UpdateRevisionRetentionAction.php',
             'Repositories/Revisions/DocumentRevisionStoreRepository.php',
         ]))->toBe([]);

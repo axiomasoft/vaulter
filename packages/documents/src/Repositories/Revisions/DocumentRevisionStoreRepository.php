@@ -19,7 +19,8 @@ use Vaulter\Support\Identity;
 
 /**
  * Write-side row work for the immutable checkpoints in v_document_revisions:
- * insert a checkpoint, change its retention pin, and prune the history. There is no
+ * insert a checkpoint, change its retention pin, prune the history and purge checkpoints
+ * (releasing their managed payload references). There is no
  * general update — a checkpoint's payload never changes after INSERT. Opens NO
  * transactions and dispatches NO events.
  */

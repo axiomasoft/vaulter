@@ -16,7 +16,8 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 /*
  * A checkpoint is immutable — after INSERT only keep_forever changes, so a
  * revision id always names the same bytes. The model refuses any other update, the
- * store repository has no general update, and setRetention is the one mutator.
+ * store repository has no general update, and setRetention is the one mutator; the
+ * store only otherwise inserts and deletes whole checkpoints.
  */
 function immutableCheckpoint(): DocumentRevision
 {
@@ -70,5 +71,7 @@ it('exposes no general update on the checkpoint store', function (): void {
         new ReflectionClass(DocumentRevisionStoreRepository::class)->getMethods(ReflectionMethod::IS_PUBLIC),
     );
 
-    expect($methods)->toEqualCanonicalizing(['__construct', 'create', 'setRetention', 'prune']);
+    // purge() deletes whole checkpoints (node purge, history pruning) and releases their
+    // payload references; deleting a row never rewrites the bytes a revision id names.
+    expect($methods)->toEqualCanonicalizing(['__construct', 'create', 'setRetention', 'prune', 'purge']);
 });
