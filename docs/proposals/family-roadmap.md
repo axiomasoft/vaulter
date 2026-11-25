@@ -156,10 +156,13 @@ and, except for one collaboration changelog, no `CHANGELOG.md`.
 tarball built from `release/packages.json`, changesets for npm packages, a Keep a Changelog file per
 published package, and release notes drafted from Conventional Commits.
 
-Decide the intra-repository constraint style together with the release model: the base packages
-require each other as `self.version` (one version line released together), while ai and editor-pro
-require their sibling packages as `^1.0` (independent versions). Both are valid, but one family
-should use one, and the split workflow must match it.
+**Decided rule: intra-repository dependencies use `self.version`.** Packages that live in the same
+repository require each other as `self.version` and are released together on one version line;
+versions will not stabilize for a while, so independent per-package versions would only add
+bookkeeping. The base already follows this in all eight packages. ai and editor-pro still require
+their sibling packages as `^1.0` and move to `self.version` on their branches; the split workflow
+tags every package of a repository with the same version. Dependencies on another repository of the
+family stay ranges (see A1).
 
 **Rationale.** Integrators then upgrade every package the same way, and a release can be reviewed
 from one checklist.
