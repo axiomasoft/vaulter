@@ -115,7 +115,12 @@ final class DocumentRevisionStoreRepository
     {
         $model = $this->documentsConfig->model('document_revision');
         $query = $model::query()->whereKey($ids);
-        foreach ((clone $query)->with('payload')->get() as $revision) {
+        // Only a managed codec needs the stored payload to release its references, so the
+        // (possibly large) payloads of any other type are never read on the way out.
+        $managed = (clone $query)->get([(new $model)->getKeyName(), 'type'])
+            ->filter(fn (DocumentRevision $revision): bool => $this->references->manages($revision->type))
+            ->load('payload');
+        foreach ($managed as $revision) {
             $this->references->change($revision->type, 'revision', Identity::stringify($revision->getKey()), $revision->payload?->content, null);
         }
         $query->delete();

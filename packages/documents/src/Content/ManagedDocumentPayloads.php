@@ -13,6 +13,12 @@ final readonly class ManagedDocumentPayloads
 {
     public function __construct(private DocumentTypeRegistry $types) {}
 
+    /** True when the type's codec keeps references, so its payloads must be read before they change. */
+    public function manages(string $type): bool
+    {
+        return $this->types->find($type)?->codec() instanceof ManagedDocumentCodec;
+    }
+
     /**
      * @param array<string, mixed>|null $previous
      * @param array<string, mixed>|null $next
