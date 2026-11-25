@@ -96,6 +96,10 @@ function mcc_routes(): array
     $routes = [];
     foreach ($inventory['items'] as $item) {
         $name = (string) ($item['name'] ?? '');
+        // The public share unlock changes nothing: it is a POST only so the share password stays in the body.
+        if ($name === 'vaulter.v1.public-shares.unlock') {
+            continue;
+        }
         if (str_starts_with($name, 'vaulter.v1.') && array_intersect($item['methods'], ['POST', 'PUT', 'PATCH', 'DELETE']) !== []) {
             $routes[substr($name, strlen('vaulter.v1.'))] = ['owner' => (string) $item['owner'], 'middleware' => array_values($item['middleware'])];
         }
