@@ -6977,6 +6977,7 @@
                 }
             ],
             "indexes": {
+                "v_webhook_deliveries_endpoint_feed_idx": "CREATE INDEX v_webhook_deliveries_endpoint_feed_idx ON public.v_webhook_deliveries USING btree (endpoint_id, created_at, id)",
                 "v_webhook_deliveries_endpoint_id_index": "CREATE INDEX v_webhook_deliveries_endpoint_id_index ON public.v_webhook_deliveries USING btree (endpoint_id)",
                 "v_webhook_deliveries_event_endpoint_unique": "CREATE UNIQUE INDEX v_webhook_deliveries_event_endpoint_unique ON public.v_webhook_deliveries USING btree (event_id, endpoint_id)",
                 "v_webhook_deliveries_pkey": "CREATE UNIQUE INDEX v_webhook_deliveries_pkey ON public.v_webhook_deliveries USING btree (id)",

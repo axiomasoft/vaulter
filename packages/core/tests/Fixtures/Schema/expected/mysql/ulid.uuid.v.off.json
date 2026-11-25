@@ -8388,6 +8388,31 @@
                         }
                     ]
                 },
+                "v_webhook_deliveries_endpoint_feed_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "endpoint_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "created_at",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
                 "v_webhook_deliveries_endpoint_id_index": {
                     "unique": false,
                     "type": "BTREE",
@@ -8473,7 +8498,7 @@
                     ]
                 }
             },
-            "create_sql": "CREATE TABLE `v_webhook_deliveries` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `endpoint_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `event` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `payload` json NOT NULL,\n  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `attempts` int unsigned NOT NULL DEFAULT '0',\n  `next_retry_at` timestamp NULL DEFAULT NULL,\n  `claim_token` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `claim_until` timestamp NULL DEFAULT NULL,\n  `last_error` text COLLATE utf8mb4_unicode_ci,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `event_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_webhook_deliveries_event_endpoint_unique` (`event_id`,`endpoint_id`),\n  KEY `v_webhook_deliveries_retry_idx` (`status`,`next_retry_at`),\n  KEY `v_webhook_deliveries_prune_idx` (`status`,`updated_at`),\n  KEY `v_webhook_deliveries_endpoint_id_index` (`endpoint_id`),\n  CONSTRAINT `v_webhook_deliveries_endpoint_id_foreign` FOREIGN KEY (`endpoint_id`) REFERENCES `v_webhook_endpoints` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_webhook_deliveries` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `endpoint_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `event` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `payload` json NOT NULL,\n  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `attempts` int unsigned NOT NULL DEFAULT '0',\n  `next_retry_at` timestamp NULL DEFAULT NULL,\n  `claim_token` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `claim_until` timestamp NULL DEFAULT NULL,\n  `last_error` text COLLATE utf8mb4_unicode_ci,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `event_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_webhook_deliveries_event_endpoint_unique` (`event_id`,`endpoint_id`),\n  KEY `v_webhook_deliveries_retry_idx` (`status`,`next_retry_at`),\n  KEY `v_webhook_deliveries_prune_idx` (`status`,`updated_at`),\n  KEY `v_webhook_deliveries_endpoint_feed_idx` (`endpoint_id`,`created_at`,`id`),\n  KEY `v_webhook_deliveries_endpoint_id_index` (`endpoint_id`),\n  CONSTRAINT `v_webhook_deliveries_endpoint_id_foreign` FOREIGN KEY (`endpoint_id`) REFERENCES `v_webhook_endpoints` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_webhook_endpoints": {
             "columns": [

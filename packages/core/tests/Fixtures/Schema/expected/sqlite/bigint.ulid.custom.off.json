@@ -6629,6 +6629,29 @@
                 }
             ],
             "indexes": {
+                "custom_webhook_deliveries_endpoint_feed_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "endpoint_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "created_at",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"custom_webhook_deliveries_endpoint_feed_idx\" on \"custom_webhook_deliveries\" (\"endpoint_id\", \"created_at\", \"id\")"
+                },
                 "custom_webhook_deliveries_endpoint_id_index": {
                     "unique": 0,
                     "origin": "c",
