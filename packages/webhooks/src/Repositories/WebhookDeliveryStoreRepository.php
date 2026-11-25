@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks\Repositories;
 
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Cursor;
 use Illuminate\Support\Carbon;
 use Packman\Attributes\Internal;
 use Vaulter\Webhooks\Configuration\WebhooksOptions;
@@ -134,15 +135,25 @@ final readonly class WebhookDeliveryStoreRepository
     /**
      * An endpoint's deliveries, newest first, for the admin API.
      *
+     * The keyset predicate Laravel builds for the cursor, `created_at < ? OR (created_at = ? AND id < ?)`, cannot
+     * start an index scan, so a deep page walked the endpoint's history from the newest row. A leading bound on the
+     * first sort column in front of it lets (endpoint_id, created_at, id) seek straight to the cursor.
+     *
      * @return CursorPaginator<int, WebhookDelivery>
      */
     public function pageForEndpoint(WebhookEndpoint $endpoint, ?string $cursor, int $perPage): CursorPaginator
     {
-        return $this->newQuery()
-            ->where('endpoint_id', $endpoint->getKey())
+        $query = $this->newQuery()->where('endpoint_id', $endpoint->getKey());
+        $position = $cursor === null ? null : Cursor::fromEncoded($cursor);
+        $createdAt = $position?->toArray()['created_at'] ?? null;
+        if ($position !== null && is_string($createdAt)) {
+            $query->where('created_at', $position->pointsToNextItems() ? '<=' : '>=', $createdAt);
+        }
+
+        return $query
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->cursorPaginate(perPage: $perPage, cursor: $cursor);
+            ->cursorPaginate(perPage: $perPage, cursor: $position);
     }
 
     /** One delivery of the endpoint; a delivery of another endpoint is not found. */

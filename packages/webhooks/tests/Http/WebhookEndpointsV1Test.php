@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Http\V1;
@@ -71,6 +73,33 @@ it('pages the deliveries of one endpoint only', function (): void {
         ->and($page->json('data.0.event_type'))->toBe('folder.created');
     $rest = $this->getJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries?per_page=2&cursor='.urlencode($page->json('meta.next_cursor'))))->assertOk();
     expect($rest->json('data'))->toHaveCount(1);
+});
+
+it('pages an endpoint history newest first through timestamp ties with a leading created_at bound', function (): void {
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $expected = [];
+    foreach (['2026-01-01 10:00:00', '2026-01-01 11:00:00', '2026-01-01 11:00:00', '2026-01-01 11:00:00', '2026-01-01 12:00:00'] as $at) {
+        $expected[] = webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint, ['created_at' => $at, 'updated_at' => $at]));
+    }
+    usort($expected, static fn (WebhookDelivery $a, WebhookDelivery $b): int => [$b->created_at, $b->getKey()] <=> [$a->created_at, $a->getKey()]);
+
+    $bounded = 0;
+    DB::listen(static function (QueryExecuted $query) use (&$bounded): void {
+        if (str_contains($query->sql, 'webhook_deliveries') && preg_match('/created_at[`"]? <=/', $query->sql) === 1) {
+            $bounded++;
+        }
+    });
+    $seen = [];
+    $url = V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries?per_page=2');
+    do {
+        $page = $this->getJson($url)->assertOk();
+        array_push($seen, ...array_column($page->json('data'), 'id'));
+        $next = $page->json('meta.next_cursor');
+        $url = V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries?per_page=2&cursor='.urlencode((string) $next));
+    } while (is_string($next));
+
+    expect($seen)->toBe(array_map(static fn (WebhookDelivery $delivery): string => (string) $delivery->getKey(), $expected))
+        ->and($bounded)->toBe(2);
 });
 
 it('redelivers a dead delivery (202), refuses a pending one (409) and one of another endpoint (404)', function (): void {

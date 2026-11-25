@@ -33960,6 +33960,17 @@
             ]
         },
         {
+            "id": "migration:0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/database/migrations/0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_webhook_deliveries"
+            ]
+        },
+        {
             "columns": [
                 "id",
                 "tenant_id",

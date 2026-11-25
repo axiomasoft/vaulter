@@ -60,12 +60,13 @@ it('declares everything of the package through its manifest, paths relative to t
         ->and(array_column($contributions, 0))->toContain(DoctorCheck::class);
 });
 
-it('ships its two create-migrations in the package, in the block of numbers of the webhooks owner', function (): void {
+it('ships its migrations in the package, in the block of numbers of the webhooks owner', function (): void {
     $files = array_map(basename(...), glob(dirname(__DIR__, 2).'/database/migrations/*.php') ?: []);
 
     expect($files)->toBe([
         '0001_01_01_000401_create_v_webhook_endpoints_table.php',
         '0001_01_01_000402_create_v_webhook_deliveries_table.php',
+        '0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php',
     ]);
 });
 

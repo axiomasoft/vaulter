@@ -105,7 +105,8 @@ final class WebhooksSchema implements ModuleSchema
      * plan), ported from chatom 1:1. Gated on 'reliability'.
      * endpoint_id is an explicit FK → v_webhook_endpoints (cascade on delete). The
      * (status, next_retry_at) index is the due-retry sweep cursor; (status, updated_at)
-     * backs the retention prune of terminal (delivered|dead) rows. (event_id,
+     * backs the retention prune of terminal (delivered|dead) rows; (endpoint_id,
+     * created_at, id) serves an endpoint's delivery history in page order. (event_id,
      * endpoint_id) is unique, so an occurrence reaches an endpoint through one row
      * however often the relay retries its fan-out.
      */
@@ -132,10 +133,44 @@ final class WebhooksSchema implements ModuleSchema
         // The retention sweep (vaulter:webhooks:prune) deletes terminal rows by
         // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.
         $table->index(['status', 'updated_at'], $name.'_prune_idx');
+        // An endpoint's delivery history, newest first (the admin API's deliveries page).
+        $table->index(['endpoint_id', 'created_at', 'id'], $name.'_endpoint_feed_idx');
 
         $table->foreign('endpoint_id')
             ->references('id')
             ->on($this->helpers->table('webhook_endpoints'))
             ->cascadeOnDelete();
+    }
+
+    /**
+     * The delivery-history index on a table created before it was part of the definition. Public so the upgrade
+     * migration adds the same index; a no-op when the table is missing or already has it.
+     */
+    public function addDeliveriesEndpointFeedIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('webhook_deliveries');
+
+        if (!$schema->hasTable($table) || $schema->hasIndex($table, $table.'_endpoint_feed_idx')) {
+            return;
+        }
+
+        $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->index(['endpoint_id', 'created_at', 'id'], $table.'_endpoint_feed_idx');
+        });
+    }
+
+    public function dropDeliveriesEndpointFeedIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('webhook_deliveries');
+
+        if (!$schema->hasTable($table) || !$schema->hasIndex($table, $table.'_endpoint_feed_idx')) {
+            return;
+        }
+
+        $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->dropIndex($table.'_endpoint_feed_idx');
+        });
     }
 }
