@@ -9630,6 +9630,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Http/Controllers/Sharing/UnlockPublicShareController.php",
+            "fqcn": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UnlockPublicShareController",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UnlockPublicShareController"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Http/Controllers/Sharing/UpdateShareController.php",
             "fqcn": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
             "kind": "final-class",
@@ -11926,6 +11940,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Sharing/ShareDownloadGrant.php",
+            "fqcn": "Vaulter\\Drive\\Sharing\\ShareDownloadGrant",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Sharing\\ShareDownloadGrant"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Sharing/ShareLinkRules.php",
             "fqcn": "Vaulter\\Drive\\Sharing\\ShareLinkRules",
             "kind": "final-class",
@@ -11936,6 +11964,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Sharing\\ShareLinkRules"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Sharing/ShareLinkSigner.php",
+            "fqcn": "Vaulter\\Drive\\Sharing\\ShareLinkSigner",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Sharing\\ShareLinkSigner"
         },
         {
             "action": "keep",
