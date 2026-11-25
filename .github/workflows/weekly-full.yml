@@ -77,7 +77,7 @@ jobs:
           COMPOSER_IGNORE_PHP: ${{ matrix.php == '8.6' && '--ignore-platform-req=php' || '' }}
         run: |
           composer require "laravel/framework:$LARAVEL" "orchestra/testbench:$TESTBENCH" --dev --no-interaction --no-update
-          composer update $COMPOSER_IGNORE_PHP --prefer-dist --no-interaction --no-progress
+          composer update ${COMPOSER_IGNORE_PHP:+"$COMPOSER_IGNORE_PHP"} --prefer-dist --no-interaction --no-progress
 
       - name: Verify the installed versions
         env:
@@ -167,7 +167,7 @@ jobs:
       - name: Install dependencies
         env:
           COMPOSER_IGNORE_PHP: ${{ matrix.php == '8.6' && '--ignore-platform-req=php' || '' }}
-        run: composer install $COMPOSER_IGNORE_PHP --prefer-dist --no-interaction --no-progress
+        run: composer install ${COMPOSER_IGNORE_PHP:+"$COMPOSER_IGNORE_PHP"} --prefer-dist --no-interaction --no-progress
 
       - name: Tests (${{ matrix.engine }}, full)
         env:
@@ -207,7 +207,7 @@ jobs:
       - name: Install dependencies
         env:
           COMPOSER_IGNORE_PHP: ${{ matrix.php == '8.6' && '--ignore-platform-req=php' || '' }}
-        run: composer install $COMPOSER_IGNORE_PHP --prefer-dist --no-interaction --no-progress
+        run: composer install ${COMPOSER_IGNORE_PHP:+"$COMPOSER_IGNORE_PHP"} --prefer-dist --no-interaction --no-progress
 
       # The coverage floor of core (80%); coverage is not a PR lane.
       - name: Core coverage
@@ -245,7 +245,7 @@ jobs:
       - name: Install dependencies
         env:
           COMPOSER_IGNORE_PHP: ${{ matrix.php == '8.6' && '--ignore-platform-req=php' || '' }}
-        run: composer install $COMPOSER_IGNORE_PHP --prefer-dist --no-interaction --no-progress
+        run: composer install ${COMPOSER_IGNORE_PHP:+"$COMPOSER_IGNORE_PHP"} --prefer-dist --no-interaction --no-progress
 
       # Fail if the stand suite skips a test.
       - name: Stand
@@ -322,7 +322,7 @@ jobs:
       - name: Install dependencies
         env:
           COMPOSER_IGNORE_PHP: ${{ matrix.php == '8.6' && '--ignore-platform-req=php' || '' }}
-        run: composer install $COMPOSER_IGNORE_PHP --prefer-dist --no-interaction --no-progress
+        run: composer install ${COMPOSER_IGNORE_PHP:+"$COMPOSER_IGNORE_PHP"} --prefer-dist --no-interaction --no-progress
 
       - name: Workflow policy
         run: |
