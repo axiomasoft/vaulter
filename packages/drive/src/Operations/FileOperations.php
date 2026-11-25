@@ -100,7 +100,7 @@ final readonly class FileOperations implements Contract
         }
 
         $aggregate = $node->file()->firstOrFail();
-        $page = $aggregate->versions()->orderByDesc('number')->orderByDesc('id')->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
+        $page = $aggregate->versions()->orderByDesc('number')->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
 
         return new Page(
             items: array_values($page->getCollection()->map(fn (FileRevision $revision): FileRevisionSnapshot => $this->revisions->map($revision, $aggregate))->all()),

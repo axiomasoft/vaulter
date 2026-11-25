@@ -73,6 +73,27 @@ it('lists revisions newest first, adds one with If-Match and restores an older o
     expect(streamedContent($this->get(V1::url('files/'.$file->id.'/download'))->assertOk()))->toBe('one');
 });
 
+it('pages revisions on the revision number alone, so the next page seeks the unique key', function (): void {
+    $file = V1::file($this->drive, 'paged.txt', 'one');
+    foreach (['two', 'three'] as $bytes) {
+        $this->drive->files()->addRevision($file->id, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'paged.txt'));
+    }
+    $page = $this->getJson(V1::url('files/'.$file->id.'/revisions?per_page=2'))->assertOk()
+        ->assertJsonPath('data.0.number', 3)->assertJsonPath('data.1.number', 2);
+
+    $selects = [];
+    DB::listen(static function (QueryExecuted $query) use (&$selects): void {
+        if (str_contains($query->sql, 'file_revisions') && preg_match('/number[`"]? </', $query->sql) === 1) {
+            $selects[] = $query->sql;
+        }
+    });
+    $this->getJson(V1::url('files/'.$file->id.'/revisions?per_page=2&cursor='.urlencode($page->json('meta.next_cursor'))))->assertOk()
+        ->assertJsonCount(1, 'data')->assertJsonPath('data.0.number', 1);
+
+    expect($selects)->toHaveCount(1)
+        ->and(strtolower($selects[0]))->not->toContain(' or ');
+});
+
 it('pins a revision, refuses to delete the head and deletes an old revision', function (): void {
     $file = V1::file($this->drive, 'r.txt', 'old');
     $this->drive->files()->addRevision($file->id, UploadSource::fromString('new', 'r.txt'));
