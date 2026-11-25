@@ -77,7 +77,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [V7](#v7-signed-typed-keyset-cursors-for-the-plain-listings) | Signed, typed keyset cursors for the plain listings (500 fixed) | P2 | S |
 | [Q7](#q7-push-chat-events-instead-of-a-php-worker-per-open-tab) | Push chat events instead of a PHP worker per open tab | P2 | M |
 | [Q8](#q8-seekable-pages-for-the-scan-backfill-and-rescan) | Seekable pages for the scan backfill and rescan | P2 | S |
-| [Q9](#q9-one-read-snapshot-of-the-drive-per-operation) | One read snapshot of the drive per operation | P3 | S (an owner decision) |
+| [Q9](#q9-one-read-snapshot-of-the-drive-per-operation) | One read snapshot of the drive per operation (collaboration done) | P3 | S |
 | [V5](#v5-ai-a-resource-scoped-tool-port-only-reaches-its-resources-resolved) | ai: a resource-scoped tool port only reaches its resources | — | resolved |
 
 Cost: **S** is up to a day, **M** a few days, **L** more than a week.
@@ -940,6 +940,14 @@ an archive or a delete earlier in the same request, or a lock taken after the fi
 decided on the old row. Explicit passing keeps the freshness visible at each call site.
 
 **Priority.** P3. **Cost.** S.
+
+**Status.** Accepted by the owner as explicit passing, and done where it changes no public API (base
+`OperationGuard` is internal): `authorize()` and `abilities()` take the drive the caller just read,
+used only when it is the node's own drive, and `CollaborationAccessPolicy::evaluateReference()` and
+`evaluateAuthenticationReference()` decide on the drive `referenceContext()` read in the same call.
+A hub reference now reads `v_drives` twice (the reference and the access resolver's lookup) instead
+of 13 times before `e452964c`. `evaluate()` on a handle and `ChangeDocumentWriteModeAction` still
+read the drive fresh. The other operations (`DriveHandle::context`, the snapshot mapper) remain.
 
 ### V1. Realtime identity from the token, not the client
 
