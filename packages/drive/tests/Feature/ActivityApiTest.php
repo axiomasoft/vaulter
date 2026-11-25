@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Events\DriveEventType;
@@ -99,6 +100,40 @@ it('cursor-paginates the feed', function (): void {
 
     expect($response->json('data'))->toHaveCount(2)
         ->and($response->json('meta.next_cursor'))->not->toBeNull();
+});
+
+it('pages through rows that share a timestamp exactly once, each page seeking from the cursor', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'ties');
+    AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
+    $at = now()->startOfSecond();
+    $expected = [];
+    foreach ([0, 0, 0, 0, 0, 60, 60] as $secondsAgo) {
+        $row = targetedRow($storage->getKey(), $node, DriveEventType::NodeRenamed);
+        $row->forceFill(['created_at' => $at->copy()->subSeconds($secondsAgo)])->save();
+        $expected[] = ['at' => $secondsAgo, 'id' => (string) $row->getKey()];
+    }
+    usort($expected, static fn (array $a, array $b): int => [$a['at'], -(int) $a['id']] <=> [$b['at'], -(int) $b['id']]);
+    $table = (new Activity)->getTable();
+    $bound = DB::connection()->getQueryGrammar()->wrap('created_at').' <= ?';
+
+    $seen = [];
+    $cursor = null;
+    do {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $response = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity?per_page=2'.($cursor === null ? '' : '&cursor='.urlencode($cursor)))->assertOk();
+        $reads = array_values(array_filter(array_column(DB::getQueryLog(), 'query'), static fn (string $sql): bool => str_contains($sql, $table) && str_contains($sql, 'order by')));
+        DB::disableQueryLog();
+        if ($cursor !== null) {
+            // Every read past the first page carries the sargable bound next to the tie-breaking OR.
+            expect($reads)->not->toBeEmpty()->each(fn ($sql) => $sql->toContain($bound));
+        }
+        $seen = [...$seen, ...array_column($response->json('data'), 'id')];
+        $cursor = $response->json('meta.next_cursor');
+    } while ($cursor !== null);
+
+    expect($seen)->toBe(array_column($expected, 'id'));
 });
 
 it('403s a node feed for an actor WITHOUT View (opaque404)', function (): void {

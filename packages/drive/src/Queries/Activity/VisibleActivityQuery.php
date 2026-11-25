@@ -133,7 +133,10 @@ final readonly class VisibleActivityQuery
     private function after(Builder $query, ?array $last): void
     {
         if ($last !== null) {
-            $query->where(fn (Builder $q) => $q->where('created_at', '<', $last['created_at'])->orWhere(fn (Builder $q) => $q->where('created_at', $last['created_at'])->where('id', '<', $last['id'])));
+            // The leading `created_at <=` repeats what the OR implies, so the database seeks the (drive_id, created_at)
+            // index to the cursor instead of filtering every newer row: a deep page costs what the first one does.
+            $query->where('created_at', '<=', $last['created_at'])
+                ->where(fn (Builder $q) => $q->where('created_at', '<', $last['created_at'])->orWhere(fn (Builder $q) => $q->where('created_at', $last['created_at'])->where('id', '<', $last['id'])));
         }
     }
 
