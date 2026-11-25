@@ -53,3 +53,14 @@ it('updates to exactly the limit and refuses one byte more without writing', fun
         ->toThrow(InvalidDocumentContentException::class, sprintf('(%d bytes > %d bytes)', $limit + 1, $limit));
     expect(Document::query()->where('node_id', $node->id)->firstOrFail()->state_version)->toBe($before->state_version);
 })->with('size-limited types');
+
+it('measures non-Latin text by its UTF-8 bytes against the limit', function (): void {
+    $documents = Documents::in(DocumentTestHelpers::drive());
+    // 400 Cyrillic letters are 800 bytes of UTF-8 but were 2400 bytes as \uXXXX escapes, over the 1 KB limit.
+    $content = ['notes' => str_repeat('ж', 400)];
+
+    $node = $documents->create('Cyrillic', type: 'acme/opaque-note', content: $content);
+
+    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->payload?->content_size)
+        ->toBe(strlen('{"notes":""}') + 800);
+});

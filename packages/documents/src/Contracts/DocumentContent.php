@@ -24,6 +24,6 @@ interface DocumentContent
     /** sha256 of the canonical serialization; lets an autosave skip a write that changed nothing. */
     public function contentHash(): string;
 
-    /** The byte size of the canonical JSON payload; the node's size_bytes and quota follow it. */
+    /** The UTF-8 byte size of the JSON payload (non-ASCII text unescaped); the node's size_bytes and quota follow it. */
     public function sizeInBytes(): int;
 }

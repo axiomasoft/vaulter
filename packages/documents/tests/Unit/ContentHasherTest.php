@@ -16,3 +16,15 @@ it('hashes the same content identically whatever the order of object keys', func
 it('keeps the order of list items significant', function (): void {
     expect(ContentHasher::hash(['content' => ['a', 'b']]))->not->toBe(ContentHasher::hash(['content' => ['b', 'a']]));
 });
+
+it('counts non-ASCII text and slashes as their UTF-8 bytes, not as JSON escapes', function (): void {
+    $content = ['type' => 'doc', 'text' => 'Привет, 世界 🙂 https://example.test/a'];
+
+    // 12 bytes of Cyrillic, 6 of CJK, 4 of emoji: escaped they were 36, 12 and 12 bytes, plus one byte per slash.
+    expect(ContentHasher::size($content))->toBe(strlen('{"type":"doc","text":"Привет, 世界 🙂 https://example.test/a"}'))
+        ->and(ContentHasher::size($content))->toBe(72);
+});
+
+it('refuses to size content that is not valid UTF-8 instead of calling it empty', function (): void {
+    expect(fn () => ContentHasher::size(['text' => "\xB1\x31"]))->toThrow(JsonException::class);
+});

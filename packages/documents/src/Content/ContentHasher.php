@@ -24,10 +24,16 @@ final class ContentHasher
         return hash('sha256', self::encode($content));
     }
 
-    /** @param array<array-key, mixed> $content */
+    /**
+     * The UTF-8 bytes of the content as JSON. Key order does not change the length, so nothing is sorted; non-ASCII
+     * text and slashes are counted as the bytes they are, not as their `\uXXXX` / `\/` escapes, which made a Cyrillic
+     * or CJK document count two to three times its size against the size limit and the drive quota.
+     *
+     * @param array<array-key, mixed> $content
+     */
     public static function size(array $content): int
     {
-        return strlen(self::encode($content));
+        return strlen(json_encode($content, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
     }
 
     /** @param array<array-key, mixed> $content */
