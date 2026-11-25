@@ -106,9 +106,11 @@ split packages are published from `packages/*`), so a lock file there does not c
 Use one PHPStan, Larastan, Pint, Rector and Pest range across the family and bump it in one pull
 request per repository.
 
-The shared Rector set belongs to the same policy: `packman-devtools` enables `SetList::EARLY_RETURN`
-in `PackmanRectorSet`, and the satellite work reported rewrites from it that the repositories then
-had to skip locally. Fix or narrow the set once in Packman instead of per-repository skips.
+The shared Rector set shows why: `PackmanRectorSet` in `packman-devtools` 0.1.1 references
+`SetList::EARLY_RETURN`, a constant the installed Rector 2 no longer has, so `rector process` aborts
+with "Undefined constant" before it looks at a single file in every repository that uses the set.
+Fix it once in Packman (move to the current set or the explicit rules) and release it, instead of
+per-repository workarounds.
 
 **Rationale.** It makes a red build reproducible and a tool upgrade a reviewable change, instead of
 a side effect of whatever was released last night.
