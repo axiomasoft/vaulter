@@ -41,6 +41,18 @@ it('lists revisions newest first with a cursor and reads one with its content', 
         ->assertJsonMissingPath('data.snapshot_label');
 });
 
+it('orders and pages revisions by number, not by a clock that stepped back', function (): void {
+    $this->travelTo(now()->addHour());
+    $later = $this->postJson(Docs::url('documents/'.$this->id.'/revisions'), ['label' => 'clock ahead'])->assertCreated()->json('data.id');
+    $this->travelBack();
+    $newest = $this->postJson(Docs::url('documents/'.$this->id.'/revisions'), ['label' => 'clock back'])->assertCreated()->json('data.id');
+
+    $page = $this->getJson(Docs::url('documents/'.$this->id.'/revisions?per_page=1'))->assertOk()->assertJsonPath('data.0.id', $newest);
+    $this->getJson(Docs::url('documents/'.$this->id.'/revisions?per_page=1&cursor='.urlencode($page->json('meta.next_cursor'))))
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $later);
+});
+
 it('refuses a per_page out of range and an unknown revision', function (): void {
     $this->getJson(Docs::url('documents/'.$this->id.'/revisions?per_page=0'))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
     $this->getJson(Docs::url('documents/'.$this->id.'/revisions?per_page=201'))->assertStatus(422);

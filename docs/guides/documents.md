@@ -425,7 +425,7 @@ $next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50,
 :::
 
 The listing is cursor-paginated (`per_page` clamped to 1–200, default 50), newest first (by
-creation time), and omits `content`. Each item is a `DocumentRevision`; ids are strings:
+revision number, which follows creation order), and omits `content`. Each item is a `DocumentRevision`; ids are strings:
 
 <!-- snippet: host -->
 

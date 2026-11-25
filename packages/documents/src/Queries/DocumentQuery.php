@@ -54,7 +54,9 @@ final readonly class DocumentQuery
     }
 
     /**
-     * Newest first; ties on the timestamp fall back to the key so the cursor is stable.
+     * Newest first by revision number: the writer numbers revisions in creation order and (document_id, number) is
+     * unique, so the number alone is a stable cursor, and a seekable one on that unique index. Ordering by the
+     * timestamp sorted every revision of the document for each page instead.
      *
      * @return CursorPaginator<int, DocumentRevision>
      */
@@ -66,8 +68,7 @@ final readonly class DocumentQuery
         return $model::query()
             ->with(self::REVISION_METADATA)
             ->where('document_id', $document->getKey())
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
+            ->orderByDesc('number')
             ->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
     }
 
