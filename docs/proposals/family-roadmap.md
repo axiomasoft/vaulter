@@ -19,38 +19,46 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [R2](#r2-a-deterministic-static-analysis-entry-point) | A deterministic static-analysis entry point | P0 | S (done in base) |
 | [R3](#r3-lock-the-development-toolchain) | Lock the development toolchain | P0 | S |
 | [A1](#a1-an-explicit-cross-repository-version-contract) | An explicit cross-repository version contract | P0 | M |
-| [B4](#b4-one-local-entry-point-that-builds-what-the-php-tests-need) | One local entry point that builds what the PHP tests need | P1 | M |
+| [R4](#r4-one-packman-and-azguard-pin-for-the-family) | One Packman and AzGuard pin for the family | P1 | S |
+| [R5](#r5-one-release-flow) | One release flow | P1 | M |
+| [A6](#a6-move-planning-material-out-of-the-public-repository) | Move planning material out of the public repository | P1 | S (decided) |
+| [A7](#a7-one-safe-redirect-helper-in-the-base) | One safe redirect helper in the base | P1 | S |
+| [A8](#a8-datetime-instead-of-timestamp-columns-on-mysql) | DATETIME instead of TIMESTAMP columns on MySQL | P1 | S |
+| [A9](#a9-a-writer-for-the-sheets-projection-tables) | A writer for the sheets projection tables | P1 | M |
+| [A10](#a10-one-database-engine-type-instead-of-driver-name-strings) | One database-engine type instead of driver-name strings | P1 | S / M |
+| [A12](#a12-one-spelling-per-input-no-synonym-keys-or-values) | One spelling per input: no synonym keys or values | P1 | S |
 | [B1](#b1-move-the-engineering-rails-into-packman-devtools) | Move the engineering rails into `packman-devtools` | P1 | M |
 | [B2](#b2-one-ecosystem-checkout-step) | One ecosystem checkout step | P1 | S |
 | [B3](#b3-shared-root-configuration-with-a-drift-check) | Shared root configuration with a drift check | P1 | M |
-| [R4](#r4-one-packman-and-azguard-pin-for-the-family) | One Packman and AzGuard pin for the family | P1 | S |
-| [R5](#r5-one-release-flow) | One release flow | P1 | M |
+| [B4](#b4-one-local-entry-point-that-builds-what-the-php-tests-need) | One local entry point that builds what the PHP tests need | P1 | M |
 | [T1](#t1-contract-tests-in-every-satellite-that-implements-a-base-spi) | Contract tests in every satellite that implements a base SPI | P1 | S |
+| [T4](#t4-retire-or-repair-the-test-name-baseline) | Retire or repair the test-name baseline | P1 | S |
+| [T5](#t5-a-contract-test-for-the-node-converter-error-codes) | A contract test for the Node converter error codes | P1 | S |
+| [D1](#d1-english-only-documentation-with-the-same-tree-in-every-repository) | English-only documentation with the same tree everywhere | P1 | M |
+| [D3](#d3-contributor-documentation-in-every-repository) | Contributor documentation in every repository | P1 | S |
+| [X1](#x1-editor-pro-exchange-recovery-must-re-dispatch-or-fail) | editor-pro: exchange recovery must re-dispatch or fail | P1 | S |
+| [X3](#x3-sheets-stream-the-zip-entry-checks) | sheets: stream the ZIP entry checks | P1 | S |
+| [X4](#x4-sheets-re-validate-realtime-tokens-during-a-session) | sheets: re-validate realtime tokens during a session | P1 | M |
+| [S1](#s1-the-projector-contract-and-its-measured-payoff-extends-a9) | The projector contract and its measured payoff | P1 | M |
+| [S2](#s2-one-licence-allowlist-instead-of-four-denylists-input-to-b1) | One licence allowlist instead of four denylists | P1 | S |
+| [S3](#s3-a-first-party-clamav-scanner-in-the-base) | A first-party ClamAV scanner in the base | P1 | S |
+| [S5](#s5-editor-features-still-missing-against-tiptap-pro) | Editor features still missing against TipTap Pro | P1–P3 | M–L each |
+| [S6](#s6-remove-the-archive) | Remove the archive | P1 | S |
+| [R6](#r6-npm-only-and-a-reviewed-install-script-allowlist) | npm only, and a reviewed install-script allowlist | P2 | S |
+| [R7](#r7-pin-runners-and-service-images-and-enforce-it) | Pin runners and service images, and enforce it | P2 | S |
 | [A2](#a2-one-registration-model-for-every-php-package) | One registration model for every PHP package | P2 | M |
 | [A3](#a3-one-error-catalogue-per-package) | One error catalogue per package | P2 | M |
 | [A4](#a4-typed-options-in-the-satellites) | Typed options in the satellites | P2 | M |
 | [A5](#a5-public-surface-snapshots-in-the-satellites) | Public surface snapshots in the satellites | P2 | S |
-| [A7](#a7-one-safe-redirect-helper-in-the-base) | One safe redirect helper in the base | P1 | S |
-| [A8](#a8-datetime-instead-of-timestamp-columns-on-mysql) | DATETIME instead of TIMESTAMP columns on MySQL | P1 | S |
-| [A9](#a9-a-writer-for-the-sheets-projection-tables) | A writer for the sheets projection tables | P1 | M |
-| [A6](#a6-move-planning-material-out-of-the-public-repository) | Move planning material out of the public repository | P1 | S (a decision) |
-| [R6](#r6-npm-only-and-a-reviewed-install-script-allowlist) | npm only, and a reviewed install-script allowlist | P2 | S |
-| [R7](#r7-pin-runners-and-service-images-and-enforce-it) | Pin runners and service images, and enforce it | P2 | S |
+| [A11](#a11-a-typed-payload-kind-in-the-managed-codec-spi) | A typed payload kind in the managed-codec SPI | P2 | S |
 | [B5](#b5-one-javascript-lint-and-format-setup) | One JavaScript lint and format setup | P2 | S |
-| [D1](#d1-english-only-documentation-with-the-same-tree-in-every-repository) | English-only documentation with the same tree everywhere | P1 | M |
-| [D2](#d2-one-documentation-site-for-the-family) | One documentation site for the family | P2 | M |
-| [D3](#d3-contributor-documentation-in-every-repository) | Contributor documentation in every repository | P1 | S |
 | [T2](#t2-the-same-test-harness-shape-everywhere) | The same test harness shape everywhere | P2 | M |
 | [T3](#t3-scheduled-mutation-testing-on-the-domain-core) | Scheduled mutation testing on the domain core | P2 | M |
-| [T4](#t4-retire-or-repair-the-test-name-baseline) | Retire or repair the test-name baseline | P1 | S |
+| [D2](#d2-one-documentation-site-for-the-family) | One documentation site for the family | P2 | M |
 | [H1](#h1-no-planning-codes-in-code-tests-and-comments) | No planning codes in code, tests and comments | P2 | M |
 | [H2](#h2-the-same-gitignore-agent-block-everywhere) | The same `.gitignore` agent block everywhere | P2 | S |
-| [S1](#s1-the-projector-contract-and-its-measured-payoff-extends-a9) | The projector contract and its measured payoff | P1 | M |
-| [S2](#s2-one-licence-allowlist-instead-of-four-denylists-input-to-b1) | One licence allowlist instead of four denylists | P1 | S |
-| [S3](#s3-a-first-party-clamav-scanner-in-the-base) | A first-party ClamAV scanner in the base | P1 | S |
+| [X2](#x2-editor-pro-the-overlap-detector-is-a-stateful-singleton-nobody-shares) | editor-pro: the overlap detector is a stateful singleton | P2 | S |
 | [S4](#s4-the-unused-blob-encryption-column-implement-or-drop) | The unused blob encryption column: implement or drop | P2 | S / L |
-| [S5](#s5-editor-features-still-missing-against-tiptap-pro) | Editor features still missing against TipTap Pro | P1–P3 | M–L each |
-| [S6](#s6-remove-the-archive-and-decide-about-its-history) | Remove the archive, and decide about its history | P1 | S (a decision) |
 
 Cost: **S** is up to a day, **M** a few days, **L** more than a week.
 
@@ -64,8 +72,12 @@ account or billing condition, not a broken workflow. The base gets real CI only 
 `axioma-studio/vaulter-mirror` copy; the satellites get none. Their `CI gate` jobs exist but have
 never gated anything.
 
-**Proposal.** Pick one of: enable Actions billing for the `axiomasoft` organization (simplest); a
-mirror per satellite, as for the base; or one self-hosted runner pool shared by the family. Then make
+**Update.** The repositories were made public for the CI work, which lets Actions start on
+`axiomasoft/*` for now. They go private again afterwards, so the decision below is only postponed.
+
+**Proposal.** Before they go private, pick one of: enable Actions billing for the `axiomasoft`
+organization (simplest); a mirror per satellite, as for the base; or one self-hosted runner pool
+shared by the family. Then make
 `CI gate` a required status check on `main` in every repository.
 
 If mirrors are chosen, use one template for all of them: a mirror repository per satellite with
@@ -101,8 +113,9 @@ After the fix the base gives the same result on every fresh install (0 errors at
 ### R3. Lock the development toolchain
 
 **Problem.** No repository tracks `composer.lock`. Tool versions float inside ranges, and the ranges
-disagree: the base, collaboration and sheets require `phpstan/phpstan ^2.3.6`, while ai and
-editor-pro require `^2.2.16 <2.3.6`. The same code can pass in one repository and fail in another
+disagree. On the `refactor/polish` branches the base and collaboration require
+`phpstan/phpstan ^2.3.6`, sheets and editor-pro `~2.3.7`, and ai still `^2.2.16 <2.3.6`; on `main`
+the ranges differ again. The same code can pass in one repository and fail in another
 only because of the resolved analyser version. GitHub Actions are already pinned by commit in the
 base (`release/tool-pins.json`), but the PHP and Node tools are not.
 
@@ -211,11 +224,14 @@ bisect.
 **Problem.** Each satellite has an inline "stop-cranes" job in `ci.yml` of 360 to 439 lines of
 shell and Python. Pairwise they are 79 to 89 % identical. Three near-identical PHPStan SQL rules
 exist (`VaulterSqlStopRail`, `VaulterAiSqlStopRail`, `EditorProSqlStopRail`), and `unindexed-fks.sql`
-exists in four copies under two different paths (`scripts/ci/` and `scripts/ci/sql/`).
+exists in four copies under two different paths (`scripts/ci/` and `scripts/ci/sql/`). The
+constraint scanners themselves have diverged into separate scripts: collaboration has
+`scripts/ci/stop-cranes.py`, sheets and the base each have their own `scripts/ci/engineering-rails.py`.
 
 **Proposal.** Ship these from `packman-devtools`, which already provides `phpstan-base.neon` and the
 Rector set: one rails command with a per-repository configuration file (denylist, allowed licences,
-extra bans), one configurable PHPStan rule, and one SQL gate. Each repository keeps only its
+extra bans) that replaces the per-repository scanner scripts, one configurable PHPStan rule, and
+one SQL gate. Each repository keeps only its
 configuration.
 
 **Rationale.** A fix to a rail currently has to be made five times, and the copies have already
@@ -356,11 +372,16 @@ consumers.
 ### A7. One safe redirect helper in the base
 
 **Problem.** vaulter-ai had an open redirect: a `redirect_to` value taken from the request was
-followed without checking that it stays on the host application.
+followed without checking that it stays on the host application. After that fix it still had a
+second path out: when `redirect_to` was rejected, the fallback `url()->previous()` follows the
+`Referer` header, so a form posted from a foreign site redirected back to it (fixed on the ai
+branch in `b14c1b2`).
 
 **Proposal.** One helper in the base core that accepts only relative paths or URLs on the
-configured application host, used by every package that redirects after an action, plus a shared
-test for it.
+configured application host, and applies the same rule to every fallback (`url()->previous()`, the
+`Referer` header), falling back to a fixed in-app route instead. Every package that redirects after
+an action uses it; a shared test covers `//host`, `\\host`, scheme-relative and foreign-Referer
+cases.
 
 **Cost.** S.
 
@@ -401,6 +422,51 @@ guards it gives a false green.
 
 **Cost.** M.
 
+### A10. One database-engine type instead of driver-name strings
+
+**Problem.** Engine-specific code compares `getDriverName()` with string literals. Laravel reports
+MariaDB as `mariadb`, so every `=== 'mysql'` check silently treats MariaDB as "not MySQL".
+collaboration had this bug (fixed on its branch in `a6703e9`), and the base had it in
+`NodeReadRepository::siblingQuery()`, where the locking sibling read after the tree lock did not run
+on MariaDB (fixed on `refactor/polish`). In the base about a dozen checks of this shape remain, all
+in schema code: `DocumentsSchema` (five), `DriveSchema` (five), `MediaSchema` and two in
+`SchemaHelpers`. Some may be deliberate (MariaDB DDL differs), but the code cannot say which.
+
+**Proposal.** A `DatabaseEngine` enum (`Sqlite`, `Pgsql`, `Mysql`, `Mariadb`) in core with
+`VaulterDatabase::engine()` and intent methods (`isMysqlFamily()`, `hasRepeatableReadSnapshots()`,
+`supportsDeferredUniqueness()`, ...), used by every package of the family, plus a PHPStan rule (B1)
+that rejects comparing `getDriverName()` with a literal. Each remaining check is then reviewed once
+and written as either the family or the exact engine.
+
+**Cost.** S for the enum and the rule, M for the review of the schema checks (they touch the
+in-flight schema series, so after it lands).
+
+### A11. A typed payload kind in the managed-codec SPI
+
+**Problem.** `ManagedDocumentCodec::replacePayloadReference(string $kind, ...)` receives the magic
+strings `'working'` and `'revision'`; documents passes them as literals in four places, and the
+sheets `WorkbookCodec` compares `$kind === 'working'` and builds its pin owners as
+`'sheets.'.$kind`. A typo on either side compiles and silently pins nothing.
+
+**Proposal.** A backed enum `PayloadKind` (`Working = 'working'`, `Revision = 'revision'`) in the
+documents contracts, taken by the SPI method; sheets uses `$kind->value` for the pin owner. One
+coordinated change in the base and sheets (the SPI has no other implementers).
+
+**Cost.** S.
+
+### A12. One spelling per input: no synonym keys or values
+
+**Problem.** vaulter-ai accepts several spellings for one thing: `AgenToolsLlmPort` reads the
+response format from six synonymous keys, and the `decide` endpoint accepts `approve`, `approved`,
+`reject` and `rejected`. These are compatibility layers, and there are no users to be compatible
+with; every synonym is another branch to test and to document.
+
+**Proposal.** One key and one backed enum per input (for `decide`: `Decision::Approve`,
+`Decision::Reject`, validated with `Rule::enum()`), and a 422 for anything else. Apply the same rule
+in review across the family.
+
+**Cost.** S, after the in-flight ai series that touches these files.
+
 ### A6. Move planning material out of the public repository
 
 **Problem.** The public MIT base repository carries `plan/` and `audits/`: Russian planning
@@ -410,7 +476,11 @@ are the main source of planning codes in comments (H1).
 **Proposal.** After the current migration series lands, move them to the private workspace
 repository and keep only ADRs in `docs/adr`.
 
-**Cost.** S, but it is an owner decision.
+**Decided.** The repositories are public only for the duration of the CI work and go private again
+afterwards, so the history does not need rewriting; deleting the folders after the migration series
+is enough (see S6).
+
+**Cost.** S.
 
 ## Documentation
 
@@ -493,15 +563,30 @@ or delete the tool and its data. Keeping a guard that nobody can pass is worse t
 
 **Cost.** S.
 
+### T5. A contract test for the Node converter error codes
+
+**Problem.** The DOCX converter (a Node CLI in editor-pro) reports failures as error codes that the
+PHP exchange package maps to problem codes. The two lists live in different languages and nothing
+checks that they agree: a new or renamed Node code falls through to a generic failure on the PHP
+side. The sheets Node engine has the same shape.
+
+**Proposal.** The Node side exports its codes as JSON at build time; a PHP test asserts that every
+exported code has a mapping and every mapped code still exists. The same test template in every
+repository with a Node worker.
+
+**Cost.** S.
+
 ## Hygiene
 
 ### H1. No planning codes in code, tests and comments
 
 **Problem.** Planning and review codes (`F-P1.4-12`, `SEC-R19`, `D19`, `P2.5`, ...) point at documents
-outside the repository. On `refactor/polish` they are gone from the base source and from all test
-names except the frozen public-API snapshot tests, but about 110 lines in the base tests and scripts
-still carry them (mostly identifiers inside strings and dataset keys, 17 comment lines), and a test
-directory is named after a plan phase (`packages/drive/tests/Uploads/P3`). collaboration has a few
+outside the repository. On `refactor/polish` they are gone from the base source and from the test
+names, except the frozen public-API snapshot tests and two names in `DocumentCopyLifecycleTest`
+(files the in-flight series is changing). About 110 lines in the base tests and scripts still carry
+them (mostly identifiers inside strings and dataset keys, 17 comment lines, the `scripts/t` header),
+and test files and directories are named after plan phases (`packages/drive/tests/Uploads/P3`,
+`R07*ContractsTest.php`). collaboration has a few
 as well.
 
 **Proposal.** Replace each code with the reason the code exists, as part of normal changes to those
@@ -517,6 +602,69 @@ files, and add a rail (B1) that rejects new ones.
 **Proposal.** The same block in every repository, shipped from B3 so it cannot drift.
 
 **Cost.** S.
+
+## Satellite defects waiting on in-flight work
+
+Real defects found by the reviews of the satellite branches whose files are being changed by the
+in-flight series right now. Each is fixed on the satellite branch once that series lands.
+
+### X1. editor-pro: exchange recovery must re-dispatch or fail
+
+**Problem.** The exchange `recover` command resets jobs with an expired lease to `queued` but does
+not dispatch them again, so they stay queued until purge. The same happens when the queue worker is
+killed by its timeout while the lease is still live: nothing ever picks the job up, and the client
+polls forever. (A crashed worker now marks the job `failed` on the branch; these two paths remain.)
+
+**Proposal.** `recover` re-dispatches every job it requeues, bounded by the attempt budget, and
+marks a job `failed` with an error code once the budget is spent; a test kills a worker mid-job and
+asserts that the job finishes or fails. After the series that changes the exchange jobs.
+
+**Priority.** P1. **Cost.** S.
+
+### X2. editor-pro: the overlap detector is a stateful singleton nobody shares
+
+**Problem.** The review overlap detector caches the index of the last document it saw (that cache is
+what made it fast), so it is no longer stateless, yet `ReviewBindings` still binds it as a
+singleton, while `SuggestionOperations` creates its own instance with `new`. The singleton is unused
+on that path, and anywhere it is used, a long-lived worker carries one document's index into the
+next request.
+
+**Proposal.** Drop the unused singleton binding, or pass the index explicitly so the detector stays
+stateless; then one construction path. After the series that changes the review operations.
+
+**Priority.** P2. **Cost.** S.
+
+### X3. sheets: stream the ZIP entry checks
+
+**Problem.** `ZipArchiveGuard` reads every entry into memory to count its bytes, up to 50 MiB per
+entry, so one XLSX import can hold far more than its compressed size in PHP memory, which is the
+resource the guard exists to protect.
+
+**Proposal.** Read each entry through a stream in fixed chunks, count the inflated bytes and stop
+at the per-entry and total limits as soon as either is crossed; a test with a crafted archive
+asserts the peak memory stays bounded.
+
+**Priority.** P1. **Cost.** S.
+
+### X4. sheets: re-validate realtime tokens during a session
+
+**Problem.** The sheets realtime engine checks a peer's token only when it joins. An expired or
+revoked token keeps a live connection, with write access, for as long as the socket stays open. The
+collaboration hub already re-validates expiry and revocation during the session.
+
+**Proposal.** Use the same rule as the hub: check `exp` on every message (or a timer at `exp`), and
+close the connection when the base revokes the grant; share the implementation with the hub if the
+packages allow it.
+
+**Priority.** P1 (access control). **Cost.** M.
+
+## Merge order notes
+
+- After the base `refactor/polish` merges (the managed-codec SPI gains `array<string, mixed>`
+  payload types), remove the sheets PHPStan ignore for `method.childParameterType` on
+  `WorkbookCodec`: it only exists because the base SPI was untyped.
+- Satellites resolve the base from a sibling checkout of `main` (A1), so merge the base first, then
+  collaboration, then sheets and editor-pro, then ai.
 
 ## Salvaged from the planning archive
 
@@ -624,7 +772,7 @@ AI toolkits are now covered by the family. The rest was deferred and is not buil
 
 **Proposal.** Keep them as independent, opt-in extensions (never in the base), each with its own data
 owner, schema version, server-side enforcement and acceptance corpus. The per-module notes are in
-[vaulter-editor-pro `docs/concepts/tiptap-pro-parity.md`](https://github.com/axiomasoft/vaulter-editor-pro/blob/refactor/polish/docs/concepts/tiptap-pro-parity.md).
+[vaulter-editor-pro `docs/concepts/tiptap-pro-parity.md`](https://github.com/axiomasoft/vaulter-editor-pro/blob/main/docs/concepts/tiptap-pro-parity.md).
 Suggested order:
 
 | Priority | Feature | Note |
@@ -643,7 +791,7 @@ Suggested order:
 
 **Priority.** As in the table. **Cost.** M to L per feature.
 
-### S6. Remove the archive, and decide about its history
+### S6. Remove the archive
 
 **Problem.** Besides A6: the repository is public now. `plan/tiptap-pro/` documents the internals of
 TipTap Pro packages read from their installed `dist/` bundles under a Pro licence, together with
@@ -651,10 +799,9 @@ probe scripts and the account's team id in `plan/tiptap-pro/.env.example`. Delet
 removes it from the tree but not from the public history.
 
 **Proposal.** Delete `plan/` and `audits/` once the migration series has moved what the satellites
-need (items S1–S5 above keep the rest). Then decide whether that is enough or the history must be
-rewritten (a force push to `main` and every branch, which needs an explicit owner decision).
+need (items S1–S5 above keep the rest).
 
-**Rationale.** The vendor's licence terms, not our code, decide how risky public reverse-engineering
-notes are.
+**Decided.** No history rewrite: the repositories are public only while CI is brought up and go
+private again afterwards.
 
-**Priority.** P1 (a decision). **Cost.** S.
+**Priority.** P1. **Cost.** S.
