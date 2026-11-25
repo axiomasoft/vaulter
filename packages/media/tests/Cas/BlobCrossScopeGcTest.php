@@ -20,7 +20,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('sweep одного scope не трогает байты другого scope с теми же байтами', function (): void {
+it('a sweep of one scope leaves the same bytes of another scope alone', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 

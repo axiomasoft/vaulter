@@ -47,7 +47,7 @@ function initiateTus(int $totalBytes, string $name = 'big.bin'): UploadSession
     ));
 }
 
-it('open сессию: initiated, нулевой offset, upload_id и TTL', function (): void {
+it('opens a session: initiated, zero offset, upload_id and TTL', function (): void {
     $session = initiateTus(totalBytes: 10);
 
     expect($session->status)->toBe(UploadStatus::Initiated)
@@ -56,7 +56,7 @@ it('open сессию: initiated, нулевой offset, upload_id и TTL', func
         ->and($session->expires_at)->not->toBeNull();
 });
 
-it('PATCH-чанки → HEAD-offset растёт → assemble → commit создаёт файловый узел', function (): void {
+it('PATCH chunks advance the HEAD offset, then assemble and commit create a file node', function (): void {
     $bytes = 'hello resumable drive world'; // 27 bytes
     $session = initiateTus(totalBytes: strlen($bytes), name: 'hello.txt');
 
@@ -90,7 +90,7 @@ it('PATCH-чанки → HEAD-offset растёт → assemble → commit соз
         ->and($session->refresh()->assembled_blob_id)->not->toBeNull();
 });
 
-it('resume после разрыва: второй клиент читает HEAD-offset и продолжает', function (): void {
+it('resume after a disconnect: a second client reads the HEAD offset and continues', function (): void {
     $bytes = str_repeat('A', 8).str_repeat('B', 8); // 16 bytes
     $session = initiateTus(totalBytes: 16, name: 'resume.bin');
 
@@ -118,7 +118,7 @@ it('resume после разрыва: второй клиент читает HEA
         ->and($version->sha256)->toBe(hash('sha256', $bytes));
 });
 
-it('отвергает PATCH с offset, не совпадающим с серверным — байты расходятся (tus 409, F-P1.4-02)', function (): void {
+it('rejects a PATCH whose offset differs from the server offset when the bytes diverge (tus 409)', function (): void {
     $session = initiateTus(totalBytes: 20);
 
     $handler = app(TusUploadHandler::class);
@@ -131,7 +131,7 @@ it('отвергает PATCH с offset, не совпадающим с серв�
         ->toThrow(OffsetMismatchException::class);
 });
 
-it('идемпотентный повтор: PATCH с offset<server, но с СОВПАДАЮЩИМИ уже застейдженными байтами → успех, offset не двигается назад (F-P1.4-02)', function (): void {
+it('idempotent retry: a PATCH with offset below the server but MATCHING staged bytes succeeds and the offset does not move back', function (): void {
     $session = initiateTus(totalBytes: 20);
 
     $handler = app(TusUploadHandler::class);
@@ -145,7 +145,7 @@ it('идемпотентный повтор: PATCH с offset<server, но с С�
         ->and($result['complete'])->toBeFalse();
 });
 
-it('дедуп: идентичная резюмируемая загрузка → один блоб против прежней', function (): void {
+it('dedup: an identical resumable upload yields one blob shared with the earlier one', function (): void {
     $bytes = 'identical resumable payload';
 
     // First resumable upload.
@@ -164,7 +164,7 @@ it('дедуп: идентичная резюмируемая загрузка �
         ->and(FileRevision::query()->count())->toBe(2);
 });
 
-it('лживый client sha256 отклоняется до записи версии', function (): void {
+it('a lying client sha256 is rejected before the version is written', function (): void {
     $bytes = 'the real bytes';
     $storage = UploadTestHelpers::storage();
 
@@ -184,7 +184,7 @@ it('лживый client sha256 отклоняется до записи верс
 
 });
 
-it('квота: сборка сверх квоты отклоняется на commit', function (): void {
+it('quota: assembling past the quota is rejected at commit', function (): void {
     $bytes = 'this is definitely too many bytes for the quota';
     $storage = UploadTestHelpers::storage(quotaBytes: 5);
 
@@ -206,7 +206,7 @@ it('квота: сборка сверх квоты отклоняется на c
         ->and($storage->refresh()->used_bytes)->toBe(0);
 });
 
-it('over-size: initiate сверх max_bytes отклоняется ДО приёма байт', function (): void {
+it('over-size: initiating above max_bytes is rejected BEFORE any bytes are accepted', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 10);
     $storage = UploadTestHelpers::storage();
 
@@ -220,7 +220,7 @@ it('over-size: initiate сверх max_bytes отклоняется ДО при�
     expect(UploadSession::query()->count())->toBe(0);
 });
 
-it('abort чистит staged temp и помечает aborted', function (): void {
+it('abort cleans the staged temp and marks the session aborted', function (): void {
     $session = initiateTus(totalBytes: 20);
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor('half bytes'), 0);
@@ -234,7 +234,7 @@ it('abort чистит staged temp и помечает aborted', function (): vo
     expect($session->refresh()->status)->toBe(UploadStatus::Aborted);
 });
 
-it('новая версия: резюмируемая загрузка на существующий узел бампит number', function (): void {
+it('new version: a resumable upload onto an existing node bumps the number', function (): void {
     // Seed a v1 file via a first resumable upload.
     $storage = UploadTestHelpers::storage();
     $v1 = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(

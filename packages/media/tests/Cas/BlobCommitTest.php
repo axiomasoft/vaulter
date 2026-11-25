@@ -23,7 +23,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('коммитит блоб: одна строка, объект на диске, статус committed', function (): void {
+it('commits a blob: one row, an object on disk, status committed', function (): void {
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('hello cas'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -36,7 +36,7 @@ it('коммитит блоб: одна строка, объект на диск
     Storage::disk('local')->assertExists($blob->storage_key);
 });
 
-it('сервер пересчитывает sha256 — врущий клиент игнорируется', function (): void {
+it('the server recomputes sha256 and ignores a lying client', function (): void {
     $store = app(BlobStore::class);
 
     // The client could send any sha256 they like; commit() never takes it — the
@@ -48,7 +48,7 @@ it('сервер пересчитывает sha256 — врущий клиент
         ->and($blob->sha256)->not->toBe(hash('sha256', 'a lie'));
 });
 
-it('дедуп: одинаковые байты дважды → ОДНА строка, ОДИН объект, два ребра', function (): void {
+it('dedup: the same bytes twice give ONE row, ONE object and two edges', function (): void {
     $store = app(BlobStore::class);
 
     $first = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('same bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -73,7 +73,7 @@ it('дедуп: одинаковые байты дважды → ОДНА стр
     expect($first->fresh()->ref_count)->toBe(2);
 });
 
-it('повторный коммит идемпотентен и не пишет второй объект', function (): void {
+it('a repeated commit is idempotent and writes no second object', function (): void {
     $store = app(BlobStore::class);
 
     $store->commit(CasTestHelpers::streamFor('idem'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));

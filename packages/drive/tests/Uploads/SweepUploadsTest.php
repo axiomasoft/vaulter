@@ -17,7 +17,7 @@ beforeEach(function (): void {
     Storage::fake('local');
 });
 
-it('sweep помечает протухшие открытые сессии expired и чистит staged temp', function (): void {
+it('sweep marks stale open sessions expired and cleans the staged temp', function (): void {
     $storage = UploadTestHelpers::storage();
 
     $stale = UploadTestHelpers::session($storage, totalSizeBytes: 100);
@@ -35,7 +35,7 @@ it('sweep помечает протухшие открытые сессии expi
     Storage::disk('local')->assertMissing($stagedKey);
 });
 
-it('sweep НЕ трогает свежие (не протухшие) сессии', function (): void {
+it('sweep does NOT touch fresh (unexpired) sessions', function (): void {
     $storage = UploadTestHelpers::storage();
 
     $fresh = UploadTestHelpers::session($storage, totalSizeBytes: 100);
@@ -46,7 +46,7 @@ it('sweep НЕ трогает свежие (не протухшие) сесси�
     expect($fresh->refresh()->status)->toBe(UploadStatus::Initiated);
 });
 
-it('sweep НЕ трогает уже завершённые/aborted сессии', function (): void {
+it('sweep does NOT touch completed or aborted sessions', function (): void {
     $storage = UploadTestHelpers::storage();
 
     $committed = UploadTestHelpers::session($storage);
@@ -61,7 +61,7 @@ it('sweep НЕ трогает уже завершённые/aborted сессии
     expect($committed->refresh()->status)->toBe(UploadStatus::Committed);
 });
 
-it('sweepable scope выбирает initiated|uploading|assembled в границах expires_at (F-P1.4-10)', function (): void {
+it('the sweepable scope selects initiated|uploading|assembled within expires_at', function (): void {
     // Assembled is a sweep candidate too (a
     // session stuck Assembled past its TTL — commit interrupted after every byte
     // landed — used to leak its staged temp / S3 parts forever).
@@ -97,7 +97,7 @@ it('sweepable scope выбирает initiated|uploading|assembled в грани
         ]);
 });
 
-it('sweep сметает застрявшую Assembled-сессию за TTL и чистит staged-байты (F-P1.4-10, red-before: остаётся)', function (): void {
+it('sweep clears a stuck Assembled session past its TTL and cleans the staged bytes', function (): void {
     $storage = UploadTestHelpers::storage();
 
     $stuck = UploadTestHelpers::session($storage, totalSizeBytes: 10);
@@ -114,7 +114,7 @@ it('sweep сметает застрявшую Assembled-сессию за TTL и
     Storage::disk('local')->assertMissing($stagedKey);
 });
 
-it('sweep НЕ трогает свежую Assembled-сессию в пределах TTL (F-P1.4-10, контроль)', function (): void {
+it('sweep does NOT touch a fresh Assembled session within its TTL (control)', function (): void {
     $storage = UploadTestHelpers::storage();
 
     $fresh = UploadTestHelpers::session($storage, totalSizeBytes: 10);
@@ -130,7 +130,7 @@ it('sweep НЕ трогает свежую Assembled-сессию в преде�
     Storage::disk('local')->assertExists($stagedKey);
 });
 
-it('sweep абортит S3-multipart части протухшей сессии', function (): void {
+it('sweep aborts the S3 multipart parts of a stale session', function (): void {
     $storage = UploadTestHelpers::storage();
 
     $stale = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 10);

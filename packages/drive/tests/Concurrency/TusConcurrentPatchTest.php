@@ -23,7 +23,7 @@ use Vaulter\Drive\Uploads\TusUploadHandler;
  * Provisioning: DB_CONNECTION=pgsql (+ DB_HOST/PORT/DATABASE/USERNAME/PASSWORD) on a
  * PHP build with pdo_pgsql and pcntl. Skipped otherwise.
  */
-it('два конкурентных PATCH с одинаковым offset — ровно один применяется, финальный sha256 эталонный, F-P1.4-01', function (): void {
+it('two concurrent PATCHes at the same offset: exactly one applies and the final sha256 matches the reference', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('The concurrent-PATCH race is only observable on PostgreSQL (SQLite serialises writes).');
     }
@@ -142,7 +142,7 @@ it('два конкурентных PATCH с одинаковым offset — р�
  * use of the argument offset (which the PG-only fork test, always skipped on the
  * in-memory sqlite CI DB, would not catch).
  */
-it('offset берётся со СВЕЖЕЙ залоченной строки, а не из устаревшей модели-аргумента, F-P1.4-01', function (): void {
+it('the offset comes from the FRESH locked row, not from the stale model argument', function (): void {
     Storage::fake('local');
 
     $storage = UploadTestHelpers::storage();

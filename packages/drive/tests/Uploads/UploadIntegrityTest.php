@@ -34,7 +34,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('S3 complete при сумме частей меньше total_size_bytes → отказ, блоб не создан, F-P1.4-03', function (): void {
+it('S3 complete with parts summing below total_size_bytes is refused and no blob is created', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session(
         $storage,
@@ -54,7 +54,7 @@ it('S3 complete при сумме частей меньше total_size_bytes →
     expect(Blob::query()->count())->toBe(0);
 });
 
-it('отказывает часть S3 больше объявленного размера и потолка файла до записи части', function (): void {
+it('refuses an S3 part larger than the declared size and the file ceiling before writing it', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 3);
     $handler = app(S3MultipartHandler::class);
@@ -75,7 +75,7 @@ it('отказывает часть S3 больше объявленного р�
     expect($parts->sizeOf($capped->refresh(), 1))->toBe(2);
 });
 
-it('tus PATCH больше объявленной длины не пишет байты', function (): void {
+it('a tus PATCH beyond the declared length writes no bytes', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: 3);
     $handler = app(TusUploadHandler::class);
@@ -85,7 +85,7 @@ it('tus PATCH больше объявленной длины не пишет б�
     expect(app(StagedUpload::class)->size($session->refresh()))->toBe(0);
 });
 
-it('пустой PATCH при неизвестной длине завершает tus и позволяет commit', function (): void {
+it('an empty PATCH with a deferred length completes tus and allows commit', function (): void {
     $bytes = 'deferred upload';
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, targetName: 'deferred.bin');
@@ -124,7 +124,7 @@ it('пустой PATCH при неизвестной длине завершае
         ->and($session->refresh()->status)->toBe(UploadStatus::Committed);
 });
 
-it('пустой PATCH не закрывает tus, пока заявленная длина не набрана', function (): void {
+it('an empty PATCH does not close tus until the declared length is reached', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::Tus, totalSizeBytes: 4);
     $handler = app(TusUploadHandler::class);
@@ -136,7 +136,7 @@ it('пустой PATCH не закрывает tus, пока заявленна�
         ->and($session->refresh()->total_size_bytes)->toBe(4);
 });
 
-it('чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-байт, F-P1.4-04', function (): void {
+it('a chunk above max_chunk_bytes (hard cap) is refused before any staged bytes are written', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8); // 8-byte per-chunk hard ceiling
 
     $storage = UploadTestHelpers::storage();
@@ -152,7 +152,7 @@ it('чанк больше max_chunk_bytes (hard cap) → отказ до зап�
     expect(app(StagedUpload::class)->size($session->refresh()))->toBe(0);
 });
 
-it('PATCH крупнее chunk_size (это лишь HINT) НЕ отклоняется, пока max_chunk_bytes не задан, F-P1.4-04', function (): void {
+it('a PATCH larger than chunk_size (only a HINT) is NOT rejected while max_chunk_bytes is unset', function (): void {
     // chunk_size is the advertised HINT, not a cap; the hard cap (max_chunk_bytes) is
     // disabled by default. A conformant tus client sending a body far larger than the
     // 8-byte hint in one PATCH must be ACCEPTED (the shipped contract: "the server
@@ -173,7 +173,7 @@ it('PATCH крупнее chunk_size (это лишь HINT) НЕ отклоняе
         ->and(app(StagedUpload::class)->size($session->refresh()))->toBe(9);
 });
 
-it('append не поднимает пиковую память до размера staged-файла (потоковая дозапись), F-P1.4-04', function (): void {
+it('append does not raise peak memory to the staged file size (streaming append)', function (): void {
     ini_set('memory_limit', '512M');
 
     $storage = UploadTestHelpers::storage();
@@ -212,7 +212,7 @@ it('append не поднимает пиковую память до размер
         ->and($staged->size($session->refresh()))->toBe($stagedBytes + 4);
 });
 
-it('commit отклоняет объект с mime image/png и magic-bytes ZIP, F-P1.4-11', function (): void {
+it('commit rejects an object declared image/png with ZIP magic bytes', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['mime_type' => 'image/png'])->save());

@@ -21,7 +21,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('фаза 1: помечает unreferenced committed-блоб tombstoned с grace-дедлайном', function (): void {
+it('phase 1 marks an unreferenced committed blob tombstoned with a grace deadline', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
@@ -38,7 +38,7 @@ it('фаза 1: помечает unreferenced committed-блоб tombstoned с g
         ->and($blob->fresh()->delete_after_at)->not->toBeNull();
 });
 
-it('фаза 1: НЕ трогает блоб с живым ребром (liveness = ребро, не ref_count)', function (): void {
+it('phase 1 does NOT touch a blob with a live edge (liveness is the edge, not ref_count)', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
@@ -57,7 +57,7 @@ it('фаза 1: НЕ трогает блоб с живым ребром (livenes
         ->and($blob->fresh()->status)->toBe(BlobStatus::Committed);
 });
 
-it('фаза 2: sweep удаляет байты только у tombstoned past-grace, статус deleted', function (): void {
+it('phase 2: sweep deletes bytes only of tombstoned blobs past grace and sets status deleted', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
@@ -79,7 +79,7 @@ it('фаза 2: sweep удаляет байты только у tombstoned past-
     Storage::disk('local')->assertMissing($key);
 });
 
-it('фаза 2: НЕ удаляет tombstoned внутри grace-окна', function (): void {
+it('phase 2 does NOT delete tombstoned blobs inside the grace window', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
@@ -97,7 +97,7 @@ it('фаза 2: НЕ удаляет tombstoned внутри grace-окна', fun
     Storage::disk('local')->assertExists($blob->storage_key);
 });
 
-it('воскрешение: коммит на tombstoned-блоб разтомбствляет его (status→committed)', function (): void {
+it('resurrection: a commit onto a tombstoned blob untombstones it (status committed)', function (): void {
     $store = app(BlobStore::class);
 
     // A blob got tombstoned (GC phase 1) — bytes still on disk during grace.
@@ -117,7 +117,7 @@ it('воскрешение: коммит на tombstoned-блоб разтомб
         ->and(Blob::query()->count())->toBe(1);
 });
 
-it('воскрешение перед sweep спасает байты: после resurrection sweep ничего не трогает', function (): void {
+it('resurrection before sweep saves the bytes: after it the sweep touches nothing', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
@@ -142,7 +142,7 @@ it('воскрешение перед sweep спасает байты: посл�
     Storage::disk('local')->assertExists($blob->storage_key);
 });
 
-it('идемпотентность: повторный sweep по deleted-блобу — no-op', function (): void {
+it('idempotence: a repeated sweep over a deleted blob is a no-op', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 

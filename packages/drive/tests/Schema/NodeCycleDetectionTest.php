@@ -48,7 +48,7 @@ beforeEach(function (): void {
         ->update(['parent_id' => $this->child->getKey()]);
 });
 
-it('обход предков по узлу с форсированным циклом завершается ограниченно, не раздутой/бесконечной рекурсией [F-P4.2-02]', function (): void {
+it('walking the ancestors of a node with a forced cycle terminates within a bound instead of recursing without end', function (): void {
     $this->root->refresh();
 
     $ancestors = $this->root->ancestors()->get();
@@ -59,7 +59,7 @@ it('обход предков по узлу с форсированным цик
     expect($ancestors->count())->toBeLessThanOrEqual(2);
 });
 
-it('обход потомков по узлу с форсированным циклом завершается ограниченно, не раздутой/бесконечной рекурсией [F-P4.2-02]', function (): void {
+it('walking the descendants of a node with a forced cycle terminates within a bound instead of recursing without end', function (): void {
     $this->child->refresh();
 
     $descendants = $this->child->descendants()->get();

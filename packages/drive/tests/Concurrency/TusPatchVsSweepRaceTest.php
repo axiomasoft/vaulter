@@ -32,7 +32,7 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
  * Provisioning: DB_CONNECTION=pgsql (+ DB_HOST/PORT/DATABASE/USERNAME/PASSWORD) на сборке
  * PHP с pdo_pgsql и pcntl. Иначе — skip (лейн `drive-pgsql`, .github/workflows/drive.yml).
  */
-it('PATCH и sweep одной сессии: победитель ровно один, файл не усечён, терминальная сессия не воскресает, R-02', function (): void {
+it('PATCH and sweep of one session: exactly one wins, the file is not truncated, a terminal session does not come back', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('Гонка PATCH↔sweep наблюдаема только на PostgreSQL (SQLite сериализует записи).');
     }
@@ -174,7 +174,7 @@ it('PATCH и sweep одной сессии: победитель ровно од
  * Наблюдаемость лока требует ДВУХ сеансов (advisory-лок реентрантен внутри одного) —
  * поэтому здесь второе независимое соединение, а не форк.
  */
-it('commitAssembled() берёт ту же критическую секцию: пока лок сессии держит другой сеанс, коммит отбивается, R-11', function (): void {
+it('commitAssembled() takes the same critical section: while another session holds the lock, the commit is rejected', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('Неблокирующий лок сессии наблюдаем только на PostgreSQL (SQLite сериализует записи).');
     }
@@ -225,7 +225,7 @@ it('commitAssembled() берёт ту же критическую секцию: 
  * два таких upload_id больше не мешают друг другу: лок берётся из ДВУХ независимых
  * соединений (advisory-лок реентрантен внутри одного сеанса — одного соединения тут мало).
  */
-it('лок двух РАЗНЫХ upload_id, коллизирующих по 32-битному hashtext, выдаётся обоим, R-09', function (): void {
+it('locks for two DIFFERENT upload_ids that collide on 32-bit hashtext are granted to both', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('Ключ advisory-лока существует только на PostgreSQL.');
     }

@@ -14,7 +14,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
-it('move = ОДИН UPDATE по parent_id, поддерево не трогается', function (): void {
+it('move is ONE UPDATE of parent_id; the subtree is not touched', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->folders()->create('A');
@@ -35,7 +35,7 @@ it('move = ОДИН UPDATE по parent_id, поддерево не трогае�
         ->and(DriveTestHelpers::model($grandchild)->sequence)->toBe(0);
 });
 
-it('цикл-гард: запрет перемещения в самого себя', function (): void {
+it('cycle guard: a node cannot move into itself', function (): void {
     $drive = DriveTestHelpers::drive();
     $folder = $drive->folders()->create('A');
 
@@ -43,7 +43,7 @@ it('цикл-гард: запрет перемещения в самого се�
         ->toThrow(NodeCycleException::class);
 });
 
-it('цикл-гард: запрет перемещения в собственного потомка', function (): void {
+it('cycle guard: a node cannot move into its own descendant', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->folders()->create('A');
@@ -53,7 +53,7 @@ it('цикл-гард: запрет перемещения в собственн
         ->toThrow(NodeCycleException::class);
 });
 
-it('цикл-гард: id потомка — суффикс id предка, перенос в потомка не проходит', function (): void {
+it('cycle guard: when a descendant id is a suffix of the ancestor id, the move into it still fails', function (): void {
     $drive = DriveTestHelpers::drive();
     $rootId = $drive->model()->root_node_id;
     $storageId = $drive->model()->getKey();
@@ -83,7 +83,7 @@ it('цикл-гард: id потомка — суффикс id предка, п�
         ->and($descendant->refresh()->parent_id)->toEqual(50);
 });
 
-it('move отклоняет конфликт имён в месте назначения', function (): void {
+it('move rejects a name conflict at the destination', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->folders()->create('A');
@@ -96,7 +96,7 @@ it('move отклоняет конфликт имён в месте назнач
         ->toThrow(NodeNameConflictException::class);
 });
 
-it('move отклоняет кросс-storage перемещение', function (): void {
+it('move rejects a cross-storage move', function (): void {
     $driveA = DriveTestHelpers::drive();
     $driveB = DriveTestHelpers::drive();
 
@@ -107,7 +107,7 @@ it('move отклоняет кросс-storage перемещение', function
         ->toThrow(NodeNotFoundException::class);
 });
 
-it('rename меняет имя и проверяет конфликт сиблингов', function (): void {
+it('rename changes the name and checks for sibling conflicts', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->folders()->create('A');
@@ -120,7 +120,7 @@ it('rename меняет имя и проверяет конфликт сибли
         ->toThrow(NodeNameConflictException::class);
 });
 
-it('rename в то же имя — no-op без конфликта', function (): void {
+it('renaming to the same name is a no-op without a conflict', function (): void {
     $drive = DriveTestHelpers::drive();
     $a = $drive->folders()->create('A');
 

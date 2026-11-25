@@ -23,7 +23,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('загружает файл: node kind=file + File + FileRevision + ребро', function (): void {
+it('uploads a file: a kind=file node, File, FileRevision and an edge', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('hello drive'), 'hello.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
@@ -39,7 +39,7 @@ it('загружает файл: node kind=file + File + FileRevision + ребр
         ->and(Blob::query()->count())->toBe(1);
 });
 
-it('дедуп: два одинаковых файла → один блоб, два узла, два ребра', function (): void {
+it('dedup: two identical files yield one blob, two nodes and two edges', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('same bytes'), 'a.bin'));
@@ -54,7 +54,7 @@ it('дедуп: два одинаковых файла → один блоб, д
         ->and($a->id)->not->toEqual($b->id);
 });
 
-it('увеличивает used_bytes в рамках транзакции загрузки', function (): void {
+it('increments used_bytes inside the upload transaction', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('1234567890'), 'x.bin'));
@@ -62,7 +62,7 @@ it('увеличивает used_bytes в рамках транзакции за�
     expect($drive->model()->refresh()->used_bytes)->toBe(10);
 });
 
-it('квота: загрузка сверх квоты отклоняется ДО коммита блоба', function (): void {
+it('quota: an upload past the quota is rejected BEFORE the blob is committed', function (): void {
     $drive = DriveTestHelpers::drive();
     app(VaulterDatabase::class)->write(fn () => $drive->model()->forceFill(['quota_bytes' => 5])->save());
 
@@ -74,7 +74,7 @@ it('квота: загрузка сверх квоты отклоняется Д
         ->and($drive->model()->refresh()->used_bytes)->toBe(0);
 });
 
-it('новая версия: бамп number, перенаведение head, прежняя superseded', function (): void {
+it('new version: bumps number, repoints head and supersedes the previous one', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1'), 'doc.txt'));
@@ -91,7 +91,7 @@ it('новая версия: бамп number, перенаведение head, �
         ->and($file->currentRevision->number)->toBe(2);
 });
 
-it('новая версия добавляет к used_bytes свой полный размер', function (): void {
+it('a new version adds its full size to used_bytes', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'doc.txt')); // 4 bytes
@@ -103,7 +103,7 @@ it('новая версия добавляет к used_bytes свой полны
     expect($drive->model()->refresh()->used_bytes)->toBe(14);
 });
 
-it('диспатчит FileUploaded для нового файла и NodeVersionCommitted для версии', function (): void {
+it('dispatches FileUploaded for a new file and NodeVersionCommitted for a version', function (): void {
     Event::fake([FileUploaded::class, FileRevisionAdded::class]);
 
     $drive = DriveTestHelpers::drive();

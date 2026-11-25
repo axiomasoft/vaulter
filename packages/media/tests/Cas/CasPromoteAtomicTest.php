@@ -92,7 +92,7 @@ final class InterruptedCasPromotionStream
  * be trusted as a committed blob — silent CAS corruption). The pre-fix driver wrote
  * the incoming stream straight to the canonical key.
  */
-it('промоушен пишет во временный ключ и атомарно move в финальный, не в финальный напрямую, F-P1.5-01', function (): void {
+it('promotion writes to a temporary key and moves it atomically to the final key, never writing the final key directly', function (): void {
     $writes = [];
     $moves = [];
     $present = [];
@@ -153,7 +153,7 @@ it('промоушен пишет во временный ключ и атома
  * while the canonical CAS key was never written and the temp leaked (silent CAS
  * corruption / phantom success). put() must return false AND reclaim the temp.
  */
-it('promote: move вернул false → put возвращает false и temp удаляется, не фантомный success, review def.1', function (): void {
+it('promote: when move returns false, put returns false and the temp is removed (no phantom success)', function (): void {
     $present = [];
     $deleted = [];
 
@@ -210,7 +210,7 @@ it('promote: move вернул false → put возвращает false и temp 
  * the move FAIL (outside the try/catch, leaking the temp) where a direct PUT succeeds.
  * The adapter type identifies S3; signed-URL support also exists on local disks.
  */
-it('object store (атомарная запись) → put пишет прямо в финальный ключ, без temp и без move, review def.2', function (): void {
+it('an object store (atomic writes) makes put write straight to the final key, without a temp or a move', function (): void {
     $writes = [];
     $moved = false;
 

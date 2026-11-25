@@ -56,18 +56,18 @@ function searchNames(Drive $storage, string $term): array
         ->all();
 }
 
-it('термин "%" матчит ТОЛЬКО узлы с литеральным "%" в имени, не все узлы [F-P1.8-03]', function (): void {
+it('the term "%" matches ONLY nodes with a literal "%" in the name, not every node', function (): void {
     expect(searchNames($this->storage, '%'))->toBe(['50% report']);
 });
 
-it('термин "_" матчит ТОЛЬКО узлы с литеральным "_" в имени, не любой символ [F-P1.8-03]', function (): void {
+it('the term "_" matches ONLY nodes with a literal "_" in the name, not any character', function (): void {
     expect(searchNames($this->storage, '_'))->toBe(['a_b']);
 });
 
-it('обычный подстроковый поиск продолжает работать без изменений [F-P1.8-03]', function (): void {
+it('plain substring search keeps working unchanged', function (): void {
     expect(searchNames($this->storage, 'alph'))->toBe(['alpha']);
 });
 
-it('поиск по составному термину с "%" внутри матчит буквально [F-P1.8-03]', function (): void {
+it('a compound term with "%" inside matches literally', function (): void {
     expect(searchNames($this->storage, '50% rep'))->toBe(['50% report']);
 });

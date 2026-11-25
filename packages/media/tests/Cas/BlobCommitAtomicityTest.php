@@ -28,7 +28,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('rollback не оставляет висящей строки blob', function (): void {
+it('rollback leaves no dangling blob row', function (): void {
     // A ContentStore whose promote() blows up mid-transaction forces a rollback
     // after the row INSERT — proving the INSERT is inside the tx and reverts.
     $exploding = new class implements ContentStore
@@ -87,7 +87,7 @@ it('rollback не оставляет висящей строки blob', function
         ->and(Storage::disk('local')->allFiles())->toBe([]);
 });
 
-it('staged temp-файл удаляется после успешного коммита', function (): void {
+it('the staged temp file is deleted after a successful commit', function (): void {
     $before = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 
     app(BlobStore::class)->commit(stringStream('temp cleanup'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));

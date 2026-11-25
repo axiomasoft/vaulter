@@ -21,7 +21,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('копия файла переиспользует ОДИН блоб через новое ребро', function (): void {
+it('a file copy reuses ONE blob through a new edge', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $original = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared content'), 'a.txt'));
@@ -42,7 +42,7 @@ it('копия файла переиспользует ОДИН блоб чер�
     expect(RevisionBlobPins::edges($blob))->toBe(2)->and(RevisionBlobPins::pins($blob))->toBe(2);
 });
 
-it('глубокая копия папки клонирует всё поддерево', function (): void {
+it('a deep folder copy clones the whole subtree', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $root = $drive->folders()->create('Project');
@@ -86,7 +86,7 @@ it('copies every descendant when its id is a suffix of an ancestor id', function
     expect($suffix->children()->pluck('name')->all())->toBe(['Leaf']);
 });
 
-it('copy отклоняет конфликт имён в месте назначения', function (): void {
+it('copy rejects a name conflict at the destination', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->folders()->create('A');

@@ -36,27 +36,27 @@ beforeEach(function (): void {
     $this->report = $make('report', $this->q1);
 });
 
-it('каст kind в NodeKind enum', function (): void {
+it('casts kind to the NodeKind enum', function (): void {
     expect($this->root->kind)->toBe(NodeKind::Folder);
 });
 
-it('descendants собирает всё поддерево от корня', function (): void {
+it('descendants collects the whole subtree from the root', function (): void {
     $names = $this->root->descendants()->pluck('name')->sort()->values()->all();
 
     expect($names)->toBe(['docs', 'q1', 'report']);
 });
 
-it('ancestors поднимается до корня от листа', function (): void {
+it('ancestors climbs from a leaf to the root', function (): void {
     $names = $this->report->ancestors()->pluck('name')->sort()->values()->all();
 
     expect($names)->toBe(['docs', 'q1', 'root']);
 });
 
-it('children даёт прямых потомков', function (): void {
+it('children returns the direct descendants', function (): void {
     expect($this->docs->children()->pluck('name')->all())->toBe(['q1']);
 });
 
-it('scope treeOf ограничивает выборку одним хранилищем', function (): void {
+it('the treeOf scope limits the query to one storage', function (): void {
     $other = ForceCreates::make(Drive::class, [
         'owner_type' => 'team', 'owner_id' => 2, 'name' => 'Other',
     ]);
@@ -69,7 +69,7 @@ it('scope treeOf ограничивает выборку одним хранил
     expect($count)->toBe(4);
 });
 
-it('storage->nodes и node->storage связаны', function (): void {
+it('storage->nodes and node->storage are related', function (): void {
     expect($this->storage->nodes()->count())->toBe(4)
         ->and($this->report->storage->getKey())->toBe($this->storage->getKey());
 });

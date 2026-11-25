@@ -17,7 +17,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
  * Vaulter::drive($entity) get-or-creates the storage idempotently and provisions a
  * root folder node. The polymorphic owner triple is the idempotency key.
  */
-it('создаёт storage и корневую папку при первом обращении', function (): void {
+it('creates the storage and its root folder on first access', function (): void {
     $host = DriveTestHelpers::host();
 
     $drive = Vaulter::drive($host)->asSystem('test fixture');
@@ -35,7 +35,7 @@ it('создаёт storage и корневую папку при первом о
         ->and($root->id)->toEqual($drive->model()->root_node_id);
 });
 
-it('идемпотентен: второе обращение возвращает тот же storage', function (): void {
+it('is idempotent: a second access returns the same storage', function (): void {
     $host = DriveTestHelpers::host();
 
     $first = Vaulter::drive($host)->model();
@@ -49,7 +49,7 @@ it('идемпотентен: второе обращение возвращае
 // Разведение storage по панелям переехало в StoragePanelSeparationTest: панель обязана быть
 // в конфиге ДО boot'а (ProfileRegistry резолвится в packageBooted) — см. PanelTestCase.
 
-it('применяет дефолтный диск из конфига к новому storage', function (): void {
+it('applies the default disk from config to a new storage', function (): void {
     config()->set('vaulter-media.disk', 'spaces');
 
     $storage = DriveTestHelpers::drive()->model();
@@ -57,7 +57,7 @@ it('применяет дефолтный диск из конфига к нов
     expect($storage->disk)->toBe('spaces');
 });
 
-it('диспатчит StorageCreated с корнем при провижене', function (): void {
+it('dispatches StorageCreated with the root on provisioning', function (): void {
     Event::fake([DriveCreated::class]);
 
     $drive = DriveTestHelpers::drive();

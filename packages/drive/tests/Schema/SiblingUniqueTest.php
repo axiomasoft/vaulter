@@ -43,7 +43,7 @@ function makeNode(Drive $storage, string $name, array $overrides = []): Node
     return $node;
 }
 
-it('отвергает дубль имени живого сиблинга в том же родителе', function (): void {
+it('rejects a duplicate name of a live sibling under the same parent', function (): void {
     $storage = makeStorage();
     $parent = makeNode($storage, 'root');
 
@@ -55,7 +55,7 @@ it('отвергает дубль имени живого сиблинга в т
         ->toThrow(QueryException::class);
 });
 
-it('разрешает дубль имени, если конкурент в корзине (trashed_at)', function (): void {
+it('allows a duplicate name when the competitor is in the trash (trashed_at)', function (): void {
     $storage = makeStorage();
     $parent = makeNode($storage, 'root2');
 
@@ -69,7 +69,7 @@ it('разрешает дубль имени, если конкурент в к�
     expect($second->exists)->toBeTrue();
 });
 
-it('разрешает дубль имени после purge конкурента (узлы без deleted_at)', function (): void {
+it('allows a duplicate name after the competitor is purged (nodes have no deleted_at)', function (): void {
     $storage = makeStorage();
     $parent = makeNode($storage, 'root3');
 

@@ -20,7 +20,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('пересчитывает ref_count из числа рёбер', function (): void {
+it('recomputes ref_count from the number of edges', function (): void {
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('counted'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -41,7 +41,7 @@ it('пересчитывает ref_count из числа рёбер', function (
         ->and($report['dangling'])->toBe([]);
 });
 
-it('сбрасывает ref_count к 0, когда все рёбра удалены', function (): void {
+it('resets ref_count to 0 when every edge is gone', function (): void {
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('orphaned'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -57,7 +57,7 @@ it('сбрасывает ref_count к 0, когда все рёбра удале
     expect($blob->fresh()->ref_count)->toBe(0);
 });
 
-it('помечает dangling-строку: committed-блоб без объекта на диске', function (): void {
+it('flags a dangling row: a committed blob without an object on disk', function (): void {
     $store = app(BlobReconciler::class);
 
     $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('vanished'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -70,7 +70,7 @@ it('помечает dangling-строку: committed-блоб без объек
     expect($report['dangling'])->toContain((string) $blob->getKey());
 });
 
-it('читает строки блобов (берёт lock) раньше, чем считает пины', function (): void {
+it('reads the blob rows (taking the lock) before counting the pins', function (): void {
     $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('lock first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
     CasTestHelpers::pin($blob, CasTestHelpers::reference('a'));
 

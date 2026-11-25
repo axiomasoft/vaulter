@@ -40,7 +40,7 @@ beforeEach(function (): void {
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Detection (report-only) — the happy path on every driver.
 // ─────────────────────────────────────────────────────────────────────────────
-it('обнаруживает настоящий orphan и пропускает закоммиченный объект (report-only)', function (): void {
+it('finds a real orphan and skips a committed object (report only)', function (): void {
     // A real committed blob (row + bytes) — must be SKIPPED as owned.
     $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('owned bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
@@ -61,7 +61,7 @@ it('обнаруживает настоящий orphan и пропускает �
 // 2. Round-trip guard — every non-canonical path is SKIPPED and survives.
 //    Each spoof is its own assertion via a dataset (one scenario, many inputs).
 // ─────────────────────────────────────────────────────────────────────────────
-it('round-trip guard: НЕ канонический путь пропускается и переживает обход', function (string $label, Closure $makePath): void {
+it('round-trip guard: a NON-canonical path is skipped and survives the walk', function (string $label, Closure $makePath): void {
     $sha = hash('sha256', "guard:{$label}");
     $path = $makePath($sha);
 
@@ -96,7 +96,7 @@ it('round-trip guard: НЕ канонический путь пропускае�
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. off scope — an orphan of its own scope IS detected.
 // ─────────────────────────────────────────────────────────────────────────────
-it('off-scope: orphan отдельной загрузки (dedup off) обнаруживается', function (): void {
+it('off scope: the orphan of a separate upload (dedup off) is found', function (): void {
     $segment = BlobScope::unshared()->segment();
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'off orphan', scope: $segment, ageHours: 48);
 
@@ -109,7 +109,7 @@ it('off-scope: orphan отдельной загрузки (dedup off) обнар
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. Any-status row ⇒ owned (never an orphan), for every lifecycle status.
 // ─────────────────────────────────────────────────────────────────────────────
-it('любой статус строки делает объект owned (пропущен), а не orphan', function (BlobStatus $status): void {
+it('any row status makes the object owned (skipped), not an orphan', function (BlobStatus $status): void {
     $blob = CasTestHelpers::seedBlobRow(bytes: "owned:{$status->value}", status: $status, disk: 'local');
     // Age the bytes past grace so ONLY the row-ownership (not the grace) can exclude.
     CasTestHelpers::ageObject(key: $blob->storage_key, ageHours: 72);
@@ -132,7 +132,7 @@ it('любой статус строки делает объект owned (про
 //    Row records disk='other', bytes live on the scanned disk 'local': the row
 //    probe must still see the object as OWNED (storage_key is globally unique).
 // ─────────────────────────────────────────────────────────────────────────────
-it('owned кросс-диском: строка на disk=other, байты на local → НЕ orphan (storage_key глобально уникален)', function (): void {
+it('owned across disks: a row on disk=other with bytes on local is NOT an orphan (storage_key is globally unique)', function (): void {
     // Bytes on 'local' (the disk we will scan); the owning row records disk='other'.
     $blob = CasTestHelpers::seedBlobRow(
         bytes: 'cross-disk owned',
@@ -156,7 +156,7 @@ it('owned кросс-диском: строка на disk=other, байты на
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. Orphan grace — fresh skipped, aged detected, null-mtime skipped.
 // ─────────────────────────────────────────────────────────────────────────────
-it('grace: свежий row-less объект (mtime=now) пропускается', function (): void {
+it('grace: a fresh row-less object (mtime=now) is skipped', function (): void {
     // Fresh: no ageing — mtime is "now", inside any grace window.
     CasTestHelpers::seedOrphan(bytes: 'fresh orphan', scope: 't-1', ageHours: 0);
 
@@ -166,7 +166,7 @@ it('grace: свежий row-less объект (mtime=now) пропускаетс
         ->and($report['skipped'])->toBe(1);
 });
 
-it('grace: тот же объект, состаренный за --orphan-grace, попадает в orphans', function (): void {
+it('grace: the same object aged past --orphan-grace lands in the orphans', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'aged orphan', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
@@ -174,7 +174,7 @@ it('grace: тот же объект, состаренный за --orphan-grace,
     expect($report['orphans'])->toBe([$orphanKey]);
 });
 
-it('grace: null-mtime объект (возраст неизвестен) пропускается, не удаляется', function (): void {
+it('grace: an object with a null mtime (age unknown) is skipped, not deleted', function (): void {
     // The real store lays the bytes down (a valid canonical key, no row)...
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'null mtime orphan', scope: 't-1', ageHours: 48);
 
@@ -194,7 +194,7 @@ it('grace: null-mtime объект (возраст неизвестен) про�
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. Prune REFUSED on sqlite — detection runs, deletion does not.
 // ─────────────────────────────────────────────────────────────────────────────
-it('prune отказан на sqlite: pruneSupported=false, байты живы, orphan всё ещё в отчёте', function (): void {
+it('prune is refused on sqlite: pruneSupported=false, the bytes live and the orphan stays in the report', function (): void {
     expect(DB::connection()->getDriverName())->toBe('sqlite'); // the gate's premise
 
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'survives prune', scope: 't-1', ageHours: 48);
@@ -213,7 +213,7 @@ it('prune отказан на sqlite: pruneSupported=false, байты живы,
 // ─────────────────────────────────────────────────────────────────────────────
 // 8. Listing unsupported — a non-listable store refuses the walk cleanly.
 // ─────────────────────────────────────────────────────────────────────────────
-it('listing не поддержан: не-listable store → listingSupported=false, scanned=0, ничего не удаляется', function (): void {
+it('listing unsupported: a non-listable store gives listingSupported=false, scanned=0 and deletes nothing', function (): void {
     // Bytes are a genuine, aged orphan — but the active store cannot enumerate.
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'unwalkable orphan', scope: 't-1', ageHours: 48);
 

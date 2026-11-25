@@ -43,7 +43,7 @@ function legacyVersion(array $content): DocumentRevision
     return DocumentRevision::query()->whereKey($headId)->firstOrFail();
 }
 
-it('легаси-версия с неизвестными узлами ЧИТАЕТСЯ (decay), а не бросает, R-01', function (): void {
+it('a legacy revision with unknown nodes IS read (decay) instead of throwing', function (): void {
     $version = legacyVersion([
         'type' => 'doc',
         'content' => [
@@ -69,7 +69,7 @@ it('легаси-версия с неизвестными узлами ЧИТА�
     expect(app(TipTapRenderer::class)->toHtml($content))->toContain('жив');
 });
 
-it('легаси-версия с image/table (узлами собственного редактора) читается штатно, R-01', function (): void {
+it('a legacy revision with image/table (the editor own nodes) reads normally', function (): void {
     $version = legacyVersion([
         'type' => 'doc',
         'content' => [
@@ -88,7 +88,7 @@ it('легаси-версия с image/table (узлами собственно�
         ->toContain('<td><p>c</p></td>');
 });
 
-it('легаси-версия с javascript:-href читается и обезвреживается на рендере, R-07', function (): void {
+it('a legacy revision with a javascript: href is read and neutralized at render', function (): void {
     $version = legacyVersion([
         'type' => 'doc',
         'content' => [[

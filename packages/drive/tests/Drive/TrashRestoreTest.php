@@ -18,7 +18,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('trash помечает узел и всё поддерево, used_bytes не меняется', function (): void {
+it('trash marks the node and its whole subtree and leaves used_bytes unchanged', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $folder = $drive->folders()->create('Project');
@@ -37,7 +37,7 @@ it('trash помечает узел и всё поддерево, used_bytes н�
         ->and($drive->model()->refresh()->used_bytes)->toBe($usedBefore);
 });
 
-it('trash освобождает имя для нового сиблинга (partial-uniq исключает trashed)', function (): void {
+it('trash frees the name for a new sibling (the partial unique index excludes trashed rows)', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $first = $drive->folders()->create('Docs');
@@ -48,7 +48,7 @@ it('trash освобождает имя для нового сиблинга (pa
     expect($second->id)->not->toEqual($first->id);
 });
 
-it('restore очищает trashed-триплет на поддереве', function (): void {
+it('restore clears the trashed triplet on the subtree', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $folder = $drive->folders()->create('Project');
@@ -61,7 +61,7 @@ it('restore очищает trashed-триплет на поддереве', func
         ->and(DriveTestHelpers::model($sub)->trashed_at)->toBeNull();
 });
 
-it('restore при живом сиблинге с тем же именем → конфликт', function (): void {
+it('restore with a live sibling of the same name is a conflict', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $original = $drive->folders()->create('Docs');
@@ -74,7 +74,7 @@ it('restore при живом сиблинге с тем же именем → �
         ->toThrow(NodeNameConflictException::class);
 });
 
-it('restore без назначения отказывает, если исходный родитель пропал, и не переносит в корень', function (): void {
+it('restore without a destination refuses when the original parent is gone and does not move to the root', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $parent = $drive->folders()->create('Parent');
@@ -92,7 +92,7 @@ it('restore без назначения отказывает, если исхо�
     expect($restored->parentId)->toEqual($drive->root()->id);
 });
 
-it('restore возвращает только своё поддерево: ранее удалённый потомок остаётся в корзине своим корнем', function (): void {
+it('restore brings back only its own subtree: a descendant trashed earlier stays in the trash as its own root', function (): void {
     $drive = DriveTestHelpers::drive();
     $folder = $drive->folders()->create('Project');
     $early = $drive->folders()->create('Early', $folder);

@@ -13,7 +13,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
  * config()->set('vaulter-drive.profiles.providers') после boot'а уже не подхватывается. Раньше тест держался
  * именно на нём — и упал, как только реестр стал строиться на boot'е.
  */
-it('разводит storage по разным панелям одного владельца', function (): void {
+it('keeps one owner storages apart across panels', function (): void {
     $host = DriveTestHelpers::host();
 
     $default = Vaulter::drive($host, 'default')->model();

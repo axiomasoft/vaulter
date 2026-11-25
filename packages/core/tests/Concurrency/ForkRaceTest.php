@@ -44,7 +44,7 @@ afterEach(function (): void {
     Schema::dropIfExists('race_counter');
 });
 
-it('сериализует read-modify-write под FOR UPDATE: оба ok, итог 2', function (): void {
+it('serializes read-modify-write under FOR UPDATE: both ok, result 2', function (): void {
     ForkRace::skipUnlessSupported($this);
     forkRaceCounter();
 
@@ -57,7 +57,7 @@ it('сериализует read-modify-write под FOR UPDATE: оба ok, ит�
         ->and(DB::table('race_counter')->value('value'))->toBe(2);
 });
 
-it('негативный контроль: без FOR UPDATE обновление теряется, итог 1', function (): void {
+it('negative control: without FOR UPDATE the update is lost, result 1', function (): void {
     ForkRace::skipUnlessSupported($this);
     forkRaceCounter();
 
@@ -71,7 +71,7 @@ it('негативный контроль: без FOR UPDATE обновлени�
         ->and(DB::table('race_counter')->value('value'))->toBe(1);
 });
 
-it('каждая задача имеет своё соединение и ждёт готовности всех участников', function (): void {
+it('each task has its own connection and waits until every participant is ready', function (): void {
     ForkRace::skipUnlessSupported($this);
 
     $parentPid = (int) DB::selectOne('select pg_backend_pid() as pid')->pid;
@@ -128,7 +128,7 @@ it('каждая задача имеет своё соединение и ждё
     }
 });
 
-it('исключение задачи возвращается как исход, соседняя задача ok', function (): void {
+it('a task exception comes back as an outcome and the neighbouring task is ok', function (): void {
     ForkRace::skipUnlessSupported($this);
 
     $outcomes = ForkRace::run([

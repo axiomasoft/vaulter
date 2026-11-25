@@ -22,7 +22,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
  * проверить без сервера: SQL, который репозиторий выпускает на mysql-грамматике. pretend()
  * логирует запрос, не исполняя его.
  */
-it('acquireForPatch на MySQL берёт НЕблокирующий лок — FOR UPDATE NOWAIT, R-02', function (string $driver): void {
+it('acquireForPatch on MySQL takes a NON-blocking lock (FOR UPDATE NOWAIT)', function (string $driver): void {
     $default = (string) config('database.default');
     $pdo = DB::connection($default)->getPdo();
 

@@ -31,14 +31,14 @@ function chunkLimitStorage(): Drive
     return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
-it('ключ max_chunk_bytes имеет непустой дефолт — из коробки чанк ограничен, RV-03', function (): void {
+it('max_chunk_bytes has a non-empty default, so chunks are bounded out of the box', function (): void {
     // Config-honesty: до фикса дефолт был 0 = «кап отключён», то есть обещанная защита из
     // коробки не стояла вовсе.
     expect(app(DriveOptions::class)->uploads->resumable->maxChunkSize)->toBeGreaterThan(0)
         ->and(config('vaulter-drive.uploads.resumable.max_chunk_size'))->toBeGreaterThan(0);
 });
 
-it('tus PATCH с Content-Length больше max_chunk_bytes отбивается ДО чтения тела, RV-03', function (): void {
+it('a tus PATCH with Content-Length above max_chunk_bytes is rejected BEFORE the body is read', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
@@ -66,7 +66,7 @@ it('tus PATCH с Content-Length больше max_chunk_bytes отбиваетс�
     expect(StorageFacade::disk('local')->exists("tmp/uploads/{$uploadId}"))->toBeFalse();
 });
 
-it('S3 part с Content-Length больше max_chunk_bytes отбивается ДО чтения тела, RV-03', function (): void {
+it('an S3 part with Content-Length above max_chunk_bytes is rejected BEFORE the body is read', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
@@ -89,7 +89,7 @@ it('S3 part с Content-Length больше max_chunk_bytes отбивается 
     expect(StorageFacade::disk('local')->exists("tmp/uploads/{$uploadId}.parts/1"))->toBeFalse();
 });
 
-it('чанк без объявленной длины (нестатируемый поток, как php://input) всё равно ограничен, RV-03', function (): void {
+it('a chunk without a declared length (an unstatable stream such as php://input) is still bounded', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();

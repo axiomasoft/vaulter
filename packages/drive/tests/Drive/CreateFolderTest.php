@@ -9,7 +9,7 @@ use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
-it('создаёт папку в корне хранилища (под root-узлом)', function (): void {
+it('creates a folder at the storage root (under the root node)', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $folder = $drive->folders()->create('Docs');
@@ -22,7 +22,7 @@ it('создаёт папку в корне хранилища (под root-уз
         ->and($folder->driveId)->toEqual($drive->model()->getKey());
 });
 
-it('создаёт вложенную папку под родителем', function (): void {
+it('creates a nested folder under its parent', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $parent = $drive->folders()->create('Docs');
@@ -31,7 +31,7 @@ it('создаёт вложенную папку под родителем', fun
     expect($child->parentId)->toEqual($parent->id);
 });
 
-it('детерминированно отклоняет конфликт имён сиблингов', function (): void {
+it('rejects a sibling name conflict deterministically', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $drive->folders()->create('Docs');
@@ -40,7 +40,7 @@ it('детерминированно отклоняет конфликт имё�
         ->toThrow(NodeNameConflictException::class);
 });
 
-it('игнорирует регистр при проверке сиблингов', function (): void {
+it('ignores case when checking siblings', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $drive->folders()->create('Docs');
@@ -49,7 +49,7 @@ it('игнорирует регистр при проверке сиблинго
         ->toThrow(NodeNameConflictException::class);
 });
 
-it('разрешает одинаковые имена в разных родителях', function (): void {
+it('allows the same name under different parents', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $a = $drive->folders()->create('A');
@@ -61,7 +61,7 @@ it('разрешает одинаковые имена в разных роди�
     expect($shared->parentId)->toEqual($b->id);
 });
 
-it('диспатчит NodeCreated при создании папки', function (): void {
+it('dispatches NodeCreated when a folder is created', function (): void {
     Event::fake([FolderCreated::class]);
 
     $folder = DriveTestHelpers::drive()->folders()->create('Docs');
@@ -72,7 +72,7 @@ it('диспатчит NodeCreated при создании папки', function
     );
 });
 
-it('list возвращает прямых детей папки', function (): void {
+it('list returns the direct children of a folder', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $drive->folders()->create('A');

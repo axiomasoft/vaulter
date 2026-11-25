@@ -10,7 +10,7 @@ use Vaulter\Drive\Testing\Fixtures\Panels\OverrideDefaultProfile;
 use Vaulter\Drive\Testing\Fixtures\Panels\ProjectProfile;
 use Vaulter\Drive\Testing\Fixtures\Panels\TeamProfile;
 
-it('строит реестр из конфига и регистрирует дефолт первым', function (): void {
+it('builds the registry from config and registers the default first', function (): void {
     $registry = ProfileRegistry::fromConfig(
         providerClasses: [ProjectProfile::class, TeamProfile::class],
         defaultClass: DefaultProfile::class,
@@ -28,7 +28,7 @@ it('rejects duplicate explicit default keys', function (): void {
     ProfileRegistry::fromConfig(providerClasses: [OverrideDefaultProfile::class], defaultClass: DefaultProfile::class);
 })->throws(InvalidProfileException::class, 'unique');
 
-it('get бросает UnknownProfileException на неизвестную панель', function (): void {
+it('get throws UnknownProfileException for an unknown panel', function (): void {
     $registry = ProfileRegistry::fromConfig(
         providerClasses: [],
         defaultClass: DefaultProfile::class,

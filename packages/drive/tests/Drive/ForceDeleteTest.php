@@ -16,7 +16,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('forceDelete отцепляет рёбра блоба → блоб становится GC-кандидатом', function (): void {
+it('forceDelete detaches the blob edges so the blob becomes a GC candidate', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('payload bytes'), 'f.bin'));
@@ -36,7 +36,7 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
     expect(RevisionBlobPins::edges($blob))->toBe(0)->and(RevisionBlobPins::pins($blob))->toBe(0);
 });
 
-it('forceDelete уменьшает used_bytes на освобождённый размер', function (): void {
+it('forceDelete decreases used_bytes by the freed size', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('1234567890'), 'f.bin')); // 10
@@ -49,7 +49,7 @@ it('forceDelete уменьшает used_bytes на освобождённый р
     expect($drive->model()->refresh()->used_bytes)->toBe(0);
 });
 
-it('purge физически удаляет всё поддерево', function (): void {
+it('purge physically deletes the whole subtree', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $folder = $drive->folders()->create('Project');
@@ -65,7 +65,7 @@ it('purge физически удаляет всё поддерево', function
         ->and(Node::query()->whereIn('id', [$folder->id, $sub->id, $file->id])->exists())->toBeFalse();
 });
 
-it('forceDelete не трогает байты на диске (GC отдельно)', function (): void {
+it('forceDelete leaves the bytes on disk alone (GC is separate)', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('keep these bytes'), 'f.bin'));

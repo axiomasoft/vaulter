@@ -15,7 +15,7 @@ afterEach(function (): void {
     File::deleteDirectory(app_path('Vaulter'));
 });
 
-it('создаёт файл провайдера панели и НЕ трогает конфиг и миграции', function (): void {
+it('creates the panel provider file and does NOT touch config or migrations', function (): void {
     $migrationsBefore = File::exists(database_path('migrations'))
         ? File::files(database_path('migrations'))
         : [];
@@ -49,7 +49,7 @@ it('создаёт файл провайдера панели и НЕ трога
     expect($migrationsAfter)->toBe($migrationsBefore);
 });
 
-it('эмитит host и withoutGrants по флагам', function (): void {
+it('emits host and withoutGrants from the flags', function (): void {
     $this->artisan('vaulter:make:profile', [
         'name' => 'project_drive',
         '--host' => 'App\\Models\\Project',
@@ -63,13 +63,13 @@ it('эмитит host и withoutGrants по флагам', function (): void {
         ->toContain('->grants(false)');
 });
 
-it('не перезаписывает существующий провайдер без --force', function (): void {
+it('does not overwrite an existing provider without --force', function (): void {
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])->assertSuccessful();
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])->assertFailed();
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive', '--force' => true])->assertSuccessful();
 });
 
-it('пишет Pest-тест, который лентится и проходит на сгенерированном профиле', function (): void {
+it('writes a Pest test that lints and passes on the generated profile', function (): void {
     File::deleteDirectory(base_path('tests/Unit/Vaulter'));
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])->assertSuccessful();
 

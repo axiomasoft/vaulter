@@ -34,7 +34,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('sweepPending ретраит транзиентный serialization-failure 40001 вместо проброса, F-P1.5-02', function (): void {
+it('sweepPending retries a transient 40001 serialization failure instead of rethrowing it', function (): void {
     // A pending blob past the grace window with no live edge — a sweepPending target.
     $blob = CasTestHelpers::seedBlobRow(bytes: 'crashed staging bytes', status: BlobStatus::Pending);
     $blob->forceFill(['first_seen_at' => now()->subDay()])->save();

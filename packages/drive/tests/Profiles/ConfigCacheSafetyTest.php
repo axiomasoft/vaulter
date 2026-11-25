@@ -8,7 +8,7 @@ declare(strict_types=1);
  * would succeed and panels/handlers/exporters/drivers carry FQCN strings, not
  * closures.
  */
-it('конфиг vaulter сериализуем (config:cache не сломается)', function (): void {
+it('the vaulter config is serializable (config:cache keeps working)', function (): void {
     /** @var array<string, mixed> $config */
     $config = config('vaulter');
 
@@ -19,7 +19,7 @@ it('конфиг vaulter сериализуем (config:cache не сломае�
     expect(containsClosure($config))->toBeFalse();
 });
 
-it('конфиг vaulter-drive сериализуем (config:cache не сломается)', function (): void {
+it('the vaulter-drive config is serializable (config:cache keeps working)', function (): void {
     /** @var array<string, mixed> $config */
     $config = config('vaulter-drive');
 
@@ -27,7 +27,7 @@ it('конфиг vaulter-drive сериализуем (config:cache не сло�
         ->and(containsClosure($config))->toBeFalse();
 });
 
-it('ключи panels и default_panel — это FQCN, а не замыкания', function (): void {
+it('the panels and default_panel keys hold FQCNs, not closures', function (): void {
     expect(config('vaulter-drive.profiles.providers'))->toBeArray()
         ->and(config('vaulter-drive.profiles.default'))->toBeString();
 

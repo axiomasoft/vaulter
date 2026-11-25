@@ -137,7 +137,7 @@ it('does not follow a redirect onto a private address, F-P1.7-01', function (): 
  * Ключ УДАЛЁН, редиректы не следуются безусловно. Тест бьёт ровно в эту точку: хост ПЫТАЕТСЯ
  * их включить.
  */
-it('устаревший ключ follow_redirects=true НЕ включает редиректы — 302 на metadata не следуется, R-05', function (): void {
+it('legacy follow_redirects=true key does NOT enable redirects: a 302 to metadata is not followed', function (): void {
     // Хост (или его легаси-конфиг) пытается вернуть старое поведение.
     expect(fn (): WebhooksOptions => WebhooksOptions::fromArray(['delivery' => ['follow_redirects' => true]]))
         ->toThrow(InvalidConfiguration::class, 'vaulter-webhooks.delivery.follow_redirects');

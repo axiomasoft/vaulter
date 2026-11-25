@@ -25,7 +25,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 3]));
 });
 
-it('initiate пишет activity-строку upload.initiated с актором и upload_id (F-P1.4-13, red-before: нет строки)', function (): void {
+it('initiate writes an upload.initiated activity row with the actor and upload_id', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
@@ -40,7 +40,7 @@ it('initiate пишет activity-строку upload.initiated с актором
         ->and($row->context['upload_id'])->toBe($uploadId);
 });
 
-it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before: нет строки)', function (): void {
+it('abort writes an upload.aborted activity row', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
@@ -57,7 +57,7 @@ it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before
         ->and($row->context['upload_id'])->toBe($uploadId);
 });
 
-it('sweep-expire пишет activity-строку upload.expired без актора (F-P1.4-13, red-before: нет строки)', function (): void {
+it('sweep expiry writes an upload.expired activity row without an actor', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
@@ -95,7 +95,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
  * either class cannot orphan a historical row. A future regression that made an
  * upload a morph target (or moved `Node`) trips this.
  */
-it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {
+it('the Uploads move is morph-safe: upload-session activity writes no target_type/target_id, and Node, the only morph target, did not move', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [

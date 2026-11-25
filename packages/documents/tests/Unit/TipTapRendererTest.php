@@ -72,7 +72,7 @@ it('renders TipTap content to Markdown', function (): void {
         ->toContain('- two');
 });
 
-it('рендерит новые узлы контракта D27 (image, table) и марку underline, R-01', function (): void {
+it('renders the newer contract nodes (image, table) and the underline mark', function (): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [
@@ -184,7 +184,7 @@ function legacyHostileSnapshot(): array
     ];
 }
 
-it('легаси-снапшот с javascript:-href доходит до рендерера и обезвреживается санитайзером, R-07', function (): void {
+it('a legacy snapshot with a javascript: href reaches the renderer and is neutralized by the sanitizer', function (): void {
     $html = app(TipTapRenderer::class)->toHtml(TipTapContent::decayFrom(legacyHostileSnapshot()));
 
     // Санитайзер снял опасный href/src; текст ссылки при этом сохранён.
@@ -192,7 +192,7 @@ it('легаси-снапшот с javascript:-href доходит до ренд
         ->and($html)->toContain('click me');
 });
 
-it('эшелон 2 ДОСТИЖИМ: с pass-through-санитайзером тот же снапшот течёт, R-07', function (): void {
+it('the second line of defence is REACHABLE: with a pass-through sanitizer the same snapshot leaks', function (): void {
     // Доказательство красноты (D19-форма): подменяем санитайзер прозрачным стабом. Если бы
     // рендерер сам резал href раньше санитайзера, эшелон был бы фикцией и этот тест остался
     // бы зелёным — он обязан пасть, показав, что вход у эшелона реальный.
@@ -216,7 +216,7 @@ it('эшелон 2 ДОСТИЖИМ: с pass-through-санитайзером т
 
 // ─── markdown-путь ──────────────────────────────
 
-it('markdown-экспорт: схема КАЖДОЙ выведенной цели ссылки разрешена, R-04', function (string $label, string $href): void {
+it('markdown export: the scheme of EVERY emitted link target is allowed', function (string $label, string $href): void {
     // Легаси-снапшот (decay, не fromArray): store-time href мог быть легальным, а вредонос
     // — в ЛЕЙБЛЕ; либо href легальной схемы несёт ')' и закрывает цель раньше времени.
     $markdown = app(TipTapRenderer::class)->toMarkdown(TipTapContent::decayFrom([
@@ -255,7 +255,7 @@ it('markdown-экспорт: схема КАЖДОЙ выведенной цел
     'изображение в label' => ['![x](javascript:alert(1))', 'https://ok.example'],
 ]);
 
-it('markdown-экспорт: опасный src картинки не выводится, R-04', function (): void {
+it('markdown export: a dangerous image src is not emitted', function (): void {
     $markdown = app(TipTapRenderer::class)->toMarkdown(TipTapContent::decayFrom([
         'type' => 'doc',
         'content' => [['type' => 'image', 'attrs' => ['src' => 'javascript:alert(1)', 'alt' => 'x']]],
@@ -284,7 +284,7 @@ it('escapes raw text in markdown export, F-P1.11-04', function (): void {
         ->not->toContain('&lt;');
 });
 
-it('markdown-экспорт НЕ печатает HTML-сущности: & в URL и < в тексте, R-10', function (): void {
+it('markdown export does NOT print HTML entities: & in URLs and < in text', function (): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -315,7 +315,7 @@ it('markdown-экспорт НЕ печатает HTML-сущности: & в UR
  * ТЕКСТ, а не инъекция на уровне TipTap-JSON. Ровно тот класс, который
  * соседняя ветка text экранированием `<`/`>` и закрывает.
  */
-it('markdown-экспорт: code-марка не выпускает сырой HTML через разрыв абзаца, R-04', function (): void {
+it('markdown export: a code mark does not let raw HTML out through a paragraph break', function (): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -348,7 +348,7 @@ it('markdown-экспорт: code-марка не выпускает сырой 
  * следующий `|` — как ЖИВОЙ разделитель: ячейка разваливается на лишнюю колонку и сдвигает
  * все следующие. Та самая column-injection, которую комментарий обещал предотвращать.
  */
-it('markdown-экспорт: `|` в ячейке не добавляет колонку, R-04', function (): void {
+it('markdown export: a pipe in a cell does not add a column', function (): void {
     $cell = static fn (string $type, string $text, bool $code = false): array => [
         'type' => $type,
         'content' => [['type' => 'paragraph', 'content' => [
@@ -394,7 +394,7 @@ it('markdown-экспорт: `|` в ячейке не добавляет кол�
  * последовательности бэктиков в теле (CommonMark) — тогда тело инертно ЦЕЛИКОМ, чем бы оно
  * ни было.
  */
-it('markdown-экспорт: тело codeBlock не закрывает свой fence и не выпускает сырой HTML, RV-01', function (): void {
+it('markdown export: a codeBlock body does not close its fence or let raw HTML out', function (): void {
     $body = "innocent\n```\n<script>alert(1)</script>\n```";
 
     $doc = TipTapContent::fromArray([
@@ -420,7 +420,7 @@ it('markdown-экспорт: тело codeBlock не закрывает свой
  * валидирует. Info-string печаталась сырой, поэтому `"php\n```\n<img src=x onerror=alert(1)>"`
  * закрывал fence переводом строки и выпускал живой <img onerror> в .md.
  */
-it('markdown-экспорт: language кодоблока валидируется, а не печатается сырым, RV-01', function (string $language, string $expectedFence): void {
+it('markdown export: the codeBlock language is validated, not printed raw', function (string $language, string $expectedFence): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -522,7 +522,7 @@ function tableWithCell(array $cellContent): TipTapContent
     ]);
 }
 
-it('markdown-экспорт: "|" в ЦЕЛИ ссылки/картинки не добавляет таблице колонок, P5.2', function (array $cellContent): void {
+it('markdown export: a pipe in a link or image TARGET does not add table columns', function (array $cellContent): void {
     // Схема легальна (http) — store-time такой URL принимает; но цель ссылки идёт мимо
     // escapeMarkdown(), а markdownDestination() кодировал только <, > и пробел. GFM читал
     // '| [x](https://a.example/?a=1|2|3) | y |' как ЧЕТЫРЕ колонки и сдвигал всё дальше.

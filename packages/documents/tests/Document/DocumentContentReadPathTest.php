@@ -47,7 +47,7 @@ function seedLegacyHeadContent(int|string $nodeId, array $content): void
     app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $nodeId)->firstOrFail()->payload()->update(['content' => json_encode($content)]));
 }
 
-it('отдаёт легаси-контент с javascript:-ссылкой обеззараженным, а не сырым, R-12', function (): void {
+it('serves legacy content with a javascript: link sanitized, not raw', function (): void {
     $drive = readPathStorage()->getKey();
 
     $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), ['name' => 'Legacy'])
@@ -97,7 +97,7 @@ it('отдаёт легаси-контент с javascript:-ссылкой об�
         ->and($encoded)->toContain('"alt":"x"');
 });
 
-it('круг чтение→сохранение: что ресурс отдал редактору, то он принимает обратно, P5.2', function (array $legacy): void {
+it('read then save round trip: what the resource gave the editor it accepts back', function (array $legacy): void {
     // Скраб URL выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты, — и редактор получал
     // из GET узел вроде {"type":"link","attrs":{"target":"_blank"}}. PUT ровно этого же
     // payload'а падал 500 (store-time требует href): любой легаси-документ с относительной
@@ -126,7 +126,7 @@ it('круг чтение→сохранение: что ресурс отдал
     ]]],
 ]);
 
-it('сохраняет безопасные ссылки при чтении — обеззараживание не ломает нормальный контент, R-12', function (): void {
+it('keeps safe links on read, so sanitizing does not break normal content', function (): void {
     $drive = readPathStorage()->getKey();
 
     $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), [

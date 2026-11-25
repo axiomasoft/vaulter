@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 use Vaulter\Integration\Tests\Schema\DriveSchemaAssertions;
 
-it('применяет базовые Drive-миграции под ulid-стратегией', function (): void {
+it('applies the base Drive migrations under the ulid strategy', function (): void {
     DriveSchemaAssertions::assertAllTablesAndColumns();
 });

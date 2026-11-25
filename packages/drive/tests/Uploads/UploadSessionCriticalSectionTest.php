@@ -43,7 +43,7 @@ beforeEach(function (): void {
  * authoritative offset, префикс файла исчезал навсегда. Путь целостности данных обязан
  * отказывать, а не усекать.
  */
-it('append() при offset > 0 и пропавшем staged-объекте ОТКАЗЫВАЕТ, а не усекает файл, R-03', function (): void {
+it('append() at offset > 0 with the staged object gone REFUSES instead of truncating the file', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 20);
 
@@ -69,7 +69,7 @@ it('append() при offset > 0 и пропавшем staged-объекте ОТ�
  * UploadStatus::canTransitionTo, и был механизмом ВОСКРЕШЕНИЯ терминальной сессии в
  * гонке PATCH ↔ sweep. Compare-and-set по открытым статусам: 0 затронутых строк → конфликт.
  */
-it('advanceReceived() НЕ воскрешает терминальную сессию — CAS по открытым статусам, R-08', function (UploadStatus $terminal): void {
+it('advanceReceived() does NOT resurrect a terminal session (CAS on the open statuses)', function (UploadStatus $terminal): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
@@ -96,7 +96,7 @@ it('advanceReceived() НЕ воскрешает терминальную сес�
  * второй инвариант: сессия, уже ушедшая в терминал между выборкой кандидата и локом, НЕ
  * трогается повторно — байты чужой (новой) стадии не сносятся, событие не дублируется.
  */
-it('expire() перечитывает статус под локом и не трогает уже терминальную сессию, R-02', function (): void {
+it('expire() rereads the status under the lock and leaves an already terminal session alone', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
@@ -119,7 +119,7 @@ it('expire() перечитывает статус под локом и не т�
  * (пропуск залоченной сессии требует реального второго соединения — он в
  * tests/Concurrency/TusPatchVsSweepRaceTest.php, PG-лейн).
  */
-it('vaulter:uploads:sweep реклеймит стухшую сессию и чистит staged, R-02', function (): void {
+it('vaulter:uploads:sweep reclaims a stale session and cleans the staged bytes', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
@@ -141,7 +141,7 @@ it('vaulter:uploads:sweep реклеймит стухшую сессию и чи
  * включает) прямо во время коммита — и markCommitted воскрешал терминальную строку в
  * Committed, дорисовывая ей assembled_blob_id. CAS по Assembled: 0 строк → конфликт.
  */
-it('markCommitted() НЕ воскрешает реклеймленную сессию — CAS по Assembled, R-11', function (UploadStatus $terminal): void {
+it('markCommitted() does NOT resurrect a reclaimed session (CAS on Assembled)', function (UploadStatus $terminal): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 10);
 
@@ -167,7 +167,7 @@ it('markCommitted() НЕ воскрешает реклеймленную сес�
  * CommitUploadAction спокойно доводил её до конца: узел создавался, а терминальная строка
  * воскресала в Committed — sweep и commit молча делили одни и те же байты.
  */
-it('коммит реклеймленной сессии отбивается, узел не создаётся, статус не воскресает, R-11', function (): void {
+it('committing a reclaimed session is rejected: no node is created and the status is not resurrected', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 6, parentId: $storage->root_node_id);
 
@@ -197,7 +197,7 @@ it('коммит реклеймленной сессии отбивается, �
  * в терминал между последним чанком и коммитом, отбивается конфликтом, а сам коммит не
  * вызывается вовсе.
  */
-it('commitAssembled() перечитывает статус под локом и не зовёт коммит терминальной сессии, R-11', function (): void {
+it('commitAssembled() rereads the status under the lock and does not commit a terminal session', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 6, parentId: $storage->root_node_id);
 
@@ -223,7 +223,7 @@ it('commitAssembled() перечитывает статус под локом и
  * ложился на диск уже терминальной сессии: scopeSweepable её больше не выберет → байты
  * осиротели навсегда. Тот же класс гонки, что закрыт для PATCH/expire/abort/commit.
  */
-it('putPart() перечитывает статус под локом: часть терминальной сессии не пишется, RV-02', function (): void {
+it('putPart() rereads the status under the lock: a part of a terminal session is not written', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 100);
 
@@ -250,7 +250,7 @@ it('putPart() перечитывает статус под локом: част�
  * Санити: штатный PATCH после фикса по-прежнему работает (CAS пропускает открытую
  * сессию, append находит staged-объект) — фикс не сломал happy-path.
  */
-it('штатная последовательность PATCH после фикса не сломана', function (): void {
+it('the regular PATCH sequence still works', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 6);
 

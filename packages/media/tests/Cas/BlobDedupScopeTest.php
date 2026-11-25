@@ -30,7 +30,7 @@ function makeBlob(array $overrides = []): Blob
     return $blob;
 }
 
-it('отвергает одинаковый sha256 в одном scope', function (): void {
+it('rejects an identical sha256 within one scope', function (): void {
     makeBlob(['tenant_id' => 1, 'storage_id' => 1, 'storage_key' => 't1/aa/aa/x']);
 
     // Run the violating insert inside a SAVEPOINT (nested DB::transaction): on PostgreSQL
@@ -43,7 +43,7 @@ it('отвергает одинаковый sha256 в одном scope', functio
     ))->toThrow(QueryException::class);
 });
 
-it('допускает одинаковый sha256 в разных scope', function (): void {
+it('allows an identical sha256 across scopes', function (): void {
     $a = makeBlob(['tenant_id' => 1, 'storage_id' => null, 'storage_key' => 't1/aa/aa/a']);
     $b = makeBlob(['tenant_id' => 2, 'storage_id' => null, 'storage_key' => 't2/aa/aa/b']);
 
@@ -53,7 +53,7 @@ it('допускает одинаковый sha256 в разных scope', funct
         ->and($a->storage_key)->not->toBe($b->storage_key);
 });
 
-it('хранит state-колонки блоба для CAS-логики M1b', function (): void {
+it('keeps the blob state columns the CAS logic relies on', function (): void {
     // Read back from the DB so the schema-level column defaults are asserted.
     $blob = makeBlob(['tenant_id' => 9])->fresh();
 

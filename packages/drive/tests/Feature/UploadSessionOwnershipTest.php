@@ -31,7 +31,7 @@ function actingAsActor(int $id): void
     test()->actingAs((new TestUser)->forceFill(['id' => $id]));
 }
 
-it('владелец сессии продвигает её PATCH-чанком (F-P1.4-12, контроль)', function (): void {
+it('the session owner advances it with a PATCH chunk (control)', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
@@ -50,7 +50,7 @@ it('владелец сессии продвигает её PATCH-чанком (
     )->assertCreated();
 });
 
-it('чужой актор с правом Create в той же папке НЕ может PATCH чужую сессию (F-P1.4-12, red-before: проходит)', function (): void {
+it('another actor with Create on the same folder can NOT PATCH a foreign session', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
@@ -72,7 +72,7 @@ it('чужой актор с правом Create в той же папке НЕ 
     )->assertForbidden();
 });
 
-it('чужой актор НЕ может DELETE (abort) чужую сессию (F-P1.4-12)', function (): void {
+it('another actor can NOT DELETE (abort) a foreign session', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
@@ -92,7 +92,7 @@ it('чужой актор НЕ может DELETE (abort) чужую сессию
         ->assertJsonPath('data.status', 'initiated');
 });
 
-it('чужой актор НЕ может HEAD чужую сессию (F-P1.4-12)', function (): void {
+it('another actor can NOT HEAD a foreign session', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
@@ -107,7 +107,7 @@ it('чужой актор НЕ может HEAD чужую сессию (F-P1.4-1
     $this->call('HEAD', 'api/vaulter/v1/uploads/'.$uploadId)->assertForbidden();
 });
 
-it('S3-multipart: чужой актор НЕ может POST parts на чужую сессию (F-P1.4-12)', function (): void {
+it('S3 multipart: another actor can NOT POST parts to a foreign session', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();

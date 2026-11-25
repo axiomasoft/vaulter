@@ -31,7 +31,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.gc.orphan_grace_hours', 1);
 });
 
-it('vaulter:blobs:reconcile --orphans с orphan → FAILURE и объект в выводе', function (): void {
+it('vaulter:blobs:reconcile --orphans with an orphan fails and lists the object', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd orphan', scope: 't-1', ageHours: 48);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true])
@@ -43,7 +43,7 @@ it('vaulter:blobs:reconcile --orphans с orphan → FAILURE и объект в �
     Storage::disk('local')->assertExists($orphanKey);
 });
 
-it('vaulter:blobs:reconcile --orphans --prune на sqlite: отказ, байты живы, FAILURE', function (): void {
+it('vaulter:blobs:reconcile --orphans --prune on sqlite refuses, keeps the bytes and fails', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd prune refused', scope: 't-1', ageHours: 48);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true])
@@ -57,14 +57,14 @@ it('vaulter:blobs:reconcile --orphans --prune на sqlite: отказ, байт�
     'the FAILURE exit is the SQLite prune-refusal premise; PG/MySQL prune succeeds.',
 );
 
-it('vaulter:blobs:reconcile --orphans на чистом диске → SUCCESS', function (): void {
+it('vaulter:blobs:reconcile --orphans on a clean disk succeeds', function (): void {
     // No orphan seeded — a clean disk reconciles cleanly.
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true])
         ->expectsOutputToContain('Orphan walk (report-only)')
         ->assertExitCode(Command::SUCCESS);
 });
 
-it('vaulter:blobs:reconcile --orphans: не-listable драйвер сообщает "listing unsupported", не падает на этом', function (): void {
+it('vaulter:blobs:reconcile --orphans: a non-listable driver reports "listing unsupported" instead of failing on it', function (): void {
     // A genuine aged orphan is present, but the active store cannot enumerate — the
     // walk is skipped cleanly; with no dangling row the command still SUCCEEDs.
     CasTestHelpers::seedOrphan(bytes: 'unwalkable cmd', scope: 't-1', ageHours: 48);
@@ -75,7 +75,7 @@ it('vaulter:blobs:reconcile --orphans: не-listable драйвер сообща
         ->assertExitCode(Command::SUCCESS);
 });
 
-it('vaulter:blobs:reconcile --orphan-grace переопределяет окно (свежий объект не orphan)', function (): void {
+it('vaulter:blobs:reconcile --orphan-grace overrides the window (a fresh object is not an orphan)', function (): void {
     // A 2h-old object: past the 1h floor, but a 24h --orphan-grace keeps it fresh.
     CasTestHelpers::seedOrphan(bytes: 'within override grace', scope: 't-1', ageHours: 2);
 

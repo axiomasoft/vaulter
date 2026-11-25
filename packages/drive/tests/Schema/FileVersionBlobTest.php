@@ -57,13 +57,13 @@ beforeEach(function (): void {
     $this->file->forceFill(['current_revision_id' => $this->version->getKey()])->save();
 });
 
-it('file -> versions -> blob связаны', function (): void {
+it('file, versions and blob are related', function (): void {
     expect($this->file->versions()->count())->toBe(1)
         ->and($this->file->currentRevision->getKey())->toBe($this->version->getKey())
         ->and($this->version->blob->getKey())->toBe($this->blob->getKey());
 });
 
-it('ребро version<->blob — это GC-истина через pivot', function (): void {
+it('the version-blob edge through the pivot is the GC source of truth', function (): void {
     // FileRevisionBlob is fully guarded — the production write
     // path is the drive's RevisionBlobLinks over the query-builder repository, not
     // Eloquent's own relation attach(); it writes the edge and its media pin
@@ -79,7 +79,7 @@ it('ребро version<->blob — это GC-истина через pivot', func
         ->and(app(BlobPins::class)->countByOwner())->toBe([RevisionBlobLinks::OWNER_TYPE => 1]);
 });
 
-it('number монотонно уникален на файл', function (): void {
+it('number is monotonically unique per file', function (): void {
     // SAVEPOINT the violating insert: on PostgreSQL a UNIQUE violation aborts the whole
     // enclosing RefreshDatabase transaction, poisoning the connection for the rest of the
     // suite; the nested DB::transaction rolls back only the failed insert. SQLite tolerates

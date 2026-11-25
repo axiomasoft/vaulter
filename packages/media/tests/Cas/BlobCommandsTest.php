@@ -18,7 +18,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.gc.grace_hours', 1);
 });
 
-it('vaulter:blobs:gc прогоняет обе фазы', function (): void {
+it('vaulter:blobs:gc runs both phases', function (): void {
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('via command'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -31,7 +31,7 @@ it('vaulter:blobs:gc прогоняет обе фазы', function (): void {
     expect($blob->fresh()->status)->toBe(BlobStatus::Deleted);
 });
 
-it('vaulter:blobs:gc --pending подметает упавший staging', function (): void {
+it('vaulter:blobs:gc --pending sweeps a failed staging', function (): void {
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -44,7 +44,7 @@ it('vaulter:blobs:gc --pending подметает упавший staging', funct
     expect($blob->fresh()->status)->toBe(BlobStatus::Deleted);
 });
 
-it('vaulter:blobs:reconcile корректирует ref_count и сообщает', function (): void {
+it('vaulter:blobs:reconcile corrects ref_count and reports it', function (): void {
     $store = app(BlobStore::class);
 
     $blob = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('reconcile cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
@@ -57,7 +57,7 @@ it('vaulter:blobs:reconcile корректирует ref_count и сообщае
     expect($blob->fresh()->ref_count)->toBe(1);
 });
 
-it('vaulter:blobs:reconcile падает, когда есть dangling-строка', function (): void {
+it('vaulter:blobs:reconcile fails when there is a dangling row', function (): void {
     $blob = CasTestHelpers::row(app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')));
 
     Storage::disk('local')->delete($blob->storage_key);

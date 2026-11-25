@@ -28,7 +28,7 @@ function protocolStorage(): Drive
     return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
-it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-before: 302/422)', function (): void {
+it('offset-mismatch PATCH returns 409 with Upload-Offset, NOT 302/422', function (): void {
     $storage = protocolStorage();
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'conflict.bin',
@@ -58,7 +58,7 @@ it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-
         ->assertHeader('Tus-Resumable', '1.0.0');
 });
 
-it('идемпотентный повтор совпадающего диапазона → 204, не 409 (F-P1.4-02)', function (): void {
+it('an idempotent retry of a matching range returns 204, not 409', function (): void {
     $storage = protocolStorage();
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'retry.bin',
@@ -86,7 +86,7 @@ it('идемпотентный повтор совпадающего диапа�
         ->assertHeader('Upload-Offset', '5');
 });
 
-it('PATCH с неверным Content-Type → 415, НЕ 204 (F-P1.4-05, red-before: 204)', function (): void {
+it('PATCH with a wrong Content-Type returns 415, NOT 204', function (): void {
     $storage = protocolStorage();
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'badtype.bin',
@@ -102,7 +102,7 @@ it('PATCH с неверным Content-Type → 415, НЕ 204 (F-P1.4-05, red-bef
     )->assertStatus(415);
 });
 
-it('HEAD/PATCH без Tus-Resumable → 412 (F-P1.4-06, red-before: проходит)', function (): void {
+it('HEAD/PATCH without Tus-Resumable returns 412', function (): void {
     $storage = protocolStorage();
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'noversion.bin',
@@ -122,7 +122,7 @@ it('HEAD/PATCH без Tus-Resumable → 412 (F-P1.4-06, red-before: проход
     )->assertStatus(412);
 });
 
-it('HEAD/PATCH с чужой версией Tus-Resumable → 412 (F-P1.4-06)', function (): void {
+it('HEAD/PATCH with a foreign Tus-Resumable version returns 412', function (): void {
     $storage = protocolStorage();
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'wrongversion.bin',
@@ -133,7 +133,7 @@ it('HEAD/PATCH с чужой версией Tus-Resumable → 412 (F-P1.4-06)', 
         ->assertStatus(412);
 });
 
-it('OPTIONS анонсирует Tus-Version/Tus-Extension/Tus-Max-Size (F-P1.4-07, red-before: нет роута)', function (): void {
+it('OPTIONS announces Tus-Version, Tus-Extension and Tus-Max-Size', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 1_000_000);
 
     $this->call('OPTIONS', 'api/vaulter/v1/uploads/any-literal-handle')
@@ -144,12 +144,12 @@ it('OPTIONS анонсирует Tus-Version/Tus-Extension/Tus-Max-Size (F-P1.4-
         ->assertHeader('Tus-Max-Size', '1000000');
 });
 
-it('OPTIONS не анонсирует checksum-расширение (не реализовано, U1.5/U1.6)', function (): void {
+it('OPTIONS does not announce the checksum extension (not implemented)', function (): void {
     $this->call('OPTIONS', 'api/vaulter/v1/uploads/any-literal-handle')
         ->assertHeader('Tus-Extension', 'creation,termination');
 });
 
-it('метаданные с неизвестным ключом → отброшены, с известным — сохранены (F-P1.4-08, red-before: принимаются)', function (): void {
+it('metadata with an unknown key is dropped and with a known key is kept', function (): void {
     $storage = protocolStorage();
 
     $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
@@ -168,7 +168,7 @@ it('метаданные с неизвестным ключом → отброш
     expect(UploadTestHelpers::clientMetadata($session))->toBe(['filename' => 'meta.bin']);
 });
 
-it('значение метаданных сверх лимита длины — усекается, не отвергается (F-P1.4-08)', function (): void {
+it('a metadata value over the length limit is truncated, not rejected', function (): void {
     config()->set('vaulter-drive.uploads.resumable.metadata.max_value_length', 8);
     $storage = protocolStorage();
 

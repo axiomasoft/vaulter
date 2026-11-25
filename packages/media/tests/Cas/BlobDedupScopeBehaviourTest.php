@@ -19,11 +19,11 @@ beforeEach(function (): void {
     Storage::fake('local');
 });
 
-it('global больше не строится: нет общей области между тенантами', function (): void {
+it('global is no longer built: tenants share no scope', function (): void {
     expect(fn (): BlobScope => BlobScope::forUpload('global', '1', '10'))->toThrow(InvalidArgumentException::class);
 });
 
-it('tenant без тенанта: одинаковые байты в разных дисках → ДВА блоба', function (): void {
+it('tenant without a tenant: identical bytes on different disks give TWO blobs', function (): void {
     $store = app(BlobStore::class);
 
     $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10)));
@@ -36,7 +36,7 @@ it('tenant без тенанта: одинаковые байты в разны�
         ->and($b->storage_key)->toStartWith('d-20/');
 });
 
-it('off: одинаковые байты одного диска → ДВА блоба', function (): void {
+it('off: identical bytes on one disk give TWO blobs', function (): void {
     $store = app(BlobStore::class);
 
     $a = CasTestHelpers::row($store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10)));
@@ -48,7 +48,7 @@ it('off: одинаковые байты одного диска → ДВА бл
         ->and(Storage::disk('local')->allFiles())->toHaveCount(2);
 });
 
-it('tenant: одинаковые байты в разных тенантах → ДВА блоба, два объекта', function (): void {
+it('tenant: identical bytes in different tenants give TWO blobs and two objects', function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
     $store = app(BlobStore::class);
 
@@ -80,7 +80,7 @@ it('keeps opaque tenant scopes byte exact under the database collation', functio
     'trailing space' => ['Acme', 'Acme '],
 ]);
 
-it('storage: одинаковые байты в разных хранилищах → ДВА блоба', function (): void {
+it('storage: identical bytes in different storages give TWO blobs', function (): void {
     config()->set('vaulter-media.dedup.scope', 'drive');
     $store = app(BlobStore::class);
 
@@ -98,7 +98,7 @@ it('storage: одинаковые байты в разных хранилища�
         ->and($b->tenant_id)->toBeNull();
 });
 
-it('storage-scope ключит на drive_id, не на tenant_id', function (): void {
+it('the storage scope keys on drive_id, not tenant_id', function (): void {
     config()->set('vaulter-media.dedup.scope', 'drive');
     $store = app(BlobStore::class);
 

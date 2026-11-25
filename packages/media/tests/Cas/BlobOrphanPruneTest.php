@@ -37,7 +37,7 @@ beforeEach(function (): void {
 );
 
 // 11. Actual prune deletes the bytes.
-it('prune на pgsql реально удаляет байты осиротевшего объекта', function (): void {
+it('prune on pgsql really deletes the bytes of an orphaned object', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg prune me', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: true);
@@ -49,7 +49,7 @@ it('prune на pgsql реально удаляет байты осиротевш
 });
 
 // 11b. Command-level: a prune that cleaned everything exits SUCCESS.
-it('vaulter:blobs:reconcile --orphans --prune на pgsql очищает orphan и выходит SUCCESS', function (): void {
+it('vaulter:blobs:reconcile --orphans --prune on pgsql clears the orphan and succeeds', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg cmd prune', scope: 't-1', ageHours: 48);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true, '--orphan-grace' => 24])
@@ -61,7 +61,7 @@ it('vaulter:blobs:reconcile --orphans --prune на pgsql очищает orphan �
 
 // 12. Concurrency / lock-then-recheck: a row that appears before the locked recheck
 //     prevents the delete (the commit won the race for the content address).
-it('lock-then-recheck на pgsql: строка, появившаяся до перепроверки под локом, спасает байты', function (): void {
+it('lock-then-recheck on pgsql: a row that appears before the locked recheck saves the bytes', function (): void {
     // A true parallel-connection interleave (commit racing the prune between the
     // cheap scan and the under-lock recheck) is impractical in a single-process
     // test. We pin the decisive invariant instead: the prune's under-lock probe
@@ -105,7 +105,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
 //     the real disk (listKeys is a snapshot generator), so we drive it with a fixture
 //     that lists a PHANTOM key (old mtime, no bytes): detection classifies it as an
 //     orphan, then the prune's delete no-ops over the absent object.
-it('prune на pgsql идемпотентен: исчезнувший до удаления объект не бросает (phantom listing)', function (): void {
+it('prune on pgsql is idempotent: an object gone before deletion does not throw (phantom listing)', function (): void {
     $phantomKey = app(ContentStore::class)->keyFor(scope: BlobScope::fromSegment('t-1'), sha256: hash('sha256', 'phantom'));
 
     app()->instance(ContentStore::class, new PhantomListingContentStore(

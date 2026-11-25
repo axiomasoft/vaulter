@@ -23,7 +23,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('реальный конвейер: detach→reconcile→mark томбствляет осиротевший committed-блоб (без ручного стампинга)', function (): void {
+it('real pipeline: detach, reconcile and mark tombstone an orphaned committed blob (no manual stamping)', function (): void {
     $store = app(BlobStore::class);
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
@@ -51,7 +51,7 @@ it('реальный конвейер: detach→reconcile→mark томбств�
         ->and($blob->fresh()->delete_after_at->isFuture())->toBeTrue();
 });
 
-it('реальный конвейер: за время grace sweep не трогает свежий tombstone, после grace — удаляет байты', function (): void {
+it('real pipeline: sweep leaves a fresh tombstone alone during grace and deletes the bytes after it', function (): void {
     $store = app(BlobStore::class);
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
@@ -83,7 +83,7 @@ it('реальный конвейер: за время grace sweep не трог
     Storage::disk('local')->assertMissing($key);
 });
 
-it('реальный конвейер: всё ещё ссылающийся блоб mark пропускает (liveness = ребро)', function (): void {
+it('real pipeline: mark skips a blob that is still referenced (liveness is the edge)', function (): void {
     $store = app(BlobStore::class);
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);

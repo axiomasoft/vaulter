@@ -82,7 +82,7 @@ it('initiate → parts → complete → server-recompute → commit', function (
         ->and($session->refresh()->status)->toBe(UploadStatus::Committed);
 });
 
-it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика', function (): void {
+it('re-uploading a part REPLACES it (PK part_no), as in S3', function (): void {
     $session = initiateS3(totalBytes: 5, name: 'replace.bin');
     $handler = app(S3MultipartHandler::class);
 
@@ -102,7 +102,7 @@ it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика
     expect($version->sha256)->toBe(hash('sha256', 'bbbbb'));
 });
 
-it('лживый ETag не используется как адрес — сервер пересчитывает sha256', function (): void {
+it('a lying ETag is not used as the address; the server recomputes sha256', function (): void {
     $bytes = 'real multipart bytes';
     $session = initiateS3(totalBytes: strlen($bytes), name: 'x.bin');
     $handler = app(S3MultipartHandler::class);
@@ -120,7 +120,7 @@ it('лживый ETag не используется как адрес — сер
         ->and($version->sha256)->not->toBe(trim($result['etag'], '"'));
 });
 
-it('complete без частей отклоняется', function (): void {
+it('complete without parts is rejected', function (): void {
     $session = initiateS3(totalBytes: 10);
 
     expect(fn () => app(S3MultipartHandler::class)->complete($session->refresh()))
@@ -154,7 +154,7 @@ it('streams multipart assembly with bounded complete memory', function (): void 
         ->toBe($partBytes * $partCount);
 });
 
-it('abort удаляет per-part объекты и помечает aborted', function (): void {
+it('abort deletes the per-part objects and marks the session aborted', function (): void {
     $session = initiateS3(totalBytes: 10, name: 'abort.bin');
     $handler = app(S3MultipartHandler::class);
 
@@ -168,7 +168,7 @@ it('abort удаляет per-part объекты и помечает aborted', f
     expect($session->refresh()->status)->toBe(UploadStatus::Aborted);
 });
 
-it('дедуп: multipart-сборка против идентичной прежней загрузки того же диска → один блоб', function (): void {
+it('dedup: a multipart assembly matching an earlier upload on the same disk yields one blob', function (): void {
     config()->set('vaulter-media.dedup.scope', 'drive');
     $bytes = 'shared multipart payload bytes';
     $storage = UploadTestHelpers::storage();

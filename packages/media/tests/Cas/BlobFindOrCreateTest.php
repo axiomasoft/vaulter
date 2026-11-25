@@ -21,7 +21,7 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-it('возвращает РЕАЛЬНЫЙ id (регрессия на null-id из ON CONFLICT DO NOTHING)', function (): void {
+it('returns the REAL id (regression for the null id from ON CONFLICT DO NOTHING)', function (): void {
     $repo = app(BlobStoreRepository::class);
     $sha = hash('sha256', 'real id');
 
@@ -41,7 +41,7 @@ it('возвращает РЕАЛЬНЫЙ id (регрессия на null-id и
         ->and($result['blob']->status)->toBe(BlobStatus::Committed);
 });
 
-it('второй find-or-create тех же байт → created=false, тот же id', function (): void {
+it('a second find-or-create of the same bytes gives created=false and the same id', function (): void {
     $repo = app(BlobStoreRepository::class);
     $sha = hash('sha256', 'second hit');
     $key = "t1/{$sha[0]}{$sha[1]}/{$sha[2]}{$sha[3]}/{$sha}";
@@ -61,7 +61,7 @@ it('второй find-or-create тех же байт → created=false, тот �
         ->and(Blob::query()->count())->toBe(1);
 });
 
-it('find-or-create на tombstoned-строке воскрешает её', function (): void {
+it('find-or-create on a tombstoned row resurrects it', function (): void {
     $repo = app(BlobStoreRepository::class);
     $sha = hash('sha256', 'resurrect-me');
     $key = "t1/{$sha[0]}{$sha[1]}/{$sha[2]}{$sha[3]}/{$sha}";
@@ -86,7 +86,7 @@ it('find-or-create на tombstoned-строке воскрешает её', func
         ->and($again['blob']->delete_after_at)->toBeNull();
 });
 
-it('BlobLock на sqlite: advisory-lock — no-op, single-writer сериализует', function (): void {
+it('BlobLock on sqlite: the advisory lock is a no-op and the single writer serializes', function (): void {
     $lock = app(BlobLock::class);
 
     // SQLite test connection: no advisory lock, no FOR UPDATE — the unique
