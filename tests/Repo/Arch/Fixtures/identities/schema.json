@@ -33291,6 +33291,40 @@
             "engines": {
                 "mysql": {
                     "columns": [
+                        "endpoint_id",
+                        "created_at",
+                        "id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(endpoint_id, created_at, id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "endpoint_id",
+                        "created_at",
+                        "id"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_endpoint_feed_idx",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
+                "symbol": "v_webhook_deliveries"
+            },
+            "table": "v_webhook_deliveries"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
                         "endpoint_id"
                     ],
                     "method": "BTREE",
