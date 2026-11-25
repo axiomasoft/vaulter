@@ -776,7 +776,10 @@ Revoke the link. **Response:** `204`.
 `ResolveShareToken`, which checks the token, the audience and the password and counts
 the visit. The first answer of a visit returns an `X-Share-Session` header; sending it
 back keeps the rest of the visit from costing more uses. Send a password in
-`X-Share-Password`. Every answer is `private, no-store` with `Referrer-Policy: no-referrer`.
+`X-Share-Password` (or the body of `unlock`); a `?password=` query parameter is ignored. Wrong
+passwords are limited per client and link (`vaulter-share-password`, 10 a minute): past it,
+password attempts answer `429`. Every answer is `private, no-store` with
+`Referrer-Policy: no-referrer`.
 
 Denials: an unknown, revoked, rotated, expired or used-up token, a visitor outside the
 link's tenant and a node outside the link all answer `404 share_not_found`; a missing or
@@ -801,7 +804,16 @@ The children of a shared folder, name order, as a page. An `item` link lists not
 The bytes of the shared file, or of a listed child with `?node=`. Needs a role with
 `download` — a previewer link gets `403 permission_denied`. Always streamed, with the
 headers of [File delivery](#file-delivery); `423 content_unavailable` before any byte if
-the file is not clean.
+the file is not clean. `?grant=` (from `unlock`) stands in for the password of that file.
+
+#### `POST v1/shares/{token}/unlock` — `public-shares.unlock`
+
+Trades the password (body `password`, or `X-Share-Password`) for a download path a plain
+link can open. Body `node` picks a file inside a shared folder. Same checks as the download
+route first (a previewer link `403`, a folder `404`). **Response:** `200`
+`{"data": {"download_url": "/api/vaulter/v1/shares/{token}/download?node=…&grant=…", "expires_at": "…Z"}}`.
+The grant is bound to the link, its password and that file, and expires after five
+minutes (never past the link's expiry).
 
 ---
 

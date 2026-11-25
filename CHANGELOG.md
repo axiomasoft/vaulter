@@ -8,6 +8,13 @@ This file covers the public release channel.
 
 ## [Unreleased]
 
+### Security
+
+- Share passwords are no longer read from the query string. A plain download link of a
+  password-protected share gets a five-minute, single-file grant from the new
+  `POST v1/shares/{token}/unlock` (`publicShares.unlock` in `@vaulter/vue`), and wrong
+  passwords are rate limited per client and link (`vaulter-share-password`, 10 a minute).
+
 ### Packman migration
 
 - Register Drive configuration diagnostics through Packman's supported SPI and give the shared registry a unique vaulter.config.valid check without changing local vaulter:doctor identifiers.

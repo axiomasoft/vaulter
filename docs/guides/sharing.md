@@ -310,6 +310,12 @@ curl https://app.test/api/vaulter/v1/shares/<token>/nodes \
 # Download the file behind the link (reader, commenter, writer):
 curl https://app.test/api/vaulter/v1/shares/<token>/download \
   -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...' -o file.bin
+
+# A plain <a href> can send no header: trade the password for a download path first.
+curl -X POST https://app.test/api/vaulter/v1/shares/<token>/unlock \
+  -H 'Content-Type: application/json' -d '{"password": "s3cret", "node": "<opaque id>"}'
+# → {"data": {"download_url": "/api/vaulter/v1/shares/<token>/download?node=…&grant=…",
+#             "expires_at": "2026-11-25T10:05:00Z"}}
 ```
 
 <!-- snippet: host -->
@@ -323,6 +329,8 @@ const client = useVaulterClient()
 const node      = await client.publicShares.get(token)           // GET /shares/{token}
 const children  = await client.publicShares.nodes(token)         // GET /shares/{token}/nodes
 const dlUrl     = client.publicShares.downloadUrl(token)         // GET /shares/{token}/download
+const unlocked  = await client.publicShares.unlock(token, pw)    // POST /shares/{token}/unlock
+// <a :href="unlocked.download_url"> works without the password until unlocked.expires_at
 </script>
 ```
 
@@ -340,10 +348,27 @@ denial reasons are deliberately conflated so a probe cannot tell *which* gate fa
 | **PasswordRequired** | `401 share_password_required` | The share is password-gated and no/incorrect password was supplied. |
 | **LoginRequired**  | `401 actor_required` | The audience is `authenticated` or `tenant` and no host user is signed in. |
 
-::: tip Password header vs query
-The middleware reads the password from the `X-Share-Password` header **first** (so the secret
-never lands in a URL or access log), then falls back to a `password` query/body param.
-:::
+### Passwords stay out of URLs
+
+The middleware reads the password from the `X-Share-Password` header or from the `password`
+field of a POST body, and **never from the query string**: a `?password=` is ignored, so the
+secret cannot land in an access log, a proxy log or the browser history. Hash checks are
+constant-time (`Hash::check`).
+
+A plain download link (`<a href>`) can send neither a header nor a body, so it first calls
+`POST v1/shares/{token}/unlock` with the password (and `node` for a file inside a shared
+folder). The answer is a `download_url` carrying a **download grant**: an HMAC, signed with the
+application key, of the link, its token generation, the settings that decide who may open it,
+and the opaque id of that one file. It works for five minutes (never past the link's expiry)
+and only on the download route of that file; rotating the token, revoking the link or
+changing its password voids it at once. Like a link session it stands for a visit already
+paid for, so it costs no further use. A folder or a previewer link gets no grant (`404` /
+`403`, as on the download route).
+
+Wrong passwords are counted per client IP and link by the `vaulter-share-password` rate
+limiter, 10 a minute by default. Past it every password attempt on that link answers `429`
+with `Retry-After`, right or wrong, on the header and the POST path alike; other links are
+not affected. Register a limiter with that name in the host to change the budget.
 
 ## Lifetime and the drive policy
 

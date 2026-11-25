@@ -65,7 +65,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [V2](#v2-a-per-peer-intent-budget-in-sheets-realtime) | A per-peer intent budget in sheets realtime | P1 | S |
 | [Q3](#q3-indexed-substring-search-on-names) | Indexed substring search on names | P2 | S (a deployment decision) |
 | [Q5](#q5-sheets-export-replay-without-hashing-the-source-blob) | sheets: export replay without hashing the source blob | P2 | S |
-| [V3](#v3-share-passwords-out-of-query-strings) | Share passwords out of query strings | P2 | S (an owner decision) |
+| [V3](#v3-share-passwords-out-of-query-strings) | Share passwords out of query strings | P2 | S (resolved) |
 | [Q6](#q6-ai-resource-ids-in-the-text-projection-heads) | ai: resource ids in the text projection heads | P1 | M |
 | [V4](#v4-ai-commit-checks-the-commands-own-permission) | ai: commit checks the command's own permission | P1 | S |
 | [V6](#v6-ai-an-allowlist-sanitizer-for-streamed-html) | ai: an allowlist sanitizer for streamed HTML | P1 | S |
@@ -833,7 +833,12 @@ plain `<a>` link can download a password-protected share.
 token and drop the query fallback, or keep it behind an explicit option documented as logging the
 secret.
 
-**Priority.** P2. **Cost.** S (an owner decision).
+**Resolved** on the base `refactor/polish` (decided by the owner: POST and a signed link, no query
+fallback). The query parameter is ignored; `POST v1/shares/{token}/unlock` trades the password for
+a five-minute grant bound to the link, its password and one file; wrong passwords are limited per
+client and link. See the sharing guide.
+
+**Priority.** P2. **Cost.** S.
 
 ### V4. ai: commit checks the command's own permission
 
