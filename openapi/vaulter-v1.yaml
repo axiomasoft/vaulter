@@ -1211,6 +1211,13 @@ paths:
         description: A file inside a shared folder.
         schema:
           type: string
+      - name: grant
+        in: query
+        required: false
+        description: A download grant from public-shares.unlock. It stands in for the password of a protected link, for
+          the file named in `node` only, for five minutes.
+        schema:
+          type: string
       responses:
         '200':
           description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
@@ -1257,6 +1264,71 @@ paths:
           $ref: '#/components/responses/Problem404'
         '423':
           $ref: '#/components/responses/Problem423'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /shares/{token}/unlock:
+    post:
+      operationId: public-shares.unlock
+      tags:
+      - public-shares
+      summary: Trade a share password for a short-lived download URL
+      description: For a plain link that can send neither a header nor a body. The password travels in the body or in
+        X-Share-Password, never in the URL; wrong passwords are rate limited per client and link.
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/ShareToken'
+      - $ref: '#/components/parameters/ShareSession'
+      - $ref: '#/components/parameters/SharePassword'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                password:
+                  type: string
+                  description: The share password, unless it is sent in X-Share-Password.
+                node:
+                  type: string
+                  description: A file inside a shared folder (its opaque id).
+              additionalProperties: false
+      responses:
+        '200':
+          description: A download URL that works without the password until expires_at.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicyRequired'
+            X-Share-Session:
+              $ref: '#/components/headers/XShareSession'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShareUnlock'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
         '429':
           $ref: '#/components/responses/Problem429'
         '500':
@@ -3969,7 +4041,7 @@ components:
       name: X-Share-Password
       in: header
       required: false
-      description: Password of a protected share.
+      description: Password of a protected share. It is never read from the query string.
       schema:
         type: string
     TusResumableHeader:
@@ -5294,6 +5366,20 @@ components:
             description: Shown once, in store and rotate responses only.
           url:
             type: string
+    ShareUnlock:
+      type: object
+      required:
+      - download_url
+      - expires_at
+      properties:
+        download_url:
+          type: string
+          description: Path of public-shares.download on this host, carrying the node and its grant; it needs no password
+            until expires_at.
+        expires_at:
+          type: string
+          format: date-time
+          pattern: Z$
     Activity:
       type: object
       required:

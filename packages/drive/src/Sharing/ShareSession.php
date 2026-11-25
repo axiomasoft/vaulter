@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Sharing;
 
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
 use Packman\Attributes\Internal;
 use Vaulter\Drive\Models\Sharing\NodeShare;
@@ -26,36 +25,23 @@ final readonly class ShareSession
 
     private const int LIFETIME_SECONDS = 3600;
 
-    public function __construct(private Repository $config) {}
+    public function __construct(private ShareLinkSigner $signer) {}
 
     /** A session for $share, or null when the application has no key to sign with. */
     public function issue(NodeShare $share, Carbon $now): ?string
     {
-        $key = $this->key();
-        if ($key === null) {
-            return null;
-        }
         $expires = $now->getTimestamp() + self::LIFETIME_SECONDS;
         if ($share->expires_at !== null) {
             $expires = min($expires, $share->expires_at->getTimestamp());
         }
-        $payload = rtrim(strtr(base64_encode($this->payload($share, $expires)), '+/', '-_'), '=');
 
-        return $payload.'.'.hash_hmac('sha256', $payload, $key);
+        return $this->signer->sign($this->payload($share, $expires));
     }
 
     public function valid(?string $session, NodeShare $share, Carbon $now): bool
     {
-        $key = $this->key();
-        if ($key === null || $session === null || substr_count($session, '.') !== 1) {
-            return false;
-        }
-        [$payload, $signature] = explode('.', $session);
-        if (!hash_equals(hash_hmac('sha256', $payload, $key), $signature)) {
-            return false;
-        }
-        $decoded = base64_decode(strtr($payload, '-_', '+/'), true);
-        if ($decoded === false) {
+        $decoded = $this->signer->open($session);
+        if ($decoded === null) {
             return false;
         }
         $parts = explode('|', $decoded);
@@ -70,17 +56,6 @@ final readonly class ShareSession
 
     private function payload(NodeShare $share, int $expires): string
     {
-        $fingerprint = substr(hash('sha256', implode('|', [
-            $share->token_hash, $share->role_key, $share->role_version, $share->audience->value, (string) $share->password_hash,
-        ])), 0, 16);
-
-        return implode('|', ['v1', Identity::stringify($share->getKey()), $share->token_generation, $fingerprint, $expires]);
-    }
-
-    private function key(): ?string
-    {
-        $key = $this->config->get('app.key');
-
-        return is_string($key) && $key !== '' ? $key : null;
+        return implode('|', ['v1', Identity::stringify($share->getKey()), $share->token_generation, $this->signer->fingerprint($share), $expires]);
     }
 }

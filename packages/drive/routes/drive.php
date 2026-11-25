@@ -45,6 +45,7 @@ use Vaulter\Drive\Http\Controllers\Sharing\ListSharesController;
 use Vaulter\Drive\Http\Controllers\Sharing\RevokeShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\RotateShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\ShowPublicShareController;
+use Vaulter\Drive\Http\Controllers\Sharing\UnlockPublicShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\UpdateShareController;
 use Vaulter\Drive\Http\Controllers\Trash\EmptyTrashController;
 use Vaulter\Drive\Http\Controllers\Trash\ListTrashController;
@@ -172,6 +173,7 @@ Route::prefix($routes->versionedPrefix())
 /*
 | Public share links: no authentication of their own; ResolveShareToken turns the token
 | into the link's role and node-set (throttled first, so token guessing is limited).
+| A password never rides in a URL: POST .../unlock trades it for a short-lived download grant.
 | Every response is private, no-store and Referrer-Policy: no-referrer.
 */
 Route::prefix($routes->versionedPrefix())
@@ -182,4 +184,5 @@ Route::prefix($routes->versionedPrefix())
         Route::get('shares/{token}', ShowPublicShareController::class)->name('public-shares.show');
         Route::get('shares/{token}/nodes', ListPublicShareNodesController::class)->name('public-shares.nodes');
         Route::get('shares/{token}/download', DownloadPublicShareController::class)->name('public-shares.download');
+        Route::post('shares/{token}/unlock', UnlockPublicShareController::class)->name('public-shares.unlock');
     });

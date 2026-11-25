@@ -193,6 +193,80 @@ it('401s a password-gated public resolve until the password is supplied', functi
         ->assertJsonPath('data.id', expectedOpaqueNodeId($node->getKey()));
 });
 
+it('ignores a share password sent in the query string, so it never lands in a URL', function (): void {
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('locked bytes'), 'locked.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
+    ShareTestHelpers::share($file, token: 'query-pw-token', passwordHash: Hash::make('open-sesame'));
+
+    $this->getJson('api/vaulter/v1/shares/query-pw-token?password=open-sesame')
+        ->assertStatus(401)
+        ->assertJsonPath('code', 'share_password_required');
+    $this->getJson('api/vaulter/v1/shares/query-pw-token/download?password=open-sesame')
+        ->assertStatus(401)
+        ->assertJsonPath('code', 'share_password_required');
+});
+
+it('trades a share password sent in a POST body for a short-lived download link that needs no password', function (): void {
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('locked bytes'), 'locked.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
+    ShareTestHelpers::share($file, token: 'unlock-token', passwordHash: Hash::make('open-sesame'));
+
+    $this->postJson('api/vaulter/v1/shares/unlock-token/unlock', ['password' => 'wrong'])
+        ->assertStatus(401)
+        ->assertJsonPath('code', 'share_password_required');
+
+    $unlocked = $this->postJson('api/vaulter/v1/shares/unlock-token/unlock', ['password' => 'open-sesame'])
+        ->assertOk()
+        ->assertHeader('Cache-Control', 'no-store, private');
+    $url = $unlocked->json('data.download_url');
+    expect($url)->toBeString()->toStartWith('/api/vaulter/v1/shares/unlock-token/download?')
+        ->not->toContain('open-sesame')
+        ->and($unlocked->json('data.expires_at'))->toBe(now()->addSeconds(300)->toIso8601ZuluString());
+
+    // No header, no body: what a plain <a href> sends.
+    expect($this->get($url)->assertOk()->streamedContent())->toBe('locked bytes');
+});
+
+it('refuses a download grant that expired, was tampered with, names another file or outlived a password change', function (): void {
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('locked bytes'), 'locked.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
+    $share = ShareTestHelpers::share($file, token: 'grant-token', passwordHash: Hash::make('open-sesame'));
+    $url = fn (): string => $this->postJson('api/vaulter/v1/shares/grant-token/unlock', ['password' => 'open-sesame'])->assertOk()->json('data.download_url');
+    $denied = fn (string $link) => $this->getJson($link)->assertStatus(401)->assertJsonPath('code', 'share_password_required');
+
+    $link = $url();
+    parse_str((string) parse_url($link, PHP_URL_QUERY), $query);
+    $denied(str_replace('grant='.$query['grant'], 'grant='.substr($query['grant'], 0, -1).(str_ends_with($query['grant'], 'a') ? 'b' : 'a'), $link));
+    $denied(str_replace('node='.$query['node'], 'node='.str_repeat('0', 32), $link));
+    $denied('api/vaulter/v1/shares/grant-token/download?grant='.$query['grant']);
+
+    $this->travel(301)->seconds();
+    $denied($link);
+
+    $fresh = $url();
+    $share->forceFill(['password_hash' => Hash::make('changed')])->save();
+    $denied($fresh);
+});
+
+it('429s every password attempt on a link once its wrong-password budget is spent', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'guessed-doc');
+    ShareTestHelpers::share($node, token: 'guess-token', passwordHash: Hash::make('open-sesame'));
+    ShareTestHelpers::share(AccessTestHelpers::folder($storage, null, 'other-doc'), token: 'other-token', passwordHash: Hash::make('open-sesame'));
+
+    foreach (range(1, 10) as $attempt) {
+        $this->postJson('api/vaulter/v1/shares/guess-token/unlock', ['password' => 'guess-'.$attempt])->assertStatus(401);
+    }
+
+    // Past the budget even the right password waits, on the POST and the header path alike.
+    $this->postJson('api/vaulter/v1/shares/guess-token/unlock', ['password' => 'open-sesame'])
+        ->assertStatus(429)
+        ->assertHeader('Retry-After');
+    $this->getJson('api/vaulter/v1/shares/guess-token', ['X-Share-Password' => 'open-sesame'])->assertStatus(429);
+    // Another link keeps its own budget.
+    $this->getJson('api/vaulter/v1/shares/other-token', ['X-Share-Password' => 'open-sesame'])->assertOk();
+});
+
 it('serves a public download within the READ bits, bounds it by max_uses, and never redirects even on a disk that provides a temporary url', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 

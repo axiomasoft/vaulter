@@ -40,6 +40,10 @@ function opcRoutes(): array
         if (!str_starts_with($name, 'vaulter.v1.') || !str_starts_with($route->getActionName(), 'Vaulter\\Drive\\')) {
             continue;
         }
+        // The public unlock changes nothing: it is a POST only so the share password stays in the body.
+        if ($name === 'vaulter.v1.public-shares.unlock') {
+            continue;
+        }
         if (array_intersect($route->methods(), ['POST', 'PUT', 'PATCH', 'DELETE']) !== []) {
             $routes[substr($name, strlen('vaulter.v1.'))] = $route;
         }

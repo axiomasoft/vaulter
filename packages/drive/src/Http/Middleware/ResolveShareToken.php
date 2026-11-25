@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Middleware;
 
 use Closure;
+use Illuminate\Cache\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Packman\Attributes\Internal;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Drive\Exceptions\Sharing\SharePasswordRequiredException;
 use Vaulter\Drive\Sharing\ShareContext;
+use Vaulter\Drive\Sharing\ShareDownloadGrant;
 use Vaulter\Drive\Sharing\ShareRedeemer;
 use Vaulter\Drive\Sharing\ShareResolution;
 use Vaulter\Drive\Sharing\ShareResolver;
@@ -36,6 +40,12 @@ use Vaulter\Exceptions\Access\MissingActorException;
  * that header back belong to the same visit and are not counted again, so opening a
  * preview, paging a listing and fetching ranges cost one use.
  *
+ * The password is read from the X-Share-Password header or a POST body, never from
+ * the query string, so it stays out of URLs, access logs and browser history. A plain
+ * download link gets a short-lived grant from POST shares/{token}/unlock instead. Wrong
+ * passwords are counted per link and client by the `vaulter-share-password` rate
+ * limiter; past it every password attempt on that link answers 429, right or wrong.
+ *
  * Downstream controllers read the context via {@see self::context()}.
  */
 #[Internal]
@@ -46,9 +56,15 @@ final class ResolveShareToken
      */
     public const string ATTRIBUTE = 'vaulter_share_context';
 
+    /** The named rate limiter that bounds wrong password attempts on one link. */
+    public const string PASSWORD_LIMITER = 'vaulter-share-password';
+
+    private const string DOWNLOAD_ROUTE = 'vaulter.v1.public-shares.download';
+
     public function __construct(
         private readonly ShareResolver $resolver,
         private readonly ShareRedeemer $redeemer,
+        private readonly RateLimiter $limiter,
     ) {}
 
     /** @param Closure(Request): Response $next */
@@ -60,12 +76,27 @@ final class ResolveShareToken
             $this->deny(ShareResolution::NotFound);
         }
 
+        $password = $this->password($request);
+        $attempts = $password === null ? null : $this->passwordLimit($request);
+        if ($attempts !== null && $this->limiter->tooManyAttempts($attempts['key'], $attempts['max'])) {
+            throw new ThrottleRequestsException('Too many share password attempts.', headers: [
+                'Retry-After' => $this->limiter->availableIn($attempts['key']),
+            ]);
+        }
+
+        $download = $request->route()?->getName() === self::DOWNLOAD_ROUTE;
         $result = $this->resolver->resolve(
             token: $token,
             actor: $this->actor($request),
-            password: $this->password($request),
+            password: $password,
             session: $this->session($request),
+            grant: $download ? $this->query($request, ShareDownloadGrant::PARAMETER) : null,
+            resource: $download ? $this->query($request, 'node') : null,
         );
+
+        if ($attempts !== null && $result->resolution === ShareResolution::PasswordRequired) {
+            $this->limiter->hit($attempts['key'], $attempts['decay']);
+        }
 
         if (!$result->isOk() || !$result->context instanceof ShareContext) {
             $this->deny($result->resolution);
@@ -110,8 +141,8 @@ final class ResolveShareToken
     }
 
     /**
-     * The supplied share password: header X-Share-Password first (so the secret
-     * stays out of the URL/logs), then a `password` query/body param as a fallback.
+     * The supplied share password: the X-Share-Password header, or the `password` field
+     * of a POST body. A `password` query parameter is ignored, as on every other method.
      */
     private function password(Request $request): ?string
     {
@@ -121,9 +152,37 @@ final class ResolveShareToken
             return $header;
         }
 
-        $input = $request->input('password');
+        $body = $request->isMethod('POST') ? $request->post('password') : null;
 
-        return is_string($input) && $input !== '' ? $input : null;
+        return is_string($body) && $body !== '' ? $body : null;
+    }
+
+    /**
+     * The password attempt budget of this client on this link, keyed apart from every other limiter.
+     *
+     * @return array{key: string, max: int, decay: int}|null
+     */
+    private function passwordLimit(Request $request): ?array
+    {
+        $callback = $this->limiter->limiter(self::PASSWORD_LIMITER);
+        $limit = $callback === null ? null : $callback($request);
+        if (!$limit instanceof Limit) {
+            return null;
+        }
+        $key = $limit->key;
+
+        return [
+            'key' => self::PASSWORD_LIMITER.':'.(is_string($key) || is_int($key) ? (string) $key : ''),
+            'max' => $limit->maxAttempts,
+            'decay' => $limit->decaySeconds,
+        ];
+    }
+
+    private function query(Request $request, string $name): ?string
+    {
+        $value = $request->query($name);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     private function session(Request $request): ?string

@@ -796,6 +796,23 @@
         ]
     },
     {
+        "name": "vaulter.v1.public-shares.unlock",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/shares/{token}/unlock",
+        "middleware": [
+            "vaulter.module:drive",
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
+        ]
+    },
+    {
         "name": "vaulter.v1.shared.index",
         "methods": [
             "GET",

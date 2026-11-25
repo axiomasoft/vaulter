@@ -67,6 +67,7 @@ final class DriveRouteLabels implements RouteLabelSource
             'vaulter.v1.public-shares.show' => 'share.show',
             'vaulter.v1.public-shares.nodes' => 'share.nodes',
             'vaulter.v1.public-shares.download' => 'share.download',
+            'vaulter.v1.public-shares.unlock' => 'share.unlock',
             'vaulter.v1.uploads.store' => 'uploads.tus_create',
             'vaulter.v1.uploads.tus.patch' => 'uploads.tus_patch',
             'vaulter.v1.uploads.show' => 'uploads.tus_status',

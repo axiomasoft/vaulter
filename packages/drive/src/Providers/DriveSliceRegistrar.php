@@ -18,6 +18,7 @@ use Vaulter\Drive\Content\OffScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Drive\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Http\Middleware\ResolveShareToken;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
@@ -39,6 +40,9 @@ use Vaulter\Support\Identity;
 #[Internal]
 final class DriveSliceRegistrar implements ModuleBindings
 {
+    /** Wrong share passwords one client may try on one link per minute, unless the host registers its own limiter. */
+    private const int SHARE_PASSWORD_ATTEMPTS = 10;
+
     public function register(Application $app): void
     {
         $app->bind(ProfilePolicy::class);
@@ -127,6 +131,12 @@ final class DriveSliceRegistrar implements ModuleBindings
             $limiter->for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
                 $app->make(RoutesOptions::class)->rateLimits->public,
             )->by($request->ip() ?? 'unknown'));
+        }
+
+        if ($limiter->limiter(ResolveShareToken::PASSWORD_LIMITER) === null) {
+            // Wrong passwords per client and link: one link cannot be guessed at the public rate.
+            $limiter->for(ResolveShareToken::PASSWORD_LIMITER, static fn (Request $request): Limit => Limit::perMinute(self::SHARE_PASSWORD_ATTEMPTS)
+                ->by(($request->ip() ?? 'unknown').'|'.hash('sha256', (string) $request->route('token'))));
         }
 
         if ($limiter->limiter('vaulter-uploads') === null) {

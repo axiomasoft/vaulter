@@ -49,7 +49,7 @@ use Vaulter\Drive\Tenancy\TenancyBoundary;
  *      maxShareLinkTtlDays. A share on an unsafe node resolves to NotFound,
  *      indistinguishable from a wrong token;
  *   5. enforces the audience (anyone | authenticated | tenant) and the optional
- *      password gate.
+ *      password gate, which a download grant for the requested file also passes.
  *   6. re-checks that the share's issuer (granted_by)
  *      STILL holds Ability::Share on the node through the identity ACL — a share
  *      does not outlive the access that authorized minting it (confused-deputy
@@ -72,17 +72,19 @@ final readonly class ShareResolver
         private ShareContentGuard $content,
         private ShareLinkRules $rules,
         private ShareSession $sessions,
+        private ShareDownloadGrant $grants,
         private TenancyOptions $tenancy,
         private Container $container,
     ) {}
 
     /**
      * Resolve a raw bearer token for the (optional) acting host user, the (optional)
-     * supplied password and the (optional) link session of an earlier redemption.
+     * supplied password, the (optional) link session of an earlier redemption and the
+     * (optional) download grant for $resource, the opaque id of the requested file.
      * Returns a ShareResult whose status the public HTTP layer translates to
      * 404 / 401 / proceed.
      */
-    public function resolve(string $token, ?Authenticatable $actor = null, ?string $password = null, ?string $session = null): ShareResult
+    public function resolve(string $token, ?Authenticatable $actor = null, ?string $password = null, ?string $session = null, ?string $grant = null, ?string $resource = null): ShareResult
     {
         $now = Carbon::now();
         $tokenHash = ShareToken::hash($token);
@@ -102,7 +104,9 @@ final readonly class ShareResolver
         // The use budget is part of liveness — an exhausted share is as good as
         // expired (NotFound, not a distinct leak). A visitor whose session already
         // redeemed a use keeps the visit they paid for.
-        $inSession = $this->sessions->valid($session, $share, $now);
+        // A download grant comes from a visit that already redeemed its use, like a session.
+        $granted = $this->grants->valid($grant, $share, $resource, $now);
+        $inSession = $granted || $this->sessions->valid($session, $share, $now);
         if (!$inSession && $share->isExhausted()) {
             return ShareResult::notFound();
         }
@@ -123,7 +127,7 @@ final readonly class ShareResolver
             return ShareResult::notFound();
         }
 
-        if ($share->hasPassword() && !$this->passwordMatches($share, $password)) {
+        if ($share->hasPassword() && !$granted && !$this->passwordMatches($share, $password)) {
             return ShareResult::passwordRequired();
         }
 

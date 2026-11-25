@@ -527,6 +527,11 @@ it('covers every mutating route of the package, with a reason for each row that 
     $registered = [];
     foreach (app('router')->getRoutes()->getRoutes() as $route) {
         $name = (string) $route->getName();
+        // The public unlock is a read on the link's own channel that is a POST only to keep the password in its body:
+        // no identity, no receipt; NodeShareApiTest holds its password, rate limit and grant checks.
+        if ($name === 'vaulter.v1.public-shares.unlock') {
+            continue;
+        }
         if (str_starts_with($name, 'vaulter.v1.') && str_starts_with($route->getActionName(), 'Vaulter\\Drive\\') && array_intersect($route->methods(), ['POST', 'PUT', 'PATCH', 'DELETE']) !== []) {
             $registered[] = substr($name, strlen('vaulter.v1.'));
         }

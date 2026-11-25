@@ -2342,6 +2342,37 @@
             "uri": "api/vaulter/v1/shares/{token}"
         },
         {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UnlockPublicShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UnlockPublicShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.public-shares.unlock",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "vaulter.module:drive",
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
+            ],
+            "name": "vaulter.v1.public-shares.unlock",
+            "openapi": {
+                "operation_id": "public-shares.unlock",
+                "path": "/shares/{token}/unlock"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Sharing/UnlockPublicShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UnlockPublicShareController"
+            },
+            "uri": "api/vaulter/v1/shares/{token}/unlock"
+        },
+        {
             "action": "Vaulter\\Drive\\Http\\Controllers\\Shared\\ListSharedWithMeController",
             "controller": "Vaulter\\Drive\\Http\\Controllers\\Shared\\ListSharedWithMeController",
             "default_registered": true,
