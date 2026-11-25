@@ -602,6 +602,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold. | `[--consumer [CONSUMER]] [--limit [LIMIT]] [--once] [--max-seconds [MAX-SECONDS]]` |
 | `vaulter:relay:replay` | Replay a range of the outbox to one consumer, or acknowledge its gap. | `[--consumer [CONSUMER]] [--from [FROM]] [--to [TO]] [--ack-only]` |
 | `vaulter:revisions:prune` | Delete non-current file revisions past their profile retention policy. | `[--drive [DRIVE]] [--dry-run]` |
+| `vaulter:rls:install` | Install PostgreSQL Row-Level Security policies, security_invoker views and roles for Vaulter tables. | `[--schema [SCHEMA]] [--prefix [PREFIX]] [--role [ROLE]] [--migrator-role [MIGRATOR-ROLE]] [--roles] [--dry-run]` |
 | `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
 | `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |
 | `vaulter:trash:purge` | Permanently delete trashed nodes whose retention window has elapsed. | `[--days [DAYS]]` |

@@ -198,7 +198,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 
 **409** · documents · retryable `never` · receipt `never`
 
-**Document command required** — Send edits through the active document journal.
+**Document command required** — Send edits through the document command writer.
 
 ### `document_content_degraded`
 
