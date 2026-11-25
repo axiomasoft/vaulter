@@ -13,6 +13,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Drive\Actions\Content\SupersedeScanWorkAction;
 use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Drive;
@@ -60,12 +61,12 @@ final readonly class ScanWorkReconciler
         $cooldown = $this->driveConfig->uploads->scan->workValue('publish_cooldown_seconds');
         $counts = ['scanned' => 0, 'published' => 0, 'failed' => 0, 'stalled_configuration' => 0, 'remaining_due' => 0];
         $class = $this->config->model('scan_obligation');
-        $query = app(TenancyBoundary::class)->constrain($class::query())->whereIn('state', ['pending', 'retry_wait', 'leased'])
+        $query = app(TenancyBoundary::class)->constrain($class::query())->whereIn('state', [ScanWorkState::Pending->value, ScanWorkState::RetryWait->value, ScanWorkState::Leased->value])
             ->where(function (Builder $query) use ($now, $cooldown): void {
                 $query->where(function (Builder $query) use ($now, $cooldown): void {
-                    $query->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<=', $now)
+                    $query->whereIn('state', [ScanWorkState::Pending->value, ScanWorkState::RetryWait->value])->where('available_at', '<=', $now)
                         ->where(fn (Builder $q): Builder => $q->whereNull('last_published_at')->orWhere('last_published_at', '<=', $now->modify('-'.$cooldown.' seconds')));
-                })->orWhere(fn (Builder $q): Builder => $q->where('state', 'leased')->where('lease_expires_at', '<=', $now));
+                })->orWhere(fn (Builder $q): Builder => $q->where('state', ScanWorkState::Leased->value)->where('lease_expires_at', '<=', $now));
             });
         if ($driveIds !== null) {
             $query->whereIn('drive_id', $driveIds);
@@ -98,21 +99,21 @@ final readonly class ScanWorkReconciler
                 continue;
             }
             if ($dryRun) {
-                $counts['published'] += $row->state === 'leased' ? 0 : 1;
+                $counts['published'] += $row->state === ScanWorkState::Leased ? 0 : 1;
 
                 continue;
             }
-            if ($row->state === 'leased') {
+            if ($row->state === ScanWorkState::Leased) {
                 $this->recover->execute($row, $this->work->now());
                 $row = $this->work->find($row->id);
             }
-            if ($row === null || $row->state === 'settled' || $row->state === 'leased') {
+            if ($row === null || $row->state === ScanWorkState::Settled || $row->state === ScanWorkState::Leased) {
                 continue;
             }
             $claimed = $this->database->transaction(function () use ($class, $row, $cooldown): ?ScanObligation {
                 $fresh = $class::query()->whereKey($row->id)->lockForUpdate()->first();
                 $current = $this->work->now();
-                if ($fresh === null || !in_array($fresh->state, ['pending', 'retry_wait'], true)
+                if ($fresh === null || !in_array($fresh->state, [ScanWorkState::Pending, ScanWorkState::RetryWait], true)
                     || $fresh->available_at > $current
                     || ($fresh->last_published_at !== null && $fresh->last_published_at->addSeconds($cooldown) > $current)) {
                     return null;
@@ -126,7 +127,7 @@ final readonly class ScanWorkReconciler
                     $counts['published']++;
                 } else {
                     $class::query()->whereKey($claimed->id)->where('generation', $claimed->generation)
-                        ->whereIn('state', ['pending', 'retry_wait'])->update(['available_at' => $this->work->now()->modify('+'.$cooldown.' seconds')]);
+                        ->whereIn('state', [ScanWorkState::Pending->value, ScanWorkState::RetryWait->value])->update(['available_at' => $this->work->now()->modify('+'.$cooldown.' seconds')]);
                 }
             }
         }

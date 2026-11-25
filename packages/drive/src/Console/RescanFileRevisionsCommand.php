@@ -22,6 +22,7 @@ use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\ScanWorkReconciler;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\DriveContext;
@@ -200,7 +201,7 @@ final class RescanFileRevisionsCommand extends Command
                     foreach ($specs as $spec) {
                         $existing = $revision->scanObligations()->where('spec_key', $spec->specKey())->first();
                         if (!$this->option('rescan') && ($evidence->compatible($revision, $spec) !== null
-                            || ($existing?->state === 'settled' && !$this->option('retry-failed')))) {
+                            || ($existing?->state === ScanWorkState::Settled && !$this->option('retry-failed')))) {
                             $out['skipped']++;
 
                             continue;
@@ -218,7 +219,7 @@ final class RescanFileRevisionsCommand extends Command
                             $result = $this->option('rescan') || ($this->option('retry-failed') && $existing?->outcome === 'failed')
                                 ? $requestWork->requestRescan($snapshot['revision'], $spec, $request, $context)
                                 : $requestWork->ensure($snapshot['revision'], $spec, $request, $context);
-                            if ($result->state !== 'settled') {
+                            if ($result->state !== ScanWorkState::Settled) {
                                 $publisher->afterCommit($result);
                             }
 

@@ -7852,6 +7852,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Enums/ScanWorkState.php",
+            "fqcn": "Vaulter\\Drive\\Enums\\ScanWorkState",
+            "kind": "enum",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Enums\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Enums\\ScanWorkState"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Enums/Sharing/ShareAudience.php",
             "fqcn": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
             "kind": "enum",

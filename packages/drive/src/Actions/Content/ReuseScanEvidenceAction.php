@@ -10,6 +10,8 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanEvidence;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
+use Vaulter\Drive\Enums\ScanStatus;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
@@ -45,20 +47,20 @@ final readonly class ReuseScanEvidenceAction
         if ((string) $work->drive_id !== (string) $snapshot['drive']->id || (string) $work->tenant_id !== (string) $snapshot['drive']->tenant_id || (string) $work->revision_id !== (string) $snapshot['revision']->id || $work->spec_key !== $spec->specKey() || $work->content_identity !== $identity->fingerprint()) {
             throw new LogicException('Evidence reuse obligation differs.');
         }
-        if ($work->state === 'settled' && $work->outcome === 'clean') {
+        if ($work->state === ScanWorkState::Settled && $work->outcome === 'clean') {
             $existing = $this->evidence->compatible($target, $spec);
             if ($existing !== null) {
                 return $existing;
             }
         }
-        if ($work->attempt !== 0 || $work->state !== 'pending') {
+        if ($work->attempt !== 0 || $work->state !== ScanWorkState::Pending) {
             throw new LogicException('Evidence reuse requires a fresh request.');
         }
         $now = $this->work->now();
         $row = $this->evidence->recordReuse($work, $this->work->requestFor($work), $record, $now);
-        $work->forceFill(['state' => 'settled', 'outcome' => 'clean', 'reason' => null, 'retryable' => false,
+        $work->forceFill(['state' => ScanWorkState::Settled, 'outcome' => 'clean', 'reason' => null, 'retryable' => false,
             'attempt' => 1, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
-        $target->forceFill(['scan_status' => 'clean'])->save();
+        $target->forceFill(['scan_status' => ScanStatus::Clean->value])->save();
 
         return $this->evidence->value($row);
     }

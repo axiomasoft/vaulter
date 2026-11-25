@@ -3791,6 +3791,17 @@
             }
         },
         {
+            "attribute": "state",
+            "cast": "Vaulter\\Drive\\Enums\\ScanWorkState",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.state",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
             "attribute": "updated_at",
             "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
             "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",

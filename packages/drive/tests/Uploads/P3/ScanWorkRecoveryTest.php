@@ -20,6 +20,7 @@ use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\FileRevision;
@@ -83,7 +84,7 @@ it('committed work survives missing delivery and reconciles publication', functi
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $revision->scanObligations()->firstOrFail();
-    expect($work->state)->toBe('pending')->and($work->attempt)->toBe(0);
+    expect($work->state)->toBe(ScanWorkState::Pending)->and($work->attempt)->toBe(0);
     Bus::fake();
     $result = app(ScanWorkReconciler::class)->reconcile();
     expect($result['published'])->toBe(1);
@@ -146,10 +147,10 @@ it('ledger deduplicates old requests and terminal exhaustion requires explicit r
     $attempt = app(ClaimScanWorkAction::class)->execute($second->id, $second->generation, new DateTimeImmutable('now'));
     app(VaulterDatabase::class)->write(fn () => $second->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save());
     expect(app(RecoverScanWorkAction::class)->execute($second, new DateTimeImmutable('now')))->toBeTrue()
-        ->and($second->refresh()->state)->toBe('settled')->and($second->reason)->toBe('attempts_exhausted')
+        ->and($second->refresh()->state)->toBe(ScanWorkState::Settled)->and($second->reason)->toBe('attempts_exhausted')
         ->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $next = $request((string) Str::uuid());
-    expect($next->state)->toBe('pending')->and($next->attempt)->toBe(0);
+    expect($next->state)->toBe(ScanWorkState::Pending)->and($next->attempt)->toBe(0);
 });
 
 it('signed cursors resume one revision and reject signature changes', function (): void {
@@ -242,10 +243,10 @@ it('replacement activation terminates old work while configuration mismatch stal
     $row = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
     config()->set('vaulter-drive.scan.scanner_version', '2');
     $result = app(ScanWorkReconciler::class)->reconcile();
-    expect($result['stalled_configuration'])->toBe(1)->and($row->refresh()->state)->toBe('pending');
+    expect($result['stalled_configuration'])->toBe(1)->and($row->refresh()->state)->toBe(ScanWorkState::Pending);
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $result = app(ScanWorkReconciler::class)->reconcile();
-    expect($row->refresh()->state)->toBe('settled')->and($row->reason)->toBe('superseded_policy')
+    expect($row->refresh()->state)->toBe(ScanWorkState::Settled)->and($row->reason)->toBe('superseded_policy')
         ->and($row->lease_token)->toBeNull();
     app(ScanBackfillReconciler::class)->expand();
     expect($node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->count())->toBe(2);
@@ -307,7 +308,7 @@ it('selects due work and expired leases by UTC in either app timezone', function
         expect($attempt)->not->toBeNull()->and(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0);
         app(VaulterDatabase::class)->write(fn () => $work->refresh()->forceFill(['lease_expires_at' => now('UTC')->subSecond(), 'last_published_at' => null])->save());
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
-            ->and($work->refresh()->state)->toBe('retry_wait')->and($work->lease_token)->toBeNull();
+            ->and($work->refresh()->state)->toBe(ScanWorkState::RetryWait)->and($work->lease_token)->toBeNull();
         app(VaulterDatabase::class)->write(fn () => $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save());
         $bus = Mockery::mock(Dispatcher::class);
         $bus->shouldReceive('dispatch')->andThrow(new RuntimeException('broker unavailable'));

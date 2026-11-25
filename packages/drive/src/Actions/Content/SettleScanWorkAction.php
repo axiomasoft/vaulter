@@ -11,6 +11,8 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\ScanWorkTransitions;
+use Vaulter\Drive\Enums\ScanStatus;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
@@ -55,21 +57,21 @@ final readonly class SettleScanWorkAction
             $this->transitions->append($work, $result, $now);
             $retry = $result->retryable && $work->attempt < $this->transitions->maxAttempts();
             $delay = [1 => 30, 2 => 120, 3 => 600, 4 => 1800][$work->attempt] ?? 1800;
-            $work->forceFill(['state' => $retry ? 'retry_wait' : 'settled', 'outcome' => $result->verdict->value,
+            $work->forceFill(['state' => $retry ? ScanWorkState::RetryWait : ScanWorkState::Settled, 'outcome' => $result->verdict->value,
                 'reason' => $result->reason, 'retryable' => $result->retryable, 'available_at' => $retry ? $now->modify('+'.$delay.' seconds') : $now,
                 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
             $revision = $snapshot['revision'];
             if ($result->verdict === ScanVerdict::Infected) {
-                $revision->forceFill(['quarantined_at' => $revision->quarantined_at ?? $now, 'scan_status' => 'infected'])->save();
+                $revision->forceFill(['quarantined_at' => $revision->quarantined_at ?? $now, 'scan_status' => ScanStatus::Infected->value])->save();
                 if ($snapshot['blob'] === null) {
                     throw new LogicException('Infection requires an exact blob.');
                 }
                 $snapshot['blob']->forceFill(['quarantined_at' => $snapshot['blob']->quarantined_at ?? $now])->save();
             } elseif ($this->evidence->infected($revision)) {
-                $revision->forceFill(['scan_status' => 'infected'])->save();
+                $revision->forceFill(['scan_status' => ScanStatus::Infected->value])->save();
             } else {
                 $clean = $this->evidence->compatible($revision, $attempt->spec) !== null;
-                $revision->forceFill(['scan_status' => $clean ? 'clean' : ($retry ? 'pending' : 'failed')])->save();
+                $revision->forceFill(['scan_status' => ($clean ? ScanStatus::Clean : ($retry ? ScanStatus::Pending : ScanStatus::Failed))->value])->save();
             }
 
             return true;

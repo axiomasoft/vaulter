@@ -33,6 +33,7 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Database\Factories\PinnedTenantResolver;
 use Vaulter\Drive\Enums\ScanStatus;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
@@ -207,7 +208,7 @@ final class ScanLifecycleContractTests
         Assert::assertNotNull($stale, 'Due scan work must be claimable.');
         $this->force($work->refresh(), ['lease_expires_at' => now('UTC')->subSecond(), 'last_published_at' => null]);
         $this->reconcile($drive);
-        Assert::assertSame('retry_wait', $work->refresh()->state, 'The reconcile command must recover an expired lease.');
+        Assert::assertSame(ScanWorkState::RetryWait, $work->refresh()->state, 'The reconcile command must recover an expired lease.');
         Assert::assertNull($work->lease_token, 'A recovered lease must not keep its token.');
 
         // The dead worker wakes up late: its attempt no longer owns the work.

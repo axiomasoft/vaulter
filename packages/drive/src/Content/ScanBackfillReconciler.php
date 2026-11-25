@@ -10,6 +10,7 @@ use RuntimeException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Configuration\DriveOptions;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -98,7 +99,7 @@ final readonly class ScanBackfillReconciler
                         }
                         $cursor->forceFill(['last_admission_sequence' => $revision->scan_admission_sequence,
                             'last_revision_id' => $revision->id])->save();
-                        if ($obligation !== null && $obligation->state !== 'settled') {
+                        if ($obligation !== null && $obligation->state !== ScanWorkState::Settled) {
                             $this->publisher->afterCommit($obligation);
                         }
 

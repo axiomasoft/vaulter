@@ -18,6 +18,7 @@ use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -95,7 +96,7 @@ it('killed committed publisher leaves intent recoverable by an independent proce
     expect($outcomes[0]->ok)->toBeFalse();
     $workClass = app(DriveOptions::class)->model('scan_obligation');
     $row = $workClass::query()->where('drive_id', $drive->id)->firstOrFail();
-    expect($row->state)->toBe('pending')->and($row->attempt)->toBe(0);
+    expect($row->state)->toBe(ScanWorkState::Pending)->and($row->attempt)->toBe(0);
     $recovered = ForkRace::run([function () use ($row): bool {
         $result = app(ScanWorkReconciler::class)->reconcile();
         $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
@@ -125,7 +126,7 @@ it('killed lease owner is fenced while a surviving process recovers', function (
         }
         posix_kill(getmypid(), SIGKILL);
     }]);
-    expect($killed[0]->ok)->toBeFalse()->and($row->refresh()->state)->toBe('leased');
+    expect($killed[0]->ok)->toBeFalse()->and($row->refresh()->state)->toBe(ScanWorkState::Leased);
     $row->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     $surviving = ForkRace::run([function () use ($row): bool {
         app(RecoverScanWorkAction::class)->execute($row, new DateTimeImmutable('now'));

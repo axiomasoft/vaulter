@@ -12,6 +12,7 @@ use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Enums\ScanStatus;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -51,7 +52,7 @@ final readonly class RestoreFileRevisionAction
             if ($source->size_bytes > $file->size_bytes) {
                 $this->policy->assertFileSize($context->drive, $source->size_bytes);
             }
-            if ($source->scan_status === 'infected') {
+            if ($source->scan_status === ScanStatus::Infected->value) {
                 throw new ContentQuarantinedException;
             }
             $this->admission->assertSource($source);

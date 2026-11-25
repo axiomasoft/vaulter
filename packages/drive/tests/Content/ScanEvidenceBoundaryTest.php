@@ -14,6 +14,7 @@ use Vaulter\Drive\Actions\Content\RevokeScanEvidenceAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Configuration\ScanOptions;
 use Vaulter\Drive\Content\ScanSnapshot;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanRequest;
 use Vaulter\Drive\Models\Drive;
@@ -159,14 +160,14 @@ it('reuses only exact same-drive clean evidence and revocation immediately remov
     $sourceEvidence = app(ScanEvidenceRepository::class)->compatible($revision, $spec);
     [, $copy] = scanBoundaryFixture($blob, $drive);
     $own = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($copy, $spec, (string) Str::uuid(), $context));
-    expect($own->state)->toBe('settled')->and($own->outcome)->toBe('clean')->and(ScanRequest::count())->toBe(2)
+    expect($own->state)->toBe(ScanWorkState::Settled)->and($own->outcome)->toBe('clean')->and(ScanRequest::count())->toBe(2)
         ->and(ScanEvidenceRecord::query()->where('revision_id', $copy->id)->first()->reused_from_id)->toBe($sourceEvidence->id);
     // Tenant-global physical storage can be shared, but evidence never grants
     // another drive authority, even for byte-for-byte identical immutable identity.
     $blob->forceFill(['storage_id' => null])->save();
     [$foreignDrive, $foreignRevision, , $foreignContext] = scanBoundaryFixture($blob);
     $foreignWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($foreignRevision, $spec, (string) Str::uuid(), $foreignContext));
-    expect($foreignWork->state)->toBe('pending');
+    expect($foreignWork->state)->toBe(ScanWorkState::Pending);
     expect(fn () => $db->transaction(fn () => app(ReuseScanEvidenceAction::class)->execute($foreignRevision, $sourceEvidence, $spec, $foreignWork)))
         ->toThrow(LogicException::class);
     // Equality on spec_key is independently significant; a persisted corrupt
@@ -191,16 +192,16 @@ it('records retry evidence, recovers lost leases and terminates exhausted attemp
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true)))->toBeTrue();
     $work->refresh();
-    expect($work->state)->toBe('retry_wait')->and($work->lease_token)->toBeNull()->and(ScanEvidenceRecord::count())->toBe(1)
+    expect($work->state)->toBe(ScanWorkState::RetryWait)->and($work->lease_token)->toBeNull()->and(ScanEvidenceRecord::count())->toBe(1)
         ->and(app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable))->toBeNull();
     $work->forceFill(['available_at' => now()->subMinute()])->save();
     $second = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $work->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
-    expect(app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('retry_wait')
+    expect(app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe(ScanWorkState::RetryWait)
         ->and(app(SettleScanWorkAction::class)->execute($second, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $third = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $work->refresh()->forceFill(['attempt' => 5, 'lease_expires_at' => now()->subSecond()])->save();
-    expect(app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('settled')
+    expect(app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe(ScanWorkState::Settled)
         ->and($work->fresh()->reason)->toBe('attempts_exhausted')->and(ScanEvidenceRecord::count())->toBe(2);
 });
 
@@ -208,7 +209,7 @@ it('settles unsupported manifests without opening bytes and rejects fabricated p
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $revision->forceFill(['blob_id' => null, 'manifest_blob_id' => $blob->id])->save();
     $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
-    expect($work->state)->toBe('settled')->and($work->reason)->toBe('unsupported')->and($work->attempt)->toBe(1)
+    expect($work->state)->toBe(ScanWorkState::Settled)->and($work->reason)->toBe('unsupported')->and($work->attempt)->toBe(1)
         ->and(ScanEvidenceRecord::count())->toBe(1)->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->toBeNull();
     $revision->forceFill(['tenant_id' => 'fabricated', 'sha256' => str_repeat('f', 64), 'blob_id' => $blob->id]);
     $snapshot = app(ScanSnapshot::class)->load($revision);
@@ -235,7 +236,7 @@ it('optional failed rescan retains exact clean proof and a new scanner epoch ref
     $newSpec = app(ScanOptions::class)->globalSpec();
     expect(app(ScanEvidenceRepository::class)->compatible($revision, $newSpec))->toBeNull();
     $newWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $newSpec, (string) Str::uuid(), $context));
-    expect($newWork->id)->not->toBe($work->id)->and($newWork->generation)->toBe(1)->and($newWork->state)->toBe('pending');
+    expect($newWork->id)->not->toBe($work->id)->and($newWork->generation)->toBe(1)->and($newWork->state)->toBe(ScanWorkState::Pending);
 });
 
 it('deterministic identity failure settles the current fenced snapshot without retry or blob mutation', function (): void {
@@ -247,7 +248,7 @@ it('deterministic identity failure settles the current fenced snapshot without r
     expect(app(FenceScanAttemptAction::class)->execute($attempt))->toBeNull()
         ->and(app(FailScanAttemptAction::class)->execute($attempt, 'content_identity_mismatch'))->toBeTrue()
         ->and(app(FailScanAttemptAction::class)->execute($attempt, 'content_identity_mismatch'))->toBeFalse()
-        ->and($work->fresh()->state)->toBe('settled')->and($work->fresh()->reason)->toBe('content_identity_mismatch')
+        ->and($work->fresh()->state)->toBe(ScanWorkState::Settled)->and($work->fresh()->reason)->toBe('content_identity_mismatch')
         ->and($work->fresh()->retryable)->toBeFalse()->and($blob->fresh()->quarantined_at)->toBeNull()
         ->and(ScanEvidenceRecord::query()->first()->outcome)->toBe('failed');
 });

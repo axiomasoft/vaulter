@@ -9,6 +9,7 @@ use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Operations\DriveContext;
@@ -105,7 +106,7 @@ it('corrupted immutable identity fails terminally before scanner bytes', functio
     $row = $revision->scanObligations()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $revision->blob()->firstOrFail()->forceFill(['storage_key' => 'changed-key'])->save());
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
-    expect($scanner->reads)->toBe(0)->and($row->refresh()->state)->toBe('settled')
+    expect($scanner->reads)->toBe(0)->and($row->refresh()->state)->toBe(ScanWorkState::Settled)
         ->and($row->outcome)->toBe('failed')->and($row->reason)->toBe('content_identity_mismatch')
         ->and($row->retryable)->toBeFalse()->and($row->lease_token)->toBeNull();
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
@@ -153,7 +154,7 @@ it('does not record the row hash when the streamed bytes differ', function (stri
     $row = $revision->scanObligations()->firstOrFail();
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
     expect($scanner->reads)->toBe(0)
-        ->and($row->refresh()->state)->toBe('settled')
+        ->and($row->refresh()->state)->toBe(ScanWorkState::Settled)
         ->and($row->outcome)->toBe('failed')
         ->and($row->reason)->toBe('content_identity_mismatch')
         ->and($row->retryable)->toBeFalse()

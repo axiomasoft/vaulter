@@ -11,6 +11,7 @@ use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Data\DoctorContext;
 use Packman\Doctor\Data\DoctorFinding;
 use Vaulter\Drive\Configuration\DriveModelsOptions;
+use Vaulter\Drive\Enums\ScanWorkState;
 
 /**
  * The durable scan obligations of uploaded content. A lease nobody renews, work that never became due
@@ -42,11 +43,11 @@ final readonly class ScanObligationsCheck implements DoctorCheck
         $now = CarbonImmutable::instance($context->now)->utc();
         $obligation = $this->models->scanObligation;
 
-        $expiredLeases = $obligation::query()->where('state', 'leased')->where('lease_expires_at', '<', $now)->count();
-        $overdue = $obligation::query()->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<', $now->subMinutes(self::OVERDUE_MINUTES))->count();
+        $expiredLeases = $obligation::query()->where('state', ScanWorkState::Leased->value)->where('lease_expires_at', '<', $now)->count();
+        $overdue = $obligation::query()->whereIn('state', [ScanWorkState::Pending->value, ScanWorkState::RetryWait->value])->where('available_at', '<', $now->subMinutes(self::OVERDUE_MINUTES))->count();
         $unscanned = [];
         foreach ($obligation::query()->toBase()
-            ->where('state', 'settled')
+            ->where('state', ScanWorkState::Settled->value)
             ->where(static fn (Builder $query): Builder => $query->whereIn('outcome', self::UNSCANNED)->orWhereIn('reason', self::UNSCANNED))
             ->selectRaw('coalesce(reason, outcome) as label, count(*) as total')->groupByRaw('coalesce(reason, outcome)')
             ->get() as $row) {

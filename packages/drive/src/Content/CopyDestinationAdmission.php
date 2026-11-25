@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Packman\Attributes\Internal;
+use Vaulter\Drive\Enums\ScanStatus;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Operations\DriveContext;
@@ -29,10 +30,10 @@ final readonly class CopyDestinationAdmission
     {
         foreach ($this->policy->scanSpecs($this->profiles->get($context->drive->profile)) as $spec) {
             if ($spec->mode !== ScanMode::Off) {
-                return 'pending';
+                return ScanStatus::Pending->value;
             }
         }
 
-        return 'not_required';
+        return ScanStatus::NotRequired->value;
     }
 }

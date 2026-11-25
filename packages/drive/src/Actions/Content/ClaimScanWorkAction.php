@@ -11,6 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanWorkTransitions;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 
@@ -38,8 +39,8 @@ final readonly class ClaimScanWorkAction
 
         return $this->database->transaction(function () use ($id, $generation, $now, $spec): ?ScanAttempt {
             $work = $this->work->lock($id);
-            if ($work === null || $work->generation !== $generation || $work->state === 'settled'
-                || $work->available_at > $now || ($work->state === 'leased' && $work->lease_expires_at > $now)) {
+            if ($work === null || $work->generation !== $generation || $work->state === ScanWorkState::Settled
+                || $work->available_at > $now || ($work->state === ScanWorkState::Leased && $work->lease_expires_at > $now)) {
                 return null;
             }
             if ($work->attempt >= $this->transitions->maxAttempts()) {
@@ -51,7 +52,7 @@ final readonly class ClaimScanWorkAction
             $token = (string) Str::uuid();
             $lease = $now->modify('+'.$this->settings->leaseSeconds().' seconds');
             $deadline = $now->modify('+'.$this->settings->scannerTimeoutSeconds().' seconds');
-            $work->forceFill(['state' => 'leased', 'attempt' => $attempt, 'lease_token' => $token,
+            $work->forceFill(['state' => ScanWorkState::Leased, 'attempt' => $attempt, 'lease_token' => $token,
                 'lease_expires_at' => $lease, 'updated_at' => $now])->save();
 
             return new ScanAttempt($work->id, $work->revision_id, $work->blob_id, $work->drive_id, $work->tenant_id,

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Override;
 use Packman\Attributes\Internal;
 use Vaulter\Configuration\DatabaseOptions;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -34,7 +35,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property string               $scanner_version
  * @property string               $policy_version
  * @property string               $request_key
- * @property string               $state
+ * @property ScanWorkState        $state
  * @property string|null          $outcome
  * @property string|null          $reason
  * @property CarbonImmutable|null $created_at
@@ -74,6 +75,7 @@ class ScanObligation extends Model
             'attempt' => PHP_INT_SIZE === 8 ? 'integer' : 'string',
             'size_bytes' => PHP_INT_SIZE === 8 ? 'integer' : 'string',
             'retryable' => 'boolean',
+            'state' => ScanWorkState::class,
         ];
     }
 }

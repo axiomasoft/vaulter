@@ -12,6 +12,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\ScanWorkTransitions;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Operations\DriveContext;
@@ -79,14 +80,14 @@ final readonly class RequestScanWorkAction
             'content_identity' => $identityHash, 'sha256' => $r->sha256, 'size_bytes' => $r->size_bytes,
             'spec_key' => $spec->specKey(), 'scanner_key' => $spec->scannerKey, 'scanner_version' => $spec->scannerVersion,
             'policy_version' => $spec->policyVersion, 'generation' => $generation, 'attempt' => 0,
-            'request_key' => $requestKey, 'state' => 'pending', 'outcome' => null, 'reason' => null, 'retryable' => false,
+            'request_key' => $requestKey, 'state' => ScanWorkState::Pending, 'outcome' => null, 'reason' => null, 'retryable' => false,
             'available_at' => $now, 'lease_token' => null, 'lease_expires_at' => null, 'last_published_at' => null,
             'created_at' => $createdAt, 'updated_at' => $now])->save();
         $this->work->recordRequest($work, $requestKey, $now, $rescan ? 'explicit_rescan' : 'admission', $context->correlationId);
         if ($unsupported) {
             $work->forceFill(['attempt' => 1])->save();
             $this->transitions->append($work, new ScanResult(ScanVerdict::Failed, $r->manifest_blob_id !== null || $blob?->chunked === true ? 'unsupported' : 'unknown'), $now);
-            $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $r->manifest_blob_id !== null || $blob?->chunked === true ? 'unsupported' : 'unknown'])->save();
+            $work->forceFill(['state' => ScanWorkState::Settled, 'outcome' => 'failed', 'reason' => $r->manifest_blob_id !== null || $blob?->chunked === true ? 'unsupported' : 'unknown'])->save();
         } elseif (!$rescan) {
             // A same-drive reupload may reuse existing exact-byte proof, but always
             // materializes its own request and evidence row before commit.

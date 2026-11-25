@@ -10,6 +10,8 @@ use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Actions\Content\ReuseScanEvidenceAction;
+use Vaulter\Drive\Enums\ScanStatus;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Operations\DriveContext;
@@ -56,13 +58,13 @@ final readonly class ScanAdmission
             if ($candidate !== null && (string) $candidate->driveId === (string) $context->driveId()) {
                 $this->reuse->execute($revision, $candidate, $spec, $obligation);
                 $clean = true;
-            } elseif ($obligation->state === 'settled' && $obligation->outcome === 'failed') {
+            } elseif ($obligation->state === ScanWorkState::Settled && $obligation->outcome === 'failed') {
                 $failed = true;
-            } elseif ($obligation->state !== 'settled') {
+            } elseif ($obligation->state !== ScanWorkState::Settled) {
                 $pending = true;
                 $this->publisher->afterCommit($obligation);
             }
         }
-        $revision->forceFill(['scan_status' => $pending ? 'pending' : ($clean ? 'clean' : ($failed ? 'failed' : 'not_required'))])->save();
+        $revision->forceFill(['scan_status' => ($pending ? ScanStatus::Pending : ($clean ? ScanStatus::Clean : ($failed ? ScanStatus::Failed : ScanStatus::NotRequired)))->value])->save();
     }
 }

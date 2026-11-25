@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanWorkTransitions;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 
@@ -25,12 +26,12 @@ final readonly class RecoverScanWorkAction
     {
         return $this->database->transaction(function () use ($obligation, $now): bool {
             $work = $this->work->lockPersisted($obligation);
-            if ($work === null || $work->generation !== $obligation->generation || $work->state !== 'leased'
+            if ($work === null || $work->generation !== $obligation->generation || $work->state !== ScanWorkState::Leased
                 || $work->lease_expires_at > $now) {
                 return false;
             }
             if ($work->attempt < $this->transitions->maxAttempts()) {
-                $work->forceFill(['state' => 'retry_wait', 'available_at' => $now, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
+                $work->forceFill(['state' => ScanWorkState::RetryWait, 'available_at' => $now, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
 
                 return true;
             }

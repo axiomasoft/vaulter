@@ -9,6 +9,7 @@ use LogicException;
 use Packman\Attributes\Internal;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\File;
@@ -40,7 +41,7 @@ final readonly class ScanWorkTransitions
         if (!$this->evidence->hasAttempt($request, $work->attempt)) {
             $this->append($work, new ScanResult(ScanVerdict::Failed, $reason), $now);
         }
-        $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $reason, 'retryable' => false,
+        $work->forceFill(['state' => ScanWorkState::Settled, 'outcome' => 'failed', 'reason' => $reason, 'retryable' => false,
             'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
     }
 
@@ -51,7 +52,7 @@ final readonly class ScanWorkTransitions
 
     public function fence(ScanObligation $work, ScanAttempt $attempt, DateTimeImmutable $now): bool
     {
-        return $work->state === 'leased' && $work->generation === $attempt->generation && $work->attempt === $attempt->attempt
+        return $work->state === ScanWorkState::Leased && $work->generation === $attempt->generation && $work->attempt === $attempt->attempt
             && $work->lease_token === $attempt->leaseToken && $work->lease_expires_at > $now
             && (string) $work->revision_id === (string) $attempt->revisionId && (string) $work->blob_id === (string) $attempt->blobId
             && (string) $work->drive_id === (string) $attempt->driveId && (string) $work->tenant_id === (string) $attempt->tenantId

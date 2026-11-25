@@ -11,6 +11,7 @@ use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Content\ScanEvidence;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
+use Vaulter\Drive\Enums\ScanStatus;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanRequest;
@@ -48,7 +49,7 @@ final readonly class ScanEvidenceRepository
     {
         $r = $snapshot['revision'];
         $blob = $snapshot['blob'];
-        if ($r->scan_status === 'infected' || $r->getAttribute('quarantined_at') !== null || $blob?->getAttribute('quarantined_at') !== null) {
+        if ($r->scan_status === ScanStatus::Infected->value || $r->getAttribute('quarantined_at') !== null || $blob?->getAttribute('quarantined_at') !== null) {
             return true;
         }
         if ($blob === null) {

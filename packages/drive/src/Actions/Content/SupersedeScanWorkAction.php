@@ -9,6 +9,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanWorkTransitions;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Drive\Enums\ScanWorkState;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
@@ -27,7 +28,7 @@ final readonly class SupersedeScanWorkAction
     {
         return $this->database->transaction(function () use ($obligation): bool {
             $work = $this->work->lockPersisted($obligation);
-            if ($work === null || $work->generation !== $obligation->generation || $work->state === 'settled') {
+            if ($work === null || $work->generation !== $obligation->generation || $work->state === ScanWorkState::Settled) {
                 return false;
             }
             $drive = $this->authority->driveOrFail($work->drive_id);
