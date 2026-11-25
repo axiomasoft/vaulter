@@ -47,11 +47,16 @@ it('shows the schema migrations the database has not run', function (): void {
 it('shows the slots a module defines and the contributions it makes', function (): void {
     $slots = array_column(modulesJson()['core']['slots'], null, 'slot');
 
-    expect($slots[DoctorCheck::class]['role'])->toBe('defines')
-        ->and($slots[DoctorCheck::class]['contributions'])->toBe(15);
-
     $module = new CoreModule;
     $builder = ModuleDeclarations::buildOffered($module::class);
+    $declaredChecks = array_filter($builder->contributions(), static fn (SlotContribution $contribution): bool => $contribution->slot === DoctorCheck::class);
+
+    // The command reports what the module declares, so the count comes from the declaration
+    // itself instead of a number that goes stale with every new doctor check.
+    expect($slots[DoctorCheck::class]['role'])->toBe('defines')
+        ->and($slots[DoctorCheck::class]['contributions'])->toBe(count($declaredChecks))
+        ->and($declaredChecks)->not->toBeEmpty();
+
     $invariants = array_values(array_filter($builder->contributions(), static fn (SlotContribution $contribution): bool => $contribution->slot === DoctorCheck::class && $contribution->key === 'core.production_invariants'));
     expect($invariants)->toHaveCount(1)
         ->and($invariants[0]->implementation)->toBe(ProductionInvariantsCheck::class);
