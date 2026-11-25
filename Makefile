@@ -9,8 +9,8 @@ lint: ## Fix code style with Pint
 lint-check: ## Check code style (no fix)
 	vendor/bin/pint --test
 
-stan: ## Run PHPStan static analysis
-	vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+stan: ## Run PHPStan static analysis (composer analyse: Testbench manifests first, then PHPStan)
+	composer analyse
 
 rector: ## Run Rector dry-run (no changes)
 	vendor/bin/rector --dry-run --no-progress-bar

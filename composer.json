@@ -133,7 +133,10 @@
     "scripts": {
         "lint": "vendor/bin/pint",
         "lint:check": "vendor/bin/pint --test",
-        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G --no-progress",
+        "analyse": [
+            "@php vendor/bin/testbench package:discover",
+            "vendor/bin/phpstan analyse --memory-limit=1G --no-progress"
+        ],
         "phpstan": "@analyse",
         "refactor": "vendor/bin/rector process",
         "refactor:check": "vendor/bin/rector process --dry-run",

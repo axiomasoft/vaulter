@@ -177,6 +177,13 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: vendor/bin/pint --test
 
+      # Larastan boots the Testbench skeleton in every PHPStan worker; on a fresh install the
+      # workers race to write its discovery manifests, and a worker that loses the race types
+      # every console option()/argument() as mixed (flaky errors). Write them once first.
+      - name: Build the Testbench discovery manifests
+        working-directory: ${{ matrix.dir }}
+        run: vendor/bin/testbench package:discover
+
       - name: Static analysis (PHPStan max)
         working-directory: ${{ matrix.dir }}
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
