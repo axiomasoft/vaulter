@@ -30,6 +30,8 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [A3](#a3-one-error-catalogue-per-package) | One error catalogue per package | P2 | M |
 | [A4](#a4-typed-options-in-the-satellites) | Typed options in the satellites | P2 | M |
 | [A5](#a5-public-surface-snapshots-in-the-satellites) | Public surface snapshots in the satellites | P2 | S |
+| [A7](#a7-one-safe-redirect-helper-in-the-base) | One safe redirect helper in the base | P1 | S |
+| [A8](#a8-datetime-instead-of-timestamp-columns-on-mysql) | DATETIME instead of TIMESTAMP columns on MySQL | P1 | S |
 | [A6](#a6-move-planning-material-out-of-the-public-repository) | Move planning material out of the public repository | P1 | S (a decision) |
 | [R6](#r6-npm-only-and-a-reviewed-install-script-allowlist) | npm only, and a reviewed install-script allowlist | P2 | S |
 | [R7](#r7-pin-runners-and-service-images-and-enforce-it) | Pin runners and service images, and enforce it | P2 | S |
@@ -58,6 +60,12 @@ never gated anything.
 **Proposal.** Pick one of: enable Actions billing for the `axiomasoft` organization (simplest); a
 mirror per satellite, as for the base; or one self-hosted runner pool shared by the family. Then make
 `CI gate` a required status check on `main` in every repository.
+
+If mirrors are chosen, use one template for all of them: a mirror repository per satellite with
+Actions enabled, Docker available on the runners (the PostgreSQL and MySQL service containers), and
+one repository secret (for example `VAULTER_READ_TOKEN`) with read access to `axiomasoft/vaulter`,
+`axiomasoft/vaulter-collaboration` and `axiomasoft/packman`, which the sibling checkout (B2) sends as
+an `Authorization` header.
 
 **Rationale.** Without this, every other proposal here is checked only on a laptop. The satellites
 have already drifted (see R3 and B4) precisely because nothing runs.
@@ -96,6 +104,10 @@ workspace. The root `composer.json` is the development workspace, not a publishe
 split packages are published from `packages/*`), so a lock file there does not constrain consumers.
 Use one PHPStan, Larastan, Pint, Rector and Pest range across the family and bump it in one pull
 request per repository.
+
+The shared Rector set belongs to the same policy: `packman-devtools` enables `SetList::EARLY_RETURN`
+in `PackmanRectorSet`, and the satellite work reported rewrites from it that the repositories then
+had to skip locally. Fix or narrow the set once in Packman instead of per-repository skips.
 
 **Rationale.** It makes a red build reproducible and a tool upgrade a reviewable change, instead of
 a side effect of whatever was released last night.
@@ -143,6 +155,11 @@ and, except for one collaboration changelog, no `CHANGELOG.md`.
 tarball built from `release/packages.json`, changesets for npm packages, a Keep a Changelog file per
 published package, and release notes drafted from Conventional Commits.
 
+Decide the intra-repository constraint style together with the release model: the base packages
+require each other as `self.version` (one version line released together), while ai and editor-pro
+require their sibling packages as `^1.0` (independent versions). Both are valid, but one family
+should use one, and the split workflow must match it.
+
 **Rationale.** Integrators then upgrade every package the same way, and a release can be reviewed
 from one checklist.
 
@@ -163,7 +180,8 @@ install scripts are allowed to run and keep that list in the repository.
 
 **Problem.** The base pinned its service images by digest but ran every job on `ubuntu-latest`;
 the satellites pin `ubuntu-24.04` but collaboration, sheets and one editor-pro job pull
-`postgres:<tag>` without a digest.
+`postgres:<tag>` without a digest. The satellite work also found a Redis image that is pinned
+differently from the base, and Dockerfile base images without a digest in collaboration.
 
 **Proposal.** Done for runners in the base on `refactor/polish` (all jobs on `ubuntu-24.04`). Pin the
 remaining service images by digest, and extend `scripts/ci/workflow-policy.py` to reject `-latest`
@@ -200,9 +218,11 @@ diverged.
 `scripts/ci/checkout-ecosystem.sh` and six more times inline in the ai, editor-pro and sheets
 workflows.
 
-**Proposal.** One script (or composite action) driven by the A1 manifest. If cross-repository
-actions are not available for private repositories, vendor the script and check that the copies
-match.
+**Proposal.** Use the base `scripts/ci/checkout-ecosystem.sh` in every satellite instead of the
+inline copies: it reads the Packman tag from the `composer.json` path repository, pins AzGuard by
+commit, and sends the token as an `Authorization` header instead of embedding it in the clone URL.
+Later, drive it from the A1 manifest. If cross-repository actions are not available for private
+repositories, vendor the script and check that the copies match.
 
 **Cost.** S.
 
@@ -226,8 +246,9 @@ fail until the sheets engine is built. After `npm ci` and the workspace builds, 
 
 **Proposal.** In every repository: `make setup` (siblings, `composer install`, `npm ci`, workspace
 builds in dependency order, Playwright browsers where needed), `make test`, `make quality` and
-`make test-pg` (PostgreSQL on a free local port). Port `scripts/pg-local.sh` from the base, and have
-`composer test` fail early with a clear message when a required build output is missing.
+`make test-pg` (PostgreSQL on a free local port). Port `scripts/pg-local.sh` from the base. Declare the build as a `composer prepare` script that
+`make setup` and CI run before `composer test`, and have `composer test` fail early with a clear
+message when a required build output is missing.
 
 **Rationale.** A contributor, and CI, should get a green run from a documented sequence, not from
 knowing which Node packages a PHP test silently depends on.
@@ -257,6 +278,18 @@ Only sheets has a `packman.json` among the satellites.
 every repository has a `packman.json` so `packman gate` can check the layering: base kernel, base
 capabilities, then collaboration, sheets and editor-pro, then ai.
 
+Make the providers uniform while doing it:
+
+- one name per package, `Vaulter<Package>ServiceProvider` (the base, collaboration and sheets follow
+  it; ai has six differently named providers and editor-pro two);
+- one rule for `singleton` versus `singletonIf`: `singletonIf` only for bindings a host is meant to
+  replace, `singleton` for internals (today the base mixes 26 and 7, ai 67 and 11, editor-pro uses
+  only `singleton`);
+- a shared test that every provider registers and boots without `APP_KEY` and without optional
+  services, with heavy dependencies (SDK clients, engines) registered lazily;
+- architecture tests for the package layers in every repository, so a lower layer cannot import a
+  higher one, next to the `packman gate` check.
+
 **Cost.** M in ai, S elsewhere.
 
 ### A3. One error catalogue per package
@@ -264,8 +297,10 @@ capabilities, then collaboration, sheets and editor-pro, then ai.
 **Problem.** The base pattern is an `ErrorCode` enum plus `ProblemDefinitions`. collaboration and
 editor-pro follow it; ai has an `ErrorCode` enum but no problem definitions; sheets has neither.
 
-**Proposal.** One catalogue per package, exported through the Packman error-codes check, so hosts get
-one `vaulter:errors` listing (and one generated reference page) for the whole family.
+**Proposal.** One catalogue per package, exported through the Packman error-codes check and merged
+into one family catalogue, so hosts get one `vaulter:errors` listing (and one generated reference
+page). Each problem `type` URL points at the documentation of the package that owns the code
+(per-source type URLs), instead of every package pointing at the base error page.
 
 **Cost.** M.
 
@@ -274,8 +309,13 @@ one `vaulter:errors` listing (and one generated reference page) for the whole fa
 **Problem.** sheets reads configuration through 31 raw `config()` calls outside its config files;
 the base uses closed-schema options objects.
 
-**Proposal.** Options objects plus an exported `config.schema.json` per package, so the
-`vaulter:doctor` configuration check also covers the satellites.
+The shallow-merged config arrays also misbehave: in sheets the published file and the code defaults
+disagree (`max_snapshot_bytes` is 32 MiB in the file and 7 MiB in code), and overriding one nested key
+drops its sibling keys back to the code defaults.
+
+**Proposal.** Typed settings objects plus an exported `config.schema.json` per package, built from one
+source of defaults, so the `vaulter:doctor` configuration check also covers the satellites. Add a
+shared test that every published configuration key is read somewhere, so dead keys cannot ship.
 
 **Cost.** M in sheets, S elsewhere.
 
@@ -291,6 +331,28 @@ in every repository.
 consumers.
 
 **Cost.** S per repository.
+
+### A7. One safe redirect helper in the base
+
+**Problem.** vaulter-ai had an open redirect: a `redirect_to` value taken from the request was
+followed without checking that it stays on the host application.
+
+**Proposal.** One helper in the base core that accepts only relative paths or URLs on the
+configured application host, used by every package that redirects after an action, plus a shared
+test for it.
+
+**Cost.** S.
+
+### A8. DATETIME instead of TIMESTAMP columns on MySQL
+
+**Problem.** collaboration creates its lease and timing columns as `TIMESTAMP(6)` on MySQL
+(`CollaborationSchema`). MySQL `TIMESTAMP` ends in January 2038 and is converted through the session
+time zone.
+
+**Proposal.** Use `DATETIME(6)` stored in UTC across the family, and add a schema rail (B1) that
+rejects `TIMESTAMP` columns on MySQL. There are no users yet, so the migration can be changed in place.
+
+**Cost.** S.
 
 ### A6. Move planning material out of the public repository
 
