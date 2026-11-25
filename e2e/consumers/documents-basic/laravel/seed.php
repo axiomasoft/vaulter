@@ -50,7 +50,7 @@ function requestAs(User $user, string $method, string $path, int $status, ?array
     $raw = (string) $response->getContent();
     check(
         $response->getStatusCode() === $status,
-        "$method $path expected $status, got ".$response->getStatusCode()." body ".$raw,
+        "$method $path expected $status, got ".$response->getStatusCode().' body '.$raw,
     );
 
     return [json_decode($raw, true, flags: JSON_THROW_ON_ERROR), $response->headers->get('ETag'), $raw];

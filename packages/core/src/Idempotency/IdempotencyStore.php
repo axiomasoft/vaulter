@@ -248,7 +248,7 @@ final class IdempotencyStore
      *
      * @template TResult
      *
-     * @param  Closure(): TResult  $query
+     * @param  Closure(): TResult $query
      * @return TResult
      */
     private function withBoundedWait(Closure $query): mixed

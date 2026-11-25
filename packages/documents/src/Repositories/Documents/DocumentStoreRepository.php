@@ -19,6 +19,7 @@ use Vaulter\Support\Identity;
 final class DocumentStoreRepository
 {
     public function __construct(private readonly ManagedDocumentPayloads $references) {}
+
     /**
      * @param array<string, mixed> $attributes server-built, never request input
      */
