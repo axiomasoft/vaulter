@@ -73,7 +73,7 @@ it('rejects incompatible drive model overrides', function (): void {
         ->toThrow(InvalidConfiguration::class);
 });
 
-it('owns the config sections of the drive concepts under vaulter-drive (P4.11)', function (): void {
+it('owns the config sections of the drive concepts under vaulter-drive', function (): void {
     /** @var array<string, mixed> $config */
     $config = require __DIR__.'/../../config/vaulter-drive.php';
 

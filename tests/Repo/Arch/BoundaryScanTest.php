@@ -259,7 +259,7 @@ it('keeps fk-map.json equal to the foreign keys of the schema identities', funct
         ->and(array_column(array_filter($map['fks'], static fn (array $fk): bool => $fk['head']), 'name'))->toBe(['v_documents_head_fk', 'v_files_head_fk']);
 });
 
-it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (all four block: I1 and I2 since P4.16, the collaboration residual of D32 emptied in P5.1)', function (): void {
+it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (all four block: I1 and I2 since , the collaboration residual of  emptied in)', function (): void {
     $repo = Repo::discover();
     $count = 0;
     foreach (['I1', 'I2', 'I3', 'I4'] as $invariant) {

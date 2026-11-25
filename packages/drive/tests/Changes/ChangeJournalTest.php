@@ -107,7 +107,7 @@ it('keeps a subtree upsert under a later plain upsert and replaces it with a lat
     expect(journalOf($this->drive, $folder->id))->toBe([['node.moved', 'upsert']]);
 });
 
-it('keeps a file move or access change under a later plain upsert (D61)', function (): void {
+it('keeps a file move or access change under a later plain upsert', function (): void {
     $file = $this->drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('a'), 'a.txt'));
     $target = $this->drive->folders()->create('target');
     $this->drive->nodes()->move($file, $target);

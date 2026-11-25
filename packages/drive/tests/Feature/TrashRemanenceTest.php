@@ -29,7 +29,7 @@ function trashStorage(): Drive
     return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
-it('404s on downloading the current head of a trashed node, F-P1.12-01', function (): void {
+it('404s on downloading the current head of a trashed node', function (): void {
     $storage = trashStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
@@ -46,7 +46,7 @@ it('404s on downloading the current head of a trashed node, F-P1.12-01', functio
     $this->get('api/vaulter/v1/files/'.$nodeId.'/download')->assertNotFound();
 });
 
-it('404s on downloading a specific version of a trashed node, F-P1.12-01', function (): void {
+it('404s on downloading a specific version of a trashed node', function (): void {
     $storage = trashStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
@@ -63,7 +63,7 @@ it('404s on downloading a specific version of a trashed node, F-P1.12-01', funct
     $this->get('api/vaulter/v1/files/'.$nodeId.'/revisions/'.$versionId.'/download')->assertNotFound();
 });
 
-it('restore makes a trashed node downloadable again, no regression to the un-trash path, F-P1.12-01', function (): void {
+it('restore makes a trashed node downloadable again, no regression to the un-trash path', function (): void {
     $storage = trashStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 

@@ -15,7 +15,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
  * Red-before: prior to this item both models declared `protected $guarded = [];`,
  * so `fill()` accepted every key below.
  */
-it('never mass-assigns author_id/node_id on NodeComment via fill() (F-P1.8-02)', function (): void {
+it('never mass-assigns author_id/node_id on NodeComment via fill()', function (): void {
     $comment = new NodeComment;
     $comment->fill([
         'author_id' => 999,
@@ -28,7 +28,7 @@ it('never mass-assigns author_id/node_id on NodeComment via fill() (F-P1.8-02)',
         ->and($comment->body)->toBe('legit comment text');
 });
 
-it('never mass-assigns anything on a DocumentRevision checkpoint via fill() (F-P1.8-02, D34)', function (): void {
+it('never mass-assigns anything on a DocumentRevision checkpoint via fill()', function (): void {
     // Checkpoints are written only by DocumentStateWriter with forceFill(); fill()
     // with request-shaped input must not reach a single column.
     expect(fn () => (new DocumentRevision)->fill([

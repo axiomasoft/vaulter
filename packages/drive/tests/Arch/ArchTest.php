@@ -33,7 +33,7 @@ arch('the package never depends on the host application (E5.1)')
  * generates INTO the host application — the package itself never imports or executes anything under `App\*`. The same holds
  * for `Console/MakeProfileCommand.php` (`App\Vaulter\Panels`) and `Console/MakeFileHandlerCommand.php`.
  */
-test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
+test('non-test src never references the host App namespace', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];
 

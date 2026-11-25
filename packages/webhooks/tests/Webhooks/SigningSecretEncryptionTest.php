@@ -15,7 +15,7 @@ use Vaulter\Webhooks\WebhookSecret;
  * cast is transparent (WebhookSigner sees plaintext), and the one-shot encryptor
  * migrates legacy plaintext rows idempotently.
  */
-it('stores the signing_secret as ciphertext and reads it back as plaintext, F-P1.7-02', function (): void {
+it('stores the signing_secret as ciphertext and reads it back as plaintext', function (): void {
     $endpoint = WebhookTestHelpers::endpoint(['signing_secret' => 'super-secret-key']);
 
     $raw = DB::table(app(DatabaseOptions::class)->table('webhook_endpoints'))
@@ -31,7 +31,7 @@ it('stores the signing_secret as ciphertext and reads it back as plaintext, F-P1
     expect($endpoint->fresh()?->signing_secret)->toBe('super-secret-key');
 });
 
-it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', function (): void {
+it('encrypts a legacy plaintext secret in place, idempotently', function (): void {
     $table = app(DatabaseOptions::class)->table('webhook_endpoints');
 
     // Seed a legacy plaintext row through the query builder (bypassing the cast).

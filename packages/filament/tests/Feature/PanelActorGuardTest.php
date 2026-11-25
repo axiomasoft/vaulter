@@ -16,7 +16,7 @@ use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
  * Red-before: with the pre-fix `Auth::user()` call, PanelActor::id() below
  * would resolve the DEFAULT-guard user (or null), never the panel-guard user.
  */
-it('resolves the acting admin through the panel guard, not the global default guard, F-P1.10-02', function (): void {
+it('resolves the acting admin through the panel guard, not the global default guard', function (): void {
     config()->set('auth.guards.panel_guard', ['driver' => 'session', 'provider' => 'users']);
 
     $defaultUser = DriveBuilder::user(1);
@@ -37,7 +37,7 @@ it('resolves the acting admin through the panel guard, not the global default gu
     expect(PanelActor::current()?->getAuthIdentifier())->toBe($panelUser->getKey());
 });
 
-it('resolves the same identity as the default guard when the panel uses no explicit guard (control, F-P1.10-02)', function (): void {
+it('resolves the same identity as the default guard when the panel uses no explicit guard (control)', function (): void {
     $defaultUser = DriveBuilder::user(1);
 
     $this->actingAs($defaultUser);

@@ -301,7 +301,7 @@ it('rejects a disallowed link href scheme', function (string $href): void {
     'missing href' => [''],
 ])->throws(InvalidDocumentContentException::class);
 
-it('rejects a disallowed image src scheme, R-01', function (string $src): void {
+it('rejects a disallowed image src scheme', function (string $src): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'image', 'attrs' => ['src' => $src]]],

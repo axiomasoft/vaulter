@@ -7,7 +7,7 @@ arch('media reads configuration through typed package accessors (P2.5)')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Media\Configuration']);
 
-test('media source has no direct Vaulter configuration reads (P2.5)', function (): void {
+test('media source has no direct Vaulter configuration reads', function (): void {
     $package = dirname(__DIR__, 2);
     $offenders = [];
 

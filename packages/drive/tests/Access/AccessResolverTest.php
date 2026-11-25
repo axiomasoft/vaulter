@@ -283,7 +283,7 @@ it('applies a subtree grant below a boundary to everything under it', function (
         ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $wall))->toBeFalse();
 });
 
-it('AccessResolver docblocks no longer claim an un-overridable wall, F-P1.1-01', function (): void {
+it('AccessResolver docblocks no longer claim an un-overridable wall', function (): void {
     $file = new ReflectionClass(AccessResolver::class)->getFileName();
     $source = file_get_contents($file);
 

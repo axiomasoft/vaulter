@@ -65,7 +65,7 @@ function copySubtreeFixture(object $test): array
     return [$folder, $visible, $secret, $destination];
 }
 
-it('SEC-D30-copy-subtree refuses the whole copy when a descendant is hidden and writes nothing', function (): void {
+it('refuses the whole copy when a descendant is hidden and writes nothing', function (): void {
     [$folder, , $secret, $destination] = copySubtreeFixture($this);
     $nodes = Node::query()->count();
     $used = $this->system->model()->used_bytes;
@@ -81,7 +81,7 @@ it('SEC-D30-copy-subtree refuses the whole copy when a descendant is hidden and 
     expect(Node::query()->where('parent_id', $copy->id)->count())->toBe(2);
 });
 
-it('SEC-D30-copy-subtree refuses a hidden document descendant before any document or revision row exists', function (): void {
+it('refuses a hidden document descendant before any document or revision row exists', function (): void {
     [$folder, , , $destination] = copySubtreeFixture($this);
     // A document the copier cannot see: the copy would otherwise reveal its content.
     $hidden = AccessTestHelpers::folder($this->system->model(), $folder, 'hidden document', inheritGrants: false);
@@ -97,7 +97,7 @@ it('SEC-D30-copy-subtree refuses a hidden document descendant before any documen
         ->and($rows())->toBe($before);
 });
 
-it('SEC-D30-copy-subtree refuses the whole copy when a visible descendant lacks download or copy', function (string $role): void {
+it('refuses the whole copy when a visible descendant lacks download or copy', function (string $role): void {
     [$folder, , $secret, $destination] = copySubtreeFixture($this);
     // The secret is visible now, but its role cannot take the content out (previewer)
     // or copy it (commenter).
@@ -108,7 +108,7 @@ it('SEC-D30-copy-subtree refuses the whole copy when a visible descendant lacks 
         ->and(Node::query()->count())->toBe($nodes);
 })->with([RoleRegistry::PREVIEWER, RoleRegistry::COMMENTER]);
 
-it('SEC-D30-copy-subtree lets a system actor copy everything but still stays in its drive', function (): void {
+it('lets a system actor copy everything but still stays in its drive', function (): void {
     [$folder, , , $destination] = copySubtreeFixture($this);
 
     $copy = $this->system->nodes()->copy($folder, $destination);
@@ -116,7 +116,7 @@ it('SEC-D30-copy-subtree lets a system actor copy everything but still stays in 
     expect(Node::query()->where('parent_id', $copy->id)->count())->toBe(2);
 });
 
-it('SEC-D30-copy-subtree refuses a descendant outside the authorised key set at the locked copy', function (): void {
+it('refuses a descendant outside the authorised key set at the locked copy', function (): void {
     [$folder, $visible, , $destination] = copySubtreeFixture($this);
     $context = DriveContext::system($this->system->model(), 'late descendant');
     $nodes = Node::query()->count();
@@ -156,7 +156,7 @@ final class CopyWithoutDownloadDriver implements PermissionDriver
     }
 }
 
-it('SEC-D30-copy-subtree refuses a copy of nodes the actor may view and copy but not download', function (): void {
+it('refuses a copy of nodes the actor may view and copy but not download', function (): void {
     $folder = $this->system->folders()->create('project');
     $this->system->files()->upload(UploadSource::fromString('visible', 'visible.txt'), new UploadOptions(parent: $folder));
     $destination = $this->system->folders()->create('destination');

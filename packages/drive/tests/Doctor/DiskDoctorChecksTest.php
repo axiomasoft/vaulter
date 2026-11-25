@@ -164,7 +164,7 @@ it('makes no write to the database', function (): void {
     expect(array_filter($statements, static fn (string $sql): bool => preg_match('/^\s*(insert|update|delete|create|alter|drop)\b/i', $sql) === 1))->toBe([]);
 });
 
-it('contributes the disk and dedup-scope checks as the drive and keeps them with the drive module (D33)', function (): void {
+it('contributes the disk and dedup-scope checks as the drive and keeps them with the drive module', function (): void {
     $keys = array_map(static fn (DoctorCheck $check): string => $check->key(), app(DoctorRegistry::class)->all());
     $drive = new ReflectionClassConstant(DriveModule::class, 'DOCTOR_CHECKS')->getValue();
     $media = new ReflectionClass(MediaModule::class);

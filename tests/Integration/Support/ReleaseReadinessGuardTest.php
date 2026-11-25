@@ -8,7 +8,7 @@ declare(strict_types=1);
  * the actual file each fix touched, not by memory of what "should" be there.
  */
 
-it('splits the root CHANGELOG.md into each split PHP package before the subtree split, F-P2.1-06', function (): void {
+it('splits the root CHANGELOG.md into each split PHP package before the subtree split', function (): void {
     $root = dirname(__DIR__, 3);
     $workflow = file_get_contents($root.'/.github/workflows/monorepo-split.yml');
     $builder = file_get_contents($root.'/scripts/release/build-artifacts.php');
@@ -27,7 +27,7 @@ it('splits the root CHANGELOG.md into each split PHP package before the subtree 
         ->and($preparePos)->toBeLessThan($materializePos);
 });
 
-it('declares a deprecation policy with a concrete removal horizon in CONTRIBUTING.md, F-P2.1-07', function (): void {
+it('declares a deprecation policy with a concrete removal horizon in CONTRIBUTING.md', function (): void {
     $contributing = file_get_contents(dirname(__DIR__, 3).'/CONTRIBUTING.md');
 
     expect($contributing)->not->toBeFalse()
@@ -38,7 +38,7 @@ it('declares a deprecation policy with a concrete removal horizon in CONTRIBUTIN
         ->and($contributing)->toMatch('/next.{0,10}major/i');
 });
 
-it('keeps @tiptap/pm as a peer dependency in @vaulter/vue package.json, F-P2.5-07', function (): void {
+it('keeps @tiptap/pm as a peer dependency in @vaulter/vue package.json', function (): void {
     $json = json_decode(
         file_get_contents(dirname(__DIR__, 3).'/packages/vue/package.json'),
         associative: true,
@@ -55,7 +55,7 @@ it('keeps @tiptap/pm as a peer dependency in @vaulter/vue package.json, F-P2.5-0
     expect($json['version'])->toBe('1.0.0');
 });
 
-it('formulates README\'s vaulter:install line as "asks to run", not "runs them", F-P2.5-04', function (): void {
+it('formulates README\'s vaulter:install line as "asks to run", not "runs them"', function (): void {
     $readme = file_get_contents(dirname(__DIR__, 3).'/README.md');
 
     expect($readme)->not->toBeFalse()

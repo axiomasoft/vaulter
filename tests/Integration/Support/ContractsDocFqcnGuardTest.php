@@ -14,7 +14,7 @@ use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
  * (sourced from the interface itself via reflection, not hand-copied) and no
  * longer the stale core-shaped one.
  */
-it('documents the real FQCN of UploadProtocolHandler, not the stale core-shaped one, F-P2.1-04', function (): void {
+it('documents the real FQCN of UploadProtocolHandler, not the stale core-shaped one', function (): void {
     $realFqcn = UploadProtocolHandler::class;
     $staleFqcn = 'Vaulter\\Contracts\\Uploads\\UploadProtocolHandler';
 

@@ -63,7 +63,7 @@ it('registers the drive codes with the catalogue and the drive lang namespace', 
     }
 });
 
-it('declares the drive codes located in core under the drive module (D39)', function (): void {
+it('declares the drive codes located in core under the drive module', function (): void {
     $catalog = $this->app->make(ProblemCatalog::class);
 
     foreach (array_keys((new DriveSliceProblemCodes)->codes()) as $code) {

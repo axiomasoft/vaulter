@@ -80,7 +80,7 @@ beforeEach(function (): void {
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 
-it('SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads', function (): void {
+it('V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads', function (): void {
     $job = new ScanFileRevision($this->work->id, $this->work->generation, $this->drive->id, 'A');
     $resolver = app(TenantResolver::class);
     $resolver->tenant = 'B';
@@ -96,7 +96,7 @@ it('SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inhe
         ->and($this->work->refresh()->outcome)->toBe('clean');
 });
 
-it('SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open', function (): void {
+it('private capability validates lease scope immutable blob revision and generation before byte open', function (): void {
     $repository = app(ScanObligationRepository::class);
     $attempt = app(ClaimScanWorkAction::class)->execute($this->work->id, $this->work->generation, new DateTimeImmutable('now'));
     expect($attempt)->not->toBeNull();
@@ -131,7 +131,7 @@ it('SEC-R12 private capability validates lease scope immutable blob revision and
     expect($this->scanner->reads)->toBe(0)->and($byteReads)->toBe(1);
 });
 
-it('SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass', function (): void {
+it('recovery only publishes current tenant work and all-tenant publication gives no job bypass', function (): void {
     $resolver = app(TenantResolver::class);
     $resolver->tenant = 'B';
     Bus::fake();

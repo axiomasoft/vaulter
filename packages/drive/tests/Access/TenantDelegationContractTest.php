@@ -17,7 +17,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
  * drive query predicates; host model scopes are additional protection.
  */
 
-it('never lets an actor granted in one storage reach a node in another via can() or sharedWith, F-P1.9-02', function (): void {
+it('never lets an actor granted in one storage reach a node in another via can() or sharedWith', function (): void {
     // The grant-authoritative lane: v_node_grants is the sole authority for these
     // assertions. The suite default ('null' driver) is intentionally OPEN — it
     // would trivially pass can()=true for both nodes and defeat the point of this
@@ -45,7 +45,7 @@ it('never lets an actor granted in one storage reach a node in another via can()
         ->and($sharedIds)->not->toContain($nodeB->getKey());
 });
 
-it('carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level, F-P1.9-02)', function (): void {
+it('carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level)', function (): void {
     // The standalone baseline does not add a TENANT global scope on its
     // default models (one would break GC/reconcile/sweeper, which must see EVERY
     // tenant). Node carries no global scope at all (purge is a real DELETE, so not
@@ -54,7 +54,7 @@ it('carries no TENANT global scope on the default Node model (the barrier is per
     expect(array_keys((new Node)->getGlobalScopes()))->toBe([]);
 });
 
-it('resolves a node by bare key with zero tenant/owner predicate applied (delegated tenancy, F-P1.9-02)', function (): void {
+it('resolves a node by bare key with zero tenant/owner predicate applied (delegated tenancy)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'bare-key');
 

@@ -29,25 +29,25 @@ function hotPathIndexColumnSets(string $table): array
     return array_map(static fn (array $index): array => $index['columns'], $indexes);
 }
 
-it('v_nodes carries a (trashed_at) scan index for the purge-trash predicate (F-P4.1-01)', function (): void {
+it('v_nodes carries a (trashed_at) scan index for the purge-trash predicate', function (): void {
     expect(hotPathIndexColumnSets('v_nodes'))->toContain(['trashed_at']);
 });
 
-it('v_nodes lists children through one (drive_id, parent_id) index now that manual positions are gone (PLAN2.D40)', function (): void {
+it('v_nodes lists children through one (drive_id, parent_id) index now that manual positions are gone (.)', function (): void {
     $columnSets = hotPathIndexColumnSets('v_nodes');
 
     expect($columnSets)->toContain(['drive_id', 'parent_id'])
         ->and($columnSets)->not->toContain(['drive_id', 'parent_id', 'position']);
 });
 
-it('v_blobs does not carry a redundant single-column status index — a strict prefix of the GC index (F-P4.1-02)', function (): void {
+it('v_blobs does not carry a redundant single-column status index — a strict prefix of the GC index', function (): void {
     $columnSets = hotPathIndexColumnSets('v_blobs');
 
     expect($columnSets)->not->toContain(['status'])
         ->and($columnSets)->toContain(['status', 'ref_count', 'delete_after_at']);
 });
 
-it('v_activity carries the (created_at) feed index exactly once, not twice (F-P4.1-02)', function (): void {
+it('v_activity carries the (created_at) feed index exactly once, not twice', function (): void {
     $duplicates = array_filter(
         hotPathIndexColumnSets('v_activity'),
         static fn (array $columns): bool => $columns === ['created_at'],

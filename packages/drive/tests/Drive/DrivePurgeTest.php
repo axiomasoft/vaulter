@@ -178,7 +178,7 @@ it('purges a quarantined revision through the same path: edges, rows and quota, 
     }
 });
 
-it('purges each child of the root as a root operation of the system actor "drive-purge" (D48), one purge event per child', function (): void {
+it('purges each child of the root as a root operation of the system actor "drive-purge", one purge event per child', function (): void {
     Queue::fake();
     $drive = DriveTestHelpers::drive();
     $id = $drive->model()->getKey();

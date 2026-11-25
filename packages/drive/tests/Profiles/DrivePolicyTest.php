@@ -49,7 +49,7 @@ function drivePolicyChain(Drive $drive, int $levels): Node
     return $parent ?? throw new LogicException('No chain.');
 }
 
-it('ships the D43 defaults', function (): void {
+it('ships the default drive policy', function (): void {
     $policy = (new Profile)->key('p')->getDrivePolicy();
 
     expect($policy->namePolicy)->toBe(PortableNamePolicy::KEY)
@@ -129,7 +129,7 @@ it('checks a file size against maxFileBytes', function (): void {
     expect(fn () => $enforcer->assertFileSize($drive, 11))->toThrow(FileSizeLimitExceededException::class);
 });
 
-it('patches one namespace and enforces the D41 property contract', function (): void {
+it('patches one namespace and enforces the policy property contract', function (): void {
     drivePolicyRegistry((new Profile)->key('default')->drivePolicy(fn (DrivePolicyBuilder $p): DrivePolicyBuilder => $p->maxPropertyCount(3)->maxPropertiesBytes(120)));
     $drive = drivePolicyDrive('default');
     $enforcer = app(DrivePolicyEnforcer::class);

@@ -9,7 +9,7 @@ arch('core reads configuration through typed package accessors (P2.5)')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Configuration', 'Vaulter\Drive\Configuration', 'Vaulter\Documents\Configuration', 'Vaulter\Media\Configuration', 'Vaulter\Filament\Configuration', 'Vaulter\AzGuard\Configuration', 'Vaulter\Tests', 'Vaulter\Testing', 'Vaulter\Drive\Testing', 'Vaulter\Documents\Testing', 'Vaulter\Load', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Media\Tests', 'Vaulter\Filament\Tests', 'Vaulter\AzGuard\Tests']);
 
-test('core source has no direct Vaulter configuration reads (P2.5)', function (): void {
+test('core source has no direct Vaulter configuration reads', function (): void {
     $package = __DIR__.'/../../../packages/core';
     $offenders = [];
 
@@ -44,7 +44,7 @@ test('core source has no direct Vaulter configuration reads (P2.5)', function ()
     expect($offenders)->toBe([]);
 });
 
-test('all six packages enforce configuration boundaries in every PHP file (P2.5)', function (): void {
+test('all six packages enforce configuration boundaries in every PHP file', function (): void {
     // AST inventory also covers classless Pest/config/routes files and deleted
     // class names, which native class_exists-based architecture rules cannot see.
     $violations = (new ConfigurationArchitectureGuard)->scanPackages(__DIR__.'/../../../packages');

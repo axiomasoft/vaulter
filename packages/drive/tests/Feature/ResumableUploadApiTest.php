@@ -169,7 +169,7 @@ it('refuses the tus surface when tus is disabled', function (): void {
     ])->assertForbidden();
 });
 
-it('429s a resumable-upload session create past the vaulter-uploads rate limit (F-P1.8-01)', function (): void {
+it('429s a resumable-upload session create past the vaulter-uploads rate limit', function (): void {
     config()->set('vaulter.routes.rate_limits.uploads', 1);
     $storage = uploadStorage();
 
@@ -185,7 +185,7 @@ it('429s a resumable-upload session create past the vaulter-uploads rate limit (
     ])->assertStatus(429);
 });
 
-it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function (): void {
+it('429s a tus PATCH past the vaulter-uploads rate limit', function (): void {
     // The limiter bucket is keyed by actor, shared across EVERY vaulter-uploads
     // request (create + every PATCH) — the cap must cover the create call too, so
     // it is set BEFORE create: budget 2 (create + one PATCH), the second PATCH
@@ -221,7 +221,7 @@ it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function 
     )->assertStatus(429);
 });
 
-it('refuses a new upload session past the active-session cap for the actor (F-P1.4-09)', function (): void {
+it('refuses a new upload session past the active-session cap for the actor', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 2);
     $storage = uploadStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();

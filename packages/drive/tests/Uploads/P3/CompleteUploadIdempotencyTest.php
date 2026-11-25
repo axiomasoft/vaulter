@@ -40,7 +40,7 @@ function assembledIdempotencyUpload(): UploadSession
     return app(UploadSessionManager::class)->markAssembled($session->refresh());
 }
 
-it('SEC-R19-replay replays persisted exact revision after a newer head and without staging', function (): void {
+it('replays persisted exact revision after a newer head and without staging', function (): void {
     $session = assembledIdempotencyUpload();
     $context = DriveContext::system($session->storage, 'upload test');
     $node = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
@@ -65,7 +65,7 @@ it('SEC-CLEANUP-input-fingerprint rejects changed completion intent and corrupt 
     expect(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-R13 keeps protocol bytes until outer commit and retains them after outer rollback', function (): void {
+it('keeps protocol bytes until outer commit and retains them after outer rollback', function (): void {
     $session = assembledIdempotencyUpload();
     $context = DriveContext::system($session->storage, 'upload test');
     expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($context, $session): void {

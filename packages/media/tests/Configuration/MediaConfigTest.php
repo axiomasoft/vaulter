@@ -77,7 +77,7 @@ it('accepts off', function (): void {
     expect(MediaOptions::fromArray(['dedup' => ['scope' => 'off']])->dedupScope())->toBe(DedupScope::Off);
 });
 
-it('reads the swappable blob model from vaulter-media.models.blob and refuses a class that is not a blob (D6)', function (): void {
+it('reads the swappable blob model from vaulter-media.models.blob and refuses a class that is not a blob', function (): void {
     /** @var array<string, mixed> $base */
     $base = require __DIR__.'/../../config/vaulter-media.php';
 

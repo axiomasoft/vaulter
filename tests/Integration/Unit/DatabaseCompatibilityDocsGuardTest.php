@@ -13,7 +13,7 @@ declare(strict_types=1);
  * table|schema change polic" returned 0 relevant hits. This test pins the presence of
  * that policy so it cannot silently regress out of the docs again.
  */
-it('states the schema change policy for future releases (F-P2.3-04)', function (): void {
+it('states the schema change policy for future releases', function (): void {
     $docs = file_get_contents(__DIR__.'/../../../docs/reference/compatibility.md');
 
     expect($docs)->not->toBeFalse()
@@ -29,7 +29,7 @@ it('states the schema change policy for future releases (F-P2.3-04)', function (
  * embeddability doc must tell a host how to place the schema on its own
  * connection, not just leave it discoverable only by reading `config/vaulter.php`.
  */
-it('documents the vaulter.database.connection key for embedding the schema on its own connection (F-P2.3-02)', function (): void {
+it('documents the vaulter.database.connection key for embedding the schema on its own connection', function (): void {
     $docs = file_get_contents(__DIR__.'/../../../docs/reference/compatibility.md');
 
     expect($docs)->not->toBeFalse()

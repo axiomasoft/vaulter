@@ -25,7 +25,7 @@ beforeEach(function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'database');
 });
 
-it('AccessResolver::can() compiles the ancestor CTE with a withMaxDepth bound (F-P4.2-01)', function (): void {
+it('AccessResolver::can() compiles the ancestor CTE with a withMaxDepth bound', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
 
@@ -68,7 +68,7 @@ it('AccessResolver::can() compiles the ancestor CTE with a withMaxDepth bound (F
         ->and($ancestorQuery)->toContain(DB::connection()->getQueryGrammar()->wrap('depth').' <');
 });
 
-it('NodeReadRepository::ancestors() compiles the ancestor CTE with a withMaxDepth bound (F-P4.2-01)', function (): void {
+it('NodeReadRepository::ancestors() compiles the ancestor CTE with a withMaxDepth bound', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
 
@@ -89,7 +89,7 @@ it('NodeReadRepository::ancestors() compiles the ancestor CTE with a withMaxDept
     expect($sql)->toContain(DB::connection()->getQueryGrammar()->wrap('depth').' <');
 });
 
-it('NodeReadRepository::breadcrumb() compiles the ancestor CTE with a withMaxDepth bound (F-P4.2-01)', function (): void {
+it('NodeReadRepository::breadcrumb() compiles the ancestor CTE with a withMaxDepth bound', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
 

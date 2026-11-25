@@ -274,7 +274,7 @@ it('keeps every table in the migrations and the schema class of the module that 
     }
 });
 
-it('numbers the create-migrations in the block of the owner and in the order of the foreign keys (D40)', function (): void {
+it('numbers the create-migrations in the block of the owner and in the order of the foreign keys', function (): void {
     $root = dirname(__DIR__, 3);
     $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499]];
     $numbers = [];

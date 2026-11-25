@@ -36,7 +36,7 @@ use Vaulter\Media\Models\Cas\Blob;
  *    stronger guarantee for these security-critical rows (CAS identity, ACL,
  *    audit trail, outbox/delivery bookkeeping).
  */
-it('discards a service/security column via fill() on a closed-$fillable vaulter-core model (F-P1.8-02)', function (
+it('discards a service/security column via fill() on a closed-$fillable vaulter-core model', function (
     string $model,
     string $dangerousKey,
     mixed $dangerousValue,
@@ -53,7 +53,7 @@ it('discards a service/security column via fill() on a closed-$fillable vaulter-
     'NodeShare.token_hash' => [NodeShare::class, 'token_hash', 'attacker-hash'],
 ]);
 
-it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with MassAssignmentException (F-P1.8-02)', function (
+it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with MassAssignmentException', function (
     string $model,
     string $dangerousKey,
     mixed $dangerousValue,
@@ -76,7 +76,7 @@ it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with Mas
  * fully guarded, so `fill()` throws outright; a fill()-only `create()` (which
  * internally calls fill() then save()) never reaches the INSERT at all.
  */
-it('never mass-assigns sha256 or storage_key on Blob via fill() or create() (F-P1.5-04)', function (): void {
+it('never mass-assigns sha256 or storage_key on Blob via fill() or create()', function (): void {
     $filled = new Blob;
 
     expect(fn () => $filled->fill([

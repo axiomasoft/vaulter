@@ -50,7 +50,7 @@ it('the exporter registry still accepts a ready instance', function (): void {
  * "fails loud when absent" — see the tests below, which pin the OPPOSITE: it
  * always resolves.
  */
-it('drive() fails loud with an install hint when no active module provides the drive factory, F-P3.5-01', function (): void {
+it('drive() fails loud with an install hint when no active module provides the drive factory', function (): void {
     $manager = new Vaulter(FreshApplication::boot(['vaulter.modules' => ['drive' => false]]));
 
     expect(fn () => $manager->drive(new Node, 'default'))
@@ -66,7 +66,7 @@ it('drive() fails loud with an install hint when no active module provides the d
  * VaulterDocumentsServiceProvider (tests/Pest.php / TestCase::getPackageProviders),
  * so this exercises the real "documents package absent" path, not a mock.
  */
-it('handlers() resolves the core-owned registry even when vaulter-documents is absent, P0.4/D10', function (): void {
+it('handlers() resolves the core-owned registry even when vaulter-documents is absent', function (): void {
     expect(app()->bound(FileHandlerRegistry::class))->toBeTrue();
 
     $registry = app(Vaulter::class)->handlers();
@@ -78,7 +78,7 @@ it('handlers() resolves the core-owned registry even when vaulter-documents is a
     expect($handler)->toBeInstanceOf(DownloadOnlyHandler::class);
 });
 
-it('registerHandler() registers a custom handler with NO package installed, P0.4/D10', function (): void {
+it('registerHandler() registers a custom handler with NO package installed', function (): void {
     $manager = app(Vaulter::class);
 
     $manager->handlers()->register(SeamTestCadHandler::class);

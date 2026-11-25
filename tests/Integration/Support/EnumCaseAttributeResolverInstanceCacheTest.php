@@ -17,7 +17,7 @@ use Vaulter\Support\EnumCaseAttributeResolver;
  * SAME populated array (static state has no per-instance storage) and this test
  * fails red; after the fix each instance starts with its own empty `$cache`.
  */
-it('does not share its reflection-attribute cache across instances, F-P2.1-05', function (): void {
+it('does not share its reflection-attribute cache across instances', function (): void {
     $first = new EnumCaseAttributeResolver;
     $first->forCase(Effect::Allow, Label::class);
 
@@ -39,7 +39,7 @@ it('does not share its reflection-attribute cache across instances, F-P2.1-05', 
  * for the whole worker process, reproducing the same failure mode as the
  * removed process-wide static cache.
  */
-it('is bound as a container scoped instance, so its lifecycle follows the container not the process, F-P2.1-05', function (): void {
+it('is bound as a container scoped instance, so its lifecycle follows the container not the process', function (): void {
     $withinRequest = app(EnumCaseAttributeResolver::class);
 
     expect(app(EnumCaseAttributeResolver::class))->toBe($withinRequest);

@@ -14,7 +14,7 @@ use Vaulter\Webhooks\WebhookRetryDispatcher;
  * next_retry_at before dispatch. Two runs back-to-back therefore fan a delivery out
  * exactly once; the outbox relay (vaulter:relay) never re-dispatches webhook deliveries.
  */
-it('does not re-dispatch the same due delivery twice across two sweeps, F-P1.7-05', function (): void {
+it('does not re-dispatch the same due delivery twice across two sweeps', function (): void {
     Bus::fake();
 
     $endpoint = WebhookTestHelpers::endpoint();

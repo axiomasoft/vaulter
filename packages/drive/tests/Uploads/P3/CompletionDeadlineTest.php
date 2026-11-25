@@ -78,7 +78,7 @@ final class DeadlineUnboundedWrapper
     }
 }
 
-it('D19-config types the completion budget as 1..300 seconds with a 60 second default', function (): void {
+it('types the completion budget as 1..300 seconds with a 60 second default', function (): void {
     expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(60);
     config()->set('vaulter-drive.uploads.resumable.complete_timeout_seconds', 0);
     expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(1);
@@ -88,7 +88,7 @@ it('D19-config types the completion budget as 1..300 seconds with a 60 second de
     expect(app(DriveOptions::class)->uploads->resumable->completeTimeoutSeconds)->toBe(60);
 });
 
-it('D19-slow-stream refuses a staged stream that outlives the budget between chunks without publishing', function (): void {
+it('refuses a staged stream that outlives the budget between chunks without publishing', function (): void {
     $session = assembledDeadlineUpload();
     $context = DriveContext::system($session->storage, 'upload test');
     // 0.25 s per clock reading: the budget of 1 s ends after the first 64 KiB chunk of 200 KB.
@@ -108,7 +108,7 @@ it('D19-slow-stream refuses a staged stream that outlives the budget between chu
         ->and(FileRevision::query()->count())->toBe(1);
 });
 
-it('D19-retry shares one monotonic budget across attempts instead of resetting it', function (): void {
+it('shares one monotonic budget across attempts instead of resetting it', function (): void {
     $session = assembledDeadlineUpload(bytes: 16);
     $context = DriveContext::system($session->storage, 'upload test');
     $reads = 0;
@@ -124,7 +124,7 @@ it('D19-retry shares one monotonic budget across attempts instead of resetting i
         ->and(FileRevision::query()->count())->toBe(0);
 });
 
-it('D19-request starts the budget once before the session critical section of UploadOperations::complete', function (): void {
+it('starts the budget once before the session critical section of UploadOperations::complete', function (): void {
     $session = assembledDeadlineUpload(bytes: 16);
     $reads = 0;
     app()->instance(CompletionClock::class, new CompletionClock(app(DriveOptions::class), steppingClock(100.0, $reads)));
@@ -138,7 +138,7 @@ it('D19-request starts the budget once before the session critical section of Up
         ->and(app(StagedUpload::class)->size($session))->toBe(16);
 });
 
-it('D19-transport bounds a socket stream with the remaining budget and reads it', function (): void {
+it('bounds a socket stream with the remaining budget and reads it', function (): void {
     [$left, $right] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
     fwrite($right, 'payload');
     fclose($right);
@@ -159,7 +159,7 @@ it('D19-transport bounds a socket stream with the remaining budget and reads it'
     fclose($left);
 });
 
-it('D19-transport refuses a stream without an enforceable timeout as an unsupported capability', function (): void {
+it('refuses a stream without an enforceable timeout as an unsupported capability', function (): void {
     stream_wrapper_register('vaulterdeadline', DeadlineUnboundedWrapper::class);
     try {
         $stream = fopen('vaulterdeadline://staged', 'rb');
@@ -171,7 +171,7 @@ it('D19-transport refuses a stream without an enforceable timeout as an unsuppor
     }
 });
 
-it('D19-interrupted rejects a staged stream that stops making progress', function (): void {
+it('rejects a staged stream that stops making progress', function (): void {
     $path = tempnam(sys_get_temp_dir(), 'vaulter-deadline-');
     $source = fopen($path, 'wb'); // write-only: a read fails with false, the stream stays open
     $stream = CompletionDeadline::start(seconds: 5, clock: steppingClock(0.01))->bound(stream: $source, uploadId: 'up-cut');
@@ -185,7 +185,7 @@ it('D19-interrupted rejects a staged stream that stops making progress', functio
     }
 });
 
-it('D19-preflight refuses an unboundable remote disk before any staged open, CAS write or assemble', function (): void {
+it('refuses an unboundable remote disk before any staged open, CAS write or assemble', function (): void {
     $session = assembledDeadlineUpload(bytes: 16);
     $local = Storage::disk('local');
     $methods = ['fileExists', 'directoryExists', 'read', 'readStream', 'write', 'writeStream', 'delete', 'deleteDirectory', 'createDirectory', 'setVisibility', 'visibility', 'mimeType', 'lastModified', 'fileSize', 'listContents', 'move', 'copy'];

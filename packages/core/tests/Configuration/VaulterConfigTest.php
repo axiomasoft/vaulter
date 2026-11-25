@@ -38,7 +38,7 @@ it('adds the package middleware exactly once to each route middleware stack', fu
         ->and($custom->versionedPrefix())->toBe('api/vaulter/v1');
 });
 
-it('keeps no drive and no webhooks section in the kernel config root (P4.11, P4.13)', function (): void {
+it('keeps no drive and no webhooks section in the kernel config root', function (): void {
     /** @var array<string, mixed> $config */
     $config = require __DIR__.'/../../config/vaulter.php';
 

@@ -29,7 +29,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  * {@see Activity::scopeNewestFirst()}), both rows
  * survive the boundary.
  */
-it('search() cursor pagination does not skip a same-name row across the page boundary (F-P4.2-05)', function (): void {
+it('search() cursor pagination does not skip a same-name row across the page boundary', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
 
@@ -61,7 +61,7 @@ it('search() cursor pagination does not skip a same-name row across the page bou
         ->and($ids->all())->toEqualCanonicalizing([$file1->id, $file2->id]);
 });
 
-it('trashed() cursor pagination does not skip a same-timestamp row across the page boundary (F-P4.2-05)', function (): void {
+it('trashed() cursor pagination does not skip a same-timestamp row across the page boundary', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
     $table = app(DatabaseOptions::class)->table('nodes');
@@ -93,7 +93,7 @@ it('trashed() cursor pagination does not skip a same-timestamp row across the pa
         ->and($ids->all())->toEqualCanonicalizing([$file1->id, $file2->id]);
 });
 
-it('GrantReadRepository::forNode() cursor pagination does not skip a same-timestamp grant across the page boundary (F-P4.2-05)', function (): void {
+it('GrantReadRepository::forNode() cursor pagination does not skip a same-timestamp grant across the page boundary', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
     $table = app(DatabaseOptions::class)->table('node_grants');

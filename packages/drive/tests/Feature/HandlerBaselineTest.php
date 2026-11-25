@@ -25,7 +25,7 @@ use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
  * from the OUTCOME side (resolution still works), not by asserting the tag exists — so
  * a future edit cannot satisfy them while dropping the guarantee.
  */
-it('resolves the preview baseline even when a stale published config empties vaulter-drive.handlers, P0.4/D10', function (): void {
+it('resolves the preview baseline even when a stale published config empties vaulter-drive.handlers', function (): void {
     // Exactly what a earlier published config/vaulter.php carries.
     config()->set('vaulter-drive.handlers', []);
     app()->forgetInstance(FileHandlerRegistry::class);
@@ -38,7 +38,7 @@ it('resolves the preview baseline even when a stale published config empties vau
         ->and($handler->capabilities($pdf)->previewable)->toBeTrue();
 });
 
-it('still falls back to DownloadOnly for an unhandled type under a stale config, P0.4/D10', function (): void {
+it('still falls back to DownloadOnly for an unhandled type under a stale config', function (): void {
     config()->set('vaulter-drive.handlers', []);
     app()->forgetInstance(FileHandlerRegistry::class);
 
@@ -48,7 +48,7 @@ it('still falls back to DownloadOnly for an unhandled type under a stale config,
         ->toBeInstanceOf(DownloadOnlyHandler::class);
 });
 
-it('lists each baseline handler exactly ONCE — the tag and the config default do not double-register, P0.4/D10', function (): void {
+it('lists each baseline handler exactly ONCE — the tag and the config default do not double-register', function (): void {
     // Both sources name the same two FQCNs; the registry de-duplicates by class, so a
     // stock install must not resolve two PreviewHandler instances (which would make the
     // priority sort order-dependent and the introspection surface lie).

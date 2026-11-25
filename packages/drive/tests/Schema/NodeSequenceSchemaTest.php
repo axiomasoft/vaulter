@@ -70,7 +70,7 @@ it('creates the node sequence as a signed 64-bit column with enforced foreign ke
     }
 })->with(['bigint', 'ulid', 'uuid7']);
 
-it('D33 refuses to add the node sequence on a mysql-driver server that cannot enforce CHECK', function (string $version, string $mode): void {
+it('refuses to add the node sequence on a mysql-driver server that cannot enforce CHECK', function (string $version, string $mode): void {
     $database = DB::getFacadeRoot();
     $connection = Mockery::mock(Connection::class);
     $connection->shouldReceive('getDriverName')->andReturn('mysql');

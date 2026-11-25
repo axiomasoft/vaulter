@@ -98,7 +98,7 @@ it('preserves cached configuration without adding defaults', function (): void {
     expect($config->all())->toBe($values);
 });
 
-it('contributes the document presenter and lifecycle to the drive slots, and no file handler (PLAN2.P4.3)', function (): void {
+it('contributes the document presenter and lifecycle to the drive slots, and no file handler', function (): void {
     $extensions = app(Kernel::class)->extensions();
 
     expect($extensions->handler(KindPresenter::class, 'document'))->toBeInstanceOf(DocumentPresenter::class)

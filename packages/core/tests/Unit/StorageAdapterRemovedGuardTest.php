@@ -13,7 +13,7 @@ use Vaulter\Configuration\VaulterOptions;
  * called itself a "Skeleton"). This guard pins the removal so the dead seam
  * cannot silently reappear.
  */
-it('removes the dead StorageAdapter seam entirely, F-P3.1-03', function (): void {
+it('removes the dead StorageAdapter seam entirely', function (): void {
     /** @var array<string, mixed> $config */
     $config = require __DIR__.'/../../config/vaulter.php';
 

@@ -16,7 +16,7 @@ use Vaulter\Drive\Schema\DriveSchema;
  * writes through the default `Schema`/`DB` facades and every model's
  * `getConnectionName()` stays null regardless of `vaulter.database.connection`.
  */
-it('creates a panel\'s tables on the connection named by vaulter.database.connection, not the default one [F-P2.3-02]', function (): void {
+it('creates a panel\'s tables on the connection named by vaulter.database.connection, not the default one', function (): void {
     config()->set('database.connections.vaulter_other', [
         'driver' => 'sqlite',
         'database' => ':memory:',
@@ -39,7 +39,7 @@ it('creates a panel\'s tables on the connection named by vaulter.database.connec
     }
 });
 
-it('routes a default Vaulter model\'s connection through vaulter.database.connection [F-P2.3-02]', function (): void {
+it('routes a default Vaulter model\'s connection through vaulter.database.connection', function (): void {
     config()->set('database.connections.vaulter_other', [
         'driver' => 'sqlite',
         'database' => ':memory:',
@@ -51,7 +51,7 @@ it('routes a default Vaulter model\'s connection through vaulter.database.connec
     config()->set('vaulter.database.connection');
 });
 
-it('control: vaulter.database.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
+it('control: vaulter.database.connection=null (the default) leaves every write on the host\'s default connection', function (): void {
     expect(config('vaulter.database.connection'))->toBeNull();
 
     config()->set('vaulter.database.table_prefix', 'conntestctrl_');

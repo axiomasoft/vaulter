@@ -66,7 +66,7 @@ it('SEC-POLICY preserves first new content boundary across reactivation and off'
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
 });
 
-it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is clean', function (): void {
+it('all content blocks legacy bytes until versioned rescan evidence is clean', function (): void {
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
@@ -90,7 +90,7 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
     expect($revision->scanEvidence()->count())->toBe(1);
 });
 
-it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain unavailable SEC-R07', function (): void {
+it('forged timestamps cannot exempt a new admission and failures remain unavailable', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'new_content_only');
@@ -148,7 +148,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
         ->toThrow(ContentUnavailableException::class);
 });
 
-it('SEC-R05 trash restoration preserves admission while current scan policy blocks bytes', function (): void {
+it('trash restoration preserves admission while current scan policy blocks bytes', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');

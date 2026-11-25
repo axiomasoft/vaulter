@@ -309,7 +309,7 @@ function acmeWrite(OperationRunner $runner, Closure $attempt): mixed
     return $runner->write(new OperationSpec(name: 'drive.folders.create', module: new ModuleId('drive')), $context->operation, $attempt);
 }
 
-it('runs an operation it declares in the catalogue, like a built-in module (D47)', function (): void {
+it('runs an operation it declares in the catalogue, like a built-in module', function (): void {
     $context = DriveContext::system(AccessTestHelpers::storage(), 'acme contract');
     $spec = new OperationSpec(name: AcmeOperationPolicies::RECORD, module: new ModuleId('acme'));
 

@@ -28,7 +28,7 @@ it('enables installed documents and comments', function (): void {
         ->and($custom->comments->enabled)->toBeFalse();
 });
 
-it('reads the registered type classes and the default type (PLAN2.P4.3)', function (): void {
+it('reads the registered type classes and the default type', function (): void {
     $config = DocumentsOptions::fromArray([
         'types' => ['Host\\KanbanDocumentType'],
         'default_type' => 'host/kanban',
@@ -40,7 +40,7 @@ it('reads the registered type classes and the default type (PLAN2.P4.3)', functi
         ->and(DocumentsOptions::fromArray([])->types)->toBe([]);
 });
 
-it('refuses a types entry that is not a class name (PLAN2.P4.3)', function (mixed $types): void {
+it('refuses a types entry that is not a class name', function (mixed $types): void {
     expect(fn (): DocumentsOptions => DocumentsOptions::fromArray(['types' => $types]))->toThrow(InvalidConfiguration::class);
 })->with([
     'closure' => [[static fn (): null => null]],

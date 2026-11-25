@@ -26,7 +26,7 @@ arch('the package never depends on the host application (E5.1)')
  * `expect(...)->not->toUse('App')`) because `App\*` is never an autoloadable class in
  * the package's own dev/test environment (red-before proven on core's ArchTest.php).
  */
-test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
+test('non-test src never references the host App namespace', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];
 

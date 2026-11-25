@@ -33,7 +33,7 @@ it('accepts a name at the current default max length (255) unchanged, characteri
     expect($validator->fails())->toBeFalse();
 });
 
-it('ignores the deprecated host max_length and keeps the fixed byte bound, P4.11', function (): void {
+it('ignores the deprecated host max_length and keeps the fixed byte bound', function (): void {
     config()->set('vaulter.drive.name_rules.max_length', 10);
     config()->set('vaulter-drive.names.max_length', 10);
 
@@ -68,14 +68,14 @@ it('still rejects a path-separator name under the unconfigured default pattern, 
     expect($validator->fails())->toBeTrue();
 });
 
-it('resolves the reject message through the vaulter:: lang namespace, not an inline literal, F-P3.1-02', function (): void {
+it('resolves the reject message through the vaulter:: lang namespace, not an inline literal', function (): void {
     $messages = DriveNameRules::messages();
 
     expect($messages['name.regex'])->toBe(trans('vaulter::validation.name_no_separators'))
         ->and($messages['name.regex'])->toBe('The name must not contain path separators (/ or \\).');
 });
 
-it('surfaces a host-overridden lang string for the reject message, F-P3.1-02', function (): void {
+it('surfaces a host-overridden lang string for the reject message', function (): void {
     app('translator')->addLines(
         ['validation.name_no_separators' => 'Названия не могут содержать разделители пути.'],
         'en',

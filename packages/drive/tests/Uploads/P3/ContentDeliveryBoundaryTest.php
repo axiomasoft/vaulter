@@ -51,7 +51,7 @@ function p37DeliverySettle($node, ScanVerdict $verdict): void
     }
 }
 
-it('SEC-R17 checks pending head, explicit older clean, metadata and sticky infection before opening bytes', function (): void {
+it('checks pending head, explicit older clean, metadata and sticky infection before opening bytes', function (): void {
     p37DeliveryRequireScan($this);
     $node = $this->system->files()->upload(UploadSource::fromString('clean old', 'file.txt'));
     $old = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -71,7 +71,7 @@ it('SEC-R17 checks pending head, explicit older clean, metadata and sticky infec
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
 });
 
-it('SEC-R17 PHP authorization is fresh with a retained model and descriptor after revoke', function (): void {
+it('PHP authorization is fresh with a retained model and descriptor after revoke', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('secret', 'file.txt'));
     config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(87);
@@ -86,7 +86,7 @@ it('SEC-R17 PHP authorization is fresh with a retained model and descriptor afte
     expect(fn () => $actor->files()->read($node))->toThrow(NodeNotFoundException::class);
 });
 
-it('SEC-R16 strict refuses bearer URLs before touching a signer', function (): void {
+it('strict refuses bearer URLs before touching a signer', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('content', 'file.txt'));
     $signer = Mockery::mock(DirectContentUrlSigner::class);
     $signer->shouldNotReceive('sign');
@@ -94,7 +94,7 @@ it('SEC-R16 strict refuses bearer URLs before touching a signer', function (): v
     expect(fn () => app(ContentDelivery::class)->directUrl($this->context, DriveTestHelpers::model($node), DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail(), 60))->toThrow(ProfileRestrictionException::class);
 });
 
-it('SEC-R16 explicit direct delivery binds exact immutable bytes and TTL with bounded revoke', function (): void {
+it('explicit direct delivery binds exact immutable bytes and TTL with bounded revoke', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('content', 'file.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     config()->set('vaulter-drive.downloads.delivery_mode', 'direct_signed');

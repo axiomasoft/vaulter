@@ -109,7 +109,7 @@ it('renders the newer contract nodes (image, table) and the underline mark', fun
 
 // ─── stored XSS via javascript: href (store time) ──────────────
 
-it('rejects a javascript: link href at store time, F-P1.11-01', function (): void {
+it('rejects a javascript: link href at store time', function (): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -123,7 +123,7 @@ it('rejects a javascript: link href at store time, F-P1.11-01', function (): voi
     ]);
 })->throws(InvalidDocumentContentException::class);
 
-it('rejects obfuscated javascript:/data: schemes at store time, F-P1.11-01', function (string $href): void {
+it('rejects obfuscated javascript:/data: schemes at store time', function (string $href): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -142,14 +142,14 @@ it('rejects obfuscated javascript:/data: schemes at store time, F-P1.11-01', fun
     'data URI' => ['data:text/html;base64,PHNjcmlwdD4='],
 ])->throws(InvalidDocumentContentException::class);
 
-it('rejects an unknown node type at store time, F-P1.11-02', function (): void {
+it('rejects an unknown node type at store time', function (): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'script', 'content' => []]],
     ]);
 })->throws(InvalidDocumentContentException::class);
 
-it('rejects an unknown attribute at store time, F-P1.11-02', function (): void {
+it('rejects an unknown attribute at store time', function (): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
@@ -264,7 +264,7 @@ it('markdown export: a dangerous image src is not emitted', function (): void {
     expect(markdownLinkTargets($markdown))->toBe([]);
 });
 
-it('escapes raw text in markdown export, F-P1.11-04', function (): void {
+it('escapes raw text in markdown export', function (): void {
     // A literal "<script>" is legitimate text (not an injection at the TipTap JSON level), and
     // the store-time check does not reject it. The export must emit it inert.
     $doc = TipTapContent::fromArray([
@@ -447,7 +447,7 @@ it('markdown export: the codeBlock language is validated, not printed raw', func
     'backtick' => ['php`', '```'],
 ]);
 
-it('keeps a valid link and drops disallowed link schemes in markdown export, F-P1.11-04', function (): void {
+it('keeps a valid link and drops disallowed link schemes in markdown export', function (): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[

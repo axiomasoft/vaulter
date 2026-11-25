@@ -17,7 +17,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
  * Red-before: prior to this item both models declared `protected $guarded = [];`,
  * so `fill()` accepted every key below.
  */
-it('never mass-assigns received_bytes on UploadSession via fill() (F-P1.8-02)', function (): void {
+it('never mass-assigns received_bytes on UploadSession via fill()', function (): void {
     $session = new UploadSession;
     $session->fill([
         'received_bytes' => 999_999_999,
@@ -30,7 +30,7 @@ it('never mass-assigns received_bytes on UploadSession via fill() (F-P1.8-02)', 
         ->and($session->target_name)->toBe('legit-name.bin');
 });
 
-it('rejects ANY fill() attribute on UploadPart with MassAssignmentException (F-P1.8-02)', function (): void {
+it('rejects ANY fill() attribute on UploadPart with MassAssignmentException', function (): void {
     // UploadPart is fully $guarded = ['*'] — Eloquent's "totally guarded" state
     // throws on any fill(), a stronger guarantee than a silent discard (its
     // production write path is DB::table()->insert()/update() in

@@ -328,7 +328,7 @@ it('contributes the telemetry middleware to the container runner', function (): 
         ->and(app(OperationRunner::class))->toBe(app(OperationRunner::class));
 });
 
-it('refuses a mutating operation outside the catalogue before the middleware, the claim and the transaction (D47)', function (): void {
+it('refuses a mutating operation outside the catalogue before the middleware, the claim and the transaction', function (): void {
     $context = DriveContext::system(AccessTestHelpers::storage(), 'runner contract');
     $keys = app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY);
     $before = app(VaulterDatabase::class)->connection()->table($keys)->count();

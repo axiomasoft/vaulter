@@ -14,7 +14,7 @@ use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('SEC-R14 system bypasses ACL within scope for each public operation category', function (OperationKind $kind, Ability $ability): void {
+it('system bypasses ACL within scope for each public operation category', function (OperationKind $kind, Ability $ability): void {
     config()->set('vaulter-drive.access.permission_driver', 'database');
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'own');
@@ -23,7 +23,7 @@ it('SEC-R14 system bypasses ACL within scope for each public operation category'
     expect($context->actor->ref()->reason)->toBe('maintenance');
 })->with(['metadata' => [OperationKind::Metadata, Ability::View], 'mutation' => [OperationKind::Mutation, Ability::Edit], 'egress seam' => [OperationKind::ContentEgress, Ability::Download], 'purge' => [OperationKind::Purge, Ability::Delete]]);
 
-it('SEC-R14 foreign locator and every system guard surface reject forged scope', function (): void {
+it('foreign locator and every system guard surface reject forged scope', function (): void {
     $drive = AccessTestHelpers::storage();
     $foreign = AccessTestHelpers::folder(storage: AccessTestHelpers::storage(), parent: null, name: 'foreign');
     $foreign->drive_id = $drive->id;
@@ -38,7 +38,7 @@ it('SEC-R14 foreign locator and every system guard surface reject forged scope',
         ->and($guard->visible(context: $context, nodes: [$foreign]))->toBe([]);
 });
 
-it('SEC-R14 metadata and purge do not invent upload or scanner dependencies', function (): void {
+it('metadata and purge do not invent upload or scanner dependencies', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'own');
     $context = DriveContext::system(drive: $drive, reason: 'maintenance');

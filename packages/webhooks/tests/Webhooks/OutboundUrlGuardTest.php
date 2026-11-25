@@ -42,7 +42,7 @@ function fakeResolver(): FakeHostResolver
 
 // ─────────────── delivery path is the real barrier ───────────────
 
-it('refuses to POST to the cloud-metadata address on the delivery path, F-P1.7-01', function (): void {
+it('refuses to POST to the cloud-metadata address on the delivery path', function (): void {
     Http::fake();
 
     $endpoint = WebhookTestHelpers::endpoint(['url' => 'http://169.254.169.254/latest/meta-data']);
@@ -72,7 +72,7 @@ it('refuses to POST to the cloud-metadata address on the delivery path, F-P1.7-0
         ->and($delivery->last_error)->not->toContain('169.254.169.254');
 });
 
-it('refuses a host that resolves to loopback, F-P1.7-01', function (): void {
+it('refuses a host that resolves to loopback', function (): void {
     Http::fake();
     fakeResolver()->set('evil.test', ['127.0.0.1']);
 
@@ -85,7 +85,7 @@ it('refuses a host that resolves to loopback, F-P1.7-01', function (): void {
     expect($delivery->refresh()->status)->toBe('failed');
 });
 
-it('refuses a host whose public A record is paired with a private AAAA record, F-P1.7-01', function (): void {
+it('refuses a host whose public A record is paired with a private AAAA record', function (): void {
     Http::fake();
     // A public IPv4 but a loopback IPv6 — ANY blocked record must sink the delivery.
     fakeResolver()->set('mixed.test', [FakeHostResolver::PUBLIC_IP, '::1']);
@@ -99,7 +99,7 @@ it('refuses a host whose public A record is paired with a private AAAA record, F
     expect($delivery->refresh()->status)->toBe('failed');
 });
 
-it('refuses an IPv4-mapped IPv6 loopback address, F-P1.7-01', function (): void {
+it('refuses an IPv4-mapped IPv6 loopback address', function (): void {
     Http::fake();
     fakeResolver()->set('mapped.test', ['::ffff:127.0.0.1']);
 
@@ -112,7 +112,7 @@ it('refuses an IPv4-mapped IPv6 loopback address, F-P1.7-01', function (): void 
     expect($delivery->refresh()->status)->toBe('failed');
 });
 
-it('does not follow a redirect onto a private address, F-P1.7-01', function (): void {
+it('does not follow a redirect onto a private address', function (): void {
     // Redirects are off, so a 302 is the final (non-2xx) response and the metadata
     // target is never requested.
     Http::fake([
@@ -160,7 +160,7 @@ it('legacy follow_redirects=true key does NOT enable redirects: a 302 to metadat
     expect($delivery->refresh()->status)->toBe('failed');
 });
 
-it('delivers to a public host, pinning the vetted IP onto the connection, F-P1.7-01', function (): void {
+it('delivers to a public host, pinning the vetted IP onto the connection', function (): void {
     Http::fake(['https://good.test/*' => Http::response('', 200)]);
     fakeResolver()->set('good.test', [FakeHostResolver::PUBLIC_IP]);
 
@@ -175,7 +175,7 @@ it('delivers to a public host, pinning the vetted IP onto the connection, F-P1.7
 
 // ─────────────── reserved / multicast / unspecified ranges ───────────────────────────
 
-it('refuses the IPv6 unspecified address :: which routes to loopback on Linux, F-P1.7-01', function (): void {
+it('refuses the IPv6 unspecified address :: which routes to loopback on Linux', function (): void {
     // 0.0.0.0/8 blocked IPv4 "this-network" but its IPv6 twin `::` was a hole: [::]
     // connects to loopback on Linux. The blocklist now carries ::/128.
     fakeResolver()->set('unspec.test', ['::']);
@@ -184,7 +184,7 @@ it('refuses the IPv6 unspecified address :: which routes to loopback on Linux, F
         ->toThrow(BlockedOutboundUrlException::class);
 });
 
-it('refuses the IPv4 limited-broadcast / reserved-future range, F-P1.7-01', function (): void {
+it('refuses the IPv4 limited-broadcast / reserved-future range', function (): void {
     // 255.255.255.255 and the whole 240.0.0.0/4 reserved block were unlisted.
     fakeResolver()->set('bcast.test', ['255.255.255.255']);
 
@@ -192,14 +192,14 @@ it('refuses the IPv4 limited-broadcast / reserved-future range, F-P1.7-01', func
         ->toThrow(BlockedOutboundUrlException::class);
 });
 
-it('refuses IPv4 multicast addresses, F-P1.7-01', function (): void {
+it('refuses IPv4 multicast addresses', function (): void {
     fakeResolver()->set('mcast4.test', ['224.0.0.1']);
 
     expect(fn () => app(OutboundUrlGuard::class)->isAllowed('https://mcast4.test/hook'))
         ->toThrow(BlockedOutboundUrlException::class);
 });
 
-it('refuses IPv6 multicast addresses, F-P1.7-01', function (): void {
+it('refuses IPv6 multicast addresses', function (): void {
     fakeResolver()->set('mcast6.test', ['ff02::1']);
 
     expect(fn () => app(OutboundUrlGuard::class)->isAllowed('https://mcast6.test/hook'))
@@ -208,12 +208,12 @@ it('refuses IPv6 multicast addresses, F-P1.7-01', function (): void {
 
 // ─────────────── guard unit ───────────────
 
-it('refuses a non-http(s) scheme, F-P1.7-01', function (): void {
+it('refuses a non-http(s) scheme', function (): void {
     expect(fn () => app(OutboundUrlGuard::class)->isAllowed('file:///etc/passwd'))
         ->toThrow(BlockedOutboundUrlException::class);
 });
 
-it('pins the vetted public IP, host and port for delivery, F-P1.7-01', function (): void {
+it('pins the vetted public IP, host and port for delivery', function (): void {
     fakeResolver()->set('good.test', [FakeHostResolver::PUBLIC_IP]);
 
     $pinned = app(OutboundUrlGuard::class)->pin('https://good.test/hook');
@@ -226,7 +226,7 @@ it('pins the vetted public IP, host and port for delivery, F-P1.7-01', function 
 
 // ─────────────── registration early-reject ───────────────
 
-it('rejects registering an endpoint whose host resolves into a private range, F-P1.7-01', function (): void {
+it('rejects registering an endpoint whose host resolves into a private range', function (): void {
     config()->set('vaulter-webhooks.manage_ability');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 

@@ -7,7 +7,7 @@ arch('drive reads configuration through typed package accessors (P2.5)')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Drive\Configuration', 'Vaulter\Drive\Testing']);
 
-test('drive source has no direct Vaulter configuration reads (P2.5)', function (): void {
+test('drive source has no direct Vaulter configuration reads', function (): void {
     $package = dirname(__DIR__, 2);
     $offenders = [];
 

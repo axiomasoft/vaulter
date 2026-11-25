@@ -18,7 +18,7 @@ use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 
-it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the trusted stream', function (): void {
+it('refuses wrong scoped jobs before scanner reads and closes the trusted stream', function (): void {
     Storage::fake('local');
     Bus::fake();
     $scanner = new class implements ContentScanner
@@ -67,7 +67,7 @@ it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the truste
     expect($scanner->reads)->toBe(1);
 });
 
-it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes', function (): void {
+it('corrupted immutable identity fails terminally before scanner bytes', function (): void {
     Storage::fake('local');
     Bus::fake();
     $scanner = new class implements ContentScanner
@@ -113,7 +113,7 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
 });
 
-it('SEC-R12 does not record the row hash when the streamed bytes differ', function (string $corrupt): void {
+it('does not record the row hash when the streamed bytes differ', function (string $corrupt): void {
     Storage::fake('local');
     Bus::fake();
     $scanner = new class implements ContentScanner

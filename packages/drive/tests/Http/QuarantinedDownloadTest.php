@@ -48,7 +48,7 @@ it('answers 423 for an infected head, in both delivery modes', function (string 
     expect($signer->calls)->toBe(0);
 })->with(['strict', 'direct_signed']);
 
-it('answers 423 for a head whose blob the integrity scrub marked, in both delivery modes (D49)', function (string $mode): void {
+it('answers 423 for a head whose blob the integrity scrub marked, in both delivery modes', function (string $mode): void {
     config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     app()->instance(DirectContentUrlSigner::class, new class implements DirectContentUrlSigner
     {

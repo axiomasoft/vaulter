@@ -62,7 +62,7 @@ it('lets an owner with the Share ability mint a link and returns the raw token o
     expect($row->token_hash)->toBe(hash('sha256', $token));
 });
 
-it('stamps a default expiry when none is supplied, never minting an immortal link (F-P1.3-03)', function (): void {
+it('stamps a default expiry when none is supplied, never minting an immortal link', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'ttl-default');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
@@ -78,7 +78,7 @@ it('stamps a default expiry when none is supplied, never minting an immortal lin
     expect($row->expires_at->diffInMinutes(now()->addHours(72), absolute: true))->toBeLessThan(5);
 });
 
-it('rejects an explicit expiry above the configured ceiling (F-P1.3-03)', function (): void {
+it('rejects an explicit expiry above the configured ceiling', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'ttl-ceiling');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
@@ -158,7 +158,7 @@ it('resolves a public share token to node metadata within scope', function (): v
         ->assertJsonPath('data.name', 'public-doc');
 });
 
-it('never exposes the raw sequential node id publicly, only an opaque projection (F-P1.3-05)', function (): void {
+it('never exposes the raw sequential node id publicly, only an opaque projection', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'opaque-doc');
     ShareTestHelpers::share($node, token: 'opaque-token');
@@ -193,7 +193,7 @@ it('401s a password-gated public resolve until the password is supplied', functi
         ->assertJsonPath('data.id', expectedOpaqueNodeId($node->getKey()));
 });
 
-it('serves a public download within the READ bits, bounds it by max_uses, and never redirects even on a disk that provides a temporary url (F-P1.3-01)', function (): void {
+it('serves a public download within the READ bits, bounds it by max_uses, and never redirects even on a disk that provides a temporary url', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('public bytes'), 'pub.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
@@ -245,7 +245,7 @@ it('lists a subtree share but 404s a listing on an item share', function (): voi
     $this->getJson('api/vaulter/v1/shares/item-token/nodes')->assertNotFound();
 });
 
-it('429s a public share resolve past the vaulter-public rate limit (F-P1.8-01)', function (): void {
+it('429s a public share resolve past the vaulter-public rate limit', function (): void {
     config()->set('vaulter.routes.rate_limits.public', 1);
 
     $storage = AccessTestHelpers::storage();

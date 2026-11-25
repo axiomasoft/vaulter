@@ -32,7 +32,7 @@ arch('the package never depends on the host application (E5.1)')
  * The scaffolding commands that EMIT `App\*` as the namespace of code generated INTO the host
  * moved with their domains (vaulter-drive); the core has none left.
  */
-test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
+test('non-test src never references the host App namespace', function (): void {
     $src = __DIR__.'/../../../packages/core/src';
     $offenders = [];
 
@@ -559,7 +559,7 @@ function coreReferencesTo(string $root): array
  * Ownership move: the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
  * vaulter-drive and the HTTP/config/kernel slice moved there. No core file names a `Vaulter\Drive\` type any more (the boundary scan blocks it).
  */
-test('core source references the vaulter-drive package nowhere (P2 #5 / D1, I1 blocks from P4.16)', function (): void {
+test('core source references the vaulter-drive package nowhere (P2 #5, I1 blocks from)', function (): void {
     $src = (string) realpath(__DIR__.'/../../../packages/core/src');
     $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
     sort($found);
@@ -582,7 +582,7 @@ test('core source references the vaulter-drive package nowhere (P2 #5 / D1, I1 b
  * handler/broadcast provider wiring moved to its own provider. Same file-scan form as
  * the drive guard above.
  */
-test('core source never references the extracted vaulter-documents package (P2 #5 / D2)', function (): void {
+test('core source never references the extracted vaulter-documents package (P2 #5)', function (): void {
     expect(coreReferencesTo('Documents'))->toBe([]);
 });
 
@@ -590,7 +590,7 @@ test('core source never references the extracted vaulter-documents package (P2 #
  * The optional permission bridge owns its complete guard seam and driver.
  * Core source has no dependency on the bridge package.
  */
-test('core source never references the vaulter-azguard package (P2.1)', function (): void {
+test('core source never references the vaulter-azguard package', function (): void {
     expect(coreReferencesTo('AzGuard'))->toBe([]);
 });
 
@@ -605,7 +605,7 @@ test('core source never references the vaulter-azguard package (P2.1)', function
  * comments/docblocks (e.g. DocumentContent/DocumentExporter explaining the seam) are
  * legitimate and stripped the same way `coreReferencesTo()` strips them.
  */
-test('core source never references a concrete TipTap class (VLT-CANON P0.3)', function (): void {
+test('core source never references a concrete TipTap class', function (): void {
     $src = __DIR__.'/../../../packages/core/src';
     $offenders = [];
 
@@ -724,7 +724,7 @@ arch('production source never imports testing helpers (D35)')
     ->not->toUse('Vaulter\Testing')
     ->ignoring(['Vaulter\Testing', 'Vaulter\Tests']);
 
-test('core source and configuration contain no bridge implementation names (P2.5)', function (): void {
+test('core source and configuration contain no bridge implementation names', function (): void {
     $offenders = [];
     $package = __DIR__.'/../../../packages/core';
 

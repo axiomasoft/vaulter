@@ -87,7 +87,7 @@ it('persists work and request atomically and preserves explicit rescan request d
     expect($first->fresh()->generation)->toBe(3)->and(ScanRequest::count())->toBe(3);
 });
 
-it('SEC-R20-scan-validator reads actual immutable input and settles only the exact live attempt without changing head or sequence', function (): void {
+it('reads actual immutable input and settles only the exact live attempt without changing head or sequence', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $repository = app(ScanObligationRepository::class);
@@ -129,7 +129,7 @@ it('SEC-R20-scan-validator reads actual immutable input and settles only the exa
         ->and([$revision->file->fresh()->current_revision_id, $revision->file->node->fresh()->sequence, $revision->file->fresh()->revision_count])->toBe($before);
 });
 
-it('SEC-R11 rejects altered identity and keeps sticky infection through later clean rescan and config off', function (): void {
+it('rejects altered identity and keeps sticky infection through later clean rescan and config off', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
     $db = app(VaulterDatabase::class);
@@ -150,7 +150,7 @@ it('SEC-R11 rejects altered identity and keeps sticky infection through later cl
         ->and($revision->fresh()->scan_status)->toBe('infected');
 });
 
-it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediately removes compatibility', function (): void {
+it('reuses only exact same-drive clean evidence and revocation immediately removes compatibility', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
     $db = app(VaulterDatabase::class);
@@ -215,13 +215,13 @@ it('settles unsupported manifests without opening bytes and rejects fabricated p
     expect($snapshot['revision']->tenant_id)->toBeNull()->and($snapshot['identity'])->toBeNull();
 });
 
-it('SEC-R07 validates structured verdicts before persistence', function (): void {
+it('validates structured verdicts before persistence', function (): void {
     expect(fn (): ScanResult => new ScanResult(ScanVerdict::Clean, 'unknown'))->toThrow(InvalidArgumentException::class)
         ->and(fn (): ScanResult => new ScanResult(ScanVerdict::Failed, 'raw scanner details'))->toThrow(InvalidArgumentException::class)
         ->and(fn (): ScanResult => new ScanResult(ScanVerdict::Failed, 'unsupported', true))->toThrow(InvalidArgumentException::class);
 });
 
-it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner epoch refuses old evidence', function (): void {
+it('optional failed rescan retains exact clean proof and a new scanner epoch refuses old evidence', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $db = app(VaulterDatabase::class);
     $repository = app(ScanObligationRepository::class);
@@ -238,7 +238,7 @@ it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner e
     expect($newWork->id)->not->toBe($work->id)->and($newWork->generation)->toBe(1)->and($newWork->state)->toBe('pending');
 });
 
-it('SEC-R12 deterministic identity failure settles the current fenced snapshot without retry or blob mutation', function (): void {
+it('deterministic identity failure settles the current fenced snapshot without retry or blob mutation', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
     $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));

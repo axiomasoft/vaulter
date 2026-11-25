@@ -34,7 +34,7 @@ function guardProfile(Profile $profile): void
     app()->instance(ProfileRegistry::class, $registry);
 }
 
-it('SEC-R14 user and system both obey frozen share policy after user View', function (): void {
+it('user and system both obey frozen share policy after user View', function (): void {
     guardProfile((new Profile)->key('default')->shareLinks(false)->comments(false));
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'visible');
@@ -52,7 +52,7 @@ it('SEC-R14 user and system both obey frozen share policy after user View', func
     expect(fn () => $guard->authorize($user, Ability::Share, $hidden))->toThrow(NodeNotFoundException::class);
 });
 
-it('SEC-R14 system bypasses only ACL and never the owner policy on any guard surface', function (): void {
+it('system bypasses only ACL and never the owner policy on any guard surface', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'existing');
     guardProfile((new Profile)->key('default')->owners(TestUser::class));
@@ -64,7 +64,7 @@ it('SEC-R14 system bypasses only ACL and never the owner policy on any guard sur
         ->and(array_values($guard->abilities($context, $node)->flags))->each->toBeFalse();
 });
 
-it('SEC-R14 allows system denied by ACL when profile allows and keeps foreign scope hidden', function (): void {
+it('allows system denied by ACL when profile allows and keeps foreign scope hidden', function (): void {
     guardProfile((new Profile)->key('default')->shareLinks());
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'own');
@@ -81,7 +81,7 @@ it('SEC-R14 allows system denied by ACL when profile allows and keeps foreign sc
     $guard->authorize($context, Ability::Share, $node);
 });
 
-it('SEC-R14 purge and metadata do not require upload MIME scan or public egress', function (): void {
+it('purge and metadata do not require upload MIME scan or public egress', function (): void {
     guardProfile((new Profile)->key('default')->shareLinks(false)->comments(false)
         ->uploads(new UploadPolicy(maxFileSize: 0, allowedMimeTypes: ['image/png'], requireScan: true)));
     $drive = AccessTestHelpers::storage();
@@ -92,7 +92,7 @@ it('SEC-R14 purge and metadata do not require upload MIME scan or public egress'
     expect(app(OperationGuard::class)->visible($context, [$node]))->toHaveCount(1);
 });
 
-it('SEC-R14 disabling grants removes scalar and batch ACL contributions without opening access', function (): void {
+it('disabling grants removes scalar and batch ACL contributions without opening access', function (): void {
     guardProfile((new Profile)->key('default')->grants(false));
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'grant-only');

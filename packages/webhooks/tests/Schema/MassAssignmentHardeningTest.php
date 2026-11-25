@@ -16,7 +16,7 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
  *  - WebhookEndpoint has a CLOSED $fillable list (url/events/is_active): a key outside it is silently discarded;
  *  - WebhookDelivery is fully `$guarded = ['*']`: ANY fill() with a non-empty array throws MassAssignmentException.
  */
-it('discards a service/security column via fill() on the closed-$fillable WebhookEndpoint (F-P1.8-02)', function (
+it('discards a service/security column via fill() on the closed-$fillable WebhookEndpoint', function (
     string $model,
     string $dangerousKey,
     mixed $dangerousValue,
@@ -31,7 +31,7 @@ it('discards a service/security column via fill() on the closed-$fillable Webhoo
     'WebhookEndpoint.previous_signing_secret' => [WebhookEndpoint::class, 'previous_signing_secret', 'ATTACKER-SECRET'],
 ]);
 
-it('rejects ANY fill() attribute on the fully-$guarded WebhookDelivery with MassAssignmentException (F-P1.8-02)', function (
+it('rejects ANY fill() attribute on the fully-$guarded WebhookDelivery with MassAssignmentException', function (
     string $model,
     string $dangerousKey,
     mixed $dangerousValue,
@@ -53,7 +53,7 @@ it('rejects ANY fill() attribute on the fully-$guarded WebhookDelivery with Mass
  * discarded; the column is NOT NULL, so a fill()-only create() that drops it
  * fails the INSERT — a second, DB-level proof.
  */
-it('never mass-assigns signing_secret on WebhookEndpoint via fill() or create() (F-P1.7-04)', function (): void {
+it('never mass-assigns signing_secret on WebhookEndpoint via fill() or create()', function (): void {
     $filled = new WebhookEndpoint;
     $filled->fill([
         'url' => 'https://hooks.test/receive',

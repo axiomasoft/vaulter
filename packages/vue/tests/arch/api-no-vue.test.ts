@@ -65,7 +65,7 @@ function violation(file: string, specifier: string): string | null {
   return forbiddenPackages.some((pattern) => pattern.test(specifier)) ? 'imports a Vue/editor/realtime package' : null
 }
 
-describe('src/api has no Vue imports (D15)', () => {
+describe('src/api has no Vue imports', () => {
   const files = sourceFiles(api)
 
   it('scans the api folder', () => {

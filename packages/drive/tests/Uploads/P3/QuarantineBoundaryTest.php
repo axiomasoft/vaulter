@@ -26,7 +26,7 @@ beforeEach(function (): void {
     $this->context = DriveContext::system($this->system->model(), 'quarantine fixture');
 });
 
-it('SEC-R01 legacy not_required and bare clean cannot authorize required public bytes', function (): void {
+it('legacy not_required and bare clean cannot authorize required public bytes', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('legacy', 'legacy.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'clean'])->save());
@@ -40,7 +40,7 @@ it('SEC-R01 legacy not_required and bare clean cannot authorize required public 
     $this->get('api/vaulter/v1/shares/quarantine-legacy/download')->assertStatus(423);
 });
 
-it('SEC-R07 required structured failure never grants PHP or share bytes', function (string $reason, bool $retryable): void {
+it('required structured failure never grants PHP or share bytes', function (string $reason, bool $retryable): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');
@@ -60,7 +60,7 @@ it('SEC-R07 required structured failure never grants PHP or share bytes', functi
     ['unsupported', false], ['too_large', false], ['password_protected', false], ['access_denied', false], ['unknown', false],
 ]);
 
-it('SEC-R17 public share stream rechecks revocation after descriptor resolution and before byte open', function (): void {
+it('public share stream rechecks revocation after descriptor resolution and before byte open', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('protected', 'file.txt'));
     $share = ShareTestHelpers::share($node, token: 'revoked-at-open');
     $resolved = app(ShareResolver::class)->resolve('revoked-at-open');

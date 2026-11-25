@@ -42,6 +42,6 @@ it('exposes the Vaulter facade', function (): void {
  * has already built the instance, so it cannot be satisfied by the assertion's
  * own act of checking).
  */
-it('eagerly resolves (and boot-validates) the panel registry on packageBooted, F-P3.2-01', function (): void {
+it('eagerly resolves (and boot-validates) the panel registry on packageBooted', function (): void {
     expect(app()->resolved(ProfileRegistry::class))->toBeTrue();
 });

@@ -70,7 +70,7 @@ it('preserves the host replacement map instead of merging the shipped entries ba
     expect($config->get('vaulter-drive.access.permission_drivers'))->toBe(['custom' => 'Host\\CustomDriver']);
 });
 
-it('keeps an explicit vaulter-documents.types list from growing default entries back (PLAN2.P4.3)', function (): void {
+it('keeps an explicit vaulter-documents.types list from growing default entries back', function (): void {
     $config = new Repository(['vaulter-documents' => ['types' => ['Host\\KanbanDocumentType']]]);
     $defaults = ['vaulter-documents' => ['types' => ['Vaulter\\Documents\\Types\\RichTextDocumentType', 'Vaulter\\Documents\\Types\\MarkdownDocumentType']]];
 

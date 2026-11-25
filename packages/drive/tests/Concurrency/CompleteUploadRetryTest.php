@@ -59,7 +59,7 @@ function flakyBlobStore(int $failures, int &$calls): void
     app()->instance(BlobStore::class, $store);
 }
 
-it('SEC-R19-retry completes after one concurrency failure by retrying the outermost unit', function (): void {
+it('completes after one concurrency failure by retrying the outermost unit', function (): void {
     $session = retryAssembledUpload();
     $calls = 0;
     flakyBlobStore(failures: 1, calls: $calls);
@@ -72,7 +72,7 @@ it('SEC-R19-retry completes after one concurrency failure by retrying the outerm
         ->and(app(StagedUpload::class)->size($session))->toBe(0);
 });
 
-it('SEC-R19-retry-exhausted maps the persistent failure to a retryable problem and keeps the staged bytes', function (): void {
+it('maps the persistent failure to a retryable problem and keeps the staged bytes', function (): void {
     $session = retryAssembledUpload();
     $calls = 0;
     flakyBlobStore(failures: 99, calls: $calls);

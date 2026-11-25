@@ -35,7 +35,7 @@ function sequenceContractState(): array
     return DriveTestHelpers::writeTablesSnapshot();
 }
 
-it('SEC-R19-noop checks a current or stale expectation before every effective no-op', function (string $operation): void {
+it('checks a current or stale expectation before every effective no-op', function (string $operation): void {
     $node = $this->drive->folders()->create('same');
     $run = fn (int $expected): NodeSnapshot => match ($operation) {
         'rename' => $this->drive->nodes()->rename($node, 'same', $expected),
@@ -71,7 +71,7 @@ it('increments sequence once for each metadata or content transition and leaves 
     expect($copy->sequence)->toBe(0)->and(DriveTestHelpers::model($file)->sequence)->toBe(5);
 });
 
-it('SEC-R20-subtree increments every descendant once on trash and restore', function (): void {
+it('increments every descendant once on trash and restore', function (): void {
     $top = $this->drive->folders()->create('top');
     $middle = $this->drive->folders()->create('middle', $top);
     $leaf = $this->drive->folders()->create('leaf', $middle);
@@ -88,7 +88,7 @@ it('SEC-R20-subtree increments every descendant once on trash and restore', func
     }
 });
 
-it('SEC-R20-overflow admits max minus one and rolls back max mutations including subtree peers', function (): void {
+it('admits max minus one and rolls back max mutations including subtree peers', function (): void {
     $top = $this->drive->folders()->create('top');
     $child = $this->drive->folders()->create('child', $top);
     app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($child->id)->update(['sequence' => PHP_INT_MAX - 1]));
@@ -100,7 +100,7 @@ it('SEC-R20-overflow admits max minus one and rolls back max mutations including
         ->and(sequenceContractState())->toBe($before);
 });
 
-it('SEC-R20-overflow rejects negative expectations and corrupted negative helper input', function (): void {
+it('rejects negative expectations and corrupted negative helper input', function (): void {
     $node = $this->drive->folders()->create('node');
     expect(fn () => $this->drive->nodes()->rename($node, 'invalid', -1))->toThrow(InvalidArgumentException::class);
     $db = app(VaulterDatabase::class);
@@ -112,7 +112,7 @@ it('SEC-R20-overflow rejects negative expectations and corrupted negative helper
     expect(DriveTestHelpers::model($node)->sequence)->toBe(0)->and($node->name)->toBe('node');
 });
 
-it('SEC-R19-replay returns the committed result without ingesting or comparing the old expectation again', function (): void {
+it('returns the committed result without ingesting or comparing the old expectation again', function (): void {
     DriveTestHelpers::insideOperation(); // drives the S3 handler and the manager directly
     $node = $this->drive->files()->upload(UploadSource::fromString('original', 'replay.txt'));
     app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($node->id)->update(['sequence' => 7]));

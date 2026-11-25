@@ -11,12 +11,12 @@ use Vaulter\Webhooks\ResponseSizeLimit;
  * on_headers hook — before the body is buffered — closing the OOM/DoS vector. This
  * unit-tests the exact predicate the hook calls.
  */
-it('refuses a declared response body above the limit, F-P1.7-06', function (): void {
+it('refuses a declared response body above the limit', function (): void {
     expect(fn () => ResponseSizeLimit::assertContentLengthWithinLimit((string) (1024 * 1024), 65536))
         ->toThrow(WebhookResponseTooLargeException::class);
 });
 
-it('allows a small, absent or non-numeric declared body, F-P1.7-06', function (): void {
+it('allows a small, absent or non-numeric declared body', function (): void {
     ResponseSizeLimit::assertContentLengthWithinLimit('100', 65536);
     ResponseSizeLimit::assertContentLengthWithinLimit('65536', 65536);
     ResponseSizeLimit::assertContentLengthWithinLimit(null, 65536);
@@ -28,7 +28,7 @@ it('allows a small, absent or non-numeric declared body, F-P1.7-06', function ()
     expect(true)->toBeTrue();
 });
 
-it('enforces the smallest positive ceiling, F-P1.7-06', function (): void {
+it('enforces the smallest positive ceiling', function (): void {
     expect(fn () => ResponseSizeLimit::assertContentLengthWithinLimit('2', 1))
         ->toThrow(WebhookResponseTooLargeException::class);
 });

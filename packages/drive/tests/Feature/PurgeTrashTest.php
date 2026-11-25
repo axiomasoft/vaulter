@@ -31,7 +31,7 @@ beforeEach(function (): void {
     config()->set('vaulter-drive.trash.retention_days', 30);
 });
 
-it('physically purges a node trashed past the retention window, F-P1.12-02', function (): void {
+it('physically purges a node trashed past the retention window', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'old');
 
@@ -73,7 +73,7 @@ it('frees the blob edges of a purged file subtree (GC-eligible)', function (): v
     expect(RevisionBlobPins::edges($blob->refresh()))->toBe(0)->and(RevisionBlobPins::pins($blob->refresh()))->toBe(0);
 });
 
-it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02', function (): void {
+it('cascades the physical purge to file/version rows on PostgreSQL', function (): void {
     if (DB::connection()->getDriverName() !== 'pgsql') {
         $this->markTestSkipped('FK cascadeOnDelete is not enforced on the default SQLite test connection.');
     }
@@ -94,7 +94,7 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
         ->and(DB::table('v_file_revisions')->where('file_id', $fileId)->exists())->toBeFalse();
 });
 
-it('does not physically purge a node restored between candidate materialisation and the purge transaction, TOCTOU guard (P2.2 review fix)', function (): void {
+it('does not physically purge a node restored between candidate materialisation and the purge transaction, TOCTOU guard', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->folders()->create('raced');
 
@@ -140,7 +140,7 @@ it('honours the --days override', function (): void {
     expect(Node::query()->whereKey($node->getKey())->exists())->toBeFalse();
 });
 
-it('purges each root as its own root operation of the system actor "retention" (D48), recording one purge event per root', function (): void {
+it('purges each root as its own root operation of the system actor "retention", recording one purge event per root', function (): void {
     $storage = AccessTestHelpers::storage();
     $nodes = [];
     foreach (['a', 'b'] as $name) {

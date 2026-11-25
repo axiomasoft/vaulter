@@ -42,7 +42,7 @@ function typeOf(mixed $revision): mixed
     return $snapshot->type;
 }
 
-it('keeps a markdown document markdown across an autosave checkpoint (P0.4/L3)', function (): void {
+it('keeps a markdown document markdown across an autosave checkpoint (L3)', function (): void {
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Notes',
@@ -86,7 +86,7 @@ it('takes a checkpoint for a document whose head is missing, without dereferenci
         ->and($result->document->current_revision_id)->toEqual($result->checkpoint?->getKey());
 });
 
-it('keeps the type on a NAMED checkpoint too (P0.4/L3)', function (): void {
+it('keeps the type on a NAMED checkpoint too (L3)', function (): void {
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Notes',

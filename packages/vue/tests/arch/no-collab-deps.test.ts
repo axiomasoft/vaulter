@@ -52,7 +52,7 @@ function isForbidden(specifier: string): boolean {
   return forbiddenPackages.some((pattern) => pattern.test(specifier))
 }
 
-describe('@vaulter/vue has no collaboration stack (D15)', () => {
+describe('@vaulter/vue has no collaboration stack', () => {
   const files = sourceFiles(src)
 
   it('scans the source folder', () => {

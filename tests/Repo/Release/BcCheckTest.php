@@ -694,7 +694,7 @@ it('trust: no predecessor is initial_bootstrap and never a BC pass, only an exte
         ->and($run(bc_policy([['line' => 'php-public', 'tag' => 'v0.9.0', 'sha' => $r['A']]], [$approval($r['A'])]), $r['A'])['exit'])->toBe(2);
 });
 
-it('trust: a policy revision equal to the candidate and candidate-edited exceptions are self-authorizing and exit 2; a malformed policy is rejected (D18)', function (): void {
+it('trust: a policy revision equal to the candidate and candidate-edited exceptions are self-authorizing and exit 2; a malformed policy is rejected', function (): void {
     $r = bc_release_repo();
     $exception = ['surface' => 'php:core', 'subject' => 'Vaulter\Port::read()', 'rule' => 'member-removed', 'classification' => 'BREAK', 'release_line' => 'php-public', 'before_hash' => null, 'after_hash' => null, 'decision' => 'PLAN4-D18', 'reason' => 'x', 'expiry' => '2030-01-01'];
     $self = ReleaseCheck::run($r['dir'], $r['C'], $r['C'], bc_policy(), bc_exceptions_json(), 'tool', '2026-10-28');

@@ -69,7 +69,7 @@ it('SEC-RECOVERY-bounds rejects contradictory command scope and dry run creates 
     expect($class::query()->count())->toBe(0);
 });
 
-it('SEC-R09 committed work survives missing delivery and reconciles publication SEC-R10', function (): void {
+it('committed work survives missing delivery and reconciles publication', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -96,7 +96,7 @@ it('SEC-R09 committed work survives missing delivery and reconciles publication 
         ->and($revision->scanEvidence()->count())->toBe(1);
 });
 
-it('SEC-R13 outer rollback removes admission work revision and queued publication', function (): void {
+it('outer rollback removes admission work revision and queued publication', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');

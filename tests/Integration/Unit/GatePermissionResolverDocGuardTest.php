@@ -11,7 +11,7 @@ use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
  * for an undefined ability, so fail-closed behaviour was never at risk — only the
  * comment was wrong. This guard pins that the false "swallow" claim is gone.
  */
-it('no longer claims gateAllows() swallows an exception it never catches, F-P1.2-02', function (): void {
+it('no longer claims gateAllows() swallows an exception it never catches', function (): void {
     $method = new ReflectionMethod(GatePermissionDriver::class, 'gateAllows');
     $doc = $method->getDocComment();
 

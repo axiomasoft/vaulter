@@ -29,7 +29,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-it('serves a public download of a text/html declared mime as octet-stream with nosniff (F-P1.11-03)', function (): void {
+it('serves a public download of a text/html declared mime as octet-stream with nosniff', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('<script>alert(1)</script>'), 'evil.txt'), new UploadOptions(declaredMimeType: 'text/html'));
@@ -43,7 +43,7 @@ it('serves a public download of a text/html declared mime as octet-stream with n
         ->and($response->headers->get('x-content-type-options'))->toBe('nosniff');
 });
 
-it('serves a public download of a whitelisted image/png declared mime as-is, nosniff still set unconditionally (F-P1.11-03)', function (): void {
+it('serves a public download of a whitelisted image/png declared mime as-is, nosniff still set unconditionally', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jE1cAAAAASUVORK5CYII=')), 'photo.png'), new UploadOptions(declaredMimeType: 'image/png'));

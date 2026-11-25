@@ -24,7 +24,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 
-it('SEC-R03 COPY owns fresh admission and clean evidence without copying a source lease', function (): void {
+it('COPY owns fresh admission and clean evidence without copying a source lease', function (): void {
     Storage::fake('local');
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
@@ -46,7 +46,7 @@ it('SEC-R03 COPY owns fresh admission and clean evidence without copying a sourc
         ->and($target->scanEvidence()->first()->reused_from_id)->not->toBeNull();
 });
 
-it('SEC-R03 exempt legacy COPY receives required destination work and fresh admission', function (): void {
+it('exempt legacy COPY receives required destination work and fresh admission', function (): void {
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
@@ -67,7 +67,7 @@ it('SEC-R03 exempt legacy COPY receives required destination work and fresh admi
         ->and($target->scanEvidence()->count())->toBe(0);
 });
 
-it('SEC-R04 revision restore creates fresh admission and its own destination work', function (): void {
+it('revision restore creates fresh admission and its own destination work', function (): void {
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
@@ -88,7 +88,7 @@ it('SEC-R04 revision restore creates fresh admission and its own destination wor
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($target->id);
 });
 
-it('SEC-R06 legacy infected source refuses COPY and same blob reupload atomically', function (): void {
+it('legacy infected source refuses COPY and same blob reupload atomically', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
@@ -109,7 +109,7 @@ it('SEC-R06 legacy infected source refuses COPY and same blob reupload atomicall
         ->and($drive->refresh()->scan_admission_sequence)->toBe(1)->and($drive->used_bytes)->toBe(strlen('infected legacy'));
 });
 
-it('SEC-R03 folder COPY creates every child obligation and later failure rolls back the subtree', function (): void {
+it('folder COPY creates every child obligation and later failure rolls back the subtree', function (): void {
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();

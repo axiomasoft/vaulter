@@ -58,7 +58,7 @@ it('storage scope → UNIQUE (scope_key, sha256)', function (): void {
 });
 
 // The physical object address remains independently unique across disks.
-it('storage_key_uniq stays single-column (the F-P1.5-03 NULL-tenant dedup backbone)', function (): void {
+it('storage_key_uniq stays single-column (the  NULL-tenant dedup backbone)', function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
     rebuildBlobsTable();
 

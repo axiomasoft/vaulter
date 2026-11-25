@@ -35,7 +35,7 @@ arch('the package never depends on the host application (E5.1)')
  * `expect(...)->not->toUse('App')`) because `App\*` is never an autoloadable class in
  * the package's own dev/test environment (red-before proven on core's ArchTest.php).
  */
-test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
+test('non-test src never references the host App namespace', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];
 
@@ -87,7 +87,7 @@ arch('internal namespaces are not used outside the package (E3.1)')
  * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
  * packages with real contracts (core/drive/documents/azguard) carry PublicApiSnapshotTest.
  */
-test('the package exposes no public contract surface (VLT-REL P2.2)', function (): void {
+test('the package exposes no public contract surface', function (): void {
     $contractsDir = __DIR__.'/../../src/Contracts';
     $found = [];
 

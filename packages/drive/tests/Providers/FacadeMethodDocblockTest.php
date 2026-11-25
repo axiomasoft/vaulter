@@ -16,7 +16,7 @@ use Vaulter\Drive\Vaulter;
  * annotation in the facade's docblock, so the next new manager method that
  * forgets its docblock line fails this test instead of silently regressing.
  */
-it('lists every public Vaulter method in the facade @method docblock, F-P2.1-01', function (): void {
+it('lists every public Vaulter method in the facade @method docblock', function (): void {
     $managerMethods = collect(new ReflectionClass(Vaulter::class)->getMethods(ReflectionMethod::IS_PUBLIC))
         ->reject(fn (ReflectionMethod $method): bool => $method->isStatic() || $method->isConstructor())
         ->map(fn (ReflectionMethod $method): string => $method->getName())

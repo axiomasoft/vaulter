@@ -87,7 +87,7 @@ it('keeps resources enabled for an omitted or malformed host toggle', function (
  * registered against a subsystem it turned off. This assertion FAILS on the
  * pre-fix code (ActivityResource stays registered).
  */
-it('drops ActivityResource when the core activity feature is off, even with its own toggle left on, F-P1.10-03', function (): void {
+it('drops ActivityResource when the core activity feature is off, even with its own toggle left on', function (): void {
     config()->set('vaulter-drive.features.activity', false);
 
     $panel = Panel::make()->id('probe-activity-off');
@@ -98,7 +98,7 @@ it('drops ActivityResource when the core activity feature is off, even with its 
         ->and($panel->getResources())->toContain(DriveResource::class);
 });
 
-it('control: ActivityResource registers when the core activity feature is on (default), F-P1.10-03', function (): void {
+it('control: ActivityResource registers when the core activity feature is on (default)', function (): void {
     expect(config('vaulter-drive.features.activity'))->toBeTrue();
 
     $panel = Panel::make()->id('probe-activity-on');

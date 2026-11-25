@@ -25,7 +25,7 @@ function trashDocumentStorage(): Drive
     return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
-it('404s on reading the content of a trashed document node, F-P1.12-01', function (): void {
+it('404s on reading the content of a trashed document node', function (): void {
     $storage = trashDocumentStorage();
 
     $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
@@ -46,7 +46,7 @@ it('404s on reading the content of a trashed document node, F-P1.12-01', functio
     $this->getJson($nodeBase.'/content')->assertNotFound();
 });
 
-it('404s on exporting a trashed document node, F-P1.12-01', function (): void {
+it('404s on exporting a trashed document node', function (): void {
     $storage = trashDocumentStorage();
 
     $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
@@ -65,7 +65,7 @@ it('404s on exporting a trashed document node, F-P1.12-01', function (): void {
     $this->getJson($nodeBase.'/export/html')->assertNotFound();
 });
 
-it('404s on listing revision history of a trashed node, F-P1.12-01', function (): void {
+it('404s on listing revision history of a trashed node', function (): void {
     $storage = trashDocumentStorage();
 
     $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [

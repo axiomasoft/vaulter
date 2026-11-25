@@ -36,7 +36,7 @@ function panelIds(array $rows, string $column = 'id'): array
     return array_values(array_map(static fn (array $row): string => (string) $row[$column], $rows));
 }
 
-it('DriveResource lists a storage the acting admin can reach and hides one it cannot (F-P1.10-01)', function (): void {
+it('DriveResource lists a storage the acting admin can reach and hides one it cannot', function (): void {
     $owner = DriveBuilder::user(1);
     $reachable = DriveBuilder::storage();
     $unreachable = DriveBuilder::storage();
@@ -55,7 +55,7 @@ it('DriveResource lists a storage the acting admin can reach and hides one it ca
     expect(PanelDrives::ids())->toBe([]);
 });
 
-it('NodeGrantResource lists a grant on a reachable node and hides one on an unreachable node (F-P1.10-01)', function (): void {
+it('NodeGrantResource lists a grant on a reachable node and hides one on an unreachable node', function (): void {
     $owner = DriveBuilder::user(1);
     $storage = DriveBuilder::storage();
     $reachable = DriveBuilder::folder($storage, 'Owned');
@@ -81,7 +81,7 @@ it('NodeGrantResource lists a grant on a reachable node and hides one on an unre
     expect(PanelGrants::rows())->toBe([]);
 });
 
-it('NodeShareResource lists a share on a reachable node and hides one on an unreachable node (F-P1.10-01)', function (): void {
+it('NodeShareResource lists a share on a reachable node and hides one on an unreachable node', function (): void {
     config()->set('vaulter-drive.features.share_links', true);
     $owner = DriveBuilder::user(1);
     $this->actingAs($owner);
@@ -113,7 +113,7 @@ it('NodeShareResource lists a share on a reachable node and hides one on an unre
         ->and($rows[0])->not->toHaveKey('token');
 });
 
-it('ActivityResource lists activity targeting a reachable node and hides a foreign owner\'s activity (F-P1.10-01)', function (): void {
+it('ActivityResource lists activity targeting a reachable node and hides a foreign owner\'s activity', function (): void {
     $owner = DriveBuilder::user(1);
     $storage = DriveBuilder::storage();
     $reachable = DriveBuilder::folder($storage, 'Loud');

@@ -27,7 +27,7 @@ beforeEach(function (): void {
     Storage::fake('local');
 });
 
-it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner and a side-effect-free 412 loser', function (): void {
+it('forks expected 7 rename against content with one sequence 8 winner and a side-effect-free 412 loser', function (): void {
     $owner = DriveTestHelpers::host();
     $drive = Vaulter::drive($owner)->asSystem('sequence race fixture');
     $node = $drive->files()->upload(UploadSource::fromString('old', 'race.txt'));
@@ -96,7 +96,7 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
     }
 });
 
-it('SEC-R19-retry preserves the original expectation after serialization retry', function (): void {
+it('preserves the original expectation after serialization retry', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('retry fixture');
     $node = $drive->folders()->create('original');
     Node::query()->whereKey($node->id)->update(['sequence' => 7]);

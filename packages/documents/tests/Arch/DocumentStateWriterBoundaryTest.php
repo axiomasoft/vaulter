@@ -50,7 +50,7 @@ it('writes Yjs state and JSON content of documents only in DocumentStateWriter',
     expect($offenders)->toBe([]);
 });
 
-it('writes the pending-state marker only in DocumentStateWriter (D26)', function (): void {
+it('writes the pending-state marker only in DocumentStateWriter', function (): void {
     expect(documentsSourcesMatching('/\'pending_(generation|through_seq)\'\s*=>|->pending_(generation|through_seq)\s*=[^=>]/', ['Content/DocumentStateWriter.php']))->toBe([]);
 });
 

@@ -225,7 +225,7 @@ function oversizedContent(): TipTapContent
 
 // ─── max_document_size_kb enforced at save time ───────────────
 
-it('CreateDocumentAction rejects content over max_document_size_kb, F-P1.11-05', function (): void {
+it('CreateDocumentAction rejects content over max_document_size_kb', function (): void {
     config()->set('vaulter-documents.content.max_size_kb', 1);
 
     $drive = DocumentTestHelpers::drive();
@@ -238,7 +238,7 @@ it('CreateDocumentAction rejects content over max_document_size_kb, F-P1.11-05',
     ));
 })->throws(InvalidDocumentContentException::class);
 
-it('UpdateDocumentContentAction rejects content over max_document_size_kb, F-P1.11-05', function (): void {
+it('UpdateDocumentContentAction rejects content over max_document_size_kb', function (): void {
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Grows too big');
 

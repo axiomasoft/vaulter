@@ -188,7 +188,7 @@ it('streams the current version with the right bytes and headers (no temp-url di
         ->and($response->streamedContent())->toBe('hello bytes');
 });
 
-it('streams the bytes through PHP even on a disk that provides a temporary url, never redirecting (P1.2 / F-P1.3-01)', function (): void {
+it('streams the bytes through PHP even on a disk that provides a temporary url, never redirecting', function (): void {
     // The faked local disk DOES provide temporary URLs; the presign-redirect
     // branch was removed (a presigned URL is a bearer token that bypasses
     // per-request re-authorization and cannot be revoked instantly), so the
@@ -225,7 +225,7 @@ it('streams a specific historical version', function (): void {
     expect($response->streamedContent())->toBe('first');
 });
 
-it('serves a text/html declared mime as octet-stream with nosniff, never the raw declared type (F-P1.3-04, F-P1.11-03)', function (): void {
+it('serves a text/html declared mime as octet-stream with nosniff, never the raw declared type', function (): void {
     // Force the streaming branch — the header hardening sits on the PHP-stream
     // path (the presign-redirect branch is tested elsewhere).
     app()->instance(StorageDriver::class, new StreamingOnlyStorageDriver(app(StorageDriver::class)));
@@ -243,7 +243,7 @@ it('serves a text/html declared mime as octet-stream with nosniff, never the raw
         ->and($response->headers->get('x-content-type-options'))->toBe('nosniff');
 });
 
-it('serves a whitelisted image/png declared mime as-is, with nosniff still set (F-P1.3-04)', function (): void {
+it('serves a whitelisted image/png declared mime as-is, with nosniff still set', function (): void {
     app()->instance(StorageDriver::class, new StreamingOnlyStorageDriver(app(StorageDriver::class)));
 
     $storage = driveStorage();
@@ -310,7 +310,7 @@ it('cursor-paginates the folder listing', function (): void {
         ->assertJsonCount(2, 'data');
 });
 
-it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N) (F-P4.2-03)', function (): void {
+it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)', function (): void {
     $storage = driveStorage();
     $base = 'api/vaulter/v1/drives/'.$storage->getKey();
     $siblingCount = 5;

@@ -25,7 +25,7 @@ function revisionBlobsMigration(): Migration
     return require dirname(__DIR__, 2).'/database/migrations/0001_01_01_000205_create_v_file_revision_blobs_table.php';
 }
 
-it('releases the drive pins and only them before the revision edge table is dropped (D23, P7)', function (): void {
+it('releases the drive pins and only them before the revision edge table is dropped (P7)', function (): void {
     DriveTestHelpers::drive()->files()->upload(UploadSource::fromString('rolled back', 'a.txt'));
     $blob = Blob::query()->firstOrFail();
     app(VaulterDatabase::class)->transaction(fn () => app(BlobPins::class)->pin($blob->getKey(), 'documents.attachment', 'keep-me'));

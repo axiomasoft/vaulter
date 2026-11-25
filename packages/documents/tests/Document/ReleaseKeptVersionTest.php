@@ -33,7 +33,7 @@ function createDocumentForRelease(): Node
     ));
 }
 
-it('clears a keep_forever pin, F-P1.12-03', function (): void {
+it('clears a keep_forever pin', function (): void {
     $node = createDocumentForRelease();
 
     $pinned = app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new CreateNamedRevisionInput(
@@ -51,7 +51,7 @@ it('clears a keep_forever pin, F-P1.12-03', function (): void {
         ->and(DocumentRevision::query()->whereKey($pinned->getKey())->first()->keep_forever)->toBeFalse();
 });
 
-it('a released version re-enters the prune window on the next snapshot, F-P1.12-03', function (): void {
+it('a released version re-enters the prune window on the next snapshot', function (): void {
     config()->set('vaulter-documents.revisions.limit', 1);
 
     $node = createDocumentForRelease();
@@ -84,7 +84,7 @@ it('throws when releasing a version id that does not belong to the node', functi
         ->toThrow(DocumentRevisionNotFoundException::class);
 });
 
-it('releases a keep_forever pin through the HTTP surface, F-P1.12-03', function (): void {
+it('releases a keep_forever pin through the HTTP surface', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 
     $storage = DocumentTestHelpers::drive()->model();

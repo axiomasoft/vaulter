@@ -34,7 +34,7 @@ beforeEach(function (): void {
     Bus::fake();
 });
 
-it('SEC-R11 concurrent claims acquire one live lease and late old token cannot settle', function (): void {
+it('concurrent claims acquire one live lease and late old token cannot settle', function (): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');
@@ -74,7 +74,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
 });
 
-it('SEC-R09 killed committed publisher leaves intent recoverable by an independent process', function (): void {
+it('killed committed publisher leaves intent recoverable by an independent process', function (): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');
@@ -107,7 +107,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
         ->and($row->refresh()->outcome)->toBe('clean');
 });
 
-it('SEC-R11 killed lease owner is fenced while a surviving process recovers', function (): void {
+it('killed lease owner is fenced while a surviving process recovers', function (): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');
@@ -192,7 +192,7 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
     }
 });
 
-it('SEC-R12 purge and settlement serialize without resurrecting a head or work', function (): void {
+it('purge and settlement serialize without resurrecting a head or work', function (): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');

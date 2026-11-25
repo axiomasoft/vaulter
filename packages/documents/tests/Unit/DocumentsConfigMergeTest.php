@@ -28,7 +28,7 @@ final class ConfigMergeHostNodeComment extends NodeComment {}
  * The module owns its config root, registers its document types from it and presents
  * document nodes through a kind presenter; it adds no file handler.
  */
-it('loads document defaults under their owner and contributes a kind presenter, not file handlers (P2.5)', function (): void {
+it('loads document defaults under their owner and contributes a kind presenter, not file handlers', function (): void {
     expect(config('vaulter-documents.models.node_comment'))->toBe(NodeComment::class)
         ->and(config('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
         ->and(config('vaulter-documents.types'))->toBe([RichTextDocumentType::class, MarkdownDocumentType::class])
@@ -44,7 +44,7 @@ it('loads document defaults under their owner and contributes a kind presenter, 
     expect($presenters)->toBe([DocumentPresenter::class]);
 });
 
-it('preserves a valid host model subclass when the documents provider registers again (P2.5)', function (): void {
+it('preserves a valid host model subclass when the documents provider registers again', function (): void {
     config(['vaulter-documents.models.node_comment' => ConfigMergeHostNodeComment::class]);
 
     // A provider cannot offer its module again after boot (the catalogue is sealed): the kernel applies the
@@ -57,7 +57,7 @@ it('preserves a valid host model subclass when the documents provider registers 
         ->and(config('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class);
 });
 
-it('preserves cached module configuration during registration and adds no file handler (P2.5)', function (): void {
+it('preserves cached module configuration during registration and adds no file handler', function (): void {
     $app = Mockery::mock(Application::class)->makePartial();
     $app->shouldReceive('configurationIsCached')->once()->andReturn(true);
     $values = ['vaulter-documents' => [
