@@ -11,7 +11,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 
-it('V20 creates one x.pdf and returns a domain conflict to the second writer', function (): void {
+it('creates one x.pdf and returns a domain conflict to the second writer', function (): void {
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();

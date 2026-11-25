@@ -8,7 +8,7 @@ use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 
-it('V30 consumes a borrowed PSR stream from its current position and never closes it', function (): void {
+it('consumes a borrowed PSR stream from its current position and never closes it', function (): void {
     $resource = UploadTestHelpers::streamFor('prefixpayload');
     $psr = new Stream($resource);
     $psr->read(6);
@@ -22,14 +22,14 @@ it('V30 consumes a borrowed PSR stream from its current position and never close
     $psr->close();
 });
 
-it('V30 rejects actual oversize PSR bytes without closing the borrowed stream', function (): void {
+it('rejects actual oversize PSR bytes without closing the borrowed stream', function (): void {
     $psr = new Stream(UploadTestHelpers::streamFor('payload'));
     expect(fn () => app(StagedUpload::class)->stageSource(UploadSource::fromPsrStream($psr, 'x.txt'), 3))->toThrow(FileSizeLimitExceededException::class);
     expect($psr->isReadable())->toBeTrue();
     $psr->close();
 });
 
-it('V30 closes owned source handles and discards its prepared temporary object', function (): void {
+it('closes owned source handles and discards its prepared temporary object', function (): void {
     $source = UploadSource::fromString('content', 'file.txt');
     $prepared = app(StagedUpload::class)->stageSource($source);
     $path = $prepared->staged->path();

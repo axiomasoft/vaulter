@@ -36,7 +36,7 @@ beforeEach(function (): void {
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 
-it('V31 stamps authoritative drive and children and retained system handles recheck A B A', function (): void {
+it('stamps authoritative drive and children and retained system handles recheck A B A', function (): void {
     $handle = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $drive = $handle->model();
     $root = $handle->root();
@@ -48,7 +48,7 @@ it('V31 stamps authoritative drive and children and retained system handles rech
     expect($handle->root()->id)->toBe($root->id);
 });
 
-it('V31 denies mutated supplied drive and node models and cached repository authority', function (): void {
+it('denies mutated supplied drive and node models and cached repository authority', function (): void {
     $a = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($a, null, 'in-a');
     app(DriveReadRepository::class)->find($a->id);
@@ -63,7 +63,7 @@ it('V31 denies mutated supplied drive and node models and cached repository auth
         ->and(fn () => app(AccessResolver::class)->can(AccessTestHelpers::user(), Ability::View, $node))->toThrow(NodeNotFoundException::class);
 });
 
-it('V31 constrains HTTP lookup search shared and trash reads to the owning drive tenant', function (): void {
+it('constrains HTTP lookup search shared and trash reads to the owning drive tenant', function (): void {
     $a = AccessTestHelpers::storage();
     $nodeA = AccessTestHelpers::folder($a, null, 'secret');
     app(TenantResolver::class)->tenant = 'B';
@@ -79,7 +79,7 @@ it('V31 constrains HTTP lookup search shared and trash reads to the owning drive
     $this->getJson('api/vaulter/v1/nodes/'.$nodeB->id)->assertOk();
 });
 
-it('V31 refuses a foreign existing owner profile winner without creating another drive', function (): void {
+it('refuses a foreign existing owner profile winner without creating another drive', function (): void {
     $owner = DriveTestHelpers::host();
     $a = Vaulter::drive($owner)->model();
     app(TenantResolver::class)->tenant = 'B';
@@ -88,7 +88,7 @@ it('V31 refuses a foreign existing owner profile winner without creating another
     expect($a->newQuery()->count())->toBe(1);
 });
 
-it('V31 null refuses current authority while normalized tenant ids retain leading zeroes', function (): void {
+it('null refuses current authority while normalized tenant ids retain leading zeroes', function (): void {
     $resolver = app(TenantResolver::class);
     $resolver->tenant = '001';
     $drive = AccessTestHelpers::storage();
@@ -99,7 +99,7 @@ it('V31 null refuses current authority while normalized tenant ids retain leadin
     expect(TenancyBoundary::normalize(1))->toBe('1')->and(TenancyBoundary::normalize('001'))->toBe('001')->and(TenancyBoundary::normalize(null))->toBeNull();
 });
 
-it('I15 restores nested maintenance exceptions without carrying bypass into a Fiber', function (): void {
+it('restores nested maintenance exceptions without carrying bypass into a Fiber', function (): void {
     $a = AccessTestHelpers::storage();
     app(TenantResolver::class)->tenant = 'B';
     expect(fn (): mixed => Vaulter::withoutTenancy(function () use ($a): void {
@@ -113,7 +113,7 @@ it('I15 restores nested maintenance exceptions without carrying bypass into a Fi
     expect(fn () => Vaulter::drive($a))->toThrow(NodeNotFoundException::class);
 });
 
-it('I15 maintenance keeps ACL checks and authoritative child consistency', function (): void {
+it('maintenance keeps ACL checks and authoritative child consistency', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'database');
     $a = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($a, null, 'secret');
@@ -125,7 +125,7 @@ it('I15 maintenance keeps ACL checks and authoritative child consistency', funct
     });
 });
 
-it('V31 optional owner tenant resolver rereads owner on both provision and existing lookup', function (): void {
+it('optional owner tenant resolver rereads owner on both provision and existing lookup', function (): void {
     $connection = app(VaulterDatabase::class)->connection();
     $connection->getSchemaBuilder()->create('p38_owners', function (Blueprint $table): void {
         $table->id();
@@ -161,7 +161,7 @@ it('V31 optional owner tenant resolver rereads owner on both provision and exist
     expect($drive->newQuery()->count())->toBe(1);
 });
 
-it('V31 anonymous bearer shares derive only their target tenant and do not open a foreign system handle', function (): void {
+it('anonymous bearer shares derive only their target tenant and do not open a foreign system handle', function (): void {
     config()->set('vaulter-drive.features.share_links', true);
     $a = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $rootA = $a->root();
@@ -182,7 +182,7 @@ it('V31 anonymous bearer shares derive only their target tenant and do not open 
     $this->getJson('api/vaulter/v1/shares/'.$link->token)->assertNotFound();
 });
 
-it('V31 F1 binds optional owner validation lookup and insert to one persisted identity', function (): void {
+it('binds optional owner validation lookup and insert to one persisted identity', function (): void {
     $db = app(VaulterDatabase::class)->connection();
     $db->getSchemaBuilder()->create('p38_binding_owners', function (Blueprint $table): void {
         $table->id();
@@ -236,7 +236,7 @@ it('V31 F1 binds optional owner validation lookup and insert to one persisted id
     expect($driveClass::query()->count())->toBe(1);
 });
 
-it('V31 F2 rejects mismatched descendant ancestor breadcrumb and ACL tree stamps', function (): void {
+it('rejects mismatched descendant ancestor breadcrumb and ACL tree stamps', function (): void {
     $drive = AccessTestHelpers::storage();
     $root = AccessTestHelpers::folder($drive, null, 'root');
     $parent = AccessTestHelpers::folder($drive, $root, 'parent');

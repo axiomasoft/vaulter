@@ -37,7 +37,7 @@ function completeRaceSession(): UploadSession
     return app(UploadSessionManager::class)->markAssembled($session->refresh());
 }
 
-it('V19 two complete calls commit one node revision edge quota update and event', function (): void {
+it('two complete calls commit one node revision edge quota update and event', function (): void {
     $session = completeRaceSession();
     $task = static function () use ($session): array {
         $fresh = $session->fresh();

@@ -172,7 +172,7 @@ it('isolates database resources from a sibling profile with an open candidate la
     expect($rowIds)->toContain((string) $visible->root_node_id)->not->toContain((string) $hiddenNode->id, (string) $openNode->id);
 })->with(['gate', 'disabled']);
 
-it('V31 Filament node grant share and activity listings stay in the current tenant', function (): void {
+it('Filament node grant share and activity listings stay in the current tenant', function (): void {
     config()->set('vaulter-drive.features.share_links', true);
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);

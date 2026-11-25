@@ -19,7 +19,7 @@ uses(TestCase::class, RefreshDatabase::class);
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 
-it('V31 actual HTTP node revision and upload session routes cannot cross tenant', function (): void {
+it('actual HTTP node revision and upload session routes cannot cross tenant', function (): void {
     Storage::fake('local');
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);

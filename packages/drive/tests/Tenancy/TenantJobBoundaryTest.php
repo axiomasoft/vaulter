@@ -21,7 +21,7 @@ uses(TestCase::class, RefreshDatabase::class);
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 
-it('V08 validates host A B A restores on next exception and fails absent or foreign tenant without work', function (): void {
+it('validates host A B A restores on next exception and fails absent or foreign tenant without work', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     $resolver = new MutableTenantResolver;
@@ -61,7 +61,7 @@ it('V08 validates host A B A restores on next exception and fails absent or fore
         ->and($resolver->current())->toBe('A');
 });
 
-it('V08 a deleted queued actor fails without promotion to system or invoking next', function (): void {
+it('a deleted queued actor fails without promotion to system or invoking next', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     app()->instance(TenantResolver::class, new MutableTenantResolver);
@@ -84,7 +84,7 @@ it('V08 a deleted queued actor fails without promotion to system or invoking nex
     expect($called)->toBeFalse()->and($job->failure)->toBeInstanceOf(NodeNotFoundException::class)->and($middleware->actor())->toBeNull();
 });
 
-it('V08 rehydrates a user through Auth and evaluates changed permissions at execution', function (): void {
+it('rehydrates a user through Auth and evaluates changed permissions at execution', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     config()->set('vaulter-drive.access.permission_driver', 'database');

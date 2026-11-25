@@ -80,7 +80,7 @@ beforeEach(function (): void {
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 
-it('V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads', function (): void {
+it('private scanner A B A refuses mismatch null and maintenance inheritance before any reads', function (): void {
     $job = new ScanFileRevision($this->work->id, $this->work->generation, $this->drive->id, 'A');
     $resolver = app(TenantResolver::class);
     $resolver->tenant = 'B';

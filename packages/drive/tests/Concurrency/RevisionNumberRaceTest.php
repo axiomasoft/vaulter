@@ -20,7 +20,7 @@ beforeEach(function (): void {
     Storage::fake('local');
 });
 
-it('V03 serializes revisions and accounts for every retained revision', function (): void {
+it('serializes revisions and accounts for every retained revision', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('old'), 'a.txt'));
     // Both children inherit revision 1, even after the winner commits revision 2.
@@ -45,7 +45,7 @@ it('V03 serializes revisions and accounts for every retained revision', function
 
 // Upload's node lock ALSO serializes revisions. Exercise the aggregate repository
 // independently so removing its FOR UPDATE is a meaningful negative control.
-it('V03 aggregate lock protects counter allocation even without a caller node lock', function (): void {
+it('aggregate lock protects counter allocation even without a caller node lock', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('head'), 'a.txt'));
     $file = DriveTestHelpers::model($node)->file()->firstOrFail();

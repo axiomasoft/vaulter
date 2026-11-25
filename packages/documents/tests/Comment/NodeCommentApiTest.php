@@ -45,7 +45,7 @@ it('lists the node comment thread for a viewer', function () use ($user, $commen
         ->toEqualCanonicalizing(['first', 'second']);
 });
 
-it('V29 denies Reader comment creation and Commenter editing', function () use ($user, $commentNode, $url): void {
+it('denies Reader comment creation and Commenter editing', function () use ($user, $commentNode, $url): void {
     [, $node] = $commentNode(RoleRegistry::READER);
     $this->actingAs($user(1));
     $this->getJson($url($node))->assertOk();

@@ -18,7 +18,7 @@ uses(TestCase::class, DatabaseMigrations::class);
 
 afterEach(fn () => MutableTenantResolver::clearFixtureStamps());
 
-it('V31 a real PG owner profile race has one tenant winner and a hidden loser', function (): void {
+it('a real PG owner profile race has one tenant winner and a hidden loser', function (): void {
     ForkRace::skipUnlessSupported($this);
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);

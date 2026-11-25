@@ -79,7 +79,7 @@ function r07bReqTenantStorage(int $tenantId): Drive
 
 // ── UploadSessionManager.initiate: session attribute contracts ────────────────
 
-it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnNull tenantId)', function (): void {
+it('initiate stores the tenant_id from the storage row', function (): void {
     // Use integer tenant_id (bigint column on pgsql, works on sqlite too)
     $tenantId = 99887766;
     $storage = r07bReqTenantStorage($tenantId);
@@ -95,7 +95,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
     expect($session->tenant_id)->toBe((string) $tenantId);
 });
 
-it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCast)', function (): void {
+it('initiate upload_id is stored as a non-empty string', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -107,7 +107,7 @@ it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCa
     expect($session->upload_id)->toBeString()->not->toBeEmpty();
 });
 
-it('R07b: initiate target_name stored from UploadInitData (L74 RemoveArrayItem target_name)', function (): void {
+it('initiate target_name stored from UploadInitData', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -119,7 +119,7 @@ it('R07b: initiate target_name stored from UploadInitData (L74 RemoveArrayItem t
     expect($session->target_name)->toBe('specific-name.bin');
 });
 
-it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArrayItem node_id)', function (): void {
+it('initiate node_id stored from UploadInitData targetNode', function (): void {
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
 
@@ -142,7 +142,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
     expect($session->target_node_id)->toEqual($node->getKey());
 });
 
-it('R07b: initiate metadata=[] retains server owner identity (L77 RemoveArrayItem metadata coalesce)', function (): void {
+it('initiate metadata=[] retains server owner identity', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -155,7 +155,7 @@ it('R07b: initiate metadata=[] retains server owner identity (L77 RemoveArrayIte
     expect($session->metadata)->toBe(['actor_type' => 'vaulter:system', 'expected_sequence' => null]);
 });
 
-it('R07b: initiate non-empty metadata retains client values and server identity (L77 sanity)', function (): void {
+it('initiate non-empty metadata retains client values and server identity', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -170,7 +170,7 @@ it('R07b: initiate non-empty metadata retains client values and server identity 
 
 // ── assertWithinMaxBytes boundary (L263 BooleanOr and ±1) ───────────────────
 
-it('R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes (L263 BooleanOr)', function (): void {
+it('max_bytes=0 bypasses the ceiling for any total_size_bytes', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 0);
     $storage = UploadTestHelpers::storage();
 
@@ -187,7 +187,7 @@ it('R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes (L263 Boolea
     expect($session->total_size_bytes)->toBe(999_999);
 });
 
-it('R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementInteger)', function (): void {
+it('max_bytes=1 blocks total_size_bytes=2', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 1);
     $storage = UploadTestHelpers::storage();
 
@@ -201,7 +201,7 @@ it('R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementInteger)', fu
     )))->toThrow(ValidationException::class);
 });
 
-it('R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 boundary)', function (): void {
+it('max_bytes=1 allows total_size_bytes=1 exactly', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 1);
     $storage = UploadTestHelpers::storage();
 
@@ -217,7 +217,7 @@ it('R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 boundary)', fu
 
 // ── assertWithinActiveSessionCap (L269 RemoveArrayItem) ─────────────────────
 
-it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem actorId check)', function (): void {
+it('null actorId bypasses the active session cap', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 1);
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
@@ -236,7 +236,7 @@ it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem act
     expect(UploadSession::query()->whereNull('created_by')->count())->toBe(2);
 });
 
-it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArrayItem max===0 check)', function (): void {
+it('max_active_sessions=0 disables the cap for any actorId', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 0);
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
@@ -256,7 +256,7 @@ it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArr
 
 // ── guardTransition error field (L300 RemoveArrayItem 'status' key) ──────────
 
-it('R07b: guardTransition ValidationException carries the "status" field in errors (L300 RemoveArrayItem)', function (): void {
+it('guardTransition ValidationException carries the "status" field in errors', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Committed])->save());
 
@@ -270,7 +270,7 @@ it('R07b: guardTransition ValidationException carries the "status" field in erro
 
 // ── UploadSessionStoreRepository: advanceReceived status filter (L182) ────────
 
-it('R07b: advanceReceived works on an Uploading session (L182 RemoveArrayItem Uploading)', function (): void {
+it('advanceReceived works on an Uploading session', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 16);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Uploading, 'received_bytes' => 4])->save());
 
@@ -280,7 +280,7 @@ it('R07b: advanceReceived works on an Uploading session (L182 RemoveArrayItem Up
         ->and($session->fresh()->status)->toBe(UploadStatus::Uploading);
 });
 
-it('R07b: advanceReceived throws on an Aborted session (L182 boundary — non-open status)', function (): void {
+it('advanceReceived throws on an Aborted session', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Aborted])->save());
 
@@ -290,7 +290,7 @@ it('R07b: advanceReceived throws on an Aborted session (L182 boundary — non-op
 
 // ── UploadSessionStoreRepository: markCommitted Assembled check (L217) ────────
 
-it('R07b: markCommitted throws UploadConflictException on an Initiated session (L217 RemoveArrayItem)', function (): void {
+it('markCommitted throws UploadConflictException on an Initiated session', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     expect($session->status)->toBe(UploadStatus::Initiated);
 
@@ -298,7 +298,7 @@ it('R07b: markCommitted throws UploadConflictException on an Initiated session (
         ->toThrow(UploadConflictException::class);
 });
 
-it('R07b: markCommitted throws on an Uploading session — only Assembled passes (L217 boundary)', function (): void {
+it('markCommitted throws on an Uploading session — only Assembled passes', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Uploading])->save());
 
@@ -308,7 +308,7 @@ it('R07b: markCommitted throws on an Uploading session — only Assembled passes
 
 // ── UploadPart casts (L57 AlwaysReturnEmptyArray, L58-L61 RemoveArrayItem) ───
 
-it('R07b: UploadPart part_no and byte_offset and size_bytes cast to strict int (L57/L58/L59/L60)', function (): void {
+it('UploadPart part_no and byte_offset and size_bytes cast to strict int', function (): void {
     $session = UploadTestHelpers::session(
         UploadTestHelpers::storage(),
         protocol: UploadProtocol::S3Multipart,
@@ -328,7 +328,7 @@ it('R07b: UploadPart part_no and byte_offset and size_bytes cast to strict int (
         ->and($part->size_bytes)->toBe(5);
 });
 
-it('R07b: UploadPart received_at casts to Carbon (L57/L61 received_at cast)', function (): void {
+it('UploadPart received_at casts to Carbon', function (): void {
     $session = UploadTestHelpers::session(
         UploadTestHelpers::storage(),
         protocol: UploadProtocol::S3Multipart,
@@ -356,7 +356,7 @@ function r07bActor(): ActorRef
     return new ActorRef(type: 'user', id: 42);
 }
 
-it('R07b: upload.aborted records all three context keys', function (): void {
+it('upload.aborted records all three context keys', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 8);
@@ -373,7 +373,7 @@ it('R07b: upload.aborted records all three context keys', function (): void {
         ->and($row->context['received_bytes'])->toBe(5);
 });
 
-it('R07b: upload.aborted upload_id context is the session upload_id', function (): void {
+it('upload.aborted upload_id context is the session upload_id', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
@@ -385,7 +385,7 @@ it('R07b: upload.aborted upload_id context is the session upload_id', function (
 
 // ── EventRecorder: upload.expired activity context ───────
 
-it('R07b: upload.expired records all three context keys', function (): void {
+it('upload.expired records all three context keys', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 8);
@@ -401,7 +401,7 @@ it('R07b: upload.expired records all three context keys', function (): void {
         ->and($row->context['received_bytes'])->toBe(3);
 });
 
-it('R07b: upload.expired protocol is the tus protocol value', function (): void {
+it('upload.expired protocol is the tus protocol value', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(
@@ -418,7 +418,7 @@ it('R07b: upload.expired protocol is the tus protocol value', function (): void 
 
 // ── EventRecorder: node.purged node_ids are strings ──
 
-it('R07b: node.purged node_ids are string-typed after Identity::stringify', function (): void {
+it('node.purged node_ids are string-typed after Identity::stringify', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $storage = UploadTestHelpers::storage();
@@ -458,7 +458,7 @@ it('R07b: node.purged node_ids are string-typed after Identity::stringify', func
 
 // ── UploadSessionStoreRepository: pgsql advisory lock key prefix (L90) ────────
 
-it('R07b: acquireForPatch pgsql advisory lock key includes upload: prefix (L90 ConcatRemoveLeft/SwitchSides)', function (): void {
+it('acquireForPatch pgsql advisory lock key includes upload: prefix', function (): void {
     // On pgsql: different lock keys for different upload_ids (ConcatSwitchSides would swap prefix to suffix,
     // ConcatRemoveLeft would drop it — either way, two identical upload_ids after transformation would collide).
     // This test is only observable on pgsql; on sqlite the pgsql branch is skipped entirely.

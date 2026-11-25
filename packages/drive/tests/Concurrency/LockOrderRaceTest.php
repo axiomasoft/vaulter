@@ -16,7 +16,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
 
-it('V21 completes ten overlapping move/upload races with an acyclic tree and exact head bytes', function (): void {
+it('completes ten overlapping move/upload races with an acyclic tree and exact head bytes', function (): void {
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();

@@ -36,7 +36,7 @@ beforeEach(function (): void {
     $this->base = 'api/vaulter/v1/drives/'.$this->storage->id;
 });
 
-it('V09 reaches the 301st candidate across empty pages and hides walled-off nodes everywhere', function (): void {
+it('reaches the 301st candidate across empty pages and hides walled-off nodes everywhere', function (): void {
     config()->set('vaulter-drive.listing.scan_budget', 100);
     $hidden = [];
     for ($i = 0; $i < 300; $i++) {
@@ -71,7 +71,7 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
     $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
 });
 
-it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only cuts grants', function (): void {
+it('keeps a drive-wide Gate role through an inheritance boundary, which only cuts grants', function (): void {
     // A boundary is a grant-inheritance rule, not a block: the host role lane is
     // node-blind and still applies; only an override Deny closes a drive to a role.
     $walled = AccessTestHelpers::folder($this->storage, $this->folder, 'walled', inheritGrants: false);

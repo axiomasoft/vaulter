@@ -45,7 +45,7 @@ function purgeLifecycleRevisions(int|string $documentId): int
     return DocumentRevision::query()->where('document_id', $documentId)->count();
 }
 
-it('V33 purges the copy\'s revisions and leaves the original intact', function (): void {
+it('purges the copy\'s revisions and leaves the original intact', function (): void {
     $drive = DocumentTestHelpers::drive();
     $source = purgeLifecycleDocument($drive, 'Original');
     $original = DocumentTestHelpers::document($source);

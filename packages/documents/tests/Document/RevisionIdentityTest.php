@@ -19,7 +19,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  * id 7 to the FILE revision 7. Heads now live on their own aggregate, so each kind
  * reads its own revision and the node carries no shared pointer.
  */
-it('V32 keeps a file revision and a document revision with the same id apart', function (): void {
+it('keeps a file revision and a document revision with the same id apart', function (): void {
     expect(config('vaulter.ids.strategy'))->toBe('bigint');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = DocumentTestHelpers::drive();

@@ -13,7 +13,7 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 
-it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function (): void {
+it('admits exactly one 8 MiB upload into 10 MiB of free quota', function (): void {
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();

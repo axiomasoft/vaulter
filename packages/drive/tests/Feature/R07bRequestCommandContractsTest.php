@@ -66,51 +66,51 @@ function r07bReqUploadId(string $storageId, array $extra = []): string
 
 // ── CreateUploadSessionRequest: totalSizeBytes() int cast (L87 RemoveIntegerCast) ──
 
-it('R07b: totalSizeBytes() casts numeric string to strict int (L87 RemoveIntegerCast)', function (): void {
+it('totalSizeBytes() casts numeric string to strict int', function (): void {
     $req = r07bReqBuildSession(['total_size_bytes' => '8']);
     expect($req->totalSizeBytes())->toBe(8); // strict int 8, not '8'
 });
 
-it('R07b: totalSizeBytes() returns null for a non-numeric string (L87 boundary)', function (): void {
+it('totalSizeBytes() returns null for a non-numeric string', function (): void {
     expect(r07bReqBuildSession(['total_size_bytes' => 'abc'])->totalSizeBytes())->toBeNull();
 });
 
-it('R07b: totalSizeBytes() returns null when key is absent (L87 boundary)', function (): void {
+it('totalSizeBytes() returns null when key is absent', function (): void {
     expect(r07bReqBuildSession([])->totalSizeBytes())->toBeNull();
 });
 
 // ── CreateUploadSessionRequest: expectedSha256() (L94) ───────────────────────
 
-it('R07b: expectedSha256() returns the full 64-char hash string (L94 AlwaysReturnNull/TernaryNegated)', function (): void {
+it('expectedSha256() returns the full 64-char hash string', function (): void {
     $sha256 = str_repeat('e', 64);
     expect(r07bReqBuildSession(['expected_sha256' => $sha256])->expectedSha256())->toBe($sha256);
 });
 
-it('R07b: expectedSha256() returns null for empty string (L94 EmptyStringToNotEmpty/NotIdenticalToIdentical)', function (): void {
+it('expectedSha256() returns null for empty string', function (): void {
     expect(r07bReqBuildSession(['expected_sha256' => ''])->expectedSha256())->toBeNull();
 });
 
-it('R07b: expectedSha256() returns null when key is absent (L94 BooleanAnd)', function (): void {
+it('expectedSha256() returns null when key is absent', function (): void {
     expect(r07bReqBuildSession([])->expectedSha256())->toBeNull();
 });
 
 // ── CreateUploadSessionRequest: mimeType() (L101) ────────────────────────────
 
-it('R07b: mimeType() returns the string for a non-empty input (L101 AlwaysReturnNull/BooleanAnd)', function (): void {
+it('mimeType() returns the string for a non-empty input', function (): void {
     expect(r07bReqBuildSession(['mime_type' => 'application/pdf'])->mimeType())->toBe('application/pdf');
 });
 
-it('R07b: mimeType() returns null for empty string (L101 EmptyStringToNotEmpty)', function (): void {
+it('mimeType() returns null for empty string', function (): void {
     expect(r07bReqBuildSession(['mime_type' => ''])->mimeType())->toBeNull();
 });
 
-it('R07b: mimeType() returns null when key is absent (L101)', function (): void {
+it('mimeType() returns null when key is absent', function (): void {
     expect(r07bReqBuildSession([])->mimeType())->toBeNull();
 });
 
 // ── CreateUploadSessionRequest: name() (L80) ─────────────────────────────────
 
-it('R07b: name() returns null for a non-string truthy value — kills BooleanAndToBooleanOr (L80)', function (): void {
+it('name() returns null for a non-string truthy value — kills BooleanAndToBooleanOr', function (): void {
     // Inject a boolean directly, bypassing JSON coercion (tests is_string guard)
     $http = HttpRequest::create('/', 'POST');
     $http->request->set('name', true);
@@ -121,17 +121,17 @@ it('R07b: name() returns null for a non-string truthy value — kills BooleanAnd
     expect($req->name())->toBeNull();
 });
 
-it('R07b: name() returns null for empty string (L80 EmptyStringToNotEmpty)', function (): void {
+it('name() returns null for empty string', function (): void {
     expect(r07bReqBuildSession(['name' => ''])->name())->toBeNull();
 });
 
-it('R07b: name() returns the string for a non-empty string (L80 sanity)', function (): void {
+it('name() returns the string for a non-empty string', function (): void {
     expect(r07bReqBuildSession(['name' => 'file.bin'])->name())->toBe('file.bin');
 });
 
 // ── CreateUploadSessionRequest: rules() RemoveArrayItem (L29-35) ─────────────
 
-it('R07b: resumable session rules() enforces protocol, name, sha256, mime and metadata (L29-35 RemoveArrayItem)', function (): void {
+it('resumable session rules() enforces protocol, name, sha256, mime and metadata', function (): void {
     $base = r07bReqStorageBase().'/uploads';
 
     // L29: protocol in:... rule
@@ -167,11 +167,11 @@ it('R07b: resumable session rules() enforces protocol, name, sha256, mime and me
 
 // ── UploadFileRequest: name() (L91) ──────────────────────────────────────────
 
-it('R07b: UploadFileRequest name() returns null for empty string (L91 EmptyStringToNotEmpty)', function (): void {
+it('UploadFileRequest name() returns null for empty string', function (): void {
     expect(r07bReqBuildFile(['name' => ''])->name())->toBeNull();
 });
 
-it('R07b: UploadFileRequest name() returns null for non-string (L91 BooleanAndToBooleanOr)', function (): void {
+it('UploadFileRequest name() returns null for non-string', function (): void {
     $http = HttpRequest::create('/', 'POST');
     $http->request->set('name', 42);
     $req = UploadFileRequest::createFrom($http);
@@ -179,13 +179,13 @@ it('R07b: UploadFileRequest name() returns null for non-string (L91 BooleanAndTo
     expect($req->name())->toBeNull();
 });
 
-it('R07b: UploadFileRequest name() returns the string for a non-empty value (L91 sanity)', function (): void {
+it('UploadFileRequest name() returns the string for a non-empty value', function (): void {
     expect(r07bReqBuildFile(['name' => 'photo.jpg'])->name())->toBe('photo.jpg');
 });
 
 // ── UploadFileRequest: rules() RemoveArrayItem (L29/41/42/43) ────────────────
 
-it('R07b: UploadFileRequest rules() has file required, name max and name regex (L29/41/42/43)', function (): void {
+it('UploadFileRequest rules() has file required, name max and name regex', function (): void {
     $base = r07bReqStorageBase().'/files';
 
     // L29: file required
@@ -209,7 +209,7 @@ it('R07b: UploadFileRequest rules() has file required, name max and name regex (
 
 // ── PurgeTrashCommand: retention eligibility and reported root counts ──────────
 
-it('R07b: one-day retention purges an old root and preserves one inside the window', function (): void {
+it('one-day retention purges an old root and preserves one inside the window', function (): void {
     $this->travelTo(Carbon::parse('2026-09-20 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $old = AccessTestHelpers::folder($storage, null, 'one-day-old');
@@ -223,7 +223,7 @@ it('R07b: one-day retention purges an old root and preserves one inside the wind
         ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
-it('R07b: two-day retention includes the exact cutoff and reports two purged roots', function (): void {
+it('two-day retention includes the exact cutoff and reports two purged roots', function (): void {
     $this->travelTo(Carbon::parse('2026-09-21 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $old = AccessTestHelpers::folder($storage, null, 'two-day-old');
@@ -240,7 +240,7 @@ it('R07b: two-day retention includes the exact cutoff and reports two purged roo
         ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
-it('R07b: zero retention purges a root trashed now while leaving live nodes', function (): void {
+it('zero retention purges a root trashed now while leaving live nodes', function (): void {
     $this->travelTo(Carbon::parse('2026-09-22 10:00:00'));
     $storage = AccessTestHelpers::storage();
     $trashed = AccessTestHelpers::folder($storage, null, 'just-trashed');
@@ -253,7 +253,7 @@ it('R07b: zero retention purges a root trashed now while leaving live nodes', fu
         ->and(Node::query()->whereKey($live->id)->exists())->toBeTrue();
 });
 
-it('R07b: non-numeric days uses configured retention rather than zero', function (): void {
+it('non-numeric days uses configured retention rather than zero', function (): void {
     config()->set('vaulter-drive.trash.retention_days', 14);
     $this->travelTo(Carbon::parse('2026-09-22 11:00:00'));
     $storage = AccessTestHelpers::storage();
@@ -270,7 +270,7 @@ it('R07b: non-numeric days uses configured retention rather than zero', function
 
 // ── PurgeTrashCommand: ForceDeleteNodeAction (L94 RemoveMethodCall) ───────────
 
-it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction must run (L94)', function (): void {
+it('purge-trash decrements storage used_bytes — ForceDeleteNodeAction must run', function (): void {
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();
 
@@ -288,7 +288,7 @@ it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction mu
 
 // ── PurgeTrashCommand: purgeSubtree (L99 RemoveMethodCall) ───────────────────
 
-it('R07b: purge-trash physically removes rows — no query finds them afterwards (L99)', function (): void {
+it('purge-trash physically removes rows — no query finds them afterwards', function (): void {
     $this->travelTo(Carbon::parse('2026-09-23 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $n = AccessTestHelpers::folder($storage, null, 'r07b-physical');
@@ -303,7 +303,7 @@ it('R07b: purge-trash physically removes rows — no query finds them afterwards
 
 // ── PurgeTrashCommand: purgedRoots / purgedNodeCount counting (L105/107) ──────
 
-it('R07b: purge-trash increments purgedRoots correctly for multiple subtrees (L105/L107)', function (): void {
+it('purge-trash increments purgedRoots correctly for multiple subtrees', function (): void {
     $this->travelTo(Carbon::parse('2026-09-24 12:00:00'));
     $storage = AccessTestHelpers::storage();
 
@@ -320,7 +320,7 @@ it('R07b: purge-trash increments purgedRoots correctly for multiple subtrees (L1
 
 // ── PurgeTrashCommand: vaulter_purge_nodes_total counter (L113/L114) ──────────
 
-it('R07b: purge-trash emits vaulter_purge_nodes_total when nodes are purged (L114)', function (): void {
+it('purge-trash emits vaulter_purge_nodes_total when nodes are purged', function (): void {
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
     app()->forgetInstance(MetricsRecorder::class);
@@ -343,7 +343,7 @@ it('R07b: purge-trash emits vaulter_purge_nodes_total when nodes are purged (L11
 
 // ── TusUploadController: max_chunk_bytes ceiling (L390 IncrementInteger on 0) ──
 
-it('R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413 (L390 IncrementInteger)', function (): void {
+it('max_chunk_bytes=1 blocks a 2-byte declared chunk with 413', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storageId = r07bReqStorageBase();
     $uploadId = r07bReqUploadId(explode('/', $storageId)[4], ['total_size_bytes' => 16]);
@@ -361,7 +361,7 @@ it('R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413 (L390 Increm
     $response->assertStatus(413);
 });
 
-it('R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 boundary)', function (): void {
+it('max_chunk_bytes=1 allows an exactly 1-byte chunk', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storageId = r07bReqStorageBase();
     $uploadId = r07bReqUploadId(explode('/', $storageId)[4], ['total_size_bytes' => 16]);
@@ -376,7 +376,7 @@ it('R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 boundary)', fun
 
 // ── TusUploadController: sanitizeMetadata ContinueToBreak (L433) ─────────────
 
-it('R07b: sanitizeMetadata continues after unknown key and still includes known keys that follow (L433 ContinueToBreak)', function (): void {
+it('sanitizeMetadata continues after unknown key and still includes known keys that follow', function (): void {
     config()->set('vaulter-drive.uploads.resumable.metadata.allowed_keys', ['filename']);
     $storageId = explode('/', r07bReqStorageBase())[4];
 
@@ -396,7 +396,7 @@ it('R07b: sanitizeMetadata continues after unknown key and still includes known 
 
 // ── TusUploadController: decodeUploadMetadata empty key (L462 EmptyStringToNotEmpty) ──
 
-it('R07b: decodeUploadMetadata skips segments with an empty key (L462 EmptyStringToNotEmpty)', function (): void {
+it('decodeUploadMetadata skips segments with an empty key', function (): void {
     config()->set('vaulter-drive.uploads.resumable.metadata.allowed_keys', ['filename']);
     $storageId = explode('/', r07bReqStorageBase())[4];
 
@@ -416,7 +416,7 @@ it('R07b: decodeUploadMetadata skips segments with an empty key (L462 EmptyStrin
 
 // ── TusUploadController: abort manager call (L186 RemoveMethodCall) ───────────
 
-it('R07b: DELETE abort transitions session to Aborted status (L186 RemoveMethodCall)', function (): void {
+it('DELETE abort transitions session to Aborted status', function (): void {
     $storageId = explode('/', r07bReqStorageBase())[4];
     $uploadId = r07bReqUploadId($storageId);
 

@@ -17,7 +17,7 @@ beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this, app(VaulterDatabase::class)->connection()->getName());
 });
 
-it('V36 refuses the second of two renames with the same expectedSequence', function (): void {
+it('refuses the second of two renames with the same expectedSequence', function (): void {
     $node = RaceFixtures::document();
     $drive = $node->storage;
     $rename = static fn (string $name): Closure => static fn (): array => RaceFixtures::attempt(static fn () => Vaulter::drive($drive)->asSystem('V36 document rename')

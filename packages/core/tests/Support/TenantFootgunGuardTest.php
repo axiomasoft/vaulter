@@ -10,7 +10,7 @@ use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
-it('V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment', function (string $env, mixed $resolver): void {
+it('strict tenancy rejects missing invalid and wrong-interface resolver in every environment', function (string $env, mixed $resolver): void {
     app()->detectEnvironment(fn (): string => $env);
     config()->set('vaulter-drive.access.permission_driver', 'database');
     config()->set('vaulter.tenancy.enabled', true);
@@ -20,7 +20,7 @@ it('V31 strict tenancy rejects missing invalid and wrong-interface resolver in e
         ->toThrow(TenancyMisconfiguredException::class);
 })->with(['testing', 'production'])->with([null, 'MissingTenantClass', stdClass::class]);
 
-it('V31 boot permits a valid read-only resolver with null current for maintenance CLI', function (): void {
+it('boot permits a valid read-only resolver with null current for maintenance CLI', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     app()->forgetInstance(VaulterOptions::class);

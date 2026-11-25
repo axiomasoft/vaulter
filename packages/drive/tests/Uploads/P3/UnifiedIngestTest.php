@@ -26,7 +26,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => Storage::fake('local'));
 
-it('V05 rejects an executable disguised as PDF before SQL and CAS', function (): void {
+it('rejects an executable disguised as PDF before SQL and CAS', function (): void {
     $drive = UploadTestHelpers::storage();
     $stream = UploadTestHelpers::streamFor('MZ'.str_repeat("\0", 1024));
     expect(fn () => Vaulter::drive($drive)->asSystem('test fixture')->files()->upload(UploadSource::fromStream($stream, 'report.pdf'), new UploadOptions(declaredMimeType: 'application/pdf')))
@@ -35,7 +35,7 @@ it('V05 rejects an executable disguised as PDF before SQL and CAS', function ():
     fclose($stream);
 });
 
-it('I9 persists detected MIME separately from the declared generic MIME', function (): void {
+it('persists detected MIME separately from the declared generic MIME', function (): void {
     $drive = UploadTestHelpers::storage();
     $stream = UploadTestHelpers::streamFor('plain text');
     $node = app(IngestFileAction::class)->execute(DriveContext::system($drive, 'test fixture'), new IngestFileInput($drive, $stream, 'note.txt', 'application/octet-stream'));
@@ -44,7 +44,7 @@ it('I9 persists detected MIME separately from the declared generic MIME', functi
     fclose($stream);
 });
 
-it('I9 ingest receipt names the revision this call created, not the head a post-commit writer moved', function (): void {
+it('ingest receipt names the revision this call created, not the head a post-commit writer moved', function (): void {
     $handle = Vaulter::drive(UploadTestHelpers::storage())->asSystem('test fixture');
     $fileId = $handle->files()->upload(UploadSource::fromString('initial', 'receipt.txt'))->id;
     $later = null;
@@ -64,7 +64,7 @@ it('I9 ingest receipt names the revision this call created, not the head a post-
         ->and($own->id)->not->toBe($later->id);
 });
 
-it('V30 counts from the current position and enforces the actual byte limit', function (): void {
+it('counts from the current position and enforces the actual byte limit', function (): void {
     $stream = UploadTestHelpers::streamFor('prefixactual');
     fread($stream, 6);
     $source = UploadSource::fromStream($stream, 'x.txt', 999);
@@ -81,7 +81,7 @@ it('V30 counts from the current position and enforces the actual byte limit', fu
     fclose($stream);
 });
 
-it('V05 HTTP single tus and S3 reject the same executable PDF bytes before CAS', function (string $protocol): void {
+it('HTTP single tus and S3 reject the same executable PDF bytes before CAS', function (string $protocol): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 12]));
     $drive = Vaulter::drive(DriveTestHelpers::host())->model();
     $bytes = 'MZ'.str_repeat("\0", 1024);
