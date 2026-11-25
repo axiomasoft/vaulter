@@ -32,6 +32,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [A5](#a5-public-surface-snapshots-in-the-satellites) | Public surface snapshots in the satellites | P2 | S |
 | [A7](#a7-one-safe-redirect-helper-in-the-base) | One safe redirect helper in the base | P1 | S |
 | [A8](#a8-datetime-instead-of-timestamp-columns-on-mysql) | DATETIME instead of TIMESTAMP columns on MySQL | P1 | S |
+| [A9](#a9-a-writer-for-the-sheets-projection-tables) | A writer for the sheets projection tables | P1 | M |
 | [A6](#a6-move-planning-material-out-of-the-public-repository) | Move planning material out of the public repository | P1 | S (a decision) |
 | [R6](#r6-npm-only-and-a-reviewed-install-script-allowlist) | npm only, and a reviewed install-script allowlist | P2 | S |
 | [R7](#r7-pin-runners-and-service-images-and-enforce-it) | Pin runners and service images, and enforce it | P2 | S |
@@ -309,9 +310,18 @@ page). Each problem `type` URL points at the documentation of the package that o
 **Problem.** sheets reads configuration through 31 raw `config()` calls outside its config files;
 the base uses closed-schema options objects.
 
-The shallow-merged config arrays also misbehave: in sheets the published file and the code defaults
-disagree (`max_snapshot_bytes` is 32 MiB in the file and 7 MiB in code), and overriding one nested key
-drops its sibling keys back to the code defaults.
+The shallow-merged config arrays also misbehave in sheets:
+
+- the published file and the code fallbacks disagree: `max_snapshot_bytes` is 32 MiB in the file and
+  7 MiB in `WorkbookCodec`; `max_message_bytes` is 64 MiB in the file and in `ExchangeWire`, but 8 MiB
+  in `RuntimeWire`;
+- some keys are read but missing from the config file, so they can only be set by knowing the code:
+  `locale`, the top-level `queue_connection` (the file only has `exchange.queue_connection`) and
+  `realtime.checkpoint_interval`;
+- the import size limit is configured through different environment variables in the PHP package and
+  in the Node engine;
+- the package config is merged at the top level only, so overriding one nested key in a host drops
+  its sibling keys back to the code fallbacks.
 
 **Proposal.** Typed settings objects plus an exported `config.schema.json` per package, built from one
 source of defaults, so the `vaulter:doctor` configuration check also covers the satellites. Add a
@@ -353,6 +363,32 @@ time zone.
 rejects `TIMESTAMP` columns on MySQL. There are no users yet, so the migration can be changed in place.
 
 **Cost.** S.
+
+### A9. A writer for the sheets projection tables
+
+**Problem.** vaulter-sheets creates the `v_sheets_projection_*` tables (builds, heads, sheets, tables,
+columns, rows, cells) and runs a pre-publish check over them (`scripts/ci/sql/sheets-checks.sql`), but
+no code in any repository writes to them: neither sheets nor vaulter-ai has a projector. The tables
+stay empty, and the check passes on nothing.
+
+**Proposal.** Keep the tables and implement the projector. Decide first:
+
+- the owning package: sheets (the projection is a read model of its own workbook format, useful to
+  search, exports and the AI alike) or ai (if the AI tools are its only reader). Sheets is the
+  natural owner, with ai as a consumer;
+- when it runs: synchronously on save (always consistent, but adds latency to every save) or as a
+  queued job keyed by the revision (the save stays fast, readers see the previous build until the new
+  one is published; the `builds`/`heads` tables already fit this model).
+
+Then write the contract down: which revision a build reflects, how a head moves atomically from one
+complete build to the next, and what readers see while a build is pending or failed. Cover it with
+tests: a build per saved revision, an atomic head switch, idempotent rebuilds, and the pre-publish
+check failing on a real inconsistency instead of on empty tables.
+
+**Rationale.** A read model nobody writes is worse than none: it looks finished, and the check that
+guards it gives a false green.
+
+**Cost.** M.
 
 ### A6. Move planning material out of the public repository
 
