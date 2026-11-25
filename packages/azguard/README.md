@@ -1,6 +1,6 @@
 # Vaulter · AzGuard permission bridge
 
-`axiomasoft/vaulter-azguard` wires the [AzGuard](https://github.com/axiomasoft/azguard-private)
+`axiomasoft/vaulter-azguard` wires the [AzGuard](https://github.com/axiomasoft/azguard)
 v1 panel authorization (resources and assignment scopes) into Vaulter's
 composite ACL — so a host running AzGuard authorizes Vaulter documents/folders with its
 existing roles and permissions.
