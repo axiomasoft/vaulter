@@ -66,6 +66,11 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [Q3](#q3-indexed-substring-search-on-names) | Indexed substring search on names | P2 | S (a deployment decision) |
 | [Q5](#q5-sheets-export-replay-without-hashing-the-source-blob) | sheets: export replay without hashing the source blob | P2 | S |
 | [V3](#v3-share-passwords-out-of-query-strings) | Share passwords out of query strings | P2 | S (an owner decision) |
+| [Q6](#q6-ai-resource-ids-in-the-text-projection-heads) | ai: resource ids in the text projection heads | P1 | M |
+| [V4](#v4-ai-commit-checks-the-commands-own-permission) | ai: commit checks the command's own permission | P1 | S |
+| [V6](#v6-ai-an-allowlist-sanitizer-for-streamed-html) | ai: an allowlist sanitizer for streamed HTML | P1 | S |
+| [Q7](#q7-push-chat-events-instead-of-a-php-worker-per-open-tab) | Push chat events instead of a PHP worker per open tab | P2 | M |
+| [V5](#v5-ai-a-resource-scoped-tool-port-only-reaches-its-resources-resolved) | ai: a resource-scoped tool port only reaches its resources | — | resolved |
 
 Cost: **S** is up to a day, **M** a few days, **L** more than a week.
 
@@ -720,9 +725,26 @@ column, so the line has no effect. In collaboration the heads, updates and recei
 `document_id`, which leads their primary keys; there the copy tripled the cost of 200k inserts
 (3575 ms against 1168 ms).
 
+The same no-op `->index(false)` after `reference()` is in the satellites, so each of these columns
+still gets the single-column index its author meant to skip (a duplicate wherever the column leads
+a composite index or the primary key):
+
+- ai `AiDocumentsSchema`: `ai_text_commands.document_id`, `ai_text_projection_heads.document_id`,
+  `ai_text_blocks.document_id`.
+- editor-pro exchange `ExchangeSchema`: `document_exchange_jobs` `document_id`, `source_blob_id`,
+  `source_revision_id`, `output_blob_id`.
+- editor-pro review `ReviewSchema`: `document_revision_pins.revision_id`,
+  `document_comment_anchors.comment_id`, `document_comment_states.comment_id`.
+- base `DocumentsSchema`: the payload and sync-state key column (`getColumns()[0]->index(false)`).
+
+editor-pro already works around it for `document_id` with a private `withoutLeadingDocumentIndex()`
+that clears the fluent flag, copied into both schemas.
+
 **Proposal.** `IdStrategy::reference()` now takes `index: false` (base `587a8f22`). Use it for
-each column above and drop the duplicates in the same migration as Q1, regenerating the schema
-expectation fixtures once.
+each column above, delete every `->index(false)` line and both `withoutLeadingDocumentIndex()`
+copies, and drop the duplicates in the same migration as Q1 (one migration per repository),
+regenerating the schema expectation fixtures once. A grep check in the shared rails (B1) that
+rejects `->index(false)` keeps the no-op from coming back.
 
 **Priority.** P1. **Cost.** S.
 
@@ -735,6 +757,35 @@ cached result is still valid, so a replay costs a full read of the workbook.
 column instead of re-reading the blob.
 
 **Priority.** P2. **Cost.** S.
+
+### Q6. ai: resource ids in the text projection heads
+
+**Problem.** AI body-text search finds matching blocks through `ai_text_blocks` and
+`ai_text_projection_heads`, which know only the `document_id`. To return resources, the directory
+lists every node the caller can see and resolves each one's document to match the hits. Reading
+metadata instead of the full payload (ai `f4681bd`) removed the 603 payload and sync-state queries
+of a 200-document drive, but the search is still linear in the number of visible documents.
+
+**Proposal.** Store the drive node id (`resource_id`) in `ai_text_projection_heads` when the
+projection is written, index `(tenant_id, resource_id)`, and let the search join hits to resource
+ids directly; the directory then checks access only for the hit set (the batched `filterAccessible`
+of ai `f426591`). Needs a backfill for existing heads.
+
+**Priority.** P1. **Cost.** M.
+
+### Q7. Push chat events instead of a PHP worker per open tab
+
+**Problem.** The ai chat event stream (SSE) is a PHP loop that polls the run's events for up to
+25 s per connection, so every open chat tab holds a PHP-FPM worker. Idle polls now back off from
+200 ms to 2 s (ai `368eeac`: 15 polls per idle connection instead of 125, 4 queries each), but the
+worker is still held: a few hundred open tabs exhaust a typical FPM pool.
+
+**Proposal.** Publish run events from the writer and deliver them over the collaboration hub's
+long-lived connection, or over PostgreSQL `LISTEN/NOTIFY` in a small event-loop process
+(ReactPHP, Swoole or the hub itself), keeping `Last-Event-ID` replay from the events table for
+reconnects. The polling endpoint stays as the fallback for MySQL and for hosts without the hub.
+
+**Priority.** P2. **Cost.** M.
 
 ### V1. Realtime identity from the token, not the client
 
@@ -769,6 +820,40 @@ token and drop the query fallback, or keep it behind an explicit option document
 secret.
 
 **Priority.** P2. **Cost.** S (an owner decision).
+
+### V4. ai: commit checks the command's own permission
+
+**Problem.** `Commit::authorize()` asks the directory for `edit` on the resource, while describe
+and prepare use the descriptor's `requiredPermission`. A command declared with a stricter
+permission (for example `manage`) is prepared under that permission but committed under `edit`;
+if the caller loses the stricter permission between prepare and commit, the commit still runs.
+
+**Proposal.** Resolve the command descriptor from the proposal's plan in `authorize()` and pass its
+`requiredPermission` to `findAccessible()`, with a test that revokes the stricter permission after
+prepare and expects `resource_unavailable` on commit.
+
+**Priority.** P1. **Cost.** S.
+
+### V5. ai: a resource-scoped tool port only reaches its resources (resolved)
+
+**Problem.** `OfficeToolPort::forContext($context, $runId, $resources)` narrowed only the advertised
+descriptors; `call()` executed any `resource_id` the user could access.
+
+**Resolution.** ai `ba624bf`: a scoped port refuses calls on resources outside the scope, and search,
+with `resource_unavailable`; an unscoped port is unchanged.
+
+### V6. ai: an allowlist sanitizer for streamed HTML
+
+**Problem.** `StreamContent.ts` sanitizes streamed HTML fragments with a blocklist of tags
+(`BLOCKED_TAGS`). Anything not on the list (a new element, an unexpected attribute) reaches the DOM
+parser, and the list has to be kept in step with browsers.
+
+**Proposal.** Derive an allowlist from the editor's ProseMirror schema: parse the fragment with the
+schema's `DOMParser` into a detached document, keep only nodes, marks and attributes the schema
+defines (dropping event handlers and non-http(s) URLs), and test it with a corpus of known XSS
+payloads.
+
+**Priority.** P1. **Cost.** S.
 
 ## Merge order notes
 
