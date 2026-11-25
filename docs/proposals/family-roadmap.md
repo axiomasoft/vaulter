@@ -45,6 +45,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [S6](#s6-remove-the-archive) | Remove the archive | P1 | S |
 | [R6](#r6-npm-only-and-a-reviewed-install-script-allowlist) | npm only, and a reviewed install-script allowlist | P2 | S |
 | [R7](#r7-pin-runners-and-service-images-and-enforce-it) | Pin runners and service images, and enforce it | P2 | S |
+| [R8](#r8-ci-debt-inherited-from-main) | CI debt inherited from main | P1 | S / M |
 | [A2](#a2-one-registration-model-for-every-php-package) | One registration model for every PHP package | P2 | M |
 | [A3](#a3-one-error-catalogue-per-package) | One error catalogue per package | P2 | M |
 | [A4](#a4-typed-options-in-the-satellites) | Typed options in the satellites | P2 | M |
@@ -120,6 +121,11 @@ to untyped command options, which surfaces as a varying set of errors.
 **Proposal.** Done in the base on `refactor/polish`: `composer analyse` and the CI quality job run
 `vendor/bin/testbench package:discover` before PHPStan, so the skeleton exists before any worker
 starts. Apply the same step to every satellite that runs PHPStan with Larastan on Testbench.
+
+The per-package Quality jobs had a second gap: Composer never discovers the root package, so the
+package under analysis was not booted and Larastan again saw untyped command options. A
+`testbench.yaml` that registers the package's own provider fixes it (done in drive, documents and
+media); every package that ships console commands needs one.
 
 **Rationale.** A gate that changes its verdict between runs on the same commit cannot be required.
 After the fix the base gives the same result on every fresh install (0 errors at level max).
@@ -232,6 +238,32 @@ runner labels and undigested images, then run the same policy in every repositor
 bisect.
 
 **Cost.** S.
+
+### R8. CI debt inherited from main
+
+**Problem.** On `refactor/polish` these jobs are red for causes that came in with `main`, not with
+the polish work. They are listed so nobody reads them as regressions of this branch:
+
+- *Repo harness, PHP 8.5.* `WorkflowPolicyTest` calls `scripts/php84`, which requires PHP 8.4, on
+  the PHP 8.5 leg added with the 8.5 matrix (H-01).
+- *Repo harness.* `BoundaryScanTest` (scan I4), `SurfaceRulesTest` ×2 (I13) and the aggregate
+  `inventory.php --check` in `InventoryHarnessTest`: the committed allowlists no longer match the
+  source merged on 23 November (new container probes in core tenancy, modules and CORS middleware,
+  webhooks and documents; stale entries in the package registrars; a documents enum in a
+  `CollaborativeStateTransition` signature).
+- *Fast / integration.* `OutboxRelayTest` ×3, `OperationsUseRunnerTest`,
+  `ProvidersDeclareOnlyTest`, `ServiceLocatorRatchetTest`, `IdempotencyContractTest` and
+  `OwnershipRegistryTest` (migration numbering after H-01).
+
+**Proposal.** Fix each at its source, not by recounting the allowlists: either the new code moves
+to constructor injection and the probes disappear, or each entry gets a reason, a category and a
+removal version, reviewed by the owner of the series that added it. The PHP 8.5 leg either skips
+the 8.4-only shim or `scripts/php84` accepts the job's interpreter.
+
+**Rationale.** A gate that is red for known reasons hides new failures; `CI gate` cannot become a
+required check until these are gone.
+
+**Cost.** S for the 8.5 leg and the allowlists, M for the integration ratchets.
 
 ## Shared tooling
 
