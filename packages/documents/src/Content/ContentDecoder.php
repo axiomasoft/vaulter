@@ -16,6 +16,8 @@ use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Documents\DocumentPayload;
+use Vaulter\Documents\Models\Revisions\DocumentRevisionPayload;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\UnknownDocumentType;
 
@@ -89,6 +91,7 @@ final readonly class ContentDecoder
         return $content;
     }
 
+    /** @return array<string, mixed>|null */
     public function storagePayload(string $typeKey, ?DocumentContent $content): ?array
     {
         $codec = $this->types->find($typeKey)?->codec();
@@ -98,14 +101,48 @@ final readonly class ContentDecoder
             : $content->toArray());
     }
 
-    public function storedPayload(string $typeKey, ?string $raw, ?array $fallback): ?array
+    /**
+     * The stored JSON of a working-state or checkpoint payload row. A managed codec keeps
+     * nested JSON objects apart from lists, which the array cast cannot, so it reads the
+     * raw column; every other type reads the cast array.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function payloadOf(string $typeKey, DocumentPayload|DocumentRevisionPayload|null $payload): ?array
     {
-        if ($raw === null || !$this->types->find($typeKey)?->codec() instanceof ManagedDocumentCodec) {
+        $fallback = $payload?->content;
+        $raw = $payload?->getAttributes()['content'] ?? null;
+        if (!is_string($raw) || !$this->types->find($typeKey)?->codec() instanceof ManagedDocumentCodec) {
             return $fallback;
         }
         $decoded = json_decode($raw);
+        if (!$decoded instanceof \stdClass) {
+            return $fallback;
+        }
+        $top = [];
+        foreach (get_object_vars($decoded) as $key => $value) {
+            $top[(string) $key] = $value;
+        }
 
-        return $decoded instanceof \stdClass ? (array) $decoded : $fallback;
+        return $top;
+    }
+
+    /**
+     * A stored payload carried verbatim into another working state (copy, restore): a
+     * managed type decodes its trusted storage, any other type, registered or not, is
+     * kept as opaque JSON instead of failing or decaying.
+     */
+    public function carriedContent(string $typeKey, DocumentPayload|DocumentRevisionPayload|null $payload, int $schemaVersion): ?DocumentContent
+    {
+        $content = $this->payloadOf($typeKey, $payload);
+        if ($content === null) {
+            return null;
+        }
+        $codec = $this->types->find($typeKey)?->codec();
+
+        return $codec instanceof ManagedDocumentCodec
+            ? $codec->decodeStored($content, $schemaVersion)
+            : OpaqueContent::fromArray($content);
     }
 
     /**
@@ -165,7 +202,7 @@ final readonly class ContentDecoder
 
         return $type !== null
             && $this->schemaWritable($type, $document->schema_version)
-            && $this->read($document->type, $this->storedPayload($document->type, $document->payload?->getAttributes()['content'] ?? null, $document->payload?->content), $document->schema_version)->lossless;
+            && $this->read($document->type, $this->payloadOf($document->type, $document->payload), $document->schema_version)->lossless;
     }
 
     /**

@@ -46,7 +46,7 @@ final class DocumentRevisionStoreRepository
         $revision->save();
 
         $payload = (new DocumentRevisionPayload)->forceFill($payloadAttributes);
-        $this->references->change($revision->type, 'revision', (string) $revision->getKey(), null, $payload->content);
+        $this->references->change($revision->type, 'revision', Identity::stringify($revision->getKey()), null, $payload->content);
         $revision->payload()->save($payload);
         $sync = null;
         if ($syncAttributes !== null) {
@@ -110,13 +110,13 @@ final class DocumentRevisionStoreRepository
         return $excess->count();
     }
 
-    /** @param list<int|string> $ids */
+    /** @param array<int|string> $ids */
     public function purge(array $ids): void
     {
         $model = $this->documentsConfig->model('document_revision');
         $query = $model::query()->whereKey($ids);
         foreach ((clone $query)->with('payload')->get() as $revision) {
-            $this->references->change($revision->type, 'revision', (string) $revision->getKey(), $revision->payload?->content, null);
+            $this->references->change($revision->type, 'revision', Identity::stringify($revision->getKey()), $revision->payload?->content, null);
         }
         $query->delete();
     }

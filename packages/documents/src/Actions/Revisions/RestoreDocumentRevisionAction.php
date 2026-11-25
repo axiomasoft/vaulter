@@ -10,9 +10,6 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\DocumentWriteLock;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\ContentDecoder;
-use Vaulter\Documents\Contracts\ManagedDocumentCodec;
-use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
@@ -53,7 +50,6 @@ final readonly class RestoreDocumentRevisionAction
         private DocumentWriteLock $writeLock,
         private NodeSnapshotMapper $nodeSnapshots,
         private DocumentSnapshotMapper $documentSnapshots,
-        private DocumentTypeRegistry $types,
         private ContentDecoder $decoder,
     ) {}
 
@@ -78,14 +74,10 @@ final readonly class RestoreDocumentRevisionAction
                 throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);
             }
 
-            $content = $this->decoder->storedPayload($source->type, $source->payload?->getAttributes()['content'] ?? null, $source->payload?->content);
-            $codec = $this->types->find($source->type)?->codec();
             $sync = $source->syncState;
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Restore,
-                content: is_array($content) ? ($codec instanceof ManagedDocumentCodec
-                    ? $codec->decodeStored($content, $source->schema_version)
-                    : OpaqueContent::fromArray($content)) : null,
+                content: $this->decoder->carriedContent($source->type, $source->payload, $source->schema_version),
                 schemaVersion: $source->schema_version,
                 collabState: $sync?->collab_state,
                 actorId: $actorId,

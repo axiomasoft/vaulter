@@ -31,7 +31,7 @@ final readonly class DocumentSnapshotMapper
         $source = $revision ?? $head;
         $schemaVersion = $revision->schema_version ?? $document->schema_version;
         $payload = $revision === null ? $document->payload : $revision->payload;
-        $content = $this->decoder->storedPayload($typeKey, $payload?->getAttributes()['content'] ?? null, $payload?->content);
+        $content = $this->decoder->payloadOf($typeKey, $payload);
         $read = $this->decoder->read($typeKey, $content, $schemaVersion);
 
         return new DocumentSnapshot(

@@ -172,7 +172,7 @@ final readonly class DocumentStateWriter
 
             $previous ??= $this->decoder->read(
                 $document->type,
-                $this->decoder->storedPayload($document->type, $payload?->getRawOriginal('content'), $payload?->content),
+                $this->decoder->payloadOf($document->type, $payload),
                 $document->schema_version,
             )->content;
             $hook->replaceSnapshot(Identity::stringify($document->getKey()), $document->collab_epoch, $previous, $next);
@@ -262,7 +262,7 @@ final readonly class DocumentStateWriter
             'created_by' => $actorId,
             'created_at' => $now,
         ], [
-            'content' => $this->decoder->storedPayload($document->type, $payload?->getAttributes()['content'] ?? null, $payload?->content),
+            'content' => $this->decoder->payloadOf($document->type, $payload),
             'content_hash' => $payload?->content_hash,
             'content_size' => $payload?->content_size,
         ], $sync?->collab_protocol === null ? null : [

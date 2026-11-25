@@ -93,7 +93,7 @@ final class LockedMutation implements LockedDocumentMutation
             writeMode: $this->document->write_mode->value,
             protocol: $this->document->syncState?->collab_protocol,
             pending: PendingStateGuard::markerOf($this->document) !== null,
-            content: $this->decoder->read($this->document->type, $this->decoder->storedPayload($this->document->type, $this->document->payload?->getAttributes()['content'] ?? null, $this->document->payload?->content), $this->document->schema_version)->content,
+            content: $this->decoder->read($this->document->type, $this->decoder->payloadOf($this->document->type, $this->document->payload), $this->document->schema_version)->content,
         );
     }
 }

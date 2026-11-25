@@ -9,6 +9,7 @@ use Vaulter\Documents\Content\ManagedDocumentPayloads;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Documents\DocumentPayload;
 use Vaulter\Documents\Models\Documents\DocumentSyncState;
+use Vaulter\Support\Identity;
 
 /**
  * Row writes of the document aggregate. Only CreateDocumentAction (the empty
@@ -39,11 +40,11 @@ final class DocumentStoreRepository
         return $document;
     }
 
-    /** @param array<string, mixed> $attributes */
+    /** @param array{content: array<string, mixed>|null, content_hash: string|null, content_size: int|null} $attributes */
     public function savePayload(Document $document, array $attributes): void
     {
         $payload = $document->payload ?? new DocumentPayload;
-        $this->references->change($document->type, 'working', (string) $document->getKey(), $payload->content, $attributes['content']);
+        $this->references->change($document->type, 'working', Identity::stringify($document->getKey()), $payload->content, $attributes['content']);
         $document->payload()->save($payload->forceFill($attributes));
         $document->setRelation('payload', $payload);
     }

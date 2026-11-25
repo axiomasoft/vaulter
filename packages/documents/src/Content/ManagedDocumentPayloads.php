@@ -13,6 +13,10 @@ final readonly class ManagedDocumentPayloads
 {
     public function __construct(private DocumentTypeRegistry $types) {}
 
+    /**
+     * @param array<string, mixed>|null $previous
+     * @param array<string, mixed>|null $next
+     */
     public function change(string $type, string $kind, string $id, ?array $previous, ?array $next): void
     {
         $codec = $this->types->find($type)?->codec();

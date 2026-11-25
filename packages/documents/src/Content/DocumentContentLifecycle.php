@@ -13,8 +13,6 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
-use Vaulter\Documents\Contracts\ManagedDocumentCodec;
-use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
@@ -22,6 +20,7 @@ use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Support\Identity;
 
 /**
  * Content of a kind=document node for copy and purge. Both run inside the Vaulter
@@ -45,7 +44,6 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         private PendingStateGuard $pending,
         private DocumentRevisionStoreRepository $revisionStore,
         private ManagedDocumentPayloads $references,
-        private DocumentTypeRegistry $types,
         private ContentDecoder $decoder,
     ) {}
 
@@ -80,17 +78,11 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         $nodeModel = $this->drives->model('node');
         $document->setRelation('node', $nodeModel::query()->whereKey($copy->id)->firstOrFail());
 
-        $content = $this->decoder->storedPayload($original->type, $original->payload?->getAttributes()['content'] ?? null, $original->payload?->content);
-        $codec = $this->types->find($original->type)?->codec();
-        $copyContent = is_array($content) ? ($codec instanceof ManagedDocumentCodec
-            ? $codec->decodeStored($content, $original->schema_version)
-            : OpaqueContent::fromArray($content)) : null;
-
-        // The payload is carried verbatim as opaque JSON: the copy must keep content of a
-        // type that is not registered (any more) instead of failing or decaying it.
+        // The payload is carried verbatim: the copy must keep content of a type that is not
+        // registered (any more) instead of failing or decaying it.
         $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Copy,
-            content: $copyContent,
+            content: $this->decoder->carriedContent($original->type, $original->payload, $original->schema_version),
             schemaVersion: $original->schema_version,
             collabState: $original->syncState?->collab_state,
             actorId: $actorId,
@@ -121,18 +113,18 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
 
         $revisions = $this->documentsConfig->model('document_revision');
         do {
-            $ids = $revisions::query()
+            $ids = array_map(Identity::stringify(...), $revisions::query()
                 ->where('document_id', $document->getKey())
                 ->orderBy('id')
                 ->limit(self::PURGE_BATCH)
                 ->pluck('id')
-                ->all();
+                ->all());
             if ($ids !== []) {
                 $this->revisionStore->purge($ids);
             }
         } while (count($ids) === self::PURGE_BATCH);
 
-        $this->references->change($document->type, 'working', (string) $document->getKey(), $document->payload?->content, null);
+        $this->references->change($document->type, 'working', Identity::stringify($document->getKey()), $document->payload?->content, null);
         Document::query()->whereKey($document->getKey())->delete();
     }
 }
