@@ -14,10 +14,14 @@ use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanRequest;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Models\Cas\Blob;
 
 /** @internal Immutable scan evidence persistence; availability decisions go through ContentAvailabilityGuard. */
 #[Internal]
@@ -32,7 +36,16 @@ final readonly class ScanEvidenceRepository
 
     public function infected(FileRevision $revision): bool
     {
-        $snapshot = $this->snapshots->load($revision);
+        return $this->infectedIn($this->snapshots->load($revision));
+    }
+
+    /**
+     * infected() over a snapshot the caller already loaded.
+     *
+     * @param array{revision:FileRevision,file:File,node:Node,drive:Drive,blob:?Blob,identity:?ImmutableContentIdentity} $snapshot
+     */
+    public function infectedIn(array $snapshot): bool
+    {
         $r = $snapshot['revision'];
         $blob = $snapshot['blob'];
         if ($r->scan_status === 'infected' || $r->getAttribute('quarantined_at') !== null || $blob?->getAttribute('quarantined_at') !== null) {
@@ -59,9 +72,18 @@ final readonly class ScanEvidenceRepository
 
     public function compatible(FileRevision $revision, ScanPolicySpec $spec): ?ScanEvidence
     {
-        $snapshot = $this->snapshots->load($revision);
+        return $this->compatibleIn($this->snapshots->load($revision), $spec);
+    }
+
+    /**
+     * compatible() over a snapshot the caller already loaded.
+     *
+     * @param array{revision:FileRevision,file:File,node:Node,drive:Drive,blob:?Blob,identity:?ImmutableContentIdentity} $snapshot
+     */
+    public function compatibleIn(array $snapshot, ScanPolicySpec $spec): ?ScanEvidence
+    {
         $identity = $snapshot['identity'];
-        if ($identity === null || $this->infected($snapshot['revision'])) {
+        if ($identity === null || $this->infectedIn($snapshot)) {
             return null;
         }
         $class = $this->config->model('scan_evidence');

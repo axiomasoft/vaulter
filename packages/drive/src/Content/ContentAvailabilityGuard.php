@@ -30,7 +30,7 @@ use Vaulter\Media\Models\Cas\Blob;
 #[Internal]
 final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
-    public function __construct(private DriveOptions $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
+    public function __construct(private DriveOptions $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence, private ScanSnapshot $snapshots) {}
 
     /**
      * The slot entry: the snapshots name the selected node and revision, the current rows are read by their ids and
@@ -62,7 +62,7 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
             throw NodeNotFoundException::forId($node->id);
         }
         app(TenancyBoundary::class)->assertDrive($drive);
-        $this->assertClean($actualRevision, $drive);
+        $this->assertClean($actualRevision);
     }
 
     public function assertAvailableForShare(ShareContext $context, Node $node, FileRevision $revision): void
@@ -71,7 +71,7 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
         if (!$context->containsNode($actualNode) || (string) $context->share->tenant_id !== (string) $drive->tenant_id) {
             throw NodeNotFoundException::forId($node->id);
         }
-        $this->assertClean($actualRevision, $drive);
+        $this->assertClean($actualRevision);
     }
 
     /** @return array{Node,FileRevision,Drive,Blob} */
@@ -101,13 +101,19 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
         return [$actualNode, $actualRevision, $drive, $blob];
     }
 
-    private function assertClean(FileRevision $revision, Drive $drive): void
+    /**
+     * The revision's scope and the drive's policy states are read once and every check below judges those rows:
+     * re-reading them per spec cost a dozen queries per spec on each download without adding any guarantee, since
+     * the separate reads were never a consistent view either.
+     */
+    private function assertClean(FileRevision $revision): void
     {
-        if ($this->evidence->infected($revision)) {
+        $snapshot = $this->snapshots->load($revision);
+        if ($this->evidence->infectedIn($snapshot)) {
             throw new ContentUnavailableException;
         }
-        foreach ($this->policies->resolve($drive) as $spec) {
-            if ($this->policies->required($revision, $spec) && $this->evidence->compatible($revision, $spec) === null) {
+        foreach ($this->policies->requiredSpecs($snapshot['drive'], $snapshot['revision']) as $spec) {
+            if ($this->evidence->compatibleIn($snapshot, $spec) === null) {
                 throw new ContentUnavailableException;
             }
         }

@@ -32,6 +32,13 @@ final readonly class OffScanPolicyResolver implements ScanPolicyResolver
         return false;
     }
 
+    public function requiredSpecs(Drive $drive, FileRevision $revision): array
+    {
+        $this->resolve($drive);
+
+        return [];
+    }
+
     public function resolve(Drive $drive): array
     {
         $specs = $this->policy->scanSpecs($this->profiles->get($drive->profile));

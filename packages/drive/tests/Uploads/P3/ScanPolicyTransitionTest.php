@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Vaulter\Database\VaulterDatabase;
@@ -88,6 +89,41 @@ it('all content blocks legacy bytes until versioned rescan evidence is clean', f
     app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean));
     app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision);
     expect($revision->scanEvidence()->count())->toBe(1);
+});
+
+it('checks a scanned revision from one read of its scope and of the drive policy states', function (): void {
+    Storage::fake('local');
+    Bus::fake();
+    $drive = UploadTestHelpers::storage();
+    $context = DriveContext::system($drive, 'fixture');
+    $stream = UploadTestHelpers::streamFor('scanned');
+    $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
+    fclose($stream);
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
+    app(ScanPolicyResolver::class)->initialize($drive, $context);
+    app(ScanBackfillReconciler::class)->expand();
+    $row = $revision->scanObligations()->firstOrFail();
+    $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
+    app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean));
+    $options = app(DriveOptions::class);
+    $states = (new ($options->model('scan_policy_state')))->getTable();
+    $revisions = (new ($options->model('file_revision')))->getTable();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision);
+    $queries = array_column(DB::getQueryLog(), 'query');
+    DB::disableQueryLog();
+
+    // Both specs (global and profile) require a scan here; each used to reload the scope and the states on its own.
+    $count = static fn (string $needle): int => count(array_filter($queries, static fn (string $sql): bool => str_contains($sql, $needle)));
+    $grammar = DB::connection()->getQueryGrammar();
+    expect($count($grammar->wrapTable($states)))->toBe(1)
+        ->and($count('from '.$grammar->wrapTable($revisions).' where '.$grammar->wrap($revisions.'.id').' = ?'))->toBe(1)
+        ->and(count($queries))->toBeLessThanOrEqual(25);
 });
 
 it('forged timestamps cannot exempt a new admission and failures remain unavailable', function (): void {
