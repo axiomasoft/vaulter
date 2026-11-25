@@ -255,8 +255,9 @@ the polish work. They are listed so nobody reads them as regressions of this bra
   webhooks and documents; stale entries in the package registrars; a documents enum in a
   `CollaborativeStateTransition` signature).
 - *Fast / integration.* `OutboxRelayTest` ×3, `OperationsUseRunnerTest`,
-  `ProvidersDeclareOnlyTest`, `ServiceLocatorRatchetTest`, `IdempotencyContractTest` and
-  `OwnershipRegistryTest` (migration numbering after H-01).
+  `ProvidersDeclareOnlyTest`, `ServiceLocatorRatchetTest` and `IdempotencyContractTest`.
+  (`OwnershipRegistryTest`, red on the H-01 upgrade migration, now numbers upgrade migrations by
+  their table: base `f37164ad`.)
 
 **Proposal.** Fix each at its source, not by recounting the allowlists: either the new code moves
 to constructor injection and the probes disappear, or each entry gets a reason, a category and a
