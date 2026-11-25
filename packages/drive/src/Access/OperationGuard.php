@@ -220,7 +220,7 @@ final readonly class OperationGuard
         foreach (Ability::cases() as $ability) {
             $flags[$ability->value] = $grants->allows($ability)
                 && ($ability !== Ability::Create || $canCreate)
-                && $this->profileAllows(context: $context, node: $node, ability: $ability, operation: OperationKind::Metadata);
+                && $this->profileAllows(context: $context, node: $node, ability: $ability, operation: OperationKind::Metadata, drive: $drive);
         }
 
         return new NodeAbilities(flags: $flags);

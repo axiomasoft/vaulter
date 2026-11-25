@@ -134,3 +134,19 @@ it('projects the profile create gate consistently in HTTP and a batch', function
     $this->postJson(V1::url('drives/'.$drive->model()->getKey().'/folders'), ['name' => 'child', 'parent_id' => $folder->id])
         ->assertStatus($allow ? 201 : 403);
 })->with([true, false]);
+
+it('reads the drive once for the abilities of one node, not once per ability', function (): void {
+    $drive = V1::drive(userId: 1, role: RoleRegistry::WRITER);
+    $folder = V1::folder($drive, 'single');
+    $nodes = $drive->actingAs(V1::user(1))->nodes();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $abilities = $nodes->abilities($folder->id);
+    $driveReads = array_filter(DB::getQueryLog(), static fn (array $query): bool => preg_match('/from [`"]?v_drives[`"]?/', $query['query']) === 1);
+    DB::disableQueryLog();
+
+    // The View authorization and abilities() each read the drive once; the profile gate of each ability reuses it.
+    expect($abilities->flags['edit'])->toBeTrue()
+        ->and(count($driveReads))->toBeLessThanOrEqual(3);
+});
