@@ -411,7 +411,7 @@ defineProps<{ node: Node }>()
 
 The `vaulter/tiptap` viewer is a headless editing shell
 (`VaulterDocumentNode`): it loads the content, autosaves and, when the
-presentation is **collaborative**, a matching protocol adapter is registered, request a neutral collaboration session. The editor
+presentation is **collaborative** and a matching protocol adapter is registered, opens a neutral collaboration session. The editor
 engine itself is yours — replace the key as above, or fill the shell's default slot. See
 [Document nodes](/guides/documents#working-state-and-checkpoints) for the autosave path.
 
