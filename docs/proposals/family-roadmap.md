@@ -74,7 +74,10 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [Q6](#q6-ai-resource-ids-in-the-text-projection-heads) | ai: resource ids in the text projection heads | P1 | M |
 | [V4](#v4-ai-commit-checks-the-permission-of-its-command) | ai: commit checks the permission of its command | P1 | S |
 | [V6](#v6-ai-an-allowlist-sanitizer-for-streamed-html) | ai: an allowlist sanitizer for streamed HTML | P1 | S |
+| [V7](#v7-a-forged-or-stale-cursor-is-a-500-not-a-400) | A forged or stale cursor is a 500, not a 400 | P1 | S |
 | [Q7](#q7-push-chat-events-instead-of-a-php-worker-per-open-tab) | Push chat events instead of a PHP worker per open tab | P2 | M |
+| [Q8](#q8-seekable-pages-for-the-scan-backfill-and-rescan) | Seekable pages for the scan backfill and rescan | P2 | S |
+| [Q9](#q9-one-read-snapshot-of-the-drive-per-operation) | One read snapshot of the drive per operation | P3 | S (an owner decision) |
 | [V5](#v5-ai-a-resource-scoped-tool-port-only-reaches-its-resources-resolved) | ai: a resource-scoped tool port only reaches its resources | — | resolved |
 
 Cost: **S** is up to a day, **M** a few days, **L** more than a week.
@@ -801,7 +804,11 @@ comparison `(a, b) < (?, ?)` seeks too on PostgreSQL, SQLite and MySQL 8, but Ma
 less reliably, so the leading bound is the safer default. On MySQL and MariaDB the compaction scans
 also have no partial indexes and walk the primary key; a plain index on the filter column (or a
 generated column that is non-null only for candidate rows) is the substitute there. Done for the
-activity feed (base `5e95eb1f`: 142.8 ms to 0.076 ms).
+activity feed (base `5e95eb1f`: 142.8 ms to 0.076 ms), the document revision history (base
+`5cf3cfd2`: pages by revision number alone, 11.4 ms to 0.03 ms at 50k revisions), the file
+revisions (base `36edca09`: deep page 4.5 ms to 0.03 ms) and the webhook delivery feed of an
+endpoint (base `3acdb762`: an `(endpoint_id, created_at, id)` index and a leading bound, 23.6 ms to
+0.055 ms at 150k deliveries). Still on the OR shape, small per node: comments, grants and shares.
 
 **Priority.** P1. **Cost.** S.
 
@@ -854,6 +861,11 @@ The satellites cannot adopt `index: false` before the base merge: their CI check
 `reference()` has no such parameter yet. Collaboration's heads, updates and receipts logs switch in
 the same change that follows the base merge.
 
+`v_node_comments` has the same overlap: `foreignKeyIndex(node_id)` (created on MySQL only) next to
+`(node_id, created_at)`. `v_webhook_deliveries` keeps the single `endpoint_id` index of
+`reference()`, now covered by `v_webhook_deliveries_endpoint_feed_idx` (base `3acdb762`); drop it in
+the same migration.
+
 **Priority.** P1. **Cost.** S.
 
 ### Q5. sheets: export replay without hashing the source blob
@@ -894,6 +906,39 @@ long-lived connection, or over PostgreSQL `LISTEN/NOTIFY` in a small event-loop 
 reconnects. The polling endpoint stays as the fallback for MySQL and for hosts without the hub.
 
 **Priority.** P2. **Cost.** M.
+
+### Q8. Seekable pages for the scan backfill and rescan
+
+**Problem.** `ScanBackfillReconciler` and `RescanFileRevisionsCommand` page `v_file_revisions` with
+the OR keyset of Q2, and `scan_admission_sequence` has no index; each page also filters through
+`EXISTS` on the file's node. A rescan of a large drive therefore re-reads the table from the start on
+every page.
+
+**Proposal.** An index on `v_file_revisions (scan_admission_sequence)` (partial on PostgreSQL where
+the backfill filter allows) and the Q2 leading bound in both pagers. Waiting on the schema series:
+`DriveSchema` is being changed by H-01.
+
+**Priority.** P2. **Cost.** S.
+
+### Q9. One read snapshot of the drive per operation
+
+**Problem.** One node read still loads its drive by primary key several times: `DriveHandle::context`,
+`TenancyBoundary::assertDrive`, the lifecycle check of `OperationGuard::authorize`, `abilities()`,
+`NodeSnapshotMapper::tenants` and `AccessResolver`'s `loadMissing` each read it again (about 7 for a
+GET of a node). `CollaborationAccessPolicy::evaluateReference`, which the hub runs on every backend
+call, read it 13 times; reusing the drive `abilities()` already holds for its nine profile gates
+(base `e452964c`) brings that to 4 (22 queries to 13), and the abilities of one node from 12 drive
+reads to 3. Each remaining read is a primary-key lookup and fresh by design: the policy is the live
+authority, and `ChangeDocumentWriteModeAction` re-evaluates it after taking its row locks.
+
+**Proposal.** An owner decision first: whether an operation may decide on one drive snapshot. If yes,
+thread the drive the operation already resolved (`DriveContext` holds it) into the guard and the
+mapper as an explicit argument, re-reading only where a lock was just taken. A request-scoped memo
+(a scoped container binding, safe under Octane) would also remove the reads, but it hides staleness:
+an archive or a delete earlier in the same request, or a lock taken after the first read, would be
+decided on the old row. Explicit passing keeps the freshness visible at each call site.
+
+**Priority.** P3. **Cost.** S.
 
 ### V1. Realtime identity from the token, not the client
 
@@ -974,6 +1019,23 @@ parser, and the list has to be kept in step with browsers.
 schema's `DOMParser` into a detached document, keep only nodes, marks and attributes the schema
 defines (dropping event handlers and non-http(s) URLs), and test it with a corpus of known XSS
 payloads.
+
+**Priority.** P1. **Cost.** S.
+
+### V7. A forged or stale cursor is a 500, not a 400
+
+**Problem.** Every cursor-paginated endpoint passes the client's `cursor` straight to Laravel's
+`cursorPaginate()`. A cursor without the expected parameter throws `UnexpectedValueException`, and
+a parameter of the wrong type reaches PostgreSQL and fails the cast (`QueryException`): both are an
+HTTP 500. Affected: document revisions and comments, file revisions, grants, shares, the nodes of a
+public share, webhook endpoints and deliveries. Cursors issued before `5cf3cfd2` and `36edca09`
+(which dropped `id` from the revision order) hit the first case; the message of `5cf3cfd2` says
+they are refused as invalid, but they are a 500 until this lands.
+
+**Proposal.** Decode the cursor in one place (the Q2 builder in the base), check its parameters and
+their types against the sort columns, and answer an invalid one with the 400
+`drive.invalid_cursor` problem the drive already defines. Signing the cursor (an HMAC with the app
+key) also stops clients from crafting positions. This changes the error contract of these endpoints, so it needs an owner decision.
 
 **Priority.** P1. **Cost.** S.
 
