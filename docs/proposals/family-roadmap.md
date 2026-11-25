@@ -61,7 +61,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [Q1](#q1-a-sorted-index-and-a-seekable-cursor-for-folder-listings) | A sorted index and a seekable cursor for folder listings | P1 | S |
 | [Q2](#q2-seekable-keyset-cursors-everywhere) | Seekable keyset cursors everywhere | P1 | S |
 | [Q4](#q4-drop-indexes-that-duplicate-a-key-prefix) | Drop indexes that duplicate a key prefix | P1 | S |
-| [V1](#v1-realtime-identity-from-the-token-not-the-client) | Realtime identity from the token, not the client | P1 | S |
+| [V1](#v1-realtime-identity-from-the-token-not-the-client) | Realtime identity from the token (id done; display name open) | P1 | S |
 | [V2](#v2-a-per-peer-intent-budget-in-sheets-realtime) | A per-peer intent budget in sheets realtime | P1 | S |
 | [Q3](#q3-indexed-substring-search-on-names) | Indexed substring search on names | P2 | S (a deployment decision) |
 | [Q5](#q5-sheets-export-replay-without-hashing-the-source-blob) | sheets: export replay without hashing the source blob | P2 | S |
@@ -746,6 +746,11 @@ copies, and drop the duplicates in the same migration as Q1 (one migration per r
 regenerating the schema expectation fixtures once. A grep check in the shared rails (B1) that
 rejects `->index(false)` keeps the no-op from coming back.
 
+The satellites cannot adopt `index: false` before the base merge: their CI checks out the base from
+`main` (`scripts/ci/checkout-ecosystem.sh`, `VAULTER_REF` defaults to `refs/heads/main`), where
+`reference()` has no such parameter yet. Collaboration's heads, updates and receipts logs switch in
+the same change that follows the base merge.
+
 **Priority.** P1. **Cost.** S.
 
 ### Q5. sheets: export replay without hashing the source blob
@@ -789,12 +794,21 @@ reconnects. The polling endpoint stays as the fallback for MySQL and for hosts w
 
 ### V1. Realtime identity from the token, not the client
 
-**Problem.** Collaboration awareness and sheets presence take the user's name and id from what the
-client sends, so a peer can show itself to others as someone else.
+**Problem.** Collaboration awareness and sheets presence took the user's name and id from what the
+client sends, so a peer could show itself to others as someone else.
 
-**Proposal.** The server fills identity fields from the verified token claims and drops or
-overwrites client-sent ones; a test sends a forged identity and asserts the other peers see the
-token's.
+**Done.** The id is the server's: the collaboration hub stamps `user.id` / `user.type` of every
+awareness state with the principal the backend verified and refuses awareness for another live
+connection's client id (collaboration `bf4b3c7`); sheets realtime does the same from the room token
+the owner accepted and gives each socket its own presence `client_id` (sheets `220abc6`).
+
+**Remaining: a server-side display name.** The name and colour are still the client's, because the
+room token carries only `sub` and `sub_type`. Either the base mints a `name` claim into the room
+token (a host-provided display-name resolver behind `ActorRef`, so the satellites stay
+user-model-agnostic), or the base exposes a batched `user.id` → display-name endpoint the editors
+call for the ids they see in presence. The first keeps the rooms self-contained and costs one claim
+per token; the second keeps names out of tokens and logs. Either way the hub and the sheets room
+then overwrite `user.name` as they now overwrite `user.id`.
 
 **Priority.** P1. **Cost.** S.
 
