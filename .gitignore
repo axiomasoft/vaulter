@@ -29,7 +29,7 @@ __pycache__
 # Local tooling artifacts
 *.bak
 
-# Локальные состояния агентов и одноразовые лабораторные материалы.
+# Local scratch state and one-off lab material.
 /scratchpad/
 /plans/
 /_create_project_drive_drive_tables.php
@@ -44,19 +44,19 @@ e2e/blob-report/
 viewer-synced.png
 _e2e_smoke.mjs
 
-# VLT-LOAD (plans/VLT-LOAD) — run artifacts, not stand definition (seed manifests/
-# snapshots are P2.3, not produced yet — ignored ahead of time so they never land by accident).
+# Load stand run artifacts, not the stand definition (seed manifests and snapshots are
+# ignored ahead of time so they never land by accident).
 load/seed/out/
 load/*.tar
 load/*.tar.gz
-# load/scripts/run.sh (P2.4) stages the seed manifest here for the k6 container to read
+# load/scripts/run.sh stages the seed manifest here for the k6 container to read
 # (docker-compose.load.yml only mounts load/k6/, not load/seed/out/) — a run artifact.
 load/k6/dataset.json
-# load/scripts/run.sh (P2.5) stages the gates/thresholds.js source here for the same
+# load/scripts/run.sh stages the gates/thresholds.js source here for the same
 # reason (k6 container only mounts load/k6/, not load/gates/) — a run artifact, not a
 # second source of truth.
 load/k6/lib/thresholds.js
-# perf-assert.py/collect-container-stats.sh outputs (P2.5) — run artifacts, not spec.
+# perf-assert.py/collect-container-stats.sh outputs — run artifacts, not spec.
 # Non-recursive: does NOT match load/baselines/*.json (those ARE committed — slo-gates.md
 # §4.1: baseline is a version-reviewed artifact) or load/seed/profiles/*.
 load/*.json
@@ -67,7 +67,7 @@ load/results/
 load/gates/__pycache__/
 /:memory:
 
-# Local quality/baseline run output (plans VLT-LOAD, KERNEL P1)
+# Local quality and baseline run output
 /var/
 # Generated coverage report
 coverage.xml
