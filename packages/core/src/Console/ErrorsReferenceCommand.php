@@ -21,7 +21,7 @@ final class ErrorsReferenceCommand extends Command
     protected $signature = 'vaulter:errors:reference
         {--openapi : Print the x-vaulter-problems table and the code examples for openapi/vaulter-v1.yaml, writing nothing}
         {--check : Exit 1 when a page differs from the generated reference, without writing}
-        {--path=* : Pages to update (default: docs/reference/errors.md and docs/ru/reference/errors.md)}';
+        {--path=* : Pages to update (default: docs/reference/errors.md)}';
 
     protected $description = 'Generate the problem-code reference in the docs.';
 
@@ -37,15 +37,14 @@ final class ErrorsReferenceCommand extends Command
         if ($paths === []) {
             // The pages live in the monorepo, not in the host application.
             $root = dirname(__DIR__, 4);
-            $paths = [$root.'/docs/reference/errors.md', $root.'/docs/ru/reference/errors.md'];
+            $paths = [$root.'/docs/reference/errors.md'];
         }
         $check = $this->option('check');
         $stale = false;
 
         foreach ($paths as $path) {
-            $locale = str_contains(str_replace('\\', '/', $path), '/ru/') ? 'ru' : 'en';
             $page = is_file($path) ? file_get_contents($path) : false;
-            $next = $page === false ? null : $reference->apply($page, $locale);
+            $next = $page === false ? null : $reference->apply($page, 'en');
             if ($page === false || $next === null) {
                 $this->components->error(sprintf('%s is missing or has no %s / %s markers.', $path, ErrorsReference::START, ErrorsReference::END));
                 $stale = true;

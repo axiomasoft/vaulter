@@ -18,7 +18,7 @@ final class EventsReferenceCommand extends Command
 {
     protected $signature = 'vaulter:events:reference
         {--check : Exit 1 when a page differs from the generated table, without writing}
-        {--path=* : Pages to update (default: docs/reference/events.md and docs/ru/reference/events.md)}';
+        {--path=* : Pages to update (default: docs/reference/events.md)}';
 
     protected $description = 'Generate the event catalogue table in the reference docs.';
 
@@ -28,7 +28,7 @@ final class EventsReferenceCommand extends Command
         if ($paths === []) {
             // The pages live in the monorepo, not in the host application.
             $root = dirname(__DIR__, 4);
-            $paths = [$root.'/docs/reference/events.md', $root.'/docs/ru/reference/events.md'];
+            $paths = [$root.'/docs/reference/events.md'];
         }
         $check = $this->option('check');
         $stale = false;

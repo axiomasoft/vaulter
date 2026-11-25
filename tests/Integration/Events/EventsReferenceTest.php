@@ -14,7 +14,6 @@ use Vaulter\Events\EventsReference;
  */
 $pages = [
     'en' => dirname(__DIR__, 3).'/docs/reference/events.md',
-    'ru' => dirname(__DIR__, 3).'/docs/ru/reference/events.md',
 ];
 
 function eventsReference(): EventsReference

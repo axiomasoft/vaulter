@@ -6,4 +6,4 @@ Public documents owns the document aggregate, collaboration access policy, persi
 
 Realtime editing is available as a commercial add-on. Its product transport, deployment, credentials and durability decisions are shipped in its private documentation.
 
-See [Collaboration protocols](/extending/collaboration-protocols) · [Протоколы коллаборации](/ru/extending/collaboration-protocols).
+See [Collaboration protocols](/extending/collaboration-protocols).

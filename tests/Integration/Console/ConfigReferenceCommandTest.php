@@ -77,7 +77,6 @@ it('keeps the generated block of each reference page current', function (string 
     expect(ConfigReferenceCommand::apply($page, __DIR__.'/../../../packages'))->toBe($page);
 })->with([
     'en' => dirname(__DIR__, 3).'/docs/reference/config.md',
-    'ru' => dirname(__DIR__, 3).'/docs/ru/reference/config.md',
 ]);
 
 it('exits 1 from --check without writing when the page drifted', function (): void {

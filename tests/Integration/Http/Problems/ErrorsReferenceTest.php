@@ -18,7 +18,6 @@ function errorsReference(): ErrorsReference
 
 $pages = [
     'en' => [dirname(__DIR__, 4).'/docs/reference/errors.md', 'en'],
-    'ru' => [dirname(__DIR__, 4).'/docs/ru/reference/errors.md', 'ru'],
 ];
 
 it('keeps the generated block of each page current', function (string $path, string $locale): void {

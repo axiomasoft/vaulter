@@ -31,7 +31,7 @@ final class ConfigReferenceCommand extends Command
 
     protected $signature = 'vaulter:config:reference
         {--check : Exit 1 when a page differs from the generated table, without writing}
-        {--path=* : Pages to update (default: docs/reference/config.md and docs/ru/reference/config.md)}';
+        {--path=* : Pages to update (default: docs/reference/config.md)}';
 
     protected $description = 'Generate the config key table in the reference docs.';
 
@@ -266,7 +266,7 @@ final class ConfigReferenceCommand extends Command
         // The pages and the package configs live in the monorepo, not in the host application.
         $root = dirname(__DIR__, 4);
         if ($paths === []) {
-            $paths = [$root.'/docs/reference/config.md', $root.'/docs/ru/reference/config.md'];
+            $paths = [$root.'/docs/reference/config.md'];
         }
         $check = $this->option('check');
         $stale = false;

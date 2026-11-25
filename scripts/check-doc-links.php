@@ -7,22 +7,16 @@ declare(strict_types=1);
  * Offline check of the documentation links.
  *
  *   php scripts/check-doc-links.php docs README.md   every relative link and #anchor resolves
- *   php scripts/check-doc-links.php --mirror docs    docs/ and docs/ru/ hold the same pages
  *
  * External links (http, https, mailto) are not fetched. Anchors follow the VitePress
  * slug rule, so a heading and its {#custom-id} both count.
  */
 $root = dirname(__DIR__);
 $args = array_slice($argv, 1);
-$mirror = in_array('--mirror', $args, true);
-$args = array_values(array_filter($args, static fn (string $arg): bool => $arg !== '--mirror'));
 if ($args === []) {
-    fwrite(STDERR, "usage: check-doc-links.php [--mirror] <docs-dir|file>...\n");
+    fwrite(STDERR, "usage: check-doc-links.php <docs-dir|file>...\n");
     exit(2);
 }
-
-/** The pages that carry no translation: decision records and the working plan. */
-const UNMIRRORED = ['adr/', 'plan/', 'ru/', 'node_modules/', '.vitepress/'];
 
 /** @return list<string> markdown files below a directory, relative to it */
 function markdownFiles(string $directory): array
@@ -37,55 +31,6 @@ function markdownFiles(string $directory): array
     sort($files);
 
     return $files;
-}
-
-function isUnmirrored(string $relative, bool $ru): bool
-{
-    foreach (UNMIRRORED as $prefix) {
-        if ($ru && $prefix === 'ru/') {
-            continue;
-        }
-        if (str_starts_with($relative, $prefix) || str_contains($relative, '/'.$prefix)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-if ($mirror) {
-    $docs = realpath($args[0]);
-    if ($docs === false) {
-        fwrite(STDERR, "{$args[0]}: no such directory\n");
-        exit(2);
-    }
-    $en = [];
-    foreach (markdownFiles($docs) as $file) {
-        if (!isUnmirrored($file, false)) {
-            $en[] = $file;
-        }
-    }
-    $ru = [];
-    if (is_dir($docs.'/ru')) {
-        foreach (markdownFiles($docs.'/ru') as $file) {
-            if (!isUnmirrored($file, true)) {
-                $ru[] = $file;
-            }
-        }
-    }
-    $failed = false;
-    foreach (array_diff($en, $ru) as $file) {
-        fwrite(STDERR, "docs/ru/{$file}: missing translation of docs/{$file}\n");
-        $failed = true;
-    }
-    foreach (array_diff($ru, $en) as $file) {
-        fwrite(STDERR, "docs/{$file}: missing page for docs/ru/{$file}\n");
-        $failed = true;
-    }
-    if (!$failed) {
-        echo 'mirror ok: '.count($en)." pages\n";
-    }
-    exit($failed ? 1 : 0);
 }
 
 /** The markdown without fenced code blocks (lines kept so line numbers stay true). */
@@ -110,20 +55,15 @@ function withoutFences(string $text): string
     return implode("\n", $out);
 }
 
-/**
- * The VitePress slug of a heading text. VitePress folds letters with a combining mark
- * (й → и, ё → е); $fold = false keeps them, the spelling the Russian pages link with.
- */
-function slug(string $heading, bool $fold = true): string
+/** The VitePress slug of a heading text; letters with a combining mark are folded (é → e) as VitePress does. */
+function slug(string $heading): string
 {
     $text = html_entity_decode($heading, ENT_QUOTES | ENT_HTML5);
     $text = preg_replace('/\[([^\]]*)\]\([^)]*\)/', '$1', $text) ?? $text;
     $text = preg_replace('/<[^>]+>/', '', $text) ?? $text;
     $text = str_replace(['`', '*'], '', $text);
-    if ($fold) {
-        $text = class_exists(Normalizer::class) ? (Normalizer::normalize($text, Normalizer::FORM_KD) ?: $text) : $text;
-        $text = preg_replace('/[\x{0300}-\x{036f}]/u', '', $text) ?? $text;
-    }
+    $text = class_exists(Normalizer::class) ? (Normalizer::normalize($text, Normalizer::FORM_KD) ?: $text) : $text;
+    $text = preg_replace('/[\x{0300}-\x{036f}]/u', '', $text) ?? $text;
     $text = preg_replace('/[\x00-\x1f]/', '', $text) ?? $text;
     $text = preg_replace('/[\s~`!@#$%^&*()\-_+=\[\]{}|\\\;:"\'“”‘’<>,.?\/]+/u', '-', $text) ?? $text;
     $text = preg_replace('/-{2,}/', '-', $text) ?? $text;
@@ -163,7 +103,6 @@ function anchors(string $file): array
         $seen[$base] = $count + 1;
         $suffix = $count === 0 ? '' : '-'.$count;
         $found[$base.$suffix] = true;
-        $found[slug($heading, false).$suffix] = true;
         // `code_name` headings also answer to the GitHub spelling with underscores: the problem
         // type URIs and exception messages link to the page on GitHub.
         if (preg_match('/^`([a-z0-9_]+)`$/', $heading, $code) === 1) {

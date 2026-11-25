@@ -27,7 +27,7 @@ final class CommandsReferenceCommand extends Command
 
     protected $signature = 'vaulter:commands:reference
         {--check : Exit 1 when a page differs from the generated table, without writing}
-        {--path=* : Pages to update (default: docs/reference/commands.md and docs/ru/reference/commands.md)}';
+        {--path=* : Pages to update (default: docs/reference/commands.md)}';
 
     protected $description = 'Generate the command table in the reference docs.';
 
@@ -110,7 +110,7 @@ final class CommandsReferenceCommand extends Command
         if ($paths === []) {
             // The pages live in the monorepo, not in the host application.
             $root = dirname(__DIR__, 4);
-            $paths = [$root.'/docs/reference/commands.md', $root.'/docs/ru/reference/commands.md'];
+            $paths = [$root.'/docs/reference/commands.md'];
         }
         $check = $this->option('check');
         $stale = false;

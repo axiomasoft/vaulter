@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 const repo = 'https://github.com/axioma-studio/vaulter'
 
 // ---------------------------------------------------------------------------
-// English (root) sidebar
+// Guide sidebar
 // ---------------------------------------------------------------------------
 
 const guideSidebar = [
@@ -145,127 +145,8 @@ const adrSidebar = [
   },
 ]
 
-// ---------------------------------------------------------------------------
-// Russian sidebar — lists ONLY translated pages; everything else falls back
-// to the English tree (cross-locale links are kept absolute, e.g. /guides/*).
-// ---------------------------------------------------------------------------
-
-const ruGuideSidebar = [
-  {
-    text: 'Начало работы',
-    collapsed: false,
-    items: [
-      { text: 'Что такое Vaulter?', link: '/ru/getting-started/introduction' },
-      { text: 'Быстрый старт', link: '/ru/getting-started/quick-start' },
-      { text: 'Установка', link: '/ru/getting-started/installation' },
-      { text: 'Конфигурация', link: '/ru/guides/configuration' },
-      { text: 'Совместимость (API и БД)', link: '/ru/reference/compatibility' },
-    ],
-  },
-  {
-    text: 'Основные концепции',
-    collapsed: false,
-    items: [
-      { text: 'Архитектура', link: '/ru/concepts/architecture' },
-      { text: 'Глоссарий', link: '/ru/concepts/glossary' },
-      { text: 'Модули', link: '/ru/concepts/modules' },
-      { text: 'Конвейер операций', link: '/ru/concepts/operations' },
-      { text: 'Идемпотентность', link: '/ru/concepts/idempotency' },
-      { text: 'Storage Panels', link: '/ru/concepts/drives-and-profiles' },
-      { text: 'Drive — хранилища, папки и узлы', link: '/ru/concepts/nodes-and-revisions' },
-      { text: 'Хранилище и блобы', link: '/ru/concepts/storage-and-blobs' },
-      { text: 'Обработчики документов', link: '/ru/extending/file-handlers' },
-      { text: 'Типы документов', link: '/ru/extending/document-types' },
-      { text: 'Протоколы коллаборации', link: '/ru/extending/collaboration-protocols' },
-      { text: 'Экспортеры', link: '/ru/extending/exporters' },
-      { text: 'Инспекторы загрузок', link: '/ru/extending/upload-inspectors' },
-      { text: 'Профили', link: '/ru/extending/profiles' },
-      { text: 'Написание движка/обработчика', link: '/ru/extending/viewers' },
-    ],
-  },
-  {
-    text: 'Работа с контентом',
-    collapsed: false,
-    items: [
-      { text: 'Документы-узлы', link: '/ru/guides/documents' },
-      { text: 'Загрузки', link: '/ru/guides/uploads' },
-      { text: 'Корзина и поиск', link: '/ru/guides/trash' },
-      { text: 'Целостность блобов и GC', link: '/ru/guides/blob-integrity' },
-      { text: 'Публичные ссылки', link: '/ru/guides/sharing' },
-      { text: 'Журнал изменений', link: '/ru/concepts/events' },
-      { text: 'Outbox', link: '/ru/concepts/events-outbox' },
-      { text: 'Комментарии', link: '/ru/guides/comments' },
-      { text: 'Экспорт', link: '/ru/guides/export' },
-    ],
-  },
-  {
-    text: 'Авторизация',
-    collapsed: false,
-    items: [
-      { text: 'Авторизация', link: '/ru/concepts/access-model' },
-      { text: 'Драйверы прав', link: '/ru/extending/permission-drivers' },
-      { text: 'Гранты', link: '/ru/guides/grants' },
-      { text: 'Права (abilities)', link: '/ru/guides/abilities' },
-      { text: 'Мультитенантность', link: '/ru/concepts/tenancy' },
-    ],
-  },
-  {
-    text: 'Realtime и интерфейс',
-    collapsed: false,
-    items: [
-      { text: 'Адаптеры коллаборации', link: '/ru/extending/collaboration-protocols' },
-      { text: 'Vue-пакет (@vaulter/vue)', link: '/ru/guides/vue' },
-      { text: 'Плагин Filament', link: '/ru/guides/filament' },
-    ],
-  },
-  {
-    text: 'Дальше',
-    collapsed: false,
-    items: [
-      { text: 'Рецепты', link: '/ru/guides/recipes' },
-      { text: 'Диагностика', link: '/ru/guides/troubleshooting' },
-      { text: 'Справочник ошибок', link: '/ru/guides/errors' },
-      {
-        text: 'Эксплуатация',
-        link: '/ru/guides/operations',
-        collapsed: true,
-        items: [
-          { text: 'Резервное копирование и восстановление', link: '/ru/guides/operations/backup-and-restore' },
-          { text: 'Ротация ключей', link: '/ru/guides/operations/key-rotation' },
-          { text: 'Мёртвые доставки outbox', link: '/ru/guides/operations/outbox-dead-letters' },
-          { text: 'Инцидент целостности CAS', link: '/ru/guides/operations/cas-integrity-incident' },
-          { text: 'Экспорт и удаление tenant', link: '/ru/guides/operations/tenant-export-and-deletion' },
-          { text: 'Откат выпуска', link: '/ru/guides/operations/release-rollback' },
-          { text: 'Восстановление миграции', link: '/ru/guides/operations/migration-recovery' },
-          { text: 'Скомпрометированный артефакт', link: '/ru/guides/operations/compromised-artifact' },
-        ],
-      },
-      { text: 'Модель угроз', link: '/ru/security/threat-model' },
-      { text: 'Чек-лист усиления защиты', link: '/ru/security/hardening-checklist' },
-    ],
-  },
-]
-
-const ruReferenceSidebar = [
-  {
-    text: 'Справочник API',
-    collapsed: false,
-    items: [
-      { text: 'PHP API (фасад и контракты)', link: '/ru/reference/php-api' },
-      { text: 'REST API', link: '/ru/reference/rest-api' },
-      { text: 'Ключи конфигурации', link: '/ru/reference/config' },
-      { text: 'События', link: '/ru/reference/events' },
-      { text: 'Коды ошибок', link: '/ru/reference/errors' },
-      { text: 'Конкурентность', link: '/ru/reference/concurrency' },
-      { text: 'Каталог операций', link: '/ru/reference/operations' },
-      { text: 'Artisan-команды', link: '/ru/reference/commands' },
-    ],
-  },
-]
-
-// ---------------------------------------------------------------------------
-
 export default defineConfig({
+  lang: 'en-US',
   title: 'Vaulter',
   description:
     'Embeddable document & file management for Laravel — Storage Panels, a unified node tree, content-addressed blobs, pluggable authorization and real-time collaboration.',
@@ -301,31 +182,6 @@ export default defineConfig({
     footer: {
       message: 'Internals & ADRs · Released under the MIT License.',
       copyright: 'Copyright © 2026-present Axioma Studio',
-    },
-  },
-
-  locales: {
-    root: { label: 'English', lang: 'en' },
-    ru: {
-      label: 'Русский',
-      lang: 'ru',
-      link: '/ru/',
-      themeConfig: {
-        nav: [
-          { text: 'Руководство', link: '/ru/getting-started/introduction', activeMatch: '^/ru/(getting-started|concepts|guides|extending|security)/' },
-          { text: 'Справочник', link: '/ru/reference/php-api', activeMatch: '/ru/reference/' },
-          { text: 'ADRs (EN)', link: '/adr/' },
-          { text: 'GitHub', link: repo },
-        ],
-        sidebar: {
-          '/ru/getting-started/': ruGuideSidebar,
-          '/ru/concepts/': ruGuideSidebar,
-          '/ru/guides/': ruGuideSidebar,
-          '/ru/extending/': ruGuideSidebar,
-          '/ru/security/': ruGuideSidebar,
-          '/ru/reference/': ruReferenceSidebar,
-        },
-      },
     },
   },
 })

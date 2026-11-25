@@ -8,16 +8,14 @@ declare(strict_types=1);
  *
  *   php scripts/check-doc-snippets.php docs
  *
- * Every php/ts/vue/js/bash fence in docs/{getting-started,guides,extending} (and docs/ru/…) must
+ * Every php/ts/vue/js/bash fence in docs/{getting-started,guides,extending} must
  * be preceded by a marker comment naming how it is verified:
  *
- *   <!-- recipe: <repo-path>#<region> -->   the block, less its leading `use` lines (and, in ru, comments), equals the "// [recipe:<region>]" … "// [/recipe]" area of a test
+ *   <!-- recipe: <repo-path>#<region> -->   the block, less its leading `use` lines, equals the "// [recipe:<region>]" … "// [/recipe]" area of a test
  *   <!-- snippet: config -->               top-level keys exist in a package's config/*.php
  *   <!-- snippet: shell -->                every vaulter:* command is registered
  *   <!-- snippet: signature <FQCN> -->     the class/interface and each declared method exist
  *   <!-- snippet: host -->                 host-application code: `use Vaulter\…` imports and @vaulter/vue imports resolve
- *
- * A ru block must carry the same marker and the same code as its en twin; comments may be translated.
  */
 $root = dirname(__DIR__);
 $args = array_slice($argv, 1);
@@ -45,7 +43,7 @@ function fragments(string $docs): array
 {
     $out = [];
     foreach (is_file($docs) ? [null] : SECTIONS as $section) {
-        foreach ($section === null ? [$docs] : [$docs.'/'.$section, $docs.'/ru/'.$section] as $dir) {
+        foreach ($section === null ? [$docs] : [$docs.'/'.$section] as $dir) {
             if (!is_dir($dir) && !is_file($dir)) {
                 continue;
             }
@@ -137,31 +135,6 @@ function dedent(string $code): string
     }
 
     return implode("\n", array_map(static fn (string $line): string => $line === '' ? '' : substr($line, (int) $indent), $lines));
-}
-
-/** The code with comments dropped, so a translated comment does not count as a different example. */
-function withoutComments(string $code): string
-{
-    $kept = [];
-    foreach (explode("\n", $code) as $line) {
-        $trim = ltrim($line);
-        if ($trim === '' || preg_match('~^(//|#|\*|/\*|<!--)~', $trim)) {
-            continue;
-        }
-        // A marker inside a string literal is code, not a comment.
-        if (preg_match_all('~\s+(?://|#)\s~', $line, $found, PREG_OFFSET_CAPTURE)) {
-            foreach ($found[0] as [, $offset]) {
-                $before = substr($line, 0, $offset);
-                if (substr_count($before, "'") % 2 === 0 && substr_count($before, '"') % 2 === 0) {
-                    $line = $before;
-                    break;
-                }
-            }
-        }
-        $kept[] = rtrim($line);
-    }
-
-    return implode("\n", $kept);
 }
 
 function region(string $file, string $name): ?string
@@ -547,11 +520,7 @@ foreach ($byFile as $file => $blocks) {
                 foreach (hostChecks($root, $block['lang'], $block['code']) as $message) {
                     $fail($file, $line, $message);
                 }
-                $translated = str_contains($file, '/ru/');
-                $same = $translated
-                    ? withoutComments(dedent($area)) === withoutComments(dedent($code))
-                    : dedent($area) === dedent($code);
-                if (!$same) {
+                if (dedent($area) !== dedent($code)) {
                     $fail($file, $line, "block differs from the tested region {$marker}");
                 }
             }
@@ -617,32 +586,6 @@ foreach ($byFile as $file => $blocks) {
             }
         } else {
             $fail($file, $line, "unknown marker '{$marker}'");
-        }
-    }
-}
-
-// The ru mirror: same marker, same code (comments aside), in the same position.
-foreach ($byFile as $file => $blocks) {
-    if (!str_contains($file, '/docs/ru/') && !str_contains($file, $docs.'/ru/')) {
-        continue;
-    }
-    $twin = str_replace($docs.'/ru/', $docs.'/', $file);
-    $en = $byFile[$twin] ?? null;
-    if ($en === null) {
-        $fail($file, 1, 'no en page with the same path');
-
-        continue;
-    }
-    if (count($en) !== count($blocks)) {
-        $fail($file, 1, 'has '.count($blocks).' fragments, the en page has '.count($en));
-
-        continue;
-    }
-    foreach ($blocks as $i => $block) {
-        if ($block['marker'] !== $en[$i]['marker']) {
-            $fail($file, $block['line'], 'marker differs from the en fragment');
-        } elseif (withoutComments(dedent($block['code'])) !== withoutComments(dedent($en[$i]['code']))) {
-            $fail($file, $block['line'], 'code differs from the en fragment');
         }
     }
 }
