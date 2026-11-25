@@ -74,7 +74,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [Q6](#q6-ai-resource-ids-in-the-text-projection-heads) | ai: resource ids in the text projection heads | P1 | M |
 | [V4](#v4-ai-commit-checks-the-permission-of-its-command) | ai: commit checks the permission of its command | P1 | S |
 | [V6](#v6-ai-an-allowlist-sanitizer-for-streamed-html) | ai: an allowlist sanitizer for streamed HTML | P1 | S |
-| [V7](#v7-a-forged-or-stale-cursor-is-a-500-not-a-400) | A forged or stale cursor is a 500, not a 400 | P1 | S |
+| [V7](#v7-signed-typed-keyset-cursors-for-the-plain-listings) | Signed, typed keyset cursors for the plain listings (500 fixed) | P2 | S |
 | [Q7](#q7-push-chat-events-instead-of-a-php-worker-per-open-tab) | Push chat events instead of a PHP worker per open tab | P2 | M |
 | [Q8](#q8-seekable-pages-for-the-scan-backfill-and-rescan) | Seekable pages for the scan backfill and rescan | P2 | S |
 | [Q9](#q9-one-read-snapshot-of-the-drive-per-operation) | One read snapshot of the drive per operation | P3 | S (an owner decision) |
@@ -1023,22 +1023,22 @@ payloads.
 
 **Priority.** P1. **Cost.** S.
 
-### V7. A forged or stale cursor is a 500, not a 400
+### V7. Signed, typed keyset cursors for the plain listings
 
-**Problem.** Every cursor-paginated endpoint passes the client's `cursor` straight to Laravel's
-`cursorPaginate()`. A cursor without the expected parameter throws `UnexpectedValueException`, and
-a parameter of the wrong type reaches PostgreSQL and fails the cast (`QueryException`): both are an
-HTTP 500. Affected: document revisions and comments, file revisions, grants, shares, the nodes of a
-public share, webhook endpoints and deliveries. Cursors issued before `5cf3cfd2` and `36edca09`
-(which dropped `id` from the revision order) hit the first case; the message of `5cf3cfd2` says
-they are refused as invalid, but they are a 500 until this lands.
+**Problem.** The document revisions and comments, file revisions and webhook lists take Laravel's
+plain base64 JSON cursor. A malformed or mismatched one used to be a 500 (a missing sort column threw
+`UnexpectedValueException`, a value of the wrong type failed the PostgreSQL cast); base `KeysetCursor`
+now checks the sort columns and their value types and answers 422 `validation_failed`, like the node,
+grant and share listings, whose cursors are already sealed by `ExactListing`. The message of base
+`5cf3cfd2` says stale revision cursors are "refused as invalid"; until that fix they were a 500 (the
+changelog records it; history is not rewritten). A plain cursor can still be crafted to start
+anywhere inside a list the caller may read.
 
-**Proposal.** Decode the cursor in one place (the Q2 builder in the base), check its parameters and
-their types against the sort columns, and answer an invalid one with the 400
-`drive.invalid_cursor` problem the drive already defines. Signing the cursor (an HMAC with the app
-key) also stops clients from crafting positions. This changes the error contract of these endpoints, so it needs an owner decision.
+**Proposal.** Seal these cursors like the others (`ExactListing::sealCursor`, bound to the listing
+and its scope), which changes the format clients receive, so it is an owner decision; do it together
+with the Q2 builder.
 
-**Priority.** P1. **Cost.** S.
+**Priority.** P2. **Cost.** S.
 
 ## Merge order notes
 
