@@ -52,7 +52,7 @@ final readonly class Role
     public static function covering(array $roles): ?self
     {
         foreach ($roles as $candidate) {
-            $all = array_all($roles, fn ($role) => $candidate->covers($role));
+            $all = array_all($roles, fn (self $role): bool => $candidate->covers($role));
             if ($all) {
                 return $candidate;
             }

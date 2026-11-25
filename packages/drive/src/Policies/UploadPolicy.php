@@ -51,7 +51,7 @@ final readonly class UploadPolicy
             return true;
         }
 
-        return array_any($patterns, fn ($pattern): bool => strtolower($pattern) === strtolower($mime)
+        return array_any($patterns, fn (string $pattern): bool => strtolower($pattern) === strtolower($mime)
             || (str_ends_with($pattern, '/*') && str_starts_with(strtolower($mime), strtolower(substr($pattern, 0, -1)))));
     }
 }

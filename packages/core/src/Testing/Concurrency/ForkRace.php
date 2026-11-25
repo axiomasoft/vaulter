@@ -246,7 +246,7 @@ final class ForkRace
         }
 
         if (is_array($value)) {
-            return array_all($value, fn ($item): bool => self::isJsonValue($item));
+            return array_all($value, fn (mixed $item): bool => self::isJsonValue($item));
         }
 
         return false;

@@ -59,7 +59,7 @@ final readonly class DoctorRegistry
             $checks[$check->key()] = $check;
         }
         foreach ($this->tagged() as $check) {
-            if (array_any($prefixes, fn ($prefix): bool => self::matches($check->key(), $prefix))) {
+            if (array_any($prefixes, fn (string $prefix): bool => self::matches($check->key(), $prefix))) {
                 if (isset($checks[$check->key()])) {
                     throw new LogicException(sprintf('Doctor check key "%s" is registered twice.', $check->key()));
                 }

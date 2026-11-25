@@ -393,7 +393,7 @@ final readonly class TipTapContent implements DocumentContent
             return false;
         }
 
-        return array_any($value, fn ($item): bool => self::carriesDangerousScheme($item));
+        return array_any($value, fn (mixed $item): bool => self::carriesDangerousScheme($item));
     }
 
     // ─── Read time: decay ────────────────────────────────────────────────────

@@ -79,6 +79,6 @@ final readonly class SetNodePropertiesAction
             return false;
         }
 
-        return array_all($left, fn ($value, $key): bool => array_key_exists($key, $right) && self::sameProperties($value, $right[$key]));
+        return array_all($left, fn (mixed $value, int|string $key): bool => array_key_exists($key, $right) && self::sameProperties($value, $right[$key]));
     }
 }
