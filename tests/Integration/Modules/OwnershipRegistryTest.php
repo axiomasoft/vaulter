@@ -274,11 +274,18 @@ it('keeps every table in the migrations and the schema class of the module that 
     }
 });
 
-it('numbers the create-migrations in the block of the owner and in the order of the foreign keys', function (): void {
+it('numbers the migrations in the block of the owner and in the order of the foreign keys', function (): void {
     $root = dirname(__DIR__, 3);
     $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499]];
     $numbers = [];
+    $upgrades = [];
     foreach (glob($root.'/packages/*/database/migrations/*.php') ?: [] as $file) {
+        if (preg_match('/^0001_01_01_(\d{6})_add_[a-z_]+_to_(v_[a-z_]+)_table\.php$/', basename($file), $m) === 1) {
+            // An upgrade migration that changes an existing table (an index, a key) is numbered like its table.
+            $upgrades[basename($file)] = [$m[2], (int) $m[1]];
+
+            continue;
+        }
         expect(preg_match('/^0001_01_01_(\d{6})_create_(v_[a-z_]+)_table\.php$/', basename($file), $m))->toBe(1, $file);
         $numbers[$m[2]] = (int) $m[1];
     }
@@ -299,6 +306,13 @@ it('numbers the create-migrations in the block of the owner and in the order of 
         [$from, $to] = $blocks[$owners[$table]];
         expect($number >= $from && $number <= $to)->toBeTrue($table.' is '.$number.' but '.$owners[$table].' owns '.$from.'-'.$to);
     }
+    foreach ($upgrades as $file => [$table, $number]) {
+        expect(array_key_exists($table, $owners))->toBeTrue($file.' changes a table no package owns');
+        [$from, $to] = $blocks[$owners[$table]];
+        expect($number >= $from && $number <= $to)->toBeTrue($file.' is outside '.$owners[$table].' '.$from.'-'.$to)
+            ->and($number)->toBeGreaterThan($numbers[$table], $file.' runs before the table it changes');
+    }
+    expect(array_keys($upgrades))->toContain('0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php');
 
     // The table a foreign key points at is created before the table that holds it (the head FKs are added later).
     $fks = json_decode((string) file_get_contents($root.'/tests/Repo/Arch/Fixtures/fk-map.json'), true, flags: JSON_THROW_ON_ERROR)['fks'];
