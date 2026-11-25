@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Composer\Autoload\ClassLoader;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
@@ -98,7 +99,8 @@ PHP;
 
     try {
         $process = new Process(
-            command: [PHP_BINARY, '-r', $code, dirname(__DIR__, 2).'/vendor/autoload.php'],
+            // The autoloader this run uses: the package's own vendor/ in a split checkout, the root one in the monorepo.
+            command: [PHP_BINARY, '-r', $code, dirname((string) new ReflectionClass(ClassLoader::class)->getFileName(), 2).'/autoload.php'],
             env: ['TMPDIR' => $directory],
             timeout: 15,
         );
