@@ -31611,7 +31611,9 @@
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
-                    "doc": []
+                    "doc": [
+                        "@param Closure(DriveContext):"
+                    ]
                 }
             }
         },

@@ -386,7 +386,7 @@
                     "accepts_value": true,
                     "array": true,
                     "default": [],
-                    "description": "Pages to update (default: docs/reference/commands.md and docs/ru/reference/commands.md)",
+                    "description": "Pages to update (default: docs/reference/commands.md)",
                     "name": "path",
                     "shortcut": null,
                     "value_required": false
@@ -423,7 +423,7 @@
                     "accepts_value": true,
                     "array": true,
                     "default": [],
-                    "description": "Pages to update (default: docs/reference/config.md and docs/ru/reference/config.md)",
+                    "description": "Pages to update (default: docs/reference/config.md)",
                     "name": "path",
                     "shortcut": null,
                     "value_required": false
@@ -615,7 +615,7 @@
                     "accepts_value": true,
                     "array": true,
                     "default": [],
-                    "description": "Pages to update (default: docs/reference/errors.md and docs/ru/reference/errors.md)",
+                    "description": "Pages to update (default: docs/reference/errors.md)",
                     "name": "path",
                     "shortcut": null,
                     "value_required": false
@@ -652,7 +652,7 @@
                     "accepts_value": true,
                     "array": true,
                     "default": [],
-                    "description": "Pages to update (default: docs/reference/events.md and docs/ru/reference/events.md)",
+                    "description": "Pages to update (default: docs/reference/events.md)",
                     "name": "path",
                     "shortcut": null,
                     "value_required": false

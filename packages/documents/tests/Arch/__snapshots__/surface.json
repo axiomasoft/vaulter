@@ -4053,7 +4053,9 @@
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
-                    "doc": []
+                    "doc": [
+                        "@param array<string, mixed> $raw"
+                    ]
                 },
                 "method:prepare": {
                     "kind": "method",
@@ -4141,7 +4143,10 @@
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
-                    "doc": []
+                    "doc": [
+                        "@param array<string, mixed>|null $next",
+                        "@param array<string, mixed>|null $previous"
+                    ]
                 },
                 "method:storagepayload": {
                     "kind": "method",
@@ -4167,7 +4172,9 @@
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
-                    "doc": []
+                    "doc": [
+                        "@return array<string, mixed>"
+                    ]
                 }
             }
         },
