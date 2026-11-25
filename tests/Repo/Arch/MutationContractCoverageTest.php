@@ -62,6 +62,7 @@ const MCC_EVIDENCE = [
     'documents.comments.add' => ['packages/documents/tests/Operations/DocumentIdempotencyTest.php', 'replays a comment add, a resolution and a deletion once each'],
     'documents.comments.resolve' => ['packages/documents/tests/Operations/DocumentIdempotencyTest.php', 'replays a comment add, a resolution and a deletion once each'],
     'documents.comments.delete' => ['packages/documents/tests/Operations/DocumentIdempotencyTest.php', 'replays a comment add, a resolution and a deletion once each'],
+    'documents.comments.reopen' => ['packages/documents/tests/Operations/DocumentIdempotencyTest.php', 'replays a reopen once'],
     'webhooks.endpoints.register' => ['packages/webhooks/tests/Webhooks/EndpointIdempotencyTest.php', 'registers once per key and replays the same secret from a receipt that holds only its ciphertext'],
     'webhooks.endpoints.update' => ['packages/webhooks/tests/Webhooks/EndpointIdempotencyTest.php', 'replays an update whose If-Match went stale because the first request committed, without a second change'],
     'webhooks.endpoints.deactivate' => ['packages/webhooks/tests/Webhooks/EndpointIdempotencyTest.php', 'deactivates once per key and raises the version once'],

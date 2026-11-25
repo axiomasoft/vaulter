@@ -207,6 +207,18 @@ it('replays a comment add, a resolution and a deletion once each', function (): 
     expect(fn () => Documents::comments($keyed('other'))->delete($node, $added->id, $resolved->version))->toThrow(CommentNotFoundException::class);
 });
 
+it('replays a reopen once', function (): void {
+    [, $node, $keyed] = idempotentThread();
+    $comment = Documents::comments($keyed('add'))->add($node, new AddCommentInput('thread'));
+    $resolved = Documents::comments($keyed('resolve'))->resolve($node, $comment->id, $comment->version);
+
+    $reopened = Documents::comments($keyed('reopen-1'))->reopen($node, $comment->id, $resolved->version);
+    expect($reopened->resolvedAt)->toBeNull()
+        ->and($reopened->version)->toBe($resolved->version + 1)
+        ->and(Documents::comments($keyed('reopen-1'))->reopen($node, $comment->id, $resolved->version))->toEqual($reopened)
+        ->and(NodeComment::query()->findOrFail($comment->id)->version)->toBe($reopened->version);
+});
+
 it('refuses a resolve or a delete on a version that is gone, whichever write came first', function (): void {
     [, $node, $keyed] = idempotentThread();
     $comment = Documents::comments($keyed('a'))->add($node, new AddCommentInput('thread'));
