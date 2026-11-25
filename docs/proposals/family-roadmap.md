@@ -45,6 +45,12 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [T4](#t4-retire-or-repair-the-test-name-baseline) | Retire or repair the test-name baseline | P1 | S |
 | [H1](#h1-no-planning-codes-in-code-tests-and-comments) | No planning codes in code, tests and comments | P2 | M |
 | [H2](#h2-the-same-gitignore-agent-block-everywhere) | The same `.gitignore` agent block everywhere | P2 | S |
+| [S1](#s1-the-projector-contract-and-its-measured-payoff-extends-a9) | The projector contract and its measured payoff | P1 | M |
+| [S2](#s2-one-licence-allowlist-instead-of-four-denylists-input-to-b1) | One licence allowlist instead of four denylists | P1 | S |
+| [S3](#s3-a-first-party-clamav-scanner-in-the-base) | A first-party ClamAV scanner in the base | P1 | S |
+| [S4](#s4-the-unused-blob-encryption-column-implement-or-drop) | The unused blob encryption column: implement or drop | P2 | S / L |
+| [S5](#s5-editor-features-still-missing-against-tiptap-pro) | Editor features still missing against TipTap Pro | P1–P3 | M–L each |
+| [S6](#s6-remove-the-archive-and-decide-about-its-history) | Remove the archive, and decide about its history | P1 | S (a decision) |
 
 Cost: **S** is up to a day, **M** a few days, **L** more than a week.
 
@@ -511,3 +517,144 @@ files, and add a rail (B1) that rejects new ones.
 **Proposal.** The same block in every repository, shipped from B3 so it cannot drift.
 
 **Cost.** S.
+
+## Salvaged from the planning archive
+
+`plan/` and `audits/` (332 files, about 5 MB, Russian) hold the design work behind the ten delivery
+phases, including the `MVP-2` track (range comments, tracked changes, DOCX exchange, XLSX/CSV,
+collaborative workbooks, workbook references in TipTap) and a study of every TipTap Pro module.
+All 33 entries of the orchestration manifest (the scaffold and tasks `0.1` to `10.2` of both tracks) have landed in the five repositories; the
+executable checks, reference implementations, SQL drafts and probes in the archive are superseded by
+the tests and migrations in the packages. What follows is what the archive still knows and the code
+does not do yet. Items are checked against `main` and `refactor/polish` on 2026-11-25.
+
+### S1. The projector contract and its measured payoff (extends A9)
+
+**Problem.** A9 needs a contract for the projection writer before anyone builds it. The archive has
+one, plus the measurement that justified the projection tables.
+
+**Proposal.** Build the projector to these rules:
+
+1. The writer commits the change together with an outbox row (or a link to the recoverable journal).
+   The projector receives the document id, the generation and the range of source positions.
+2. A delta is applied only on top of the published base of the same generation: an exact duplicate
+   is ignored; a gap makes the projector read the missing range or rebuild; an event from an older
+   generation (after a restore) is dropped.
+3. Rows and the head pointer are published in one transaction. A large rebuild fills a new build and
+   re-checks the source, generation and base before the head moves. A reader takes one snapshot (or
+   one query joined to the head), so it can never mix a new head with old rows.
+4. A read after a receipt asks for at least the receipt's position. If the projection lags, the
+   reader either reads a bounded fragment from the authoritative state (re-checking access) or
+   returns "pending"; the position check includes the generation.
+5. Verification "as of commit" uses the immutable receipt or the historical state, not the current
+   projection; a formula cache counts as current only with confirmed dependencies.
+6. Deleting a document hides it from authorised reads at once; projection rows and blobs are swept
+   later, idempotently and per tenant.
+
+Review vectors worth turning into tests: a stale paragraph returned under a newer receipt position
+is a defect; a projector of generation 3 must not move the head after a restore to generation 4;
+access revoked between search and snippet hides title, snippet and position; with `B2=12, B3=8,
+D2=SUM(B2:B3)` and a write `B2=15`, the stale cached `D2=20` must not be reported as recalculated;
+two deliveries of one event publish once; equal local ids in two tenants never authorise each other.
+
+**Rationale.** Measured on PostgreSQL 18.4 (warm cache, 50 samples, response hashes verified), reading
+20 cells `B2:E6` from a 100,000-cell workbook took **133 ms p95 from the JSONB monolith and
+0.15–0.23 ms from the projection**; reading three paragraphs of a 1,100-block contract took 1.6–2.0 ms
+from JSONB and 0.12 ms from the projection. The tables are worth filling.
+
+**Priority.** P1, together with A9. **Cost.** M.
+
+### S2. One licence allowlist instead of four denylists (input to B1)
+
+**Problem.** The family's licence rule is "production dependencies are MIT, Apache-2.0, BSD or ISC
+only; no TipTap Pro, `@univerjs-pro/*`, Handsontable, HyperFormula, GPL, AGPL or SSPL". The base
+enforces it as an allowlist (`scripts/ci/engineering-rails.py`). The satellites enforce it as
+regex denylists that disagree: sheets accepts `proprietary`, collaboration rejects `PROPRIETARY`
+and `SEE LICENSE`, editor-pro rejects `UNLICENSED` but not `proprietary`, and ai keeps its own
+inline copy. A new licence string passes or fails depending on the repository.
+
+**Proposal.** Ship the base allowlist and the named package denylist as the B1 rails configuration,
+with an explicit exemption only for the family's own private packages.
+
+**Rationale.** Licence-clean production dependencies are a product requirement (closed products ship
+on top of these packages without royalties), so the rule must not depend on which copy runs.
+
+**Priority.** P1, with B1. **Cost.** S.
+
+### S3. A first-party ClamAV scanner in the base
+
+**Problem.** The base has the `ContentScanner` contract, its contract test suite and a doctor check
+that refuses a bound ClamAV older than 1.5.5, but no scanner implementation: every host has to write
+the clamd client itself, the most security-sensitive piece of the upload path.
+
+**Proposal.** Ship a `ClamdContentScanner` in media: an external `clamd` over a Unix socket or an
+isolated network, `zINSTREAM` in 64 KiB chunks (bounded PHP memory on a 1 GiB file), fail-closed on
+any error or timeout, and the documented daemon settings (`StreamMaxLength 1024M`, `MaxScanSize
+1024M`, `MaxFileSize 512M`, `MaxRecursion 16`, `AlertEncrypted yes`, `AlertBrokenExecutables yes`).
+Run `ContentScannerContractTests` against a real clamd in the extended CI lane.
+
+**Rationale.** The quarantine, verdict and doctor plumbing already exist; the adapter is the missing
+piece that makes the secure default usable.
+
+**Priority.** P1. **Cost.** S.
+
+### S4. The unused blob encryption column: implement or drop
+
+**Problem.** `v_blobs.encryption_key_id` (with an index) is created by `MediaSchema` and declared on
+the `Blob` model, but nothing reads or writes it.
+
+**Proposal.** Either drop the column, or implement the encryption profile it was added for:
+segmented envelope encryption with `sodium_crypto_secretstream_xchacha20poly1305_*` in independent
+4 MiB segments (64 × 64 KiB chunks), the DEK wrapped by the tenant's KMS key with AAD
+`dek:{tenant}:{sha256}`, a per-segment subkey derived from the DEK and the segment index, chunk AAD
+`vaulter:v1:{tenant}:{sha256}:seg={n}`, and `sodium_memzero` after use. This keeps O(1) HTTP `Range`
+reads at about 0.03 % size overhead and makes cross-tenant blob substitution fail authentication.
+
+**Rationale.** A column with no behaviour suggests encryption at rest that does not exist. No users
+yet, so dropping it now is free; adding it later is a normal migration.
+
+**Priority.** P2 (decide), P1 if a product needs encryption at rest. **Cost.** S to drop, L to
+implement.
+
+### S5. Editor features still missing against TipTap Pro
+
+**Problem.** The archive classified all 93 TipTap Pro catalogue entries. Collaboration, REST,
+JWT, webhooks, comments, snapshots, compare, tracked changes, DOCX import/export, Markdown and the
+AI toolkits are now covered by the family. The rest was deferred and is not built anywhere.
+
+**Proposal.** Keep them as independent, opt-in extensions (never in the base), each with its own data
+owner, schema version, server-side enforcement and acceptance corpus. The per-module notes are in
+[vaulter-editor-pro `docs/concepts/tiptap-pro-parity.md`](https://github.com/axiomasoft/vaulter-editor-pro/blob/refactor/polish/docs/concepts/tiptap-pro-parity.md).
+Suggested order:
+
+| Priority | Feature | Note |
+| --- | --- | --- |
+| P1 | Office paste normalisation (Word, Outlook, Google Docs/Sheets HTML) | DOCX import does not cover the clipboard, which is how most content arrives |
+| P1 | File drop/paste into Media (`@tiptap/extension-file-handler`) | Callbacks bound to Media upload, limits and ACL |
+| P1 | PDF export | Server render of a pinned revision with pinned fonts and an access check; the base only has the exporter SPI |
+| P1 | Find and replace, table of contents | Reuse the OSS extensions; anchors for the ToC must follow `blockId` |
+| P2 | Page layout and page breaks in the editor | The DOCX model already carries `pageBreak`; the editor schema does not, so breaks are not editable |
+| P2 | Template slots and variables | Typed fill-only fields resolved from authorised sources, with a server-side commit for headless fills (contracts, lessons) |
+| P2 | Content protection for human edits | `ContentProtectionPolicy` is enforced only on AI writes in vaulter-ai; the hub and the base API do not consult it |
+| P2 | Comment mentions, unread state and notifications | Threads, replies and resolve exist; nothing tells a person they are addressed |
+| P3 | ODT and EPUB export, Diagrams, Whiteboard | Only on a product request |
+
+**Rationale.** Without this list the next "TipTap Pro parity" question has to redo the research.
+
+**Priority.** As in the table. **Cost.** M to L per feature.
+
+### S6. Remove the archive, and decide about its history
+
+**Problem.** Besides A6: the repository is public now. `plan/tiptap-pro/` documents the internals of
+TipTap Pro packages read from their installed `dist/` bundles under a Pro licence, together with
+probe scripts and the account's team id in `plan/tiptap-pro/.env.example`. Deleting the folder
+removes it from the tree but not from the public history.
+
+**Proposal.** Delete `plan/` and `audits/` once the migration series has moved what the satellites
+need (items S1–S5 above keep the rest). Then decide whether that is enough or the history must be
+rewritten (a force push to `main` and every branch, which needs an explicit owner decision).
+
+**Rationale.** The vendor's licence terms, not our code, decide how risky public reverse-engineering
+notes are.
+
+**Priority.** P1 (a decision). **Cost.** S.
