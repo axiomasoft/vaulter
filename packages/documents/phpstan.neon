@@ -22,4 +22,6 @@ parameters:
         # host's own tests, never inside this package's src.
         -
             identifier: trait.unused
-            path: src/Testing/Contracts/DocumentTypeContractTests.php
+            paths:
+                - src/Testing/Contracts/DocumentTypeContractTests.php
+                - src/Testing/Contracts/CollaborationProtocolContractTests.php

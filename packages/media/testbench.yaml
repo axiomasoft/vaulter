@@ -1,0 +1,4 @@
+# Workbench for this package's own dev tools (testbench, Larastan): Composer does not
+# auto-discover the root package, so register its provider explicitly.
+providers:
+  - Vaulter\Media\VaulterMediaServiceProvider

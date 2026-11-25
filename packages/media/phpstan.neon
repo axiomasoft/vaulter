@@ -16,3 +16,9 @@ parameters:
         # generic Eloquent builder).
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+
+        # Shipped for host test suites: the driver contract trait is consumed by Pest
+        # `uses()` in a storage driver's own tests, never inside this package's src.
+        -
+            identifier: trait.unused
+            path: src/Testing/Contracts/StorageDriverContractTests.php
