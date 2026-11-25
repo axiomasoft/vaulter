@@ -57,6 +57,10 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [H1](#h1-no-planning-codes-in-code-tests-and-comments) | No planning codes in code, tests and comments | P2 | M |
 | [H2](#h2-the-same-gitignore-agent-block-everywhere) | The same `.gitignore` agent block everywhere | P2 | S |
 | [X2](#x2-editor-pro-the-overlap-detector-is-a-stateful-singleton-nobody-shares) | editor-pro: the overlap detector is a stateful singleton | P2 | S |
+| [X4](#x4-editor-pro-unpinning-must-not-clear-an-earlier-keep-forever) | editor-pro: unpinning must not clear an earlier keep-forever | P1 | S |
+| [X5](#x5-ai-drop-the-core-config-keys-nothing-reads) | ai: drop the core config keys nothing reads | P2 | S |
+| [A13](#a13-ai-backed-enums-for-command-step-and-decision-states) | ai: backed enums for command, step and decision states | P2 | S / M |
+| [A14](#a14-stricter-typescript-flags-in-the-satellites) | Stricter TypeScript flags in the satellites | P2 | M |
 | [S4](#s4-the-unused-blob-encryption-column-implement-or-drop) | The unused blob encryption column: implement or drop | P2 | S / L |
 | [Q1](#q1-a-sorted-index-and-a-seekable-cursor-for-folder-listings) | A sorted index and a seekable cursor for folder listings | P1 | S |
 | [Q2](#q2-seekable-keyset-cursors-everywhere) | Seekable keyset cursors everywhere | P1 | S |
@@ -479,6 +483,42 @@ in review across the family.
 
 **Cost.** S, after the in-flight ai series that touches these files.
 
+### A13. ai: backed enums for command, step and decision states
+
+**Problem.** Three core DTOs carry their lifecycle as plain strings: `CommandOutcome::$state`
+(`running`, `committed`, `rejected`), `OfficeRunStep::$state` (`dispatched`, `waiting`, `finished`,
+`failed`, `verified`) and `StoredProposal::$decision` (`pending`, `approved`, `rejected`). Callers
+compare them with literals (`$outcome->state === 'rejected'`, `$proposal->decision !== 'approved'`)
+in the commit path, the step coordinator, the approved-command job and the workspace views, so a
+typo compiles and PHPStan cannot check that a `match` covers every state.
+
+**Proposal.** `CommandState`, `StepState` and `ProposalDecision` backed enums whose values are the
+stored strings (no migration), constructed once in the repositories with `::from()`, and exhaustive
+`match` at the decision points. The wire format keeps `->value`. The files involved (`Commit`,
+`Runs`, `Proposals`) are being changed by the in-flight ai series, so this lands after it.
+
+**Cost.** S per enum, M together.
+
+### A14. Stricter TypeScript flags in the satellites
+
+**Problem.** The Vue and Node packages compile with `strict`, but not with the flags that catch
+unchecked indexing and `undefined` passed to optional properties. Measured on `refactor/polish`
+with each flag turned on alone:
+
+| Package | `noUncheckedIndexedAccess` | `exactOptionalPropertyTypes` | `noImplicitOverride` |
+|---------|---------------------------|------------------------------|----------------------|
+| ai `vue` | 20 errors | 13 | 0 |
+| editor-pro `vue` | 105 | 52 | 0 |
+| editor-pro `docx` | 560 | 28 | 0 |
+
+Most of the errors are in files the in-flight editor and ai series are changing.
+
+**Proposal.** Turn on `noImplicitOverride` now (it costs nothing), then `exactOptionalPropertyTypes`,
+then `noUncheckedIndexedAccess` package by package once those series land; each flag stays on once
+its package is clean.
+
+**Cost.** S for the first two flags, M for `noUncheckedIndexedAccess` in docx.
+
 ### A6. Move planning material out of the public repository
 
 **Problem.** The public MIT base repository carries `plan/` and `audits/`: Russian planning
@@ -657,6 +697,37 @@ at the per-entry and total limits as soon as either is crossed; a test with a cr
 asserts the peak memory stays bounded.
 
 **Priority.** P1. **Cost.** S.
+
+### X4. editor-pro: unpinning must not clear an earlier keep-forever
+
+**Problem.** `RevisionPinOperations::unpin(releaseRetention: true)` (the `release_retention` query
+parameter of the unpin endpoint) clears the revision's keep-forever flag unconditionally. If the
+revision was already kept forever before it was pinned, unpinning silently drops a retention
+decision the pin never made, and the revision becomes eligible for pruning. `releaseExpired()`
+deliberately leaves retention alone, so the two paths disagree.
+
+**Proposal.** Record on the pin whether pinning set the flag (a `set_retention` column), and release
+retention on unpin only when it did; a test pins a revision that is already kept forever, unpins
+with `release_retention` and expects the flag to stay. The column belongs to the review schema,
+which an in-flight series is changing.
+
+**Priority.** P1. **Cost.** S.
+
+### X5. ai: drop the core config keys nothing reads
+
+**Problem.** The published core config (`config/vaulter-ai.php`) carries `default_profile`
+(`VAULTER_AI_DEFAULT_PROFILE`) and `chat.max_retries`, `chat.retry_backoff_ms`,
+`chat.request_timeout_seconds`. No code reads them: retries and timeouts of model calls are executor
+settings (`vaulter-ai-laravel-ai.chat.*`, which `LaravelAiLlmPort` does read), and the profile comes
+from `CallContext::$profile`, which the host's `CallContextResolver` sets. An operator who changes
+the core keys gets no effect and no error.
+
+**Proposal.** Remove the four keys (pre-1.0, no compatibility layer) rather than wire them: wiring
+would give each setting two sources of truth. The configuration reference already marks them as
+unread; drop that note in the same change. The ai core and laravel-ai suites pass with the keys
+removed. The config file is being changed by the in-flight ai series, so after it.
+
+**Priority.** P2. **Cost.** S.
 
 Resolved on the satellite branches since the review, kept here for the record:
 
