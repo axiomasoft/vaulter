@@ -38,7 +38,6 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [D3](#d3-contributor-documentation-in-every-repository) | Contributor documentation in every repository | P1 | S |
 | [X1](#x1-editor-pro-exchange-recovery-must-re-dispatch-or-fail) | editor-pro: exchange recovery must re-dispatch or fail | P1 | S |
 | [X3](#x3-sheets-stream-the-zip-entry-checks) | sheets: stream the ZIP entry checks | P1 | S |
-| [X4](#x4-sheets-re-validate-realtime-tokens-during-a-session) | sheets: re-validate realtime tokens during a session | P1 | M |
 | [S1](#s1-the-projector-contract-and-its-measured-payoff-extends-a9) | The projector contract and its measured payoff | P1 | M |
 | [S2](#s2-one-licence-allowlist-instead-of-four-denylists-input-to-b1) | One licence allowlist instead of four denylists | P1 | S |
 | [S3](#s3-a-first-party-clamav-scanner-in-the-base) | A first-party ClamAV scanner in the base | P1 | S |
@@ -646,17 +645,12 @@ asserts the peak memory stays bounded.
 
 **Priority.** P1. **Cost.** S.
 
-### X4. sheets: re-validate realtime tokens during a session
+Resolved on the satellite branches since the review, kept here for the record:
 
-**Problem.** The sheets realtime engine checks a peer's token only when it joins. An expired or
-revoked token keeps a live connection, with write access, for as long as the socket stays open. The
-collaboration hub already re-validates expiry and revocation during the session.
-
-**Proposal.** Use the same rule as the hub: check `exp` on every message (or a timer at `exp`), and
-close the connection when the base revokes the grant; share the implementation with the hub if the
-packages allow it.
-
-**Priority.** P1 (access control). **Cost.** M.
+- sheets realtime now re-validates every peer's token during the session, as the collaboration hub
+  does: an expired token closes the connection with code 4001 so the client reconnects with a fresh
+  one, and each peer is re-checked with its own token at least once a minute (`revalidateMs`), so a
+  revoked grant closes only that peer (vaulter-sheets `c23f1ab`, `eeb23d5`, docs `5f3b934`).
 
 ## Merge order notes
 
