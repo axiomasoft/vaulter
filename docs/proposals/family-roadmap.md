@@ -72,7 +72,7 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [Q5](#q5-sheets-export-replay-without-hashing-the-source-blob) | sheets: export replay without hashing the source blob | P2 | S |
 | [V3](#v3-share-passwords-out-of-query-strings) | Share passwords out of query strings | P2 | S (resolved) |
 | [Q6](#q6-ai-resource-ids-in-the-text-projection-heads) | ai: resource ids in the text projection heads | P1 | M |
-| [V4](#v4-ai-commit-checks-the-commands-own-permission) | ai: commit checks the command's own permission | P1 | S |
+| [V4](#v4-ai-commit-checks-the-permission-of-its-command) | ai: commit checks the permission of its command | P1 | S |
 | [V6](#v6-ai-an-allowlist-sanitizer-for-streamed-html) | ai: an allowlist sanitizer for streamed HTML | P1 | S |
 | [Q7](#q7-push-chat-events-instead-of-a-php-worker-per-open-tab) | Push chat events instead of a PHP worker per open tab | P2 | M |
 | [V5](#v5-ai-a-resource-scoped-tool-port-only-reaches-its-resources-resolved) | ai: a resource-scoped tool port only reaches its resources | — | resolved |
@@ -943,7 +943,7 @@ client and link. See the sharing guide.
 
 **Priority.** P2. **Cost.** S.
 
-### V4. ai: commit checks the command's own permission
+### V4. ai: commit checks the permission of its command
 
 **Problem.** `Commit::authorize()` asks the directory for `edit` on the resource, while describe
 and prepare use the descriptor's `requiredPermission`. A command declared with a stricter
