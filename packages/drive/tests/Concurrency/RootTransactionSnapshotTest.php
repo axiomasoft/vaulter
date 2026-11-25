@@ -14,18 +14,15 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 // A peer session commits the conflicting name in between; the create has to see it.
 // Committed rows (DatabaseMigrations, see tests/Pest.php): the peer session must see the fixtures.
 
-beforeEach(function (): void {
-    if (DB::connection()->getDriverName() !== 'mysql') {
-        $this->markTestSkipped('The snapshot taken before the tree lock is a MySQL REPEATABLE READ effect.');
-    }
-    config()->set('database.connections.snapshot_peer', config('database.connections.'.DB::getDefaultConnection()));
-});
-
 afterEach(function (): void {
     DB::purge('snapshot_peer');
 });
 
 it('sees a sibling name committed by a peer between the first read and the tree lock', function (): void {
+    if (!in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+        $this->markTestSkipped('The snapshot taken before the tree lock is a MySQL/MariaDB REPEATABLE READ effect.');
+    }
+    config()->set('database.connections.snapshot_peer', config('database.connections.'.DB::getDefaultConnection()));
     $system = Vaulter::drive(DriveTestHelpers::host())->asSystem('snapshot fixture');
     $parent = $system->folders()->create('parent');
     $other = $system->folders()->create('other', $parent);
