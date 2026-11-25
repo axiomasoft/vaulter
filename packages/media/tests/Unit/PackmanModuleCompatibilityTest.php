@@ -10,6 +10,7 @@ use Illuminate\Foundation\Application;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
+use Packman\Plugins\Data\Contributions\SlotContribution;
 use Packman\Plugins\Laravel\ExtensionRegistrar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -85,9 +86,21 @@ final class PackmanModuleCompatibilityTest extends TestCase
             ExtensionRegistrar::builtInFor($app, CoreModule::class);
             $registry = $app->make(PluginInspector::class);
 
+            $declared = array_column(array_filter(
+                (new CoreModule)->slotContributions(),
+                static fn (array $contribution): bool => $contribution['slot'] === DoctorCheck::class,
+            ), 'id');
+            $registered = array_map(
+                static fn (SlotContribution $contribution): string => $contribution->id,
+                $registry->slotContributions()[DoctorCheck::class],
+            );
+            sort($declared);
+            sort($registered);
+
             self::assertCount(1, $registry->describe());
-            self::assertCount(6, $registry->slots());
-            self::assertCount(15, $registry->slotContributions()[DoctorCheck::class]);
+            self::assertCount(count((new CoreModule)->definedSlots()), $registry->slots());
+            self::assertNotSame([], $declared);
+            self::assertSame($declared, $registered);
         } finally {
             Container::setInstance($previous);
         }
