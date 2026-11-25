@@ -140,3 +140,21 @@ it('gates every action, reads included, behind the manage ability', function ():
         $this->json($method, V1::url($path))->assertForbidden()->assertJsonPath('code', 'permission_denied');
     }
 });
+
+it('refuses a malformed or mismatched endpoints or deliveries cursor with 422 instead of failing the query', function (): void {
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $forge = static fn (array $parameters): string => rtrim(strtr(base64_encode((string) json_encode($parameters)), '+/', '-_'), '=');
+    $bad = [
+        $forge(['id' => 1, '_pointsToNextItems' => true]),
+        $forge(['created_at' => '2026-01-01 00:00:00', '_pointsToNextItems' => true]),
+        $forge(['created_at' => 'soon', 'id' => 1, '_pointsToNextItems' => true]),
+        'not-a-cursor',
+    ];
+
+    foreach (['webhook-endpoints', 'webhook-endpoints/'.$endpoint->getKey().'/deliveries'] as $path) {
+        foreach ($bad as $cursor) {
+            $this->getJson(V1::url($path.'?cursor='.urlencode($cursor)))
+                ->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
+        }
+    }
+});

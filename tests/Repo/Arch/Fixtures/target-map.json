@@ -12131,6 +12131,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Support/KeysetCursor.php",
+            "fqcn": "Vaulter\\Drive\\Support\\KeysetCursor",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Support\\KeysetCursor"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Support/NodeName.php",
             "fqcn": "Vaulter\\Drive\\Support\\NodeName",
             "kind": "final-class",

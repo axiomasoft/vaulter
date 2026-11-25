@@ -161,3 +161,19 @@ it('answers a stranger who replays a deletion 404, not the stored receipt', func
 
     $this->deleteJson($this->url.'/'.$id, [], ['If-Match' => '"comment.'.$id.'.0"', 'Idempotency-Key' => 'del'])->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
+
+it('refuses a malformed or mismatched comments cursor with 422 instead of failing the query', function (): void {
+    $forge = static fn (array $parameters): string => rtrim(strtr(base64_encode((string) json_encode($parameters)), '+/', '-_'), '=');
+    $bad = [
+        $forge(['id' => 1, '_pointsToNextItems' => true]),
+        $forge(['created_at' => 'yesterday', 'id' => 1, '_pointsToNextItems' => true]),
+        $forge(['created_at' => '2026-02-30 00:00:00', 'id' => 1, '_pointsToNextItems' => true]),
+        $forge(['created_at' => '2026-01-01 00:00:00', 'id' => ['x'], '_pointsToNextItems' => true]),
+        'not-a-cursor',
+    ];
+
+    foreach ($bad as $cursor) {
+        $this->getJson($this->url.'?cursor='.urlencode($cursor))
+            ->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
+    }
+});

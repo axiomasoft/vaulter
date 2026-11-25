@@ -158,3 +158,16 @@ it('answers not_a_file for content routes on a folder', function (): void {
     $this->getJson(V1::url('files/'.$folder->id.'/revisions'))->assertStatus(422)->assertJsonPath('code', 'not_a_file');
     $this->getJson(V1::url('files/'.$folder->id.'/download'))->assertStatus(422)->assertJsonPath('code', 'not_a_file');
 });
+
+it('refuses a malformed or mismatched revisions cursor with 422 instead of failing the query', function (): void {
+    $file = V1::file($this->drive, 'cursor.txt', 'one');
+    $forge = static fn (array $parameters): string => rtrim(strtr(base64_encode((string) json_encode($parameters)), '+/', '-_'), '=');
+
+    foreach ([$forge(['id' => 1, '_pointsToNextItems' => true]), $forge(['number' => '1 or 1=1', '_pointsToNextItems' => true]), 'not-a-cursor'] as $cursor) {
+        $this->getJson(V1::url('files/'.$file->id.'/revisions?cursor='.urlencode($cursor)))
+            ->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
+    }
+    // A cursor of the earlier (number, id) order still pages: the extra id is ignored.
+    $this->getJson(V1::url('files/'.$file->id.'/revisions?cursor='.urlencode($forge(['number' => 2, 'id' => 9, '_pointsToNextItems' => true]))))
+        ->assertOk()->assertJsonPath('data.0.number', 1);
+});

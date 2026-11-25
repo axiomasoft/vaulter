@@ -46,6 +46,7 @@ use Vaulter\Drive\Idempotency\PurgeReceiptCodec;
 use Vaulter\Drive\Idempotency\RevisionReceiptCodec;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Support\KeysetCursor;
 use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
@@ -100,7 +101,9 @@ final readonly class FileOperations implements Contract
         }
 
         $aggregate = $node->file()->firstOrFail();
-        $page = $aggregate->versions()->orderByDesc('number')->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
+        $versions = $aggregate->versions();
+        $cursor = KeysetCursor::open($options->cursor, ['number' => KeysetCursor::NUMBER], $versions->getRelated());
+        $page = $versions->orderByDesc('number')->cursorPaginate(perPage: $options->perPage, cursor: $cursor);
 
         return new Page(
             items: array_values($page->getCollection()->map(fn (FileRevision $revision): FileRevisionSnapshot => $this->revisions->map($revision, $aggregate))->all()),

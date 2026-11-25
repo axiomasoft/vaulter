@@ -15,6 +15,16 @@ This file covers the public release channel.
   `POST v1/shares/{token}/unlock` (`publicShares.unlock` in `@vaulter/vue`), and wrong
   passwords are rate limited per client and link (`vaulter-share-password`, 10 a minute).
 
+### Fixed
+
+- A malformed, forged or stale pagination cursor on the document revisions and comments, file
+  revisions, webhook endpoints and webhook deliveries lists is refused with 422
+  `validation_failed` (`errors.cursor`), as the node, grant and share listings already do, instead
+  of failing the query with a 500. The cursor format is unchanged. A revision-history cursor issued
+  before the history was ordered by revision number alone (base `5cf3cfd2`, whose commit message
+  calls such cursors "refused as invalid") returned a 500 until this fix; it is now refused as
+  described there. A file-revision cursor of the earlier `(number, id)` order keeps paging.
+
 ### Packman migration
 
 - Register Drive configuration diagnostics through Packman's supported SPI and give the shared registry a unique vaulter.config.valid check without changing local vaulter:doctor identifiers.

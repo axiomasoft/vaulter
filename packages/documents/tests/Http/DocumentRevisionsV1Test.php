@@ -116,3 +116,20 @@ it('answers a caller without a grant 404 on every revision route', function (): 
     $this->postJson(Docs::url('documents/'.$this->id.'/revisions'), ['label' => 'No'])->assertNotFound();
     $this->postJson(Docs::url('documents/'.$this->id.'/revisions/1/restore'), [], ['If-Match' => '"x"'])->assertNotFound();
 });
+
+it('refuses a malformed or mismatched revisions cursor with 422 instead of failing the query', function (): void {
+    $forge = static fn (array $parameters): string => rtrim(strtr(base64_encode((string) json_encode($parameters)), '+/', '-_'), '=');
+    $bad = [
+        // A cursor of the earlier timestamp order: no revision number to seek from.
+        $forge(['created_at' => '2026-01-01 00:00:00', 'id' => 1, '_pointsToNextItems' => true]),
+        $forge(['number' => 'abc', '_pointsToNextItems' => true]),
+        $forge(['number' => -1, '_pointsToNextItems' => true]),
+        $forge(['number' => 1, '_pointsToNextItems' => 'yes']),
+        'not-a-cursor',
+    ];
+
+    foreach ($bad as $cursor) {
+        $this->getJson(Docs::url('documents/'.$this->id.'/revisions?cursor='.urlencode($cursor)))
+            ->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
+    }
+});

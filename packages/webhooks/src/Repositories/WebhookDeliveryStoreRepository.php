@@ -6,9 +6,9 @@ namespace Vaulter\Webhooks\Repositories;
 
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\Cursor;
 use Illuminate\Support\Carbon;
 use Packman\Attributes\Internal;
+use Vaulter\Drive\Support\KeysetCursor;
 use Vaulter\Webhooks\Configuration\WebhooksOptions;
 use Vaulter\Webhooks\Models\WebhookDelivery;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -144,7 +144,7 @@ final readonly class WebhookDeliveryStoreRepository
     public function pageForEndpoint(WebhookEndpoint $endpoint, ?string $cursor, int $perPage): CursorPaginator
     {
         $query = $this->newQuery()->where('endpoint_id', $endpoint->getKey());
-        $position = $cursor === null ? null : Cursor::fromEncoded($cursor);
+        $position = KeysetCursor::open($cursor, ['created_at' => KeysetCursor::TIMESTAMP, 'id' => KeysetCursor::KEY], $query->getModel());
         $createdAt = $position?->toArray()['created_at'] ?? null;
         if ($position !== null && is_string($createdAt)) {
             $query->where('created_at', $position->pointsToNextItems() ? '<=' : '>=', $createdAt);

@@ -20,6 +20,7 @@ use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Enums\NodeSort;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Support\KeysetCursor;
 use Vaulter\Support\Identity;
 
 /**
@@ -69,7 +70,7 @@ final readonly class DocumentQuery
             ->with(self::REVISION_METADATA)
             ->where('document_id', $document->getKey())
             ->orderByDesc('number')
-            ->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
+            ->cursorPaginate(perPage: $options->perPage, cursor: KeysetCursor::open($options->cursor, ['number' => KeysetCursor::NUMBER], new $model));
     }
 
     /**
@@ -86,7 +87,7 @@ final readonly class DocumentQuery
             ->where('node_id', $node->getKey())
             ->orderBy('created_at')
             ->orderBy('id')
-            ->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
+            ->cursorPaginate(perPage: $options->perPage, cursor: KeysetCursor::open($options->cursor, ['created_at' => KeysetCursor::TIMESTAMP, 'id' => KeysetCursor::KEY], new $model));
     }
 
     public function comment(Node $node, CommentSnapshot|int|string $comment): NodeComment
