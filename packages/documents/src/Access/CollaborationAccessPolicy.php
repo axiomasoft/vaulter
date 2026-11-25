@@ -30,6 +30,7 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Enums\Operations\OperationKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
@@ -60,19 +61,23 @@ final readonly class CollaborationAccessPolicy
         return $this->evaluateForSession($context, $document, $clientSchemaVersion, $ceiling)[0];
     }
 
-    /** @return array{CollaborationAccessDecision, Node, Document} */
+    /**
+     * @param  Drive|null                                         $drive the drive this same call has just read (a hub reference), so the checks reuse it
+     *                                                                   instead of reading it again; null reads it fresh
+     * @return array{CollaborationAccessDecision, Node, Document}
+     */
     #[Internal]
-    public function evaluateForSession(DriveContext $context, NodeSnapshot|string|int $document, ?int $clientSchemaVersion, CollaborationMode $ceiling = CollaborationMode::Write): array
+    public function evaluateForSession(DriveContext $context, NodeSnapshot|string|int $document, ?int $clientSchemaVersion, CollaborationMode $ceiling = CollaborationMode::Write, ?Drive $drive = null): array
     {
-        $node = $this->document($context, $document, Ability::View, OperationKind::Metadata);
-        $ability = $this->ability($context, $node);
+        $node = $this->document($context, $document, Ability::View, OperationKind::Metadata, $drive);
+        $ability = $this->ability($context, $node, $drive);
         $aggregate = $this->query->document($node, withState: true, withHead: false, withPayload: $ceiling === CollaborationMode::Write && $ability === Ability::Edit);
 
-        return [$this->evaluateState($context, $node, $aggregate, $clientSchemaVersion, $ceiling, $ability), $node, $aggregate];
+        return [$this->evaluateState($context, $node, $aggregate, $clientSchemaVersion, $ceiling, $ability, $drive), $node, $aggregate];
     }
 
     #[Internal]
-    public function evaluateState(DriveContext $context, Node $node, Document $aggregate, ?int $clientSchemaVersion, CollaborationMode $ceiling = CollaborationMode::Write, ?Ability $ability = null): CollaborationAccessDecision
+    public function evaluateState(DriveContext $context, Node $node, Document $aggregate, ?int $clientSchemaVersion, CollaborationMode $ceiling = CollaborationMode::Write, ?Ability $ability = null, ?Drive $drive = null): CollaborationAccessDecision
     {
         $actor = $context->actor->ref()->id;
         if ($context->actor->isSystem() || $actor === null) {
@@ -99,11 +104,12 @@ final readonly class CollaborationAccessPolicy
         if (!$driver->supportsState($aggregate->type, $binding->stateFormat, $binding->schemaVersion, $hasCheckpoint, CollaborationMode::Read)) {
             throw new CollaborationUnavailableException('unsupported_binding', $aggregate->type);
         }
-        $ability ??= $this->ability($context, $node);
+        $ability ??= $this->ability($context, $node, $drive);
         // The same rule the hub re-checks on every call: only an editor of content this
         // installation can save back, on an active drive, with a client that speaks the
         // type's schema, gets a room that writes; everyone else watches it.
-        $driveActive = $node->storage()->value('status') === DriveStatus::Active;
+        $ownDrive = $drive !== null && Identity::stringify($drive->getKey()) === Identity::stringify($node->drive_id);
+        $driveActive = ($ownDrive ? $drive->status : $node->storage()->value('status')) === DriveStatus::Active;
         $writable = $ceiling === CollaborationMode::Write
             && $ability === Ability::Edit
             && $binding->schemaVersion === $type->schemaVersion()
@@ -121,9 +127,9 @@ final readonly class CollaborationAccessPolicy
         ), $ability, $driveActive);
     }
 
-    private function ability(DriveContext $context, Node $node): Ability
+    private function ability(DriveContext $context, Node $node, ?Drive $drive = null): Ability
     {
-        $flags = $this->guard->abilities($context, $node)->flags;
+        $flags = $this->guard->abilities($context, $node, $drive)->flags;
 
         return match (true) {
             $flags[Ability::Edit->value] ?? false => Ability::Edit,
@@ -143,7 +149,8 @@ final readonly class CollaborationAccessPolicy
     {
         $context = $this->referenceContext($actor, $driveId, $nodeId, $tenant, $correlationId);
 
-        return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
+        // The drive was read a moment ago by referenceContext(), in this same call: decide on that read.
+        return $this->evaluateForSession($context, $nodeId, $clientSchemaVersion, $ceiling, $context->drive)[0];
     }
 
     /**
@@ -159,7 +166,7 @@ final readonly class CollaborationAccessPolicy
             return null;
         }
 
-        return $this->evaluate($context, $nodeId, $ceiling, $clientSchemaVersion);
+        return $this->evaluateForSession($context, $nodeId, $clientSchemaVersion, $ceiling, $context->drive)[0];
     }
 
     /** Resolve a trusted room reference to an operation context. Callers still authorize the requested operation. */
@@ -208,12 +215,12 @@ final readonly class CollaborationAccessPolicy
         return $node instanceof Node ? $node : null;
     }
 
-    private function document(DriveContext $context, NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node
+    private function document(DriveContext $context, NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation, ?Drive $drive = null): Node
     {
         $node = $this->scopedNode($context, $key);
         // Authorize before the kind check, so a node the actor cannot see stays
         // indistinguishable from a missing one.
-        $this->guard->authorize($context, $ability, $node, $operation);
+        $this->guard->authorize($context, $ability, $node, $operation, $drive);
         if (!$node->kind->isDocument()) {
             throw NotADocumentException::forNode($node->getKey());
         }

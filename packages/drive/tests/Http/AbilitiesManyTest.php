@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
@@ -149,4 +151,18 @@ it('reads the drive once for the abilities of one node, not once per ability', f
     // The View authorization and abilities() each read the drive once; the profile gate of each ability reuses it.
     expect($abilities->flags['edit'])->toBeTrue()
         ->and(count($driveReads))->toBeLessThanOrEqual(3);
+});
+
+it('decides on a caller-supplied drive only when it is the node\'s own drive', function (): void {
+    $drive = V1::drive(userId: 1, role: RoleRegistry::WRITER);
+    $folder = DriveTestHelpers::model(V1::folder($drive, 'own'));
+    $archived = V1::drive(userId: 1, role: RoleRegistry::WRITER);
+    $archived->archive();
+    $context = DriveContext::for($drive->model(), Actor::user(V1::user(1)), 'supplied-drive');
+    $guard = app(OperationGuard::class);
+
+    // Another drive (here archived) must not stand in for the node's own, active drive.
+    $guard->authorize($context, Ability::Edit, $folder, OperationKind::Mutation, $archived->model()->fresh());
+
+    expect($guard->abilities($context, $folder, $archived->model()->fresh())->flags['edit'])->toBeTrue();
 });

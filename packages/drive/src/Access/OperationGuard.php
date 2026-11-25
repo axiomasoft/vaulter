@@ -23,6 +23,7 @@ use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Support\Identity;
 
 #[Internal]
 final readonly class OperationGuard
@@ -38,10 +39,15 @@ final readonly class OperationGuard
         private TenancyBoundary $boundary,
     ) {}
 
-    public function authorize(DriveContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata): void
+    /**
+     * @param Drive|null $drive the node's drive as the caller read it within this same decision; it saves the
+     *                          re-read and is used only when it is that drive. Pass it only when nothing (a lock,
+     *                          a lifecycle change) can have happened since the read.
+     */
+    public function authorize(DriveContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata, ?Drive $drive = null): void
     {
         $node = $this->scoped(context: $context, node: $node);
-        $drive = $this->assertDriveLifecycle(context: $context, node: $node, operation: $operation);
+        $drive = $this->assertDriveLifecycle(context: $context, node: $node, operation: $operation, drive: $drive);
         if (!$context->actor->isSystem()) {
             $grants = $this->grants(context: $context, node: $node);
             $this->requireView(grants: $grants, node: $node);
@@ -208,12 +214,13 @@ final readonly class OperationGuard
         return array_map(static fn (Node $node): string => (string) $node->id, $nodes);
     }
 
-    public function abilities(DriveContext $context, Node $node): NodeAbilities
+    /** @param Drive|null $drive as for {@see self::authorize()} */
+    public function abilities(DriveContext $context, Node $node, ?Drive $drive = null): NodeAbilities
     {
         $node = $this->scoped(context: $context, node: $node);
         $grants = $context->actor->isSystem() ? GrantSet::superAllowed() : $this->grants(context: $context, node: $node);
         $this->requireView(grants: $grants, node: $node);
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+        $drive = $this->driveOf(node: $node, drive: $drive);
         $actor = $context->actor->authorizable();
         $canCreate = $context->actor->isSystem() || ($actor !== null && $this->resolver->canCreateIn(actor: $actor, drive: $drive));
         $flags = [];
@@ -271,9 +278,9 @@ final readonly class OperationGuard
      * The drive lifecycle: a drive being deleted does not exist for anyone
      * but the system purge; an archived drive refuses every non-system mutation.
      */
-    private function assertDriveLifecycle(DriveContext $context, Node $node, OperationKind $operation): Drive
+    private function assertDriveLifecycle(DriveContext $context, Node $node, OperationKind $operation, ?Drive $drive = null): Drive
     {
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+        $drive = $this->driveOf(node: $node, drive: $drive);
         $purging = $context->actor->isSystem() && $context->actor->ref()->reason === self::PURGE_REASON;
         if ($drive->status === DriveStatus::Deleting && !$purging) {
             throw NodeNotFoundException::forId($node->id);
@@ -284,6 +291,16 @@ final readonly class OperationGuard
         }
 
         return $drive;
+    }
+
+    /** The caller's drive when it is the node's, else the node's drive read now. */
+    private function driveOf(Node $node, ?Drive $drive): Drive
+    {
+        if ($drive !== null && Identity::stringify($drive->getKey()) === Identity::stringify($node->drive_id)) {
+            return $drive;
+        }
+
+        return $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
     }
 
     private function scoped(DriveContext $context, Node $node): Node

@@ -317,3 +317,18 @@ it('keeps the stored schema read-only when the installed type has advanced', fun
     expect($decision->grant->schemaVersion)->toBe(1)->and($decision->grant->mode)->toBe(CollaborationMode::Read);
     expect(Document::query()->where('node_id', $this->node->id)->firstOrFail()->getAttributes())->toBe($before);
 });
+
+it('decides a hub reference on the one drive read of that call', function (): void {
+    $policy = app(CollaborationAccessPolicy::class);
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $decision = $policy->evaluateReference($this->context->actor, $this->node->driveId, $this->node->id, null, 'ref-reads');
+    $driveReads = array_filter(DB::getQueryLog(), static fn (array $query): bool => preg_match('/from [`"]?v_drives[`"]?/', $query['query']) === 1);
+    DB::disableQueryLog();
+
+    // referenceContext() reads the drive and the lifecycle, ability and drive-active checks reuse that read; the
+    // access resolver's own lookup is the only other one.
+    expect($decision->grant->mode)->toBe(CollaborationMode::Write)
+        ->and($decision->driveActive)->toBeTrue()
+        ->and($driveReads)->toHaveCount(2);
+});
