@@ -851,6 +851,14 @@ a composite index or the primary key):
 editor-pro already works around it for `document_id` with a private `withoutLeadingDocumentIndex()`
 that clears the fluent flag, copied into both schemas.
 
+**Decision (base side).** Still one schema migration together with Q1, as proposed below, now
+that H-01 has merged: Q4 drops are only worth a migration and a regeneration of the 144 schema
+fixtures when that work is done once. Dropping an index on MySQL fails while it is the only index
+backing a foreign key, so each drop needs the MySQL and MariaDB lanes of CI to confirm that a
+composite still leads with the FK column; doing it without them (as when CI is unavailable) would
+trade a write cost for a broken upgrade. Q8 added its index alone because it changes a hot path's
+plan by three orders of magnitude, which Q4 does not.
+
 **Proposal.** `IdStrategy::reference()` now takes `index: false` (base `587a8f22`). Use it for
 each column above, delete every `->index(false)` line and both `withoutLeadingDocumentIndex()`
 copies, and drop the duplicates in the same migration as Q1 (one migration per repository),
@@ -916,8 +924,17 @@ the OR keyset of Q2, and `scan_admission_sequence` has no index; each page also 
 every page.
 
 **Proposal.** An index on `v_file_revisions (scan_admission_sequence)` (partial on PostgreSQL where
-the backfill filter allows) and the Q2 leading bound in both pagers. Waiting on the schema series:
-`DriveSchema` is being changed by H-01.
+the backfill filter allows) and the Q2 leading bound in both pagers.
+
+**Done.** `v_file_revisions_scan_admission_idx (scan_admission_sequence, id)` (migration `000220`,
+after H-01 merged) and the leading bound in `ScanBackfillReconciler` and `RescanFileRevisionsCommand`.
+A plain composite, not a partial index: the backfill bounds only by sequence and drive, so there is no
+row filter to make it partial on, and the `id` tie-breaker matches the page order on every engine.
+At 1M rows a deep page is 40 ms without the index, 138 ms with the index but the OR-only predicate
+(the planner walks it from the start) and 0.05 ms with both. The `EXISTS` on the file's node still
+filters each row; a large table shared by many drives can walk other drives' revisions before a page
+fills, which a `drive_id` column on the revision would remove (not proposed: it denormalises the
+node tree).
 
 **Priority.** P2. **Cost.** S.
 
@@ -1045,6 +1062,15 @@ anywhere inside a list the caller may read.
 **Proposal.** Seal these cursors like the others (`ExactListing::sealCursor`, bound to the listing
 and its scope), which changes the format clients receive, so it is an owner decision; do it together
 with the Q2 builder.
+
+**Decision.** Keep the plain, validated cursors. A forged cursor here can only start a page inside a
+list the caller may already read in full (all revisions, comments or deliveries of one resource the
+caller is authorised for), so a seal protects nothing; the node, grant and share listings are sealed
+because their rows are filtered by access and the sort key (a name) could otherwise probe hidden
+rows. Since `KeysetCursor` checks the sort columns and value types, a bad cursor is a 422, not a
+500. Sealing would invalidate every cursor in flight at deploy, tie them to the signing key's
+rotation and change what clients receive, for no confidentiality gain. Revisit only if one of these
+lists starts filtering rows per caller.
 
 **Priority.** P2. **Cost.** S.
 

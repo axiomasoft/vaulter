@@ -2637,6 +2637,24 @@
                     ],
                     "sql": "CREATE INDEX \"custom_file_revisions_restored_from_revision_id_index\" on \"custom_file_revisions\" (\"restored_from_revision_id\")"
                 },
+                "custom_file_revisions_scan_admission_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "scan_admission_sequence",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"custom_file_revisions_scan_admission_idx\" on \"custom_file_revisions\" (\"scan_admission_sequence\", \"id\")"
+                },
                 "custom_file_revisions_sha256_index": {
                     "unique": 0,
                     "origin": "c",

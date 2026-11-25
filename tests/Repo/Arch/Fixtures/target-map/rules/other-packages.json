@@ -736,6 +736,14 @@
         },
         {
             "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000220_add_scan_admission_index_to_v_file_revisions_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence: v_file_revisions_scan_admission_idx is added by the migration of drive"
+        },
+        {
+            "match": "file",
             "value": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
             "owner": "media",
             "action": "keep",

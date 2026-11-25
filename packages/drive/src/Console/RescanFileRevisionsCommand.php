@@ -192,8 +192,9 @@ final class RescanFileRevisionsCommand extends Command
                     $revisions->whereKey($this->revisionKeys());
                 }
                 if ($cursor !== null && $cursor['last_revision_id'] !== null && $drive->id === $cursor['last_drive_id']) {
-                    $revisions->where(fn (Builder $q): Builder => $q->where('scan_admission_sequence', '>', $cursor['last_admission_sequence'])
-                        ->orWhere(fn (Builder $q): Builder => $q->where('scan_admission_sequence', $cursor['last_admission_sequence'])->where('id', '>', $cursor['last_revision_id'])));
+                    $revisions->where('scan_admission_sequence', '>=', $cursor['last_admission_sequence'])
+                        ->where(fn (Builder $q): Builder => $q->where('scan_admission_sequence', '>', $cursor['last_admission_sequence'])
+                            ->orWhere(fn (Builder $q): Builder => $q->where('scan_admission_sequence', $cursor['last_admission_sequence'])->where('id', '>', $cursor['last_revision_id'])));
                 }
                 foreach ($revisions->orderBy('scan_admission_sequence')->orderBy('id')->limit($scope['limit'] - $out['scanned'])->get() as $revision) {
                     $out['scanned']++;

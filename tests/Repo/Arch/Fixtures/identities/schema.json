@@ -29614,6 +29614,38 @@
             "engines": {
                 "mysql": {
                     "columns": [
+                        "scan_admission_sequence",
+                        "id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(scan_admission_sequence, id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "scan_admission_sequence",
+                        "id"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_file_revisions.v_file_revisions_scan_admission_idx",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000204_create_v_file_revisions_table.php",
+                "symbol": "v_file_revisions"
+            },
+            "table": "v_file_revisions"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
                         "sha256"
                     ],
                     "method": "BTREE",
@@ -33892,6 +33924,17 @@
             },
             "tables": [
                 "v_files"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000220_add_scan_admission_index_to_v_file_revisions_table.php",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000220_add_scan_admission_index_to_v_file_revisions_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_file_revisions"
             ]
         },
         {

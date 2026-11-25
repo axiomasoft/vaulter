@@ -2463,6 +2463,7 @@
                 "custom_file_revisions_no_uniq": "CREATE UNIQUE INDEX custom_file_revisions_no_uniq ON public.custom_file_revisions USING btree (file_id, number)",
                 "custom_file_revisions_pkey": "CREATE UNIQUE INDEX custom_file_revisions_pkey ON public.custom_file_revisions USING btree (id)",
                 "custom_file_revisions_restored_from_revision_id_index": "CREATE INDEX custom_file_revisions_restored_from_revision_id_index ON public.custom_file_revisions USING btree (restored_from_revision_id)",
+                "custom_file_revisions_scan_admission_idx": "CREATE INDEX custom_file_revisions_scan_admission_idx ON public.custom_file_revisions USING btree (scan_admission_sequence, id)",
                 "custom_file_revisions_sha256_index": "CREATE INDEX custom_file_revisions_sha256_index ON public.custom_file_revisions USING btree (sha256)",
                 "custom_file_revisions_status_index": "CREATE INDEX custom_file_revisions_status_index ON public.custom_file_revisions USING btree (status)",
                 "custom_file_revisions_tenant_id_index": "CREATE INDEX custom_file_revisions_tenant_id_index ON public.custom_file_revisions USING btree (tenant_id)"

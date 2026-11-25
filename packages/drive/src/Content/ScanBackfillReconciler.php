@@ -59,6 +59,8 @@ final readonly class ScanBackfillReconciler
             $revisionClass = $this->config->model('file_revision');
             $query = $revisionClass::query()->whereHas('file.node', fn (Builder $nodes): Builder => $nodes->where('drive_id', $drive->id))
                 ->where('scan_admission_sequence', '<=', $run->target_sequence)
+                // The leading bound lets the planner seek the admission index; the OR below is the tie-breaker.
+                ->where('scan_admission_sequence', '>=', $run->last_admission_sequence)
                 ->where(function (Builder $query) use ($run): void {
                     $query->where('scan_admission_sequence', '>', $run->last_admission_sequence);
                     if ($run->last_revision_id !== null) {

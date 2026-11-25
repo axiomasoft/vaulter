@@ -321,6 +321,15 @@
         },
         {
             "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000220_add_scan_admission_index_to_v_file_revisions_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
             "file": "packages/drive/routes/drive.php",
             "note": null,
             "owner": "drive",

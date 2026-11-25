@@ -3128,6 +3128,25 @@
                         }
                     ]
                 },
+                "custom_file_revisions_scan_admission_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "scan_admission_sequence",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
                 "custom_file_revisions_sha256_index": {
                     "unique": false,
                     "type": "BTREE",
@@ -3212,7 +3231,7 @@
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_file_revisions` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `file_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `number` int NOT NULL,\n  `blob_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `manifest_blob_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `size_bytes` bigint NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `declared_mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `scan_status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'not_required',\n  `scan_admission_sequence` bigint NOT NULL DEFAULT '0',\n  `quarantined_at` timestamp NULL DEFAULT NULL,\n  `original_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `keep_forever` tinyint(1) NOT NULL DEFAULT '0',\n  `restored_from_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` bigint unsigned DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `committed_at` timestamp NULL DEFAULT NULL,\n  `superseded_at` timestamp NULL DEFAULT NULL,\n  `client_modified_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_file_revisions_no_uniq` (`file_id`,`number`),\n  UNIQUE KEY `custom_file_revisions_id_file_uniq` (`id`,`file_id`),\n  KEY `custom_file_revisions_file_id_status_index` (`file_id`,`status`),\n  KEY `custom_file_revisions_tenant_id_index` (`tenant_id`),\n  KEY `custom_file_revisions_file_id_index` (`file_id`),\n  KEY `custom_file_revisions_blob_id_index` (`blob_id`),\n  KEY `custom_file_revisions_manifest_blob_id_index` (`manifest_blob_id`),\n  KEY `custom_file_revisions_sha256_index` (`sha256`),\n  KEY `custom_file_revisions_status_index` (`status`),\n  KEY `custom_file_revisions_restored_from_revision_id_index` (`restored_from_revision_id`),\n  CONSTRAINT `custom_file_revisions_file_id_foreign` FOREIGN KEY (`file_id`) REFERENCES `custom_files` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_file_revisions_restored_fk` FOREIGN KEY (`restored_from_revision_id`) REFERENCES `custom_file_revisions` (`id`) ON DELETE SET NULL,\n  CONSTRAINT `custom_file_revisions_chk_1` CHECK (((`scan_admission_sequence` is null) or (`scan_admission_sequence` >= 0)))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_file_revisions` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `file_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `number` int NOT NULL,\n  `blob_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `manifest_blob_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `size_bytes` bigint NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `declared_mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `scan_status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'not_required',\n  `scan_admission_sequence` bigint NOT NULL DEFAULT '0',\n  `quarantined_at` timestamp NULL DEFAULT NULL,\n  `original_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `keep_forever` tinyint(1) NOT NULL DEFAULT '0',\n  `restored_from_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` bigint unsigned DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `committed_at` timestamp NULL DEFAULT NULL,\n  `superseded_at` timestamp NULL DEFAULT NULL,\n  `client_modified_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_file_revisions_no_uniq` (`file_id`,`number`),\n  UNIQUE KEY `custom_file_revisions_id_file_uniq` (`id`,`file_id`),\n  KEY `custom_file_revisions_file_id_status_index` (`file_id`,`status`),\n  KEY `custom_file_revisions_scan_admission_idx` (`scan_admission_sequence`,`id`),\n  KEY `custom_file_revisions_tenant_id_index` (`tenant_id`),\n  KEY `custom_file_revisions_file_id_index` (`file_id`),\n  KEY `custom_file_revisions_blob_id_index` (`blob_id`),\n  KEY `custom_file_revisions_manifest_blob_id_index` (`manifest_blob_id`),\n  KEY `custom_file_revisions_sha256_index` (`sha256`),\n  KEY `custom_file_revisions_status_index` (`status`),\n  KEY `custom_file_revisions_restored_from_revision_id_index` (`restored_from_revision_id`),\n  CONSTRAINT `custom_file_revisions_file_id_foreign` FOREIGN KEY (`file_id`) REFERENCES `custom_files` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_file_revisions_restored_fk` FOREIGN KEY (`restored_from_revision_id`) REFERENCES `custom_file_revisions` (`id`) ON DELETE SET NULL,\n  CONSTRAINT `custom_file_revisions_chk_1` CHECK (((`scan_admission_sequence` is null) or (`scan_admission_sequence` >= 0)))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "custom_files": {
             "columns": [

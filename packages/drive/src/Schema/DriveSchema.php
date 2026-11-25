@@ -291,6 +291,8 @@ final class DriveSchema implements ModuleSchema
         // that very file, not merely some revision.
         $table->unique(['id', 'file_id'], $table->getTable().'_id_file_uniq');
         $table->index(['file_id', 'status']);
+        // The scan backfill and the rescan page revisions in admission order.
+        $table->index(['scan_admission_sequence', 'id'], $table->getTable().'_scan_admission_idx');
 
         $table->foreign('file_id')
             ->references('id')
@@ -1007,6 +1009,35 @@ final class DriveSchema implements ModuleSchema
 
         $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
             $blueprint->dropIndex($table.'_head_fk_idx');
+        });
+    }
+
+    /** Public so the upgrade migration adds the admission-order index to an existing table. */
+    public function addFileRevisionsScanAdmissionIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('file_revisions');
+
+        if (!$schema->hasTable($table) || $schema->hasIndex($table, $table.'_scan_admission_idx')) {
+            return;
+        }
+
+        $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->index(['scan_admission_sequence', 'id'], $table.'_scan_admission_idx');
+        });
+    }
+
+    public function dropFileRevisionsScanAdmissionIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('file_revisions');
+
+        if (!$schema->hasTable($table) || !$schema->hasIndex($table, $table.'_scan_admission_idx')) {
+            return;
+        }
+
+        $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->dropIndex($table.'_scan_admission_idx');
         });
     }
 

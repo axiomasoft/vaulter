@@ -17,6 +17,12 @@ This file covers the public release channel.
 
 ### Fixed
 
+- The scan backfill and `vaulter:scan:rescan` page `v_file_revisions` through the new
+  `v_file_revisions_scan_admission_idx` (`scan_admission_sequence, id`, migration
+  `0001_01_01_000220`) with a leading `scan_admission_sequence >= ?` bound, so a deep page seeks
+  instead of re-reading the table: 0.05 ms instead of 40 ms at 1M revisions on PostgreSQL. The
+  index alone is not enough: with the old OR-only predicate the planner walks it from the start
+  (138 ms).
 - A malformed, forged or stale pagination cursor on the document revisions and comments, file
   revisions, webhook endpoints and webhook deliveries lists is refused with 422
   `validation_failed` (`errors.cursor`), as the node, grant and share listings already do, instead
