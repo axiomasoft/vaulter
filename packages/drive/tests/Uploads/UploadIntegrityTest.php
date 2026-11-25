@@ -174,7 +174,9 @@ it('a PATCH larger than chunk_size (only a HINT) is NOT rejected while max_chunk
 });
 
 it('append does not raise peak memory to the staged file size (streaming append)', function (): void {
-    ini_set('memory_limit', '512M');
+    // A hard cap a fixed distance above what the process already holds: an absolute
+    // value cannot be applied once the suite run itself has grown past it.
+    ini_set('memory_limit', memory_get_usage(true) + 256 * 1024 * 1024);
 
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage);
