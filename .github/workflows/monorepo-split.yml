@@ -1,26 +1,21 @@
 name: Monorepo split (PHP)
 
 # Mirrors Filament's release mechanics: on every pushed tag, each PHP package under
-# packages/<name> is force-split into its own read-only repo axioma-studio/vaulter-<name>,
+# packages/<name> is force-split into its own read-only repo (the `split` of release/packages.json),
 # and the same tag is propagated (as_tag) so Packagist — which is registered against
 # the SPLIT repos — picks up the new version. The npm packages are released separately
 # by release-npm.yml.
 #
 # PREREQUISITES (one-time, NOT done here):
-#   1. Create the empty target repos: axioma-studio/vaulter (metapackage), axioma-studio/vaulter-core,
-#      axioma-studio/vaulter-media, axioma-studio/vaulter-drive, axioma-studio/vaulter-documents,
-#      axioma-studio/vaulter-webhooks, axioma-studio/vaulter-filament, axioma-studio/vaulter-azguard.
+#   1. Create the empty target repos: axiomasoft/vaulter (metapackage), axiomasoft/vaulter-core,
+#      axiomasoft/vaulter-media, axiomasoft/vaulter-drive, axiomasoft/vaulter-documents,
+#      axiomasoft/vaulter-webhooks, axiomasoft/vaulter-filament, axiomasoft/vaulter-azguard.
 #   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
 #      those split repos.
 #   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-azguard
-#      hard-depends on axioma-studio/azguard-core (^0.2), so keep that package resolvable on
+#      hard-depends on axiomasoft/azguard (^2.0), so keep that package resolvable on
 #      Packagist before registering the bridge (its local path-repositories are dev-only and
 #      Composer ignores a dependency's own `repositories`, so consumers are unaffected).
-#   4. renamed the bridge (permissions-azguard → azguard). If the old target repo
-#      axioma-studio/vaulter-permissions-azguard was already created (or registered on Packagist)
-#      under the pre-rename prerequisites, delete/abandon it — this workflow will never push to
-#      it again, and an abandoned empty package under the old name would outrank nothing but
-#      confuse everyone.
 #
 # The matrix is computed by scripts/release/route-release.php from release/packages.json (check-versions.php proves the
 # workflow consumes it). vaulter-azguard is skipped while its AzGuard require is a dev constraint, and the
@@ -183,7 +178,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # not axioma-studio/vaulter-vaulter. A manifest or probe error fails the job instead of shipping.
+      # not axiomasoft/vaulter-vaulter. A manifest or probe error fails the job instead of shipping.
       - name: Resolve the split repository of packages/${{ matrix.package }}
         id: plan
         run: |
@@ -192,7 +187,7 @@ jobs:
             echo "channel=${{ needs.route.outputs.channel }}"
             echo "split=${split}"
             echo "package=$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .name' release/packages.json)"
-            echo "name=${split#axioma-studio/}"
+            echo "name=${split#*/}"
             echo "excluded=false"
           } >> "$GITHUB_OUTPUT"
 

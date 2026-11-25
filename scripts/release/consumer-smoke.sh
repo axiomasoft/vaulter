@@ -10,7 +10,7 @@ version="${2:?usage: consumer-smoke.sh <artifacts-dir> <version>}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-has_artifact() { compgen -G "$artifacts/axioma-studio-$1-$version.zip" >/dev/null; }
+has_artifact() { compgen -G "$artifacts/axiomasoft-$1-$version.zip" >/dev/null; }
 
 core_media_drive="axiomasoft/vaulter-core axiomasoft/vaulter-media axiomasoft/vaulter-drive"
 
