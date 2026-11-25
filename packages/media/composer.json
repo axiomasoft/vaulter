@@ -15,9 +15,6 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
-    "replace": {
-        "axioma-studio/vaulter-media": "self.version"
-    },
     "require": {
         "php": ">=8.4 <8.6",
         "axiomasoft/packman": "^0.1",

@@ -21,9 +21,6 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
-    "replace": {
-        "axioma-studio/vaulter-azguard": "self.version"
-    },
     "require": {
         "axiomasoft/azguard": "^2.0@dev",
         "axiomasoft/packman": "^0.1",

@@ -14,9 +14,6 @@
         "issues": "https://github.com/axiomasoft/vaulter/issues",
         "source": "https://github.com/axiomasoft/vaulter"
     },
-    "replace": {
-        "axioma-studio/vaulter": "self.version"
-    },
     "require": {
         "axiomasoft/vaulter-core": "self.version",
         "axiomasoft/vaulter-documents": "self.version",
