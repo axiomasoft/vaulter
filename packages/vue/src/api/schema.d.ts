@@ -401,6 +401,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/shares/{token}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trade a share password for a short-lived download URL
+         * @description For a plain link that can send neither a header nor a body. The password travels in the body or in X-Share-Password, never in the URL; wrong passwords are rate limited per client and link.
+         */
+        post: operations["public-shares.unlock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/drives/{drive}": {
         parameters: {
             query?: never;
@@ -1460,6 +1480,12 @@ export interface components {
             token: string;
             url: string;
         };
+        ShareUnlock: {
+            /** @description Path of public-shares.download on this host, carrying the node and its grant; it needs no password until expires_at. */
+            download_url: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
         Activity: {
             id: string;
             type: string;
@@ -1938,7 +1964,7 @@ export interface components {
         ExportFormat: string;
         /** @description Session token returned by a previous share response. */
         ShareSession: string;
-        /** @description Password of a protected share. */
+        /** @description Password of a protected share. It is never read from the query string. */
         SharePassword: string;
         /** @description tus protocol version, 1.0.0. */
         TusResumableHeader: string;
@@ -2964,7 +2990,7 @@ export interface operations {
             header?: {
                 /** @description Session token returned by a previous share response. */
                 "X-Share-Session"?: components["parameters"]["ShareSession"];
-                /** @description Password of a protected share. */
+                /** @description Password of a protected share. It is never read from the query string. */
                 "X-Share-Password"?: components["parameters"]["SharePassword"];
             };
             path: {
@@ -3009,7 +3035,7 @@ export interface operations {
             header?: {
                 /** @description Session token returned by a previous share response. */
                 "X-Share-Session"?: components["parameters"]["ShareSession"];
-                /** @description Password of a protected share. */
+                /** @description Password of a protected share. It is never read from the query string. */
                 "X-Share-Password"?: components["parameters"]["SharePassword"];
             };
             path: {
@@ -3049,11 +3075,13 @@ export interface operations {
             query?: {
                 /** @description A file inside a shared folder. */
                 node?: string;
+                /** @description A download grant from public-shares.unlock. It stands in for the password of a protected link, for the file named in `node` only, for five minutes. */
+                grant?: string;
             };
             header?: {
                 /** @description Session token returned by a previous share response. */
                 "X-Share-Session"?: components["parameters"]["ShareSession"];
-                /** @description Password of a protected share. */
+                /** @description Password of a protected share. It is never read from the query string. */
                 "X-Share-Password"?: components["parameters"]["SharePassword"];
             };
             path: {
@@ -3090,6 +3118,57 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             423: components["responses"]["Problem423"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "public-shares.unlock": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Session token returned by a previous share response. */
+                "X-Share-Session"?: components["parameters"]["ShareSession"];
+                /** @description Password of a protected share. It is never read from the query string. */
+                "X-Share-Password"?: components["parameters"]["SharePassword"];
+            };
+            path: {
+                /** @description Share token. */
+                token: components["parameters"]["ShareToken"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The share password, unless it is sent in X-Share-Password. */
+                    password?: string;
+                    /** @description A file inside a shared folder (its opaque id). */
+                    node?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description A download URL that works without the password until expires_at. */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Referrer-Policy": components["headers"]["ReferrerPolicyRequired"];
+                    "X-Share-Session": components["headers"]["XShareSession"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShareUnlock"];
+                    };
+                };
+            };
+            401: components["responses"]["Problem401"];
+            403: components["responses"]["Problem403"];
+            404: components["responses"]["Problem404"];
             429: components["responses"]["Problem429"];
             500: components["responses"]["Problem500"];
         };

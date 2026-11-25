@@ -98,6 +98,19 @@ describe('createVaulterClient — requests', () => {
     expect(sent.headers['X-Share-Password']).toBe('pw')
   })
 
+  it('unlocks a protected link with the password in the body, never in the URL', async () => {
+    const unlocked = { download_url: '/api/vaulter/v1/shares/tok/download?node=9&grant=g', expires_at: '2027-01-01T00:05:00Z' }
+    const fetchMock = fetchSequence(() => jsonResponse({ data: unlocked }))
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    await expect(client.publicShares.unlock('tok', 'pw', '9')).resolves.toEqual(unlocked)
+
+    const sent = call(fetchMock)
+    expect(sent.url).toBe('/api/vaulter/v1/shares/tok/unlock')
+    expect(sent.method).toBe('POST')
+    expect(JSON.parse(sent.body as string)).toEqual({ password: 'pw', node: '9' })
+  })
+
   it('keeps X-Share-Session on the share node and the page for the next call', async () => {
     const fetchMock = fetchSequence(
       () => jsonResponse({ data: { id: '1', name: 'Shared' } }, 200, { 'X-Share-Session': 'sess' }),

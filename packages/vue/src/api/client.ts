@@ -39,6 +39,7 @@ import type {
   NodeWithIncludes,
   PublicNode,
   Share,
+  ShareUnlock,
   UpdateShareInput,
   UploadProtocol,
   UploadSession,
@@ -214,6 +215,11 @@ export interface VaulterClient {
     nodes(token: string, query?: CursorQuery, access?: ShareAccess): Promise<CursorPage<PublicNode>>
     /** URL only: an anchor can send neither the share session nor the password. */
     downloadUrl(token: string, nodeId?: NodeId): string
+    /**
+     * Trade the password of a protected link for a download path an anchor can open: the password goes in the body,
+     * the path carries a grant for that one file that expires after a few minutes.
+     */
+    unlock(token: string, password: string, nodeId?: NodeId): Promise<ShareUnlock>
   }
 
   comments: {
@@ -621,6 +627,8 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
       },
       downloadUrl: (token, nodeId) =>
         transport.url(`/shares/${token}/download${nodeId !== undefined ? `?node=${encodeURIComponent(nodeId)}` : ''}`),
+      unlock: (token, password, nodeId) =>
+        data('POST', `/shares/${token}/unlock`, { json: { password, node: nodeId } }),
     },
 
     comments: {

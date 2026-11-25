@@ -46,6 +46,8 @@ export type GrantList = Pick<Schemas['GrantList'], 'etag' | 'data'>
 export type GrantPage = Schemas['GrantList']
 export type Share = Schemas['Share']
 export type MintedShare = Schemas['MintedShare']
+/** A download path of a password-protected link that works without the password until `expires_at`. */
+export type ShareUnlock = Schemas['ShareUnlock']
 export type Activity = Schemas['Activity']
 export type Change = Schemas['Change']
 /** A change that carries the node as the reader sees it now. */

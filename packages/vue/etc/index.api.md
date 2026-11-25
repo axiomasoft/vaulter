@@ -570,6 +570,10 @@ export interface components {
             token: string;
             url: string;
         };
+        ShareUnlock: {
+            download_url: string;
+            expires_at: string;
+        };
         Activity: {
             id: string;
             type: string;
@@ -2968,6 +2972,7 @@ export interface operations {
         parameters: {
             query?: {
                 node?: string;
+                grant?: string;
             };
             header?: {
                 "X-Share-Session"?: components["parameters"]["ShareSession"];
@@ -3078,6 +3083,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicNodeEnvelope"];
+                };
+            };
+            401: components["responses"]["Problem401"];
+            403: components["responses"]["Problem403"];
+            404: components["responses"]["Problem404"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    // (undocumented)
+    "public-shares.unlock": {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Share-Session"?: components["parameters"]["ShareSession"];
+                "X-Share-Password"?: components["parameters"]["SharePassword"];
+            };
+            path: {
+                token: components["parameters"]["ShareToken"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    password?: string;
+                    node?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Referrer-Policy": components["headers"]["ReferrerPolicyRequired"];
+                    "X-Share-Session": components["headers"]["XShareSession"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShareUnlock"];
+                    };
                 };
             };
             401: components["responses"]["Problem401"];
@@ -4879,6 +4930,23 @@ export interface paths {
         trace?: never;
     };
     // (undocumented)
+    "/shares/{token}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["public-shares.unlock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    // (undocumented)
     "/uploads/{upload}": {
         parameters: {
             query?: never;
@@ -5086,6 +5154,9 @@ export type ShareAudience = Schemas['Share']['audience'];
 
 // @public (undocumented)
 export type ShareRole = 'previewer' | 'reader' | 'commenter' | 'writer';
+
+// @public
+export type ShareUnlock = Schemas['ShareUnlock'];
 
 // @public (undocumented)
 export interface StartUploadOptions extends ResumableUploadOptions {
@@ -5544,6 +5615,7 @@ export interface VaulterClient {
         get(token: string, access?: ShareAccess): Promise<PublicNode>;
         nodes(token: string, query?: CursorQuery, access?: ShareAccess): Promise<CursorPage<PublicNode>>;
         downloadUrl(token: string, nodeId?: NodeId): string;
+        unlock(token: string, password: string, nodeId?: NodeId): Promise<ShareUnlock>;
     };
     // (undocumented)
     shares: {
