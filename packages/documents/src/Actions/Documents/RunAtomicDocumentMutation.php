@@ -10,6 +10,7 @@ use Packman\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\AtomicDocumentMutation;
+use Vaulter\Documents\Contracts\LockedDocumentMutation;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Enums\Access\Ability;
