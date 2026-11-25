@@ -6,7 +6,7 @@ Vue components and the documentation site.
 ## Package channels and local development
 
 The public MIT channel includes core, media, drive, documents, webhooks, filament, the
-`axioma-studio/vaulter` metapackage and `@vaulter/vue`. The AzGuard bridge is public but remains
+`axiomasoft/vaulter` metapackage and `@vaulter/vue`. The AzGuard bridge is public but remains
 excluded from release artifacts until its upstream has a stable tag. The metapackage requires
 only core, media, drive and documents.
 
@@ -20,17 +20,26 @@ are ignored when that package is installed as a dependency.
 ## Prerequisites
 
 - PHP `^8.4` with `composer`
-- Node `>=26` with `npm`
+- Node `>=26.13.1` with `npm` (the current LTS line; CI pins 26.13.1)
 - Docker for container-based database checks
 
 ## Setup
 
+The root `composer.json` resolves Packman and AzGuard from sibling checkouts
+(`../packman`, `../azguard`), at the versions CI pins in `scripts/ci/checkout-ecosystem.sh`.
+That script creates both siblings next to the repository:
+
 ```bash
-git clone https://github.com/axioma-studio/vaulter.git
+git clone https://github.com/axiomasoft/vaulter.git
 cd vaulter
-composer install     # path-linked packages under packages/*
-npm install          # the Vue workspace and docs
+scripts/ci/checkout-ecosystem.sh   # ../packman at the pinned tag, ../azguard at the pinned commit
+composer install                   # path-linked packages under packages/*
+npm ci                             # the Vue workspace and docs
 ```
+
+The script also registers the two siblings as global Composer repositories (so a split
+package can be installed on its own); remove them with
+`composer config --global --unset repositories.packman` (and `.azguard`) if you do not want that.
 
 ## Development workflow (PHP)
 

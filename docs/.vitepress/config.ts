@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress'
 
-const repo = 'https://github.com/axioma-studio/vaulter'
+const repo = 'https://github.com/axiomasoft/vaulter'
 
 // ---------------------------------------------------------------------------
 // Guide sidebar
