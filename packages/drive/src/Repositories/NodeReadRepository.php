@@ -18,6 +18,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Configuration\DriveOptions;
 use Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -666,8 +667,11 @@ final class NodeReadRepository
     public function candidateNodeIds(Authorizable $actor): array
     {
         $driveModel = $this->vaulterConfig->model('drive');
-        $anchors = [];
         $openIds = [];
+        // Grant-authoritative drives whose driver expands the actor into the same subjects share one grant read: the
+        // subject index is not drive-bound, so reading it per drive loaded every grant of the actor once per drive.
+        /** @var array<string, array{subjects: list<Subject>, drives: array<string, true>}> $groups */
+        $groups = [];
         foreach (app(TenancyBoundary::class)->constrain($driveModel::query())->cursor() as $drive) {
             $driver = $this->drivers->forProfile($drive->profile);
             if (!$this->profilePolicy->featureEnabledForKey($drive->profile, 'grants')
@@ -683,12 +687,33 @@ final class NodeReadRepository
                 continue;
             }
             $subjects = $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive));
-            $rows = $this->grants->allowAnchorsFor(subjects: $subjects, now: Carbon::now());
-            $nodeIds = [];
-            foreach (array_chunk($rows->pluck('node_id')->all(), 500) as $chunk) {
-                array_push($nodeIds, ...$this->query()->where('drive_id', $drive->id)->whereKey($chunk)->pluck('id')->all());
+            if ($subjects === []) {
+                continue;
             }
-            $keys = array_fill_keys(array_map(Identity::stringify(...), $nodeIds), true);
+            $signatures = array_map(static fn (Subject $subject): string => $subject->signature(), $subjects);
+            sort($signatures);
+            $key = implode("\n", $signatures);
+            $groups[$key] ??= ['subjects' => $subjects, 'drives' => []];
+            $groups[$key]['drives'][(string) $drive->id] = true;
+        }
+
+        $anchors = [];
+        $now = Carbon::now();
+        foreach ($groups as $group) {
+            $rows = $this->grants->allowAnchorsFor(subjects: $group['subjects'], now: $now);
+            $keys = [];
+            foreach (array_chunk(array_values(array_unique(array_map(Identity::stringify(...), $rows->pluck('node_id')->all()))), 500) as $chunk) {
+                foreach ($this->query()->whereKey($chunk)->toBase()->get(['id', 'drive_id']) as $node) {
+                    $id = $node->id ?? null;
+                    $driveId = $node->drive_id ?? null;
+                    if ((!is_int($id) && !is_string($id)) || (!is_int($driveId) && !is_string($driveId))) {
+                        throw new LogicException('Invalid candidate node identity.');
+                    }
+                    if (isset($group['drives'][(string) $driveId])) {
+                        $keys[Identity::stringify($id)] = true;
+                    }
+                }
+            }
             foreach ($rows as $row) {
                 if (isset($keys[Identity::stringify($row->node_id)])) {
                     $anchors[] = $row;

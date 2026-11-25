@@ -344,7 +344,10 @@ final class AccessResolver
      */
     public function sharedNodeIds(Authorizable $actor): array
     {
-        $ids = [];
+        // Drives whose driver expands the actor into the same subjects share one grant read: the subject index is
+        // not drive-bound, so reading it per drive repeated the same query (and a node lookup) for every drive.
+        /** @var array<string, array{subjects: list<Subject>, drives: array<string, true>}> $groups */
+        $groups = [];
         $driveModel = $this->vaulterConfig->model('drive');
         $nodeModel = $this->vaulterConfig->model('node');
         foreach ($this->boundary->constrain($driveModel::query())->cursor() as $drive) {
@@ -353,13 +356,30 @@ final class AccessResolver
             }
             $driver = $this->drivers->forProfile($drive->profile);
             $subjects = $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive));
-            $candidates = $this->grants->nodeIdsSharedWith(subjects: $subjects, now: Carbon::now());
+            if ($subjects === []) {
+                continue;
+            }
+            $signatures = array_map(static fn (Subject $subject): string => $subject->signature(), $subjects);
+            sort($signatures);
+            $key = implode("\n", $signatures);
+            $groups[$key] ??= ['subjects' => $subjects, 'drives' => []];
+            $groups[$key]['drives'][(string) $drive->id] = true;
+        }
+
+        $ids = [];
+        $now = Carbon::now();
+        foreach ($groups as $group) {
+            $candidates = $this->grants->nodeIdsSharedWith(subjects: $group['subjects'], now: $now);
             foreach (array_chunk($candidates, 500) as $chunk) {
-                foreach ($nodeModel::query()->where('drive_id', $drive->id)->whereKey($chunk)->pluck('id') as $id) {
-                    if (!is_int($id) && !is_string($id)) {
+                foreach ($nodeModel::query()->whereKey($chunk)->toBase()->get(['id', 'drive_id']) as $row) {
+                    $id = $row->id ?? null;
+                    $driveId = $row->drive_id ?? null;
+                    if ((!is_int($id) && !is_string($id)) || (!is_int($driveId) && !is_string($driveId))) {
                         throw new LogicException('Invalid shared node identity.');
                     }
-                    $ids[] = $id;
+                    if (isset($group['drives'][(string) $driveId])) {
+                        $ids[] = $id;
+                    }
                 }
             }
         }

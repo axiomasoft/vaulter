@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
@@ -48,4 +52,54 @@ it('excludes a candidate cut off by an inheritance boundary on re-resolution', f
 
     expect($visibleIds)->toContain($parent->id)
         ->and($visibleIds)->not->toContain($child->id);
+});
+
+it('reads the subject index once for drives that expand the actor alike', function (): void {
+    $granted = [];
+    foreach (range(1, 6) as $i) {
+        $storage = AccessTestHelpers::storage();
+        $node = AccessTestHelpers::folder($storage, null, 'shared-'.$i);
+        AccessTestHelpers::folder($storage, null, 'private-'.$i);
+        AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item);
+        $granted[] = $node->id;
+    }
+    $grants = (new NodeGrant)->getTable();
+    $reads = 0;
+    DB::listen(static function (QueryExecuted $query) use ($grants, &$reads): void {
+        if (str_contains($query->sql, $grants)) {
+            $reads++;
+        }
+    });
+
+    $ids = app(AccessResolver::class)->sharedNodeIds(AccessTestHelpers::user());
+
+    sort($ids);
+    sort($granted);
+    expect($ids)->toBe($granted)
+        ->and($reads)->toBe(1);
+});
+
+it('reads the grants once for the candidate ids of drives that expand the actor alike', function (): void {
+    $expected = [];
+    foreach (range(1, 6) as $i) {
+        $storage = AccessTestHelpers::storage();
+        $node = AccessTestHelpers::folder($storage, null, 'shared-'.$i);
+        AccessTestHelpers::folder($storage, null, 'private-'.$i);
+        AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item);
+        $expected[] = $node->id;
+    }
+    $grants = (new NodeGrant)->getTable();
+    $reads = 0;
+    DB::listen(static function (QueryExecuted $query) use ($grants, &$reads): void {
+        if (str_contains($query->sql, $grants)) {
+            $reads++;
+        }
+    });
+
+    $ids = app(NodeReadRepository::class)->candidateNodeIds(AccessTestHelpers::user());
+
+    sort($ids);
+    sort($expected);
+    expect($ids)->toBe($expected)
+        ->and($reads)->toBe(1);
 });
