@@ -58,6 +58,14 @@ problem, the change, why it is worth doing, a rough cost, and a priority:
 | [H2](#h2-the-same-gitignore-agent-block-everywhere) | The same `.gitignore` agent block everywhere | P2 | S |
 | [X2](#x2-editor-pro-the-overlap-detector-is-a-stateful-singleton-nobody-shares) | editor-pro: the overlap detector is a stateful singleton | P2 | S |
 | [S4](#s4-the-unused-blob-encryption-column-implement-or-drop) | The unused blob encryption column: implement or drop | P2 | S / L |
+| [Q1](#q1-a-sorted-index-and-a-seekable-cursor-for-folder-listings) | A sorted index and a seekable cursor for folder listings | P1 | S |
+| [Q2](#q2-seekable-keyset-cursors-everywhere) | Seekable keyset cursors everywhere | P1 | S |
+| [Q4](#q4-drop-indexes-that-duplicate-a-key-prefix) | Drop indexes that duplicate a key prefix | P1 | S |
+| [V1](#v1-realtime-identity-from-the-token-not-the-client) | Realtime identity from the token, not the client | P1 | S |
+| [V2](#v2-a-per-peer-intent-budget-in-sheets-realtime) | A per-peer intent budget in sheets realtime | P1 | S |
+| [Q3](#q3-indexed-substring-search-on-names) | Indexed substring search on names | P2 | S (a deployment decision) |
+| [Q5](#q5-sheets-export-replay-without-hashing-the-source-blob) | sheets: export replay without hashing the source blob | P2 | S |
+| [V3](#v3-share-passwords-out-of-query-strings) | Share passwords out of query strings | P2 | S (an owner decision) |
 
 Cost: **S** is up to a day, **M** a few days, **L** more than a week.
 
@@ -651,6 +659,116 @@ Resolved on the satellite branches since the review, kept here for the record:
   does: an expired token closes the connection with code 4001 so the client reconnects with a fresh
   one, and each peer is re-checked with its own token at least once a minute (`revalidateMs`), so a
   revoked grant closes only that peer (vaulter-sheets `c23f1ab`, `eeb23d5`, docs `5f3b934`).
+
+## Performance and security
+
+Found by the measured performance and security pass of 2026-11-25 (PostgreSQL 18, a drive with
+512k nodes and 1M activity rows) and by the same pass over collaboration and sheets. What could be
+fixed on `refactor/polish` without touching in-flight files has landed; these items remain.
+
+### Q1. A sorted index and a seekable cursor for folder listings
+
+**Problem.** A folder listing orders by `name, id` but the only index is `(drive_id, parent_id)`,
+so every page sorts all live children: 5.5 ms per page at the default 10k-child cap, 44 ms at 200k.
+An index alone is not enough: `ExactListing` pages with `name > ? OR (name = ? AND id > ?)`, which
+the planner cannot seek, so with the index a deep page gets slower (91 ms) instead of faster.
+
+**Proposal.** Add `(parent_id, name, id) WHERE trashed_at IS NULL` (a plain composite on MySQL) and
+give `ExactListing` the leading bound of Q2 (`name >= ?` before the tie-breaker). With both, the
+first page is 0.2 ms and deep pages cost the same. Waiting on the schema series: `DriveSchema` and
+the schema expectation fixtures are being changed by H-01.
+
+**Priority.** P1. **Cost.** S.
+
+### Q2. Seekable keyset cursors everywhere
+
+**Problem.** The family writes keyset cursors as `a < ? OR (a = ? AND b < ?)`. PostgreSQL cannot
+start an index scan from that predicate, so it walks the index from the first row and filters: the
+activity feed spent 142.8 ms on a deep page of 1M rows, its first page 0.08 ms. The same shape is in
+`ExactListing` (base) and `LogTables::scan` (collaboration, the compaction lease scans).
+
+**Proposal.** One rule, ideally one builder helper in the base: put a leading bound on the first sort
+column (`a <= ?`) in front of the tie-breaker. It is portable and needs no raw SQL. A row-value
+comparison `(a, b) < (?, ?)` seeks too on PostgreSQL, SQLite and MySQL 8, but MariaDB optimises it
+less reliably, so the leading bound is the safer default. On MySQL and MariaDB the compaction scans
+also have no partial indexes and walk the primary key; a plain index on the filter column (or a
+generated column that is non-null only for candidate rows) is the substitute there. Done for the
+activity feed (base `5e95eb1f`: 142.8 ms to 0.076 ms).
+
+**Priority.** P1. **Cost.** S.
+
+### Q3. Indexed substring search on names
+
+**Problem.** Name search is `lower(name) LIKE '%term%'`, a sequential scan of the whole nodes table:
+67 ms at 500k rows, linear in the drive size.
+
+**Proposal.** On PostgreSQL a `pg_trgm` GIN index on `lower(name)`, behind a capability check
+because the extension needs a superuser or a managed-database setting; MySQL keeps the scan or uses
+a FULLTEXT index with prefix semantics. This is a deployment decision as much as a code change.
+
+**Priority.** P2. **Cost.** S.
+
+### Q4. Drop indexes that duplicate a key prefix
+
+**Problem.** A B-tree whose columns are a prefix of another index only costs writes. Found:
+`v_drive_changes (drive_id)` next to `(drive_id, node_id)` and `(drive_id, seq)`; `v_files` indexes
+`node_id` twice; `v_drive_change_heads` indexes `drive_id` twice; `v_file_revisions (file_id)` is
+covered; `v_document_revisions (document_id)` is covered by `(document_id, number)`. The four
+document payload and sync-state tables also index their primary-key column a second time: the
+schema meant to skip it with `index(false)`, but Laravel creates a fluent index for `false` on a new
+column, so the line has no effect. In collaboration the heads, updates and receipts logs index
+`document_id`, which leads their primary keys; there the copy tripled the cost of 200k inserts
+(3575 ms against 1168 ms).
+
+**Proposal.** `IdStrategy::reference()` now takes `index: false` (base `587a8f22`). Use it for
+each column above and drop the duplicates in the same migration as Q1, regenerating the schema
+expectation fixtures once.
+
+**Priority.** P1. **Cost.** S.
+
+### Q5. sheets: export replay without hashing the source blob
+
+**Problem.** Replaying an export recomputes the hash of the full source blob to decide whether the
+cached result is still valid, so a replay costs a full read of the workbook.
+
+**Proposal.** Store the source SHA-256 next to the export when it is produced and compare that
+column instead of re-reading the blob.
+
+**Priority.** P2. **Cost.** S.
+
+### V1. Realtime identity from the token, not the client
+
+**Problem.** Collaboration awareness and sheets presence take the user's name and id from what the
+client sends, so a peer can show itself to others as someone else.
+
+**Proposal.** The server fills identity fields from the verified token claims and drops or
+overwrites client-sent ones; a test sends a forged identity and asserts the other peers see the
+token's.
+
+**Priority.** P1. **Cost.** S.
+
+### V2. A per-peer intent budget in sheets realtime
+
+**Problem.** Sheets realtime has no per-peer limit on intents, so one peer can fill the room's
+queue and starve the others.
+
+**Proposal.** A token bucket per peer, with a close code once it is exceeded, configured like the
+collaboration hub's limits; a test floods from one peer and asserts another peer's intents still
+apply.
+
+**Priority.** P1. **Cost.** S.
+
+### V3. Share passwords out of query strings
+
+**Problem.** `ResolveShareToken` accepts the share password from a `password` query parameter on
+GET routes, which puts it in access logs, proxy logs and browser history. It probably exists so a
+plain `<a>` link can download a password-protected share.
+
+**Proposal.** Exchange the password once (POST) for a short-lived, share-scoped cookie or signed
+token and drop the query fallback, or keep it behind an explicit option documented as logging the
+secret.
+
+**Priority.** P2. **Cost.** S (an owner decision).
 
 ## Merge order notes
 
