@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Contracts\IdStrategy;
 use Vaulter\Models\Casts\IntegerKey;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
@@ -82,3 +83,17 @@ it('emits uuid keys, string cast, HasUuids concern and a uuid7 for uuid7', funct
         ->and($strategy->newId())->toBeString()
         ->and($strategy->newId())->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/');
 });
+
+it('indexes a reference by default and leaves it bare when the caller opts out', function (IdStrategy $strategy): void {
+    $indexed = columnFor(fn (Blueprint $t) => $strategy->reference($t, 'document_id'));
+    $bare = columnFor(fn (Blueprint $t) => $strategy->reference($t, 'document_id', index: false));
+
+    // A column already leading the primary key needs no index of its own; Blueprint only skips
+    // the fluent index when the attribute is absent, since a false value still creates one.
+    expect($indexed->get('index'))->toBeTrue()
+        ->and($bare->getAttributes())->not->toHaveKey('index');
+})->with([
+    'bigint' => fn (): IdStrategy => new AutoIncrementIds,
+    'ulid' => fn (): IdStrategy => new UlidIds,
+    'uuid7' => fn (): IdStrategy => new Uuid7Ids,
+]);

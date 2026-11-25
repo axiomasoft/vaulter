@@ -28,8 +28,11 @@ interface IdStrategy
     /**
      * Define a foreign reference to another Vaulter entity (same key type).
      * The explicit ->foreign()->cascadeOnDelete() is added by the migration.
+     *
+     * The column gets its own index unless $index is false, which is for a column
+     * already leading the primary key or another index: a second copy only slows writes.
      */
-    public function reference(Blueprint $table, string $column, bool $nullable = false): void;
+    public function reference(Blueprint $table, string $column, bool $nullable = false, bool $index = true): void;
 
     /**
      * Define a reference to an actor (host user id) — no DB-level FK, because

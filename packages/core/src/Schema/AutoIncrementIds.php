@@ -22,9 +22,13 @@ final class AutoIncrementIds implements IdStrategy
         $table->bigIncrements(column: $column);
     }
 
-    public function reference(Blueprint $table, string $column, bool $nullable = false): void
+    public function reference(Blueprint $table, string $column, bool $nullable = false, bool $index = true): void
     {
-        $table->unsignedBigInteger(column: $column)->nullable(value: $nullable)->index();
+        $definition = $table->unsignedBigInteger(column: $column)->nullable(value: $nullable);
+
+        if ($index) {
+            $definition->index();
+        }
     }
 
     public function actor(Blueprint $table, string $column, bool $nullable = false): void

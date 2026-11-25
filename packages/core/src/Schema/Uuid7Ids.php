@@ -28,9 +28,13 @@ final class Uuid7Ids implements IdStrategy
         $table->primary($column);
     }
 
-    public function reference(Blueprint $table, string $column, bool $nullable = false): void
+    public function reference(Blueprint $table, string $column, bool $nullable = false, bool $index = true): void
     {
-        $table->uuid(column: $column)->nullable(value: $nullable)->index();
+        $definition = $table->uuid(column: $column)->nullable(value: $nullable);
+
+        if ($index) {
+            $definition->index();
+        }
     }
 
     public function actor(Blueprint $table, string $column, bool $nullable = false): void
