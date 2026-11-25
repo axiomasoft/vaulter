@@ -63,7 +63,7 @@ it('V19 two complete calls commit one node revision edge quota update and event'
     expect((string) $replay->id)->toBe((string) $session->result_node_id)->and(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-CLEANUP-commit-kill surviving independent worker discovers durable cleanup after commit', function (): void {
+it('surviving independent worker discovers durable cleanup after commit', function (): void {
     $session = completeRaceSession();
     $barrier = tempnam(sys_get_temp_dir(), 'vaulter-cleanup-crash-');
     unlink($barrier);
@@ -119,7 +119,7 @@ it('SEC-CLEANUP-commit-kill surviving independent worker discovers durable clean
     }
 });
 
-it('SEC-CLEANUP-mutex holds the session lock through the outer commit against abort and sweep', function (): void {
+it('holds the session lock through the outer commit against abort and sweep', function (): void {
     $session = completeRaceSession();
     $barrier = tempnam(sys_get_temp_dir(), 'vaulter-cleanup-lock-');
     unlink($barrier);

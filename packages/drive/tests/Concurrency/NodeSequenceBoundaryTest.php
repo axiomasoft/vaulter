@@ -122,7 +122,7 @@ it('preserves the original expectation after serialization retry', function (): 
         ->and(DriveTestHelpers::model($node)->name)->toBe('original');
 });
 
-it('SEC-REV-RECEIPT returns its own committed revision when a later writer changes the head before return', function (): void {
+it('returns its own committed revision when a later writer changes the head before return', function (): void {
     $handle = Vaulter::drive(DriveTestHelpers::host())->asSystem('revision receipt fixture');
     $node = $handle->files()->upload(UploadSource::fromString('initial', 'receipt.txt'));
     $fileId = $node->id;
@@ -149,7 +149,7 @@ it('SEC-REV-RECEIPT returns its own committed revision when a later writer chang
         ->and(FileRevision::query()->count())->toBe(3);
 });
 
-it('SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two revisions from nonseekable sources', function (): void {
+it('turns two locked same-name uploads into one node and two revisions from nonseekable sources', function (): void {
     $owner = DriveTestHelpers::host();
     $handle = Vaulter::drive($owner)->asSystem('AddRevision race fixture');
     $handle->model()->forceFill(['quota_bytes' => 6])->save(); // both revisions are retained and counted

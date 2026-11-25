@@ -60,7 +60,7 @@ function serializationRetryUnit(Drive $drive, Connection $peer, int $conflicts):
     return ['result' => $result, 'attempts' => $attempts, 'caught' => $caught];
 }
 
-it('SEC-F01-40001 retries a real serialization failure once the unit has rolled back', function (): void {
+it('retries a real serialization failure (SQLSTATE 40001) once the unit has rolled back', function (): void {
     $drive = UploadTestHelpers::storage();
 
     $run = serializationRetryUnit($drive, DB::connection('retry_peer'), conflicts: 1);
@@ -70,7 +70,7 @@ it('SEC-F01-40001 retries a real serialization failure once the unit has rolled 
         ->and($drive->newQuery()->whereKey($drive->getKey())->value('name'))->toBe('unit 2');
 });
 
-it('SEC-F01-40001-exhausted gives up after three attempts with a retryable problem and no partial write', function (): void {
+it('gives up on a serialization failure after three attempts with a retryable problem and no partial write', function (): void {
     $drive = UploadTestHelpers::storage();
 
     $run = serializationRetryUnit($drive, DB::connection('retry_peer'), conflicts: 99);
@@ -82,7 +82,7 @@ it('SEC-F01-40001-exhausted gives up after three attempts with a retryable probl
         ->and($drive->newQuery()->whereKey($drive->getKey())->value('name'))->toBe('peer 3');
 });
 
-it('SEC-F01-40P01 retries the real deadlock victim while the other transaction commits', function (): void {
+it('retries the real deadlock victim (SQLSTATE 40P01) while the other transaction commits', function (): void {
     $first = UploadTestHelpers::storage();
     $second = UploadTestHelpers::storage();
     $ids = [$first->getKey(), $second->getKey()];

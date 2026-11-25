@@ -364,7 +364,7 @@ it('read blocks legacy infection and uncommitted content after Download authoriz
     expect(fn () => $this->actor->files()->read($file, $revision))->toThrow(NodeNotFoundException::class);
 })->with(['infected']);
 
-it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extra node, charging the revision in full', function (string $stored, string $incoming): void {
+it('appends to the normalized case-insensitive sibling with no extra node, charging the revision in full', function (string $stored, string $incoming): void {
     $node = $this->system->files()->upload(UploadSource::fromString('old', $stored));
     // Both revisions are retained, so both count.
     app(VaulterDatabase::class)->write(fn () => $this->system->model()->forceFill(['quota_bytes' => 6])->save());
@@ -377,7 +377,7 @@ it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extr
         ->and($this->system->model()->used_bytes)->toBe(6);
 })->with([['Report.txt', 'report.TXT'], ['Résumé.txt', "Re\u{0301}sume\u{0301}.txt"], ['résumé.txt', 'RÉSUMÉ.txt']]);
 
-it('SEC-CONFLICT requires Edit on the actual case-insensitive revision target outside the transaction', function (): void {
+it('requires Edit on the actual case-insensitive revision target outside the transaction', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('old', 'Report.txt'));
     operationMatrixGrant($this->system, $this->system->root(), $this->user, RoleRegistry::WRITER);
     operationMatrixGrant($this->system, $node, $this->user, RoleRegistry::COMMENTER);
@@ -387,7 +387,7 @@ it('SEC-CONFLICT requires Edit on the actual case-insensitive revision target ou
     expect(operationMatrixState())->toBe($before);
 });
 
-it('SEC-CONFLICT keeps a folder sibling as an upload conflict without side effects', function (): void {
+it('keeps a folder sibling as an upload conflict without side effects', function (): void {
     $this->system->folders()->create('Report.txt');
     $before = operationMatrixState();
     expect(fn () => $this->system->files()->upload(UploadSource::fromString('new', 'report.TXT'), new UploadOptions(onConflict: OnNameConflict::AddRevision)))
@@ -395,7 +395,7 @@ it('SEC-CONFLICT keeps a folder sibling as an upload conflict without side effec
     expect(operationMatrixState())->toBe($before);
 });
 
-it('SEC-CONFLICT answers 404 about the requested name for a hidden sibling, file or folder', function (string $kind): void {
+it('answers 404 about the requested name for a hidden sibling, file or folder', function (string $kind): void {
     $hidden = $kind === 'file'
         ? $this->system->files()->upload(UploadSource::fromString('old', 'Report.txt'))
         : $this->system->folders()->create('Report.txt');
@@ -412,7 +412,7 @@ it('SEC-CONFLICT answers 404 about the requested name for a hidden sibling, file
     expect(operationMatrixState())->toBe($before);
 })->with(['file', 'folder']);
 
-it('SEC-CURSOR rejects a file list cursor for a different kind filter', function (): void {
+it('rejects a file list cursor for a different kind filter', function (): void {
     $this->system->folders()->create('a-folder');
     $this->system->files()->upload(UploadSource::fromString('x', 'z-file.txt'));
     $page = $this->system->nodes()->children($this->system->root(), new ListOptions(perPage: 1, kinds: [NodeKind::File]));

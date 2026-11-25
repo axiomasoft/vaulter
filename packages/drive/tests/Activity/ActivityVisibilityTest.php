@@ -101,7 +101,7 @@ it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages',
     expect($this->operation->forDrive(new ListOptions(cursor: $cursor->encode()))->items)->toBe([]);
 });
 
-it('SEC-I7-projection withholds request fingerprint and access details from a reader without Share', function (): void {
+it('withholds request fingerprint and access details from a reader without Share', function (): void {
     $readOnly = AccessTestHelpers::folder($this->drive, null, 'read only');
     $managed = AccessTestHelpers::folder($this->drive, null, 'managed');
     AccessTestHelpers::grant($readOnly, RoleRegistry::READER);

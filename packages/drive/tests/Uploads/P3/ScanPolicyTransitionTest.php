@@ -35,7 +35,7 @@ use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 
-it('SEC-POLICY rejects enabled unactivated drives without allocating admission', function (): void {
+it('rejects enabled unactivated drives without allocating admission', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -49,7 +49,7 @@ it('SEC-POLICY rejects enabled unactivated drives without allocating admission',
     }
 });
 
-it('SEC-POLICY preserves first new content boundary across reactivation and off', function (): void {
+it('preserves first new content boundary across reactivation and off', function (): void {
     $drive = UploadTestHelpers::storage();
     app(VaulterDatabase::class)->write(fn () => $drive->forceFill(['scan_admission_sequence' => 7])->save());
     config()->set('vaulter-drive.scan.mode', 'new_content_only');
@@ -116,7 +116,7 @@ it('forged timestamps cannot exempt a new admission and failures remain unavaila
         ->toThrow(ContentUnavailableException::class);
 });
 
-it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independently', function (): void {
+it('evaluates global and profile eligibility independently', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'new_content_only');
@@ -169,7 +169,7 @@ it('trash restoration preserves admission while current scan policy blocks bytes
         ->toThrow(ContentUnavailableException::class);
 });
 
-it('SEC-POLICY missing scanner and conflicting required aliases fail scanner boot validation', function (): void {
+it('missing scanner and conflicting required aliases fail scanner boot validation', function (): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     expect(fn () => (new BindingsRegistrar)->register(app()))
         ->toThrow(InvalidConfigurationException::class);
@@ -180,21 +180,21 @@ it('SEC-POLICY missing scanner and conflicting required aliases fail scanner boo
         ->toThrow(InvalidConfiguration::class);
 });
 
-it('SEC-POLICY rejects sync null or missing broker retry time with a configured scanner', function (string $driver, ?int $retry): void {
+it('rejects sync null or missing broker retry time with a configured scanner', function (string $driver, ?int $retry): void {
     config()->set('queue.default', 'scanner');
     config()->set('queue.connections.scanner', ['driver' => $driver, 'retry_after' => $retry]);
     expect(fn () => app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class), requireBroker: true))
         ->toThrow(InvalidConfigurationException::class);
 })->with(['sync' => ['sync', 180], 'null' => ['null', 180], 'missing visibility' => ['database', null], 'short visibility' => ['database', 120]]);
 
-it('SEC-POLICY permits asynchronous scanner work only with actual ordered broker settings', function (): void {
+it('permits asynchronous scanner work only with actual ordered broker settings', function (): void {
     config()->set('queue.default', 'database');
     config()->set('queue.connections.database.retry_after', 180);
     app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class), requireBroker: true);
     expect(config('queue.connections.database.driver'))->toBe('database');
 });
 
-it('SEC-POLICY off without a scanner leaves unrelated broker timing unrestricted', function (): void {
+it('off without a scanner leaves unrelated broker timing unrestricted', function (): void {
     config()->set('queue.default', 'database');
     config()->set('queue.connections.database.retry_after', 90);
     app(DriveOptionsValidator::class)->validateScanWork(app(DriveOptions::class));

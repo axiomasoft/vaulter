@@ -54,7 +54,7 @@ it('replays persisted exact revision after a newer head and without staging', fu
         ->and(app(StagedUpload::class)->size($session))->toBe(0);
 });
 
-it('SEC-CLEANUP-input-fingerprint rejects changed completion intent and corrupt authoritative pointers without ingest', function (): void {
+it('rejects changed completion intent and corrupt authoritative pointers without ingest', function (): void {
     $session = assembledIdempotencyUpload();
     $context = DriveContext::system($session->storage, 'upload test');
     app(CompleteUploadAction::class)->execute(context: $context, session: $session);
@@ -80,7 +80,7 @@ it('keeps protocol bytes until outer commit and retains them after outer rollbac
     expect(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-CLEANUP-success-before-flag-clear treats missing committed staging as idempotent recovery and never creates another revision', function (): void {
+it('treats missing committed staging as idempotent recovery and never creates another revision', function (): void {
     $session = assembledIdempotencyUpload();
     app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'upload test'), session: $session);
     $session->refresh()->forceFill(['cleanup_pending' => true, 'cleanup_available_at' => now()])->save();
@@ -89,7 +89,7 @@ it('SEC-CLEANUP-success-before-flag-clear treats missing committed staging as id
         ->and(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-CLEANUP-delete-failure keeps failed postcommit deletion recoverable while completion remains successful', function (): void {
+it('keeps failed postcommit deletion recoverable while completion remains successful', function (): void {
     $session = assembledIdempotencyUpload();
     $disk = Storage::disk('local');
     $proxy = Mockery::mock($disk);
@@ -104,7 +104,7 @@ it('SEC-CLEANUP-delete-failure keeps failed postcommit deletion recoverable whil
         ->and(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-CLEANUP-sniff-throw closes the acquired protocol reader and its own preparation', function (): void {
+it('closes the acquired protocol reader and its own preparation', function (): void {
     $session = assembledIdempotencyUpload();
     $disk = Storage::disk('local');
     $reader = $disk->readStream(app(StagedUpload::class)->keyFor($session));
@@ -133,7 +133,7 @@ it('backfills only provable legacy revision pointers and never guesses the newer
         ->and($session->result_blob_id)->toBe($session->assembled_blob_id)->and(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-CLEANUP-revoked-result requires fresh View and rejects another actor and foreign drive', function (): void {
+it('requires fresh View and rejects another actor and foreign drive', function (): void {
     $session = assembledIdempotencyUpload();
     $user = AccessTestHelpers::user(991);
     $session->forceFill(['created_by' => $user->getKey(), 'metadata' => ['actor_type' => $user->getMorphClass()]])->save();
@@ -151,7 +151,7 @@ it('SEC-CLEANUP-revoked-result requires fresh View and rejects another actor and
     expect(FileRevision::query()->count())->toBe(1);
 });
 
-it('SEC-CLEANUP-backoff follows the bounded retry schedule without re-ingest', function (): void {
+it('follows the bounded retry schedule without re-ingest', function (): void {
     $this->freezeTime();
     $session = assembledIdempotencyUpload();
     $disk = Storage::disk('local');
@@ -181,7 +181,7 @@ it('SEC-CLEANUP-backoff follows the bounded retry schedule without re-ingest', f
     }
 });
 
-it('SEC-C03-replay-ability replays a committed completion only while the actor still holds the mutation right', function (): void {
+it('replays a committed completion only while the actor still holds the mutation right', function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'database');
     $session = assembledIdempotencyUpload();
     $user = AccessTestHelpers::user(993);

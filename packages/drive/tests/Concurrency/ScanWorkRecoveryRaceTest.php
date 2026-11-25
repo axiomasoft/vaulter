@@ -137,7 +137,7 @@ it('killed lease owner is fenced while a surviving process recovers', function (
         ->and($row->refresh()->attempt)->toBe(2)->and($row->outcome)->toBe('clean');
 });
 
-it('SEC-POLICY-activation-race captures an admitted writer before exclusive activation', function (): void {
+it('captures an admitted writer before exclusive activation', function (): void {
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);

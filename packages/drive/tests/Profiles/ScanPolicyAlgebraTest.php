@@ -13,7 +13,7 @@ use Vaulter\Drive\Profiles\UploadPolicy;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Enums\Cas\ScanMode;
 
-it('SEC-CONFIG-alias normalizes null defaults and required=true to all_content', function (): void {
+it('normalizes null defaults and required=true to all_content', function (): void {
     expect(DriveOptions::fromArray((array) config('vaulter-drive', []))->scan->mode)->toBe(ScanMode::Off);
     config()->set('vaulter-drive.uploads.scan.required', true);
     expect(DriveOptions::fromArray((array) config('vaulter-drive', []))->scan->mode)->toBe(ScanMode::AllContent);
@@ -23,7 +23,7 @@ it('SEC-CONFIG-alias normalizes null defaults and required=true to all_content',
     expect(fn (): DriveOptions => DriveOptions::fromArray((array) config('vaulter-drive', [])))->toThrow(InvalidConfiguration::class);
 });
 
-it('SEC-CONFIG-alias refuses explicit unequal canonical and alias values', function (string $key, mixed $canonical, mixed $alias): void {
+it('refuses explicit unequal canonical and alias values', function (string $key, mixed $canonical, mixed $alias): void {
     config()->set('vaulter-drive.scan.'.$key, $canonical);
     config()->set('vaulter-drive.uploads.scan.'.$key, $alias);
     DriveOptions::fromArray((array) config('vaulter-drive', []));
@@ -32,7 +32,7 @@ it('SEC-CONFIG-alias refuses explicit unequal canonical and alias values', funct
     ['scanner_key', 'a', 'b'], ['scanner_version', '1', '2'], ['policy_version', '1', '2'], ['rollout_key', 'a', 'b'],
 ])->throws(InvalidConfiguration::class, 'Conflicting');
 
-it('SEC-CONFIG-alias permits false with explicit all_content and equal duplicate identifiers', function (): void {
+it('permits false with explicit all_content and equal duplicate identifiers', function (): void {
     config()->set('vaulter-drive.scan', ['mode' => 'all_content', 'required' => false, 'policy_version' => '2']);
     config()->set('vaulter-drive.uploads.scan', ['mode' => 'all_content', 'required' => false, 'policy_version' => '2']);
     $options = DriveOptions::fromArray((array) config('vaulter-drive', []));
@@ -40,7 +40,7 @@ it('SEC-CONFIG-alias permits false with explicit all_content and equal duplicate
         ->and($options->scan->globalSpec()->policyVersion)->toBe('2');
 });
 
-it('SEC-POLICY-two-boundaries retains independent predicates rather than max(mode)', function (): void {
+it('retains independent predicates rather than max(mode)', function (): void {
     $global = new ScanPolicySpec('global', ScanMode::NewContentOnly, 'scanner', '1', '1', 'g');
     $profile = new ScanPolicySpec('profile:p', ScanMode::NewContentOnly, 'scanner', '1', '2', 'p');
     expect($global->requiresScan(15, 20))->toBeFalse()->and($profile->requiresScan(15, 12))->toBeTrue()
@@ -48,7 +48,7 @@ it('SEC-POLICY-two-boundaries retains independent predicates rather than max(mod
     expect(fn (): bool => $global->requiresScan(0, null))->toThrow(InvalidConfigurationException::class, 'boundary');
 });
 
-it('SEC-POLICY-two-boundaries never subtracts global all_content through profile off', function (): void {
+it('never subtracts global all_content through profile off', function (): void {
     config()->set('vaulter-drive.scan.mode', 'all_content');
     app()->forgetInstance(DriveOptions::class);
     app()->forgetInstance(ScanOptions::class);

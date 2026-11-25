@@ -35,7 +35,7 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
-it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it', function (): void {
+it('materializes bounded durable activation work and checkpoints it', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
@@ -60,7 +60,7 @@ it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it
     expect($run::query()->first()->state)->toBe('completed');
 });
 
-it('SEC-RECOVERY-bounds rejects contradictory command scope and dry run creates no work', function (): void {
+it('rejects contradictory command scope and dry run creates no work', function (): void {
     $this->artisan('vaulter:scan:reconcile', ['--limit' => 0])->assertExitCode(2);
     $this->artisan('vaulter:scan:reconcile', ['--tenant' => 'a', '--all-tenants' => true])->assertExitCode(2);
     $this->artisan('vaulter:scan:rescan', ['--request-id' => 'not-a-uuid', '--dry-run' => true])->assertExitCode(2);
@@ -120,7 +120,7 @@ it('outer rollback removes admission work revision and queued publication', func
     Bus::assertNothingDispatched();
 });
 
-it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requires explicit rescan', function (): void {
+it('ledger deduplicates old requests and terminal exhaustion requires explicit rescan', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -152,7 +152,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     expect($next->state)->toBe('pending')->and($next->attempt)->toBe(0);
 });
 
-it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature changes', function (): void {
+it('signed cursors resume one revision and reject signature changes', function (): void {
     config()->set('queue.default', 'database');
     config()->set('queue.connections.database.retry_after', 180);
     Storage::fake('local');
@@ -198,7 +198,7 @@ it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature 
     expect($class::query()->count())->toBe(2);
 });
 
-it('SEC-BACKFILL new content preparation retains legacy work at same spec all content cutover', function (): void {
+it('new content preparation retains legacy work at same spec all content cutover', function (): void {
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
@@ -227,7 +227,7 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
         ->toThrow(ContentUnavailableException::class);
 });
 
-it('SEC-POLICY-superseded replacement activation terminates old work while configuration mismatch stalls', function (): void {
+it('replacement activation terminates old work while configuration mismatch stalls', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -251,7 +251,7 @@ it('SEC-POLICY-superseded replacement activation terminates old work while confi
     expect($node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->count())->toBe(2);
 });
 
-it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publication', function (): void {
+it('optional off rescan rejects sync before SQL or publication', function (): void {
     Bus::fake();
     UploadTestHelpers::scanner(new class implements ContentScanner
     {
@@ -283,7 +283,7 @@ it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publicati
     Bus::assertNothingDispatched();
 });
 
-it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app timezone', function (string $timezone): void {
+it('selects due work and expired leases by UTC in either app timezone', function (string $timezone): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -323,7 +323,7 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
     }
 })->with(['ahead' => 'Europe/Moscow', 'behind' => 'America/New_York']);
 
-it('SEC-C03-db-clock decides which scan work is due regardless of application clock skew', function (): void {
+it('decides which scan work is due regardless of application clock skew', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -348,7 +348,7 @@ it('SEC-C03-db-clock decides which scan work is due regardless of application cl
     }
 });
 
-it('SEC-C03-db-clock-utc reports naive UTC whatever timezone the database session runs in', function (): void {
+it('reports naive UTC whatever timezone the database session runs in', function (): void {
     $connection = app(VaulterDatabase::class)->connection();
     $pgsql = $connection->getDriverName() === 'pgsql';
     if ($pgsql) {
@@ -367,7 +367,7 @@ it('SEC-C03-db-clock-utc reports naive UTC whatever timezone the database sessio
     }
 });
 
-it('SEC-C03-db-clock-live keeps advancing inside an open transaction', function (): void {
+it('keeps advancing inside an open transaction', function (): void {
     $work = app(ScanObligationRepository::class);
 
     app(VaulterDatabase::class)->transaction(function () use ($work): void {
@@ -379,7 +379,7 @@ it('SEC-C03-db-clock-live keeps advancing inside an open transaction', function 
     });
 });
 
-it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limit', function (): void {
+it('counts all still-due work whatever the batch limit', function (): void {
     Storage::fake('local');
     Bus::fake();
     config()->set('vaulter-drive.scan.mode', 'all_content');

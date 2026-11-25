@@ -12,7 +12,7 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 uses(TestCase::class);
 
-it('SEC-TENANT-IDENTITY keeps numeric and case-sensitive tenant identity on the actual database', function (): void {
+it('keeps numeric and case-sensitive tenant identity on the actual database', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     $resolver = new MutableTenantResolver;

@@ -207,7 +207,7 @@ it('scans shared candidates across storages without totals or blocked rows', fun
     expect($ids)->toContain((string) $visible->id)->not->toContain((string) $hidden->id);
 });
 
-it('SEC-CURSOR binds shared-list cursors to the current actor identity', function (): void {
+it('binds shared-list cursors to the current actor identity', function (): void {
     $a = AccessTestHelpers::folder($this->storage, $this->folder, 'z-shared-a');
     AccessTestHelpers::grant($a, RoleRegistry::READER);
     $other = AccessTestHelpers::storage();
