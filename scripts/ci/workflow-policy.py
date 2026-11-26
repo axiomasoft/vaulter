@@ -278,6 +278,30 @@ def check_consumer_isolation(name: str, job: dict) -> list[str]:
     return errors
 
 
+def check_e2e_documents(name: str, job: dict, needs_changes: bool = False) -> list[str]:
+    if not job:
+        return [f'{name}: no e2e-documents job']
+    errors: list[str] = []
+    if str(job.get('continue-on-error', 'false')).lower() != 'false':
+        errors.append(f'{name}: e2e-documents must block errors')
+    if needs_changes:
+        cond = str(job.get('if', ''))
+        if 'has_vue' not in cond or 'has_consumer' not in cond:
+            errors.append(f'{name}: e2e-documents must follow has_vue / has_consumer lane outputs')
+    engines = ((job.get('strategy') or {}).get('matrix') or {}).get('engine') or []
+    if set(engines) != {'sqlite', 'pgsql'}:
+        errors.append(f'{name}: e2e-documents matrix.engine must cover both sqlite and pgsql, got {engines!r}')
+    pg_service = (job.get('services') or {}).get('postgres')
+    if not isinstance(pg_service, dict) or 'postgres:18.7-alpine@sha256:' not in str(pg_service.get('image', '')):
+        errors.append(f'{name}: e2e-documents must pin postgres:18.7-alpine service for PostgreSQL 18.7 E2E')
+    run_steps = [step for step in job.get('steps') or [] if 'e2e/consumers/documents-basic/run.sh' in str(step.get('run', ''))]
+    if not run_steps or any(step.get('if') or str(step.get('continue-on-error', 'false')).lower() != 'false' for step in run_steps):
+        errors.append(f'{name}: e2e-documents must run e2e/consumers/documents-basic/run.sh unconditionally and block errors')
+    elif not any('PACKMAN_REF' in str(step.get('run', '')) and 'rev-parse' in str(step.get('run', '')) for step in run_steps):
+        errors.append(f'{name}: e2e-documents must pass resolved PACKMAN_REF from checked-out ../packman HEAD')
+    return errors
+
+
 def check_ci(doc: dict, root: Path) -> list[str]:
     name = 'ci.yml'
     errors: list[str] = []
@@ -300,6 +324,7 @@ def check_ci(doc: dict, root: Path) -> list[str]:
     errors += check_contract_bc(jobs.get('contract-bc') or {})
     errors += check_sca(jobs.get('sca') or {})
     errors += check_npm_declaration_job('vue', '@vaulter/vue', 'vue', jobs.get('vue') or {})
+    errors += check_e2e_documents(name, jobs.get('e2e-documents') or {}, needs_changes=True)
     for output in ('has_contract_bc', 'contract_bc_provisioned', 'contract_bc_required_lines', 'contract_bc_selected_lines'):
         if (jobs.get('changes', {}).get('outputs') or {}).get(output) != '${{ steps.plan.outputs.' + output + ' }}':
             errors.append(f'{name}: changes must expose {output} from the actual plan')
@@ -370,6 +395,10 @@ def check_npm_declaration_job(job_id: str, workspace: str, lane: str, job: dict)
         errors.append(f'{job_id}: declaration guard must not retain checkout credentials')
     if job_id == 'vue' and not any(step.get('run') == 'npm run api:check --workspace @vaulter/vue' for step in job.get('steps', [])):
         errors.append('vue: OpenAPI api:check must remain distinct from the declaration guard')
+    if job_id == 'vue':
+        budget_steps = [step for step in job.get('steps', []) if str(step.get('run', '')).strip() == 'npm run budget:check --workspace @vaulter/vue']
+        if len(budget_steps) != 1 or any('if' in step or str(step.get('continue-on-error', False)).lower() != 'false' for step in budget_steps):
+            errors.append('vue: bundle size budget check must run unconditionally and block errors')
     return errors
 
 
@@ -413,6 +442,19 @@ def check_weekly(doc: dict, root: Path) -> list[str]:
             errors.append(f'{name}: no step runs {needle} ({why})')
     if 'pcov' not in json.dumps(doc):
         errors.append(f'{name}: coverage must use the pcov driver')
+    jobs = doc.get('jobs') or {}
+    vue_job = jobs.get('vue') or {}
+    if not any(str(step.get('run', '')).strip() == 'npm run budget:check --workspace @vaulter/vue' and not step.get('if') and str(step.get('continue-on-error', 'false')).lower() == 'false' for step in vue_job.get('steps') or []):
+        errors.append(f'{name}: vue must run npm run budget:check --workspace @vaulter/vue unconditionally')
+    errors += check_e2e_documents(name, jobs.get('e2e-documents') or {}, needs_changes=False)
+    gate_steps = (jobs.get('full-gate') or {}).get('steps') or []
+    uploads_qual = any(
+        'actions/upload-artifact@' in str(step.get('uses', ''))
+        and (step.get('with') or {}).get('name') == 'release-qualification'
+        for step in gate_steps
+    )
+    if not uploads_qual or 'qualification.json' not in '\n'.join(str(step.get('run', '')) for step in gate_steps):
+        errors.append(f'{name}: full-gate must produce and upload release-qualification (qualification.json)')
     return errors
 
 
@@ -453,9 +495,10 @@ def check_split(doc: dict) -> list[str]:
 
 
 # Every publisher routes the tag and checks the qualification evidence in a job that holds no
-# publishing credential; the credentialed job needs that job.
+# publishing authority; the publishing job needs that job.
+# release-npm.yml uses OIDC Trusted Publishing (id-token: write, zero long-lived NPM_TOKEN).
 PUBLISHERS = {
-    'release-npm.yml': ('release', ('NPM_TOKEN',)),
+    'release-npm.yml': ('release', ('id-token',)),
 }
 
 
@@ -473,13 +516,21 @@ def check_route_before_credentials(name: str, doc: dict, publisher: str, route: 
         errors.append(f'{name}: {route} must pass the qualification evidence to route-release.php')
     dumped = json.dumps(route_job)
     for credential in credentials:
-        if credential in dumped:
+        if credential == 'id-token':
+            if (route_job.get('permissions') or {}).get('id-token') == 'write':
+                errors.append(f'{name}: {route} must not mint an OIDC id-token')
+        elif credential in dumped:
             errors.append(f'{name}: {route} must not hold the publisher credential {credential}')
     needs = publish_job.get('needs') or []
     needs = [needs] if isinstance(needs, str) else list(needs)
     if route not in needs:
         errors.append(f'{name}: {publisher} must need {route} (no credential before routing + qualification)')
-    if not any(credential in json.dumps(publish_job) for credential in credentials):
+    if 'id-token' in credentials:
+        if (publish_job.get('permissions') or {}).get('id-token') != 'write':
+            errors.append(f'{name}: {publisher} must grant id-token: write for OIDC Trusted Publishing')
+        if any(token in json.dumps(doc) for token in NPM_CREDENTIALS):
+            errors.append(f'{name}: must use OIDC Trusted Publishing without NPM_TOKEN / NODE_AUTH_TOKEN')
+    elif not any(credential in json.dumps(publish_job) for credential in credentials):
         errors.append(f'{name}: {publisher} no longer shows the credential this policy guards {credentials}')
     return errors
 
@@ -516,14 +567,36 @@ def _check_approval_gate(name: str, step: dict, variable: str, credentials: tupl
     return errors
 
 
+def _check_trusted_qualification_download(name: str, job_id: str, job: dict) -> list[str]:
+    errors: list[str] = []
+    steps = job.get('steps') or []
+    resolver = next((i for i, step in enumerate(steps) if 'resolve-qualification-run.py' in str(step.get('run', ''))), None)
+    download = next(
+        (i for i, step in enumerate(steps)
+         if 'actions/download-artifact@' in str(step.get('uses', ''))
+         and (step.get('with') or {}).get('name') == 'release-qualification'),
+        None,
+    )
+    if download is None:
+        return [f'{name}: {job_id} must download release-qualification']
+    dl_with = steps[download].get('with') or {}
+    if not dl_with.get('run-id') or not dl_with.get('github-token'):
+        errors.append(f'{name}: {job_id} must download release-qualification from an explicit verified run-id with github-token')
+    if resolver is None or resolver > download:
+        errors.append(f'{name}: {job_id} must verify trusted qualification run via resolve-qualification-run.py before download-artifact')
+    return errors
+
+
 def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
     """npm: pack once without a credential, publish that tgz. OCI: promote the tested digest. PHP: consume the prepared record."""
     errors: list[str] = []
     jobs = doc.get('jobs') or {}
     if name == 'release-npm.yml':
-        pack, release, version = jobs.get('pack'), jobs.get('release'), jobs.get('version-pr')
-        if not isinstance(pack, dict) or not isinstance(release, dict):
-            return [f'{name}: needs a credential-free pack job and a release job that publishes the accepted tgz']
+        route, pack, release, version = jobs.get('route'), jobs.get('pack'), jobs.get('release'), jobs.get('version-pr')
+        if not isinstance(route, dict) or not isinstance(pack, dict) or not isinstance(release, dict):
+            return [f'{name}: needs route, a credential-free pack job and a release job that publishes the accepted tgz']
+        errors += _check_trusted_qualification_download(name, 'route', route)
+        errors += _check_trusted_qualification_download(name, 'release', release)
         dumped = json.dumps(pack)
         if any(token in dumped for token in NPM_CREDENTIALS) or 'id-token' in dumped:
             errors.append(f'{name}: pack must hold no registry credential and mint no OIDC token')
@@ -531,6 +604,12 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
             errors.append(f'{name}: pack must run npm pack once')
         if (pack.get('permissions') or {}).get('contents') == 'write':
             errors.append(f'{name}: pack must not write repository contents')
+        if (release.get('permissions') or {}).get('id-token') != 'write':
+            errors.append(f'{name}: release must grant id-token: write for npm OIDC Trusted Publishing')
+        if (release.get('permissions') or {}).get('contents') == 'write':
+            errors.append(f'{name}: release must not write repository contents')
+        if any(token in json.dumps(doc) for token in NPM_CREDENTIALS):
+            errors.append(f'{name}: OIDC Trusted Publishing forbids NPM_TOKEN / NODE_AUTH_TOKEN')
         if 'pack' not in _needs(release):
             errors.append(f'{name}: release must need pack (it publishes the accepted tgz)')
         runs = _runs(release)
@@ -538,9 +617,15 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
             errors.append(f'{name}: release must not pack, install, build or let Changesets publish; it publishes the accepted tgz only')
         if 'download-artifact' not in _uses(release):
             errors.append(f'{name}: release must download the accepted tgz artifact')
+        checkouts = [step for step in release.get('steps') or [] if 'actions/checkout@' in str(step.get('uses', ''))]
+        if not checkouts or any((step.get('with') or {}).get('fetch-depth') != 0 for step in checkouts):
+            errors.append(f'{name}: release checkout must pass fetch-depth: 0 for origin/main lineage verification')
         steps = release.get('steps') or []
         gate = next((i for i, step in enumerate(steps) if 'artifact-gate.py npm' in str(step.get('run', ''))), None)
         publish = next((i for i, step in enumerate(steps) if 'npm publish' in str(step.get('run', ''))), None)
+        lineage = next((i for i, step in enumerate(steps) if 'merge-base --is-ancestor' in str(step.get('run', '')) and 'origin/main' in str(step.get('run', ''))), None)
+        if lineage is None or publish is None or lineage > publish:
+            errors.append(f'{name}: release must verify git merge-base --is-ancestor against origin/main before npm publish')
         if gate is None or publish is None or gate > publish:
             errors.append(f'{name}: release must verify the tgz with artifact-gate.py npm before npm publish')
         else:
@@ -553,6 +638,8 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
             publish_run = str(steps[publish].get('run', ''))
             if '--access "${access}"' not in publish_run or 'public|restricted' not in publish_run:
                 errors.append(f'{name}: npm access is derived from the verified record only (public|restricted)')
+            if '--provenance=false' in publish_run or '--provenance' not in publish_run:
+                errors.append(f'{name}: npm publish must enable OIDC --provenance (never --provenance=false)')
             if '--ignore-scripts' not in publish_run or re.search(r'artifact-gate|python|\bnpm\s+(pack|ci|install|run)\b|\bnode\b|\bbash\b\s+\S+\.sh', publish_run):
                 errors.append(f'{name}: the secret step only runs npm publish --ignore-scripts of the verified tgz')
             if len(steps) > publish + 1 and any(token in json.dumps(step) for step in steps[publish + 1:] for token in NPM_CREDENTIALS):
@@ -583,6 +670,61 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
                 errors.append(f'{name}: no publisher credential may be read before the approval gate')
             if '--atomic' not in str(steps[push].get('run', '')):
                 errors.append(f'{name}: the prepared commit is pushed atomically')
+    return errors
+
+
+def check_oci(name: str, doc: dict) -> list[str]:
+    """OCI release signing must run keyless cosign >= 3.0.2 by @sha256 digest only after artifact-gate.py oci."""
+    errors: list[str] = []
+    dispatch_inputs = ((triggers(doc).get('workflow_dispatch') or {}).get('inputs') or {})
+    qual_input = dispatch_inputs.get('qualification_run_id') or {}
+    if not isinstance(qual_input, dict) or qual_input.get('required') is not True:
+        errors.append(f'{name}: workflow_dispatch must require qualification_run_id')
+    jobs = doc.get('jobs') or {}
+    qualify, sign = jobs.get('qualify'), jobs.get('sign')
+    if not isinstance(qualify, dict) or not isinstance(sign, dict):
+        return [f'{name}: needs qualify and sign jobs']
+    if (qualify.get('permissions') or {}).get('id-token') == 'write':
+        errors.append(f'{name}: qualify must not mint an OIDC id-token')
+    errors += _check_trusted_qualification_download(name, 'qualify', qualify)
+    qualify_gate = next((step for step in qualify.get('steps') or [] if 'artifact-gate.py oci' in str(step.get('run', ''))), None)
+    if qualify_gate is None or '--image-ref' not in str(qualify_gate.get('run', '')):
+        errors.append(f'{name}: qualify must bind --image-ref in artifact-gate.py oci')
+    else:
+        errors += _check_approval_gate(name, qualify_gate, 'VAULTER_ARTIFACT_APPROVAL_SHA256', ('GITHUB_TOKEN', 'GH_TOKEN', 'cosign sign'))
+    if 'qualify' not in _needs(sign):
+        errors.append(f'{name}: sign must need qualify')
+    if (sign.get('permissions') or {}).get('id-token') != 'write':
+        errors.append(f'{name}: sign must grant id-token: write for Sigstore keyless signing')
+    errors += _check_trusted_qualification_download(name, 'sign', sign)
+    steps = sign.get('steps') or []
+    installer = [step for step in steps if 'sigstore/cosign-installer@' in str(step.get('uses', ''))]
+    if not installer:
+        errors.append(f'{name}: sign must install cosign via sigstore/cosign-installer')
+    else:
+        rel = str((installer[0].get('with') or {}).get('cosign-release', ''))
+        m = re.fullmatch(r'v?(\d+)\.(\d+)\.(\d+)', rel) if rel else None
+        if rel and (m is None or tuple(int(x) for x in m.groups()) < (3, 0, 2)):
+            errors.append(f'{name}: cosign-release must be >= 3.0.2, got {rel!r}')
+    gate = next((i for i, step in enumerate(steps) if 'artifact-gate.py oci' in str(step.get('run', ''))), None)
+    signer = next((i for i, step in enumerate(steps) if 'cosign sign' in str(step.get('run', ''))), None)
+    lineage = next((i for i, step in enumerate(steps) if 'merge-base --is-ancestor' in str(step.get('run', '')) and 'origin/main' in str(step.get('run', ''))), None)
+    if gate is None or signer is None or gate > signer:
+        errors.append(f'{name}: sign must verify artifact-gate.py oci before cosign sign')
+    else:
+        errors += _check_approval_gate(name, steps[gate], 'VAULTER_ARTIFACT_APPROVAL_SHA256', ('GITHUB_TOKEN', 'GH_TOKEN', 'cosign sign'))
+        if '--image-ref' not in str(steps[gate].get('run', '')):
+            errors.append(f'{name}: sign must bind --image-ref in artifact-gate.py oci')
+    if lineage is None or signer is None or lineage > signer:
+        errors.append(f'{name}: sign must verify git merge-base --is-ancestor against origin/main before cosign sign')
+    if signer is not None:
+        sign_run = str(steps[signer].get('run', ''))
+        if '--yes' not in sign_run or '@${DIGEST}' not in sign_run or '^sha256:[0-9a-f]{64}$' not in sign_run:
+            errors.append(f'{name}: cosign sign must require ^sha256 digest validation and sign by @${{DIGEST}} with --yes')
+        if '(3, 0, 2)' not in sign_run and '3.0.2' not in sign_run:
+            errors.append(f'{name}: sign must enforce cosign >= 3.0.2 at runtime')
+        if 'ghcr.io)' not in sign_run or ('docker login' in sign_run and sign_run.find('ghcr.io)') > sign_run.find('docker login')):
+            errors.append(f'{name}: sign must enforce OCI registry allowlist before docker login')
     return errors
 
 
@@ -718,6 +860,9 @@ def check_pins(name: str, doc: dict, text: str = '') -> list[str]:
         if 'docker/build-push-action@' in refs: allowed |= {'packages'}
         if 'actions/attest-build-provenance@' in refs: allowed |= {'attestations', 'id-token'}
         if 'CodelyTV/pr-size-labeler@' in refs: allowed |= {'pull-requests'}
+        if 'sigstore/cosign-installer@' in refs: allowed |= {'id-token', 'packages'}
+        if name == 'release-npm.yml' and job_id == 'release' and 'actions/setup-node@' in refs and 'registry.npmjs.org' in json.dumps(job) and '--provenance' in _runs(job):
+            allowed |= {'id-token'}
         permissions = job.get('permissions', {})
         if not isinstance(permissions, dict) or any(v not in ('read', 'none', 'write') or (v == 'write' and k not in allowed) for k,v in permissions.items()):
             errors.append(f'{name}:{job_id}: pin unjustified write permissions')
@@ -760,7 +905,7 @@ def check_dir(directory: Path) -> list[str]:
     root = directory.resolve().parents[1]
     files = sorted(directory.glob('*.yml'))
     names = {f.name for f in files}
-    for required in ('load.yml', 'ci.yml', 'weekly-full.yml', 'monorepo-split.yml'):
+    for required in ('load.yml', 'ci.yml', 'weekly-full.yml', 'monorepo-split.yml', 'release-npm.yml', 'release-oci.yml'):
         if required not in names:
             errors.append(f'{required}: missing')
     for removed in REMOVED_WORKFLOWS:
@@ -780,10 +925,17 @@ def check_dir(directory: Path) -> list[str]:
             errors += check_weekly(doc, root)
         elif path.name == 'monorepo-split.yml':
             errors += check_split(doc)
+        elif path.name == 'release-oci.yml':
+            errors += check_oci(path.name, doc)
         elif path.name in PUBLISHERS:
             errors += check_publisher(path.name, doc)
         if path.name in ('monorepo-split.yml', 'release-npm.yml'):
             errors += check_artifacts(path.name, doc, path.read_text())
+    vue_manifest = root / 'packages' / 'vue' / 'package.json'
+    if vue_manifest.is_file():
+        vue_pkg = json.loads(vue_manifest.read_text(encoding='utf-8'))
+        if (vue_pkg.get('publishConfig') or {}).get('provenance') is not True:
+            errors.append('packages/vue/package.json: publishConfig.provenance must be true for npm OIDC Trusted Publishing')
     return errors
 
 
@@ -909,6 +1061,13 @@ def gate_errors(needs: dict) -> list[str]:
             errors.append(f'{lane}: required lane is {result}')
         elif not expected[lane] and result not in ('skipped', 'success'):
             errors.append(f'{lane}: {result}')
+    e2e_needed = expected['vue'] or expected['consumer']
+    if 'e2e-documents' in needs or e2e_needed:
+        e2e_result = (needs.get('e2e-documents') or {}).get('result', 'missing')
+        if e2e_needed and e2e_result != 'success':
+            errors.append(f'e2e-documents: required lane is {e2e_result}')
+        elif not e2e_needed and e2e_result not in ('skipped', 'success'):
+            errors.append(f'e2e-documents: {e2e_result}')
     return errors
 
 

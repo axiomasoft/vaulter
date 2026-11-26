@@ -419,7 +419,7 @@ class BuildArtifactsTest(unittest.TestCase):
         lock_path.write_text(json.dumps({"packages": [{"name": name, "version": "1.0.0"} for name in set(composer.get("require", {})) | set(composer.get("suggest", {})) if "/" in name]}))
         resolution = out / "synthetic-resolution.json"
         resolution.write_text(json.dumps({"source_sha": record["source_sha"], "lock": str(lock_path), "lock_sha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(), "php_version": "8.4-fixture", "composer_version": "2-fixture", "profile": "synthetic-protocol-only"}))
-        result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(composer_path), str(resolution), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "synthetic.cdx.json")], capture_output=True, text=True)
+        result = subprocess.run(["python3", "-I", "-B", str(RELEASE / "sbom.py"), str(composer_path), str(resolution), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "synthetic.cdx.json")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         record.update(json.loads(result.stdout))
         with (out / "SHA256SUMS").open("a") as sums:
@@ -648,7 +648,7 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertEqual({line.split("  ", 1)[1] for line in (out / "SHA256SUMS").read_text().splitlines()}, {record["archive"], record["sbom"]})
             # The exact retained resolution, composer and source reproduce the same SBOM bytes offline.
             expected = (out / record["sbom"]).read_bytes()
-            result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(prepared / "axiomasoft-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
+            result = subprocess.run(["python3", "-I", "-B", str(RELEASE / "sbom.py"), str(prepared / "axiomasoft-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((out / "reproduced.cdx.json").read_bytes(), expected)
             for field in ("resolution", "resolution_provenance", "source_sha", "policy_sha256", "version"):
@@ -1033,22 +1033,22 @@ class RouteReleaseTest(unittest.TestCase):
                     self.assertNotIn("no qualification evidence", result.stderr)  # refused on the manifest, before evidence
 
     def test_publishers_read_credentials_only_after_the_route_job(self):
-        expectations = {
-            "monorepo-split.yml": ("split", "GH_ACCESS_TOKEN"),
-            "release-npm.yml": ("release", "NPM_TOKEN"),
-        }
-        for name, (job, secret) in expectations.items():
-            workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
-            text = (ROOT / ".github/workflows" / name).read_text()
-            with self.subTest(workflow=name):
-                needs = workflow["jobs"][job]["needs"]
-                self.assertIn("route", needs if isinstance(needs, list) else [needs])
-                route = yaml.safe_dump(workflow["jobs"]["route"])
-                self.assertNotIn(secret, route)
-                self.assertNotIn("NPM_TOKEN", route)
-                self.assertIn("route-release.php", route)
-                self.assertIn(secret, text)
-        npm = yaml.safe_load((ROOT / ".github/workflows/release-npm.yml").read_text())
+        split = yaml.safe_load((ROOT / ".github/workflows/monorepo-split.yml").read_text())
+        self.assertIn("route", split["jobs"]["split"]["needs"])
+        self.assertNotIn("GH_ACCESS_TOKEN", yaml.safe_dump(split["jobs"]["route"]))
+        self.assertIn("route-release.php", yaml.safe_dump(split["jobs"]["route"]))
+        self.assertIn("GH_ACCESS_TOKEN", yaml.safe_dump(split["jobs"]["split"]))
+
+        npm_text = (ROOT / ".github/workflows/release-npm.yml").read_text()
+        npm = yaml.safe_load(npm_text)
+        npm_dumped = yaml.safe_dump(npm)
+        needs = npm["jobs"]["release"]["needs"]
+        self.assertIn("route", needs if isinstance(needs, list) else [needs])
+        self.assertIn("route-release.php", yaml.safe_dump(npm["jobs"]["route"]))
+        self.assertEqual("write", npm["jobs"]["release"]["permissions"].get("id-token"))
+        self.assertNotEqual("write", (npm["jobs"]["route"].get("permissions") or {}).get("id-token"))
+        self.assertNotIn("NPM_TOKEN", npm_dumped)
+        self.assertNotIn("NODE_AUTH_TOKEN", npm_dumped)
         self.assertNotIn("NPM_TOKEN", yaml.safe_dump(npm["jobs"]["version-pr"]))
 
 

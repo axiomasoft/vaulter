@@ -2,13 +2,19 @@ name: Release (npm)
 
 # Prepares (version-pr) and publishes the npm packages (@vaulter/vue).
 # The Version Packages PR is opened without any registry credential. Publishing is a separate job that runs only after
-# `route` has selected the channel/line from the manifest and found the qualification evidence of this exact SHA
-# No evidence, no publish, no SHA-only fallback. The registry token is read by the publish job alone. The source repository is currently private, so npm provenance
-# cannot be generated. The PHP packages are released separately by monorepo-split.yml.
+# `route` has selected the channel/line from the manifest and found the qualification evidence of this exact SHA.
+# No evidence, no publish, no SHA-only fallback. Publishing uses npm OIDC Trusted Publishing (id-token: write on the
+# publish job only, --provenance enabled, zero long-lived registry tokens) after verifying the source SHA is an ancestor
+# of origin/main. The PHP packages are released separately by monorepo-split.yml.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      qualification_run_id:
+        description: 'Optional trusted completed qualification workflow run ID carrying release-qualification for this exact SHA'
+        type: string
+        required: false
 
 # Avoid two release runs racing on the same branch.
 concurrency:
@@ -58,15 +64,31 @@ jobs:
       actions: read
     outputs:
       qualified: ${{ steps.route.outputs.qualified }}
+      qualification_run_id: ${{ steps.resolve_run.outputs.run_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Resolve and verify trusted qualification run before downloading evidence
+        id: resolve_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_RUN_ID: ${{ inputs.qualification_run_id }}
+          TRUSTED_WORKFLOW: ${{ vars.VAULTER_QUALIFICATION_WORKFLOW }}
+        run: |
+          python3 -I scripts/release/resolve-qualification-run.py \
+            --repo "${GITHUB_REPOSITORY}" \
+            --sha "${GITHUB_SHA}" \
+            --run-id "${INPUT_RUN_ID}" \
+            --extra-workflow "${TRUSTED_WORKFLOW}" \
+            --github-output "${GITHUB_OUTPUT}"
       - name: Download the qualification evidence of this SHA
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-qualification
           path: release-evidence
+          run-id: ${{ steps.resolve_run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Route every npm line and require its qualification
         id: route
         run: |
@@ -119,8 +141,10 @@ jobs:
   release:
     permissions:
       contents: read
-    # Publishing belongs to the canonical repository, after routing + qualification and after the accepted pack.
-    # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not publish.
+      actions: read
+      id-token: write
+    # Publishing belongs to the canonical repository, after routing + qualification, accepted pack, and main-lineage check.
+    # Uses npm OIDC Trusted Publishing (zero long-lived registry tokens) with provenance attestation enabled.
     if: github.repository == 'axiomasoft/vaulter' && needs.route.outputs.qualified == 'true'
     needs: [route, pack]
     name: Publish the accepted tgz
@@ -135,21 +159,39 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Require source commit on origin/main
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26.13.1'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Verify trusted qualification run before downloading evidence
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ needs.route.outputs.qualification_run_id }}
+          TRUSTED_WORKFLOW: ${{ vars.VAULTER_QUALIFICATION_WORKFLOW }}
+        run: |
+          python3 -I scripts/release/resolve-qualification-run.py \
+            --repo "${GITHUB_REPOSITORY}" \
+            --sha "${GITHUB_SHA}" \
+            --run-id "${RUN_ID}" \
+            --extra-workflow "${TRUSTED_WORKFLOW}"
+
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-qualification
           path: release-evidence
+          run-id: ${{ needs.route.outputs.qualification_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Credential-free verify FIRST. The exact bytes of the external approval A must hash to the protected variable
       # (never computed from the candidate, no default) before A is parsed; each candidate tgz must then be exactly the
       # tgz A accepted for that package/version/source (sha256, integrity, consumer evidence). Only verified files are
-      # listed for publishing. No npm token is present in this step. Registry dist.integrity is compared after the
-      # authorized publish; before it the identity is pending.
+      # listed for publishing. Registry dist.integrity is compared after the authorized publish; before it the identity is pending.
       - name: Verify the candidate tgz against the authenticated approval
         env:
           VAULTER_ARTIFACT_APPROVAL_SHA256: ${{ vars.VAULTER_ARTIFACT_APPROVAL_SHA256 }}
@@ -165,13 +207,10 @@ jobs:
           done
           test "$(wc -l < verified.txt)" = "$(jq '.npm | length' release/packages.json)"
 
-      # The secret appears only here, and only `npm publish` of the verified file runs with it: no script, build, pack
-      # or install (--ignore-scripts, no lifecycle execution with the token).
+      # OIDC Trusted Publishing only: no long-lived registry secret, no lifecycle scripts (--ignore-scripts), provenance attached.
       - name: Publish the verified tgz
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           while IFS=$'\t' read -r tgz access; do
             case "${access}" in public|restricted) ;; *) echo "unexpected access ${access}" >&2; exit 1 ;; esac
-            npm publish "${tgz}" --ignore-scripts --access "${access}" --provenance=false
+            npm publish "${tgz}" --ignore-scripts --access "${access}" --provenance
           done < verified.txt

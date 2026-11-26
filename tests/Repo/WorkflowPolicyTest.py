@@ -186,8 +186,20 @@ def npm_job(workspace, lane):
              {'run': f'npm run api:surface:check --workspace {workspace}'}]
     if workspace == '@vaulter/vue':
         steps.append({'run': 'npm run api:check --workspace @vaulter/vue'})
+        steps.append({'run': 'npm run budget:check --workspace @vaulter/vue'})
     return {'needs': 'changes', 'if': f"needs.changes.outputs.has_{lane} == 'true'", 'timeout-minutes': 30,
             'permissions': {'contents': 'read'}, 'steps': steps}
+
+
+def e2e_job():
+    return {
+        'needs': ['changes', 'vue'],
+        'if': "!cancelled() && (needs.changes.outputs.has_vue == 'true' || needs.changes.outputs.has_consumer == 'true') && (needs.vue.result == 'success' || needs.vue.result == 'skipped')",
+        'timeout-minutes': 30,
+        'strategy': {'fail-fast': False, 'matrix': {'engine': ['sqlite', 'pgsql']}},
+        'services': {'postgres': {'image': 'postgres:18.7-alpine@sha256:' + '0' * 64}},
+        'steps': [{'run': 'PACKMAN_REF="$(git -C ../packman rev-parse --verify \'HEAD^{commit}\')"\nexport PACKMAN_REF\nbash e2e/consumers/documents-basic/run.sh'}],
+    }
 
 
 def ci_doc():
@@ -200,8 +212,9 @@ def ci_doc():
     jobs['consumer-isolation'] = consumer_job()
     jobs['contract-bc'] = contract_job()
     jobs['vue'] = npm_job('@vaulter/vue', 'vue')
+    jobs['e2e-documents'] = e2e_job()
     jobs['changes']['outputs'] = {output: '${{ steps.plan.outputs.' + output + ' }}' for output in ('has_contract_bc', 'contract_bc_provisioned', 'contract_bc_required_lines', 'contract_bc_selected_lines')}
-    jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes + ['sca'],
+    jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes + ['e2e-documents', 'sca'],
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
     return {
         'on': {'push': {'branches': ['main']}, 'pull_request': {'branches': ['main']}, 'workflow_dispatch': {}},
@@ -226,12 +239,14 @@ def split_doc():
 
 
 def publisher_doc(publisher, credential):
+    perms = {'contents': 'read', 'id-token': 'write'} if credential == 'id-token' else {'contents': 'read'}
+    steps = [{'run': 'npm publish "${tgz}" --ignore-scripts --access "${access}" --provenance'}] if credential == 'id-token' else [{'uses': credential}]
     return {
         'on': {'push': {'tags': ['*']}},
         'jobs': {
-            'route': {'timeout-minutes': 10, 'steps': [
+            'route': {'timeout-minutes': 10, 'permissions': {'contents': 'read'}, 'steps': [
                 {'run': 'php scripts/release/route-release.php --tag="$T" --evidence-dir=release-evidence'}]},
-            publisher: {'needs': 'route', 'timeout-minutes': 20, 'steps': [{'uses': credential}]},
+            publisher: {'needs': 'route', 'timeout-minutes': 20, 'permissions': perms, 'steps': steps},
         },
     }
 
@@ -252,6 +267,7 @@ def needs(results, **outputs):
         base.setdefault(field, json.dumps(list(policy.REQUIRED_BC_LINES)))
     out = {job: {'result': result, 'outputs': {}} for job, result in results.items()}
     out.setdefault('contract-bc', {'result': 'success' if base['has_contract_bc'] == 'true' else 'skipped', 'outputs': {}})
+    out.setdefault('e2e-documents', {'result': 'success' if (base.get('has_vue') == 'true' or base.get('has_consumer') == 'true') else 'skipped', 'outputs': {}})
     out.setdefault('sca', {'result': 'success', 'outputs': {}})
     out['changes'] = {'result': results.get('changes', 'success'), 'outputs': base}
     return out
@@ -416,8 +432,12 @@ class SingleCiTest(unittest.TestCase):
             self.assertTrue(any('must need route' in e for e in policy.check_publisher(name, missing)), name)
 
             leaking = publisher_doc(publisher, credentials[0])
-            leaking['jobs']['route']['steps'].append({'uses': credentials[0]})
-            self.assertTrue(any('must not hold the publisher credential' in e for e in policy.check_publisher(name, leaking)), name)
+            leaking['jobs']['route']['permissions'] = {'contents': 'read', 'id-token': 'write'}
+            self.assertTrue(any('must not mint an OIDC id-token' in e for e in policy.check_publisher(name, leaking)), name)
+
+            legacy_token = publisher_doc(publisher, credentials[0])
+            legacy_token['jobs'][publisher]['env'] = {'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}
+            self.assertTrue(any('OIDC Trusted Publishing' in e for e in policy.check_publisher(name, legacy_token)), name)
 
             bare = publisher_doc(publisher, credentials[0])
             bare['jobs']['route']['steps'] = [{'run': 'echo ok'}]
@@ -1234,13 +1254,61 @@ class ScaWorkflowTest(unittest.TestCase):
             'publisher publishes by changesets': lambda d: d['jobs']['release']['steps'].append({'uses': 'changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d', 'with': {'publish': 'npm run release'}}),
             'pack job holds the registry token': lambda d: d['jobs']['pack'].update(env={'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}),
             'pack job may mint an OIDC token': lambda d: d['jobs']['pack'].update(permissions={'contents': 'read', 'id-token': 'write'}),
+            'publisher drops OIDC id-token permission': lambda d: d['jobs']['release'].update(permissions={'contents': 'read'}),
+            'publisher falls back to NPM_TOKEN secret': lambda d: d['jobs']['release']['steps'][-1].update(env={'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}),
+            'publisher disables npm provenance': lambda d: [s.update(run=s['run'].replace('--provenance', '--provenance=false')) for s in d['jobs']['release']['steps'] if 'npm publish' in str(s.get('run', ''))],
+            'publisher drops origin/main lineage check': lambda d: d['jobs']['release']['steps'].__setitem__(slice(None), [s for s in d['jobs']['release']['steps'] if 'merge-base --is-ancestor' not in str(s.get('run', ''))]),
+            'publisher drops fetch-depth 0 for merge-base': lambda d: [s['with'].pop('fetch-depth', None) for s in d['jobs']['release']['steps'] if 'actions/checkout@' in str(s.get('uses', ''))],
             'publisher does not need pack': lambda d: d['jobs']['release'].update(needs='route'),
+            'route download omits run-id': lambda d: [s['with'].pop('run-id', None) for s in d['jobs']['route']['steps'] if (s.get('with') or {}).get('name') == 'release-qualification'],
+            'release download omits run-id': lambda d: [s['with'].pop('run-id', None) for s in d['jobs']['release']['steps'] if (s.get('with') or {}).get('name') == 'release-qualification'],
+            'resolve-qualification-run removed': lambda d: d['jobs']['route']['steps'].__setitem__(slice(None), [s for s in d['jobs']['route']['steps'] if 'resolve-qualification-run.py' not in str(s.get('run', ''))]),
             'version job holds the registry token': lambda d: d['jobs']['version-pr'].update(env={'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}),
         }.items():
             with self.subTest(case=label):
                 doc = copy.deepcopy(base)
                 mutate(doc)
                 self.assertTrue(self.artifact_errors('release-npm.yml', doc), label)
+
+    def test_release_oci_enforces_cosign_ge_3_0_2_digest_and_approval_gate(self):
+        base = self.artifact_doc('release-oci.yml')
+        self.assertEqual([], policy.check_oci('release-oci.yml', base))
+        sign_steps = lambda d: d['jobs']['sign']['steps']
+        qualify_steps = lambda d: d['jobs']['qualify']['steps']
+        for label, mutate in {
+            'qualification_run_id input removed': lambda d: d[True]['workflow_dispatch']['inputs'].pop('qualification_run_id', None) if True in d else d['on']['workflow_dispatch']['inputs'].pop('qualification_run_id', None),
+            'qualify mints id-token': lambda d: d['jobs']['qualify'].update(permissions={'contents': 'read', 'id-token': 'write'}),
+            'qualify omits run-id on download': lambda d: [s['with'].pop('run-id', None) for s in qualify_steps(d) if (s.get('with') or {}).get('name') == 'release-qualification'],
+            'qualify gate omits --image-ref': lambda d: [s.update(run=s['run'].replace('--image-ref "${IMAGE_REF}"', '')) for s in qualify_steps(d) if 'artifact-gate.py oci' in str(s.get('run', ''))],
+            'sign omits qualify dependency': lambda d: d['jobs']['sign'].update(needs=[]),
+            'sign omits id-token: write': lambda d: d['jobs']['sign'].update(permissions={'contents': 'read'}),
+            'sign omits run-id on download': lambda d: [s['with'].pop('run-id', None) for s in sign_steps(d) if (s.get('with') or {}).get('name') == 'release-qualification'],
+            'sign resolves run after download': lambda d: sign_steps(d).__setitem__(slice(None), [s for s in sign_steps(d) if 'resolve-qualification-run.py' not in str(s.get('run', ''))]),
+            'cosign installer removed': lambda d: sign_steps(d).__setitem__(slice(None), [s for s in sign_steps(d) if 'cosign-installer' not in str(s.get('uses', ''))]),
+            'cosign version downgraded below 3.0.2': lambda d: [s['with'].update({'cosign-release': 'v3.0.1'}) for s in sign_steps(d) if 'cosign-installer' in str(s.get('uses', ''))],
+            'artifact-gate oci removed before cosign sign': lambda d: sign_steps(d).__setitem__(slice(None), [s for s in sign_steps(d) if 'artifact-gate.py oci' not in str(s.get('run', ''))]),
+            'sign gate omits --image-ref': lambda d: [s.update(run=s['run'].replace('--image-ref "${IMAGE_REF}"', '')) for s in sign_steps(d) if 'artifact-gate.py oci' in str(s.get('run', ''))],
+            'registry allowlist removed before docker login': lambda d: [s.update(run=s['run'].replace('ghcr.io)', 'other.invalid)')) for s in sign_steps(d) if 'cosign sign' in str(s.get('run', ''))],
+            'merge-base check removed before cosign sign': lambda d: sign_steps(d).__setitem__(slice(None), [s for s in sign_steps(d) if 'merge-base --is-ancestor' not in str(s.get('run', ''))]),
+            'signs without @sha256 digest': lambda d: [s.update(run=s['run'].replace('@${DIGEST}', ':latest')) for s in sign_steps(d) if 'cosign sign' in str(s.get('run', ''))],
+        }.items():
+            with self.subTest(case=label):
+                doc = copy.deepcopy(base)
+                mutate(doc)
+                self.assertTrue(policy.check_oci('release-oci.yml', doc), label)
+
+    def test_e2e_documents_and_vue_bundle_budget_are_required_in_ci_and_weekly_full(self):
+        for name in ('ci.yml', 'weekly-full.yml'):
+            doc = policy.load_workflow(ROOT / '.github' / 'workflows' / name)
+            self.assertIn('e2e-documents', doc['jobs'], name)
+            self.assertEqual(['sqlite', 'pgsql'], doc['jobs']['e2e-documents']['strategy']['matrix']['engine'])
+            broken = copy.deepcopy(doc)
+            broken['jobs']['vue']['steps'] = [s for s in broken['jobs']['vue']['steps'] if 'budget:check' not in str(s.get('run', ''))]
+            errors = policy.check_ci(broken, ROOT) if name == 'ci.yml' else policy.check_weekly(broken, ROOT)
+            self.assertTrue(any('budget' in e for e in errors), (name, errors))
+        self.assertIn('e2e-documents: required lane is failure', policy.gate_errors(needs({'vue': 'success', 'e2e-documents': 'failure'}, has_vue='true')))
+        vue_pkg = json.loads((ROOT / 'packages' / 'vue' / 'package.json').read_text(encoding='utf-8'))
+        self.assertIs(True, vue_pkg['publishConfig']['provenance'])
 
     def test_artifact_php_publisher_consumes_the_prepared_record_after_the_external_approval(self):
         base = self.artifact_doc('monorepo-split.yml')
@@ -1342,17 +1410,39 @@ class ScaWorkflowTest(unittest.TestCase):
 
     def test_artifact_gate_oci_promotes_only_the_digest_the_authenticated_approval_accepted(self):
         digest = 'sha256:' + 'a' * 64
-        entry = {'kind': 'oci', 'digest': digest, 'platforms': ['linux/amd64', 'linux/arm64'], 'sbom_sha256': 'c' * 64, 'policy_sha256': 'd' * 64, 'tool_sha256': 'e' * 64, 'visibility': 'private'}
-        base = ['oci', '--source-sha', self.SOURCE, '--digest', digest, '--platforms', 'linux/arm64,linux/amd64', '--sbom-sha256', 'c' * 64,
-                '--policy-sha256', 'd' * 64, '--tool-sha256', 'e' * 64, '--channel', 'private', '--visibility', 'private']
+        entry = {
+            'kind': 'oci',
+            'registry': 'ghcr.io',
+            'repository': 'axiomasoft/vaulter-hub',
+            'channel': 'private',
+            'digest': digest,
+            'platforms': ['linux/amd64', 'linux/arm64'],
+            'sbom_sha256': 'c' * 64,
+            'policy_sha256': 'd' * 64,
+            'tool_sha256': 'e' * 64,
+            'visibility': 'private',
+        }
+        base = [
+            'oci', '--source-sha', self.SOURCE, '--image-ref', 'ghcr.io/axiomasoft/vaulter-hub', '--digest', digest,
+            '--platforms', 'linux/arm64,linux/amd64', '--sbom-sha256', 'c' * 64,
+            '--policy-sha256', 'd' * 64, '--tool-sha256', 'e' * 64, '--channel', 'private', '--visibility', 'private',
+        ]
         with tempfile.TemporaryDirectory() as tmp:
             approval, pin = self.approval_file(tmp, {'oci': entry})
+            verified = Path(tmp) / 'oci-verified.json'
             args = base + ['--approval', str(approval)]
-            self.assertEqual(0, self.run_artifact_gate(*args, pin=pin).returncode)  # protocol positive, not an owner grant
+            self.assertEqual(0, self.run_artifact_gate(*args, '--emit-verified', str(verified), pin=pin).returncode)  # protocol positive, not an owner grant
+            self.assertEqual({'kind': 'oci', 'source_sha': self.SOURCE, 'registry': 'ghcr.io', 'repository': 'axiomasoft/vaulter-hub', 'image': 'ghcr.io/axiomasoft/vaulter-hub', 'digest': digest, 'channel': 'private', 'visibility': 'private'}, json.loads(verified.read_text()))
             self.assertEqual(1, self.run_artifact_gate(*args).returncode)
             self.assertEqual(1, self.run_artifact_gate(*args, pin='0' * 64).returncode)
             mutated = lambda flag, value: [value if i > 0 and args[i - 1] == flag else a for i, a in enumerate(args)]
             for label, argv in {
+                'other registry': mutated('--image-ref', 'docker.io/axiomasoft/vaulter-hub'),
+                'attacker registry': mutated('--image-ref', 'evil.example/axiomasoft/vaulter-hub'),
+                'other repository': mutated('--image-ref', 'ghcr.io/axiomasoft/other'),
+                'tag inside image-ref': mutated('--image-ref', 'ghcr.io/axiomasoft/vaulter-hub:1.0.0'),
+                'digest inside image-ref': mutated('--image-ref', 'ghcr.io/axiomasoft/vaulter-hub@' + digest),
+                'other channel': mutated('--channel', 'public'),
                 'tag instead of digest': mutated('--digest', 'ghcr.io/x/y:1.0.0'), 'other digest': mutated('--digest', 'sha256:' + 'b' * 64),
                 'platform set': mutated('--platforms', 'linux/amd64'), 'sbom': mutated('--sbom-sha256', 'f' * 64),
                 'policy': mutated('--policy-sha256', 'f' * 64), 'tool': mutated('--tool-sha256', 'f' * 64),
@@ -1361,12 +1451,91 @@ class ScaWorkflowTest(unittest.TestCase):
             }.items():
                 with self.subTest(case=label):
                     self.assertEqual(1, self.run_artifact_gate(*argv, pin=pin).returncode, label)
-            for label, artifacts in {'source SHA only': {}, 'incomplete entry': {'oci': {k: v for k, v in entry.items() if k != 'sbom_sha256'}},
-                                     'accepted public, run claims private': {'oci': {**entry, 'visibility': 'public'}}}.items():
+            for label, (artifacts, override_ref) in {
+                'source SHA only': ({}, None),
+                'incomplete entry': ({'oci': {k: v for k, v in entry.items() if k != 'sbom_sha256'}}, None),
+                'missing registry in approval': ({'oci': {k: v for k, v in entry.items() if k != 'registry'}}, None),
+                'missing repository in approval': ({'oci': {k: v for k, v in entry.items() if k != 'repository'}}, None),
+                'disallowed registry even when approved': ({'oci': {**entry, 'registry': 'docker.io'}}, 'docker.io/axiomasoft/vaulter-hub'),
+                'accepted public, run claims private': ({'oci': {**entry, 'visibility': 'public'}}, None),
+            }.items():
                 with self.subTest(case=label):
                     other, other_pin = self.approval_file(tmp, artifacts)
-                    argv = base + ['--approval', str(other)]
+                    argv = (mutated('--image-ref', override_ref) if override_ref else list(base)) + ['--approval', str(other)]
                     self.assertEqual(1, self.run_artifact_gate(*argv, pin=other_pin).returncode, label)
+
+    def test_resolve_qualification_run_enforces_exact_sha_repo_workflow_and_artifact(self):
+        import contextlib, io, runpy
+        from unittest import mock
+        resolver = runpy.run_path(str(ROOT / 'scripts/release/resolve-qualification-run.py'))
+        repo = 'axiomasoft/vaulter'
+        sha = self.SOURCE
+        valid_run = {
+            'id': 987654321,
+            'head_sha': sha,
+            'status': 'completed',
+            'conclusion': 'success',
+            'event': 'workflow_dispatch',
+            'pull_requests': [],
+            'repository': {'full_name': repo},
+            'head_repository': {'full_name': repo},
+            'path': '.github/workflows/weekly-full.yml',
+        }
+        artifacts = {'artifacts': [{'name': 'release-qualification', 'expired': False, 'size_in_bytes': 128}]}
+
+        class FakeResp:
+            def __init__(self, payload):
+                self._data = json.dumps(payload).encode('utf-8')
+            def __enter__(self):
+                return self
+            def __exit__(self, *exc):
+                return False
+            def read(self):
+                return self._data
+
+        def mock_api(req, timeout=20):
+            url = req.full_url
+            if url.endswith('/actions/runs/987654321'):
+                return FakeResp(valid_run)
+            if '/artifacts' in url:
+                return FakeResp(artifacts)
+            if f'head_sha={sha}' in url:
+                return FakeResp({'workflow_runs': [valid_run]})
+            raise AssertionError(f'unexpected URL {url}')
+
+        with tempfile.TemporaryDirectory() as tmp:
+            gh_out = Path(tmp) / 'gh_out.txt'
+            sink = io.StringIO()
+            with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.urlopen', side_effect=mock_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha, '--run-id', '987654321', '--github-output', str(gh_out)]))
+                self.assertIn('run_id=987654321\n', gh_out.read_text())
+                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha]))
+
+        for label, bad_run, bad_art in [
+            ('wrong sha', {**valid_run, 'head_sha': '0' * 40}, artifacts),
+            ('failed run', {**valid_run, 'conclusion': 'failure'}, artifacts),
+            ('pull_request event', {**valid_run, 'event': 'pull_request'}, artifacts),
+            ('fork repo', {**valid_run, 'head_repository': {'full_name': 'attacker/vaulter'}}, artifacts),
+            ('untrusted workflow path', {**valid_run, 'path': '.github/workflows/ci.yml'}, artifacts),
+            ('expired artifact', valid_run, {'artifacts': [{'name': 'release-qualification', 'expired': True, 'size_in_bytes': 128}]}),
+            ('missing artifact', valid_run, {'artifacts': []}),
+        ]:
+            with self.subTest(case=label):
+                def bad_api(req, timeout=20):
+                    url = req.full_url
+                    if url.endswith('/artifacts') or '/artifacts?' in url:
+                        return FakeResp(bad_art)
+                    if '/runs/' in url and 'head_sha=' not in url:
+                        return FakeResp(bad_run)
+                    return FakeResp({'workflow_runs': [bad_run]})
+                sink = io.StringIO()
+                with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.urlopen', side_effect=bad_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+                    with self.assertRaises(SystemExit) as ctx:
+                        resolver['main'](['--repo', repo, '--sha', sha, '--run-id', '987654321'])
+                    self.assertEqual(1, ctx.exception.code)
+                    with self.assertRaises(SystemExit) as ctx_lookup:
+                        resolver['main'](['--repo', repo, '--sha', sha])
+                    self.assertEqual(1, ctx_lookup.exception.code)
 
     def test_artifact_gate_npm_private_needs_a_probed_private_destination_even_with_an_authenticated_approval(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -274,6 +274,25 @@ This policy governs the six entity migrations Vaulter ships (`packages/core/data
 migrations`); it does not (yet) have runtime enforcement — it is a contributor/reviewer checklist,
 not a lint rule.
 
+### W0–W7 schema parity and backlog closure (Task 0.2)
+
+Planning trees under `plan/` were retired in commit `7ad44eeb7`. Normalized column-level verification
+for Task `0.2` (contrasting the canonical PostgreSQL schema snapshot
+`packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json` against the target DDL
+set across all overlapping `v_*` tables, normalizing PostgreSQL type aliases `character varying`/`varchar`,
+`character`/`char`, `timestamp(p) without time zone`/`timestamp(p)`, `int2`/`int4`/`int8`/`bool` and
+stripping `COLLATE "C"` / inline `CHECK` / `::type` casts) measured:
+
+- **Shared tables compared:** `33`
+- **Normalized column-type mismatches:** `0`
+- **Nullability (`not_null`) mismatches:** `0`
+- **Default value mismatches:** `0` (intentional structural additions/extractions remain scoped to `v_collaboration_heads`, `v_documents`, and `v_document_revisions`).
+
+All `W0–W7` backlog items across `0.2`, `1.3` (consumer E2E harness), `2.1` (`protocol=2` WebSocket negotiation),
+`5.2` (Office delta cost bench), and `6.2` (workbook reference preview & E2E) are verified closed, and the
+optional `packages/azguard/` bridge policy is recorded in [ADR-0040](/adr/0040-azguard-optional-bridge)
+(`release/packages.json` keeps it excluded until `axiomasoft/azguard` carries a tagged release).
+
 ### Running your own tests on Postgres
 
 The package's test suite defaults to in-memory SQLite. To exercise it against Postgres (the

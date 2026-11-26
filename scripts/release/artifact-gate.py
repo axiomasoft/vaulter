@@ -26,6 +26,8 @@ import sys
 import tarfile
 
 HEX64 = re.compile(r'[0-9a-f]{64}')
+ALLOWED_OCI_REGISTRIES = frozenset({'ghcr.io'})
+OCI_REPO_RE = re.compile(r'^[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$')
 
 
 def refuse(message):
@@ -61,6 +63,21 @@ def need(entry, fields):
             refuse(f'the approval entry is incomplete: {field} is missing')
 
 
+def parse_oci_image_ref(raw):
+    if not isinstance(raw, str) or not raw:
+        refuse('OCI image_ref is required')
+    if re.search(r'[\x00-\x20\x7f]', raw) or '://' in raw or '?' in raw or '#' in raw:
+        refuse(f'OCI image_ref contains disallowed characters or URL syntax: {raw!r}')
+    if ':' in raw or '@' in raw or '/' not in raw:
+        refuse(f'OCI image_ref must be registry/repository without tag or digest: {raw!r}')
+    registry, _, repository = raw.partition('/')
+    if registry not in ALLOWED_OCI_REGISTRIES:
+        refuse(f'OCI registry {registry!r} is outside allowlist {sorted(ALLOWED_OCI_REGISTRIES)}')
+    if any(seg in ('', '.', '..') for seg in repository.split('/')) or OCI_REPO_RE.fullmatch(repository) is None:
+        refuse(f'OCI repository path {repository!r} is malformed')
+    return registry, repository
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest='kind', required=True)
@@ -70,6 +87,8 @@ def main():
     npm.add_argument('--channel', required=True)
     npm.add_argument('--visibility', required=True)
     oci = sub.add_parser('oci')
+    oci.add_argument('--image-ref', required=True)
+    oci.add_argument('--emit-verified')
     for flag in ('digest', 'platforms', 'sbom-sha256', 'policy-sha256', 'tool-sha256', 'channel', 'visibility'):
         oci.add_argument('--' + flag, required=True)
     for p in (npm, oci):
@@ -117,10 +136,19 @@ def main():
             with open(args.emit_verified, 'a') as out:
                 out.write(args.tgz + '\t' + ('restricted' if args.channel == 'private' else 'public') + '\n')
     else:
+        registry, repository = parse_oci_image_ref(args.image_ref)
         entry = artifacts.get('oci')
-        need(entry, ('kind', 'digest', 'platforms', 'sbom_sha256', 'policy_sha256', 'tool_sha256', 'visibility'))
+        need(entry, ('kind', 'registry', 'repository', 'digest', 'platforms', 'sbom_sha256', 'policy_sha256', 'tool_sha256', 'channel', 'visibility'))
         if entry['kind'] != 'oci':
             refuse('the approval entry is not an OCI entry')
+        approved_registry = entry['registry']
+        approved_repo = entry['repository']
+        if approved_registry not in ALLOWED_OCI_REGISTRIES:
+            refuse(f'the approved OCI registry {approved_registry!r} is outside allowlist {sorted(ALLOWED_OCI_REGISTRIES)}')
+        if registry != approved_registry:
+            refuse(f'OCI registry {registry!r} is not the approved registry {approved_registry!r}')
+        if OCI_REPO_RE.fullmatch(str(approved_repo)) is None or repository != approved_repo:
+            refuse(f'OCI repository {repository!r} is not the approved repository {approved_repo!r}')
         if re.fullmatch(r'sha256:[0-9a-f]{64}', args.digest) is None:
             refuse(f'a tag or other reference is not an identity: {args.digest!r}')
         if args.digest != entry['digest']:
@@ -130,12 +158,27 @@ def main():
         for flag, field in (('sbom_sha256', 'sbom_sha256'), ('policy_sha256', 'policy_sha256'), ('tool_sha256', 'tool_sha256')):
             if getattr(args, flag) != entry[field]:
                 refuse(f'{field} is not the accepted one')
-        if args.channel not in ('public', 'private'):
-            refuse(f'unknown channel {args.channel!r}')
-        if args.channel == 'private' and (args.visibility != 'private' or entry['visibility'] != 'private'):
-            refuse('a private channel needs a destination probed private and accepted private')
+        if args.channel not in ('public', 'private') or entry['channel'] != args.channel:
+            refuse(f'channel {args.channel!r} is not the accepted channel {entry["channel"]!r}')
         if args.visibility != entry['visibility']:
             refuse('destination visibility is not the accepted one')
+        if args.channel == 'private' and (args.visibility != 'private' or entry['visibility'] != 'private'):
+            refuse('a private channel needs a destination probed private and accepted private')
+        if args.channel == 'public' and args.visibility != 'public':
+            refuse('a public channel needs a public destination')
+        if args.emit_verified:
+            with open(args.emit_verified, 'w', encoding='utf-8') as out:
+                json.dump({
+                    'kind': 'oci',
+                    'source_sha': args.source_sha,
+                    'registry': registry,
+                    'repository': repository,
+                    'image': f'{registry}/{repository}',
+                    'digest': args.digest,
+                    'channel': args.channel,
+                    'visibility': args.visibility,
+                }, out, sort_keys=True)
+                out.write('\n')
     print(f'artifact-gate: accepted {args.kind}')
 
 
