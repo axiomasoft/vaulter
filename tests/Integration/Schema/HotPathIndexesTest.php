@@ -40,6 +40,13 @@ it('v_nodes lists children through one (drive_id, parent_id) index now that manu
         ->and($columnSets)->not->toContain(['drive_id', 'parent_id', 'position']);
 });
 
+it('indexes live folder children in name and id order', function (): void {
+    $columns = Schema::getConnection()->getDriverName() === 'mysql'
+        ? ['parent_id', 'trashed_at', 'name', 'id']
+        : ['parent_id', 'name', 'id'];
+    expect(hotPathIndexColumnSets('v_nodes'))->toContain($columns);
+});
+
 it('v_blobs does not carry a redundant single-column status index — a strict prefix of the GC index', function (): void {
     $columnSets = hotPathIndexColumnSets('v_blobs');
 

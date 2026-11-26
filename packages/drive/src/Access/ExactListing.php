@@ -74,19 +74,21 @@ final readonly class ExactListing
                 $query->orderBy($sort['column'], $sort['direction']);
             }
             if ($last !== null) {
-                if ($order[0]['column'] === 'name') {
-                    $query->where('name', $order[0]['direction'] === 'asc' ? '>=' : '<=', $last[0]);
+                $nameOrder = array_column($order, 'column') === ['name', 'id'] && $order[0]['direction'] === $order[1]['direction'];
+                if ($nameOrder && in_array($query->getModel()->getConnection()->getDriverName(), ['pgsql', 'sqlite'], true)) {
+                    $query->whereRowValues(['name', 'id'], $order[0]['direction'] === 'asc' ? '>' : '<', $last);
+                } else {
+                    $query->where(function (Builder $outer) use ($order, $last): void {
+                        foreach ($order as $i => $sort) {
+                            $outer->orWhere(function (Builder $branch) use ($order, $last, $i, $sort): void {
+                                for ($j = 0; $j < $i; $j++) {
+                                    $branch->where($order[$j]['column'], '=', $last[$j]);
+                                }
+                                $branch->where($sort['column'], $sort['direction'] === 'asc' ? '>' : '<', $last[$i]);
+                            });
+                        }
+                    });
                 }
-                $query->where(function (Builder $outer) use ($order, $last): void {
-                    foreach ($order as $i => $sort) {
-                        $outer->orWhere(function (Builder $branch) use ($order, $last, $i, $sort): void {
-                            for ($j = 0; $j < $i; $j++) {
-                                $branch->where($order[$j]['column'], '=', $last[$j]);
-                            }
-                            $branch->where($sort['column'], $sort['direction'] === 'asc' ? '>' : '<', $last[$i]);
-                        });
-                    }
-                });
             }
             $batch = $query->limit(min($perPage * 2, $budget - $scanned))->get();
             if ($batch->isEmpty()) {

@@ -8,6 +8,9 @@ This file covers the public release channel.
 
 ## [Unreleased]
 
+- Long-lived Laravel workers now rebuild permission drivers, transactional services, document handlers and file handlers in each request or job. Register request-dependent extensions by class or container tag. An instance explicitly supplied at application boot keeps the lifetime selected by its host.
+- Scan backfills and maintenance resumes now seek directly past a tied admission sequence on PostgreSQL and SQLite. MySQL uses separate index ranges for the sequence and revision ID.
+
 - Folder listings gain a name-order index in migration 000221. Comments and webhook feeds now page across legacy rows with a null creation timestamp.
 
 - MySQL webhook deliveries retain their endpoint foreign key while upgrading the feed index. An existing delivery without an endpoint stops the migration and identifies the row for repair.
