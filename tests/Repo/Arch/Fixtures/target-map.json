@@ -1364,6 +1364,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Database/TransactionAttempt.php",
+            "fqcn": "Vaulter\\Database\\TransactionAttempt",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Database\\TransactionAttempt",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Database\\TransactionAttempt"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Database/VaulterDatabase.php",
             "fqcn": "Vaulter\\Database\\VaulterDatabase",
             "kind": "final-class",

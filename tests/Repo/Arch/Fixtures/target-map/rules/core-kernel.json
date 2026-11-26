@@ -217,6 +217,14 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Database\\TransactionAttempt",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "The outer database transaction owns retry and after-commit state for the duration of a single attempt."
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Database\\VaulterDatabase",
             "owner": "core",
             "action": "keep",
