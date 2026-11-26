@@ -102,7 +102,7 @@ final readonly class FileOperations implements Contract
 
         $aggregate = $node->file()->firstOrFail();
         $versions = $aggregate->versions();
-        $cursor = KeysetCursor::open($options->cursor, ['number' => KeysetCursor::NUMBER], $versions->getRelated());
+        $cursor = KeysetCursor::revision($options->cursor);
         $page = $versions->orderByDesc('number')->cursorPaginate(perPage: $options->perPage, cursor: $cursor);
 
         return new Page(

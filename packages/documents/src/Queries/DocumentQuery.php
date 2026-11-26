@@ -70,7 +70,7 @@ final readonly class DocumentQuery
             ->with(self::REVISION_METADATA)
             ->where('document_id', $document->getKey())
             ->orderByDesc('number')
-            ->cursorPaginate(perPage: $options->perPage, cursor: KeysetCursor::open($options->cursor, ['number' => KeysetCursor::NUMBER], new $model));
+            ->cursorPaginate(perPage: $options->perPage, cursor: KeysetCursor::revision($options->cursor));
     }
 
     /**

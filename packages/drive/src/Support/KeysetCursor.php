@@ -23,44 +23,44 @@ use Vaulter\Support\Identity;
 #[Internal]
 final class KeysetCursor
 {
-    /** A non-negative whole number, as a revision number. */
-    public const string NUMBER = 'number';
+    public static function revision(?string $encoded): ?Cursor
+    {
+        $cursor = self::decode($encoded);
+        if ($cursor !== null && !self::isNumber($cursor->toArray()['number'] ?? null)) {
+            throw InvalidCursorException::invalid();
+        }
 
-    /** A timestamp as Laravel writes it from the model: `Y-m-d H:i:s`, optionally with microseconds. */
-    public const string TIMESTAMP = 'timestamp';
+        return $cursor;
+    }
 
-    /** The primary key of the listed model. */
-    public const string KEY = 'key';
-
-    /**
-     * @param array<string, self::NUMBER|self::TIMESTAMP|self::KEY> $columns sort column => the kind of its value
-     * @param Model                                                 $model   the listed model, for the key column
-     *
-     * @throws InvalidCursorException when the cursor is malformed or does not fit this listing
-     */
-    public static function open(?string $encoded, array $columns, Model $model): ?Cursor
+    private static function decode(?string $encoded): ?Cursor
     {
         if ($encoded === null || $encoded === '') {
             return null;
         }
+
         $cursor = Cursor::fromEncoded($encoded);
-        if (!$cursor instanceof Cursor) {
+        if (!$cursor instanceof Cursor || !is_bool($cursor->toArray()['_pointsToNextItems'] ?? null)) {
             throw InvalidCursorException::invalid();
         }
-        $parameters = $cursor->toArray();
-        if (!is_bool($parameters['_pointsToNextItems'] ?? null)) {
+
+        return $cursor;
+    }
+
+    private static function byCreationTime(?string $encoded, Model $model): ?Cursor
+    {
+        $cursor = self::decode($encoded);
+        if ($cursor === null) {
+            return null;
+        }
+        $values = $cursor->toArray();
+        $key = $values['id'] ?? null;
+        if ((!is_int($key) && !is_string($key)) || !Identity::fitsKey($model, $key) || !array_key_exists('created_at', $values)) {
             throw InvalidCursorException::invalid();
         }
-        foreach ($columns as $column => $kind) {
-            $value = $parameters[$column] ?? null;
-            $fits = match ($kind) {
-                self::NUMBER => self::isNumber($value),
-                self::TIMESTAMP => array_key_exists($column, $parameters) && ($value === null || (is_string($value) && self::isTimestamp($value))),
-                self::KEY => (is_int($value) || (is_string($value) && $value !== '')) && Identity::fitsKey($model, $value),
-            };
-            if (!$fits) {
-                throw InvalidCursorException::invalid();
-            }
+        $timestamp = $values['created_at'];
+        if ($timestamp !== null && (!is_string($timestamp) || !self::isTimestamp($timestamp))) {
+            throw InvalidCursorException::invalid();
         }
 
         return $cursor;
@@ -77,7 +77,7 @@ final class KeysetCursor
      */
     public static function pageByCreationTime(Builder $listing, ?string $encoded, int $perPage, bool $newestFirst): CursorPaginator
     {
-        $cursor = self::open($encoded, ['created_at' => self::TIMESTAMP, 'id' => self::KEY], $listing->getModel());
+        $cursor = self::byCreationTime($encoded, $listing->getModel());
         $ascending = $newestFirst === ($cursor?->pointsToPreviousItems() ?? false);
         $nullsFirst = $ascending === ($listing->getModel()->getConnection()->getDriverName() !== 'pgsql');
         $timestamp = $cursor?->parameter('created_at');
@@ -116,13 +116,21 @@ final class KeysetCursor
 
     private static function isNumber(mixed $value): bool
     {
-        return (is_int($value) && $value >= 0)
-            || (is_string($value) && preg_match('/^[0-9]{1,18}$/D', $value) === 1);
+        // File and document revision numbers are signed SQL INTEGER columns.
+        if (is_int($value)) {
+            return $value >= 0 && $value <= 2_147_483_647;
+        }
+        if (!is_string($value) || preg_match('/^[0-9]+$/D', $value) !== 1) {
+            return false;
+        }
+        $digits = ltrim($value, '0');
+
+        return strlen($digits) < 10 || (strlen($digits) === 10 && strcmp($digits, '2147483647') <= 0);
     }
 
     private static function isTimestamp(string $value): bool
     {
-        if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,6})?$/D', $value) !== 1) {
+        if (str_starts_with($value, '0000-') || preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,6})?$/D', $value) !== 1) {
             return false;
         }
 

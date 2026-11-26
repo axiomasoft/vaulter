@@ -124,6 +124,8 @@ it('refuses a malformed or mismatched revisions cursor with 422 instead of faili
         $forge(['created_at' => '2026-01-01 00:00:00', 'id' => 1, '_pointsToNextItems' => true]),
         $forge(['number' => 'abc', '_pointsToNextItems' => true]),
         $forge(['number' => -1, '_pointsToNextItems' => true]),
+        $forge(['number' => 2_147_483_648, '_pointsToNextItems' => true]),
+        $forge(['number' => '2147483648', '_pointsToNextItems' => true]),
         $forge(['number' => 1, '_pointsToNextItems' => 'yes']),
         'not-a-cursor',
     ];
