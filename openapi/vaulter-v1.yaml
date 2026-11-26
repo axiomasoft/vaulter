@@ -5528,7 +5528,9 @@ components:
           type: string
           description: The comment's tag (the ETag of its responses); send it back verbatim as If-Match.
         created_at:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
           pattern: Z$
     UploadSession:
@@ -5651,7 +5653,9 @@ components:
           type: string
           description: The endpoint's tag (the ETag of its responses); send it back verbatim as If-Match.
         created_at:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
           pattern: Z$
         secret:
@@ -5692,7 +5696,9 @@ components:
           - integer
           - 'null'
         created_at:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
           pattern: Z$
     CollaborationSession:

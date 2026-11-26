@@ -158,3 +158,24 @@ it('refuses a malformed or mismatched endpoints or deliveries cursor with 422 in
         }
     }
 });
+
+it('pages every delivery once when legacy rows have no creation timestamp', function (): void {
+    $endpoint = webhookFixture(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $ids = [];
+    for ($i = 0; $i < 5; $i++) {
+        $row = webhookFixture(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint));
+        $ids[] = (string) $row->getKey();
+        if ($i % 2 === 0) {
+            webhookFixture(static fn (): int => $row->newQuery()->whereKey($row->getKey())->update(['created_at' => null]));
+        }
+    }
+    $url = V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries?per_page=1');
+    $cursor = null;
+    $seen = [];
+    foreach ($ids as $_) {
+        $page = $this->getJson($url.($cursor === null ? '' : '&cursor='.urlencode($cursor)))->assertOk();
+        $seen[] = $page->json('data.0.id');
+        $cursor = $page->json('meta.next_cursor');
+    }
+    expect($cursor)->toBeNull()->and($seen)->toEqualCanonicalizing($ids);
+});

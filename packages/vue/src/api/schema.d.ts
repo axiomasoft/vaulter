@@ -1535,7 +1535,7 @@ export interface components {
             /** @description The comment's tag (the ETag of its responses); send it back verbatim as If-Match. */
             etag: string;
             /** Format: date-time */
-            created_at: string;
+            created_at: string | null;
         };
         UploadSession: {
             upload_id: string;
@@ -1573,7 +1573,7 @@ export interface components {
             /** @description The endpoint's tag (the ETag of its responses); send it back verbatim as If-Match. */
             etag: string;
             /** Format: date-time */
-            created_at: string;
+            created_at: string | null;
             /** @description Signing secret; only in store and rotate-secret responses. */
             secret?: string;
         };
@@ -1587,7 +1587,7 @@ export interface components {
             next_retry_at: string | null;
             last_status_code: number | null;
             /** Format: date-time */
-            created_at: string;
+            created_at: string | null;
         };
         CollaborationSession: {
             protocol: string;

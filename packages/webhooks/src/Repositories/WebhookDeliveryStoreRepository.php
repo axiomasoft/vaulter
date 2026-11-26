@@ -144,16 +144,8 @@ final readonly class WebhookDeliveryStoreRepository
     public function pageForEndpoint(WebhookEndpoint $endpoint, ?string $cursor, int $perPage): CursorPaginator
     {
         $query = $this->newQuery()->where('endpoint_id', $endpoint->getKey());
-        $position = KeysetCursor::open($cursor, ['created_at' => KeysetCursor::TIMESTAMP, 'id' => KeysetCursor::KEY], $query->getModel());
-        $createdAt = $position?->toArray()['created_at'] ?? null;
-        if ($position !== null && is_string($createdAt)) {
-            $query->where('created_at', $position->pointsToNextItems() ? '<=' : '>=', $createdAt);
-        }
 
-        return $query
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->cursorPaginate(perPage: $perPage, cursor: $position);
+        return KeysetCursor::pageByCreationTime($query, $cursor, $perPage, newestFirst: true);
     }
 
     /** One delivery of the endpoint; a delivery of another endpoint is not found. */

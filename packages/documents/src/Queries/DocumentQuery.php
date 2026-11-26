@@ -83,11 +83,12 @@ final readonly class DocumentQuery
         $this->assertPlainPaging($options);
         $model = $this->config->model('node_comment');
 
-        return $model::query()
-            ->where('node_id', $node->getKey())
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->cursorPaginate(perPage: $options->perPage, cursor: KeysetCursor::open($options->cursor, ['created_at' => KeysetCursor::TIMESTAMP, 'id' => KeysetCursor::KEY], new $model));
+        return KeysetCursor::pageByCreationTime(
+            $model::query()->where('node_id', $node->getKey()),
+            $options->cursor,
+            $options->perPage,
+            newestFirst: false,
+        );
     }
 
     public function comment(Node $node, CommentSnapshot|int|string $comment): NodeComment

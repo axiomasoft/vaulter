@@ -31,7 +31,7 @@ final readonly class ListWebhookEndpointsController
         $listing = $this->endpoints->listing();
 
         return PageResponse::fromPaginator(
-            $listing->cursorPaginate(perPage: PageResponse::perPage($request), cursor: KeysetCursor::open(PageResponse::cursor($request), ['created_at' => KeysetCursor::TIMESTAMP, 'id' => KeysetCursor::KEY], $listing->getModel())),
+            KeysetCursor::pageByCreationTime($listing, PageResponse::cursor($request), PageResponse::perPage($request), newestFirst: true),
             static fn (WebhookEndpoint $endpoint): WebhookEndpointResource => new WebhookEndpointResource(WebhookEndpointSnapshot::of($endpoint)),
         );
     }
