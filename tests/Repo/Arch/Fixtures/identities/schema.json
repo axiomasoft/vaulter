@@ -20949,7 +20949,7 @@
         {
             "engines": {
                 "mysql": {
-                    "definition": "(cast(`write_mode` as char charset binary) in (_utf8mb4\\'snapshot\\',_utf8mb4\\'journal\\'))",
+                    "definition": "(cast(`write_mode` as char charset binary) in (_binary\\'snapshot\\',_binary\\'journal\\'))",
                     "kind": "check"
                 }
             },
