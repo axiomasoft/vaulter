@@ -78,7 +78,7 @@ final class BindingsRegistrar implements ModuleBindings
 
         $app->singleton(DocumentTypeRegistry::class);
         $app->singleton(DocumentExporterRegistry::class);
-        $app->singleton(DocumentsManager::class);
+        $app->scoped(DocumentsManager::class);
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
         $app->bind(AtomicDocumentMutation::class, RunAtomicDocumentMutation::class);
