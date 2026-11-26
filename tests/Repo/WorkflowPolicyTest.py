@@ -877,6 +877,10 @@ class ContractBoundaryTest(unittest.TestCase):
             for args in (['add', '.'], ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'fixture']):
                 subprocess.run(['git', '-C', str(tool)] + args, check=True)
             rev = subprocess.check_output(['git', '-C', str(tool), 'rev-parse', 'HEAD'], text=True).strip()
+            # This pin is PHP 8.4; the 8.5 CI leg has no php8.4 binary and must not approve a 8.5 runtime as 8.4.
+            version = subprocess.check_output(['php', '-r', 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'], text=True).strip()
+            if version != '8.4':
+                self.skipTest('trusted-host runtime pin is PHP 8.4')
             # Fixture setup uses source php84; bootstrap itself receives a separately approved absolute binary.
             php = subprocess.check_output([str(ROOT / 'scripts/php84'), 'php', '-r', 'echo PHP_BINARY;'], text=True)
             php = str(Path(php).resolve())

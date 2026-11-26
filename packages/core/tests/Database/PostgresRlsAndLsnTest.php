@@ -199,11 +199,13 @@ it('installs PG RLS idempotently, isolates vaulter_runtime with InitPlan, and fa
         }));
         expect($postTx)->toBe([]);
 
-        // WaitForLsn on real PG 18.4: returns valid LSN and safely falls back to Primary.
+        // A valid primary LSN is always available. WAIT FOR LSN exists from PostgreSQL 19 (MIN_PG_VERSION_NUM);
+        // 18 and earlier fall back to the primary.
         $waiter = app(WaitForLsn::class);
         $lsn = $waiter->currentPrimaryLsn();
+        $version = (int) $connection->selectOne("SELECT current_setting('server_version_num')::int AS version_num")->version_num;
         expect($lsn)->toMatch('/^[0-9A-Fa-f]+\/[0-9A-Fa-f]+$/')
-            ->and($waiter->supportsWaitForLsn($connection))->toBeFalse();
+            ->and($waiter->supportsWaitForLsn($connection))->toBe($version >= WaitForLsn::MIN_PG_VERSION_NUM);
     } finally {
         $connection->unprepared('DROP VIEW IF EXISTS v_rls_probe_view');
         $connection->unprepared('DROP TABLE IF EXISTS v_rls_probe');

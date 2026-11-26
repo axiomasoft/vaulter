@@ -21,6 +21,9 @@ This file covers the public release channel.
   replay invoked from a test or a program with integer sequences no longer exits 2 `INVALID`.
 - `scripts/php84` falls back to the current `php` when that interpreter is 8.4 or newer and no
   `php8.4` binary is on `PATH`, so the PHP 8.5 CI leg can run the inventory shim.
+- The trusted-host workflow-policy test, which pins PHP 8.4, is skipped on the PHP 8.5 CI leg.
+- `WaitForLsn::supportsWaitForLsn` is asserted true from PostgreSQL 19, where the feature exists;
+  18 still falls back to the primary.
 - I4 and I13 allowlists match the current source (stale package-registrar probes removed; host
   lifecycle, CORS, tenancy restore, WHATWG URL and live document-options probes documented).
   `DocumentWriteMode` is public API, because it already appears on the prepared collaborative

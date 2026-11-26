@@ -60,6 +60,16 @@ function idemRows(): int
     return app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY))->count();
 }
 
+/** pgsql/mysql compare expiry to clock_timestamp(), so Carbon::travel() is not enough. */
+function expireIdempotencyReceipts(int $secondsAgo, ?string $key = null): void
+{
+    $query = app(VaulterDatabase::class)->connection()->table(app(DatabaseOptions::class)->table(IdempotencyStore::ENTITY));
+    if ($key !== null) {
+        $query->where('idempotency_key', base64_encode($key));
+    }
+    $query->update(['expires_at' => now()->subSeconds($secondsAgo)]);
+}
+
 function idemRow(): ?stdClass
 {
     /** @var stdClass|null $row */
@@ -281,20 +291,20 @@ it('rejects a recently expired key and prunes only expired receipts', function (
     [$drive] = idemDrive();
     idemHandle($drive, 'ttl')->folders()->create('Once');
 
-    $this->travel(86401)->seconds();
+    expireIdempotencyReceipts(1, 'ttl');
     expect(fn () => idemHandle($drive, 'ttl')->folders()->create('Once'))->toThrow(IdempotencyKeyExpiredException::class);
 
     idemHandle($drive, 'fresh')->folders()->create('Fresh');
-    $this->travel(86401)->seconds();
+    expireIdempotencyReceipts(1, 'fresh');
     idemHandle($drive, 'newest')->folders()->create('Newest');
 
     $this->artisan('vaulter:idempotency:prune')->assertExitCode(0);
     expect(idemRows())->toBe(3);
 
-    $this->travel(7)->days();
+    expireIdempotencyReceipts(8 * 86400, 'ttl');
+    expireIdempotencyReceipts(8 * 86400, 'fresh');
     $this->artisan('vaulter:idempotency:prune')->assertExitCode(0);
     expect(idemRows())->toBe(1);
-    Carbon::setTestNow();
 });
 
 it('refuses an unknown codec version instead of guessing', function (): void {
