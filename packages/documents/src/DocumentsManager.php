@@ -19,6 +19,7 @@ final readonly class DocumentsManager
     public function __construct(
         private DocumentTypeRegistry $types,
         private DocumentExporterRegistry $exporters,
+        private Container $container,
     ) {}
 
     public function types(): DocumentTypeRegistry
@@ -43,7 +44,7 @@ final readonly class DocumentsManager
     /** Use an already resolved drive operation context. */
     public function forContext(DriveContext $context): DocumentOperations
     {
-        return app(Container::class)->makeWith(DocumentOperations::class, ['context' => $context]);
+        return $this->container->makeWith(DocumentOperations::class, ['context' => $context]);
     }
 
     /** The comments on the nodes of one drive, as the handle's actor. */

@@ -5,8 +5,13 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 bin="${PHP84_BIN:-$(command -v php8.4 || :)}"
 if [[ -z "$bin" || ! -x "$bin" ]]; then
-    echo "php84: php8.4 binary not found (set PHP84_BIN)" >&2
-    exit 1
+    # CI's PHP 8.5 leg has no php8.4 binary; use the job's interpreter when it is 8.4+.
+    if command -v php >/dev/null && php -r 'exit(version_compare(PHP_VERSION, "8.4.0", ">=") ? 0 : 1);'; then
+        bin="$(command -v php)"
+    else
+        echo "php84: php8.4 binary not found (set PHP84_BIN)" >&2
+        exit 1
+    fi
 fi
 bin="$(cd "$(dirname "$bin")" && pwd)/$(basename "$bin")"
 shim="$root/build/php84/bin"

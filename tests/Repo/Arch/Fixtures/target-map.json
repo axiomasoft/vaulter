@@ -2866,7 +2866,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Enums\\",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode"
         },
         {

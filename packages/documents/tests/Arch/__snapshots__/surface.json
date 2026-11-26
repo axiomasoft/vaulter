@@ -7353,6 +7353,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -7941,6 +7950,45 @@
                         "Vaulter\\Attributes\\EventSpec(subject: 'node', data: ['revision_id?' => 'string', 'checkpoint' => 'bool', 'state_version' => 'int', 'epoch' => 'int'], activity: false, external: true, journal: 'upsert', description: 'The content of a document was saved; webhooks receive only saves that took a checkpoint.')",
                         "Vaulter\\Attributes\\Label('Document updated')"
                     ],
+                    "deprecated": false,
+                    "doc": []
+                }
+            }
+        },
+        "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode": {
+            "kind": "enum",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": "string",
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "case:Journal": {
+                    "kind": "case",
+                    "name": "Journal",
+                    "value": "'journal'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc": []
+                },
+                "case:Snapshot": {
+                    "kind": "case",
+                    "name": "Snapshot",
+                    "value": "'snapshot'",
+                    "attributes": [],
                     "deprecated": false,
                     "doc": []
                 }
@@ -16274,6 +16322,32 @@
                     "final": false,
                     "type": "string",
                     "value": "'vaulter/rich-text'",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container|null",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,

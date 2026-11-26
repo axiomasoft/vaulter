@@ -33,17 +33,16 @@ final class RelayReplayCommand extends Command
     public function handle(OutboxRelay $relay): int
     {
         $consumer = $this->option('consumer');
-        $from = $this->option('from');
-        $to = $this->option('to');
-        if (!is_string($consumer) || $consumer === '' || !is_string($from) || !is_string($to)
-            || preg_match('/^\d+$/', $from) !== 1 || preg_match('/^\d+$/', $to) !== 1 || (int) $from > (int) $to) {
+        $from = self::digitOption($this->option('from'));
+        $to = self::digitOption($this->option('to'));
+        if (!is_string($consumer) || $consumer === '' || $from === null || $to === null || $from > $to) {
             $this->components->error('--consumer, --from and --to are required; --from and --to are outbox seqs with --from <= --to.');
 
             return self::INVALID;
         }
 
         try {
-            $result = $relay->replay($consumer, (int) $from, (int) $to, $this->option('ack-only'));
+            $result = $relay->replay($consumer, $from, $to, $this->option('ack-only'));
         } catch (LogicException $exception) {
             $this->components->error($exception->getMessage());
 
@@ -51,24 +50,36 @@ final class RelayReplayCommand extends Command
         }
 
         if ($this->option('ack-only') === true) {
-            $this->components->info(sprintf('Acknowledged %d gap(s) of %s in [%s, %s].', $result['acknowledged'], $consumer, $from, $to));
+            $this->components->info(sprintf('Acknowledged %d gap(s) of %s in [%d, %d].', $result['acknowledged'], $consumer, $from, $to));
 
             return self::SUCCESS;
         }
 
         $covered = $result['covered'];
         if ($covered === null) {
-            $this->components->error(sprintf('No event of [%s, %s] is left in the outbox: nothing to replay; use --ack-only to acknowledge the loss.', $from, $to));
+            $this->components->error(sprintf('No event of [%d, %d] is left in the outbox: nothing to replay; use --ack-only to acknowledge the loss.', $from, $to));
 
             return self::FAILURE;
         }
         $this->components->info(sprintf('Replayed %d deliver%s of %s for seqs [%d, %d] (%d dead returned to pending); acknowledged %d gap(s).', $result['rows'], $result['rows'] === 1 ? 'y' : 'ies', $consumer, $covered[0], $covered[1], $result['dead'], $result['acknowledged']));
-        if ($covered[0] > (int) $from) {
-            $this->components->error(sprintf('Seqs [%s, %d] are no longer in the outbox (retention): they cannot be replayed.', $from, $covered[0] - 1));
+        if ($covered[0] > $from) {
+            $this->components->error(sprintf('Seqs [%d, %d] are no longer in the outbox (retention): they cannot be replayed.', $from, $covered[0] - 1));
 
             return self::FAILURE;
         }
 
         return self::SUCCESS;
+    }
+
+    private static function digitOption(mixed $value): ?int
+    {
+        if (is_int($value)) {
+            return $value >= 0 ? $value : null;
+        }
+        if (is_string($value) && preg_match('/^\d+$/', $value) === 1) {
+            return (int) $value;
+        }
+
+        return null;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
+use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Api;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
@@ -22,6 +23,8 @@ final readonly class RichTextDocumentType implements DocumentType, SupportsColla
 {
     public const string KEY = 'vaulter/rich-text';
 
+    public function __construct(private ?Container $container = null) {}
+
     public function key(): string
     {
         return self::KEY;
@@ -34,7 +37,11 @@ final readonly class RichTextDocumentType implements DocumentType, SupportsColla
 
     public function schemaVersion(): int
     {
-        return app()->bound(DocumentsOptions::class) && app(DocumentsOptions::class)->tiptap->blockIds ? 2 : 1;
+        if ($this->container === null || !$this->container->bound(DocumentsOptions::class)) {
+            return 1;
+        }
+
+        return $this->container->make(DocumentsOptions::class)->tiptap->blockIds ? 2 : 1;
     }
 
     public function codec(): DocumentCodec

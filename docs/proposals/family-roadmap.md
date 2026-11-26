@@ -264,6 +264,14 @@ to constructor injection and the probes disappear, or each entry gets a reason, 
 removal version, reviewed by the owner of the series that added it. The PHP 8.5 leg either skips
 the 8.4-only shim or `scripts/php84` accepts the job's interpreter.
 
+**Done on `refactor/polish`.** `scripts/php84` accepts the job's 8.4+ interpreter; stale I4
+registrar probes were dropped and the remaining host-lifecycle / explicit-adapter / config-validation
+probes were documented; `DocumentWriteMode` is `#[Api]`; `DocumentsManager::forContext` and
+`RichTextDocumentType::schemaVersion` no longer call `app()`; related-write document operations stay
+outside the runner; the collaboration provider was removed from `ProvidersDeclareOnlyTest`;
+`vaulter:relay:replay` accepts integer sequences; a recently expired idempotency key is rejected as
+the store already documents, and the contract test matches that.
+
 **Rationale.** A gate that is red for known reasons hides new failures; `CI gate` cannot become a
 required check until these are gone.
 

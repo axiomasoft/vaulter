@@ -17,6 +17,14 @@ This file covers the public release channel.
 
 ### Fixed
 
+- `vaulter:relay:replay` accepts integer `--from` / `--to` values as well as digit strings, so a
+  replay invoked from a test or a program with integer sequences no longer exits 2 `INVALID`.
+- `scripts/php84` falls back to the current `php` when that interpreter is 8.4 or newer and no
+  `php8.4` binary is on `PATH`, so the PHP 8.5 CI leg can run the inventory shim.
+- I4 and I13 allowlists match the current source (stale package-registrar probes removed; host
+  lifecycle, CORS, tenancy restore, WHATWG URL and live document-options probes documented).
+  `DocumentWriteMode` is public API, because it already appears on the prepared collaborative
+  transition. `DocumentsManager` takes the container so `forContext` no longer calls `app()`.
 - The scan backfill and `vaulter:scan:rescan` page `v_file_revisions` through the new
   `v_file_revisions_scan_admission_idx` (`scan_admission_sequence, id`, migration
   `0001_01_01_000220`) with a leading `scan_admission_sequence >= ?` bound, so a deep page seeks

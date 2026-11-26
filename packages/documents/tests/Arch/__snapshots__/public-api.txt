@@ -243,7 +243,7 @@ FACADE Vaulter\Documents\Facades\Documents
   static DocumentTypeRegistry types()
 
 Vaulter\Documents\DocumentsManager
-  __construct(\Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Export\DocumentExporterRegistry $exporters)
+  __construct(\Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Export\DocumentExporterRegistry $exporters, \Illuminate\Contracts\Container\Container $container)
   comments(\Vaulter\Drive\Contracts\DriveHandle $drive): \Vaulter\Documents\Operations\CommentOperations
   exporters(): \Vaulter\Documents\Export\DocumentExporterRegistry
   forContext(\Vaulter\Drive\Operations\DriveContext $context): \Vaulter\Documents\Operations\DocumentOperations
@@ -415,6 +415,7 @@ Vaulter\Documents\Export\DocumentExporterRegistry
   replace(string $key, \Vaulter\Documents\Contracts\DocumentExporter|string $exporter): void
 
 Vaulter\Documents\Types\RichTextDocumentType
+  __construct(?\Illuminate\Contracts\Container\Container $container = null)
   codec(): \Vaulter\Documents\Contracts\DocumentCodec
   collaborationProtocol(): string
   collaborationStateFormat(): string

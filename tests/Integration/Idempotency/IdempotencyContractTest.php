@@ -26,6 +26,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Exceptions\Idempotency\IdempotencyKeyExpiredException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Idempotency\IdempotencyDigest;
@@ -276,17 +277,21 @@ it('scopes a system actor and a drive without tenant by tagged values, not nulls
         ->and(strlen((string) $row->scope_digest))->toBe(64);
 });
 
-it('treats an expired receipt as absent and prunes only expired receipts', function (): void {
+it('rejects a recently expired key and prunes only expired receipts', function (): void {
     [$drive] = idemDrive();
     idemHandle($drive, 'ttl')->folders()->create('Once');
 
     $this->travel(86401)->seconds();
-    expect(fn () => idemHandle($drive, 'ttl')->folders()->create('Once'))->toThrow(NodeNameConflictException::class);
+    expect(fn () => idemHandle($drive, 'ttl')->folders()->create('Once'))->toThrow(IdempotencyKeyExpiredException::class);
 
     idemHandle($drive, 'fresh')->folders()->create('Fresh');
     $this->travel(86401)->seconds();
     idemHandle($drive, 'newest')->folders()->create('Newest');
 
+    $this->artisan('vaulter:idempotency:prune')->assertExitCode(0);
+    expect(idemRows())->toBe(3);
+
+    $this->travel(7)->days();
     $this->artisan('vaulter:idempotency:prune')->assertExitCode(0);
     expect(idemRows())->toBe(1);
     Carbon::setTestNow();

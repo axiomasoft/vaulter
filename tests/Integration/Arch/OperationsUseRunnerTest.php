@@ -33,7 +33,9 @@ const OPERATIONS_READS = [
     ShareOperations::class => ['list', 'paginate'],
     ActivityOperations::class => ['forDrive', 'forNode', 'filtered'],
     ChangeOperations::class => ['startCursor', 'list'],
-    DocumentOperations::class => ['content', 'revisions', 'revisionPage', 'export', 'collaborationSession'],
+    // metadata is a read. lockForRelatedWrite / mutateForRelatedWrite run inside the caller's
+    // already-open write and receipt; a nested runner would start a second write.
+    DocumentOperations::class => ['content', 'revisions', 'revisionPage', 'export', 'collaborationSession', 'metadata', 'lockForRelatedWrite', 'mutateForRelatedWrite'],
     CommentOperations::class => ['list', 'forWrite'],
 ];
 

@@ -22,7 +22,7 @@ use Vaulter\Testing\Concerns\FreshApplication;
  * ready instance, like the handler and type registries.
  */
 it('the exporter registry accepts a class-string exporter and resolves it through the container', function (): void {
-    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app()));
+    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app()), app());
 
     $manager->exporters()->register(FakeExporter::class);
 
@@ -31,7 +31,7 @@ it('the exporter registry accepts a class-string exporter and resolves it throug
 });
 
 it('the exporter registry still accepts a ready instance', function (): void {
-    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app()));
+    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app()), app());
     $exporter = new FakeExporter;
 
     $manager->exporters()->register($exporter);

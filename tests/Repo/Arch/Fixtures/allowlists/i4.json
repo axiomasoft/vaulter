@@ -12,17 +12,6 @@
             "view": "current"
         },
         {
-            "category": "host-lifecycle",
-            "count": 1,
-            "file": "packages/azguard/src/Providers/AzGuardPackageRegistrar.php",
-            "kind": "probe",
-            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
-            "removed_in": "never",
-            "symbol": "Vaulter\\AzGuard\\Providers\\AzGuardPackageRegistrar::register",
-            "target": "'config'",
-            "view": "current"
-        },
-        {
             "count": 1,
             "file": "packages/core/src/Configuration/CompiledOptionsCache.php",
             "kind": "probe",
@@ -75,6 +64,17 @@
             "view": "current",
             "category": "host-lifecycle",
             "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Http/Middleware/ExposeVaulterCorsHeaders.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Http\\Middleware\\ExposeVaulterCorsHeaders::setOptions",
+            "target": "'request'",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Read the current request, when one is bound, to merge Vaulter CORS headers onto the host middleware; fallback keeps the configured lists and does not select a package (ADR-0039).",
             "removed_in": "never"
         },
         {
@@ -134,6 +134,17 @@
         },
         {
             "count": 1,
+            "file": "packages/core/src/Modules/OffersModules.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Modules\\OffersModules::moduleProviderBooted",
+            "target": "static::class . ':booted'",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Ask whether the application already marked this module provider as booted after a forced re-registration; a bound sentinel is host lifecycle state, not package selection (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
             "file": "packages/core/src/Modules/VaulterPluginActivationGate.php",
             "kind": "probe",
             "symbol": "Vaulter\\Modules\\VaulterPluginActivationGate::isEnabled",
@@ -170,28 +181,6 @@
             "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
             "kind": "probe",
             "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::registerInvalidGraphRoute",
-            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
-            "view": "current",
-            "category": "host-lifecycle",
-            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
-            "removed_in": "never"
-        },
-        {
-            "count": 1,
-            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
-            "kind": "probe",
-            "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::registerPackmanFacets",
-            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
-            "view": "current",
-            "category": "host-lifecycle",
-            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
-            "removed_in": "never"
-        },
-        {
-            "count": 1,
-            "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
-            "kind": "probe",
-            "symbol": "Vaulter\\Providers\\CoreKernelRegistrar::register",
             "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
             "view": "current",
             "category": "host-lifecycle",
@@ -265,6 +254,28 @@
             "view": "current"
         },
         {
+            "count": 1,
+            "file": "packages/core/src/Tenancy/RestoreTenantContext.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Tenancy\\RestoreTenantContext::handleJob",
+            "target": "\\Vaulter\\Contracts\\Tenancy\\TenantResolver::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Save and restore the already-resolved TenantResolver around a queued job so the job's tenant does not leak into the next one; this does not select a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/core/src/Tenancy/RestoreTenantContext.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Tenancy\\RestoreTenantContext::handleRequest",
+            "target": "\\Vaulter\\Contracts\\Tenancy\\TenantResolver::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Save and restore the already-resolved TenantResolver around a request so the request tenant does not leak; this does not select a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
             "category": "config-validation",
             "count": 1,
             "file": "packages/core/src/Testing/Concurrency/ForkRace.php",
@@ -331,17 +342,6 @@
             "removed_in": "never"
         },
         {
-            "count": 1,
-            "file": "packages/documents/src/Providers/DocumentsPackageRegistrar.php",
-            "kind": "probe",
-            "symbol": "Vaulter\\Documents\\Providers\\DocumentsPackageRegistrar::register",
-            "target": "'config'",
-            "view": "current",
-            "category": "host-lifecycle",
-            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
-            "removed_in": "never"
-        },
-        {
             "category": "config-validation",
             "count": 1,
             "file": "packages/documents/src/Types/DocumentTypeRegistry.php",
@@ -351,6 +351,17 @@
             "symbol": "Vaulter\\Documents\\Types\\DocumentTypeRegistry::instance",
             "target": "$type",
             "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/documents/src/Types/RichTextDocumentType.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Documents\\Types\\RichTextDocumentType::schemaVersion",
+            "target": "\\Vaulter\\Documents\\Configuration\\DocumentsOptions::class",
+            "view": "current",
+            "category": "config-validation",
+            "reason": "schemaVersion must read the current compiled vaulter-documents.tiptap.block_ids (CompiledOptionsCache is keyed by the raw config), not a copy frozen at type construction, so a mid-request config change is visible. This does not select or activate a package.",
+            "removed_in": "never"
         },
         {
             "category": "explicit-adapter",
@@ -585,28 +596,6 @@
             "view": "current"
         },
         {
-            "count": 1,
-            "file": "packages/drive/src/Providers/DrivePackageRegistrar.php",
-            "kind": "probe",
-            "symbol": "Vaulter\\Drive\\Providers\\DrivePackageRegistrar::register",
-            "target": "'config'",
-            "view": "current",
-            "category": "host-lifecycle",
-            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
-            "removed_in": "never"
-        },
-        {
-            "count": 1,
-            "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
-            "kind": "probe",
-            "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::bootOptions",
-            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
-            "view": "current",
-            "category": "host-lifecycle",
-            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
-            "removed_in": "never"
-        },
-        {
             "category": "host-lifecycle",
             "count": 1,
             "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
@@ -627,6 +616,17 @@
             "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::boot",
             "target": "\\Vaulter\\Media\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
+        },
+        {
+            "count": 1,
+            "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::bootOptions",
+            "target": "\\Illuminate\\Contracts\\Config\\Repository::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
         },
         {
             "category": "host-lifecycle",
@@ -681,6 +681,17 @@
             "view": "current",
             "category": "host-lifecycle",
             "reason": "Resolve configuration or an already registered host service at the Laravel lifecycle boundary; fallback compiles the same Options defaults and does not select or activate a package (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/webhooks/src/DefaultOutboundUrlGuard.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Webhooks\\DefaultOutboundUrlGuard::asciiHost",
+            "target": "\\Uri\\WhatWg\\Url::class",
+            "view": "current",
+            "category": "explicit-adapter",
+            "reason": "Prefer the PHP 8.5 WHATWG URL parser when that class exists, otherwise ASCII-encode the host; this is a parser capability check, not package activation.",
             "removed_in": "never"
         }
     ],

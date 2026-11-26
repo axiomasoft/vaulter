@@ -339,7 +339,7 @@ Vaulter\Documents\Data\Types\DocumentViewer api since 1.0 final readonly class
   public function toArray(): array
 
 Vaulter\Documents\DocumentsManager api since 1.0 final readonly class
-  public function __construct(Vaulter\Documents\Types\DocumentTypeRegistry $types, Vaulter\Documents\Export\DocumentExporterRegistry $exporters)
+  public function __construct(Vaulter\Documents\Types\DocumentTypeRegistry $types, Vaulter\Documents\Export\DocumentExporterRegistry $exporters, Illuminate\Contracts\Container\Container $container)
   public function comments(Vaulter\Drive\Contracts\DriveHandle $drive): Vaulter\Documents\Operations\CommentOperations
   public function exporters(): Vaulter\Documents\Export\DocumentExporterRegistry
   public function forContext(Vaulter\Drive\Operations\DriveContext $context): Vaulter\Documents\Operations\DocumentOperations
@@ -373,6 +373,10 @@ Vaulter\Documents\Enums\DocumentEventType api since 1.0 enum: string implements 
   case DocumentRestored = 'document.restored'
   case DocumentRevisionCreated = 'document.revision_created'
   case DocumentUpdated = 'document.updated'
+
+Vaulter\Documents\Enums\Documents\DocumentWriteMode api since 1.0 enum: string
+  case Journal = 'journal'
+  case Snapshot = 'snapshot'
 
 Vaulter\Documents\Errors\DocumentsErrorCode api since 1.0 enum: string implements Packman\Errors\Contracts\ErrorCode
   case CollaborationProtocolContract = 'documents.collaboration_protocol_contract'
@@ -797,6 +801,7 @@ Vaulter\Documents\Types\MarkdownDocumentType api since 1.0 final readonly class 
 
 Vaulter\Documents\Types\RichTextDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType, Vaulter\Documents\Contracts\SupportsCollaboration
   public const string KEY = 'vaulter/rich-text'
+  public function __construct(?Illuminate\Contracts\Container\Container $container = null)
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function collaborationProtocol(): string
   public function collaborationStateFormat(): string
