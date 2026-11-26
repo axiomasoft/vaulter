@@ -2,12 +2,12 @@ VaulterBreadcrumb emit (event: "navigate", nodeId: string | null): void
 VaulterBreadcrumb prop onNavigate?: ((nodeId: string | null) => any) | undefined
 VaulterBreadcrumb prop path?: { id: string; name: string; }[] | undefined
 VaulterBreadcrumb prop rootLabel?: string | undefined
-VaulterCommentsPanel emit (event: "added", comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string; }): void
-VaulterCommentsPanel emit (event: "resolved", comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string; }): void
+VaulterCommentsPanel emit (event: "added", comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string | null; }): void
+VaulterCommentsPanel emit (event: "resolved", comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string | null; }): void
 VaulterCommentsPanel prop autoLoad?: boolean | undefined
 VaulterCommentsPanel prop nodeId: string
-VaulterCommentsPanel prop onAdded?: ((comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string; }) => any) | undefined
-VaulterCommentsPanel prop onResolved?: ((comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string; }) => any) | undefined
+VaulterCommentsPanel prop onAdded?: ((comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string | null; }) => any) | undefined
+VaulterCommentsPanel prop onResolved?: ((comment: { id: string; node_id: string; parent_id: string | null; author: { type: string | null; id: string | null; }; body: string; anchor: Record<string, unknown> | null; resolved_at: string | null; resolved_by: string | null; version: number; etag: string; created_at: string | null; }) => any) | undefined
 VaulterDocumentNode emit (event: "collaborating", readonly: boolean): void
 VaulterDocumentNode emit (event: "collaboration-failed", error: unknown): void
 VaulterDocumentNode emit (event: "conflict", error: VaulterApiError): void

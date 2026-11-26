@@ -612,7 +612,7 @@ export interface components {
             resolved_by: string | null;
             version: number;
             etag: string;
-            created_at: string;
+            created_at: string | null;
         };
         UploadSession: {
             upload_id: string;
@@ -642,7 +642,7 @@ export interface components {
             disabled_at: string | null;
             version: number;
             etag: string;
-            created_at: string;
+            created_at: string | null;
             secret?: string;
         };
         WebhookDelivery: {
@@ -653,7 +653,7 @@ export interface components {
             attempts: number;
             next_retry_at: string | null;
             last_status_code: number | null;
-            created_at: string;
+            created_at: string | null;
         };
         CollaborationSession: {
             protocol: string;
