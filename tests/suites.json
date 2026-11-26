@@ -715,6 +715,7 @@
           "files": [
             "packages/media/tests/Cas/BlobPinTransactionTest.php",
             "packages/media/tests/Cas/BlobScopeKeyTest.php",
+            "packages/media/tests/Cas/BlobSnapshotConflictTest.php",
             "packages/media/tests/Cas/PinSweepRaceTest.php",
             "packages/media/tests/Cas/ScopeKeyReconcileTest.php"
           ]
@@ -1339,6 +1340,7 @@
             "packages/webhooks/tests/Http/WebhooksProblemCodesTest.php",
             "packages/webhooks/tests/Modules/WebhooksModuleTest.php",
             "packages/webhooks/tests/Outbox/WebhookFanoutConsumerTest.php",
+            "packages/webhooks/tests/Schema/DeliveryForeignKeyMigrationTest.php",
             "packages/webhooks/tests/Schema/MassAssignmentHardeningTest.php",
             "packages/webhooks/tests/Schema/WebhooksKeyColumnsTest.php",
             "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
