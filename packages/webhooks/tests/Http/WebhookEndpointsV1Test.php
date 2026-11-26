@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Support\KeysetCursor;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Webhooks\Jobs\DeliverWebhook;
 use Vaulter\Webhooks\Models\WebhookDelivery;
@@ -178,4 +179,13 @@ it('pages every delivery once when legacy rows have no creation timestamp', func
         $cursor = $page->json('meta.next_cursor');
     }
     expect($cursor)->toBeNull()->and($seen)->toEqualCanonicalizing($ids);
+
+    $query = WebhookDelivery::query()->where('endpoint_id', $endpoint->getKey());
+    $page = KeysetCursor::pageByCreationTime($query, null, 1, newestFirst: true);
+    for ($i = 1; $i < count($seen); $i++) {
+        $next = KeysetCursor::pageByCreationTime($query, $page->nextCursor()->encode(), 1, newestFirst: true);
+        $previous = KeysetCursor::pageByCreationTime($query, $next->previousCursor()->encode(), 1, newestFirst: true);
+        expect((string) $previous->items()[0]->getKey())->toBe($seen[$i - 1]);
+        $page = $next;
+    }
 });

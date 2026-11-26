@@ -55,7 +55,7 @@ final class KeysetCursor
         }
         $values = $cursor->toArray();
         $key = $values['id'] ?? null;
-        if ((!is_int($key) && !is_string($key)) || !Identity::fitsKey($model, $key) || !array_key_exists('created_at', $values)) {
+        if ((!is_int($key) && (!is_string($key) || $key === '')) || !Identity::fitsKey($model, $key) || !array_key_exists('created_at', $values)) {
             throw InvalidCursorException::invalid();
         }
         $timestamp = $values['created_at'];
