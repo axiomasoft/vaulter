@@ -5193,6 +5193,37 @@
                         }
                     ]
                 },
+                "v_nodes_live_children_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "parent_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "trashed_at",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "name",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
                 "v_nodes_mime_type_index": {
                     "unique": false,
                     "type": "BTREE",
@@ -5372,7 +5403,7 @@
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `v_nodes` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name_key` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `extension` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `inherit_grants` tinyint(1) NOT NULL DEFAULT '1',\n  `access_version` bigint NOT NULL DEFAULT '0',\n  `shortcut_target_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `properties` json DEFAULT NULL,\n  `content_modified_at` timestamp NULL DEFAULT NULL,\n  `content_modified_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_at` timestamp NULL DEFAULT NULL,\n  `trashed_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_from_parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trash_root_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `sequence` bigint NOT NULL DEFAULT '0',\n  `name_key_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS ((case when (`trashed_at` is null) then sha2(`name_key`,256) else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_nodes_sibling_uniq` (`name_key_hash`,`parent_id`),\n  UNIQUE KEY `v_nodes_root_uniq` (((case when (`parent_id` is null) then 1 else NULL end)),`drive_id`),\n  KEY `v_nodes_drive_id_fk_idx` (`drive_id`),\n  KEY `v_nodes_drive_id_parent_id_index` (`drive_id`,`parent_id`),\n  KEY `v_nodes_drive_id_kind_trashed_at_index` (`drive_id`,`kind`,`trashed_at`),\n  KEY `v_nodes_drive_id_trash_root_id_index` (`drive_id`,`trash_root_id`),\n  KEY `v_nodes_profile_index` (`profile`),\n  KEY `v_nodes_tenant_id_index` (`tenant_id`),\n  KEY `v_nodes_drive_id_index` (`drive_id`),\n  KEY `v_nodes_parent_id_index` (`parent_id`),\n  KEY `v_nodes_kind_index` (`kind`),\n  KEY `v_nodes_mime_type_index` (`mime_type`),\n  KEY `v_nodes_shortcut_target_id_index` (`shortcut_target_id`),\n  KEY `v_nodes_trashed_from_parent_id_index` (`trashed_from_parent_id`),\n  KEY `v_nodes_trash_root_id_index` (`trash_root_id`),\n  KEY `v_nodes_trashed_idx` (`trashed_at`),\n  CONSTRAINT `v_nodes_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `v_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_nodes_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_nodes_chk_1` CHECK ((`access_version` >= 0)),\n  CONSTRAINT `v_nodes_sequence_nonnegative` CHECK ((`sequence` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_nodes` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name_key` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `extension` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `inherit_grants` tinyint(1) NOT NULL DEFAULT '1',\n  `access_version` bigint NOT NULL DEFAULT '0',\n  `shortcut_target_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `properties` json DEFAULT NULL,\n  `content_modified_at` timestamp NULL DEFAULT NULL,\n  `content_modified_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_at` timestamp NULL DEFAULT NULL,\n  `trashed_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_from_parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trash_root_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `sequence` bigint NOT NULL DEFAULT '0',\n  `name_key_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS ((case when (`trashed_at` is null) then sha2(`name_key`,256) else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_nodes_sibling_uniq` (`name_key_hash`,`parent_id`),\n  UNIQUE KEY `v_nodes_root_uniq` (((case when (`parent_id` is null) then 1 else NULL end)),`drive_id`),\n  KEY `v_nodes_drive_id_fk_idx` (`drive_id`),\n  KEY `v_nodes_drive_id_parent_id_index` (`drive_id`,`parent_id`),\n  KEY `v_nodes_drive_id_kind_trashed_at_index` (`drive_id`,`kind`,`trashed_at`),\n  KEY `v_nodes_drive_id_trash_root_id_index` (`drive_id`,`trash_root_id`),\n  KEY `v_nodes_profile_index` (`profile`),\n  KEY `v_nodes_tenant_id_index` (`tenant_id`),\n  KEY `v_nodes_drive_id_index` (`drive_id`),\n  KEY `v_nodes_parent_id_index` (`parent_id`),\n  KEY `v_nodes_kind_index` (`kind`),\n  KEY `v_nodes_mime_type_index` (`mime_type`),\n  KEY `v_nodes_shortcut_target_id_index` (`shortcut_target_id`),\n  KEY `v_nodes_trashed_from_parent_id_index` (`trashed_from_parent_id`),\n  KEY `v_nodes_trash_root_id_index` (`trash_root_id`),\n  KEY `v_nodes_live_children_idx` (`parent_id`,`trashed_at`,`name`,`id`),\n  KEY `v_nodes_trashed_idx` (`trashed_at`),\n  CONSTRAINT `v_nodes_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `v_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_nodes_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_nodes_chk_1` CHECK ((`access_version` >= 0)),\n  CONSTRAINT `v_nodes_sequence_nonnegative` CHECK ((`sequence` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_outbox": {
             "columns": [

@@ -31094,6 +31094,43 @@
             "engines": {
                 "mysql": {
                     "columns": [
+                        "parent_id",
+                        "trashed_at",
+                        "name",
+                        "id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(parent_id, name, id)",
+                    "method": "btree",
+                    "predicate": "(trashed_at IS NULL)",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "parent_id",
+                        "name",
+                        "id"
+                    ],
+                    "origin": "c",
+                    "predicate": "trashed_at IS NULL",
+                    "unique": false
+                }
+            },
+            "id": "index:v_nodes.v_nodes_live_children_idx",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+                "symbol": "v_nodes"
+            },
+            "table": "v_nodes"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
                         "mime_type"
                     ],
                     "method": "BTREE",
@@ -33953,6 +33990,17 @@
             },
             "tables": [
                 "v_file_revisions"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000221_add_live_children_index_to_v_nodes_table.php",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000221_add_live_children_index_to_v_nodes_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_nodes"
             ]
         },
         {

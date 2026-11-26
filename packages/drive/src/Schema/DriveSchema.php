@@ -1012,6 +1012,35 @@ final class DriveSchema implements ModuleSchema
         });
     }
 
+    public function addFolderListingIndex(): void
+    {
+        $builder = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('nodes');
+        $index = $table.'_live_children_idx';
+        if (!$builder->hasTable($table) || $builder->hasIndex($table, $index)) {
+            return;
+        }
+        $db = $builder->getConnection();
+        if (in_array($db->getDriverName(), ['pgsql', 'sqlite'], true)) {
+            $grammar = $db->getQueryGrammar();
+            $db->statement('CREATE INDEX '.$grammar->wrap($index).' ON '.$grammar->wrapTable($table)
+                .' (parent_id, name, id) WHERE trashed_at IS NULL');
+
+            return;
+        }
+        $builder->table($table, static fn (Blueprint $blueprint) => $blueprint->index(['parent_id', 'trashed_at', 'name', 'id'], $index));
+    }
+
+    public function dropFolderListingIndex(): void
+    {
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('nodes');
+        $index = $table.'_live_children_idx';
+        if ($schema->hasTable($table) && $schema->hasIndex($table, $index)) {
+            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropIndex($index));
+        }
+    }
+
     /** Public so the upgrade migration adds the admission-order index to an existing table. */
     public function addFileRevisionsScanAdmissionIndex(): void
     {
@@ -1129,6 +1158,7 @@ final class DriveSchema implements ModuleSchema
             $this->addNodeSequence();
             $this->addSiblingUniqueIndex(table: $this->helpers->table('nodes'));
             $this->addSingleRootIndex(table: $this->helpers->table('nodes'));
+            $this->addFolderListingIndex();
             $this->addTrashedAtIndex(table: $this->helpers->table('nodes'));
         }
 

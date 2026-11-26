@@ -4132,6 +4132,7 @@
                 "v_nodes_drive_id_parent_id_index": "CREATE INDEX v_nodes_drive_id_parent_id_index ON public.v_nodes USING btree (drive_id, parent_id)",
                 "v_nodes_drive_id_trash_root_id_index": "CREATE INDEX v_nodes_drive_id_trash_root_id_index ON public.v_nodes USING btree (drive_id, trash_root_id)",
                 "v_nodes_kind_index": "CREATE INDEX v_nodes_kind_index ON public.v_nodes USING btree (kind)",
+                "v_nodes_live_children_idx": "CREATE INDEX v_nodes_live_children_idx ON public.v_nodes USING btree (parent_id, name, id) WHERE (trashed_at IS NULL)",
                 "v_nodes_mime_type_index": "CREATE INDEX v_nodes_mime_type_index ON public.v_nodes USING btree (mime_type)",
                 "v_nodes_parent_id_index": "CREATE INDEX v_nodes_parent_id_index ON public.v_nodes USING btree (parent_id)",
                 "v_nodes_pkey": "CREATE UNIQUE INDEX v_nodes_pkey ON public.v_nodes USING btree (id)",

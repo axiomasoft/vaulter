@@ -330,6 +330,15 @@
         },
         {
             "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000221_add_live_children_index_to_v_nodes_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
             "file": "packages/drive/routes/drive.php",
             "note": null,
             "owner": "drive",

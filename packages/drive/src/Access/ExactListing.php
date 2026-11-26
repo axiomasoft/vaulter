@@ -74,6 +74,9 @@ final readonly class ExactListing
                 $query->orderBy($sort['column'], $sort['direction']);
             }
             if ($last !== null) {
+                if ($order[0]['column'] === 'name') {
+                    $query->where('name', $order[0]['direction'] === 'asc' ? '>=' : '<=', $last[0]);
+                }
                 $query->where(function (Builder $outer) use ($order, $last): void {
                     foreach ($order as $i => $sort) {
                         $outer->orWhere(function (Builder $branch) use ($order, $last, $i, $sort): void {

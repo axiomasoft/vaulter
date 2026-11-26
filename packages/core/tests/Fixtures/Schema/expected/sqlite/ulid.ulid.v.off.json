@@ -4350,6 +4350,29 @@
                     ],
                     "sql": "CREATE INDEX \"v_nodes_kind_index\" on \"v_nodes\" (\"kind\")"
                 },
+                "v_nodes_live_children_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 1,
+                    "columns": [
+                        {
+                            "name": "parent_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "name",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"v_nodes_live_children_idx\" ON \"v_nodes\" (parent_id, name, id) WHERE trashed_at IS NULL"
+                },
                 "v_nodes_mime_type_index": {
                     "unique": 0,
                     "origin": "c",

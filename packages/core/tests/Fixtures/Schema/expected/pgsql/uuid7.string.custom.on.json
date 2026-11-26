@@ -4132,6 +4132,7 @@
                 "custom_nodes_drive_id_parent_id_index": "CREATE INDEX custom_nodes_drive_id_parent_id_index ON public.custom_nodes USING btree (drive_id, parent_id)",
                 "custom_nodes_drive_id_trash_root_id_index": "CREATE INDEX custom_nodes_drive_id_trash_root_id_index ON public.custom_nodes USING btree (drive_id, trash_root_id)",
                 "custom_nodes_kind_index": "CREATE INDEX custom_nodes_kind_index ON public.custom_nodes USING btree (kind)",
+                "custom_nodes_live_children_idx": "CREATE INDEX custom_nodes_live_children_idx ON public.custom_nodes USING btree (parent_id, name, id) WHERE (trashed_at IS NULL)",
                 "custom_nodes_mime_type_index": "CREATE INDEX custom_nodes_mime_type_index ON public.custom_nodes USING btree (mime_type)",
                 "custom_nodes_parent_id_index": "CREATE INDEX custom_nodes_parent_id_index ON public.custom_nodes USING btree (parent_id)",
                 "custom_nodes_pkey": "CREATE UNIQUE INDEX custom_nodes_pkey ON public.custom_nodes USING btree (id)",

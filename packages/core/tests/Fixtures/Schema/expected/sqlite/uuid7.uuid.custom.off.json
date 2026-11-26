@@ -4337,6 +4337,29 @@
                     ],
                     "sql": "CREATE INDEX \"custom_nodes_kind_index\" on \"custom_nodes\" (\"kind\")"
                 },
+                "custom_nodes_live_children_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 1,
+                    "columns": [
+                        {
+                            "name": "parent_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "name",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"custom_nodes_live_children_idx\" ON \"custom_nodes\" (parent_id, name, id) WHERE trashed_at IS NULL"
+                },
                 "custom_nodes_mime_type_index": {
                     "unique": 0,
                     "origin": "c",
