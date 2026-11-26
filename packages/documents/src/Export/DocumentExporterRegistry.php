@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Export;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
@@ -28,6 +29,9 @@ final class DocumentExporterRegistry
     /** @var array<string, DocumentExporter> */
     private array $exporters = [];
 
+    /** @var array<string, DocumentExporter|string> Boot declarations, including host-provided instances. */
+    private array $definitions = [];
+
     private bool $frozen = false;
 
     #[Internal]
@@ -49,6 +53,7 @@ final class DocumentExporterRegistry
         $this->assertNoPairCollision($instance, except: null);
 
         $this->exporters[$instance->key()] = $instance;
+        $this->definitions[$instance->key()] = $exporter;
     }
 
     /**
@@ -70,6 +75,7 @@ final class DocumentExporterRegistry
         $this->assertNoPairCollision($instance, except: $key);
 
         $this->exporters[$key] = $instance;
+        $this->definitions[$key] = $exporter;
     }
 
     /** @throws UnknownExportFormatException when no exporter renders $format for the type */
@@ -120,6 +126,42 @@ final class DocumentExporterRegistry
     public function freeze(): void
     {
         $this->frozen = true;
+    }
+
+    /**
+     * @param  list<DocumentExporter>   $tagged
+     * @return Closure(Container): self
+     */
+    #[Internal]
+    public function factoryForWorkerScopes(array $tagged): Closure
+    {
+        $definitions = $this->definitions;
+
+        $tagKeys = [];
+        foreach ($tagged as $extension) {
+            $key = $extension->key();
+            if (($definitions[$key] ?? null) === $extension) {
+                unset($definitions[$key]);
+                $tagKeys[$key] = true;
+            }
+        }
+
+        return static function (Container $scope) use ($definitions, $tagKeys): self {
+            $registry = new self($scope);
+            foreach ($definitions as $definition) {
+                $registry->register($definition);
+            }
+            if ($tagKeys !== []) {
+                foreach ($scope->tagged('vaulter.exporters') as $extension) {
+                    if ($extension instanceof DocumentExporter && isset($tagKeys[$extension->key()])) {
+                        $registry->register($extension);
+                    }
+                }
+            }
+            $registry->freeze();
+
+            return $registry;
+        };
     }
 
     #[Internal]

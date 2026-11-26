@@ -188,3 +188,21 @@ it('refuses a graph in which two modules contribute the same document type or ex
     'type' => [DocumentType::class, RichTextDocumentType::KEY],
     'exporter' => [DocumentExporter::class, 'vaulter/html'],
 ]);
+
+it('resolves a fresh frozen set of document handlers in each worker scope', function (): void {
+    $first = app(DocumentTypeRegistry::class);
+    $type = $first->get('vaulter/rich-text');
+    $exporters = app(DocumentExporterRegistry::class)->all();
+    app()->forgetScopedInstances();
+
+    $next = app(DocumentTypeRegistry::class);
+    $currentExporters = app(DocumentExporterRegistry::class);
+    expect($next)->not->toBe($first)
+        ->and($next->isFrozen())->toBeTrue()
+        ->and($next->get('vaulter/rich-text'))->not->toBe($type)
+        ->and($currentExporters->isFrozen())->toBeTrue()
+        ->and(array_keys($currentExporters->all()))->toBe(array_keys($exporters));
+    foreach ($currentExporters->all() as $key => $exporter) {
+        expect($exporter)->not->toBe($exporters[$key]);
+    }
+});

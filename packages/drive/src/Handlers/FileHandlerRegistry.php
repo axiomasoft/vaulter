@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Handlers;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use InvalidArgumentException;
 use Packman\Attributes\Internal;
@@ -61,6 +62,9 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
      */
     private array $runtime = [];
 
+    /** @var list<FileHandler|class-string<FileHandler>> */
+    private array $definitions = [];
+
     /**
      * Memoised resolutions keyed by "mime|ext|capability".
      *
@@ -82,9 +86,27 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
      */
     public function register(FileHandler|string $handler): void
     {
-        $this->runtime[] = $this->checkedInstance($handler);
+        $instance = $this->checkedInstance($handler);
+        $this->definitions[] = $handler;
+        $this->runtime[] = $instance;
         $this->handlers = null;
         $this->cache = [];
+    }
+
+    /** @return Closure(Container): self */
+    #[Internal]
+    public function factoryForWorkerScopes(): Closure
+    {
+        $definitions = $this->definitions;
+
+        return static function (Container $scope) use ($definitions): self {
+            $registry = new self($scope->make(DriveOptions::class), $scope);
+            foreach ($definitions as $definition) {
+                $registry->register($definition);
+            }
+
+            return $registry;
+        };
     }
 
     /**

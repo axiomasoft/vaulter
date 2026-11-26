@@ -80,7 +80,12 @@ final class DriveSliceRegistrar implements ModuleBindings
             return $generator;
         });
 
-        $app->singleton(FileHandlerRegistry::class);
+        $app->scoped(FileHandlerRegistry::class);
+        $app->booted(static function () use ($app): void {
+            if ($app->resolved(FileHandlerRegistry::class)) {
+                $app->scoped(FileHandlerRegistry::class, $app->make(FileHandlerRegistry::class)->factoryForWorkerScopes());
+            }
+        });
         $app->bind(\Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
     }
 

@@ -76,8 +76,8 @@ final class BindingsRegistrar implements ModuleBindings
         $app->tag('vaulter.config_validator.documents', ConfigValidCheck::TAG);
         ConfigSectionRegistration::registerValidator($app, 'vaulter.documents', $validate);
 
-        $app->singleton(DocumentTypeRegistry::class);
-        $app->singleton(DocumentExporterRegistry::class);
+        $app->scoped(DocumentTypeRegistry::class);
+        $app->scoped(DocumentExporterRegistry::class);
         $app->scoped(DocumentsManager::class);
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
@@ -134,24 +134,29 @@ final class BindingsRegistrar implements ModuleBindings
     {
         $types = $app->make(DocumentTypeRegistry::class);
         $contributed = [];
-        foreach ($app->make(Kernel::class)->extensions()->resolve(DocumentType::class) as $type) {
-            $types->register($type);
-            $contributed[$type::class] = true;
+        foreach ($app->make(Kernel::class)->extensions()->contributions(DocumentType::class) as $contribution) {
+            $types->register($contribution->implementation);
+            $contributed[$contribution->implementation] = true;
         }
         foreach ($options->types as $class) {
             if (!isset($contributed[$class])) {
                 $types->register($class);
             }
         }
+        $tagged = [];
         foreach ($app->tagged('vaulter.document_types') as $type) {
             if (!$type instanceof DocumentType && !is_string($type)) {
                 throw new InvalidConfigurationException(sprintf('[Vaulter] Document type "%s" did not resolve to a %s.', get_debug_type($type), DocumentType::class));
             }
             $types->register($type);
+            if ($type instanceof DocumentType) {
+                $tagged[] = $type;
+            }
         }
 
-        $app->booted(static function () use ($app, $types): void {
+        $app->booted(static function () use ($app, $types, $tagged): void {
             $types->freeze();
+            $app->scoped(DocumentTypeRegistry::class, $types->factoryForWorkerScopes($tagged));
             $default = self::buildOptions($app)->defaultType;
             if (!$types->has($default)) {
                 throw new InvalidConfigurationException(sprintf('[Vaulter] vaulter-documents.default_type "%s" is not a registered document type.', $default));
@@ -164,24 +169,29 @@ final class BindingsRegistrar implements ModuleBindings
     {
         $exporters = $app->make(DocumentExporterRegistry::class);
         $contributed = [];
-        foreach ($app->make(Kernel::class)->extensions()->resolve(DocumentExporter::class) as $exporter) {
-            $exporters->register($exporter);
-            $contributed[$exporter::class] = true;
+        foreach ($app->make(Kernel::class)->extensions()->contributions(DocumentExporter::class) as $contribution) {
+            $exporters->register($contribution->implementation);
+            $contributed[$contribution->implementation] = true;
         }
         foreach ($options->exporters as $class) {
             if (!isset($contributed[$class])) {
                 $exporters->register($class);
             }
         }
+        $tagged = [];
         foreach ($app->tagged('vaulter.exporters') as $exporter) {
             if (!$exporter instanceof DocumentExporter && !is_string($exporter)) {
                 throw new InvalidConfigurationException(sprintf('[Vaulter] Document exporter "%s" did not resolve to a %s.', get_debug_type($exporter), DocumentExporter::class));
             }
             $exporters->register($exporter);
+            if ($exporter instanceof DocumentExporter) {
+                $tagged[] = $exporter;
+            }
         }
 
-        $app->booted(static function () use ($exporters): void {
+        $app->booted(static function () use ($app, $exporters, $tagged): void {
             $exporters->freeze();
+            $app->scoped(DocumentExporterRegistry::class, $exporters->factoryForWorkerScopes($tagged));
         });
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Log;
 use Packman\Attributes\Api;
@@ -35,6 +36,9 @@ final class DocumentTypeRegistry
     /** @var array<string, DocumentType> */
     private array $types = [];
 
+    /** @var array<string, DocumentType|string> Boot declarations, including host-provided instances. */
+    private array $definitions = [];
+
     private bool $frozen = false;
 
     #[Internal]
@@ -56,6 +60,7 @@ final class DocumentTypeRegistry
         }
 
         $this->types[$key] = $instance;
+        $this->definitions[$key] = $type;
     }
 
     /**
@@ -76,6 +81,7 @@ final class DocumentTypeRegistry
         }
 
         $this->types[$key] = $instance;
+        $this->definitions[$key] = $type;
         Log::info('[Vaulter] Document type replaced.', ['key' => $key, 'type' => $instance::class]);
     }
 
@@ -114,6 +120,42 @@ final class DocumentTypeRegistry
     public function freeze(): void
     {
         $this->frozen = true;
+    }
+
+    /**
+     * @param  list<DocumentType>       $tagged
+     * @return Closure(Container): self
+     */
+    #[Internal]
+    public function factoryForWorkerScopes(array $tagged): Closure
+    {
+        $definitions = $this->definitions;
+
+        $tagKeys = [];
+        foreach ($tagged as $extension) {
+            $key = $extension->key();
+            if (($definitions[$key] ?? null) === $extension) {
+                unset($definitions[$key]);
+                $tagKeys[$key] = true;
+            }
+        }
+
+        return static function (Container $scope) use ($definitions, $tagKeys): self {
+            $registry = new self($scope);
+            foreach ($definitions as $definition) {
+                $registry->register($definition);
+            }
+            if ($tagKeys !== []) {
+                foreach ($scope->tagged('vaulter.document_types') as $extension) {
+                    if ($extension instanceof DocumentType && isset($tagKeys[$extension->key()])) {
+                        $registry->register($extension);
+                    }
+                }
+            }
+            $registry->freeze();
+
+            return $registry;
+        };
     }
 
     #[Internal]
