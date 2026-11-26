@@ -8,6 +8,11 @@ This file covers the public release channel.
 
 ## [Unreleased]
 
+- Folder listings gain a name-order index in migration 000221. Comments and webhook feeds now page across legacy rows with a null creation timestamp.
+
+- MySQL webhook deliveries retain their endpoint foreign key while upgrading the feed index. An existing delivery without an endpoint stops the migration and identifies the row for repair.
+- Composer no longer replaces packages under the old `axioma-studio` vendor. Update package requirements to `axiomasoft`.
+
 ### Security
 
 - Share passwords are no longer read from the query string. A plain download link of a

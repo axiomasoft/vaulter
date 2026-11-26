@@ -190,7 +190,7 @@ gated SLO, if it does not fit).
 A job's step summary always prints the `perf-assert.py` tail
 (`pass=N fail=N not-checkable=N incomparable=N known-red=N`) — a green `smoke-perf`
 proves class A on the SLOs the client can see today, not all 96 rows of `slo-gates.md`
-§3 (Code Guidance, Anti-самообман; most rows stay `not-checkable` until P8 ships their
+§3 (Code Guidance, evidence requirements; most rows stay `not-checkable` until P8 ships their
 Prometheus metric).
 
 **Known-red today, on purpose:** SLO-46…48 (`S3MultipartHandler::complete()`, L-01) —
