@@ -12397,6 +12397,12 @@
                         "@return array<string, DocumentExporter>"
                     ]
                 },
+                "method:factoryforworkerscopes": {
+                    "kind": "method",
+                    "name": "factoryForWorkerScopes",
+                    "visibility": "public",
+                    "internal": true
+                },
                 "method:for": {
                     "kind": "method",
                     "name": "for",
@@ -15920,6 +15926,12 @@
                     "doc": [
                         "@return array<string, DocumentType>"
                     ]
+                },
+                "method:factoryforworkerscopes": {
+                    "kind": "method",
+                    "name": "factoryForWorkerScopes",
+                    "visibility": "public",
+                    "internal": true
                 },
                 "method:find": {
                     "kind": "method",
