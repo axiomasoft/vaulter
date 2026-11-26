@@ -33361,6 +33361,24 @@
                     ],
                     "method": "BTREE",
                     "unique": false
+                }
+            },
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_endpoint_id_fk_idx",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
+                "symbol": "v_webhook_deliveries"
+            },
+            "table": "v_webhook_deliveries"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "endpoint_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
                 },
                 "pgsql": {
                     "definition": "(endpoint_id)",
@@ -34041,6 +34059,17 @@
             "owner": "webhooks",
             "source": {
                 "file": "packages/webhooks/database/migrations/0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_webhook_deliveries"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000404_add_endpoint_foreign_key_index_to_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/database/migrations/0001_01_01_000404_add_endpoint_foreign_key_index_to_v_webhook_deliveries_table.php",
                 "symbol": "<file>"
             },
             "tables": [

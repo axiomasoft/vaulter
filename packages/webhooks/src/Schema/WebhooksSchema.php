@@ -134,6 +134,9 @@ final class WebhooksSchema implements ModuleSchema
         // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.
         $table->index(['status', 'updated_at'], $name.'_prune_idx');
         // An endpoint's delivery history, newest first (the admin API's deliveries page).
+        // The feed index starts with endpoint_id and then nullable created_at; declare the
+        // foreign-key index first so MySQL 9.7 enforces the key (see SchemaHelpers::foreignKeyIndex()).
+        $this->helpers->foreignKeyIndex(table: $table, column: 'endpoint_id');
         $table->index(['endpoint_id', 'created_at', 'id'], $name.'_endpoint_feed_idx');
 
         $table->foreign('endpoint_id')
@@ -172,5 +175,87 @@ final class WebhooksSchema implements ModuleSchema
         $schema->table($table, static function (Blueprint $blueprint) use ($table): void {
             $blueprint->dropIndex($table.'_endpoint_feed_idx');
         });
+    }
+
+    /**
+     * The MySQL foreign-key index on a table created before it was part of the definition. Public so the upgrade
+     * migration adds the same index; a no-op when the table is missing, the index already exists, or the engine
+     * is not MySQL. Rebuilds the feed index around it so InnoDB backs the key with the simple index, not the
+     * composite whose created_at part is nullable.
+     */
+    public function addDeliveriesEndpointForeignKeyIndex(): void
+    {
+        if ($this->helpers->dbConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('webhook_deliveries');
+        $fkIndex = $table.'_endpoint_id_fk_idx';
+
+        if (!$schema->hasTable($table) || $schema->hasIndex($table, $fkIndex)) {
+            return;
+        }
+
+        $feed = $table.'_endpoint_feed_idx';
+        $foreign = $table.'_endpoint_id_foreign';
+        $hasFeed = $schema->hasIndex($table, $feed);
+        $hasForeign = $this->helpers->hasForeignKey($table, $foreign);
+        $endpoints = $this->helpers->table('webhook_endpoints');
+
+        if ($hasForeign) {
+            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropForeign($foreign));
+        }
+        if ($hasFeed) {
+            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropIndex($feed));
+        }
+        $schema->table($table, static function (Blueprint $blueprint) use ($fkIndex): void {
+            $blueprint->index('endpoint_id', $fkIndex);
+        });
+        if ($hasFeed) {
+            $schema->table($table, static function (Blueprint $blueprint) use ($table, $feed): void {
+                $blueprint->index(['endpoint_id', 'created_at', 'id'], $feed);
+            });
+        }
+        if ($hasForeign) {
+            $schema->table($table, function (Blueprint $blueprint) use ($foreign, $endpoints): void {
+                $blueprint->foreign('endpoint_id', $foreign)
+                    ->references('id')
+                    ->on($endpoints)
+                    ->cascadeOnDelete();
+            });
+        }
+    }
+
+    public function dropDeliveriesEndpointForeignKeyIndex(): void
+    {
+        if ($this->helpers->dbConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        $schema = $this->helpers->schemaConnection();
+        $table = $this->helpers->table('webhook_deliveries');
+        $fkIndex = $table.'_endpoint_id_fk_idx';
+
+        if (!$schema->hasTable($table) || !$schema->hasIndex($table, $fkIndex)) {
+            return;
+        }
+
+        $foreign = $table.'_endpoint_id_foreign';
+        $hasForeign = $this->helpers->hasForeignKey($table, $foreign);
+        $endpoints = $this->helpers->table('webhook_endpoints');
+
+        if ($hasForeign) {
+            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropForeign($foreign));
+        }
+        $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropIndex($fkIndex));
+        if ($hasForeign) {
+            $schema->table($table, function (Blueprint $blueprint) use ($foreign, $endpoints): void {
+                $blueprint->foreign('endpoint_id', $foreign)
+                    ->references('id')
+                    ->on($endpoints)
+                    ->cascadeOnDelete();
+            });
+        }
     }
 }

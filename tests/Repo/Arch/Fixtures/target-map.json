@@ -411,6 +411,15 @@
         },
         {
             "action": "keep",
+            "file": "packages/webhooks/database/migrations/0001_01_01_000404_add_endpoint_foreign_key_index_to_v_webhook_deliveries_table.php",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
             "file": "packages/webhooks/routes/webhooks.php",
             "note": null,
             "owner": "webhooks",

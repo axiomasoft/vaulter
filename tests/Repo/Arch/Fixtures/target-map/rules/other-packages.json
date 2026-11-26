@@ -247,6 +247,14 @@
         },
         {
             "match": "file",
+            "value": "packages/webhooks/database/migrations/0001_01_01_000404_add_endpoint_foreign_key_index_to_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence: v_webhook_deliveries_endpoint_id_fk_idx is added by the migration of webhooks"
+        },
+        {
+            "match": "file",
             "value": "packages/drive/config/vaulter-drive.php",
             "owner": "drive",
             "action": "keep",
