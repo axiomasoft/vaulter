@@ -7,8 +7,8 @@ namespace Vaulter\Media\Repositories\Cas;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Packman\Attributes\Internal;
-use RuntimeException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -72,15 +72,19 @@ final readonly class BlobStoreRepository
             ));
 
             return ['blob' => $blob, 'created' => true];
-        } catch (UniqueConstraintViolationException) {
-            // We lost the INSERT race (another committer of the same bytes won).
-            // Re-SELECT under the same transaction and reuse its row — never treat
-            // a unique violation as fatal. This is the loser branch of the
-            // UNIQUE (scope, sha256) backbone.
+        } catch (UniqueConstraintViolationException $exception) {
             $winner = $this->lockedLookup(sha256: $sha256, scope: $scope);
 
             if ($winner === null) {
-                throw new RuntimeException("Lost the blob INSERT race for {$sha256} but the winning row is not visible.");
+                // A fixed PostgreSQL snapshot cannot see a concurrent insert committed after
+                // it began. Retry the entire unit only for the two canonical address indexes.
+                if ($this->lock->isPostgres()
+                    && $this->conflictsWithAddress($exception)
+                    && $this->findByStorageKey($storageKey) === null) {
+                    throw new ConcurrentUpdateException($exception);
+                }
+
+                throw $exception;
             }
 
             $this->resurrect($winner);
@@ -255,6 +259,20 @@ final readonly class BlobStoreRepository
         }
 
         return $query->first();
+    }
+
+    private function conflictsWithAddress(UniqueConstraintViolationException $exception): bool
+    {
+        // PDO includes the index in PostgreSQL's error headline. Inspect only the headline:
+        // DETAIL can contain conflicting user data. Early Laravel 13 has no parsed index.
+        $detail = $exception->errorInfo[2] ?? null;
+        if (!is_string($detail)) {
+            return false;
+        }
+        $headline = explode("\n", $detail, 2)[0];
+        $table = preg_quote($this->query()->getModel()->getTable(), '/');
+
+        return preg_match('/(?<![\w$])'.$table.'_(?:scope_sha_uniq|storage_key_uniq)(?![\w$])/u', $headline) === 1;
     }
 
     private function insertCommitted(

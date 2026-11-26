@@ -13,7 +13,7 @@ uses(TestCase::class, RefreshDatabase::class)->in('Feature', 'Observability', 'D
 uses(TestCase::class)->in('Cas');
 
 uses(TestCase::class, RefreshDatabase::class)->in('Recipes');
-$unwrapped = ['BlobScopeKeyTest.php', 'ScopeKeyReconcileTest.php', 'BlobPinTransactionTest.php', 'PinSweepRaceTest.php'];
+$unwrapped = ['BlobScopeKeyTest.php', 'ScopeKeyReconcileTest.php', 'BlobPinTransactionTest.php', 'BlobSnapshotConflictTest.php', 'PinSweepRaceTest.php'];
 foreach (glob(__DIR__.'/Cas/*Test.php') as $file) {
     uses(in_array(basename($file), $unwrapped, true)
         ? DatabaseMigrations::class

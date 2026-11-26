@@ -28,7 +28,9 @@ interface BlobStore
      * blob (its bytes durable at the canonical key; the id is the committed or
      * deduplicated row's, never derived from the digest). Concurrency-safe: concurrent identical
      * uploads converge on one row via the UNIQUE (scope_key, sha256) backbone (PG
-     * advisory lock first; MySQL SELECT…FOR UPDATE; SQLite single-writer).
+     * advisory lock first; MySQL SELECT…FOR UPDATE; SQLite single-writer). At fixed snapshot isolation
+     * a concurrent insert can require a fresh outer transaction. When composing writes, stage the stream
+     * before the outer Vaulter transaction and use commitStaged() so every attempt can read the bytes.
      *
      * @param resource $stream
      */

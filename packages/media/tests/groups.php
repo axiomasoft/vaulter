@@ -25,6 +25,7 @@ return [
         'Cas/BlobPinGcTest.php',
         'Cas/BlobPinStatusTest.php',
         'Cas/BlobPinTransactionTest.php',
+        'Cas/BlobSnapshotConflictTest.php',
         'Cas/BlobReconcilerTest.php',
         'Cas/BlobScopeKeyTest.php',
         'Cas/BlobScrubHealTest.php',
@@ -48,6 +49,7 @@ return [
         'Cas/ScopeKeyReconcileTest.php',
     ],
     'engine:pgsql' => [
+        'Cas/BlobSnapshotConflictTest.php',
         'Cas/PinSweepRaceTest.php',
         'Cas/SweepPendingSerializableTest.php',
     ],
