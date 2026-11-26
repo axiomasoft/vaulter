@@ -1,6 +1,0 @@
-{
-    "http_fixture_principal_type": "Vaulter\\Testing\\Fixtures\\TestUser",
-    "hub_fixture_default_type": "Vaulter\\Collaboration\\Testing\\Fixtures\\CollaborationTestUser",
-    "default_fixture_resolves": false,
-    "matching_fixture_reconstructs_same_principal": true
-}
