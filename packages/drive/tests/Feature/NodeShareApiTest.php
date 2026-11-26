@@ -215,6 +215,7 @@ it('trades a share password sent in a POST body for a short-lived download link 
         ->assertStatus(401)
         ->assertJsonPath('code', 'share_password_required');
 
+    $this->freezeSecond();
     $unlocked = $this->postJson('api/vaulter/v1/shares/unlock-token/unlock', ['password' => 'open-sesame'])
         ->assertOk()
         ->assertHeader('Cache-Control', 'no-store, private');
