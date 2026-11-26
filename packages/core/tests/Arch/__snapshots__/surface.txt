@@ -151,7 +151,7 @@ Vaulter\Contracts\IdStrategy spi:implement since 1.0 interface
   public function key(Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
   public function modelConcern(): ?string
   public function newId(): int|null|string
-  public function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false, bool $index = true): void
+  public function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
 
 Vaulter\Contracts\Observability\MetricsRecorder spi:implement since 1.0 interface
   public function counter(string $name, float|int $amount = 1, array $labels = []): void
@@ -867,7 +867,7 @@ Vaulter\Schema\VaulterSchema api since 1.0 final class
   public static function key(Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
   public static function morphs(Illuminate\Database\Schema\Blueprint $table, string $name): void
   public static function panel(Illuminate\Database\Schema\Blueprint $table): void
-  public static function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false, bool $index = true): void
+  public static function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
   public static function tenant(Illuminate\Database\Schema\Blueprint $table): void
 
 Vaulter\Support\Concerns\HasIcon api since 1.0 trait

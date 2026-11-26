@@ -30,12 +30,11 @@ final class VaulterSchema
     /**
      * Define a typed foreign reference to another Vaulter entity (same key type)
      * plus its index. The explicit ->foreign()->cascadeOnDelete() is added by
-     * the migration that uses it — this helper only shapes the column. Pass
-     * $index false when the primary key or another index already leads with it.
+     * the migration that uses it — this helper only shapes the column.
      */
-    public static function reference(Blueprint $table, string $column, bool $nullable = false, bool $index = true): void
+    public static function reference(Blueprint $table, string $column, bool $nullable = false): void
     {
-        self::strategy()->reference(table: $table, column: $column, nullable: $nullable, index: $index);
+        self::strategy()->reference(table: $table, column: $column, nullable: $nullable);
     }
 
     /**

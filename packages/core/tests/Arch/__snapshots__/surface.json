@@ -3551,15 +3551,6 @@
                             "by_ref": false,
                             "promoted": false,
                             "attributes": []
-                        },
-                        {
-                            "name": "index",
-                            "type": "bool",
-                            "default": "true",
-                            "variadic": false,
-                            "by_ref": false,
-                            "promoted": false,
-                            "attributes": []
                         }
                     ],
                     "return": "void",
@@ -18029,15 +18020,6 @@
                             "name": "nullable",
                             "type": "bool",
                             "default": "false",
-                            "variadic": false,
-                            "by_ref": false,
-                            "promoted": false,
-                            "attributes": []
-                        },
-                        {
-                            "name": "index",
-                            "type": "bool",
-                            "default": "true",
                             "variadic": false,
                             "by_ref": false,
                             "promoted": false,
