@@ -29,46 +29,23 @@ for image in "${images[@]}"; do
         --tmpfs /var/lib/postgresql:rw,size=512m \
         -e POSTGRES_HOST_AUTH_METHOD=trust \
         -e POSTGRES_USER=postgres \
-        -e POSTGRES_DB=vaulter_spec \
-        -v "$PWD/plan:/spec:ro" \
+        -e POSTGRES_DB=vaulter_laravel \
         -v "$PWD/scripts/ci/unindexed-fks.sql:/checks/unindexed-fks.sql:ro" \
         "$image")"
 
     for _ in $(seq 1 60); do
-        if docker exec "$cid" pg_isready -h 127.0.0.1 -p 5432 -U postgres -d vaulter_spec >/dev/null 2>&1; then
+        if docker exec "$cid" pg_isready -h 127.0.0.1 -p 5432 -U postgres -d vaulter_laravel >/dev/null 2>&1; then
             break
         fi
         sleep 0.5
     done
-    docker exec "$cid" pg_isready -h 127.0.0.1 -p 5432 -U postgres -d vaulter_spec >/dev/null 2>&1
+    docker exec "$cid" pg_isready -h 127.0.0.1 -p 5432 -U postgres -d vaulter_laravel >/dev/null 2>&1
 
     port="$(docker port "$cid" 5432/tcp | head -n 1 | awk -F: '{print $NF}')"
     if [[ -z "$port" ]]; then
         echo "postgres-fks: failed to resolve mapped port for $image" >&2
         exit 1
     fi
-
-    # Pass 1: canonical static SQL modules (preserved until M-01a).
-    docker exec -i "$cid" psql -U postgres -d vaulter_spec -Xq -v ON_ERROR_STOP=1 <<'SQL_SPEC'
-\i /spec/spec/database/sql/core.sql
-\i /spec/spec/database/sql/media.sql
-\i /spec/spec/database/sql/drive.sql
-\i /spec/spec/database/sql/documents.sql
-\i /spec/spec/database/sql/webhooks.sql
-\i /spec/checks/database/unindexed-fks.sql
-CREATE TABLE rail_child (
-    id bigint PRIMARY KEY,
-    drive_id uuid NOT NULL REFERENCES v_drives(id)
-);
-SQL_SPEC
-
-    if docker exec -i "$cid" psql -U postgres -d vaulter_spec -Xq -v ON_ERROR_STOP=1 -f /spec/checks/database/unindexed-fks.sql 2>/dev/null; then
-        echo 'unindexed-fks.sql accepted an unindexed foreign key (spec)' >&2
-        exit 1
-    fi
-
-    # Pass 2: real Laravel migrations of all public vaulter packages.
-    docker exec -i "$cid" psql -U postgres -d vaulter_spec -Xq -v ON_ERROR_STOP=1 -c 'CREATE DATABASE vaulter_laravel;'
 
     DB_PORT="$port" "$php_bin" /dev/stdin "$PWD" <<'PHP_MIGRATE'
 <?php
@@ -143,8 +120,12 @@ SQL_CHECK_IDX
 
     docker exec -i "$cid" psql -U postgres -d vaulter_laravel -Xq -v ON_ERROR_STOP=1 -c \
         'CREATE TABLE rail_laravel_child (id bigint PRIMARY KEY, drive_id char(26) NOT NULL REFERENCES v_drives(id));'
-    if docker exec -i "$cid" psql -U postgres -d vaulter_laravel -Xq -v ON_ERROR_STOP=1 -f /checks/unindexed-fks.sql 2>/dev/null; then
-        echo 'unindexed-fks.sql accepted an unindexed foreign key (laravel)' >&2
+    if diagnostic="$(docker exec -i "$cid" psql -U postgres -d vaulter_laravel -Xq -v ON_ERROR_STOP=1 -f /checks/unindexed-fks.sql 2>&1)"; then
+        echo 'unindexed-fks.sql accepted an unindexed foreign key' >&2
+        exit 1
+    fi
+    if [[ "$diagnostic" != *'Unindexed foreign keys detected: rail_laravel_child.rail_laravel_child_drive_id_fkey'* ]]; then
+        echo "postgres-fks: expected the missing index diagnostic, received: $diagnostic" >&2
         exit 1
     fi
 
