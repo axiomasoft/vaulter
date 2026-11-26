@@ -193,36 +193,40 @@ final class WebhooksSchema implements ModuleSchema
         $table = $this->helpers->table('webhook_deliveries');
         $fkIndex = $table.'_endpoint_id_fk_idx';
 
-        if (!$schema->hasTable($table) || $schema->hasIndex($table, $fkIndex)) {
+        if (!$schema->hasTable($table)) {
             return;
         }
 
+        $db = $this->helpers->dbConnection();
+        $grammar = $db->getQueryGrammar();
         $feed = $table.'_endpoint_feed_idx';
         $foreign = $table.'_endpoint_id_foreign';
-        $hasFeed = $schema->hasIndex($table, $feed);
-        $hasForeign = $this->helpers->hasForeignKey($table, $foreign);
         $endpoints = $this->helpers->table('webhook_endpoints');
 
-        if ($hasForeign) {
-            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropForeign($foreign));
+        if (!$schema->hasIndex($table, $fkIndex)) {
+            // Switch the supporting index in one atomic MySQL DDL statement. The FK
+            // stays installed, including while other sessions are writing deliveries.
+            $changes = 'ADD INDEX '.$grammar->wrap($fkIndex).' (endpoint_id)';
+            if ($schema->hasIndex($table, $feed)) {
+                $changes .= ', DROP INDEX '.$grammar->wrap($feed);
+            }
+            $db->statement('ALTER TABLE '.$grammar->wrapTable($table).' '.$changes);
         }
-        if ($hasFeed) {
-            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropIndex($feed));
+        $this->addDeliveriesEndpointFeedIndex();
+
+        // Old SQL-layer checks could have admitted orphan deliveries. Preserve them
+        // for operator repair and leave the migration pending until integrity holds.
+        $orphan = $db->table($table.' as delivery')
+            ->leftJoin($endpoints.' as endpoint', 'endpoint.id', '=', 'delivery.endpoint_id')
+            ->whereNull('endpoint.id')
+            ->value('delivery.id');
+        if (is_string($orphan) || is_int($orphan)) {
+            throw new \RuntimeException("Delivery {$orphan} references a missing endpoint. Repair it and retry the migration.");
         }
-        $schema->table($table, static function (Blueprint $blueprint) use ($fkIndex): void {
-            $blueprint->index('endpoint_id', $fkIndex);
-        });
-        if ($hasFeed) {
-            $schema->table($table, static function (Blueprint $blueprint) use ($feed): void {
-                $blueprint->index(['endpoint_id', 'created_at', 'id'], $feed);
-            });
-        }
-        if ($hasForeign) {
-            $schema->table($table, function (Blueprint $blueprint) use ($foreign, $endpoints): void {
-                $blueprint->foreign('endpoint_id', $foreign)
-                    ->references('id')
-                    ->on($endpoints)
-                    ->cascadeOnDelete();
+
+        if (!$this->helpers->hasForeignKey($table, $foreign)) {
+            $schema->table($table, static function (Blueprint $blueprint) use ($foreign, $endpoints): void {
+                $blueprint->foreign('endpoint_id', $foreign)->references('id')->on($endpoints)->cascadeOnDelete();
             });
         }
     }
@@ -241,21 +245,7 @@ final class WebhooksSchema implements ModuleSchema
             return;
         }
 
-        $foreign = $table.'_endpoint_id_foreign';
-        $hasForeign = $this->helpers->hasForeignKey($table, $foreign);
-        $endpoints = $this->helpers->table('webhook_endpoints');
-
-        if ($hasForeign) {
-            $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropForeign($foreign));
-        }
+        $this->addDeliveriesEndpointFeedIndex();
         $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropIndex($fkIndex));
-        if ($hasForeign) {
-            $schema->table($table, function (Blueprint $blueprint) use ($foreign, $endpoints): void {
-                $blueprint->foreign('endpoint_id', $foreign)
-                    ->references('id')
-                    ->on($endpoints)
-                    ->cascadeOnDelete();
-            });
-        }
     }
 }
