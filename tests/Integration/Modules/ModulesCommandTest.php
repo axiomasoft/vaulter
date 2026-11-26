@@ -39,9 +39,9 @@ it('lists every offered module with its policy, activation and reason', function
 it('shows the schema migrations the database has not run', function (): void {
     $modules = modulesJson();
 
-    // No schema in this suite: every create-migration of the core is pending, and the two of the webhooks package.
+    // No schema in this suite: every create-migration of the core is pending, and those of the webhooks package.
     expect($modules['core']['schema_pending'])->toHaveCount(count(glob(__DIR__.'/../../../packages/core/database/migrations/*.php') ?: []))
-        ->and($modules['webhooks']['schema_pending'])->toBe(['0001_01_01_000401_create_v_webhook_endpoints_table', '0001_01_01_000402_create_v_webhook_deliveries_table', '0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table']);
+        ->and($modules['webhooks']['schema_pending'])->toBe(['0001_01_01_000401_create_v_webhook_endpoints_table', '0001_01_01_000402_create_v_webhook_deliveries_table', '0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table', '0001_01_01_000404_add_endpoint_foreign_key_index_to_v_webhook_deliveries_table']);
 });
 
 it('shows the slots a module defines and the contributions it makes', function (): void {

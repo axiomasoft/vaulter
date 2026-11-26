@@ -67,6 +67,7 @@ it('ships its migrations in the package, in the block of numbers of the webhooks
         '0001_01_01_000401_create_v_webhook_endpoints_table.php',
         '0001_01_01_000402_create_v_webhook_deliveries_table.php',
         '0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php',
+        '0001_01_01_000404_add_endpoint_foreign_key_index_to_v_webhook_deliveries_table.php',
     ]);
 });
 

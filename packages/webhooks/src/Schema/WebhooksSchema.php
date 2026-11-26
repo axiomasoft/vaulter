@@ -213,7 +213,7 @@ final class WebhooksSchema implements ModuleSchema
             $blueprint->index('endpoint_id', $fkIndex);
         });
         if ($hasFeed) {
-            $schema->table($table, static function (Blueprint $blueprint) use ($table, $feed): void {
+            $schema->table($table, static function (Blueprint $blueprint) use ($feed): void {
                 $blueprint->index(['endpoint_id', 'created_at', 'id'], $feed);
             });
         }
