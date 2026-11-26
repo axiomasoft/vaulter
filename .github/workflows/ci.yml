@@ -22,14 +22,14 @@ name: CI
 #        clean-consumer isolation of the split packages (consumer-isolation)
 on:
   push:
-    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
+    branches: [main, 'feat/**', 'fix/**', 'hotfix/**', 'refactor/**']
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -288,9 +288,10 @@ jobs:
     name: DB / ${{ matrix.engine }} ${{ matrix.version }} / ${{ matrix.package }}
     # Fast gate first: the server lanes start once the SQLite lane is green (or not needed), so a change that is
     # already red on SQLite does not also spend the database matrix. A skip caused by a red gate stays red in ci-gate.
-    needs: [changes, fast]
+    needs: [changes, quality, fast]
     if: >-
       !cancelled() && needs.changes.outputs.has_db == 'true'
+      && (needs.quality.result == 'success' || needs.quality.result == 'skipped')
       && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -372,9 +373,10 @@ jobs:
     name: Serial / pgsql / ${{ matrix.package }}
     # Fast gate first: the server lanes start once the SQLite lane is green (or not needed), so a change that is
     # already red on SQLite does not also spend the database matrix. A skip caused by a red gate stays red in ci-gate.
-    needs: [changes, fast]
+    needs: [changes, quality, fast]
     if: >-
       !cancelled() && needs.changes.outputs.has_serial == 'true'
+      && (needs.quality.result == 'success' || needs.quality.result == 'skipped')
       && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 40
