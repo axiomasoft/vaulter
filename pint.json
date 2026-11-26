@@ -2,8 +2,6 @@
     "preset": "laravel",
     "exclude": [
         "build",
-        "plan",
-        "scripts/fixtures-strip",
         "var",
         "vendor"
     ],

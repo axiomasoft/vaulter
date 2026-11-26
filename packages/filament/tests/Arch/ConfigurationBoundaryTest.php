@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-arch('filament reads configuration through typed package accessors (P2.5)')
+arch('filament reads configuration through typed package accessors')
     ->expect('Vaulter\Filament')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Filament\Configuration']);

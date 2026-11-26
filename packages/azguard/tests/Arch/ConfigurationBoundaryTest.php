@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-arch('azguard reads configuration through typed package accessors (P2.5)')
+arch('azguard reads configuration through typed package accessors')
     ->expect('Vaulter\AzGuard')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\AzGuard\Configuration']);

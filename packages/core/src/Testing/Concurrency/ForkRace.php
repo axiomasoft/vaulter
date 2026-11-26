@@ -107,7 +107,7 @@ final class ForkRace
 
             $readyGlob = glob("{$dir}/ready.*");
             $ready = array_map(static fn (string $path): mixed => json_decode((string) file_get_contents($path), true), is_array($readyGlob) ? $readyGlob : []);
-            fwrite(STDOUT, 'P38_FORK_PROOF '.json_encode(['barrier' => 'all ready files before task execution', 'participants' => $ready, 'timed_out' => array_keys($timedOut)]).PHP_EOL);
+            fwrite(STDOUT, 'FORK_RACE_PROOF '.json_encode(['barrier' => 'all ready files before task execution', 'participants' => $ready, 'timed_out' => array_keys($timedOut)]).PHP_EOL);
 
             return $outcomes;
         } finally {

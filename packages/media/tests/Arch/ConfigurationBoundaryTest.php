@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-arch('media reads configuration through typed package accessors (P2.5)')
+arch('media reads configuration through typed package accessors')
     ->expect('Vaulter\Media')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Media\Configuration']);

@@ -261,7 +261,7 @@ final class TargetMap
     {
         /** @var list<array<string, mixed>> $types */
         $types = $data['types'];
-        $lines = ['# Type-map (P2.2)', '', sprintf('Generated from `tests/Repo/Arch/Fixtures/target-map.json` (base `%s`); the JSON is the source of truth.', $data['base']), ''];
+        $lines = ['# Type map', '', sprintf('Generated from `tests/Repo/Arch/Fixtures/target-map.json` (base `%s`); the JSON is the source of truth.', $data['base']), ''];
 
         $table = static function (string $title, array $headers, array $rows) use (&$lines): void {
             $lines[] = "## {$title}";
@@ -313,7 +313,7 @@ final class TargetMap
             $named("Types: {$action}", array_map($describe, array_values(array_filter($types, static fn (array $t): bool => $t['action'] === $action))));
         }
         $named('Types: surface undecided', array_map($describe, array_values(array_filter($types, static fn (array $t): bool => $t['surface'] === 'undecided'))));
-        $named('Types: note "open: …" (input for P2.5 open-questions)', array_map($describe, array_values(array_filter($types, static fn (array $t): bool => is_string($t['note']) && str_contains($t['note'], 'open:')))));
+        $named('Types with open review questions', array_map($describe, array_values(array_filter($types, static fn (array $t): bool => is_string($t['note']) && str_contains($t['note'], 'open:')))));
 
         /** @var list<array<string, mixed>> $files */
         $files = $data['files'];

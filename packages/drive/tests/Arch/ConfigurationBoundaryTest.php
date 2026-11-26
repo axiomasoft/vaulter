@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-arch('drive reads configuration through typed package accessors (P2.5)')
+arch('drive reads configuration through typed package accessors')
     ->expect('Vaulter\Drive')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Drive\Configuration', 'Vaulter\Drive\Testing']);

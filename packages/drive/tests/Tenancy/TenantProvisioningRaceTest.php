@@ -48,5 +48,5 @@ it('a real PG owner profile race has one tenant winner and a hidden loser', func
     $winner = array_values(array_filter($values, fn (array $value): bool => $value['winner']))[0];
     $drive = Drive::query()->where('owner_id', 7788)->firstOrFail();
     expect($drive->tenant_id)->toBe($winner['tenant'])->and($drive->rootNode()->firstOrFail()->tenant_id)->toBe($winner['tenant']);
-    fwrite(STDOUT, 'P38_OWNER_RACE '.json_encode(['barrier' => 'ForkRace ready/release', 'connection' => 'testing', 'database' => 'vaulter_test', 'outcomes' => $values]).PHP_EOL);
+    fwrite(STDOUT, 'TENANT_OWNER_RACE '.json_encode(['barrier' => 'ForkRace ready/release', 'connection' => $drive->getConnection()->getName(), 'database' => $drive->getConnection()->getDatabaseName(), 'outcomes' => $values]).PHP_EOL);
 });

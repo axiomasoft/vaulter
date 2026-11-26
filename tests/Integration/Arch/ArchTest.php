@@ -19,7 +19,7 @@ arch('all package code declares strict types')
  * directly below, which is the test that ACTUALLY enforces the invariant (red-before
  * verified against an injected `use App\...;` fixture).
  */
-arch('the package never depends on the host application (E5.1)')
+arch('the package never depends on the host application')
     ->expect('Vaulter')
     ->not->toUse('App');
 
@@ -86,7 +86,7 @@ test('non-test src never references the host App namespace', function (): void {
  * tests below enforce the stricter same-package form where a satellite HAS its own
  * sub-namespace (documents/filament).
  */
-arch('internal namespaces are not consumed outside the Vaulter package tree (E3.1)')
+arch('internal namespaces are not consumed outside the Vaulter package tree')
     ->expect(['Vaulter\Repositories', 'Vaulter\Support'])
     ->toOnlyBeUsedIn('Vaulter');
 
@@ -146,12 +146,12 @@ arch('the document handler registry and its handlers are final')
  * class under `Vaulter\Engines` — the registry, the resolver, the baseline
  * handlers — is sealed core-internal.
  */
-arch('the core-owned handler engine and its baseline handlers are final (P0.4/D10)')
+arch('the core-owned handler engine and its baseline handlers are final')
     ->expect('Vaulter\Engines')
     ->toBeFinal()
     ->ignoring('Vaulter\Drive\Handlers\AbstractFileHandler');
 
-arch('the FileHandler contract is an interface (H.5)')
+arch('the FileHandler contract is an interface')
     ->expect('Vaulter\Drive\Contracts\Handlers\FileHandler')
     ->toBeInterface();
 

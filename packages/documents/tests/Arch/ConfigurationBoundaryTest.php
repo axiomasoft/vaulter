@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-arch('documents reads configuration through typed package accessors (P2.5)')
+arch('documents reads configuration through typed package accessors')
     ->expect('Vaulter\Documents')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Documents\Configuration']);

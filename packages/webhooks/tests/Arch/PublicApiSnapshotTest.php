@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Webhooks\Configuration\WebhooksOptions;
 
 /** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
-test('vaulter-webhooks configuration API matches the frozen golden (P4.13)', function (): void {
+test('vaulter-webhooks configuration API matches the frozen golden', function (): void {
     $reflection = new ReflectionClass(WebhooksOptions::class);
     $methods = [];
 
@@ -47,5 +47,5 @@ test('vaulter-webhooks configuration API matches the frozen golden (P4.13)', fun
     }
 
     expect(is_file($golden))->toBeTrue()
-        ->and($manifest)->toBe(file_get_contents($golden), 'Public configuration API changed; review the intended P4.13 surface before regenerating its golden.');
+        ->and($manifest)->toBe(file_get_contents($golden), 'Public configuration API changed; review the intended surface before regenerating its golden.');
 });

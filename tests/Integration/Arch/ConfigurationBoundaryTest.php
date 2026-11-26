@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Integration\Tests\Support\ConfigurationArchitectureGuard;
 
-arch('core reads configuration through typed package accessors (P2.5)')
+arch('core reads configuration through typed package accessors')
     ->expect('Vaulter')
     ->not->toUse(['config'])
     ->ignoring(['Vaulter\Configuration', 'Vaulter\Drive\Configuration', 'Vaulter\Documents\Configuration', 'Vaulter\Media\Configuration', 'Vaulter\Filament\Configuration', 'Vaulter\AzGuard\Configuration', 'Vaulter\Tests', 'Vaulter\Testing', 'Vaulter\Drive\Testing', 'Vaulter\Documents\Testing', 'Vaulter\Load', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Media\Tests', 'Vaulter\Filament\Tests', 'Vaulter\AzGuard\Tests']);

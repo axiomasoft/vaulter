@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Filament\Configuration\FilamentOptions;
 
 /** Public typed configuration API; UPDATE_SNAPSHOT is local-only. */
-test('vaulter-filament configuration API matches the frozen golden (P2.5)', function (): void {
+test('vaulter-filament configuration API matches the frozen golden', function (): void {
     $reflection = new ReflectionClass(FilamentOptions::class);
     $methods = [];
 
@@ -47,5 +47,5 @@ test('vaulter-filament configuration API matches the frozen golden (P2.5)', func
     }
 
     expect(is_file($golden))->toBeTrue()
-        ->and($manifest)->toBe(file_get_contents($golden), 'Public configuration API changed; review the intended P2.5 surface before regenerating its golden.');
+        ->and($manifest)->toBe(file_get_contents($golden), 'Public configuration API changed; review the intended surface before regenerating its golden.');
 });

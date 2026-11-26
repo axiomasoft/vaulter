@@ -235,7 +235,7 @@ function archiveMain(array $args): int
         throw new RuntimeException('unknown package selection');
     }
     ksort($sourceMap);
-    echo json_encode(['schema' => 'vaulter.archive-content/v1', 'source_kind' => $worktree ? 'isolated_worktree' : 'commit', 'source_sha' => $sha, 'source_inputs' => $sourceMap, 'source_content_sha256' => hash('sha256', json_encode($sourceMap, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)), 'packages' => $reports, 'pending' => ['SECURITY.md and copied license policy: P7.5 prerequisite', 'runtime/installed consumer, trusted Tool T, external owner A, registry and signatures: P8.2'], 'artifact_qualification' => 'pending'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n";
+    echo json_encode(['schema' => 'vaulter.archive-content/v1', 'source_kind' => $worktree ? 'isolated_worktree' : 'commit', 'source_sha' => $sha, 'source_inputs' => $sourceMap, 'source_content_sha256' => hash('sha256', json_encode($sourceMap, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)), 'packages' => $reports, 'pending' => ['Verify the security policy and copied licenses', 'Verify the installed consumer, build tool, artifact owner, registry and signatures'], 'artifact_qualification' => 'pending'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n";
 
     return array_filter($reports, static fn (array $r): bool => $r['status'] === 'failed') === [] ? 0 : 1;
 }

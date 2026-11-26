@@ -239,7 +239,7 @@ if (!function_exists('vaulterSnapshotAssert')) {
     }
 }
 
-test('vaulter-azguard public API surface matches the frozen golden (VLT-REL P2.2)', function (): void {
+test('vaulter-azguard public API surface matches the frozen golden', function (): void {
     $contracts = vaulterSnapshotContracts(__DIR__.'/../../src/Contracts', 'Vaulter\AzGuard\Contracts');
 
     // Discovery must find the enumerated surface — a scan that silently finds nothing

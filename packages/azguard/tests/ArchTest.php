@@ -7,7 +7,7 @@ arch('production source never imports testing helpers (D35)')
     ->not->toUse('Vaulter\AzGuard\Testing')
     ->ignoring(['Vaulter\AzGuard\Testing', 'Vaulter\AzGuard\Tests']);
 
-arch('bridge source depends only on core and itself (P2.4)')
+arch('bridge source depends only on core and itself')
     ->expect('Vaulter\AzGuard')
     ->not->toUse([
         'Vaulter\Media',

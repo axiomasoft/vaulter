@@ -16,6 +16,5 @@ it('no longer claims gateAllows() swallows an exception it never catches', funct
     $doc = $method->getDocComment();
 
     expect($doc)->not->toBeFalse()
-        ->and($doc)->not->toContain('swallow')
-        ->and($doc)->not->toContain('F-P1.2-02');
+        ->and($doc)->not->toContain('swallow');
 });

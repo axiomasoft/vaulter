@@ -177,7 +177,7 @@ final class Identities
 
     /**
      * Adds `class_owner` to every item whose `$field` class is owned by someone else in the type-map than the item
-     * is by its rule: a finding for P2.5, never an error here.
+     * is by its rule: a configuration review finding, never an extraction error.
      *
      * @param  Built $built
      * @return Built

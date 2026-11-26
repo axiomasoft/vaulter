@@ -63,7 +63,7 @@ it('keeps numeric and case-sensitive tenant identity on the actual database', fu
         expect(app(TenancyBoundary::class)->constrain($model->newQuery())->count())->toBe(0);
         $resolver->tenant = 'A';
         expect(app(TenancyBoundary::class)->constrain($model->newQuery())->count())->toBe(1);
-        fwrite(STDOUT, 'P38_TENANT_IDENTITY '.json_encode(['driver' => $connection->getDriverName(), 'database' => $connection->getDatabaseName(), 'numeric_leading_zero_denied' => true, 'text_case_denied' => true, 'canonical_allowed' => true]).PHP_EOL);
+        fwrite(STDOUT, 'TENANT_IDENTITY '.json_encode(['driver' => $connection->getDriverName(), 'database' => $connection->getDatabaseName(), 'numeric_leading_zero_denied' => true, 'text_case_denied' => true, 'canonical_allowed' => true]).PHP_EOL);
     } finally {
         $schema->drop($table);
     }

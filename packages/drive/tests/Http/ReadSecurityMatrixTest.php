@@ -53,7 +53,7 @@ function rsmdrvMatrix(): array
     $caller = 'the answer is scoped to the caller, not to a resource: there is no id to hide (owner: ListSharedWithMeV1Test, ExactListingTest)';
     $noList = 'not a list or search: it answers one resource, R3 holds it';
     $noDownload = 'not a download: no bytes leave the route';
-    $feed = 'the change feed may expose scanned progress, has_more and anonymous keyed removes by D20: its cursor is not compared with a world without the object (owner: P5.9, ChangesFeedV1Test)';
+    $feed = 'the change feed may expose scanned progress, has_more and anonymous keyed removes: its cursor is not compared with a world without the object (owner: ChangesFeedV1Test)';
     $public = 'the public share is a bearer capability, not a caller: expiry, revocation and a wrong token are held by SecurityMatrixTest R5 and PublicSharesV1Test';
     $row = static fn (array $over = []): array => [...['R1' => null, 'R2' => null, 'R3' => null, 'R10' => $noList, 'R11' => $noDownload], ...$over];
     $listRow = static fn (array $over = []): array => $row([...['R10' => null], ...$over]);
