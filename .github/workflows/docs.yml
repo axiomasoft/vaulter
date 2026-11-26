@@ -47,6 +47,8 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
+    # Main builds publish automatically when Pages is enabled. A manual run explicitly requests deployment.
+    if: github.event_name == 'workflow_dispatch' || github.event.repository.has_pages
     permissions:
       contents: read
       pages: write
