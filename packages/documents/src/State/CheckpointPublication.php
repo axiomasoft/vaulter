@@ -20,7 +20,10 @@ use Vaulter\ValueObjects\Access\ActorRef;
 #[Api]
 final readonly class CheckpointPublication
 {
-    /** @param array<string, mixed> $content the JSON projection of `$collabState` in the immutable stored binding schema */
+    /**
+     * @param array<string, mixed> $content     the JSON projection of `$collabState` in the stored binding schema
+     * @param string|null          $stateFormat the encoding to publish, or null to preserve the binding's format
+     */
     public function __construct(
         public CollaborationStateBinding $binding,
         public int $expectedStateVersion,
@@ -29,12 +32,17 @@ final readonly class CheckpointPublication
         public array $content,
         public ?ActorRef $actor = null,
         public ?DocumentContent $preparedContent = null,
+        public ?string $stateFormat = null,
     ) {
         if ($expectedStateVersion < 0 || $coveredThrough < 0) {
             throw new InvalidArgumentException('[Vaulter] A checkpoint names a generation, a state version and a covered sequence of at least 0.');
         }
         if ($collabState === '') {
             throw new InvalidArgumentException('[Vaulter] A checkpoint carries a binary state.');
+        }
+        if ($stateFormat !== null && $stateFormat !== $binding->stateFormat
+            && ($collabState === null || !CollaborationStateBinding::acceptsFormat($binding->protocol, $binding->stateFormat, $stateFormat))) {
+            throw new InvalidArgumentException('[Vaulter] Unsupported checkpoint format transition.');
         }
     }
 }

@@ -71,10 +71,14 @@ final readonly class DocumentStateWriter
         $hash = $change->content?->contentHash() ?? $payload?->content_hash;
         // A bound snapshot save reseeds the working state, even when the JSON is identical.
         $snapshotUpdate = $change->cause === StateWriteCause::Update;
+        $format = $change->cause === StateWriteCause::Collaboration && $change->stateFormat !== null
+            ? $change->stateFormat
+            : $sync?->collab_state_format;
         $syncUnchanged = ($snapshotUpdate && !$reseedBoundSnapshot)
             || ($change->collabState === $sync?->collab_state && (!$snapshotUpdate || $sync?->collab_protocol === null));
         if ($change->cause->skipsIdenticalWrite()
             && $syncUnchanged
+            && $format === $sync?->collab_state_format
             && $hash === $payload?->content_hash
             && $change->schemaVersion === $locked->schema_version) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
@@ -111,7 +115,6 @@ final readonly class DocumentStateWriter
         ];
 
         $protocol = $sync?->collab_protocol;
-        $format = $sync?->collab_state_format;
         if ($change->cause === StateWriteCause::Create) {
             $type = $this->decoder->writable($locked->type);
             // Command-owned types install their binding during their managed write-mode transition.

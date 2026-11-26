@@ -4448,6 +4448,15 @@
                             "optional": false,
                             "default": null,
                             "flags": 4
+                        },
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 4
                         }
                     ],
                     "return": null,
@@ -4798,6 +4807,32 @@
                 {
                     "name": "CommentDeleted",
                     "value": "'comment.deleted'"
+                }
+            ]
+        },
+        "Vaulter\\Documents\\Enums\\Documents\\DocumentWriteMode": {
+            "kind": "enum",
+            "layer": "api",
+            "since": "1.0",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {},
+            "properties": {},
+            "constants": [],
+            "enum_backing": "string",
+            "enum_cases": [
+                {
+                    "name": "Snapshot",
+                    "value": "'snapshot'"
+                },
+                {
+                    "name": "Journal",
+                    "value": "'journal'"
                 }
             ]
         },
@@ -8935,6 +8970,15 @@
                             "optional": true,
                             "default": "null",
                             "flags": 1
+                        },
+                        {
+                            "name": "stateFormat",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 1
                         }
                     ],
                     "return": null,
@@ -9003,6 +9047,44 @@
                         }
                     ],
                     "return": null,
+                    "doc": []
+                },
+                "acceptsFormat": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "protocol",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "expected",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "actual",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "bool",
                     "doc": []
                 },
                 "sameAs": {
@@ -10164,6 +10246,26 @@
             "uses": [],
             "doc": [],
             "methods": {
+                "__construct": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "container",
+                            "type": "?Illuminate\\Contracts\\Container\\Container",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 4
+                        }
+                    ],
+                    "return": null,
+                    "doc": []
+                },
                 "codec": {
                     "visibility": "public",
                     "static": false,

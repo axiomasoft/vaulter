@@ -188,6 +188,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             schemaVersion: $publication->binding->schemaVersion,
             collabState: $publication->collabState,
             actorId: $publication->actor?->id,
+            stateFormat: $publication->stateFormat,
         ));
 
         if ($result->changed) {
@@ -209,6 +210,11 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         if ($marker !== null && $marker->coveredBy($publication->binding, $publication->coveredThrough)) {
             $this->writer->mark($document, null, null);
             $marker = null;
+        } elseif ($marker !== null && $publication->stateFormat !== null && $publication->stateFormat !== $currentBinding->stateFormat
+            && $marker->binding->sameAs($currentBinding)) {
+            // Preserve an uncovered suffix under the new checkpoint format.
+            $this->writer->mark($document, $marker->generation, $marker->throughSeq);
+            $marker = PendingStateGuard::markerOf($document);
         }
 
         return new CheckpointOutcome(
@@ -232,7 +238,8 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         $type = $this->decoder->writable($transition->documentType);
         if ($type->schemaVersion() !== $transition->schemaVersion
             || ($transition->protocol !== null && (!$type instanceof SupportsCollaboration
-                || $type->collaborationProtocol() !== $transition->protocol || $type->collaborationStateFormat() !== $transition->stateFormat))) {
+                || $type->collaborationProtocol() !== $transition->protocol
+                || !CollaborationStateBinding::acceptsFormat($transition->protocol, $type->collaborationStateFormat(), $transition->stateFormat)))) {
             throw new CollaborationUnavailableException('unsupported_binding', $transition->documentType);
         }
         $content = $this->decoder->decodePrepared($type, $transition->content, $transition->schemaVersion);

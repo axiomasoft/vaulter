@@ -25,6 +25,7 @@ use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentCommandRequiredException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -79,7 +80,8 @@ final readonly class WriteLockedDocumentContent
         $sync = $document->syncState;
         if ($sync?->collab_protocol !== null && ($type->schemaVersion() !== $document->schema_version
             || !$type instanceof SupportsCollaboration
-            || $type->collaborationProtocol() !== $sync->collab_protocol || $type->collaborationStateFormat() !== $sync->collab_state_format)) {
+            || $type->collaborationProtocol() !== $sync->collab_protocol
+            || !CollaborationStateBinding::acceptsFormat($sync->collab_protocol, $type->collaborationStateFormat(), $sync->collab_state_format))) {
             throw new CollaborationUnavailableException('unsupported_binding', $document->type);
         }
         $codec = $type->codec();
