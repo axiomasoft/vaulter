@@ -241,11 +241,26 @@ final class WebhooksSchema implements ModuleSchema
         $table = $this->helpers->table('webhook_deliveries');
         $fkIndex = $table.'_endpoint_id_fk_idx';
 
-        if (!$schema->hasTable($table) || !$schema->hasIndex($table, $fkIndex)) {
+        if (!$schema->hasTable($table)) {
             return;
         }
 
+        if ($schema->hasIndex($table, $fkIndex)) {
+            $db = $this->helpers->dbConnection();
+            $grammar = $db->getQueryGrammar();
+            $feed = $table.'_endpoint_feed_idx';
+            $default = $table.'_endpoint_id_index';
+            $changes = ['DROP INDEX '.$grammar->wrap($fkIndex)];
+            if (!$schema->hasIndex($table, $default)) {
+                $changes[] = 'ADD INDEX '.$grammar->wrap($default).' (endpoint_id)';
+            }
+            if ($schema->hasIndex($table, $feed)) {
+                $changes[] = 'DROP INDEX '.$grammar->wrap($feed);
+            }
+            // Keep the original endpoint-only index ahead of the nullable feed
+            // when rolling back. MySQL enforces the FK throughout the switch.
+            $db->statement('ALTER TABLE '.$grammar->wrapTable($table).' '.implode(', ', $changes));
+        }
         $this->addDeliveriesEndpointFeedIndex();
-        $schema->table($table, static fn (Blueprint $blueprint) => $blueprint->dropIndex($fkIndex));
     }
 }
