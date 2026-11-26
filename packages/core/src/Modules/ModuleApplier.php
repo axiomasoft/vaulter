@@ -169,9 +169,9 @@ final class ModuleApplier
     {
         $implementation = $provider->implementation;
         if ($implementation !== null) {
-            $this->app->singletonIf($implementation);
+            $this->app->scopedIf($implementation);
             if ($single) {
-                $this->app->singleton($provider->contract, $implementation);
+                $this->app->scoped($provider->contract, $implementation);
             }
 
             return;
@@ -179,7 +179,7 @@ final class ModuleApplier
 
         $key = (string) $provider->configKey;
         $default = $provider->default;
-        $this->app->singleton($provider->contract, static function (Application $app) use ($key, $default, $provider): object {
+        $this->app->scoped($provider->contract, static function (Application $app) use ($key, $default, $provider): object {
             $class = $app->make(Repository::class)->get($key);
             $class = is_string($class) && $class !== '' ? $class : $default;
             if ($class === null || !is_a($class, $provider->contract, true)) {

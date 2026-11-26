@@ -56,7 +56,7 @@ final readonly class EventRecorder
         $this->recorded[$event] = true;
 
         $writer = new SinkWriter($this->database);
-        // Resolved per call: the recorder is a singleton, the sinks are swappable.
+        // Resolved per call: the host may swap its sinks within a job.
         $sinks = [];
         foreach ($this->kernel->extensions()->resolve(EventSink::class) as $sink) {
             $sinks[] = static fn (): SinkResult => $sink->record($event, $writer);

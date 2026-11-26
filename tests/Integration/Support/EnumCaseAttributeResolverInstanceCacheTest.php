@@ -3,7 +3,13 @@
 declare(strict_types=1);
 
 use Vaulter\Attributes\Label;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Vaulter;
+use Vaulter\Events\EventRecorder;
+use Vaulter\Kernel;
+use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Support\EnumCaseAttributeResolver;
 
 /*
@@ -49,4 +55,19 @@ it('is bound as a container scoped instance, so its lifecycle follows the contai
     app()->forgetScopedInstances();
 
     expect(app(EnumCaseAttributeResolver::class))->not->toBe($withinRequest);
+});
+
+it('rebuilds permission drivers, transaction state and event tracking under the same sealed module graph', function (): void {
+    $services = [Kernel::class, Vaulter::class, VaulterDatabase::class, PermissionDriverManager::class, EventRecorder::class, ModuleReadiness::class];
+    $first = [];
+    foreach ($services as $service) {
+        $first[$service] = app($service);
+    }
+    $fingerprint = app(Kernel::class)->fingerprint();
+    app()->forgetScopedInstances();
+
+    expect($fingerprint)->not->toBeNull()->and(app(Kernel::class)->fingerprint())->toBe($fingerprint);
+    foreach ($services as $service) {
+        expect(app($service))->not->toBe($first[$service])->and(app($service))->toBe(app($service));
+    }
 });

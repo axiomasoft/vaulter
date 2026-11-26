@@ -83,9 +83,9 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(CommentOperations::class);
         $app->bind(AtomicDocumentMutation::class, RunAtomicDocumentMutation::class);
         $app->alias(DocumentsManager::class, 'vaulter.documents');
-        $app->singleton(CollaborativeState::class, DatabaseCollaborativeState::class);
+        $app->scoped(CollaborativeState::class, DatabaseCollaborativeState::class);
 
-        $app->singleton(HtmlSanitizerInterface::class, static function (): HtmlSanitizer {
+        $app->scoped(HtmlSanitizerInterface::class, static function (): HtmlSanitizer {
             $config = (new HtmlSanitizerConfig)
                 ->allowSafeElements()
                 ->allowLinkSchemes(['https', 'http', 'mailto'])

@@ -33,11 +33,11 @@ final class HttpRegistrar
 {
     public function register(Application $app): void
     {
-        $app->singleton(ProblemCatalog::class, static fn (Application $app): ProblemCatalog => new ProblemCatalog(
+        $app->scoped(ProblemCatalog::class, static fn (Application $app): ProblemCatalog => new ProblemCatalog(
             static fn (): array => ProblemSources::active($app),
             $app->make(Translator::class),
         ));
-        $app->singleton(ProblemRenderer::class);
+        $app->scoped(ProblemRenderer::class);
         $app->extend(CorsService::class, static fn (CorsService $cors, Application $app): CorsService => $cors::class === CorsService::class
             ? new ExposeVaulterCorsHeaders($app, $app->make(Repository::class))
             : $cors);

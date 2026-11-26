@@ -73,7 +73,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(ObservabilityOptions::class, static fn (Container $app): ObservabilityOptions => $app->make(VaulterOptions::class)->observability);
         $app->bind(ModelsOptions::class, static fn (Container $app): ModelsOptions => $app->make(VaulterOptions::class)->models);
 
-        $app->singleton(ProductionInvariants::class, static fn (Application $app): ProductionInvariants => new ProductionInvariants(
+        $app->scoped(ProductionInvariants::class, static fn (Application $app): ProductionInvariants => new ProductionInvariants(
             $app->make(Kernel::class)->extensions(),
             $app->make(SecurityOptions::class)->acceptedRisks,
         ));
@@ -86,28 +86,28 @@ final class BindingsRegistrar implements ModuleBindings
 
             return $resolver;
         });
-        $app->singleton(VaulterHttpOperationMap::class);
-        $app->singleton(VaulterThrottledRouteMap::class);
+        $app->scoped(VaulterHttpOperationMap::class);
+        $app->scoped(VaulterThrottledRouteMap::class);
         $app->singletonIf(ConfigNormalizer::class);
 
-        $app->singleton(VaulterDatabase::class);
-        // One runner per process: it counts the writes inside its root transaction (nesting).
+        $app->scoped(VaulterDatabase::class);
+        // One runner per request or job: it counts the writes inside its root transaction (nesting).
         $app->scoped(OperationRunner::class);
         // The policies of the active modules' operations: the runner refuses a mutating operation outside them.
-        $app->singleton(OperationCatalog::class, static fn (Application $app): OperationCatalog => new OperationCatalog(
+        $app->scoped(OperationCatalog::class, static fn (Application $app): OperationCatalog => new OperationCatalog(
             static fn (): array => OperationSources::active($app->make(Kernel::class)),
         ));
         // The reference lists the operations of every offered module, an opt-in one included.
         $app->bind(OperationsReference::class, static fn (Application $app): OperationsReference => new OperationsReference(new OperationCatalog(
             static fn (): array => OperationSources::offered($app),
         )));
-        $app->singleton(ModuleReadiness::class);
+        $app->scoped(ModuleReadiness::class);
         // Stage 4 of the pipeline: scoped with the runner and the outcome the HTTP middleware reads.
         $app->scoped(OperationClaim::class, IdempotencyClaim::class);
         $app->scoped(IdempotencyOutcome::class);
-        $app->singleton(IdempotencyStore::class);
+        $app->scoped(IdempotencyStore::class);
         $app->scoped(WriteScope::class);
-        $app->singleton(IdStrategyResolver::class);
+        $app->scoped(IdStrategyResolver::class);
 
         // Container-owned, scoped: the enum-attribute
         // reflection cache used to be a process-wide `static $cache`, i.e.
@@ -119,7 +119,7 @@ final class BindingsRegistrar implements ModuleBindings
         // like the removed static cache did.
         $app->scoped(EnumCaseAttributeResolver::class);
 
-        $app->singleton(
+        $app->scoped(
             MetricsRecorder::class,
             static function (Application $app): MetricsRecorder {
 
@@ -155,7 +155,7 @@ final class BindingsRegistrar implements ModuleBindings
             },
         );
 
-        $app->singleton(
+        $app->scoped(
             TraceRecorder::class,
             static function (Application $app): TraceRecorder {
 

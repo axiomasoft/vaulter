@@ -128,7 +128,7 @@ final class VaulterDatabase
         return $this->scope()->run($callback);
     }
 
-    /** Resolved per call: the scope is a scoped service and this class is a singleton. */
+    /** Resolve the active write scope for the current transaction. */
     private function scope(): WriteScope
     {
         return $this->container->make(WriteScope::class);

@@ -25,9 +25,9 @@ final class AccessRegistrar implements ModuleBindings
     {
         $app->bind(OperationGuard::class);
 
-        $app->singleton(
+        $app->scoped(
             PermissionDriverManager::class,
-            fn (): PermissionDriverManager => new PermissionDriverManager(
+            static fn (Application $app): PermissionDriverManager => new PermissionDriverManager(
                 accessOptions: $app->make(AccessOptions::class),
                 container: $app,
                 isProduction: $app->environment('production'),
@@ -36,7 +36,7 @@ final class AccessRegistrar implements ModuleBindings
 
         $app->bind(
             PermissionDriver::class,
-            fn (): PermissionDriver => $app->make(PermissionDriverManager::class)->driver(),
+            static fn (Application $app): PermissionDriver => $app->make(PermissionDriverManager::class)->driver(),
         );
     }
 

@@ -35,7 +35,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind('vaulter.dedup_scope', static fn (Container $app): string => $app->make(MediaOptions::class)->dedupScope->value);
 
         // The StorageDriver is the media module's capability, read from `vaulter-media.storage_driver` (MediaModule).
-        $app->singleton(ContentStore::class, static function (Container $app): ContentStore {
+        $app->scoped(ContentStore::class, static function (Container $app): ContentStore {
             $service = $app->make($app->make(MediaOptions::class)->contentStore);
             if (!$service instanceof ContentStore) {
                 throw new InvalidConfigurationException('[Vaulter] Configured contentStore binding must implement ContentStore.');

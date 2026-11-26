@@ -18,8 +18,8 @@ final class EventsRegistrar implements ModuleBindings
     public function register(Application $app): void
     {
         // One instance remembers which events it recorded, so recording one twice fails.
-        $app->singleton(EventRecorder::class);
-        $app->singleton(EventCatalog::class, static fn (Application $app): EventCatalog => new EventCatalog(
+        $app->scoped(EventRecorder::class);
+        $app->scoped(EventCatalog::class, static fn (Application $app): EventCatalog => new EventCatalog(
             static fn (): array => EventSources::active($app),
             static fn (): array => EventSources::offered($app),
         ));

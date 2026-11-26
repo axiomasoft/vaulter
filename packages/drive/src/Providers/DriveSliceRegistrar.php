@@ -55,7 +55,7 @@ final class DriveSliceRegistrar implements ModuleBindings
         // fresh per NodeResource still hits the SAME repository instance across a listing page.
         $app->scoped(DriveReadRepository::class);
 
-        $app->singleton(
+        $app->scoped(
             ProfileRegistry::class,
             static function (Application $app): ProfileRegistry {
                 $profiles = self::bootOptions($app)->profiles;
@@ -68,7 +68,7 @@ final class DriveSliceRegistrar implements ModuleBindings
             },
         );
 
-        $app->singleton(Vaulter::class);
+        $app->scoped(Vaulter::class);
         $app->alias(Vaulter::class, 'vaulter');
 
         $app->bind(ShareTokenGenerator::class, static function (Application $app): ShareTokenGenerator {

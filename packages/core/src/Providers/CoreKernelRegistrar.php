@@ -29,6 +29,8 @@ use Vaulter\CoreModule;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Http\Controllers\ModuleGraphInvalidController;
 use Vaulter\Kernel;
+use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
@@ -47,7 +49,16 @@ final class CoreKernelRegistrar implements PackageRegistrar
     public function register(Application $app): void
     {
         $app->singletonIf(self::class);
-        $app->singletonIf(Kernel::class);
+        $app->scopedIf(Kernel::class, static function (Application $scope): Kernel {
+            $kernel = new Kernel($scope);
+            if ($scope->bound(CompiledModules::class)) {
+                $kernel->seal($scope->make(CompiledModules::class));
+            } elseif ($scope->bound(InvalidModuleGraph::class)) {
+                $kernel->seal($scope->make(InvalidModuleGraph::class));
+            }
+
+            return $kernel;
+        });
         $app->singletonIf(ConfigNormalizer::class);
         $app->singletonIf(ModuleApplier::class);
 
@@ -62,9 +73,11 @@ final class CoreKernelRegistrar implements PackageRegistrar
             $overrides = $config->get('vaulter.modules', []);
             $disabled = $config->get('packman.disabled_plugins', []);
             $gate = ExtensionRegistrar::activationGateFor($app, except: VaulterPluginActivationGate::class);
-            $kernel->seal((new ModuleCompiler)->compileOffered($catalog->offered(), $overrides, $catalog->pluginSpecs(),
+            $compiled = (new ModuleCompiler)->compileOffered($catalog->offered(), $overrides, $catalog->pluginSpecs(),
                 static fn (string $id): bool => (!is_array($disabled) || !in_array($id, $disabled, true)) && ($gate?->isEnabled($id) ?? true),
-            ));
+            );
+            $kernel->seal($compiled);
+            $app->instance($compiled::class, $compiled);
 
             $applier = $app->make(ModuleApplier::class);
             $applier->config('vaulter', dirname(__DIR__, 2).'/config/vaulter.php');
