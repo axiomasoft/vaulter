@@ -146,12 +146,7 @@ final class RescanFileRevisionsCommand extends Command
                 if ($this->option('request-id') === null) {
                     throw new InvalidArgumentException('Cursor resume requires the original request ID.');
                 }
-                $cursor = $this->decodeCursor(self::stringOption($this, 'after'));
-                foreach ($base as $key => $value) {
-                    if (($cursor[$key] ?? null) !== $value) {
-                        throw new InvalidArgumentException('Cursor scope or policy changed.');
-                    }
-                }
+                $cursor = $this->decodeCursor(self::stringOption($this, 'after'), $base);
                 $drives->where('id', $activating || $cursor['last_revision_id'] === null ? '>' : '>=', $cursor['last_drive_id']);
             }
             $revisionClass = app(DriveOptions::class)->model('file_revision');
@@ -192,9 +187,7 @@ final class RescanFileRevisionsCommand extends Command
                     $revisions->whereKey($this->revisionKeys());
                 }
                 if ($cursor !== null && $cursor['last_revision_id'] !== null && $drive->id === $cursor['last_drive_id']) {
-                    $revisions->where('scan_admission_sequence', '>=', $cursor['last_admission_sequence'])
-                        ->where(fn (Builder $q): Builder => $q->where('scan_admission_sequence', '>', $cursor['last_admission_sequence'])
-                            ->orWhere(fn (Builder $q): Builder => $q->where('scan_admission_sequence', $cursor['last_admission_sequence'])->where('id', '>', $cursor['last_revision_id'])));
+                    $revisions->afterScanPosition($cursor['last_admission_sequence'], $cursor['last_revision_id']);
                 }
                 foreach ($revisions->orderBy('scan_admission_sequence')->orderBy('id')->limit($scope['limit'] - $out['scanned'])->get() as $revision) {
                     $out['scanned']++;
@@ -294,8 +287,11 @@ final class RescanFileRevisionsCommand extends Command
         return rtrim(strtr(base64_encode($json), '+/', '-_'), '=').'.'.hash_hmac('sha256', $json, $key);
     }
 
-    /** @return array<string,mixed> */
-    private function decodeCursor(string $cursor): array
+    /**
+     * @param  array<string, mixed>                                                                              $scope
+     * @return array{last_drive_id: int|string, last_revision_id: int|string|null, last_admission_sequence: int}
+     */
+    private function decodeCursor(string $cursor, array $scope): array
     {
         $key = app(Repository::class)->get('app.key');
         if (!is_string($key) || $key === '') {
@@ -316,14 +312,16 @@ final class RescanFileRevisionsCommand extends Command
             || (!is_int($payload['last_revision_id'] ?? null) && !is_string($payload['last_revision_id'] ?? null) && ($payload['last_revision_id'] ?? null) !== null)) {
             throw new InvalidArgumentException('Invalid cursor payload.');
         }
-        $validated = [];
-        foreach ($payload as $field => $value) {
-            if (!is_string($field)) {
-                throw new InvalidArgumentException('Invalid cursor fields.');
+        foreach ($scope as $field => $value) {
+            if (($payload[$field] ?? null) !== $value) {
+                throw new InvalidArgumentException('Cursor scope or policy changed.');
             }
-            $validated[$field] = $value;
         }
 
-        return $validated;
+        return [
+            'last_drive_id' => $payload['last_drive_id'],
+            'last_revision_id' => $payload['last_revision_id'] ?? null,
+            'last_admission_sequence' => $payload['last_admission_sequence'],
+        ];
     }
 }

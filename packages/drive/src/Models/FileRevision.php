@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Models;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,6 +69,26 @@ class FileRevision extends Model
     use StampsDriveTenant;
 
     public const UPDATED_AT = null;
+
+    /**
+     * @param  Builder<$this> $query
+     * @return Builder<$this>
+     */
+    public function scopeAfterScanPosition(Builder $query, int $sequence, int|string|null $revisionId): Builder
+    {
+        if ($revisionId === null) {
+            return $query->where('scan_admission_sequence', '>=', $sequence);
+        }
+
+        // PostgreSQL can seek the full tuple even if thousands of legacy revisions share sequence zero.
+        // MySQL's range optimizer seeks both key parts with an expanded predicate.
+        if (in_array($this->getConnection()->getDriverName(), ['pgsql', 'sqlite'], true)) {
+            return $query->whereRowValues(['scan_admission_sequence', 'id'], '>', [$sequence, $revisionId]);
+        }
+
+        return $query->where(static fn (Builder $next): Builder => $next->where('scan_admission_sequence', '>', $sequence)
+            ->orWhere(static fn (Builder $tie): Builder => $tie->where('scan_admission_sequence', $sequence)->where('id', '>', $revisionId)));
+    }
 
     /**
      * Closed allow-list: id/tenant_id/file_id/number/blob_id/
