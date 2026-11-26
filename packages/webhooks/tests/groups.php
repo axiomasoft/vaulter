@@ -12,6 +12,7 @@ return [
         'Events/WebhookAutoDisableCommitTest.php',
         'Feature/PruneWebhooksTest.php',
         'Outbox/WebhookFanoutConsumerTest.php',
+        'Schema/DeliveryForeignKeyMigrationTest.php',
         'Schema/WebhooksKeyColumnsTest.php',
         'Webhooks/ConcurrentDeliveryTest.php',
         'Webhooks/OutboxTransactionTest.php',
@@ -31,6 +32,7 @@ return [
     'extended' => [],
     'stand' => [],
     // Whole files that can only say something on a server engine: skipped before the schema is built on SQLite.
+    'engine:mysql' => ['Schema/DeliveryForeignKeyMigrationTest.php'],
     'engine:server' => [
         'Concurrency',
     ],
