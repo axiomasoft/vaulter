@@ -8,6 +8,7 @@ use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Database\QueryException;
 use Vaulter\Database\DatabaseErrorMapper;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
@@ -73,4 +74,38 @@ it('checks explicitly deferred PostgreSQL constraints before entering COMMIT', f
             ->and(DatabaseErrorMapper::isForeignKeyViolation($error))->toBeTrue()
             ->and($database->connection()->getPdo()->inTransaction())->toBeFalse();
     }
+});
+
+it('does not replay a committed transaction when its callback reports a conflict', function (): void {
+    $database = app(VaulterDatabase::class);
+    $database->connection()->setTransactionManager(new DatabaseTransactionsManager);
+    $attempts = 0;
+    $run = static function () use ($database, &$attempts): void {
+        $database->transaction(static function () use ($database, &$attempts): void {
+            $attempts++;
+            $database->afterCommit(static fn () => throw new ConcurrentUpdateException);
+        });
+    };
+
+    expect($run)->toThrow(ConcurrentUpdateException::class)
+        ->and($attempts)->toBe(1);
+});
+
+it('retries a nested concurrent update at the outer boundary within its budget', function (): void {
+    $database = app(VaulterDatabase::class);
+    $outerAttempts = 0;
+    $nestedAttempts = 0;
+    $run = static function () use ($database, &$outerAttempts, &$nestedAttempts): void {
+        $database->transaction(static function () use ($database, &$outerAttempts, &$nestedAttempts): void {
+            $outerAttempts++;
+            $database->transaction(static function () use (&$nestedAttempts): void {
+                $nestedAttempts++;
+                throw new ConcurrentUpdateException;
+            });
+        }, attempts: 2);
+    };
+
+    expect($run)->toThrow(ConcurrentUpdateException::class)
+        ->and($outerAttempts)->toBe(2)
+        ->and($nestedAttempts)->toBe(2);
 });

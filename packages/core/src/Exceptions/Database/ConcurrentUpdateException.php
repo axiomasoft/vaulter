@@ -15,8 +15,8 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A bounded outermost retry exhausted its attempts on a deadlock or serialization
- * failure. The request is safe to repeat, so the response says so instead of a 500.
+ * A conflicting write requires a fresh outer transaction. Once its retry budget
+ * is exhausted, the caller can retry the request.
  */
 #[Api]
 final class ConcurrentUpdateException extends VaulterException implements ProblemException

@@ -11,7 +11,6 @@ use Illuminate\Database\DatabaseManager;
 use LogicException;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
-use stdClass;
 use Throwable;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Configuration\TenancyOptions;
@@ -26,7 +25,7 @@ final class VaulterDatabase
     /**
      * The outermost transaction attempt now running; `aborted` once its commit failed and it was retried.
      */
-    private ?stdClass $attempt = null;
+    private ?TransactionAttempt $attempt = null;
 
     #[Internal]
     public function __construct(
@@ -57,40 +56,58 @@ final class VaulterDatabase
         $attempt = null;
         $connection = $this->connection();
 
-        try {
-            return $connection->transaction(function (Connection $connection) use ($callback, &$attempt): mixed {
-                // Laravel repeats the callback when the commit itself fails on a concurrency
-                // error, rolling back without telling its after-commit queue: the callbacks
-                // of the abandoned attempt would still run after the next commit.
-                if ($attempt !== null) {
-                    $attempt->aborted = true;
-                }
-                if ($connection->transactionLevel() === 1) {
-                    $attempt = $this->attempt = (object) ['aborted' => false];
-                    if ($connection->getDriverName() === 'pgsql') {
-                        $this->applyPostgresTenantContext($connection);
-                    }
-                }
-
-                $result = $this->scope()->run(static fn (): mixed => $callback($connection));
-                if ($connection->transactionLevel() === 1 && $connection->getDriverName() === 'pgsql') {
-                    $connection->statement('SET CONSTRAINTS ALL IMMEDIATE');
-                }
-
-                return $result;
-            }, $attempts);
-        } catch (Throwable $exception) {
+        $budget = $attempts;
+        $started = 0;
+        $run = function (Connection $connection) use ($callback, &$attempt, &$started): mixed {
+            $started++;
+            // Laravel repeats the callback when the commit itself fails on a concurrency
+            // error, rolling back without telling its after-commit queue: the callbacks
+            // of the abandoned attempt would still run after the next commit.
             if ($attempt !== null) {
                 $attempt->aborted = true;
-                if ($connection->transactionLevel() === 0) {
-                    $this->cleanFailedCommit($connection);
+            }
+            if ($connection->transactionLevel() === 1) {
+                $attempt = $this->attempt = new TransactionAttempt;
+                if ($connection->getDriverName() === 'pgsql') {
+                    $this->applyPostgresTenantContext($connection);
                 }
             }
 
-            throw $exception;
-        } finally {
-            if ($connection->transactionLevel() === 0) {
-                $this->attempt = null;
+            $result = $this->scope()->run(static fn (): mixed => $callback($connection));
+            if ($connection->transactionLevel() === 1 && $connection->getDriverName() === 'pgsql') {
+                $connection->statement('SET CONSTRAINTS ALL IMMEDIATE');
+            }
+
+            if ($attempt !== null) {
+                $attempt->callbackReturned = true;
+            }
+
+            return $result;
+        };
+
+        while (true) {
+            try {
+                return $connection->transaction($run, $budget);
+            } catch (Throwable $exception) {
+                if ($attempt === null) {
+                    throw $exception;
+                }
+                $attempt->aborted = true;
+                if ($connection->transactionLevel() !== 0) {
+                    throw $exception;
+                }
+                $this->cleanFailedCommit($connection);
+
+                // Only a rolled-back outer callback may retry a conflict hidden by its snapshot.
+                // Native database retries and these retries share one attempt budget.
+                $budget = $attempts - $started;
+                if (!$exception instanceof ConcurrentUpdateException || $attempt->callbackReturned || $budget < 1) {
+                    throw $exception;
+                }
+            } finally {
+                if ($connection->transactionLevel() === 0) {
+                    $this->attempt = null;
+                }
             }
         }
     }
@@ -166,7 +183,7 @@ final class VaulterDatabase
                     $pdo->rollBack();
                 }
                 if ($attempt >= $attempts) {
-                    throw new ConcurrentUpdateException($exception);
+                    throw $exception instanceof ConcurrentUpdateException ? $exception : new ConcurrentUpdateException($exception);
                 }
             }
         }
@@ -185,7 +202,7 @@ final class VaulterDatabase
             Connection::class,
         );
         for ($cursor = $exception; $cursor !== null; $cursor = $cursor->getPrevious()) {
-            if ($detect($cursor)
+            if ($cursor instanceof ConcurrentUpdateException || $detect($cursor)
                 || in_array((string) $cursor->getCode(), ['40001', '40P01'], true)
                 || preg_match('/SQLSTATE\[(?:40001|40P01)\]/', $cursor->getMessage()) === 1) {
                 return true;

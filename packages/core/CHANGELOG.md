@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `VaulterDatabase::transaction()` now retries a callback that raises `ConcurrentUpdateException` once the outer transaction has rolled back. It shares the configured attempt budget with native database retries. Errors raised after commit still propagate immediately.
+
 - Retire VaulterModule/PluginModuleBridge; add native WithModuleRuntime and VaulterPluginRegistrar, canonical resource paths and single slot registration.
 
 - Renamed package namespace to `axiomasoft/vaulter-core`.
