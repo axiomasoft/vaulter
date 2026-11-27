@@ -1112,7 +1112,7 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
     }
 
     /** @param resource $socket */
-    private static function enableTlsNonBlocking($socket, int $deadlineNs): bool
+    private static function enableTlsNonBlocking(mixed $socket, int $deadlineNs): bool
     {
         $methods = STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
         while (true) {
@@ -1127,7 +1127,7 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
     }
 
     /** @param resource $socket */
-    private static function waitForStream($socket, bool $waitRead, bool $waitWrite, int $deadlineNs): bool
+    private static function waitForStream(mixed $socket, bool $waitRead, bool $waitWrite, int $deadlineNs): bool
     {
         $remainingNs = $deadlineNs - hrtime(true);
         if ($remainingNs <= 0) {
