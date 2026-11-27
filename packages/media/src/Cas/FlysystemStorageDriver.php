@@ -28,6 +28,8 @@ use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use WeakMap;
 
+use function Aws\detach_on_close_stream;
+
 /**
  * The default StorageDriver: a thin Flysystem-disk abstraction. The disk is
  * resolved per call (a blob's v_drives.disk, else the install default); writes
@@ -201,7 +203,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
         try {
             if ($size !== null && $size < 16_777_216) {
                 $checksum = $r2 ? [] : array_intersect_key($options, ['ChecksumSHA256' => true]);
-                $body = \Aws\detach_on_close_stream(Utils::streamFor($stream));
+                $body = detach_on_close_stream(Utils::streamFor($stream));
                 $command = $client->getCommand('PutObject', $address + $guard + $checksum + ['Body' => $body, 'ContentLength' => $size] + self::requestOptions());
                 if ($r2) {
                     $this->omitPartChecksums($command);

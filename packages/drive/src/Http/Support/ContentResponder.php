@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Http\Support;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Packman\Attributes\Internal;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -143,7 +144,7 @@ final readonly class ContentResponder
                 }
                 if (fseek($file->stream, $start) !== 0) {
                     fclose($file->stream);
-                    throw new \RuntimeException('Could not seek to the requested content range.');
+                    throw new RuntimeException('Could not seek to the requested content range.');
                 }
                 $status = 206;
                 $length = $end - $start + 1;

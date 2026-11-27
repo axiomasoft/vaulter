@@ -78,7 +78,7 @@ it('rejects duplicate or malformed blockIds in TipTapContent::fromArray', functi
         ],
     ];
 
-    expect(fn () => TipTapContent::fromArray($duplicate, TipTapSchema::richText()))
+    expect(fn (): TipTapContent => TipTapContent::fromArray($duplicate, TipTapSchema::richText()))
         ->toThrow(InvalidDocumentContentException::class);
 
     $malformed = [
@@ -88,7 +88,7 @@ it('rejects duplicate or malformed blockIds in TipTapContent::fromArray', functi
         ],
     ];
 
-    expect(fn () => TipTapContent::fromArray($malformed, TipTapSchema::richText()))
+    expect(fn (): TipTapContent => TipTapContent::fromArray($malformed, TipTapSchema::richText()))
         ->toThrow(InvalidDocumentContentException::class);
 });
 
@@ -134,7 +134,7 @@ it('keeps markdown schema closed without blockId and working as before (3.1-B)',
         ],
     ];
 
-    expect(fn () => TipTapContent::fromArray($withBlockId, TipTapSchema::markdown()))
+    expect(fn (): TipTapContent => TipTapContent::fromArray($withBlockId, TipTapSchema::markdown()))
         ->toThrow(InvalidDocumentContentException::class);
 });
 

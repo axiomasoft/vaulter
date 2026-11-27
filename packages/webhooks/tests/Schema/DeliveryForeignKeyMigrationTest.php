@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Pest\Mixins\Expectation;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\SchemaHelpers;
@@ -55,7 +56,7 @@ it('keeps the endpoint FK enforceable across a feed rebuild and resumes either m
     });
     $assertKey = function () use ($db): void {
         expect(fn (): bool => $db->table($this->deliveries)->insert(['id' => 2, 'endpoint_id' => 999, 'created_at' => null]))
-            ->toThrow(fn (QueryException $error) => expect($error->errorInfo[1])->toBe(1452));
+            ->toThrow(fn (QueryException $error): Expectation => expect($error->errorInfo[1])->toBe(1452));
     };
     foreach ([$this->migration->up(...), $this->migration->down(...)] as $migrate) {
         $interrupt = true;
@@ -84,7 +85,7 @@ it('retains legacy orphans for repair and restores the missing constraint on ret
     $db->table($this->endpoints)->insert(['id' => 7]);
     $this->migration->up();
     expect(fn (): bool => $db->table($table)->insert(['id' => 4, 'endpoint_id' => 8]))
-        ->toThrow(fn (QueryException $error) => expect($error->errorInfo[1])->toBe(1452));
+        ->toThrow(fn (QueryException $error): Expectation => expect($error->errorInfo[1])->toBe(1452));
     $db->table($this->endpoints)->where('id', 7)->delete();
     expect($db->table($table)->count())->toBe(0);
 });

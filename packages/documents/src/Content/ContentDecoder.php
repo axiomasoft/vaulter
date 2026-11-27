@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Content;
 
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
+use stdClass;
 use Vaulter\Documents\Configuration\DocumentsOptions;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
@@ -116,7 +117,7 @@ final readonly class ContentDecoder
             return $fallback;
         }
         $decoded = json_decode($raw);
-        if (!$decoded instanceof \stdClass) {
+        if (!$decoded instanceof stdClass) {
             return $fallback;
         }
         $top = [];

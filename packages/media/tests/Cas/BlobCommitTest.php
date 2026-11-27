@@ -96,7 +96,7 @@ it('stores a wrapped key and authenticates independently seekable encrypted segm
     $disk->put($row->storage_key, $object);
     $stream = $store->read((string) $row->id);
     fseek($stream, 8_388_608);
-    expect(fn () => fread($stream, 1))->toThrow(RuntimeException::class, 'authentication');
+    expect(fn (): string|false => fread($stream, 1))->toThrow(RuntimeException::class, 'authentication');
     fclose($stream);
 
     // An otherwise well-formed record from another index must also fail.
@@ -105,7 +105,7 @@ it('stores a wrapped key and authenticates independently seekable encrypted segm
     $disk->put($row->storage_key, substr_replace($object, substr($object, $prefix, $stride), $prefix + $stride, $stride));
     $stream = $store->read((string) $row->id);
     fseek($stream, 4_194_304);
-    expect(fn () => fread($stream, 1))->toThrow(RuntimeException::class, 'authentication');
+    expect(fn (): string|false => fread($stream, 1))->toThrow(RuntimeException::class, 'authentication');
     fclose($stream);
 });
 

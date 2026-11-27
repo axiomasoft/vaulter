@@ -66,17 +66,15 @@ it('buffers spans on the hot path and exports OTLP protobuf without throwing on 
         timeoutMs: 100,
         headers: ['x-otel-token' => 'tok'],
         transport: static function (string $endpoint, string $payload, array $headers, int $timeoutMs) use (&$captured): void {
-            $captured[] = compact('endpoint', 'payload', 'headers', 'timeoutMs');
+            $captured[] = ['endpoint' => $endpoint, 'payload' => $payload, 'headers' => $headers, 'timeoutMs' => $timeoutMs];
         },
     );
 
-    $result = $recorder->withTraceparent('00-0123456789abcdef0123456789abcdef-89abcdef01234567-01', function () use ($recorder): int {
-        return $recorder->span('vaulter.test.root', function () use ($recorder): int {
-            expect($recorder->currentTraceparent())->toStartWith('00-0123456789abcdef0123456789abcdef-');
+    $result = $recorder->withTraceparent('00-0123456789abcdef0123456789abcdef-89abcdef01234567-01', fn (): int => $recorder->span('vaulter.test.root', function () use ($recorder): int {
+        expect($recorder->currentTraceparent())->toStartWith('00-0123456789abcdef0123456789abcdef-');
 
-            return 42;
-        }, ['vaulter.target' => 'core', 'vaulter.nested' => false, 'vaulter.count' => 2]);
-    });
+        return 42;
+    }, ['vaulter.target' => 'core', 'vaulter.nested' => false, 'vaulter.count' => 2]));
 
     expect($result)->toBe(42)
         ->and($recorder->bufferedCount())->toBe(1)
@@ -120,7 +118,7 @@ it('captures traceparent in outbox payload metadata and creates an OTel Span Lin
 
     $arguments = get_object_vars(app(Kernel::class)->compiled());
     $arguments['contributions'][OutboxConsumer::class] = [
-        new SlotContribution(OutboxConsumer::class, OtlpRelayProbeConsumer::ID, 'core', OtlpRelayProbeConsumer::class, 0, null),
+        new SlotContribution(OutboxConsumer::class, OtlpRelayProbeConsumer::ID, 'core', OtlpRelayProbeConsumer::class, 0),
     ];
     $kernel = new Kernel($this->app);
     $kernel->seal(new CompiledModules(...$arguments));
@@ -206,7 +204,7 @@ it('redacts raw exception messages from exported OTLP spans', function (): void 
     );
 
     $secretMessage = 'SQLSTATE[23505]: duplicate key value (secret-sql-binding-token-xyz)';
-    expect(fn () => $recorder->span('vaulter.redact.test', static function () use ($secretMessage): void {
+    expect(fn (): mixed => $recorder->span('vaulter.redact.test', static function () use ($secretMessage): void {
         throw new RuntimeException($secretMessage, 42);
     }))->toThrow(RuntimeException::class);
 
@@ -741,7 +739,7 @@ it('skips OutboxRelay traceparent validation and container tracer lookup when tr
 
     $arguments = get_object_vars(app(Kernel::class)->compiled());
     $arguments['contributions'][OutboxConsumer::class] = [
-        new SlotContribution(OutboxConsumer::class, OtlpRelayProbeConsumer::ID, 'core', OtlpRelayProbeConsumer::class, 0, null),
+        new SlotContribution(OutboxConsumer::class, OtlpRelayProbeConsumer::ID, 'core', OtlpRelayProbeConsumer::class, 0),
     ];
     $kernel = new Kernel($this->app);
     $kernel->seal(new CompiledModules(...$arguments));
