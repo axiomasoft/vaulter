@@ -33,6 +33,12 @@ Vaulter\Media\Configuration\MediaOptions api since 1.0 final readonly class impl
   public function orphanGraceHours(int $override = 0): int
   public function storageDriver(): string
 
+Vaulter\Media\Content\ClamAvContentScanner api since 1.0 final readonly class implements Vaulter\Media\Contracts\Cas\ContentScanner
+  public function __construct(string $endpoint = 'unix:///run/clamav/clamd.ctl', int $timeoutSeconds = 60)
+  public function key(): string
+  public function scan(Vaulter\Media\Content\ScanInput $input): Vaulter\Media\Content\ScanResult
+  public function version(): string
+
 Vaulter\Media\Content\ImmutableContentIdentity api since 1.0 final readonly class
   public int|string $blobId
   public string $disk
@@ -136,6 +142,10 @@ Vaulter\Media\Data\Snapshots\BlobSnapshot api since 1.0 final readonly class
   public string $storageKey
   public ?string $tenantId
 
+Vaulter\Media\Encryption\KeyManagementPort spi:implement since 1.0 interface
+  public function unwrap(int|string $keyId, string $wrappedDek): string
+  public function wrap(string $dek): array
+
 Vaulter\Media\Enums\Cas\BlobStatus api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
   case Committed = 'committed'
   case Deleted = 'deleted'
@@ -213,6 +223,7 @@ Vaulter\Media\Testing\FakeContentScanner api since 1.0 final class implements Va
 
 Vaulter\Media\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
   public function dedupScope(): string
+  public function encryptionTenantId(): ?string
   public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
   public static function fromSegment(string $segment): self
   public function key(): string

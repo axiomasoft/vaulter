@@ -8,11 +8,11 @@ use Vaulter\Media\Tests\TestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Testing\Support\TestGroups;
 
-uses(TestCase::class, RefreshDatabase::class)->in('Feature', 'Observability', 'Doctor');
+uses(TestCase::class, RefreshDatabase::class)->in(__DIR__.'/Feature', __DIR__.'/Observability', __DIR__.'/Doctor');
 
-uses(TestCase::class)->in('Cas');
+uses(TestCase::class)->in(__DIR__.'/Cas');
 
-uses(TestCase::class, RefreshDatabase::class)->in('Recipes');
+uses(TestCase::class, RefreshDatabase::class)->in(__DIR__.'/Recipes');
 $unwrapped = ['BlobScopeKeyTest.php', 'ScopeKeyReconcileTest.php', 'BlobPinTransactionTest.php', 'BlobSnapshotConflictTest.php', 'PinSweepRaceTest.php'];
 foreach (glob(__DIR__.'/Cas/*Test.php') as $file) {
     uses(in_array(basename($file), $unwrapped, true)
@@ -20,11 +20,11 @@ foreach (glob(__DIR__.'/Cas/*Test.php') as $file) {
         : RefreshDatabase::class)->in($file);
 }
 
-uses(TestCase::class)->in('Configuration', 'Console', 'Support');
+uses(TestCase::class)->in(__DIR__.'/Configuration', __DIR__.'/Console', __DIR__.'/Support');
 
 // Database-free: these files run on the booted application without a schema; each one stayed green under
 // WithoutDatabaseSchema (a test that reaches the database fails there).
-uses(WithoutDatabaseSchema::class)->in('Configuration', 'Console', 'Support');
+uses(WithoutDatabaseSchema::class)->in(__DIR__.'/Configuration', __DIR__.'/Console', __DIR__.'/Support');
 
 // Test groups: database, serial, extended, stand and the engine-only engine:* — see groups.php.
 TestGroups::bind(__DIR__, 'media');

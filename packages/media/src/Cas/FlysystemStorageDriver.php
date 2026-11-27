@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Aws\CommandInterface;
+use Aws\Exception\AwsException;
+use Aws\Exception\MultipartUploadException;
+use Aws\ResultInterface;
+use Aws\S3\MultipartUploader;
+use Closure;
 use DateTimeInterface;
+use Fiber;
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\UnableToRetrieveMetadata;
 use Packman\Attributes\Internal;
+use Psr\Http\Message\StreamInterface;
+use RuntimeException;
 use Throwable;
 use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
+use WeakMap;
 
 /**
  * The default StorageDriver: a thin Flysystem-disk abstraction. The disk is
@@ -26,6 +38,12 @@ use Vaulter\Media\Contracts\Cas\StorageDriver;
 #[Internal]
 final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriver
 {
+    /** @var (Closure():float)|null */
+    private static ?Closure $s3Budget = null;
+
+    /** @var WeakMap<object, Closure():float>|null */
+    private static ?WeakMap $fiberBudgets = null;
+
     public function __construct(
         private readonly MediaOptions $mediaConfig,
     ) {}
@@ -41,6 +59,10 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
      */
     public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
     {
+        if ($ifNoneMatch && $this->s3Disk($disk) !== null) {
+            return $this->writeObject($key, $stream, $disk, true, $options) !== null;
+        }
+
         $filesystem = $this->disk($disk);
 
         // Conditional create. On an object store this maps to If-None-Match: * so
@@ -69,6 +91,254 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
         }
 
         return $this->promoteViaTemp($filesystem, $key, $stream, $ifNoneMatch, $options);
+    }
+
+    public function s3Disk(?string $disk): ?AwsS3V3Adapter
+    {
+        $filesystem = $this->disk($disk);
+
+        return $filesystem instanceof AwsS3V3Adapter ? $filesystem : null;
+    }
+
+    public function supportsEncryptedReads(?string $disk): bool
+    {
+        $filesystem = $this->disk($disk);
+
+        return $filesystem instanceof AwsS3V3Adapter
+            || ($filesystem instanceof FilesystemAdapter && $filesystem->getAdapter() instanceof LocalFilesystemAdapter);
+    }
+
+    /** @return array{Bucket:string, Key:string} */
+    public function s3Address(AwsS3V3Adapter $disk, string $key): array
+    {
+        $bucket = $disk->getConfig()['bucket'] ?? null;
+
+        return ['Bucket' => is_string($bucket) ? $bucket : throw new RuntimeException('S3 disk requires a bucket.'), 'Key' => $disk->path($key)];
+    }
+
+    public function isR2(AwsS3V3Adapter $disk): bool
+    {
+        return ($disk->getConfig()['vaulter_s3_profile'] ?? 's3') === 'r2';
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure():float $remaining
+     * @param  Closure():T     $operation
+     * @return T
+     */
+    public static function withinS3Budget(Closure $remaining, Closure $operation): mixed
+    {
+        $fiber = Fiber::getCurrent();
+        $previous = self::budget();
+        if ($fiber === null) {
+            self::$s3Budget = $remaining;
+        } else {
+            $budgets = self::$fiberBudgets ??= new WeakMap;
+            $budgets[$fiber] = $remaining;
+        }
+        try {
+            return $operation();
+        } finally {
+            if ($fiber === null) {
+                self::$s3Budget = $previous;
+            } else {
+                if ($previous === null) {
+                    unset($budgets[$fiber]);
+                } else {
+                    $budgets[$fiber] = $previous;
+                }
+            }
+        }
+    }
+
+    /** @return (Closure():float)|null */
+    private static function budget(): ?Closure
+    {
+        $fiber = Fiber::getCurrent();
+
+        return $fiber === null ? self::$s3Budget : (self::$fiberBudgets[$fiber] ?? null);
+    }
+
+    /** @return array<string, mixed> */
+    public static function requestOptions(bool $stream = false): array
+    {
+        $remaining = self::budget();
+        if ($remaining === null) {
+            return $stream ? ['@http' => ['stream' => true, 'decode_content' => false]] : [];
+        }
+        $seconds = $remaining();
+        if ($seconds <= 0) {
+            throw new RuntimeException('The S3 operation deadline expired.');
+        }
+
+        // cURL downloads to a spooled stream and applies the overall timeout to the transfer.
+        return ['@retries' => 0, '@http' => ['timeout' => $seconds, 'connect_timeout' => $seconds, 'decode_content' => false]];
+    }
+
+    private static function applyBudget(CommandInterface $command): void
+    {
+        foreach (self::requestOptions() as $key => $value) {
+            $command[$key] = $value;
+        }
+    }
+
+    /**
+     * @param  resource                               $stream
+     * @param  array<string, mixed>                   $options
+     * @return array{version:string,etag:string}|null null denotes a conditional-write conflict
+     */
+    public function writeObject(string $key, mixed $stream, ?string $disk, bool $conditional, array $options = []): ?array
+    {
+        $filesystem = $this->s3Disk($disk) ?? throw new RuntimeException('Versioned writes require an S3 disk.');
+        $address = $this->s3Address($filesystem, $key);
+        $client = $filesystem->getClient();
+        $guard = $conditional ? ['IfNoneMatch' => '*'] : [];
+        $size = fstat($stream)['size'] ?? null;
+        $r2 = $this->isR2($filesystem);
+
+        try {
+            if ($size !== null && $size < 16_777_216) {
+                $checksum = $r2 ? [] : array_intersect_key($options, ['ChecksumSHA256' => true]);
+                $body = \Aws\detach_on_close_stream(Utils::streamFor($stream));
+                $command = $client->getCommand('PutObject', $address + $guard + $checksum + ['Body' => $body, 'ContentLength' => $size] + self::requestOptions());
+                if ($r2) {
+                    $this->omitPartChecksums($command);
+                }
+                $result = $client->execute($command);
+            } else {
+                $uploader = new MultipartUploader($client, $stream, [
+                    'bucket' => $address['Bucket'],
+                    'key' => $address['Key'],
+                    'concurrency' => 1,
+                    'before_initiate' => function (CommandInterface $command) use ($r2): void {
+                        self::applyBudget($command);
+                        unset($command['ACL']);
+                        if ($r2) {
+                            $this->omitPartChecksums($command);
+                        }
+                    },
+                    'before_upload' => function (CommandInterface $command) use ($r2): void {
+                        self::applyBudget($command);
+                        if ($r2) {
+                            $this->omitPartChecksums($command);
+                        }
+                    },
+                    'before_complete' => static function (CommandInterface $command) use ($guard): void {
+                        self::applyBudget($command);
+                        foreach ($guard as $name => $value) {
+                            $command[$name] = $value;
+                        }
+                    },
+                ]);
+                $result = $uploader->upload();
+            }
+        } catch (MultipartUploadException $exception) {
+            $id = $exception->getState()->getId();
+            if (isset($id['UploadId'])) {
+                try {
+                    $client->execute($client->getCommand('AbortMultipartUpload', $id + ['@retries' => 0, '@http' => ['timeout' => 2, 'connect_timeout' => 2]]));
+                } catch (AwsException $cleanup) {
+                    if ($cleanup->getAwsErrorCode() !== 'NoSuchUpload') {
+                        report($cleanup);
+                    }
+                }
+            }
+            $failure = $exception->getPrevious();
+            if ($conditional && $failure instanceof AwsException && in_array($failure->getStatusCode(), [409, 412], true)) {
+                return null;
+            }
+
+            throw $exception;
+        } catch (AwsException $exception) {
+            if ($conditional && in_array($exception->getStatusCode(), [409, 412], true)) {
+                return null;
+            }
+
+            throw $exception;
+        }
+
+        return $this->objectIdentity($result);
+    }
+
+    public function omitPartChecksums(CommandInterface $command): void
+    {
+        unset($command['ChecksumSHA256'], $command['ChecksumAlgorithm']);
+        $command->getHandlerList()->remove('s3.checksum');
+    }
+
+    /** @return array{version:string,etag:string} */
+    public function objectIdentity(ResultInterface $result): array
+    {
+        $etag = $result['ETag'];
+        if (!is_string($etag) || $etag === '') {
+            throw new RuntimeException('S3 did not return an object ETag.');
+        }
+        $version = $result['VersionId'];
+
+        return ['version' => is_string($version) && $version !== '' && $version !== 'null' ? $version : $etag, 'etag' => $etag];
+    }
+
+    /** @return array{version:string,etag:string}|null */
+    public function identify(string $key, ?string $disk, ?string $version = null, ?string $etag = null): ?array
+    {
+        $filesystem = $this->s3Disk($disk);
+        if ($filesystem === null) {
+            return null;
+        }
+        $client = $filesystem->getClient();
+        try {
+            $options = $this->s3Address($filesystem, $key) + $this->readConditions($version, $etag) + self::requestOptions();
+
+            return $this->objectIdentity($client->execute($client->getCommand('HeadObject', $options)));
+        } catch (AwsException $exception) {
+            if ($exception->getStatusCode() === 404) {
+                return null;
+            }
+
+            throw $exception;
+        }
+    }
+
+    /** @return resource|null */
+    public function readObject(string $key, ?string $disk, ?string $version, ?string $etag, ?int $offset = null, ?int $length = null): mixed
+    {
+        $filesystem = $this->s3Disk($disk);
+        if ($filesystem === null) {
+            $stream = $this->get($key, $disk);
+            if (is_resource($stream) && $offset !== null && fseek($stream, $offset) !== 0) {
+                fclose($stream);
+                throw new RuntimeException('The storage disk cannot seek to the encrypted segment.');
+            }
+
+            return $stream;
+        }
+        $client = $filesystem->getClient();
+        $identity = $this->readConditions($version, $etag);
+        $range = $offset === null || $length === null ? [] : ['Range' => 'bytes='.$offset.'-'.($offset + $length - 1)];
+        $command = $client->getCommand('GetObject', $this->s3Address($filesystem, $key) + $identity + $range + self::requestOptions(stream: true));
+        try {
+            $body = $client->execute($command)['Body'];
+        } catch (AwsException $exception) {
+            if ($exception->getStatusCode() === 404) {
+                return null;
+            }
+            throw $exception;
+        }
+        if (!$body instanceof StreamInterface) {
+            throw new RuntimeException('S3 returned an invalid response body.');
+        }
+
+        $stream = $body->detach();
+
+        return is_resource($stream) ? $stream : throw new RuntimeException('S3 did not return an object stream.');
+    }
+
+    /** @return array<string, string> */
+    private function readConditions(?string $version, ?string $etag): array
+    {
+        return $version === null ? [] : ($version === $etag ? ['IfMatch' => $version] : ['VersionId' => $version]);
     }
 
     /**
@@ -185,6 +455,10 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
 
     public function exists(string $key, ?string $disk = null): bool
     {
+        if (self::budget() !== null && $this->s3Disk($disk) !== null) {
+            return $this->identify($key, $disk) !== null;
+        }
+
         return $this->disk($disk)->exists($key);
     }
 
@@ -194,6 +468,25 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
 
         if ($filesystem->exists($key)) {
             $filesystem->delete($key);
+        }
+    }
+
+    public function deleteTrackedObject(string $key, ?string $disk, string $version): void
+    {
+        $filesystem = $this->s3Disk($disk) ?? throw new RuntimeException('Version deletion requires an S3 disk.');
+        $client = $filesystem->getClient();
+        $address = $this->s3Address($filesystem, $key);
+        // Leave a delete marker so previous versions cannot become the latest object.
+        if ($this->identify($key, $disk) !== null) {
+            $client->execute($client->getCommand('DeleteObject', $address + self::requestOptions()));
+        }
+        try {
+            $arguments = $address + ['VersionId' => $version] + self::requestOptions();
+            $client->execute($client->getCommand('DeleteObject', $arguments));
+        } catch (AwsException $exception) {
+            if ($exception->getStatusCode() !== 404) {
+                throw $exception;
+            }
         }
     }
 

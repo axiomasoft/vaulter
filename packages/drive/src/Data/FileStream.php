@@ -19,6 +19,7 @@ final readonly class FileStream
         public int $size,
         public string $sha256,
         public FileRevisionSnapshot $revision,
+        public bool $supportsRanges = false,
     ) {
         if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
             throw new InvalidArgumentException('FileStream requires an open byte stream.');

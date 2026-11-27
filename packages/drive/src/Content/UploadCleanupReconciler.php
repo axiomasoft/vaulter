@@ -15,12 +15,20 @@ use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Uploads\DirectMultipartUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Media\Cas\FlysystemStorageDriver;
 
 #[Internal]
 final readonly class UploadCleanupReconciler
 {
-    public function __construct(private VaulterDatabase $database, private UploadSessionStoreRepository $sessions, private StagedUpload $staged, private DriveOptions $config) {}
+    public function __construct(
+        private VaulterDatabase $database,
+        private UploadSessionStoreRepository $sessions,
+        private StagedUpload $staged,
+        private DriveOptions $config,
+        private DirectMultipartUpload $direct,
+    ) {}
 
     /** @param list<int|string>|Builder<Drive>|null $driveIds
      * @return array{cleanup_completed:int,cleanup_failed:int,cleanup_pending:int}
@@ -66,11 +74,17 @@ final readonly class UploadCleanupReconciler
                     || (string) $locked->assembled_blob_id !== (string) $locked->result_blob_id) {
                     throw new RuntimeException('Upload cleanup has incomplete committed pointers.');
                 }
-                $nodeClass = app(DriveOptions::class)->model('node');
+                $nodeClass = $this->config->model('node');
                 $node = $nodeClass::query()->where('drive_id', $locked->drive_id)->whereKey($locked->result_node_id)->first();
                 $revision = $node?->file()->first()?->versions()->whereKey($locked->result_revision_id)->first();
                 if ($revision === null || (string) $revision->blob_id !== (string) $locked->result_blob_id) {
                     throw new RuntimeException('Upload cleanup has inconsistent committed pointers.');
+                }
+                if (DirectMultipartUpload::active($locked)) {
+                    FlysystemStorageDriver::withinS3Budget(static fn (): float => 5.0, fn () => $this->direct->discard($locked));
+                    $locked->forceFill(['cleanup_pending' => false, 'cleanup_available_at' => null, 'cleanup_last_reason' => null])->save();
+
+                    return true;
                 }
                 // Reloading prevents a caller-modified disk relation or upload ID
                 // from selecting another session's staging object.

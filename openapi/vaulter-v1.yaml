@@ -1218,6 +1218,7 @@ paths:
           the file named in `node` only, for five minutes.
         schema:
           type: string
+      - $ref: '#/components/parameters/EncryptedRange'
       responses:
         '200':
           description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
@@ -1244,7 +1245,7 @@ paths:
             X-Content-Type-Options:
               $ref: '#/components/headers/XContentTypeOptions'
             Accept-Ranges:
-              $ref: '#/components/headers/AcceptRangesNone'
+              $ref: '#/components/headers/AcceptRanges'
             Content-Length:
               $ref: '#/components/headers/ContentLength'
           content:
@@ -1256,6 +1257,46 @@ paths:
               schema:
                 type: string
                 format: binary
+        '206':
+          description: An authenticated byte range of an encrypted file.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicyRequired'
+            X-Share-Session:
+              $ref: '#/components/headers/XShareSession'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRanges'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+            Content-Range:
+              $ref: '#/components/headers/ContentRange'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '416':
+          $ref: '#/components/responses/Problem416'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -2445,6 +2486,7 @@ paths:
       summary: Download the head revision of a file (stream, or 302 with direct_signed)
       parameters:
       - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/EncryptedRange'
       responses:
         '200':
           description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
@@ -2463,7 +2505,7 @@ paths:
             X-Content-Type-Options:
               $ref: '#/components/headers/XContentTypeOptions'
             Accept-Ranges:
-              $ref: '#/components/headers/AcceptRangesNone'
+              $ref: '#/components/headers/AcceptRanges'
             Content-Length:
               $ref: '#/components/headers/ContentLength'
           content:
@@ -2475,6 +2517,38 @@ paths:
               schema:
                 type: string
                 format: binary
+        '206':
+          description: An authenticated byte range of an encrypted file.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRanges'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+            Content-Range:
+              $ref: '#/components/headers/ContentRange'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '416':
+          $ref: '#/components/responses/Problem416'
         '302':
           description: 'direct_signed delivery: 302 to a short-lived URL of the exact revision.'
           headers:
@@ -2597,6 +2671,7 @@ paths:
       parameters:
       - $ref: '#/components/parameters/Node'
       - $ref: '#/components/parameters/Revision'
+      - $ref: '#/components/parameters/EncryptedRange'
       responses:
         '200':
           description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
@@ -2615,7 +2690,7 @@ paths:
             X-Content-Type-Options:
               $ref: '#/components/headers/XContentTypeOptions'
             Accept-Ranges:
-              $ref: '#/components/headers/AcceptRangesNone'
+              $ref: '#/components/headers/AcceptRanges'
             Content-Length:
               $ref: '#/components/headers/ContentLength'
           content:
@@ -2627,6 +2702,38 @@ paths:
               schema:
                 type: string
                 format: binary
+        '206':
+          description: An authenticated byte range of an encrypted file.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRanges'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+            Content-Range:
+              $ref: '#/components/headers/ContentRange'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '416':
+          $ref: '#/components/responses/Problem416'
         '302':
           description: 'direct_signed delivery: 302 to a short-lived URL of the exact revision.'
           headers:
@@ -3109,7 +3216,7 @@ paths:
       operationId: uploads.parts.store
       tags:
       - uploads
-      summary: 's3-multipart: upload one part'
+      summary: 's3-multipart: upload one part or request its presigned URL'
       parameters:
       - $ref: '#/components/parameters/Upload'
       - name: part_no
@@ -3119,7 +3226,7 @@ paths:
         schema:
           type: integer
       requestBody:
-        required: true
+        required: false
         content:
           application/octet-stream:
             schema:
@@ -3142,7 +3249,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadPart'
+                oneOf:
+                - $ref: '#/components/schemas/UploadPart'
+                - $ref: '#/components/schemas/PresignedUploadPart'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -3189,6 +3298,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NodeEnvelope'
+        '202':
+          description: Direct multipart completed in quarantine. Repeat completion after Retry-After.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: pending_scan
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -3894,6 +4023,12 @@ components:
       description: Whatever the host application authenticates with (session, Sanctum, ...); Vaulter only needs an authenticated
         actor.
   parameters:
+    EncryptedRange:
+      name: Range
+      in: header
+      description: A single bytes range on an encrypted download.
+      schema:
+        type: string
     IfMatch:
       name: If-Match
       in: header
@@ -4181,8 +4316,19 @@ components:
       schema:
         type: string
         const: nosniff
+    AcceptRanges:
+      description: Encrypted downloads support single byte ranges.
+      required: true
+      schema:
+        type: string
+        enum: [none, bytes]
+    ContentRange:
+      description: Selected byte range and total plaintext size.
+      required: true
+      schema:
+        type: string
     AcceptRangesNone:
-      description: Range requests are not supported in 1.0.
+      description: Byte ranges are unavailable for this response.
       required: true
       schema:
         type: string
@@ -4355,6 +4501,23 @@ components:
           $ref: '#/components/headers/XRequestId'
         Cache-Control:
           $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem416:
+      description: The byte range falls outside the encrypted file.
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+        Accept-Ranges:
+          $ref: '#/components/headers/AcceptRanges'
+        Content-Range:
+          $ref: '#/components/headers/ContentRange'
       content:
         application/problem+json:
           schema:
@@ -5609,6 +5772,17 @@ components:
           type: integer
         etag:
           type: string
+    PresignedUploadPart:
+      type: object
+      required: [part_no, size, url]
+      properties:
+        part_no:
+          type: integer
+        size:
+          type: integer
+        url:
+          type: string
+          format: uri
     WebhookEndpoint:
       type: object
       required:

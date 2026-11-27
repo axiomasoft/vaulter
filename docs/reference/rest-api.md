@@ -420,6 +420,10 @@ The bytes of the head or of one exact revision, through the
 in `direct_signed` mode; `403 permission_denied` for a caller who may only view;
 `423 content_unavailable` for a revision that is not clean — both before any byte.
 
+Encrypted files stream through the application and accept a single `Range: bytes=…`
+request. The response is `206` with `Content-Range`, or `416` if the range lies outside
+the plaintext. This also applies to shared encrypted files.
+
 ---
 
 ## Resumable uploads
@@ -495,13 +499,17 @@ and `Tus-Max-Size` when there is a cap.
 
 #### `POST v1/uploads/{upload}/parts` — `uploads.parts.store`
 
-The body is the part's bytes; `part_no` (query/body or `X-Part-Number`, default 1) and
-`byte_offset`. A re-upload of a part replaces it. **Response:** `201
-{ "part_no", "size", "etag" }`.
+For proxied uploads, send the part bytes with `part_no` (query/body or `X-Part-Number`, default 1) and
+`byte_offset`. The response is `201` with `part_no`, `size`, and `etag`.
+For direct multipart, send `part_no` in the query or `X-Part-Number` header and omit the body.
+The response is `201` with `part_no`, `size`, and a presigned `url`. PUT the indicated number
+of bytes to that URL. A re-upload replaces the part.
 
 #### `POST v1/uploads/{upload}/complete` — `uploads.complete`
 
-Stitches the parts and commits. **Response:** `201` Node.
+Proxied multipart stitches the parts and returns a `201` Node. Direct multipart completes in quarantine
+and returns `202 {"status":"pending_scan"}` with `Retry-After`. Repeat the request after that interval.
+Once the scan passes, completion commits and returns a `201` Node. A rejected scan returns `422`.
 
 ---
 

@@ -13,10 +13,13 @@ use Vaulter\Configuration\CompiledOptionsCache;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\BlobPinStore;
+use Vaulter\Media\Cas\BlobStore as CasBlobStore;
+use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Encryption\KeyManagementPort;
 use Vaulter\Modules\ModuleBindings;
 
 /**
@@ -33,6 +36,7 @@ final class BindingsRegistrar implements ModuleBindings
             static fn (array $raw): MediaOptions => MediaOptions::fromArray($raw, 'vaulter-media'),
         ));
         $app->bind('vaulter.dedup_scope', static fn (Container $app): string => $app->make(MediaOptions::class)->dedupScope->value);
+        $app->when([CasBlobStore::class, Sha256ContentStore::class])->needs(Closure::class)->give(self::keyProvider(...));
 
         // The StorageDriver is the media module's capability, read from `vaulter-media.storage_driver` (MediaModule).
         $app->scoped(ContentStore::class, static function (Container $app): ContentStore {
@@ -63,6 +67,13 @@ final class BindingsRegistrar implements ModuleBindings
     public function boot(Application $app): void
     {
         self::buildOptions($app);
+    }
+
+    /** @return Closure(): ?KeyManagementPort */
+    private static function keyProvider(Container $app): Closure
+    {
+        // A host can bind the provider after CAS services have been resolved.
+        return static fn (): ?KeyManagementPort => $app->bound(KeyManagementPort::class) ? $app->make(KeyManagementPort::class) : null;
     }
 
     private static function buildOptions(Container $app): MediaOptions

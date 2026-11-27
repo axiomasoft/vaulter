@@ -200,6 +200,26 @@ function cleanPresetConfig(string $preset): array
     ];
 }
 
+it('adds the encryption envelope to an existing blob table and can apply the migration again', function (): void {
+    $migration = require dirname(__DIR__, 3).'/packages/media/database/migrations/0001_01_01_000103_add_wrapped_dek_to_v_blobs_table.php';
+    $blobs = app(SchemaHelpers::class)->table('blobs');
+    $connection = app(VaulterDatabase::class)->connection();
+    $schema = $connection->getSchemaBuilder();
+
+    $migration->down();
+    expect($schema->hasColumn($blobs, 'wrapped_dek'))->toBeFalse();
+
+    $migration->up();
+    $columns = array_column($schema->getColumns($blobs), null, 'name');
+    expect($columns['wrapped_dek'])->toMatchArray(['type_name' => 'text', 'nullable' => true]);
+    if ($connection->getDriverName() !== 'sqlite') {
+        expect($columns['storage_version']['type'])->toEndWith('(1024)');
+    }
+
+    $migration->up();
+    expect(array_column($schema->getColumns($blobs), null, 'name'))->toBe($columns);
+})->group('database');
+
 it('installs a set from nothing, rolls it back to an empty database without a pin left, and installs it again', function (AppSet $set): void {
     foreach (CLEAN_INSTALL_PRESETS as $preset) {
         $app = FreshApplication::boot([...$set->on, ...cleanPresetConfig($preset)], case: $set->testCase());

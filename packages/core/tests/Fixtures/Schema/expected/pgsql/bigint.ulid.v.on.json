@@ -417,7 +417,7 @@
                 },
                 {
                     "name": "storage_version",
-                    "type": "character varying(255)",
+                    "type": "character varying(1024)",
                     "not_null": false,
                     "default": null,
                     "identity": "",
@@ -468,6 +468,15 @@
                     "identity": "",
                     "generated": "",
                     "collation": null
+                },
+                {
+                    "name": "wrapped_dek",
+                    "type": "text",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
                 },
                 {
                     "name": "first_seen_at",

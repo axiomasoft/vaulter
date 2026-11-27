@@ -773,6 +773,14 @@
             "action": "keep",
             "phase": "stay",
             "why": "D23 (P4.7): v_blob_references, the pins media owns, is created by the migration of media"
+        },
+        {
+            "match": "file",
+            "value": "packages/media/database/migrations/0001_01_01_000103_add_wrapped_dek_to_v_blobs_table.php",
+            "owner": "media",
+            "action": "keep",
+            "phase": "stay",
+            "why": "F-03: media adds the encrypted key envelope and expands the S3 version column on existing v_blobs tables"
         }
     ]
 }

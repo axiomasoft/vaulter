@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Closure;
+use Illuminate\Validation\ValidationException;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Uploads\AbortUploadAction;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
@@ -25,14 +27,18 @@ use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
 use Vaulter\Drive\Idempotency\UploadSessionCodec;
+use Vaulter\Drive\Jobs\Uploads\ScanJob;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\CompletionClock;
+use Vaulter\Drive\Uploads\CompletionDeadline;
+use Vaulter\Drive\Uploads\DirectMultipartUpload;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Idempotency\IdempotentWrite;
+use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
@@ -57,6 +63,8 @@ final readonly class UploadOperations
         private OperationRunner $runner,
         private CompletionClock $clock,
         private NodeSnapshotMapper $nodes,
+        private VaulterDatabase $database,
+        private DirectMultipartUpload $direct,
     ) {
         $drive = $handle->model();
         $key = $drive->getRawOriginal($drive->getKeyName());
@@ -104,6 +112,9 @@ final readonly class UploadOperations
     public function complete(UploadSessionSnapshot|int|string $session): NodeSnapshot
     {
         $session = $this->find($session);
+        if ($this->prepareDirectMultipart($session)) {
+            throw UploadConflictException::forSession($session->upload_id);
+        }
         // One finite monotonic budget for the whole request, started outside every
         // DB attempt: a retry spends what is left, it never gets a fresh deadline.
         $deadline = $this->clock->start();
@@ -129,6 +140,36 @@ final readonly class UploadOperations
         }));
 
         return $this->nodes->map($node, $this->context->actor->ref());
+    }
+
+    /** @internal Returns true while the existing complete endpoint must answer 202. */
+    #[Internal]
+    public function prepareDirectMultipart(UploadSession $session): bool
+    {
+        if (!DirectMultipartUpload::active($session) || $session->status === UploadStatus::Committed) {
+            return false;
+        }
+        $deadline = $this->clock->start();
+
+        return $this->write('complete', fn (): bool => $this->manager->withSession($session, function (UploadSession $locked) use ($deadline): bool {
+            $this->completion->authorizeSession($this->context, $locked);
+            $this->assertResumable();
+            if ($locked->status === UploadStatus::Committed || $this->direct->cleanDigest($locked) !== null) {
+                return false;
+            }
+            if ($this->direct->rejected($locked)) {
+                throw ValidationException::withMessages(['parts' => 'The completed upload failed quarantine scanning.']);
+            }
+            $identity = FlysystemStorageDriver::withinS3Budget($deadline->remaining(...), fn (): array => $this->direct->complete($locked));
+            if ($this->direct->reserveScanDispatch($locked)) {
+                $job = new ScanJob($locked->upload_id, $locked->drive_id, $locked->tenant_id, $identity, $this->direct->policy());
+                $this->database->afterCommit(function () use ($job): void {
+                    dispatch($job->onQueue($this->config->uploads->scan->queue));
+                });
+            }
+
+            return true;
+        }));
     }
 
     public function abort(UploadSessionSnapshot|int|string $session): void
@@ -191,6 +232,31 @@ final readonly class UploadOperations
 
             return $this->s3->putPart(session: $locked, partNo: $partNo, byteOffset: $byteOffset, chunk: $chunk);
         });
+    }
+
+    /** @return array{part_no:int,size:int,url:string} */
+    #[Internal]
+    public function presignMultipartPart(UploadSession $session, int $partNo): array
+    {
+        if (!DirectMultipartUpload::active($session)) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+        $deadline = $this->clock->start();
+
+        // The upload lock owns the outer transaction so the runner cannot repeat S3 initiation.
+        return $this->manager->withSession(
+            $session,
+            fn (UploadSession $locked): array => $this->write('append', fn (): array => $this->presignLockedPart($locked, $partNo, $deadline)),
+        );
+    }
+
+    /** @return array{part_no:int,size:int,url:string} */
+    private function presignLockedPart(UploadSession $session, int $partNo, CompletionDeadline $deadline): array
+    {
+        $this->completion->authorizeSession($this->context, $session);
+        $this->assertResumable();
+
+        return FlysystemStorageDriver::withinS3Budget($deadline->remaining(...), fn (): array => $this->direct->part($session, $partNo));
     }
 
     /**

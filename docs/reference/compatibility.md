@@ -35,7 +35,17 @@ integer 1..300, default 60). It bounds one completion request, DB retries includ
 out the completion is refused with `upload_conflict` (409), nothing is published and the staged bytes stay
 for a repeat.
 
-The budget is enforceable only on a local staging disk. Resumable completion (`tus`, `s3-multipart`; the names are protocols, not storage capabilities) on a remote, S3 or opaque custom disk is **unsupported**: it is refused with `upload_conflict` (409) before any storage I/O. Upgrade note: stage resumable uploads on a local disk; single-shot `direct` upload and the content-addressed store on S3 are unaffected. A session already committed before this change may still run its pending staged cleanup on the staged disk without a hard deadline (known limitation).
+Tus and proxied multipart completion require a local staging disk. Other disks return `409 upload_conflict`. Opt-in direct S3 multipart applies the remaining completion budget to AWS SDK requests. It uses a queue worker to scan the quarantined object before completion can promote it to CAS. See [direct multipart uploads](/guides/uploads#direct-s3-multipart).
+
+To encrypt newly committed CAS objects, install PHP's Sodium extension and bind a
+`Vaulter\Media\Encryption\KeyManagementPort` in the host container. The adapter wraps each
+data key and supplies a key ID compatible with the installation's ID strategy. Keep previous
+key IDs available for unwrapping existing blobs. Encrypted objects use 4 MiB authenticated
+segments on the default local or S3 storage driver. Existing plaintext content stays readable.
+
+On a versioned S3 bucket, the storage role needs `s3:GetObjectVersion` and
+`s3:DeleteObjectVersion` to read and reclaim the recorded version. Bucket lifecycle rules
+can expire older noncurrent versions from repairs and abandoned writes.
 
 ### Current PHP surface
 
