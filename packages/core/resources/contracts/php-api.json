@@ -11630,7 +11630,7 @@
                             "variadic": false,
                             "optional": true,
                             "default": "null",
-                            "flags": 68
+                            "flags": 4
                         }
                     ],
                     "return": null,
