@@ -114,6 +114,9 @@ it('fetches just the requested encrypted segment from the committed S3 version',
     $ranges = [];
     $deletions = [];
     $object = '';
+    if (!class_exists(MockHandler::class)) {
+        test()->markTestSkipped('aws/aws-sdk-php is not installed.');
+    }
     $mock = new MockHandler;
     $mock->append(
         static function (CommandInterface $command) use (&$object): Result {
@@ -165,6 +168,9 @@ it('fetches just the requested encrypted segment from the committed S3 version',
 
 it('conditionally publishes multipart CAS bytes on R2 without UploadPart checksums and records the object VersionId', function (): void {
     $requests = [];
+    if (!class_exists(MockHandler::class)) {
+        test()->markTestSkipped('aws/aws-sdk-php is not installed.');
+    }
     $mock = new MockHandler;
     $capture = static function (CommandInterface $command, RequestInterface $request) use (&$requests): Result {
         $requests[] = [$command->getName(), $request];
