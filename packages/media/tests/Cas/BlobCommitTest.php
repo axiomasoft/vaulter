@@ -114,8 +114,8 @@ it('fetches just the requested encrypted segment from the committed S3 version',
     $ranges = [];
     $deletions = [];
     $object = '';
-    if (!class_exists(MockHandler::class)) {
-        test()->markTestSkipped('aws/aws-sdk-php is not installed.');
+    if (!class_exists(MockHandler::class) || !class_exists(League\Flysystem\AwsS3V3\PortableVisibilityConverter::class)) {
+        test()->markTestSkipped('aws/aws-sdk-php or league/flysystem-aws-s3-v3 is not installed.');
     }
     $mock = new MockHandler;
     $mock->append(
@@ -168,8 +168,8 @@ it('fetches just the requested encrypted segment from the committed S3 version',
 
 it('conditionally publishes multipart CAS bytes on R2 without UploadPart checksums and records the object VersionId', function (): void {
     $requests = [];
-    if (!class_exists(MockHandler::class)) {
-        test()->markTestSkipped('aws/aws-sdk-php is not installed.');
+    if (!class_exists(MockHandler::class) || !class_exists(League\Flysystem\AwsS3V3\PortableVisibilityConverter::class)) {
+        test()->markTestSkipped('aws/aws-sdk-php or league/flysystem-aws-s3-v3 is not installed.');
     }
     $mock = new MockHandler;
     $capture = static function (CommandInterface $command, RequestInterface $request) use (&$requests): Result {
