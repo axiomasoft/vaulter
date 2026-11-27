@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Pest\Mixins\Expectation;
+use Pest\Expectation;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\SchemaHelpers;
