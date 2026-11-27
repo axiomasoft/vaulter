@@ -8,6 +8,7 @@ use Aws\Result;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use League\Flysystem\AwsS3V3\PortableVisibilityConverter;
 use Psr\Http\Message\RequestInterface;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
@@ -23,6 +24,12 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+
+beforeEach(function (): void {
+    if (!class_exists(MockHandler::class) || !class_exists(PortableVisibilityConverter::class)) {
+        test()->markTestSkipped('aws/aws-sdk-php or league/flysystem-aws-s3-v3 is not installed.');
+    }
+});
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
