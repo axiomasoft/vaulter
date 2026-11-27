@@ -40,7 +40,6 @@ final readonly class OutboxWriter
         private Kernel $kernel,
         private Container $container,
         private MetricsRecorder $metrics,
-        private ?TraceRecorder $tracer = null,
     ) {}
 
     public function append(DomainEvent $event, SinkWriter $writer): SinkResult
@@ -55,11 +54,13 @@ final readonly class OutboxWriter
                 $seq = $writer->shared(SinkWriter::JOURNAL_SEQ);
                 $now = now();
                 $payload = OutboxEnvelope::body($event, is_int($seq) ? $seq : null);
-                $tracer = $this->tracer ?? $this->container->make(TraceRecorder::class);
-                if ($tracer instanceof OtlpOpenTelemetryTraceRecorder) {
-                    $traceparent = $tracer->currentTraceparent();
-                    if ($traceparent !== null) {
-                        $payload['_traceparent'] = $traceparent;
+                if ($this->config->observability->tracing->enabled) {
+                    $tracer = $this->resolveTracer();
+                    if ($tracer instanceof OtlpOpenTelemetryTraceRecorder) {
+                        $traceparent = $tracer->currentTraceparent();
+                        if ($traceparent !== null) {
+                            $payload['_traceparent'] = $traceparent;
+                        }
                     }
                 }
 
@@ -112,6 +113,11 @@ final readonly class OutboxWriter
                 return SinkResult::Stored;
             },
         );
+    }
+
+    private function resolveTracer(): TraceRecorder
+    {
+        return $this->container->make(TraceRecorder::class);
     }
 
     /**

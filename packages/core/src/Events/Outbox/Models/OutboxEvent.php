@@ -108,7 +108,9 @@ class OutboxEvent extends Model
     public function toEnvelope(): OutboxEnvelope
     {
         $payload = $this->payload;
-        unset($payload['_traceparent']);
+        if (array_key_exists('_traceparent', $payload)) {
+            unset($payload['_traceparent']);
+        }
 
         return new OutboxEnvelope(
             eventId: $this->event_id,
