@@ -6,6 +6,7 @@ declare(strict_types=1);
 /**
  * Offline check of the documentation links.
  *
+ *   php scripts/check-doc-links.php                  docs/ and README.md (the CI set)
  *   php scripts/check-doc-links.php docs README.md   every relative link and #anchor resolves
  *
  * External links (http, https, mailto) are not fetched. Anchors follow the VitePress
@@ -14,8 +15,8 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $args = array_slice($argv, 1);
 if ($args === []) {
-    fwrite(STDERR, "usage: check-doc-links.php <docs-dir|file>...\n");
-    exit(2);
+    // Bare invocation is the docs gate: the same pages CI passes explicitly.
+    $args = ['docs', 'README.md'];
 }
 
 /** @return list<string> markdown files below a directory, relative to it */

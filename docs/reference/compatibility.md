@@ -286,7 +286,7 @@ not a lint rule.
 
 ### W0–W7 schema parity and backlog closure (Task 0.2)
 
-Planning trees under `plan/` were retired in commit `7ad44eeb7`. Normalized column-level verification
+The internal planning tree was retired in commit `7ad44eeb7`. Normalized column-level verification
 for Task `0.2` (contrasting the canonical PostgreSQL schema snapshot
 `packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json` against the target DDL
 set across all overlapping `v_*` tables, normalizing PostgreSQL type aliases `character varying`/`varchar`,
