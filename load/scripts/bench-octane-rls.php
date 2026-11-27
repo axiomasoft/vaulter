@@ -1413,7 +1413,7 @@ if ($mode === 'self-test') {
         // 9. Generated filesystems.php must end with a real newline and pass `php -l`.
         $generatedFsPath = $tmpDir.'/filesystems.php';
         $generatedFs = renderOctaneFilesystemsConfig($tmpDir.'/storage');
-        if (!str_ends_with($generatedFs, "\n") || str_ends_with($generatedFs, "\\n")) {
+        if (!str_ends_with($generatedFs, "\n") || str_ends_with($generatedFs, '\\n')) {
             throw new RuntimeException('Generated filesystems.php does not end with a real newline');
         }
         file_put_contents($generatedFsPath, $generatedFs);
