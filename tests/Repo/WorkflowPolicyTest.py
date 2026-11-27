@@ -2,7 +2,10 @@
 
 import copy
 import importlib.util
+import io
 import json
+import subprocess
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -82,6 +85,61 @@ class EngineeringRailsTest(unittest.TestCase):
     def test_image_rules_refuse_bundled_storage_and_linked_antivirus(self):
         source = '# minio/minio reference\nFROM minio/minio:latest\nRUN apt-get install libclamav12\nRUN apt-get install clamd'
         self.assertEqual(['2', '3'], [issue.split(':')[0] for issue in rails.image_problems(source)])
+
+    def test_repository_ip_guard_checks_paths_and_contents_outside_runtime_lockfiles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(['git', 'init', '-q', tmp], check=True)
+            retired = 'plan/' 'tiptap-pro'
+            (root / retired).mkdir(parents=True)
+            (root / retired / 'placeholder').touch()
+            (root / '.gitignore').write_text('private.txt\n')
+            (root / 'private.txt').write_text('TIPTAP_' 'TEAM_ID=local-value')
+            (root / ('tiptap-pro-' 'extension.tgz')).touch()
+            (root / 'dev.txt').write_text('\n'.join((
+                'TIPTAP_' 'TEAM_ID=unexpected-value',
+                'https://tenant.COLLAB.' 'TIPTAP.CLOUD',
+                'https://registry.' 'tiptap.dev',
+                f'../{retired}/notes',
+                'file:vendor/tiptap-pro-' 'extension.tgz',
+            )))
+            subprocess.run(['git', 'add', '--', 'dev.txt', retired], cwd=root, check=True)
+
+            self.assertCountEqual([
+                'repository path: retired Tiptap Pro path',
+                'repository path: commercial package tarball',
+                'dev.txt:1: Tiptap team identifier',
+                'dev.txt:2: Tiptap collaboration host',
+                'dev.txt:3: commercial Tiptap registry',
+                'dev.txt:4: retired Tiptap Pro path',
+                'dev.txt:5: commercial package tarball',
+            ], rails.repository_ip_problems(root))
+
+    def test_repository_ip_guard_allows_the_scrub_command_and_public_npm_archives(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(['git', 'init', '-q', tmp], check=True)
+            runbook = root / 'docs/security/git-history-scrub-runbook.md'
+            runbook.parent.mkdir(parents=True)
+            retired = 'plan/' 'tiptap-pro'
+            command = f'git filter-repo --invert-paths --path {retired} --path plan --path audits\n'
+            runbook.write_text(command)
+            (root / 'lock.json').write_text('https://registry.npmjs.org/@tiptap/core/-/core-3.34.0.tgz')
+            for name, filename in (('@tiptap/core', 'core.tgz'), ('@tiptap-pro/extension', 'extension.tgz')):
+                data = json.dumps({'name': name}).encode()
+                with tarfile.open(root / filename, 'w:gz') as archive:
+                    member = tarfile.TarInfo('package/package.json')
+                    member.size = len(data)
+                    archive.addfile(member, io.BytesIO(data))
+
+            self.assertEqual(['extension.tgz: commercial package tarball'], list(rails.repository_ip_problems(root)))
+            runbook.write_text(command + f'copied from {retired}\n')
+            (root / 'copy.md').write_text(command)
+            self.assertCountEqual([
+                'extension.tgz: commercial package tarball',
+                'docs/security/git-history-scrub-runbook.md:2: retired Tiptap Pro path',
+                'copy.md:1: retired Tiptap Pro path',
+            ], rails.repository_ip_problems(root))
 
 
 def test_doc(**extra):

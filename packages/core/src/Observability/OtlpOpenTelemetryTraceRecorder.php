@@ -157,9 +157,7 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
             $attributes['vaulter.outcome'] = 'internal_error';
             $attributes['error.type'] = $exception::class;
             $code = $exception->getCode();
-            if (is_int($code)) {
-                $attributes['error.code'] = $code;
-            } elseif (preg_match('/\A[A-Za-z0-9_.-]{1,32}\z/', $code) === 1) {
+            if (is_int($code) || preg_match('/\A[A-Za-z0-9_.-]{1,32}\z/', $code) === 1) {
                 $attributes['error.code'] = $code;
             }
 
@@ -206,21 +204,13 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
 
     public function currentTraceparent(): ?string
     {
-        if ($this->stack !== []) {
-            $active = $this->stack[array_key_last($this->stack)];
-
-            return self::formatTraceparent($active['traceId'], $active['spanId'], sampled: true);
+        $active = $this->stack[array_key_last($this->stack)] ?? null;
+        $context = $active ?? $this->inboundContext;
+        if ($context === null) {
+            return null;
         }
 
-        if ($this->inboundContext !== null) {
-            return self::formatTraceparent(
-                $this->inboundContext['traceId'],
-                $this->inboundContext['spanId'],
-                ($this->inboundContext['flags'] & 1) === 1,
-            );
-        }
-
-        return null;
+        return self::formatTraceparent($context['traceId'], $context['spanId'], (($context['flags'] ?? 1) & 1) === 1);
     }
 
     public function bufferedCount(): int
@@ -340,15 +330,12 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
 
     private static function encodeKeyValue(string $key, int|float|string|bool $value): string
     {
-        if (is_bool($value)) {
-            $any = self::varintField(2, $value ? 1 : 0);
-        } elseif (is_int($value)) {
-            $any = self::varintField(3, $value);
-        } elseif (is_float($value)) {
-            $any = self::doubleField(4, $value);
-        } else {
-            $any = self::lengthDelimitedField(1, $value);
-        }
+        $any = match (true) {
+            is_bool($value) => self::varintField(2, $value ? 1 : 0),
+            is_int($value) => self::varintField(3, $value),
+            is_float($value) => self::doubleField(4, $value),
+            default => self::lengthDelimitedField(1, $value),
+        };
 
         return self::lengthDelimitedField(1, $key)
             .self::lengthDelimitedField(2, $any);
@@ -463,8 +450,6 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
 
             // Do not block PHP-FPM workers waiting for a stalled collector HTTP response.
             @fflush($socket);
-        } catch (Throwable) {
-            // Tracing export is fail-open on the hot path and shutdown hook.
         } finally {
             if (is_resource($socket)) {
                 @fclose($socket);
@@ -526,11 +511,8 @@ final class OtlpOpenTelemetryTraceRecorder implements TraceRecorder
         $methods = STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
         while (true) {
             $result = @stream_socket_enable_crypto($socket, true, $methods);
-            if ($result === true) {
-                return true;
-            }
-            if ($result === false) {
-                return false;
+            if (is_bool($result)) {
+                return $result;
             }
             if (!self::waitForStream($socket, waitRead: true, waitWrite: true, deadlineNs: $deadlineNs)) {
                 return false;

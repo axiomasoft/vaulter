@@ -44,7 +44,11 @@ it('keeps the lang files of a package in step with its code list', function (str
 
 it('lists the code and status of every ProblemException in the source tree', function (): void {
     $catalog = fullProblemCatalog()->all();
-    $files = glob(dirname(__DIR__, 4).'/packages/{core,drive,documents,webhooks}/src/Exceptions/{,*/}*.php', GLOB_BRACE) ?: [];
+    $files = [];
+    foreach (['core', 'drive', 'documents', 'webhooks'] as $package) {
+        $exceptions = dirname(__DIR__, 4)."/packages/{$package}/src/Exceptions";
+        array_push($files, ...(glob($exceptions.'/*.php') ?: []), ...(glob($exceptions.'/*/*.php') ?: []));
+    }
     $seen = 0;
 
     foreach ($files as $file) {

@@ -31,8 +31,10 @@ it('writes nothing to the database, the cache or the disks', function (): void {
 });
 
 it('does not open a write scope', function (): void {
-    expect(file_exists(__DIR__.'/../../../packages/core/src/Doctor/DoctorRunner.php'))->toBeTrue();
-    foreach (glob(__DIR__.'/../../../packages/core/src/Doctor/{*,Checks/*}.php', GLOB_BRACE) ?: [] as $file) {
+    $doctor = __DIR__.'/../../../packages/core/src/Doctor';
+    expect(file_exists($doctor.'/DoctorRunner.php'))->toBeTrue();
+    $files = [...(glob($doctor.'/*.php') ?: []), ...(glob($doctor.'/Checks/*.php') ?: [])];
+    foreach ($files as $file) {
         expect(file_get_contents($file))->not->toContain('OpensWriteScope')->not->toContain('->write(')->not->toContain('->transaction(');
     }
 });
