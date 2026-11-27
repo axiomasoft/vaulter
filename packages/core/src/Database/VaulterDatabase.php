@@ -11,6 +11,7 @@ use Illuminate\Database\DatabaseManager;
 use LogicException;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
+use PDO;
 use Throwable;
 use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Configuration\TenancyOptions;
@@ -117,7 +118,7 @@ final class VaulterDatabase
         // Laravel #61964 can leave PDO and the callback manager open at level zero.
         try {
             $pdo = $connection->getRawPdo();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
         } finally {

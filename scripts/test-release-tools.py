@@ -419,7 +419,7 @@ class BuildArtifactsTest(unittest.TestCase):
         lock_path.write_text(json.dumps({"packages": [{"name": name, "version": "1.0.0"} for name in set(composer.get("require", {})) | set(composer.get("suggest", {})) if "/" in name]}))
         resolution = out / "synthetic-resolution.json"
         resolution.write_text(json.dumps({"source_sha": record["source_sha"], "lock": str(lock_path), "lock_sha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(), "php_version": "8.4-fixture", "composer_version": "2-fixture", "profile": "synthetic-protocol-only"}))
-        result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(composer_path), str(resolution), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "synthetic.cdx.json")], capture_output=True, text=True)
+        result = subprocess.run(["python3", "-I", "-B", str(RELEASE / "sbom.py"), str(composer_path), str(resolution), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "synthetic.cdx.json")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         record.update(json.loads(result.stdout))
         with (out / "SHA256SUMS").open("a") as sums:
@@ -648,7 +648,7 @@ class BuildArtifactsTest(unittest.TestCase):
             self.assertEqual({line.split("  ", 1)[1] for line in (out / "SHA256SUMS").read_text().splitlines()}, {record["archive"], record["sbom"]})
             # The exact retained resolution, composer and source reproduce the same SBOM bytes offline.
             expected = (out / record["sbom"]).read_bytes()
-            result = subprocess.run(["python3", str(RELEASE / "sbom.py"), str(prepared / "axiomasoft-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
+            result = subprocess.run(["python3", "-I", "-B", str(RELEASE / "sbom.py"), str(prepared / "axiomasoft-vaulter-core/tree/composer.json"), str(out / record["resolution_provenance"]), record["source_sha"], record["version"], record["tool_sha256"], record["policy_sha256"], str(out / "reproduced.cdx.json")], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((out / "reproduced.cdx.json").read_bytes(), expected)
             for field in ("resolution", "resolution_provenance", "source_sha", "policy_sha256", "version"):
@@ -919,9 +919,10 @@ def evidence_for(tag, **override):
             if tag.startswith(entry["tag_prefix"]):
                 line, channel = entry["release_line"], entry["channel"]
                 members = [e for e in entries if e["release_line"] == line and not e.get("excluded_unless_tagged")]
+                version = tag[len(entry["tag_prefix"]):]
                 identity = {
                     "php": {"split_commit": "c" * 40, "content_sha256": "d" * 64},
-                    "npm": {"tgz_sha256": "e" * 64, "integrity": "sha512-" + "A" * 86 + "=="},
+                    "npm": {"version": version, "tgz_sha256": "e" * 64, "integrity": "sha512-" + "A" * 86 + "=="},
                     "images": {"digest": "sha256:" + "f" * 64},
                 }[kind]
                 document = {
@@ -987,6 +988,19 @@ class RouteReleaseTest(unittest.TestCase):
         self.assertIn("no qualification evidence", result.stderr)
         self.assertEqual(result.stdout, "")
 
+    def test_evidence_dir_with_qualification_json_alone_refuses_without_line_receipt(self):
+        with tempfile.TemporaryDirectory(prefix="vaulter-route-dir-") as directory:
+            ev_dir = Path(directory) / "release-evidence"
+            ev_dir.mkdir()
+            (ev_dir / "qualification.json").write_text(json.dumps({
+                "schema": "vaulter.release-qualification/v1",
+                "source_sha": SHA,
+                "ci_gate": {"sha": SHA, "conclusion": "success"},
+            }))
+            result = route_release("@vaulter/vue@1.2.3", f"--sha={SHA}", f"--evidence-dir={ev_dir}")
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("npm-vue.json is missing", result.stderr)
+
     def test_evidence_must_bind_this_sha_and_the_ci_gate_of_this_sha(self):
         self.assertIn("source_sha differs", self.route("v1.2.3", sha=OTHER_SHA).stderr)
         for gate in ({"sha": OTHER_SHA, "conclusion": "success"}, {"sha": SHA, "conclusion": "failure"}, {}):
@@ -1011,6 +1025,8 @@ class RouteReleaseTest(unittest.TestCase):
 
         self.assertIn("content_sha256 is missing or malformed", self.route("v1.2.3", mutate=break_digest).stderr)
         self.assertEqual(self.route("@vaulter/vue@1.2.3", mutate=lambda d: next(iter(d["artifacts"].values())).update(integrity="md5-1")).returncode, 1)
+        self.assertIn("version", self.route("@vaulter/vue@1.2.3", mutate=lambda d: next(iter(d["artifacts"].values())).pop("version")).stderr)
+        self.assertIn("differs from routed version 1.2.3", self.route("@vaulter/vue@1.2.3", mutate=lambda d: next(iter(d["artifacts"].values())).update(version="1.2.2")).stderr)
 
     def test_a_bad_manifest_entry_refuses_a_public_route(self):
         with tempfile.TemporaryDirectory(prefix="vaulter-route-bad-") as directory:
@@ -1033,22 +1049,22 @@ class RouteReleaseTest(unittest.TestCase):
                     self.assertNotIn("no qualification evidence", result.stderr)  # refused on the manifest, before evidence
 
     def test_publishers_read_credentials_only_after_the_route_job(self):
-        expectations = {
-            "monorepo-split.yml": ("split", "GH_ACCESS_TOKEN"),
-            "release-npm.yml": ("release", "NPM_TOKEN"),
-        }
-        for name, (job, secret) in expectations.items():
-            workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
-            text = (ROOT / ".github/workflows" / name).read_text()
-            with self.subTest(workflow=name):
-                needs = workflow["jobs"][job]["needs"]
-                self.assertIn("route", needs if isinstance(needs, list) else [needs])
-                route = yaml.safe_dump(workflow["jobs"]["route"])
-                self.assertNotIn(secret, route)
-                self.assertNotIn("NPM_TOKEN", route)
-                self.assertIn("route-release.php", route)
-                self.assertIn(secret, text)
-        npm = yaml.safe_load((ROOT / ".github/workflows/release-npm.yml").read_text())
+        split = yaml.safe_load((ROOT / ".github/workflows/monorepo-split.yml").read_text())
+        self.assertIn("route", split["jobs"]["split"]["needs"])
+        self.assertNotIn("GH_ACCESS_TOKEN", yaml.safe_dump(split["jobs"]["route"]))
+        self.assertIn("route-release.php", yaml.safe_dump(split["jobs"]["route"]))
+        self.assertIn("GH_ACCESS_TOKEN", yaml.safe_dump(split["jobs"]["split"]))
+
+        npm_text = (ROOT / ".github/workflows/release-npm.yml").read_text()
+        npm = yaml.safe_load(npm_text)
+        npm_dumped = yaml.safe_dump(npm)
+        needs = npm["jobs"]["release"]["needs"]
+        self.assertIn("route", needs if isinstance(needs, list) else [needs])
+        self.assertIn("route-release.php", yaml.safe_dump(npm["jobs"]["route"]))
+        self.assertEqual("write", npm["jobs"]["release"]["permissions"].get("id-token"))
+        self.assertNotEqual("write", (npm["jobs"]["route"].get("permissions") or {}).get("id-token"))
+        self.assertNotIn("NPM_TOKEN", npm_dumped)
+        self.assertNotIn("NODE_AUTH_TOKEN", npm_dumped)
         self.assertNotIn("NPM_TOKEN", yaml.safe_dump(npm["jobs"]["version-pr"]))
 
 

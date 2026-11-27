@@ -549,6 +549,84 @@ jobs:
       - name: Build
         run: npm run build --workspace @vaulter/vue
 
+      - name: Check @vaulter/vue bundle size budget
+        run: npm run budget:check --workspace @vaulter/vue
+
+  e2e-documents:
+    name: "E2E documents-basic (${{ matrix.engine }})"
+    needs: [changes, vue]
+    if: >-
+      !cancelled()
+      && (needs.changes.outputs.has_vue == 'true' || needs.changes.outputs.has_consumer == 'true')
+      && (needs.vue.result == 'success' || needs.vue.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: ['sqlite', 'pgsql']
+    env:
+      CI: 'true'
+      E2E_DB_CONNECTION: ${{ matrix.engine }}
+      DB_CONNECTION: ${{ matrix.engine }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: vaulter_e2e
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+    services:
+      postgres:
+        image: postgres:18.7-alpine@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --tmpfs /var/lib/postgresql
+          --health-cmd "pg_isready -U vaulter -d vaulter_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_sqlite, sqlite3, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Prepare pinned Composer workspace repositories
+        run: scripts/ci/checkout-ecosystem.sh
+
+      - name: Setup Node.js 26.13.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.1'
+
+      - name: Smoke test the Node runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libatomic1 libstdc++6
+          node -e "process.exit(0)"
+
+      - name: Run documents-basic consumer E2E (${{ matrix.engine }})
+        run: |
+          PACKMAN_REF="b2fea80d85b1787f0a74d22c0f2563fd411ad132"
+          test "$(git -C ../packman rev-parse --verify "${PACKMAN_REF}^{commit}")" = "${PACKMAN_REF}"
+          test "$(git -C ../packman rev-parse --verify 'HEAD^{commit}')" = "${PACKMAN_REF}"
+          export PACKMAN_REF
+          bash e2e/consumers/documents-basic/run.sh
+
   repo:
     name: Repo harness, workflow policy, actionlint / PHP ${{ matrix.php }}
     needs: changes
@@ -805,7 +883,7 @@ jobs:
   ci-gate:
     name: CI gate
     if: always()
-    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, repo, openapi, contract-bc, sca]
+    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, e2e-documents, repo, openapi, contract-bc, sca]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

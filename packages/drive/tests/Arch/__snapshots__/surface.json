@@ -10859,6 +10859,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "supportsRanges",
+                            "type": "bool",
+                            "default": "false",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -10976,6 +10985,25 @@
                     "abstract": false,
                     "final": false,
                     "type": "mixed",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "property:supportsRanges": {
+                    "kind": "property",
+                    "name": "supportsRanges",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "bool",
                     "default": null,
                     "hooks": [],
                     "attributes": [],
@@ -32637,6 +32665,18 @@
                 "method:patch": {
                     "kind": "method",
                     "name": "patch",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:preparedirectmultipart": {
+                    "kind": "method",
+                    "name": "prepareDirectMultipart",
+                    "visibility": "public",
+                    "internal": true
+                },
+                "method:presignmultipartpart": {
+                    "kind": "method",
+                    "name": "presignMultipartPart",
                     "visibility": "public",
                     "internal": true
                 },

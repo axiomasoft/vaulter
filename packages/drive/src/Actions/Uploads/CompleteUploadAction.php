@@ -28,8 +28,10 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Drive\Uploads\CompletionClock;
 use Vaulter\Drive\Uploads\CompletionDeadline;
+use Vaulter\Drive\Uploads\DirectMultipartUpload;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Media\Cas\FlysystemStorageDriver;
 
 #[Internal]
 final readonly class CompleteUploadAction
@@ -43,6 +45,7 @@ final readonly class CompleteUploadAction
         private OperationGuard $guard,
         private UploadCleanupReconciler $cleanup,
         private CompletionClock $clock,
+        private DirectMultipartUpload $direct,
     ) {}
 
     /** @param CompletionDeadline|null $deadline the caller's request budget; a direct call starts its own */
@@ -54,7 +57,7 @@ final readonly class CompleteUploadAction
         // the transactions nested below cannot either (Laravel retries only the outermost
         // level). A deadlock/serialization failure is retried by UploadOperations::complete()
         // through UploadSessionManager::withSession(attempts: 3) once everything rolled back.
-        return $this->database->transaction(function () use ($context, $session, $deadline): Node {
+        $commit = fn (): Node => $this->database->transaction(function () use ($context, $session, $deadline): Node {
             $locked = $this->sessions->acquireForPatch($session);
             $this->assertOwnership(context: $context, session: $locked);
             if ($locked->status === UploadStatus::Committed && $locked->input_fingerprint === null) {
@@ -81,7 +84,14 @@ final readonly class CompleteUploadAction
             }
             // The staged disk is also the CAS disk: refuse an unboundable one before opening anything.
             $this->preflight(session: $locked, deadline: $deadline);
-            $stream = $this->staged->readStream($locked);
+            $scanDigest = null;
+            if (DirectMultipartUpload::active($locked)) {
+                $scanDigest = $this->direct->cleanDigest($locked) ?? throw UploadConflictException::forClosedSession($locked->upload_id);
+                $identity = $this->direct->identity($locked) ?? throw UploadConflictException::forClosedSession($locked->upload_id);
+                $stream = $this->direct->open($locked, $identity);
+            } else {
+                $stream = $this->staged->readStream($locked);
+            }
             $prepared = null;
             try {
                 if (!is_resource($stream)) {
@@ -100,12 +110,16 @@ final readonly class CompleteUploadAction
                 $facts = $prepared->facts;
                 if (($locked->total_size_bytes !== null && $facts->size !== $locked->total_size_bytes)
                     || ($locked->expected_sha256 !== null && !hash_equals(strtolower($locked->expected_sha256), $facts->sha256))
+                    || ($scanDigest !== null && !hash_equals($scanDigest, $facts->sha256))
                     || $facts->size !== $locked->received_bytes) {
                     throw UploadConflictException::forClosedSession($locked->upload_id);
                 }
                 $fingerprint = $this->fingerprint(session: $locked, sha256: $facts->sha256, size: $facts->size, mime: $facts->detectedMimeType, name: $facts->name);
                 $deadline->assertOpen($locked->upload_id);
                 $receipt = $this->ingest->receipt(context: $context, data: $this->input(context: $context, session: $locked, stream: $stream, prepared: $prepared));
+                if ($scanDigest !== null) {
+                    $deadline->assertOpen($locked->upload_id);
+                }
                 $this->sessions->markCommitted(session: $locked, assembledBlobId: $receipt->revision->blob_id ?? throw UploadConflictException::forClosedSession($locked->upload_id), resultNodeId: $receipt->node->id, resultRevisionId: $receipt->revision->id, inputFingerprint: $fingerprint);
                 $this->scheduleCleanup($locked);
 
@@ -120,11 +134,18 @@ final readonly class CompleteUploadAction
                 }
             }
         }, attempts: 1);
+
+        return DirectMultipartUpload::active($session) ? FlysystemStorageDriver::withinS3Budget($deadline->remaining(...), $commit) : $commit();
     }
 
     /** the session's staged/CAS disk must take a bounded transport timeout before any storage call. */
     public function preflight(UploadSession $session, CompletionDeadline $deadline): void
     {
+        if (DirectMultipartUpload::active($session)) {
+            $deadline->assertOpen($session->upload_id);
+
+            return;
+        }
         $deadline->preflight(disk: $this->staged->diskFor($session), uploadId: $session->upload_id);
     }
 

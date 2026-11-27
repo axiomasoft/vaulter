@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Closure;
 use Packman\Attributes\Api;
 use Packman\Attributes\Internal;
 use RuntimeException;
@@ -14,6 +15,9 @@ use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StagedObject;
 use Vaulter\Media\Data\Snapshots\BlobSnapshot;
+use Vaulter\Media\Encryption\InvalidEncryptedSegment;
+use Vaulter\Media\Encryption\KeyManagementPort;
+use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -32,6 +36,7 @@ final readonly class BlobStore implements BlobStoreContract
 {
     private const int CHUNK_BYTES = 1_048_576;
 
+    /** @param (Closure(): ?KeyManagementPort)|null $resolveKeys */
     #[Internal]
     public function __construct(
         private ContentStore $content,
@@ -39,6 +44,7 @@ final readonly class BlobStore implements BlobStoreContract
         private BlobStoreRepository $blobs,
         private VaulterDatabase $database,
         private MediaOptions $mediaConfig,
+        private ?Closure $resolveKeys = null,
     ) {}
 
     /**
@@ -69,6 +75,9 @@ final readonly class BlobStore implements BlobStoreContract
     #[Internal]
     public function commitStagedRow(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob
     {
+        if (!$this->content instanceof Sha256ContentStore && $this->resolveKeys?->__invoke() !== null) {
+            throw new RuntimeException('Segmented encryption requires the default content store.');
+        }
         $disk ??= $this->mediaConfig->disk();
         $storageKey = $this->content->keyFor(scope: $scope, sha256: $staged->sha256());
 
@@ -103,17 +112,21 @@ final readonly class BlobStore implements BlobStoreContract
 
             if ($result['created']) {
                 // Promotion is idempotent; a rollback leaves bytes for reconciliation.
-                $this->content->promote(staged: $staged, key: $blob->storage_key, disk: $blob->disk);
+                if ($this->promote($blob, $staged, $scope, created: true) && !$this->holds($blob, $staged)) {
+                    throw new RuntimeException('The existing storage object does not match the staged content.');
+                }
             } else {
                 $present = $this->content->exists($blob->storage_key, $blob->disk);
                 // The row size already matched. Read the object anyway: the same length with other bytes would stay
                 // committed under this sha256. A byte-for-byte match is a normal commit and is not rewritten.
                 $mismatched = $present && !$this->holds($blob, $staged);
 
-                if ($mismatched) {
+                if ($mismatched && $blob->wrapped_dek !== null) {
+                    $this->promote($blob, $staged, $scope, rewrite: true);
+                } elseif ($mismatched) {
                     $this->replace($blob, $staged);
                 } elseif ($heal || !$present) {
-                    $this->content->promote(staged: $staged, key: $blob->storage_key, disk: $blob->disk);
+                    $this->promote($blob, $staged, $scope);
                 }
 
                 if ($heal || $mismatched) {
@@ -145,7 +158,32 @@ final readonly class BlobStore implements BlobStoreContract
         $model = $this->mediaConfig->blobModel();
         $row = $model::query()->whereKey($blob instanceof BlobSnapshot ? $blob->id : $blob)->first();
 
-        return $row instanceof Blob ? $this->content->get($row->storage_key, $row->disk) : null;
+        return $row instanceof Blob && !in_array($row->status, [BlobStatus::Deleting, BlobStatus::Deleted], true)
+            ? $this->readRow($row)
+            : null;
+    }
+
+    private function promote(Blob $blob, StagedObject $staged, BlobScope $scope, bool $rewrite = false, bool $created = false): bool
+    {
+        if ($this->content instanceof Sha256ContentStore) {
+            return $this->content->promoteBlob($blob, $staged, $scope->encryptionTenantId(), $rewrite, $created);
+        }
+        $this->content->promote($staged, $blob->storage_key, $blob->disk);
+
+        return false;
+    }
+
+    /** @return resource|null */
+    private function readRow(Blob $blob): mixed
+    {
+        if ($this->content instanceof Sha256ContentStore) {
+            return $this->content->readBlob($blob);
+        }
+        if ($blob->encryption_key_id !== null) {
+            throw new RuntimeException('Encrypted objects require the default content store.');
+        }
+
+        return $this->content->get($blob->storage_key, $blob->disk);
     }
 
     /**
@@ -174,7 +212,11 @@ final readonly class BlobStore implements BlobStoreContract
 
             try {
                 $this->content->delete($canonical, $disk);
-                $this->content->promote(staged: $staged, key: $canonical, disk: $disk);
+                if ($this->content instanceof Sha256ContentStore) {
+                    $this->content->promoteBlob($blob, $staged, tenant: null);
+                } else {
+                    $this->content->promote(staged: $staged, key: $canonical, disk: $disk);
+                }
             } catch (Throwable $exception) {
                 try {
                     $this->restore(key: $canonical, disk: $disk, backup: $backup);
@@ -245,14 +287,22 @@ final readonly class BlobStore implements BlobStoreContract
     /** Whether the object of $blob, streamed back, has the size and sha256 of the staged bytes. */
     private function holds(Blob $blob, StagedObject $staged): bool
     {
-        return $this->matches(key: $blob->storage_key, disk: $blob->disk, staged: $staged);
+        try {
+            return $this->matchesStream($this->readRow($blob), $staged);
+        } catch (InvalidEncryptedSegment) {
+            return false;
+        }
     }
 
     /** Whether the object at $key, streamed back, has the size and sha256 of the staged bytes. */
     private function matches(string $key, ?string $disk, StagedObject $staged): bool
     {
-        $stream = $this->content->get($key, $disk);
+        return $this->matchesStream($this->content->get($key, $disk), $staged);
+    }
 
+    /** @param resource|null $stream */
+    private function matchesStream(mixed $stream, StagedObject $staged): bool
+    {
         if (!is_resource($stream)) {
             return false;
         }

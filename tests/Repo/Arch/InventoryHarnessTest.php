@@ -54,7 +54,8 @@ function inv_targets(SourceIndex $index, string $kind): array
 /** @return array{0: int, 1: string, 2: string} */
 function inv_cli(array $args, ?string $cwd = null): array
 {
-    $process = proc_open([PHP_BINARY, inv_root().'/scripts/inventory/inventory.php', ...$args], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $cwd ?? inv_root());
+    $command = [PHP_BINARY, '-d', 'memory_limit='.ini_get('memory_limit'), inv_root().'/scripts/inventory/inventory.php', ...$args];
+    $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $cwd ?? inv_root());
     $out = (string) stream_get_contents($pipes[1]);
     $err = (string) stream_get_contents($pipes[2]);
 
@@ -728,8 +729,8 @@ it('keeps the packages fixture equal to composer.json: inventory.php packages --
 
     expect($code)->toBe(0, $out.$err)->and($out)->toContain('[packages] ok');
 
-    [$all] = inv_cli(['--check']);
-    expect($all)->toBe(0);
+    [$code, $out, $err] = inv_cli(['--check']);
+    expect($code)->toBe(0, $out.$err);
 });
 
 it('rejects an unknown generator and a missing or doubled mode with exit 2', function (): void {

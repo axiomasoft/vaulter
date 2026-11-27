@@ -705,7 +705,8 @@ Vaulter\Documents\State\CheckpointPublication api since 1.0 final readonly class
   public int $coveredThrough
   public int $expectedStateVersion
   public ?Vaulter\Documents\Contracts\DocumentContent $preparedContent
-  public function __construct(Vaulter\Documents\State\CollaborationStateBinding $binding, int $expectedStateVersion, int $coveredThrough, ?string $collabState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null, ?Vaulter\Documents\Contracts\DocumentContent $preparedContent = null)
+  public ?string $stateFormat
+  public function __construct(Vaulter\Documents\State\CollaborationStateBinding $binding, int $expectedStateVersion, int $coveredThrough, ?string $collabState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null, ?Vaulter\Documents\Contracts\DocumentContent $preparedContent = null, ?string $stateFormat = null)
 
 Vaulter\Documents\State\CollaborationStateBinding api since 1.0 final readonly class
   public int $generation
@@ -713,6 +714,7 @@ Vaulter\Documents\State\CollaborationStateBinding api since 1.0 final readonly c
   public int $schemaVersion
   public string $stateFormat
   public function __construct(string $protocol, string $stateFormat, int $schemaVersion, int $generation)
+  public static function acceptsFormat(string $protocol, string $expected, ?string $actual): bool
   public function sameAs(self $other): bool
 
 Vaulter\Documents\State\CollaborativeState api since 1.0 interface

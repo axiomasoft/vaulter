@@ -40,11 +40,14 @@ use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Contracts\Uploads\MultipartUploadPort;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Uploads\DirectMultipartUpload;
+use Vaulter\Drive\Uploads\S3MultipartUploadPort;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
@@ -63,6 +66,10 @@ final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
+        $app->bindIf(MultipartUploadPort::class, S3MultipartUploadPort::class);
+        $app->when(DirectMultipartUpload::class)->needs(Closure::class)->give(
+            static fn (Container $app): Closure => static fn (): ContentScanner => $app->make(ContentScanner::class),
+        );
         $app->bind(DriveOptions::class, static fn (Container $app): DriveOptions => CompiledOptionsCache::resolve(
             $app,
             'vaulter-drive',

@@ -92,12 +92,13 @@ final class MediaSchema implements ModuleSchema
         // Media's own state, apart from the drive's scan quarantine.
         $table->timestamp('integrity_checked_at')->nullable();
         $table->timestamp('integrity_failed_at')->nullable();
-        $table->string('storage_version', 255)->nullable();
+        $table->string('storage_version', 1024)->nullable();
         $table->string('etag', 64)->nullable();
         $table->string('md5', 64)->nullable();
         $table->string('crc32c', 64)->nullable();
         $table->boolean('chunked')->default(false);
         $ids->reference(table: $table, column: 'encryption_key_id', nullable: true);
+        $table->text('wrapped_dek')->nullable();
         $table->timestamp('first_seen_at')->useCurrent();
         $table->timestamp('committed_at')->nullable();
         $table->timestamp('delete_after_at')->nullable();

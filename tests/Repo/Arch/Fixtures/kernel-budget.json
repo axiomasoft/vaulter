@@ -27,7 +27,7 @@
   "forbidden_dev_packages_prefix": "axiomasoft/vaulter",
   "src": {
     "php_files": 278,
-    "loc": 21070,
+    "loc": 23833,
     "max_growth_percent": 10
   },
   "api_types": 138,
@@ -42,7 +42,7 @@
     {
       "date": "2026-11-17",
       "php_files": 278,
-      "loc": 21070,
+      "loc": 23833,
       "api_types": 138,
       "reason": "Native Packman extensions, immutable Options, coded errors and consumer registration SPI; ADR-0039. Domain sibling dependencies remain forbidden."
     }

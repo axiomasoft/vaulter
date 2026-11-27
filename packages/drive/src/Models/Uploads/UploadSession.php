@@ -34,35 +34,35 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  *
  * Swappable via the configuration key ('vaulter-drive.models.upload_session').
  *
- * @property int|string                $id
- * @property int|string|null           $tenant_id
- * @property int|string                $drive_id
- * @property string                    $upload_id
- * @property int|string|null           $target_node_id
- * @property int|string|null           $target_parent_id
- * @property int|string|null           $result_node_id
- * @property int|string|null           $result_revision_id
- * @property int|string|null           $result_blob_id
- * @property string|null               $input_fingerprint
- * @property bool                      $cleanup_pending
- * @property int                       $cleanup_attempts
- * @property Carbon|null               $cleanup_available_at
- * @property string|null               $cleanup_last_reason
- * @property string|null               $target_name
- * @property UploadProtocol            $protocol
- * @property UploadStatus              $status
- * @property string|null               $expected_sha256
- * @property int|null                  $total_size_bytes
- * @property int                       $received_bytes
- * @property int|null                  $chunk_size
- * @property string|null               $mime_type
- * @property array<int, mixed>|null    $parts
- * @property int|string|null           $assembled_blob_id
- * @property array<string, mixed>|null $metadata
- * @property Carbon|null               $expires_at
- * @property int|string|null           $created_by
- * @property Carbon|null               $created_at
- * @property Carbon|null               $updated_at
+ * @property int|string                   $id
+ * @property int|string|null              $tenant_id
+ * @property int|string                   $drive_id
+ * @property string                       $upload_id
+ * @property int|string|null              $target_node_id
+ * @property int|string|null              $target_parent_id
+ * @property int|string|null              $result_node_id
+ * @property int|string|null              $result_revision_id
+ * @property int|string|null              $result_blob_id
+ * @property string|null                  $input_fingerprint
+ * @property bool                         $cleanup_pending
+ * @property int                          $cleanup_attempts
+ * @property Carbon|null                  $cleanup_available_at
+ * @property string|null                  $cleanup_last_reason
+ * @property string|null                  $target_name
+ * @property UploadProtocol               $protocol
+ * @property UploadStatus                 $status
+ * @property string|null                  $expected_sha256
+ * @property int|null                     $total_size_bytes
+ * @property int                          $received_bytes
+ * @property int|null                     $chunk_size
+ * @property string|null                  $mime_type
+ * @property array<array-key, mixed>|null $parts
+ * @property int|string|null              $assembled_blob_id
+ * @property array<string, mixed>|null    $metadata
+ * @property Carbon|null                  $expires_at
+ * @property int|string|null              $created_by
+ * @property Carbon|null                  $created_at
+ * @property Carbon|null                  $updated_at
  */
 #[Internal]
 class UploadSession extends Model

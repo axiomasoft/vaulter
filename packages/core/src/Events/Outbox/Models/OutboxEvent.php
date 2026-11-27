@@ -15,6 +15,7 @@ use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Observability\OtlpOpenTelemetryTraceRecorder;
 use Vaulter\Support\Identity;
 
 /**
@@ -95,8 +96,22 @@ class OutboxEvent extends Model
         $this->attributes['staged_at'] = $value === null ? null : Carbon::parse($value, 'UTC')->utc()->format('Y-m-d H:i:s.u');
     }
 
+    public function traceparent(): ?string
+    {
+        $raw = $this->payload['_traceparent'] ?? $this->payload['traceparent'] ?? null;
+
+        return is_string($raw) && OtlpOpenTelemetryTraceRecorder::parseTraceparent($raw) !== null
+            ? $raw
+            : null;
+    }
+
     public function toEnvelope(): OutboxEnvelope
     {
+        $payload = $this->payload;
+        if (array_key_exists('_traceparent', $payload)) {
+            unset($payload['_traceparent']);
+        }
+
         return new OutboxEnvelope(
             eventId: $this->event_id,
             outboxSeq: $this->outbox_seq,
@@ -109,7 +124,7 @@ class OutboxEvent extends Model
             aggregateId: $this->aggregate_id,
             sequence: $this->sequence,
             createdAt: CarbonImmutable::instance($this->created_at),
-            payload: $this->payload,
+            payload: $payload,
         );
     }
 }

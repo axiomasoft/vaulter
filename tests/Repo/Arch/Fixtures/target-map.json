@@ -60,6 +60,15 @@
         },
         {
             "action": "keep",
+            "file": "packages/core/database/migrations/0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
             "file": "packages/documents/config/vaulter-documents.php",
             "note": null,
             "owner": "documents",
@@ -376,6 +385,15 @@
         {
             "action": "keep",
             "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/media/database/migrations/0001_01_01_000103_add_wrapped_dek_to_v_blobs_table.php",
             "note": null,
             "owner": "media",
             "package": "media",
@@ -6530,6 +6548,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Contracts/Uploads/MultipartUploadPort.php",
+            "fqcn": "Vaulter\\Drive\\Contracts\\Uploads\\MultipartUploadPort",
+            "kind": "interface",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Contracts\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Contracts\\Uploads\\MultipartUploadPort"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Contracts/Uploads/UploadInspector.php",
             "fqcn": "Vaulter\\Drive\\Contracts\\Uploads\\UploadInspector",
             "kind": "interface",
@@ -10645,6 +10677,20 @@
         },
         {
             "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Jobs/Uploads/ScanJob.php",
+            "fqcn": "Vaulter\\Drive\\Jobs\\Uploads\\ScanJob",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Jobs\\Uploads\\ScanJob"
+        },
+        {
+            "action": "keep",
             "eloquent": true,
             "file": "packages/drive/src/Models/Access/NodeGrant.php",
             "fqcn": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
@@ -12634,6 +12680,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Uploads/DirectMultipartUpload.php",
+            "fqcn": "Vaulter\\Drive\\Uploads\\DirectMultipartUpload",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Uploads\\DirectMultipartUpload"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Uploads/Inspection/FilenameInspector.php",
             "fqcn": "Vaulter\\Drive\\Uploads\\Inspection\\FilenameInspector",
             "kind": "final-class",
@@ -12756,6 +12816,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Uploads\\S3MultipartHandler"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Uploads/S3MultipartUploadPort.php",
+            "fqcn": "Vaulter\\Drive\\Uploads\\S3MultipartUploadPort",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Uploads\\S3MultipartUploadPort"
         },
         {
             "action": "keep",
@@ -14734,6 +14808,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Content/ClamAvContentScanner.php",
+            "fqcn": "Vaulter\\Media\\Content\\ClamAvContentScanner",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Media\\Content\\ClamAvContentScanner"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Content/ImmutableContentIdentity.php",
             "fqcn": "Vaulter\\Media\\Content\\ImmutableContentIdentity",
             "kind": "final-class",
@@ -14954,6 +15042,62 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Media\\Doctor\\BlobPinsCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Encryption/EncryptedReadStream.php",
+            "fqcn": "Vaulter\\Media\\Encryption\\EncryptedReadStream",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Encryption\\EncryptedReadStream"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Encryption/InvalidEncryptedSegment.php",
+            "fqcn": "Vaulter\\Media\\Encryption\\InvalidEncryptedSegment",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Encryption\\InvalidEncryptedSegment"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Encryption/KeyManagementPort.php",
+            "fqcn": "Vaulter\\Media\\Encryption\\KeyManagementPort",
+            "kind": "interface",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Media\\Encryption\\KeyManagementPort"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Encryption/SegmentedSecretStreamCipher.php",
+            "fqcn": "Vaulter\\Media\\Encryption\\SegmentedSecretStreamCipher",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Encryption\\SegmentedSecretStreamCipher"
         },
         {
             "action": "keep",
@@ -15780,6 +15924,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Observability\\NullTraceRecorder",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Observability\\NullTraceRecorder"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Observability/OtlpOpenTelemetryTraceRecorder.php",
+            "fqcn": "Vaulter\\Observability\\OtlpOpenTelemetryTraceRecorder",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Observability\\OtlpOpenTelemetryTraceRecorder",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Observability\\OtlpOpenTelemetryTraceRecorder"
         },
         {
             "action": "keep",

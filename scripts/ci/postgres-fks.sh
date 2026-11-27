@@ -30,7 +30,7 @@ for image in "${images[@]}"; do
         -e POSTGRES_HOST_AUTH_METHOD=trust \
         -e POSTGRES_USER=postgres \
         -e POSTGRES_DB=vaulter_laravel \
-        -v "$PWD/scripts/ci/unindexed-fks.sql:/checks/unindexed-fks.sql:ro" \
+        -v "$PWD/scripts/ci/sql:/checks:ro" \
         "$image")"
 
     for _ in $(seq 1 60); do

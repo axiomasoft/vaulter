@@ -27,7 +27,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": false
+    "provenance": true
   },
   "sideEffects": [
     "**/*.css"
@@ -47,6 +47,7 @@
   },
   "scripts": {
     "build": "vue-tsc --noEmit && vite build",
+    "budget:check": "node -e \"const fs=require('node:fs'),zlib=require('node:zlib');const p='dist/vaulter-vue.js';if(!fs.existsSync(p)){console.error('missing '+p);process.exit(1);}const b=fs.readFileSync(p),gz=zlib.gzipSync(b,{level:9});const raw=b.length,g=gz.length,maxRaw=122880,maxGzip=35840;console.log('@vaulter/vue dist/vaulter-vue.js: raw='+raw+'B (limit '+maxRaw+'B), gzip='+g+'B (limit '+maxGzip+'B)');if(raw>maxRaw||g>maxGzip){console.error('bundle budget exceeded');process.exit(1);}\"",
     "dev": "vite build --watch",
     "typecheck": "vue-tsc --noEmit",
     "api:generate": "openapi-typescript ../../openapi/vaulter-v1.yaml -o src/api/schema.d.ts",

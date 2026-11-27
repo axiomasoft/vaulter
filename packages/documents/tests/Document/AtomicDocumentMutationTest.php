@@ -51,7 +51,7 @@ it('reads the working state and closes the scoped handle when the callback retur
     $locked = $this->port->run($this->context, $this->node->id, function (LockedDocumentMutation $locked): LockedDocumentMutation {
         $state = $locked->snapshot();
         expect($locked->connection())->toBe($this->database->connection())
-            ->and(fn () => clone $locked)->toThrow(Error::class)
+            ->and(fn (): LockedDocumentMutation => clone $locked)->toThrow(Error::class)
             ->and($state->nodeId)->toBe((string) $this->node->id)
             ->and($state->documentId)->toBe((string) GrantedDocuments::aggregate($this->node)->id)
             ->and($state->type)->toBe('vaulter/rich-text')
@@ -69,7 +69,7 @@ it('reads the working state and closes the scoped handle when the callback retur
     expect(fn () => $locked->snapshot())->toThrow(LogicException::class)
         ->and(fn () => $locked->connection())->toThrow(LogicException::class)
         ->and(fn () => $locked->replace(DocumentTestHelpers::content(), 1))->toThrow(LogicException::class)
-        ->and($this->port->run($this->context, $this->node->id, static fn () => null))->toBeNull()
+        ->and($this->port->run($this->context, $this->node->id, static fn (): null => null))->toBeNull()
         ->and(GrantedDocuments::aggregate($this->node)->state_version)->toBe(1);
 });
 
@@ -78,7 +78,7 @@ it('records one effective replacement and leaves the position and events alone o
     $write = fn (int $position) => $this->port->run($this->context, $this->node->id, static function (LockedDocumentMutation $locked) use ($position): DocumentMutationState {
         $state = $locked->replace(DocumentTestHelpers::content('New'), $position);
         expect($locked->snapshot())->toBe($state)
-            ->and(fn () => $locked->replace(DocumentTestHelpers::content('Twice'), $state->position))->toThrow(LogicException::class);
+            ->and(fn (): DocumentMutationState => $locked->replace(DocumentTestHelpers::content('Twice'), $state->position))->toThrow(LogicException::class);
 
         return $state;
     });
@@ -105,7 +105,7 @@ it('rolls back content, receipt and event on callback failure and closes its han
     })->toThrow($error);
 
     expect($escaped)->toBeInstanceOf(LockedDocumentMutation::class)
-        ->and(fn () => $escaped->snapshot())->toThrow(LogicException::class)
+        ->and(fn (): DocumentMutationState => $escaped->snapshot())->toThrow(LogicException::class)
         ->and($this->database->connection()->table('atomic_mutation_receipts')->count())->toBe(0)
         ->and(GrantedDocuments::aggregate($this->node)->state_version)->toBe(1)
         ->and(GrantedDocuments::aggregate($this->node)->payload?->content)->toEqual(GrantedDocuments::tiptap('Draft'));
@@ -113,9 +113,9 @@ it('rolls back content, receipt and event on callback failure and closes its han
 });
 
 it('refuses stale versions and a nested transaction', function (): void {
-    expect(fn () => $this->port->run($this->context, $this->node->id, static fn (LockedDocumentMutation $locked) => $locked->replace(DocumentTestHelpers::content(), 0)))
+    expect(fn () => $this->port->run($this->context, $this->node->id, static fn (LockedDocumentMutation $locked): DocumentMutationState => $locked->replace(DocumentTestHelpers::content(), 0)))
         ->toThrow(StaleDocumentStateException::class)
-        ->and(fn () => $this->database->transaction(fn () => $this->port->run($this->context, $this->node->id, static fn () => null)))
+        ->and(fn () => $this->database->transaction(fn () => $this->port->run($this->context, $this->node->id, static fn (): null => null)))
         ->toThrow(LogicException::class)
         ->and(GrantedDocuments::aggregate($this->node)->state_version)->toBe(1);
 });
@@ -126,7 +126,7 @@ it('gives the same refusal for a missing, non-document, foreign, or uneditable n
     $forbidden = DocumentTestHelpers::context($this->node, 2);
     $foreign = DocumentTestHelpers::context(DocumentTestHelpers::drive());
     $root = $this->context->drive->rootNode()->firstOrFail();
-    $callback = static fn () => throw new RuntimeException('The callback must stay inaccessible');
+    $callback = static fn (): never => throw new RuntimeException('The callback must stay inaccessible');
     $message = NodeNotFoundException::forId('document')->getMessage();
 
     expect(fn () => $this->port->run($this->context, 'invalid:id', $callback))->toThrow(NodeNotFoundException::class, $message)
@@ -146,7 +146,7 @@ it('exposes a live journal snapshot but refuses a replacement', function (): voi
         expect($state->writeMode)->toBe('journal')
             ->and($state->protocol)->toBe('acme-ot')
             ->and($state->generation)->toBe(1)
-            ->and(fn () => $locked->replace(OpaqueContent::fromArray(['columns' => []]), $state->position))
+            ->and(fn (): DocumentMutationState => $locked->replace(OpaqueContent::fromArray(['columns' => []]), $state->position))
             ->toThrow(DocumentCommandRequiredException::class);
     });
     expect(GrantedDocuments::aggregate($node)->state_version)->toBe(2);
@@ -159,7 +159,7 @@ it('exposes the pending fence and refuses to overwrite the working state', funct
     });
     $this->port->run($this->context, $this->node->id, static function (LockedDocumentMutation $locked): void {
         expect($locked->snapshot()->pending)->toBeTrue()
-            ->and(fn () => $locked->replace(DocumentTestHelpers::content('Overwrite'), 1))->toThrow(DocumentStatePendingException::class);
+            ->and(fn (): DocumentMutationState => $locked->replace(DocumentTestHelpers::content('Overwrite'), 1))->toThrow(DocumentStatePendingException::class);
     });
     expect(GrantedDocuments::aggregate($this->node)->state_version)->toBe(1);
 });
@@ -181,9 +181,9 @@ it('routes a command-only type through the port and enforces the codec size limi
 
     expect(fn () => $autosave->execute($context, new UpdateDocumentContentInput(node: $node, content: $changed)))
         ->toThrow(DocumentCommandRequiredException::class)
-        ->and(fn () => $port->run($context, $node->id, static fn (LockedDocumentMutation $locked) => $locked->replace($oversize, 1)))
+        ->and(fn () => $port->run($context, $node->id, static fn (LockedDocumentMutation $locked): DocumentMutationState => $locked->replace($oversize, 1)))
         ->toThrow(InvalidDocumentContentException::class)
-        ->and($port->run($context, $node->id, static fn (LockedDocumentMutation $locked) => $locked->replace($changed, 1))->position)
+        ->and($port->run($context, $node->id, static fn (LockedDocumentMutation $locked): DocumentMutationState => $locked->replace($changed, 1))->position)
         ->toBe(2)
         ->and(GrantedDocuments::aggregate($node)->payload?->content)->toBe($changed->toArray());
 });
@@ -197,13 +197,13 @@ it('refuses to publish counters beyond the wire range and keeps an unchanged sna
         expect($locked->replace($locked->snapshot()->content, $max)->position)->toBe($max);
     });
     $this->port->run($this->context, $this->node->id, static function (LockedDocumentMutation $locked) use ($max): void {
-        expect(fn () => $locked->replace(DocumentTestHelpers::content('Overflow'), $max))->toThrow(OverflowException::class)
+        expect(fn (): DocumentMutationState => $locked->replace(DocumentTestHelpers::content('Overflow'), $max))->toThrow(OverflowException::class)
             ->and($locked->snapshot()->position)->toBe($max);
     });
     expect(GrantedDocuments::aggregate($this->node)->state_version)->toBe($max);
 
     $this->database->transaction(static fn () => $document->forceFill(['collab_epoch' => $max + 1])->save());
-    expect(fn () => $this->port->run($this->context, $this->node->id, static fn () => null))
+    expect(fn () => $this->port->run($this->context, $this->node->id, static fn (): null => null))
         ->toThrow(OverflowException::class);
 });
 
@@ -234,7 +234,7 @@ it('retries the whole callback after :dataset and only commits the final receipt
 
     expect($attempts)->toHaveCount(2)
         ->and($attempts[0])->not->toBe($attempts[1])
-        ->and(fn () => $attempts[0]->snapshot())->toThrow(LogicException::class)
+        ->and(fn (): DocumentMutationState => $attempts[0]->snapshot())->toThrow(LogicException::class)
         ->and($receipt)->toBe('attempt-2')
         ->and($this->database->connection()->table('atomic_mutation_receipts')->pluck('receipt')->all())->toBe([$receipt])
         ->and(GrantedDocuments::aggregate($this->node)->state_version)->toBe(2)

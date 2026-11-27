@@ -4,9 +4,11 @@ title: Scan backlog and stalled leases
 
 # Scan backlog and stalled leases
 
-**Symptom:** files stay unpublished; `vaulter:doctor` reports `drive.scan.obligations` as stuck or unscanned.
+**Symptom:** files stay unpublished (`pending` / `scanning`); `php artisan vaulter:doctor` reports `drive.scan.obligations_stuck`, `drive.scan.obligations_unscanned`, or `drive.scan.backfill_stalled`.
 
-1. Diagnose (read-only):
+## Diagnose (read-only)
+
+Run the drive scan checks to separate missing workers, daemon failures, expired leases, and stalled policy backfills:
 
 <!-- snippet: shell -->
 
@@ -14,22 +16,48 @@ title: Scan backlog and stalled leases
 php artisan vaulter:doctor --check=drive.scan
 ```
 
-2. Preview what the reconciler would recover, narrowed to one tenant or drive:
+- `drive.scan.obligations_stuck` — expired leases or obligations overdue by 30 minutes.
+- `drive.scan.obligations_unscanned` — work that settled without a verdict, grouped by reason.
+- `drive.scan.backfill_stalled` — existing files unclaimed for 24 hours during rollout.
+- `drive.scan.scanner_missing` / `drive.scan.clamav_version_unsupported` — scanner configuration or daemon version issue.
+- `drive.scan.scope_invalid` — obligation or backfill rows with missing or cross-tenant drives.
+
+Preview what the bounded reconciler will claim for one tenant or drive:
 
 <!-- snippet: shell -->
 
 ```bash
-php artisan vaulter:scan:reconcile --dry-run --tenant=acme --drive=1
+php artisan vaulter:scan:reconcile --dry-run --tenant=acme --drive=1 --json
 ```
 
-3. Run it for real. Work is bounded by `--limit` and `--max-seconds`, so repeat until the doctor check is green:
+## Recover
+
+Run reconciliation bounded by `--limit` (`1..500`, default `100`) and `--max-seconds` (`1..60`, default `30`). Exit codes: `0` ok, `2` invalid bounds or queue config, `1` unexpected error:
 
 <!-- snippet: shell -->
 
 ```bash
-php artisan vaulter:scan:reconcile --tenant=acme --drive=1 --reason="stalled leases after deploy"
+php artisan vaulter:scan:reconcile --tenant=acme --drive=1 --limit=100 --max-seconds=30 --reason="stalled leases after deploy"
 ```
 
-A lease that lapsed is taken over by the next run; no manual database edit is needed.
-If obligations keep stalling, check that a queue worker runs the `uploads.scan.queue` queue
-and that `uploads.scan.scanner_timeout_seconds` is shorter than `lease_seconds`.
+Repeat bounded runs (or pass `--all-tenants` during maintenance) until `vaulter:doctor --check=drive.scan` returns `drive.scan.obligations_ok`:
+
+<!-- snippet: shell -->
+
+```bash
+php artisan vaulter:scan:reconcile --all-tenants --limit=100 --max-seconds=30 --reason="maintenance reconcile"
+```
+
+For failed revisions after a temporary scanner outage (never for quarantined files), preview and retry only failed work:
+
+<!-- snippet: shell -->
+
+```bash
+php artisan vaulter:scan:rescan --retry-failed --dry-run --tenant=acme --drive=1
+```
+
+## Prevent repeat stalls
+
+- An expired lease is reclaimed automatically on the next run; never edit scan rows by hand.
+- Ensure a queue worker runs `vaulter-drive.uploads.scan.queue` and `vaulter-drive.schedule.scan_reconcile` (`everyFiveMinutes`) runs while `vaulter.schedule.enabled` is `true`.
+- Keep `vaulter-drive.uploads.scan.scanner_timeout_seconds` (`60`) below `lease_seconds` (`120`), and verify `max_attempts` (`5`) and `publish_cooldown_seconds` (`30`).

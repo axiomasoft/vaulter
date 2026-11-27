@@ -24,7 +24,7 @@ final readonly class RestoreTenantContext
 {
     public const string CONTEXT_KEY = 'vaulter.tenant_id';
 
-    public function __construct(private readonly ?Container $container = null) {}
+    public function __construct(private ?Container $container = null) {}
 
     public static function current(): ?string
     {

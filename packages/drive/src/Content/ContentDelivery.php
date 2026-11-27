@@ -60,7 +60,10 @@ final readonly class ContentDelivery
         if ($ttlSeconds < 1 || $ttlSeconds > $this->downloads->directTtlSeconds) {
             throw new InvalidArgumentException('Direct URL TTL exceeds the configured bound.');
         }
-        [, $selected] = $this->availability->selection($node, $revision);
+        [, $selected, , $blob] = $this->availability->selection($node, $revision);
+        if ($blob->encryption_key_id !== null) {
+            throw ProfileRestrictionException::forOperation('direct_content_url');
+        }
         $identity = $this->evidence->identity($selected) ?? throw new ContentUnavailableException;
         $expiresAt = (new DateTimeImmutable)->modify('+'.$ttlSeconds.' seconds');
         $signer = app(DirectContentUrlSigner::class);
@@ -91,6 +94,6 @@ final readonly class ContentDelivery
 
         $displayName = $revision->original_name !== '' ? $revision->original_name : $node->name;
 
-        return new FileStream($stream, $displayName, $revision->mime_type ?? 'application/octet-stream', $revision->size_bytes, $revision->sha256, $this->revisions->map($revision, $node->file()->firstOrFail()));
+        return new FileStream($stream, $displayName, $revision->mime_type ?? 'application/octet-stream', $revision->size_bytes, $revision->sha256, $this->revisions->map($revision, $node->file()->firstOrFail()), supportsRanges: $blob->encryption_key_id !== null);
     }
 }

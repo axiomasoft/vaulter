@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Http\Support;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Packman\Attributes\Internal;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -62,10 +63,10 @@ final readonly class ContentResponder
     {
         $startedAt = hrtime(true);
         if ($this->downloads->deliveryMode === 'direct_signed') {
-            return $this->redirect($request, $drive, $nodeId, $revisionId);
+            return $this->redirect($request, $drive, $nodeId, $revisionId, $disposition, $startedAt);
         }
 
-        return $this->stream($drive->files()->read($nodeId, $revisionId), $disposition, $revisionId === null ? 'file' : 'version', $startedAt);
+        return $this->stream($drive->files()->read($nodeId, $revisionId), $disposition, $revisionId === null ? 'file' : 'version', $startedAt, $request);
     }
 
     /**
@@ -90,14 +91,15 @@ final readonly class ContentResponder
         ]);
     }
 
-    public function share(ShareContext $context, Node $node, FileRevision $revision): StreamedResponse
+    public function share(ShareContext $context, Node $node, FileRevision $revision, ?Request $request = null): Response
     {
         $startedAt = hrtime(true);
 
-        return $this->stream($this->delivery->streamForShare($context, $node, $revision), 'attachment', 'share', $startedAt);
+        return $this->stream($this->delivery->streamForShare($context, $node, $revision), 'attachment', 'share', $startedAt, $request);
     }
 
-    private function redirect(Request $request, DriveHandle $drive, string $nodeId, ?string $revisionId): RedirectResponse
+    /** @param 'attachment'|'inline' $disposition */
+    private function redirect(Request $request, DriveHandle $drive, string $nodeId, ?string $revisionId, string $disposition, int $startedAt): Response
     {
         $context = DriveContext::for(drive: $drive->model(), actor: $drive->actor(), correlationId: AssignCorrelationId::of($request) ?? (string) Str::ulid());
         $node = $this->locator->find($context, $nodeId);
@@ -111,6 +113,9 @@ final readonly class ContentResponder
         if (!in_array($revision->status, ['committed', 'superseded'], true)) {
             throw NodeNotFoundException::forId($nodeId);
         }
+        if ($revision->blob()->first()?->encryption_key_id !== null) {
+            return $this->stream($this->delivery->stream($context, $node, $revision), $disposition, $revisionId === null ? 'file' : 'version', $startedAt, $request);
+        }
         $url = $this->delivery->directUrl($context, $node, $revision, $this->downloads->directTtlSeconds);
 
         return new RedirectResponse($url->url, 302, [
@@ -120,20 +125,46 @@ final readonly class ContentResponder
     }
 
     /** @param 'attachment'|'inline' $disposition */
-    private function stream(FileStream $file, string $disposition, string $source, int $startedAt): StreamedResponse
+    private function stream(FileStream $file, string $disposition, string $source, int $startedAt, ?Request $request): Response
     {
         $metrics = $this->metrics;
+        $headers = DownloadHeaders::forContent($file->mimeType, $file->filename, $disposition, $file->size);
+        $status = 200;
+        $length = $file->size;
+        if ($file->supportsRanges) {
+            $headers['Accept-Ranges'] = 'bytes';
+            $range = $request?->headers->get('Range');
+            if ($range !== null && !$request->headers->has('If-Range') && preg_match('/\Abytes=(\d*)-(\d*)\z/i', $range, $parts) === 1) {
+                $start = $parts[1] === '' ? max(0, $file->size - (int) $parts[2]) : (int) $parts[1];
+                $end = $parts[1] === '' || $parts[2] === '' ? $file->size - 1 : min((int) $parts[2], $file->size - 1);
+                if ($start > $end) {
+                    fclose($file->stream);
+
+                    abort(416, headers: ['Accept-Ranges' => 'bytes', 'Content-Range' => 'bytes */'.$file->size]);
+                }
+                if (fseek($file->stream, $start) !== 0) {
+                    fclose($file->stream);
+                    throw new RuntimeException('Could not seek to the requested content range.');
+                }
+                $status = 206;
+                $length = $end - $start + 1;
+                $headers['Content-Length'] = (string) $length;
+                $headers['Content-Range'] = "bytes {$start}-{$end}/{$file->size}";
+            }
+        }
 
         return new StreamedResponse(
-            static function () use ($file, $source, $startedAt, $metrics): void {
+            static function () use ($file, $source, $startedAt, $metrics, $length): void {
                 $ttfbRecorded = false;
                 $tier = LoadTier::label();
                 try {
-                    while (!feof($file->stream)) {
-                        $chunk = fread($file->stream, 1024 * 256);
-                        if ($chunk === false) {
+                    $remaining = $length;
+                    while ($remaining > 0 && !feof($file->stream)) {
+                        $chunk = fread($file->stream, min(1024 * 256, $remaining));
+                        if ($chunk === false || $chunk === '') {
                             break;
                         }
+                        $remaining -= strlen($chunk);
                         $metrics->counter(name: 'vaulter_download_bytes_total', amount: strlen($chunk), labels: ['source' => $source]);
                         echo $chunk;
                         if (!$ttfbRecorded) {
@@ -147,8 +178,8 @@ final readonly class ContentResponder
                     }
                 }
             },
-            200,
-            DownloadHeaders::forContent($file->mimeType, $file->filename, $disposition, $file->size),
+            $status,
+            $headers,
         );
     }
 }

@@ -2,27 +2,45 @@
 
 declare(strict_types=1);
 
+use Aws\CommandInterface;
+use Aws\MockHandler;
+use Aws\Result;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use League\Flysystem\AwsS3V3\PortableVisibilityConverter;
+use Psr\Http\Message\RequestInterface;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Contracts\Uploads\MultipartUploadPort;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Jobs\Uploads\ScanJob;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+
+beforeEach(function (): void {
+    if (!class_exists(MockHandler::class) || !class_exists(PortableVisibilityConverter::class)) {
+        test()->markTestSkipped('aws/aws-sdk-php or league/flysystem-aws-s3-v3 is not installed.');
+    }
+});
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Testing\FakeContentScanner;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -195,6 +213,104 @@ it('gates S3 initiation through the profile driver', function (bool $allow): voi
         'name' => 'profile-s3.bin', 'total_size_bytes' => 5, 'protocol' => UploadProtocol::S3Multipart->value,
     ])->assertStatus($allow ? 201 : 403);
 })->with([true, false]);
+
+it('uses the existing direct multipart routes and publishes only the bytes that passed quarantine scanning', function (string $outcome): void {
+    $bytes = 'direct multipart test';
+    $identity = ['version' => 'version-1', 'etag' => '"quarantine-etag"'];
+    $port = Mockery::mock(MultipartUploadPort::class);
+    $port->shouldReceive('enabled')->andReturnTrue();
+    $port->shouldReceive('initiate')->once()->with('local', Mockery::pattern('~^quarantine/[^/]+/[0-9a-f-]{36}$~'))
+        ->andReturn('multipart-id');
+    $port->shouldReceive('presignPart')->once()->with('local', Mockery::type('string'), 'multipart-id', 1, strlen($bytes), Mockery::type(DateTimeInterface::class))
+        ->andReturn('https://s3.example.test/part');
+    $port->shouldReceive('complete')->once()->with('local', Mockery::type('string'), 'multipart-id', strlen($bytes), Mockery::type('int'))
+        ->andReturn($identity);
+    $port->shouldReceive('open')->times($outcome === 'infected' ? 1 : 2)
+        ->with('local', Mockery::type('string'), $identity)->andReturnUsing(function () use ($outcome, $bytes) {
+            static $opens = 0;
+            $stream = fopen('php://temp', 'r+b');
+            fwrite($stream, ++$opens === 2 && $outcome === 'changed' ? str_repeat('x', strlen($bytes)) : $bytes);
+            rewind($stream);
+
+            return $stream;
+        });
+    if ($outcome !== 'changed') {
+        $port->shouldReceive('discard')->once()->with('local', Mockery::type('string'), null, $identity);
+    }
+    app()->instance(MultipartUploadPort::class, $port);
+    $scanner = new FakeContentScanner;
+    if ($outcome === 'infected') {
+        $scanner->alwaysReturns(new ScanResult(ScanVerdict::Infected));
+    }
+    app()->instance(ContentScanner::class, $scanner);
+    config()->set([
+        'queue.default' => 'quarantine-test',
+        'queue.connections.quarantine-test' => ['driver' => 'database', 'retry_after' => 180],
+        'vaulter-drive.scan.scanner_key' => 'fake',
+        'vaulter-drive.scan.scanner_version' => '1',
+    ]);
+    Queue::fake();
+
+    $drive = UploadTestHelpers::storage();
+    $this->actingAs(AccessTestHelpers::user());
+    $created = $this->postJson('api/vaulter/v1/drives/'.$drive->id.'/uploads', [
+        'name' => 'direct-s3.bin', 'total_size_bytes' => strlen($bytes), 'protocol' => UploadProtocol::S3Multipart->value,
+    ])->assertCreated();
+    $upload = 'api/vaulter/v1/uploads/'.$created->json('data.upload_id');
+    $this->postJson($upload.'/parts?part_no=1')->assertCreated()
+        ->assertExactJson(['part_no' => 1, 'size' => strlen($bytes), 'url' => 'https://s3.example.test/part']);
+    $this->postJson($upload.'/complete')->assertAccepted()->assertJsonPath('status', 'pending_scan');
+    $this->postJson($upload.'/complete')->assertAccepted();
+    expect(Blob::query()->count())->toBe(0);
+    Queue::assertPushed(ScanJob::class, 1);
+    app()->call([Queue::pushed(ScanJob::class)->first(), 'handle']);
+
+    expect($scanner->scans[0]['bytes'])->toBe($bytes);
+    $this->postJson($upload.'/complete')->assertStatus(match ($outcome) {
+        'infected' => 422,
+        'changed' => 409,
+        default => 201,
+    });
+    expect(Blob::query()->count())->toBe($outcome === 'clean' ? 1 : 0);
+})->with(['clean', 'infected', 'changed']);
+
+it('uses presigned S3 part URLs and completes and deletes the exact quarantine version', function (): void {
+    $key = 'quarantine/tenant/upload-id';
+    $commands = [];
+    $handler = new MockHandler;
+    $capture = static function (CommandInterface $command, RequestInterface $request) use (&$commands): Result {
+        $commands[] = [$command->getName(), $request];
+
+        return match ($command->getName()) {
+            'CreateMultipartUpload' => new Result(['UploadId' => 'server-upload-id']),
+            'ListParts' => new Result(['Parts' => [['PartNumber' => 1, 'Size' => 5, 'ETag' => '"part-1"']]]),
+            'CompleteMultipartUpload' => new Result(['VersionId' => 'object-version', 'ETag' => '"object-etag"']),
+            'DeleteObject' => new Result,
+        };
+    };
+    for ($i = 0; $i < 4; $i++) {
+        $handler->append($capture);
+    }
+    Storage::set('direct-s3', Storage::build([
+        'driver' => 's3', 'region' => 'us-east-1', 'bucket' => 'test-bucket',
+        'credentials' => ['key' => 'test-access-key', 'secret' => 'test-secret'], 'handler' => $handler,
+        'vaulter_s3_profile' => 'r2', 'vaulter_direct_multipart' => true,
+    ]));
+
+    $port = app(MultipartUploadPort::class);
+    expect($port->enabled('direct-s3'))->toBeTrue();
+    $id = $port->initiate('direct-s3', $key);
+    $url = $port->presignPart('direct-s3', $key, $id, 1, 5, new DateTimeImmutable('+5 minutes'));
+    expect($url)->toContain($key)->toContain('partNumber=1')->toContain('uploadId=server-upload-id')
+        ->toContain('X-Amz-Signature=')->not->toContain('checksum');
+    $identity = $port->complete('direct-s3', $key, $id, 5, 5_242_880);
+    expect($identity)->toBe(['version' => 'object-version', 'etag' => '"object-etag"']);
+    $port->discard('direct-s3', $key, null, $identity);
+
+    expect(array_column($commands, 0))->toBe(['CreateMultipartUpload', 'ListParts', 'CompleteMultipartUpload', 'DeleteObject'])
+        ->and($commands[2][1]->getHeaderLine('If-None-Match'))->toBe('*')
+        ->and($commands[3][1]->getUri()->getQuery())->toBe('versionId=object-version');
+});
 
 it('gates the S3 parts controller through the profile driver', function (bool $allow): void {
     $session = initiateS3(totalBytes: 5, name: 'profile-parts.bin');

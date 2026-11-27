@@ -16,7 +16,7 @@ use Packman\Attributes\Api;
 #[Api]
 final readonly class BlobScope
 {
-    private function __construct(private string $kind, private string $id) {}
+    private function __construct(private string $kind, private string $id, private ?string $uploadTenantId = null) {}
 
     public static function tenant(string $id): self
     {
@@ -44,12 +44,14 @@ final readonly class BlobScope
      */
     public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
     {
-        return match ($dedupScope) {
+        $scope = match ($dedupScope) {
             'tenant' => $tenantId === null ? self::storage($storageId) : self::tenant($tenantId),
             'drive' => self::storage($storageId),
             'off' => self::unshared(),
             default => throw new InvalidArgumentException('Unknown CAS dedup scope "'.$dedupScope.'"; use tenant, drive or off.'),
         };
+
+        return new self($scope->kind, $scope->id, $tenantId);
     }
 
     public function key(): string
@@ -101,6 +103,12 @@ final readonly class BlobScope
     public function tenantId(): ?string
     {
         return $this->kind === 'tenant' ? $this->id : null;
+    }
+
+    /** @internal */
+    public function encryptionTenantId(): ?string
+    {
+        return $this->uploadTenantId ?? $this->tenantId();
     }
 
     public function storageId(): ?string

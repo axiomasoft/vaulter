@@ -554,6 +554,14 @@
                     "hidden": 0
                 },
                 {
+                    "name": "wrapped_dek",
+                    "type": "TEXT",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "first_seen_at",
                     "type": "datetime",
                     "notnull": 1,
@@ -708,7 +716,7 @@
                 }
             },
             "foreign_keys": [],
-            "create_sql": "CREATE TABLE \"custom_blobs\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" integer, \"storage_id\" integer, \"hash_algo\" varchar not null default 'sha256', \"sha256\" varchar not null, \"size_bytes\" integer not null, \"disk\" varchar not null default 'default', \"storage_key\" varchar not null collate 'BINARY', \"status\" varchar not null default 'pending', \"ref_count\" integer not null default '0', \"dedup_scope\" varchar not null default 'tenant', \"quarantined_at\" datetime, \"integrity_checked_at\" datetime, \"integrity_failed_at\" datetime, \"storage_version\" varchar, \"etag\" varchar, \"md5\" varchar, \"crc32c\" varchar, \"chunked\" tinyint(1) not null default '0', \"encryption_key_id\" integer, \"first_seen_at\" datetime not null default CURRENT_TIMESTAMP, \"committed_at\" datetime, \"delete_after_at\" datetime, \"scope_key\" varchar not null collate 'BINARY')"
+            "create_sql": "CREATE TABLE \"custom_blobs\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" integer, \"storage_id\" integer, \"hash_algo\" varchar not null default 'sha256', \"sha256\" varchar not null, \"size_bytes\" integer not null, \"disk\" varchar not null default 'default', \"storage_key\" varchar not null collate 'BINARY', \"status\" varchar not null default 'pending', \"ref_count\" integer not null default '0', \"dedup_scope\" varchar not null default 'tenant', \"quarantined_at\" datetime, \"integrity_checked_at\" datetime, \"integrity_failed_at\" datetime, \"storage_version\" varchar, \"etag\" varchar, \"md5\" varchar, \"crc32c\" varchar, \"chunked\" tinyint(1) not null default '0', \"encryption_key_id\" integer, \"wrapped_dek\" text, \"first_seen_at\" datetime not null default CURRENT_TIMESTAMP, \"committed_at\" datetime, \"delete_after_at\" datetime, \"scope_key\" varchar not null collate 'BINARY')"
         },
         "custom_document_payloads": {
             "columns": [

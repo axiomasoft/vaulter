@@ -887,6 +887,14 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Observability\\OtlpOpenTelemetryTraceRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel: Наблюдаемость — production OTLP HTTP/protobuf trace recorder (O-06)"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Observability\\TracingAttributes",
             "owner": "core",
             "action": "keep",
@@ -1658,6 +1666,14 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#persistence + D40 (P4.5): v_idempotency_keys is owned by core"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + O-06: PostgreSQL autovacuum tuning for v_outbox and v_outbox_deliveries owned by core"
         },
         {
             "match": "fqcn",

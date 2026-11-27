@@ -104,8 +104,8 @@ it('validates WaitForLsn LSN format and timeout bounds and handles simulated PG 
 
     $waiter = new WaitForLsn(new DatabaseOptions(connection: 'pgsql'), $dbManager);
 
-    expect(fn () => $waiter->wait($standby19Success, 'invalid-lsn'))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => $waiter->wait($standby19Success, '0/16B6C50', 0))->toThrow(InvalidArgumentException::class)
+    expect(fn (): bool => $waiter->wait($standby19Success, 'invalid-lsn'))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): bool => $waiter->wait($standby19Success, '0/16B6C50', 0))->toThrow(InvalidArgumentException::class)
         ->and($waiter->supportsWaitForLsn($primary))->toBeFalse()
         ->and($waiter->supportsWaitForLsn($standby19Success))->toBeTrue();
 

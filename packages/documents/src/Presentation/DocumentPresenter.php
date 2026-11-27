@@ -13,6 +13,7 @@ use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationProtocolContractException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Documents\DocumentSyncState;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
@@ -47,7 +48,8 @@ final readonly class DocumentPresenter implements KindPresenter
         $writable = $this->decoder->schemaWritable($type, $schemaVersion);
         $collaborative = false;
         if ($writable && $type instanceof SupportsCollaboration && $protocol !== null && $format !== null
-            && $protocol === $type->collaborationProtocol() && $format === $type->collaborationStateFormat()
+            && $protocol === $type->collaborationProtocol()
+            && CollaborationStateBinding::acceptsFormat($protocol, $type->collaborationStateFormat(), $format)
             && in_array($protocol, $this->kernel->extensions()->handlerKeys(CollaborationProtocolDriver::class), true)) {
             $driver = $this->kernel->extensions()->handler(CollaborationProtocolDriver::class, $protocol);
             if ($driver->protocol() !== $protocol) {

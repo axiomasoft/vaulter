@@ -7,7 +7,7 @@ namespace Vaulter\Documents\State;
 use InvalidArgumentException;
 use Packman\Attributes\Api;
 
-/** Immutable identity of one persisted generation. */
+/** The identity used to fence writes to a persisted generation. */
 #[Api]
 final readonly class CollaborationStateBinding
 {
@@ -26,5 +26,12 @@ final readonly class CollaborationStateBinding
     {
         return $this->protocol === $other->protocol && $this->stateFormat === $other->stateFormat
             && $this->schemaVersion === $other->schemaVersion && $this->generation === $other->generation;
+    }
+
+    /** A Yjs checkpoint may move from V1 to V2 without changing the generation's journal protocol. */
+    public static function acceptsFormat(string $protocol, string $expected, ?string $actual): bool
+    {
+        return $expected === $actual
+            || ($protocol === 'yjs' && $expected === 'yjs-update-v1' && $actual === 'yjs-update-v2');
     }
 }

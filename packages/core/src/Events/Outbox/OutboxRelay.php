@@ -14,12 +14,14 @@ use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Configuration\OutboxOptions;
 use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\Outbox\Exceptions\LeaseLostException;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Kernel;
 use Vaulter\Modules\SlotContribution;
+use Vaulter\Observability\OtlpOpenTelemetryTraceRecorder;
 
 /**
  * The relay of the outbox, run by `vaulter:relay`. One pass:
@@ -178,26 +180,86 @@ final readonly class OutboxRelay
         $model = $this->vaulterConfig->outboxModel();
         $events = $model::whereIn('event_id', array_column($claims, 'event_id'))->get()->keyBy('event_id');
 
+        $otlpTracer = $this->resolveOtlpTracer();
         $finished = 0;
-        foreach ($claims as $claim) {
-            $event = $events->get($claim['event_id']);
-            if (!$event instanceof OutboxEvent) {
-                // Retention never deletes an event with an open row; a host that deleted it by hand loses it here.
-                $finished += (int) $this->finish($id, $claim, ConsumeResult::dead('the outbox event is gone'));
 
-                continue;
+        if ($otlpTracer === null) {
+            foreach ($claims as $claim) {
+                $finished += $this->consumeClaim(
+                    $id,
+                    $claim,
+                    $events->get($claim['event_id']),
+                    static fn (OutboxEvent $event, DeliveryControl $control): ConsumeResult => $consumer->consume($event->toEnvelope(), $control),
+                );
             }
-            $control = new DeliveryControl($this->database, $this->tables, $claim['event_id'], $id, $claim['generation'], $claim['continuation']);
-            try {
-                $result = $consumer->consume($event->toEnvelope(), $control);
-            } catch (Throwable $exception) {
-                report($exception);
-                $result = ConsumeResult::retry($exception::class.': '.$exception->getMessage());
-            }
-            $finished += (int) $this->finish($id, $claim, $result);
+
+            return $finished;
+        }
+
+        foreach ($claims as $claim) {
+            $finished += $this->consumeClaim(
+                $id,
+                $claim,
+                $events->get($claim['event_id']),
+                static function (OutboxEvent $event, DeliveryControl $control) use ($consumer, $id, $otlpTracer): ConsumeResult {
+                    $traceparent = $event->traceparent();
+                    if ($traceparent === null) {
+                        return $consumer->consume($event->toEnvelope(), $control);
+                    }
+
+                    return $otlpTracer->linkedSpan(
+                        name: 'vaulter.outbox.deliver',
+                        operation: static fn (): ConsumeResult => $consumer->consume($event->toEnvelope(), $control),
+                        attributes: [
+                            'vaulter.outbox.consumer' => $id,
+                            'vaulter.outbox.event_type' => $event->type,
+                            'vaulter.outbox.event_id' => $event->event_id,
+                        ],
+                        links: [$traceparent],
+                    );
+                },
+            );
         }
 
         return $finished;
+    }
+
+    private function resolveOtlpTracer(): ?OtlpOpenTelemetryTraceRecorder
+    {
+        if (!$this->vaulterConfig->observability->tracing->enabled) {
+            return null;
+        }
+
+        $resolved = $this->resolveTracer();
+
+        return $resolved instanceof OtlpOpenTelemetryTraceRecorder ? $resolved : null;
+    }
+
+    private function resolveTracer(): TraceRecorder
+    {
+        return $this->container->make(TraceRecorder::class);
+    }
+
+    /**
+     * @param array{event_id: string, generation: int, attempts: int, continuation: string|null} $claim
+     * @param callable(OutboxEvent, DeliveryControl): ConsumeResult                              $consume
+     */
+    private function consumeClaim(string $id, array $claim, mixed $event, callable $consume): int
+    {
+        if (!$event instanceof OutboxEvent) {
+            // Retention never deletes an event with an open row; a host that deleted it by hand loses it here.
+            return (int) $this->finish($id, $claim, ConsumeResult::dead('the outbox event is gone'));
+        }
+
+        $control = new DeliveryControl($this->database, $this->tables, $claim['event_id'], $id, $claim['generation'], $claim['continuation']);
+        try {
+            $result = $consume($event, $control);
+        } catch (Throwable $exception) {
+            report($exception);
+            $result = ConsumeResult::retry($exception::class.': '.$exception->getMessage());
+        }
+
+        return (int) $this->finish($id, $claim, $result);
     }
 
     /**

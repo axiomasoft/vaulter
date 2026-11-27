@@ -46,9 +46,10 @@ TestGroups::bind($core, static function (string $path) use ($leafZones): string 
 });
 TestGroups::bind(dirname(__DIR__).'/load/tests', 'load');
 
-// Drive + Uploads suites moved to the vaulter-drive package (ADR-0015);
-// they run under that package's own Pest suite. The shared DriveTestHelpers stays in
-// core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
+// Pest loads only the selected test directory's bootstrap. Root runs that name
+// media or drive test paths also need the packages' Testbench and group bindings.
+require_once dirname(__DIR__).'/packages/media/tests/Pest.php';
+require_once dirname(__DIR__).'/packages/drive/tests/Pest.php';
 uses(OpenApiTestCase::class)->in(dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiDocumentTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiExamplesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiProblemsTableTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiRouteCoverageTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidationEnabledTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/OpenApiValidatorSelfTest.php', dirname(__DIR__).'/tests/Integration/OpenApi/RouteListSnapshotTest.php');
 
 uses(TestCase::class)->in(dirname(__DIR__).'/packages/core/tests/Http/PreconditionsTest.php', dirname(__DIR__).'/packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php', dirname(__DIR__).'/packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php');

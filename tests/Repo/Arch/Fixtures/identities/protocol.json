@@ -4431,6 +4431,16 @@
             "via": "ShouldQueue"
         },
         {
+            "class": "Vaulter\\Drive\\Jobs\\Uploads\\ScanJob",
+            "id": "serialized:queue:Vaulter\\Drive\\Jobs\\Uploads\\ScanJob",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Jobs/Uploads/ScanJob.php",
+                "symbol": "Vaulter\\Drive\\Jobs\\Uploads\\ScanJob"
+            },
+            "via": "ShouldQueue"
+        },
+        {
             "class": "Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
             "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
             "owner": "webhooks",

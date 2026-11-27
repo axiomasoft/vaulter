@@ -100,7 +100,7 @@ promotion, the bytes form an orphan collected by `vaulter:blobs:reconcile --orph
 | Protocol      | Value           | Works on | How |
 | ------------- | --------------- | -------- | --- |
 | **tus**       | `tus`           | protocol; completion on a **local** staging disk only | tus.io CORE — Creation + `HEAD`(`Upload-Offset`) + `PATCH`(`application/offset+octet-stream`). Each chunk is appended to a staged temp; `received_bytes` is the authoritative offset. |
-| **S3 multipart** | `s3-multipart` | protocol; completion on a **local** staging disk only | Numbered parts recorded in `v_upload_parts` (re-upload of a part replaces it), stitched on complete. |
+| **S3 multipart** | `s3-multipart` | Local proxy or opt-in direct S3/R2 | The proxy records and stitches numbered parts. Direct multipart presigns each part and scans the completed object in quarantine. |
 | **Direct**    | `direct`        | any disk | A one-shot non-resumable `POST` — the small-file fast path. |
 
 The default is **tus** (the disk-agnostic resumable path). The transport is chosen at session
@@ -191,8 +191,8 @@ expectation in the session is planned after 1.0).
 The tus handler implements the three CORE operations directly (no heavy tus framework —
 self-contained over Flysystem + the session table). Appending chunks works on any Flysystem disk, but **completion** is supported on a local staging disk only.
 
-::: warning Completion is local-disk only
-`tus` and `s3-multipart` are **protocol** names, not storage capabilities. Completing a resumable session needs a bounded staged read, which Flysystem gives only the local adapter: when the staging disk is remote (S3, object stores) or a custom adapter, `complete` is refused with `upload_conflict` (409) before any storage I/O, nothing is published and the session stays assembled. Single-shot `direct` upload and the content-addressed store on S3 are unaffected. Before upgrading, stage resumable uploads on a local disk and see the completion budget in [compatibility](/reference/compatibility).
+::: warning Use a local staging disk for tus and proxied multipart
+These protocols require bounded reads through the local Flysystem adapter. They return `409 upload_conflict` on remote or custom staging disks. The direct S3 multipart mode below uses the S3 client to bound its transport calls. See [compatibility](/reference/compatibility).
 :::
 
 1. **Create** — `POST /drives/{drive}/uploads`. The manager mints the session +
@@ -271,8 +271,8 @@ True tus clients can send an `Upload-Metadata` header (a comma-separated list of
 
 ## S3-multipart flow
 
-When the session's disk is an object store, the bytes upload as **numbered parts**. The
-handler records each part (`part_no` / `byte_offset` / `size` / `etag`) in `v_upload_parts` —
+In proxy mode, the handler records each numbered part
+(`part_no` / `byte_offset` / `size` / `etag`) in `v_upload_parts` —
 a re-upload of a part **replaces** its row (the S3 semantics, encoded in the
 `(session, part_no)` composite primary key) — and on `complete` stitches the parts (ascending
 by `part_no`) into the assembled staged temp.
@@ -291,14 +291,31 @@ curl -X POST https://app.test/api/vaulter/v1/uploads/<upload_id>/complete \
   -H 'Authorization: Bearer <user-token>'
 ```
 
-::: info ETag is never the address
-The per-part `etag` we store is the object-store handle only (for debug / the real
-complete-multipart call) — it is **never** the content address. On `complete` the **stitched
-bytes**, not the multipart ETag, are what `ContentStore.stage` hashes (H.3). The default
-handler proxies parts through the `StorageDriver`, so the record/part flow runs against a faked/local
-disk in tests; completion on a remote S3 disk is refused (see the warning above); a host wanting true presigned-PUT parts swaps
-the handler — the record/complete contract is unchanged.
-:::
+The CAS content address comes from hashing the assembled bytes with SHA-256. Part ETags identify the parts.
+
+### Direct S3 multipart
+
+Set `vaulter_direct_multipart` to `true` on the drive's Laravel S3 disk in
+`config/filesystems.php`. Use `vaulter_s3_profile => 'r2'` on Cloudflare R2 to omit
+multipart checksum headers. The default profile is `s3`. Keep the quarantine prefix private,
+allow browser PUTs through the bucket's CORS policy if needed, and configure bucket lifecycle
+rules to abort abandoned multipart uploads and expire orphaned quarantine objects after the
+session TTL.
+
+Configure the scanner identity in `vaulter-drive.scan` and run a worker on the queue in
+`vaulter-drive.uploads.scan.queue`. The package's
+`Vaulter\Media\Content\ClamAvContentScanner` uses an external clamd 1.5.5 or newer.
+It defaults to `unix:///run/clamav/clamd.ctl`. To use another socket, bind the class in
+the host container with the desired Unix or TCP endpoint.
+
+1. Create an `s3-multipart` session with a positive `total_size_bytes`. Use the returned
+   `chunk_size` to divide the object into consecutively numbered parts.
+2. POST to the existing parts endpoint with `?part_no=1` and an empty body. PUT the bytes
+   directly to the returned `url`, using the returned `size`. Repeat for each part.
+3. POST to the existing complete endpoint. A `202 pending_scan` response means S3
+   has completed the object under `quarantine/{tenant_id}/{upload_uuid}`. Retry after
+   `Retry-After`. A clean scan allows that request to hash and conditionally create the
+   CAS object. A rejected scan returns `422`.
 
 ## Assemble → CAS commit & dedup
 

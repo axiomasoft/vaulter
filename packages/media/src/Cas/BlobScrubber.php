@@ -13,7 +13,9 @@ use Throwable;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Configuration\MediaOptions;
+use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Encryption\InvalidEncryptedSegment;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
@@ -46,6 +48,7 @@ final readonly class BlobScrubber
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private MediaOptions $mediaConfig,
+        private ContentStore $content,
     ) {}
 
     /**
@@ -157,7 +160,13 @@ final readonly class BlobScrubber
      */
     private function verify(Blob $blob, int &$bytes): ?string
     {
-        $stream = $this->driver->get($blob->storage_key, $blob->disk);
+        try {
+            $stream = ($blob->encryption_key_id !== null || $blob->storage_version !== null) && $this->content instanceof Sha256ContentStore
+                ? $this->content->readBlob($blob)
+                : $this->driver->get($blob->storage_key, $blob->disk);
+        } catch (InvalidEncryptedSegment) {
+            return 'digest';
+        }
 
         if ($stream === null) {
             if ($this->driver->exists($blob->storage_key, $blob->disk)) {
@@ -186,6 +195,8 @@ final readonly class BlobScrubber
                     break;
                 }
             }
+        } catch (InvalidEncryptedSegment) {
+            return 'digest';
         } finally {
             fclose($stream);
         }

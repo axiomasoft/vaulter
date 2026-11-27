@@ -22,6 +22,7 @@ use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\SignedContentUrl;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
+use Vaulter\Media\Encryption\KeyManagementPort;
 
 /**
  * The one HTTP egress point: fresh authorization and scan check per request, the exact
@@ -72,6 +73,39 @@ it('streams in strict mode with RFC 6266, nosniff, sandbox, no ranges and no sto
         ->and($response->headers->get('Content-Disposition'))->toStartWith('attachment; filename=')
         ->toContain("filename*=utf-8''%D0%BE%D1%82%D1%87%D1%91%D1%82%202026.html")
         ->and(streamedBody($response))->toBe('<script>alert(1)</script>');
+});
+
+it('serves exactly the requested authenticated bytes from an encrypted file', function (): void {
+    app()->instance(KeyManagementPort::class, new class implements KeyManagementPort
+    {
+        public function wrap(#[SensitiveParameter] string $dek): array
+        {
+            $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+
+            return ['key_id' => 1, 'wrapped_dek' => $nonce.sodium_crypto_secretbox($dek, $nonce, str_repeat('k', 32))];
+        }
+
+        public function unwrap(int|string $keyId, string $wrappedDek): string
+        {
+            $dek = sodium_crypto_secretbox_open(substr($wrappedDek, 24), substr($wrappedDek, 0, 24), str_repeat('k', 32));
+
+            return $dek === false ? throw new RuntimeException('Invalid test envelope.') : $dek;
+        }
+    });
+    $bytes = str_repeat('a', 4_194_304).str_repeat('b', 4_194_304).str_repeat('c', 3_000_000);
+    $file = V1::file($this->drive, 'encrypted.txt', $bytes);
+    $response = app(ContentResponder::class)->file(Request::create('/', server: ['HTTP_RANGE' => 'bytes=8388605-8388610']), $this->drive->actingAs($this->user), $file->id, null);
+    expect($response->getStatusCode())->toBe(206)
+        ->and($response->headers->get('Accept-Ranges'))->toBe('bytes')
+        ->and($response->headers->get('Content-Length'))->toBe('6')
+        ->and($response->headers->get('Content-Range'))->toBe('bytes 8388605-8388610/'.strlen($bytes))
+        ->and(streamedBody($response))->toBe('bbbccc');
+
+    $this->actingAs($this->user)->get('/api/vaulter/v1/files/'.$file->id.'/download', ['Range' => 'bytes=999999999-'])
+        ->assertStatus(416)
+        ->assertHeader('Content-Range', 'bytes */'.strlen($bytes))
+        ->assertHeader('Content-Type', 'application/problem+json')
+        ->assertJsonPath('code', 'http_416');
 });
 
 it('strips CR/LF, control characters and path separators from the disposition', function (): void {

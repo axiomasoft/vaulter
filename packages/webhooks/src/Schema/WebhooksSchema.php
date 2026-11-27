@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
 use Packman\Attributes\Internal;
+use RuntimeException;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
@@ -221,7 +222,7 @@ final class WebhooksSchema implements ModuleSchema
             ->whereNull('endpoint.id')
             ->value('delivery.id');
         if (is_string($orphan) || is_int($orphan)) {
-            throw new \RuntimeException("Delivery {$orphan} references a missing endpoint. Repair it and retry the migration.");
+            throw new RuntimeException("Delivery {$orphan} references a missing endpoint. Repair it and retry the migration.");
         }
 
         if (!$this->helpers->hasForeignKey($table, $foreign)) {

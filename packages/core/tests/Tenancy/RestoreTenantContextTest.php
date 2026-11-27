@@ -20,7 +20,7 @@ afterEach(function (): void {
 it('parses tenancy.rls option and rejects non-boolean values', function (): void {
     expect(TenancyOptions::fromArray([])->rls)->toBeFalse()
         ->and(TenancyOptions::fromArray(['enabled' => true, 'rls' => true])->rls)->toBeTrue()
-        ->and(fn () => TenancyOptions::fromArray(['rls' => 'yes']))->toThrow(InvalidConfiguration::class);
+        ->and(fn (): TenancyOptions => TenancyOptions::fromArray(['rls' => 'yes']))->toThrow(InvalidConfiguration::class);
 });
 
 it('prevents vaulter.tenant_id Context leak across consecutive Octane HTTP requests', function (): void {
@@ -36,9 +36,7 @@ it('prevents vaulter.tenant_id Context leak across consecutive Octane HTTP reque
     };
     $this->app->instance(TenantResolver::class, $resolver);
 
-    Route::middleware('vaulter.tenant')->get('/_test/octane-tenant', function (Request $request) {
-        return response()->json(['context' => RestoreTenantContext::current()]);
-    });
+    Route::middleware('vaulter.tenant')->get('/_test/octane-tenant', fn (Request $request) => response()->json(['context' => RestoreTenantContext::current()]));
 
     $resolver->tenant = 'tenant-alpha';
     $this->getJson('/_test/octane-tenant')
@@ -92,5 +90,5 @@ it('propagates and cleans up vaulter.tenant_id across sequential queued jobs wit
     {
         public string $tenantId = 'tenant-b';
     };
-    expect(fn () => $middleware->handle($mismatchJob, fn () => null))->toThrow(InvalidArgumentException::class);
+    expect(fn () => $middleware->handle($mismatchJob, fn (): null => null))->toThrow(InvalidArgumentException::class);
 });

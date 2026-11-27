@@ -26,5 +26,5 @@ it('counts non-ASCII text and slashes as their UTF-8 bytes, not as JSON escapes'
 });
 
 it('refuses to size content that is not valid UTF-8 instead of calling it empty', function (): void {
-    expect(fn () => ContentHasher::size(['text' => "\xB1\x31"]))->toThrow(JsonException::class);
+    expect(fn (): int => ContentHasher::size(['text' => "\xB1\x31"]))->toThrow(JsonException::class);
 });

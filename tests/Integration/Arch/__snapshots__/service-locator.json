@@ -37,7 +37,6 @@
     "drive/src/Content/ScanBackfillReconciler.php": 2,
     "drive/src/Content/ScanPolicyResolver.php": 2,
     "drive/src/Content/ScanWorkReconciler.php": 2,
-    "drive/src/Content/UploadCleanupReconciler.php": 1,
     "drive/src/DriveProvisioner.php": 7,
     "drive/src/Http/Controllers/Uploads/TusProtocolController.php": 1,
     "drive/src/Http/Resources/Drive/NodeResource.php": 1,

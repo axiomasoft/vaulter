@@ -48,11 +48,10 @@ final readonly class ProblemRenderer
     private const array FORBIDDEN_META_KEYS = ['path', 'storage_key', 'tenant_id', 'token', 'sql', 'trace', 'file', 'line', 'password', 'secret'];
 
     /**
-     * Headers a framework exception may hand on to the client: the retry and method
-     * hints, and the tus protocol headers a refused tus request still has to carry
-     * (the supported version on a 412, for instance).
+     * Protocol headers a framework exception may hand on to the client. A range
+     * refusal reports the plaintext length in Content-Range.
      */
-    private const array PASSTHROUGH_HEADERS = ['Retry-After', 'Allow', 'Tus-Resumable', 'Tus-Version'];
+    private const array PASSTHROUGH_HEADERS = ['Retry-After', 'Allow', 'Tus-Resumable', 'Tus-Version', 'Accept-Ranges', 'Content-Range'];
 
     public function __construct(
         private ProblemCatalog $catalog,

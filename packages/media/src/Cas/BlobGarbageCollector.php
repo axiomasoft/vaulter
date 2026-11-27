@@ -150,7 +150,7 @@ final readonly class BlobGarbageCollector
                             // idempotent tombstone. A missing object is fine — markDeleted is
                             // idempotent.
                             $this->blobs->markDeleting($blob);
-                            $this->content->delete($blob->storage_key, $blob->disk);
+                            $this->deleteObject($blob);
                             $this->blobs->markDeleted($blob);
 
                             return true;
@@ -218,7 +218,7 @@ final readonly class BlobGarbageCollector
                     }
 
                     $this->blobs->markDeleting($blob);
-                    $this->content->delete($blob->storage_key, $blob->disk);
+                    $this->deleteObject($blob);
                     $this->blobs->markDeleted($blob);
 
                     return true;
@@ -308,6 +308,16 @@ final readonly class BlobGarbageCollector
      * The scope discriminator for a blob's advisory lock — the same segment baked
      * into its storage_key, so GC and commit lock the same liveness unit.
      */
+    private function deleteObject(Blob $blob): void
+    {
+        if ($this->content instanceof Sha256ContentStore) {
+            $this->content->deleteBlob($blob);
+
+            return;
+        }
+        $this->content->delete($blob->storage_key, $blob->disk);
+    }
+
     private function scopeFor(Blob $blob): string
     {
         return $blob->scope_key;

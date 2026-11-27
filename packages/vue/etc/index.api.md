@@ -135,6 +135,8 @@ export interface components {
         ContentDisposition: string;
         ContentSecurityPolicy: "sandbox; default-src 'none'";
         XContentTypeOptions: "nosniff";
+        AcceptRanges: "none" | "bytes";
+        ContentRange: string;
         AcceptRangesNone: "none";
         ContentLength: number;
         XExportLossy: string;
@@ -148,6 +150,7 @@ export interface components {
     };
     // (undocumented)
     parameters: {
+        EncryptedRange: string;
         IfMatch: string;
         IdempotencyKey: string;
         DestinationIfMatch: string;
@@ -281,6 +284,19 @@ export interface components {
                 "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                 "X-Request-Id": components["headers"]["XRequestId"];
                 "Cache-Control": components["headers"]["CacheControlError"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        Problem416: {
+            headers: {
+                "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                "X-Request-Id": components["headers"]["XRequestId"];
+                "Cache-Control": components["headers"]["CacheControlError"];
+                "Accept-Ranges": components["headers"]["AcceptRanges"];
+                "Content-Range": components["headers"]["ContentRange"];
                 [name: string]: unknown;
             };
             content: {
@@ -632,6 +648,11 @@ export interface components {
             part_no: number;
             size: number;
             etag: string;
+        };
+        PresignedUploadPart: {
+            part_no: number;
+            size: number;
+            url: string;
         };
         WebhookEndpoint: {
             id: string;
@@ -1930,7 +1951,9 @@ export interface operations {
     "files.download": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                Range?: components["parameters"]["EncryptedRange"];
+            };
             path: {
                 node: components["parameters"]["Node"];
             };
@@ -1946,8 +1969,26 @@ export interface operations {
                     "Content-Disposition": components["headers"]["ContentDisposition"];
                     "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
                     "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
-                    "Accept-Ranges": components["headers"]["AcceptRangesNone"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
                     "Content-Length": components["headers"]["ContentLength"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "*/*": string;
+                };
+            };
+            206: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Content-Disposition": components["headers"]["ContentDisposition"];
+                    "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
+                    "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
+                    "Content-Length": components["headers"]["ContentLength"];
+                    "Content-Range": components["headers"]["ContentRange"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -1971,6 +2012,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            416: components["responses"]["Problem416"];
             422: components["responses"]["Problem422"];
             423: components["responses"]["Problem423"];
             500: components["responses"]["Problem500"];
@@ -2014,7 +2056,9 @@ export interface operations {
     "files.revisions.download": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                Range?: components["parameters"]["EncryptedRange"];
+            };
             path: {
                 node: components["parameters"]["Node"];
                 revision: components["parameters"]["Revision"];
@@ -2031,8 +2075,26 @@ export interface operations {
                     "Content-Disposition": components["headers"]["ContentDisposition"];
                     "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
                     "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
-                    "Accept-Ranges": components["headers"]["AcceptRangesNone"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
                     "Content-Length": components["headers"]["ContentLength"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "*/*": string;
+                };
+            };
+            206: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Content-Disposition": components["headers"]["ContentDisposition"];
+                    "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
+                    "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
+                    "Content-Length": components["headers"]["ContentLength"];
+                    "Content-Range": components["headers"]["ContentRange"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2056,6 +2118,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            416: components["responses"]["Problem416"];
             422: components["responses"]["Problem422"];
             423: components["responses"]["Problem423"];
             500: components["responses"]["Problem500"];
@@ -2977,6 +3040,7 @@ export interface operations {
             header?: {
                 "X-Share-Session"?: components["parameters"]["ShareSession"];
                 "X-Share-Password"?: components["parameters"]["SharePassword"];
+                Range?: components["parameters"]["EncryptedRange"];
             };
             path: {
                 token: components["parameters"]["ShareToken"];
@@ -2997,8 +3061,30 @@ export interface operations {
                     "Content-Disposition": components["headers"]["ContentDisposition"];
                     "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
                     "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
-                    "Accept-Ranges": components["headers"]["AcceptRangesNone"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
                     "Content-Length": components["headers"]["ContentLength"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "*/*": string;
+                };
+            };
+            206: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Referrer-Policy": components["headers"]["ReferrerPolicyRequired"];
+                    "X-Share-Session": components["headers"]["XShareSession"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "Content-Disposition": components["headers"]["ContentDisposition"];
+                    "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
+                    "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
+                    "Content-Length": components["headers"]["ContentLength"];
+                    "Content-Range": components["headers"]["ContentRange"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3009,6 +3095,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            416: components["responses"]["Problem416"];
             423: components["responses"]["Problem423"];
             429: components["responses"]["Problem429"];
             500: components["responses"]["Problem500"];
@@ -3464,6 +3551,20 @@ export interface operations {
                     "application/json": components["schemas"]["NodeEnvelope"];
                 };
             };
+            202: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status: "pending_scan";
+                    };
+                };
+            };
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
@@ -3485,7 +3586,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/octet-stream": string;
             };
@@ -3501,7 +3602,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UploadPart"];
+                    "application/json": components["schemas"]["UploadPart"] | components["schemas"]["PresignedUploadPart"];
                 };
             };
             401: components["responses"]["Problem401"];

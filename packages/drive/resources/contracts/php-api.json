@@ -6375,6 +6375,15 @@
                             "optional": false,
                             "default": null,
                             "flags": 1
+                        },
+                        {
+                            "name": "supportsRanges",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 1
                         }
                     ],
                     "return": null,

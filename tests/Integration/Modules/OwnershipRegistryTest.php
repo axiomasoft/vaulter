@@ -280,8 +280,8 @@ it('numbers the migrations in the block of the owner and in the order of the for
     $numbers = [];
     $upgrades = [];
     foreach (glob($root.'/packages/*/database/migrations/*.php') ?: [] as $file) {
-        if (preg_match('/^0001_01_01_(\d{6})_add_[a-z_]+_to_(v_[a-z_]+)_table\.php$/', basename($file), $m) === 1) {
-            // An upgrade migration that changes an existing table (an index, a key) is numbered like its table.
+        if (preg_match('/^0001_01_01_(\d{6})_(?:add|tune)_[a-z_]+_to_(v_[a-z_]+)_table\.php$/', basename($file), $m) === 1) {
+            // Index, key, and tuning upgrades belong in the block of the existing table.
             $upgrades[basename($file)] = [$m[2], (int) $m[1]];
 
             continue;
@@ -312,7 +312,10 @@ it('numbers the migrations in the block of the owner and in the order of the for
         expect($number >= $from && $number <= $to)->toBeTrue($file.' is outside '.$owners[$table].' '.$from.'-'.$to)
             ->and($number)->toBeGreaterThan($numbers[$table], $file.' runs before the table it changes');
     }
-    expect(array_keys($upgrades))->toContain('0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php');
+    expect(array_keys($upgrades))->toContain(
+        '0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php',
+        '0001_01_01_000403_add_endpoint_feed_index_to_v_webhook_deliveries_table.php',
+    );
 
     // The table a foreign key points at is created before the table that holds it (the head FKs are added later).
     $fks = json_decode((string) file_get_contents($root.'/tests/Repo/Arch/Fixtures/fk-map.json'), true, flags: JSON_THROW_ON_ERROR)['fks'];

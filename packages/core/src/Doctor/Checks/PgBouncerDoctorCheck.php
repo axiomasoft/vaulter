@@ -61,9 +61,7 @@ final readonly class PgBouncerDoctorCheck implements DoctorCheck
         $pgbouncer = is_array($connConfig['pgbouncer'] ?? null) ? $connConfig['pgbouncer'] : [];
         $pgbouncerEnabled = ($pgbouncer['enabled'] ?? false) === true || $pgbouncer !== [];
 
-        $configuredEmulate = array_key_exists(PDO::ATTR_EMULATE_PREPARES, $options)
-            ? $options[PDO::ATTR_EMULATE_PREPARES]
-            : null;
+        $configuredEmulate = $options[PDO::ATTR_EMULATE_PREPARES] ?? null;
         $runtimeEmulate = $this->runtimeEmulatePrepares();
 
         if ($configuredEmulate === true || $runtimeEmulate === true) {

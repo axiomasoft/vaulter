@@ -40,6 +40,6 @@ final readonly class DownloadPublicShareController
             throw ShareNotFoundException::opaque();
         }
 
-        return $this->content->share($context, $node, $this->nodes->head($context, $node));
+        return $this->content->share($context, $node, $this->nodes->head($context, $node), $request);
     }
 }

@@ -37,6 +37,7 @@ use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
+use Vaulter\Observability\OtlpOpenTelemetryTraceRecorder;
 use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationClaim;
@@ -47,6 +48,8 @@ use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Security\ProductionInvariants;
 use Vaulter\Support\EnumCaseAttributeResolver;
 use Vaulter\Tenancy\TenancyBypass;
+use WeakMap;
+use WeakReference;
 
 /**
  * The container wiring of the core module ({@see CoreModule}): config, database, ids, tenancy and
@@ -55,6 +58,9 @@ use Vaulter\Tenancy\TenancyBypass;
 #[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
+    /** @var ?WeakMap<Application, WeakReference<OtlpOpenTelemetryTraceRecorder>> */
+    private static ?WeakMap $activeTraceRecorders = null;
+
     public function register(Application $app): void
     {
         $app->bind(VaulterOptions::class, static fn (Container $app): VaulterOptions => CompiledOptionsCache::resolve(
@@ -155,6 +161,31 @@ final class BindingsRegistrar implements ModuleBindings
             },
         );
 
+        if (!$app->bound(OtlpOpenTelemetryTraceRecorder::class)) {
+            $app->terminating(static function () use ($app): void {
+                $recorder = self::$activeTraceRecorders?->offsetExists($app) === true
+                    ? self::$activeTraceRecorders[$app]->get()
+                    : null;
+
+                if ($recorder instanceof OtlpOpenTelemetryTraceRecorder) {
+                    if (function_exists('fastcgi_finish_request')) {
+                        @fastcgi_finish_request();
+                    }
+                    $recorder->flush();
+                }
+            });
+        }
+
+        $app->scoped(
+            OtlpOpenTelemetryTraceRecorder::class,
+            static function (Application $app): OtlpOpenTelemetryTraceRecorder {
+                $recorder = OtlpOpenTelemetryTraceRecorder::fromEnvironment();
+                self::trackTraceRecorder($app, $recorder);
+
+                return $recorder;
+            },
+        );
+
         $app->scoped(
             TraceRecorder::class,
             static function (Application $app): TraceRecorder {
@@ -166,6 +197,9 @@ final class BindingsRegistrar implements ModuleBindings
                 }
 
                 $class = $settings->tracing->recorder;
+                if ($class === 'otlp') {
+                    $class = OtlpOpenTelemetryTraceRecorder::class;
+                }
 
                 if (!is_string($class) || $class === '' || !class_exists($class)) {
                     self::logInvalidTraceRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);
@@ -187,12 +221,24 @@ final class BindingsRegistrar implements ModuleBindings
                     return new NullTraceRecorder;
                 }
 
+                self::trackTraceRecorder($app, $recorder);
+
                 return $recorder;
             },
         );
     }
 
     public function boot(Application $app): void {}
+
+    private static function trackTraceRecorder(Application $app, mixed $recorder): void
+    {
+        if (!$recorder instanceof OtlpOpenTelemetryTraceRecorder) {
+            return;
+        }
+
+        self::$activeTraceRecorders ??= new WeakMap;
+        self::$activeTraceRecorders[$app] = WeakReference::create($recorder);
+    }
 
     private static function logInvalidObservabilityRecorder(string $reason, ?string $class): void
     {

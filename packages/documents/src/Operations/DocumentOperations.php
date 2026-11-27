@@ -32,6 +32,7 @@ use Vaulter\Documents\Contracts\CollaborationProtocolDriver;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\LockedDocumentMutation;
 use Vaulter\Documents\Contracts\ManagedDocumentCodec;
+use Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision;
 use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
@@ -149,7 +150,7 @@ final readonly class DocumentOperations implements DriveExtension
         if ($decision->grant->mode === CollaborationMode::Write) {
             $this->assertSessionSeesCommittedState();
             if ($aggregate->write_mode === DocumentWriteMode::Snapshot) {
-                $decision = $this->write('change_write_mode', fn () => $this->changeWriteMode->execute(
+                $decision = $this->write('change_write_mode', fn (): CollaborationAccessDecision => $this->changeWriteMode->execute(
                     $this->context, $node, $aggregate->collab_epoch, $aggregate->state_version, $clientSchemaVersion,
                 ));
             }

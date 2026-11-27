@@ -69,7 +69,7 @@ final readonly class BlockIdentity
     {
         $seen = [];
         $changed = false;
-        $makeId = $generator ?? static fn (): string => self::generate();
+        $makeId = $generator ?? self::generate(...);
 
         $normalized = self::walkAssign($doc, $seen, $changed, $makeId, forceRegenerate: false);
 
@@ -87,7 +87,7 @@ final readonly class BlockIdentity
     {
         $seen = [];
         $changed = false;
-        $makeId = $generator ?? static fn (): string => self::generate();
+        $makeId = $generator ?? self::generate(...);
 
         return self::walkAssign($doc, $seen, $changed, $makeId, forceRegenerate: true);
     }

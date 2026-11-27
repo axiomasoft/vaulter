@@ -905,7 +905,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** s3-multipart: upload one part */
+        /** s3-multipart: upload one part or request its presigned URL */
         post: operations["uploads.parts.store"];
         delete?: never;
         options?: never;
@@ -1559,6 +1559,12 @@ export interface components {
             size: number;
             etag: string;
         };
+        PresignedUploadPart: {
+            part_no: number;
+            size: number;
+            /** Format: uri */
+            url: string;
+        };
         WebhookEndpoint: {
             id: string;
             url: string;
@@ -1850,6 +1856,20 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description The byte range falls outside the encrypted file. */
+        Problem416: {
+            headers: {
+                "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                "X-Request-Id": components["headers"]["XRequestId"];
+                "Cache-Control": components["headers"]["CacheControlError"];
+                "Accept-Ranges": components["headers"]["AcceptRanges"];
+                "Content-Range": components["headers"]["ContentRange"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
         /** @description Validation failed (validation_failed and field-bound codes). */
         Problem422: {
             headers: {
@@ -1926,6 +1946,8 @@ export interface components {
         };
     };
     parameters: {
+        /** @description A single bytes range on an encrypted download. */
+        EncryptedRange: string;
         /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak tag: 412 weak_etag_not_allowed. Stale tag: 412. X-Vaulter-If-Match is the fallback when If-Match is absent. Checked after authorization. */
         IfMatch: string;
         /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. An expired key answers 410 idempotency_key_expired for seven more days. Malformed: 422 validation_failed. */
@@ -2017,7 +2039,11 @@ export interface components {
         ContentSecurityPolicy: "sandbox; default-src 'none'";
         /** @description Always nosniff. */
         XContentTypeOptions: "nosniff";
-        /** @description Range requests are not supported in 1.0. */
+        /** @description Encrypted downloads support single byte ranges. */
+        AcceptRanges: "none" | "bytes";
+        /** @description Selected byte range and total plaintext size. */
+        ContentRange: string;
+        /** @description Byte ranges are unavailable for this response. */
         AcceptRangesNone: "none";
         /** @description Size of the body in bytes. */
         ContentLength: number;
@@ -3083,6 +3109,8 @@ export interface operations {
                 "X-Share-Session"?: components["parameters"]["ShareSession"];
                 /** @description Password of a protected share. It is never read from the query string. */
                 "X-Share-Password"?: components["parameters"]["SharePassword"];
+                /** @description A single bytes range on an encrypted download. */
+                Range?: components["parameters"]["EncryptedRange"];
             };
             path: {
                 /** @description Share token. */
@@ -3105,8 +3133,31 @@ export interface operations {
                     "Content-Disposition": components["headers"]["ContentDisposition"];
                     "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
                     "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
-                    "Accept-Ranges": components["headers"]["AcceptRangesNone"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
                     "Content-Length": components["headers"]["ContentLength"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "*/*": string;
+                };
+            };
+            /** @description An authenticated byte range of an encrypted file. */
+            206: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Referrer-Policy": components["headers"]["ReferrerPolicyRequired"];
+                    "X-Share-Session": components["headers"]["XShareSession"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "Content-Disposition": components["headers"]["ContentDisposition"];
+                    "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
+                    "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
+                    "Content-Length": components["headers"]["ContentLength"];
+                    "Content-Range": components["headers"]["ContentRange"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3117,6 +3168,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            416: components["responses"]["Problem416"];
             423: components["responses"]["Problem423"];
             429: components["responses"]["Problem429"];
             500: components["responses"]["Problem500"];
@@ -4127,7 +4179,10 @@ export interface operations {
     "files.download": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description A single bytes range on an encrypted download. */
+                Range?: components["parameters"]["EncryptedRange"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -4145,8 +4200,27 @@ export interface operations {
                     "Content-Disposition": components["headers"]["ContentDisposition"];
                     "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
                     "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
-                    "Accept-Ranges": components["headers"]["AcceptRangesNone"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
                     "Content-Length": components["headers"]["ContentLength"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "*/*": string;
+                };
+            };
+            /** @description An authenticated byte range of an encrypted file. */
+            206: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Content-Disposition": components["headers"]["ContentDisposition"];
+                    "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
+                    "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
+                    "Content-Length": components["headers"]["ContentLength"];
+                    "Content-Range": components["headers"]["ContentRange"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -4171,6 +4245,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            416: components["responses"]["Problem416"];
             422: components["responses"]["Problem422"];
             423: components["responses"]["Problem423"];
             500: components["responses"]["Problem500"];
@@ -4259,7 +4334,10 @@ export interface operations {
     "files.revisions.download": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description A single bytes range on an encrypted download. */
+                Range?: components["parameters"]["EncryptedRange"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -4279,8 +4357,27 @@ export interface operations {
                     "Content-Disposition": components["headers"]["ContentDisposition"];
                     "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
                     "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
-                    "Accept-Ranges": components["headers"]["AcceptRangesNone"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
                     "Content-Length": components["headers"]["ContentLength"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "*/*": string;
+                };
+            };
+            /** @description An authenticated byte range of an encrypted file. */
+            206: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Content-Disposition": components["headers"]["ContentDisposition"];
+                    "Content-Security-Policy": components["headers"]["ContentSecurityPolicy"];
+                    "X-Content-Type-Options": components["headers"]["XContentTypeOptions"];
+                    "Accept-Ranges": components["headers"]["AcceptRanges"];
+                    "Content-Length": components["headers"]["ContentLength"];
+                    "Content-Range": components["headers"]["ContentRange"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -4305,6 +4402,7 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            416: components["responses"]["Problem416"];
             422: components["responses"]["Problem422"];
             423: components["responses"]["Problem423"];
             500: components["responses"]["Problem500"];
@@ -4708,7 +4806,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/octet-stream": string;
             };
@@ -4725,7 +4823,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UploadPart"];
+                    "application/json": components["schemas"]["UploadPart"] | components["schemas"]["PresignedUploadPart"];
                 };
             };
             401: components["responses"]["Problem401"];
@@ -4764,6 +4862,22 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NodeEnvelope"];
+                };
+            };
+            /** @description Direct multipart completed in quarantine. Repeat completion after Retry-After. */
+            202: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        status: "pending_scan";
+                    };
                 };
             };
             401: components["responses"]["Problem401"];

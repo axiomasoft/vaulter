@@ -67,7 +67,10 @@ it('a deep folder copy clones the whole subtree', function (): void {
 it('copies every descendant when its id is a suffix of an ancestor id', function (): void {
     $drive = DriveTestHelpers::drive();
     $parentId = $drive->model()->root_node_id;
-    foreach ([[2100, 'Source'], [50, 'Middle'], [100, 'Suffix'], [60, 'Leaf']] as [$id, $name]) {
+    // Leave room for the copy's generated IDs on PostgreSQL, where explicit inserts do not advance the sequence.
+    $suffixId = (int) $parentId + 100;
+    $sourceId = (int) ('2'.$suffixId);
+    foreach ([[$sourceId, 'Source'], [$suffixId + 1, 'Middle'], [$suffixId, 'Suffix'], [$suffixId + 2, 'Leaf']] as [$id, $name]) {
         $node = new Node;
         $node->forceFill([
             'id' => $id,
@@ -79,7 +82,7 @@ it('copies every descendant when its id is a suffix of an ancestor id', function
         $parentId = $id;
     }
 
-    $copy = $drive->nodes()->copy(2100, options: new CopyOptions(name: 'Copied'));
+    $copy = $drive->nodes()->copy($sourceId, options: new CopyOptions(name: 'Copied'));
 
     $middle = DriveTestHelpers::model($copy)->children()->where('name', 'Middle')->sole();
     $suffix = $middle->children()->where('name', 'Suffix')->sole();

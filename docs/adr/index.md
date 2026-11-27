@@ -47,3 +47,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0038 — Supply chain and artifact verification](/adr/0038-supply-chain-and-artifact-verification) — accepted.
 
 - [ADR-0039: Native Packman extensions](0039-native-packman-extensions.md)
+- [ADR-0040 — AzGuard optional bridge retention and release exclusion](/adr/0040-azguard-optional-bridge) — accepted.

@@ -22,6 +22,7 @@ use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
+use Vaulter\Drive\Uploads\DirectMultipartUpload;
 use Vaulter\Drive\Uploads\UploadsOf;
 
 /**
@@ -64,13 +65,20 @@ final class S3MultipartProtocolController
     public function parts(Request $request, string $upload): JsonResponse
     {
         [$drive, $session] = $this->session($request, $upload);
+        $uploads = UploadsOf::handle($drive);
+        if (DirectMultipartUpload::active($session)) {
+            $part = $request->query('part_no', $request->header('X-Part-Number', '1'));
+            $direct = $uploads->presignMultipartPart($session, is_numeric($part) && ctype_digit($part) ? (int) $part : 0);
+
+            return new JsonResponse($direct, 201, ['Cache-Control' => 'private, no-store']);
+        }
         $this->assertContentLengthWithinLimit($request);
 
         $partNo = $request->has('part_no')
             ? $request->integer('part_no')
             : (int) $request->header('X-Part-Number', '1');
 
-        $result = UploadsOf::handle($drive)->putPart(
+        $result = $uploads->putPart(
             session: $session,
             partNo: $partNo,
             byteOffset: $request->integer('byte_offset'),
@@ -88,7 +96,11 @@ final class S3MultipartProtocolController
     public function complete(Request $request, string $upload): JsonResponse
     {
         [$drive, $session] = $this->session($request, $upload);
-        $node = UploadsOf::handle($drive)->complete(UploadSessionSnapshot::fromModel($session));
+        $uploads = UploadsOf::handle($drive);
+        if ($uploads->prepareDirectMultipart($session)) {
+            return new JsonResponse(['status' => 'pending_scan'], 202, ['Retry-After' => '2', 'Cache-Control' => 'private, no-store']);
+        }
+        $node = $uploads->complete(UploadSessionSnapshot::fromModel($session));
 
         return $this->nodes->respond($drive, $node, 201);
     }

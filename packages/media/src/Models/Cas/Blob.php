@@ -47,6 +47,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property string|null          $crc32c
  * @property bool                 $chunked
  * @property int|string|null      $encryption_key_id
+ * @property string|null          $wrapped_dek
  * @property Carbon|null          $first_seen_at
  * @property Carbon|null          $committed_at
  * @property Carbon|null          $delete_after_at

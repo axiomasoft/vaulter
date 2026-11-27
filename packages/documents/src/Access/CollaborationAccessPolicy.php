@@ -21,6 +21,7 @@ use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Queries\DocumentQuery;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\OperationGuard;
@@ -89,7 +90,8 @@ final readonly class CollaborationAccessPolicy
         }
         $binding = $aggregate->collaborationBinding();
         if (!$type instanceof SupportsCollaboration || $binding === null
-            || $type->collaborationProtocol() !== $binding->protocol || $type->collaborationStateFormat() !== $binding->stateFormat) {
+            || $type->collaborationProtocol() !== $binding->protocol
+            || !CollaborationStateBinding::acceptsFormat($binding->protocol, $type->collaborationStateFormat(), $binding->stateFormat)) {
             throw new CollaborationUnavailableException('unsupported_binding', $aggregate->type);
         }
         $extensions = $this->kernel->extensions();

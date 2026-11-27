@@ -470,7 +470,8 @@ Vaulter\Drive\Data\FileStream api since 1.0 final readonly class
   public string $sha256
   public int $size
   public mixed $stream
-  public function __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot $revision)
+  public bool $supportsRanges
+  public function __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot $revision, bool $supportsRanges = false)
 
 Vaulter\Drive\Data\Files\UploadFacts api since 1.0 final readonly class
   public ?string $declaredMimeType

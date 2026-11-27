@@ -83,7 +83,7 @@ it('does not replay a committed transaction when its callback reports a conflict
     $run = static function () use ($database, &$attempts): void {
         $database->transaction(static function () use ($database, &$attempts): void {
             $attempts++;
-            $database->afterCommit(static fn () => throw new ConcurrentUpdateException);
+            $database->afterCommit(static fn (): never => throw new ConcurrentUpdateException);
         });
     };
 

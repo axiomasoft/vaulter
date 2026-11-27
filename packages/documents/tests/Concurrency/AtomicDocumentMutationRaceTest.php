@@ -10,6 +10,7 @@ use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\AtomicDocumentMutation;
 use Vaulter\Documents\Contracts\LockedDocumentMutation;
+use Vaulter\Documents\Data\Documents\DocumentMutationState;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
@@ -36,7 +37,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    if (isset($this->barrier)) {
+    if (property_exists($this, 'barrier') && $this->barrier !== null) {
         array_map(unlink(...), glob($this->barrier.'/*') ?: []);
         rmdir($this->barrier);
         app(VaulterDatabase::class)->connection()->getSchemaBuilder()->dropIfExists('atomic_race_receipts');
@@ -121,23 +122,21 @@ it('commits exactly one replacement and receipt for a shared key when the first 
     $context = DocumentTestHelpers::context($node, 1);
     $barrier = $this->barrier;
     $abort = new RuntimeException('Roll back the first writer');
-    $command = static function (string $writer, ?Closure $beforeReturn = null) use ($node, $context): string {
-        return app(AtomicDocumentMutation::class)->run($context, $node->id, static function (LockedDocumentMutation $locked) use ($writer, $beforeReturn): string {
-            $connection = $locked->connection();
-            $receipt = $connection->table('atomic_race_receipts')->where('command_key', 'same-key')->value('receipt');
-            if (is_string($receipt)) {
-                return $receipt;
-            }
+    $command = (static fn (string $writer, ?Closure $beforeReturn = null): string => app(AtomicDocumentMutation::class)->run($context, $node->id, static function (LockedDocumentMutation $locked) use ($writer, $beforeReturn): string {
+        $connection = $locked->connection();
+        $receipt = $connection->table('atomic_race_receipts')->where('command_key', 'same-key')->value('receipt');
+        if (is_string($receipt)) {
+            return $receipt;
+        }
 
-            $locked->replace(DocumentTestHelpers::content($writer), $locked->snapshot()->position);
-            $connection->table('atomic_race_receipts')->insert(['command_key' => 'same-key', 'receipt' => $writer]);
-            if ($beforeReturn !== null) {
-                $beforeReturn($connection);
-            }
+        $locked->replace(DocumentTestHelpers::content($writer), $locked->snapshot()->position);
+        $connection->table('atomic_race_receipts')->insert(['command_key' => 'same-key', 'receipt' => $writer]);
+        if ($beforeReturn !== null) {
+            $beforeReturn($connection);
+        }
 
-            return $writer;
-        });
-    };
+        return $writer;
+    }));
 
     $results = RaceFixtures::race([
         static function () use ($command, $outcome, $barrier, $abort): array {
@@ -188,7 +187,7 @@ it('preserves an ordinary save to a neighboring paragraph between prepare and co
     $node = GrantedDocuments::document(content: TipTapContent::fromArray($prepare));
     $context = DocumentTestHelpers::context($node, 1);
     $port = app(AtomicDocumentMutation::class);
-    $prepared = $port->run($context, $node->id, static fn (LockedDocumentMutation $locked) => $locked->snapshot());
+    $prepared = $port->run($context, $node->id, static fn (LockedDocumentMutation $locked): DocumentMutationState => $locked->snapshot());
 
     $human = $prepare;
     $human['content'][1] = $paragraph('human edit');
@@ -198,7 +197,7 @@ it('preserves an ordinary save to a neighboring paragraph between prepare and co
         )),
     ]);
 
-    $saved = $port->run($context, $node->id, static function (LockedDocumentMutation $locked) use ($paragraph, $prepared) {
+    $saved = $port->run($context, $node->id, static function (LockedDocumentMutation $locked) use ($paragraph, $prepared): DocumentMutationState {
         $current = $locked->snapshot();
         $content = $current->content->toArray();
         expect($current->position)->toBe($prepared->position + 1)

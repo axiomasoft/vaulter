@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Validate resolved runtime dependencies and newly added PHP suppressions."""
+"""Validate repository IP, resolved runtime dependencies and newly added PHP suppressions."""
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
+import tarfile
 
 
 PERMISSIVE = re.compile(r'MIT|Apache-2\.0|ISC|0BSD|BSD-[234]-Clause(?:-Clear)?')
@@ -19,13 +21,79 @@ PRIVATE_COLLABORATION = {
     '@vaulter/collaboration-hub', 'yjs', 'y-protocols', 'y-prosemirror', '@tiptap/y-tiptap',
 }
 MINIMUMS = {'@tiptap/core': (3, 34, 0), 'vue': (3, 5, 42)}
+TIPTAP_REGISTRY = 'registry.' 'tiptap.dev'
+IP_MARKERS = (
+    (b'plan/' b'tiptap-pro', 'retired Tiptap Pro path'),
+    (b'tiptap_' b'team_id', 'Tiptap team identifier'),
+    (b'.collab.' b'tiptap.cloud', 'Tiptap collaboration host'),
+    (TIPTAP_REGISTRY.encode(), 'commercial Tiptap registry'),
+)
+COMMERCIAL_TARBALL = re.compile(rb'(?<![a-z0-9])(?:tiptap-pro|univerjs-pro|univer-cli)[^\s"\'<>]*\.tgz\b')
+HISTORY_SCRUB_RUNBOOK = 'docs/security/git-history-scrub-runbook.md'
+HISTORY_SCRUB_COMMAND = re.compile(
+    rb'^git filter-repo --invert-paths --path plan/' rb'tiptap-pro --path plan --path audits\r?$', re.MULTILINE,
+)
+
+
+def ip_markers(content):
+    lowered = content.lower()
+    for marker, problem in IP_MARKERS:
+        offset = lowered.find(marker)
+        if offset >= 0:
+            yield offset, problem
+    match = COMMERCIAL_TARBALL.search(lowered)
+    if match:
+        yield match.start(), 'commercial package tarball'
+
+
+def is_commercial_tarball(file):
+    try:
+        with tarfile.open(file, 'r:gz') as archive:
+            for member in archive:
+                if member.name.removeprefix('./') not in ('package/package.json', 'package.json') or not member.isfile():
+                    continue
+                with archive.extractfile(member) as manifest:
+                    package = json.load(manifest)
+                if isinstance(package, dict) and str(package.get('name', '')).lower().startswith(FORBIDDEN_PREFIXES):
+                    return True
+    except (tarfile.TarError, OSError, EOFError, ValueError):
+        return False
+    return False
+
+
+def repository_ip_problems(root):
+    paths = subprocess.check_output(
+        ['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root,
+    ).split(b'\0')
+    for raw_path in dict.fromkeys(filter(None, paths)):
+        path_problems = list(ip_markers(raw_path))
+        if path_problems:
+            # The path itself may contain a private identifier.
+            for _, problem in path_problems:
+                yield f'repository path: {problem}'
+            continue
+        path = os.fsdecode(raw_path)
+        file = root / path
+        if file.is_symlink():
+            content = os.fsencode(os.readlink(file))
+        elif file.is_file():
+            content = file.read_bytes()
+            if file.suffix.lower() == '.tgz' and is_commercial_tarball(file):
+                yield f'{path}: commercial package tarball'
+        else:
+            continue
+        if path == HISTORY_SCRUB_RUNBOOK:
+            content = HISTORY_SCRUB_COMMAND.sub(b'', content)
+        for offset, problem in ip_markers(content):
+            line_number = content.count(b'\n', 0, offset) + 1
+            yield f'{path}:{line_number}: {problem}'
 
 
 def dependency_problems(package, name, licenses):
     version = package.get('version', '')
     source = str(package.get('resolved', ''))
     if (name in FORBIDDEN or name.startswith(FORBIDDEN_PREFIXES)
-            or 'registry.tiptap.dev' in source or (name, version) == ('xlsx', '0.18.5')):
+            or TIPTAP_REGISTRY in source or (name, version) == ('xlsx', '0.18.5')):
         yield f'{name}@{version}: dependency forbidden'
     # Composer license lists offer a choice. Only an approved license may be chosen.
     if not any(
@@ -125,6 +193,7 @@ def main():
     diff = subprocess.check_output(['git', 'diff', '--unified=0', base, '--', 'packages', 'tests', 'load'], text=True)
     adr_exists = lambda number: any(Path('docs/adr').glob(f'{number}-*.md'))
     findings = list(added_suppressions(diff, adr_exists))
+    findings.extend(repository_ip_problems(Path('.')))
     files = [Path('composer.lock'), Path('package-lock.json')]
     for file in files:
         findings.extend(f'{file}: {problem}' for problem in scan_lock(file))

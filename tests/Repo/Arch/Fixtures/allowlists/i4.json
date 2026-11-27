@@ -166,6 +166,28 @@
             "view": "current"
         },
         {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/core/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "reason": "Detect the FastCGI response flush function at Laravel termination so the response can be sent before exporting traces.",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Providers\\BindingsRegistrar::register",
+            "target": "'fastcgi_finish_request'",
+            "view": "current"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/core/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "reason": "Consult the existing core recorder binding to register the Laravel termination callback only once per application.",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Providers\\BindingsRegistrar::register",
+            "target": "\\Vaulter\\Observability\\OtlpOpenTelemetryTraceRecorder::class",
+            "view": "current"
+        },
+        {
             "count": 1,
             "file": "packages/core/src/Providers/CoreKernelRegistrar.php",
             "kind": "probe",
@@ -685,6 +707,17 @@
         },
         {
             "count": 1,
+            "file": "packages/media/src/Cas/Sha256ContentStore.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Media\\Cas\\Sha256ContentStore::promoteBlob",
+            "target": "'sodium'",
+            "view": "current",
+            "category": "explicit-adapter",
+            "reason": "Refuse encrypted writes when the host lacks PHP Sodium. Plaintext storage remains available without a configured key provider.",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
             "file": "packages/media/src/Configuration/MediaOptions.php",
             "kind": "probe",
             "symbol": "Vaulter\\Media\\Configuration\\MediaOptions::parseModels",
@@ -703,6 +736,17 @@
             "view": "current",
             "category": "config-validation",
             "reason": "Validate the explicitly configured class-string against its contract before constructing immutable Options or reading native plugin metadata (ADR-0039).",
+            "removed_in": "never"
+        },
+        {
+            "count": 1,
+            "file": "packages/media/src/Providers/BindingsRegistrar.php",
+            "kind": "probe",
+            "symbol": "Vaulter\\Media\\Providers\\BindingsRegistrar::keyProvider",
+            "target": "\\Vaulter\\Media\\Encryption\\KeyManagementPort::class",
+            "view": "current",
+            "category": "host-lifecycle",
+            "reason": "Resolve an optional host-registered KMS provider when CAS needs it, including registrations made after the store was resolved.",
             "removed_in": "never"
         },
         {

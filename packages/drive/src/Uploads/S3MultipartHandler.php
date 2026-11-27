@@ -20,6 +20,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\AssembleSizeBucket;
+use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Support\LoadTier;
 
@@ -55,6 +56,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         private VaulterDatabase $database,
         private DriveOptions $driveConfig,
         private UploadSessionReadRepository $reads,
+        private DirectMultipartUpload $direct,
     ) {}
 
     /** The current session behind a snapshot: its status, totals and parts are the ones decided on. */
@@ -78,8 +80,11 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      */
     public function initialise(UploadSessionSnapshot $session): array
     {
+        $current = $this->current($session);
+        $this->direct->initialise($current);
+
         return [
-            'chunk_size' => $this->current($session)->chunk_size,
+            'chunk_size' => $current->chunk_size,
         ];
     }
 
@@ -108,6 +113,9 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      */
     public function putPart(UploadSession $session, int $partNo, int $byteOffset, mixed $chunk): array
     {
+        if (DirectMultipartUpload::active($session)) {
+            throw ValidationException::withMessages(['parts' => 'Request a presigned URL without a part body.']);
+        }
         try {
             return $this->metrics->timing(
                 name: 'vaulter_upload_chunk_duration_seconds',
@@ -212,6 +220,13 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      */
     public function complete(UploadSession $session): int
     {
+        if (DirectMultipartUpload::active($session)) {
+            if ($this->direct->cleanDigest($session) === null) {
+                throw UploadConflictException::forClosedSession($session->upload_id);
+            }
+
+            return $session->received_bytes;
+        }
         $parts = $this->parts->forSession($session);
 
         if ($parts->isEmpty()) {
@@ -307,6 +322,9 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
     public function isComplete(UploadSessionSnapshot $snapshot): bool
     {
         $session = $this->current($snapshot);
+        if (DirectMultipartUpload::active($session)) {
+            return $this->direct->cleanDigest($session) !== null;
+        }
         $total = $session->total_size_bytes;
 
         if ($total === null) {
@@ -325,6 +343,11 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
     public function abort(UploadSessionSnapshot $snapshot): void
     {
         $session = $this->current($snapshot);
+        if (DirectMultipartUpload::active($session)) {
+            FlysystemStorageDriver::withinS3Budget(static fn (): float => 5.0, fn () => $this->direct->discard($session));
+
+            return;
+        }
         foreach ($this->parts->forSession($session) as $part) {
             $this->driver->delete($this->partKey($session, $part->part_no), $this->staged->diskName($session));
         }

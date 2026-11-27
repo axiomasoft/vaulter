@@ -671,6 +671,124 @@
                 }
             }
         },
+        "Vaulter\\Media\\Content\\ClamAvContentScanner": {
+            "kind": "class",
+            "surface": "Api",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": true,
+                "readonly": true
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [
+                "Vaulter\\Media\\Contracts\\Cas\\ContentScanner"
+            ],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Api"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:__construct": {
+                    "kind": "method",
+                    "name": "__construct",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "endpoint",
+                            "type": "string",
+                            "default": "'unix:///run/clamav/clamd.ctl'",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        },
+                        {
+                            "name": "timeoutSeconds",
+                            "type": "int",
+                            "default": "60",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
+                        }
+                    ],
+                    "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:key": {
+                    "kind": "method",
+                    "name": "key",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:scan": {
+                    "kind": "method",
+                    "name": "scan",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "input",
+                            "type": "Vaulter\\Media\\Content\\ScanInput",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "Vaulter\\Media\\Content\\ScanResult",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:version": {
+                    "kind": "method",
+                    "name": "version",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                }
+            }
+        },
         "Vaulter\\Media\\Content\\ImmutableContentIdentity": {
             "kind": "class",
             "surface": "Api",
@@ -3062,6 +3180,94 @@
                 }
             }
         },
+        "Vaulter\\Media\\Encryption\\KeyManagementPort": {
+            "kind": "interface",
+            "surface": "Spi:Implement",
+            "since": "1.0",
+            "modifiers": {
+                "abstract": false,
+                "final": false,
+                "readonly": false
+            },
+            "backing": null,
+            "extends": [],
+            "implements": [],
+            "traits": [],
+            "adaptations": [],
+            "attributes": [
+                "Packman\\Attributes\\Spi(\\Packman\\Attributes\\SpiKind::Implement)"
+            ],
+            "deprecated": false,
+            "doc_internal": false,
+            "doc": [],
+            "members": {
+                "method:unwrap": {
+                    "kind": "method",
+                    "name": "unwrap",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "keyId",
+                            "type": "int|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "wrappedDek",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:wrap": {
+                    "kind": "method",
+                    "name": "wrap",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": true,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "dek",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": [
+                                "SensitiveParameter"
+                            ]
+                        }
+                    ],
+                    "return": "array",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": [
+                        "@return array{key_id:int|string, wrapped_dek:string}"
+                    ]
+                }
+            }
+        },
         "Vaulter\\Media\\Enums\\Cas\\BlobStatus": {
             "kind": "enum",
             "surface": "Api",
@@ -4375,6 +4581,22 @@
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
+                    "doc": []
+                },
+                "method:encryptiontenantid": {
+                    "kind": "method",
+                    "name": "encryptionTenantId",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": false,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [],
+                    "return": "null|string",
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": true,
                     "doc": []
                 },
                 "method:forupload": {

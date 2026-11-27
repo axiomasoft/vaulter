@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Configuration\DatabaseOptions;
@@ -187,7 +189,7 @@ it('refuses a key after active expiry, compacts its receipt, then releases the d
 
         return ['value' => $writes];
     };
-    $run = fn () => icRun($runner, $context, $attempt, $probe->write(['input' => 'same']));
+    $run = fn (): mixed => icRun($runner, $context, $attempt, $probe->write(['input' => 'same']));
     $run();
 
     $db->connection()->table($store->table())->update(['expires_at' => now()->subHour()]);
@@ -216,7 +218,7 @@ it('fingerprints multipart fields and actual file bytes independently of field o
             'HTTP_IDEMPOTENCY_KEY' => 'multipart',
             'CONTENT_TYPE' => 'multipart/form-data; boundary='.$boundary,
         ]);
-        $middleware->handle($request, static fn () => response('', 204));
+        $middleware->handle($request, static fn (): ResponseFactory|Response => response('', 204));
 
         return (string) $middleware::requestFingerprint($request);
     };
@@ -379,7 +381,7 @@ it('returns operation_in_progress when a completed receipt stays locked on Postg
     $context = icContext(icUser('users', '7'), 'locked-receipt');
     $digest = IdempotencyDigest::scope(IdempotencyDigest::tuple($context, 'core.probe.write', 'locked-receipt'));
     $write = $probe->write(['name' => 'a']);
-    $replay = fn () => icRun($runner, $context, static fn () => throw new RuntimeException('Replay ran the write.'), $write);
+    $replay = fn (): mixed => icRun($runner, $context, static fn (): never => throw new RuntimeException('Replay ran the write.'), $write);
 
     // Seed a committed receipt that both sessions can see, outside RefreshDatabase's transaction.
     $connection->rollBack();

@@ -3271,13 +3271,13 @@
                     "collation": "utf8mb4_unicode_ci",
                     "default": null,
                     "nullable": true,
-                    "type": "varchar(255)"
+                    "type": "varchar(1024)"
                 },
                 "pgsql": {
                     "collation": "default",
                     "default": null,
                     "nullable": true,
-                    "type": "character varying(255)"
+                    "type": "character varying(1024)"
                 },
                 "sqlite": {
                     "default": null,
@@ -3369,6 +3369,35 @@
                     }
                 }
             }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "text"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "text"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "TEXT"
+                }
+            },
+            "id": "column:v_blobs.wrapped_dek",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+                "symbol": "v_blobs"
+            },
+            "table": "v_blobs"
         },
         {
             "engines": {
@@ -33751,6 +33780,17 @@
             ]
         },
         {
+            "id": "migration:0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_outbox"
+            ]
+        },
+        {
             "id": "migration:0001_01_01_000101_create_v_blobs_table.php",
             "owner": "media",
             "source": {
@@ -33770,6 +33810,17 @@
             },
             "tables": [
                 "v_blob_references"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000103_add_wrapped_dek_to_v_blobs_table.php",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000103_add_wrapped_dek_to_v_blobs_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_blobs"
             ]
         },
         {
@@ -34347,6 +34398,7 @@
                 "crc32c",
                 "chunked",
                 "encryption_key_id",
+                "wrapped_dek",
                 "first_seen_at",
                 "committed_at",
                 "delete_after_at",
@@ -34362,7 +34414,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34372,7 +34425,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34382,7 +34436,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34392,7 +34447,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34402,7 +34458,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34412,7 +34469,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34422,7 +34480,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34432,7 +34491,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34442,7 +34502,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34452,7 +34513,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34462,7 +34524,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34472,7 +34535,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34482,7 +34546,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34492,7 +34557,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34502,7 +34568,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34512,7 +34579,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34522,7 +34590,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34532,7 +34601,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34542,7 +34612,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34552,7 +34623,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34562,7 +34634,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34572,7 +34645,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34582,7 +34656,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34592,7 +34667,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34602,7 +34678,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34612,7 +34689,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34622,7 +34700,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34632,7 +34711,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34642,7 +34722,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34652,7 +34733,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34662,7 +34744,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34672,7 +34755,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34682,7 +34766,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34692,7 +34777,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34702,7 +34788,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34712,7 +34799,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34722,7 +34810,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34732,7 +34821,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34742,7 +34832,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34752,7 +34843,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34762,7 +34854,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34772,7 +34865,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34782,7 +34876,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34792,7 +34887,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34802,7 +34898,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34812,7 +34909,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34822,7 +34920,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34832,7 +34931,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34846,7 +34946,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34856,7 +34957,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34866,7 +34968,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34876,7 +34979,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34886,7 +34990,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34896,7 +35001,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34906,7 +35012,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34916,7 +35023,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34926,7 +35034,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34936,7 +35045,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34946,7 +35056,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34956,7 +35067,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34966,7 +35078,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34976,7 +35089,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34986,7 +35100,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -34996,7 +35111,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35006,7 +35122,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35016,7 +35133,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35026,7 +35144,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35036,7 +35155,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35046,7 +35166,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35056,7 +35177,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35066,7 +35188,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35076,7 +35199,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35086,7 +35210,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35096,7 +35221,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35106,7 +35232,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35116,7 +35243,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35126,7 +35254,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35136,7 +35265,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35146,7 +35276,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35156,7 +35287,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35166,7 +35298,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35176,7 +35309,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35186,7 +35320,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35196,7 +35331,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35206,7 +35342,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35216,7 +35353,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35226,7 +35364,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35236,7 +35375,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35246,7 +35386,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35256,7 +35397,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35266,7 +35408,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35276,7 +35419,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35286,7 +35430,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35296,7 +35441,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35306,7 +35452,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35316,7 +35463,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35330,7 +35478,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35340,7 +35489,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35350,7 +35500,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35360,7 +35511,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35370,7 +35522,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35380,7 +35533,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35390,7 +35544,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35400,7 +35555,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35410,7 +35566,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35420,7 +35577,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35430,7 +35588,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35440,7 +35599,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35450,7 +35610,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35460,7 +35621,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35470,7 +35632,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35480,7 +35643,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35490,7 +35654,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35500,7 +35665,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35510,7 +35676,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35520,7 +35687,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35530,7 +35698,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35540,7 +35709,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35550,7 +35720,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35560,7 +35731,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35570,7 +35742,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35580,7 +35753,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35590,7 +35764,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35600,7 +35775,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35610,7 +35786,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35620,7 +35797,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35630,7 +35808,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35640,7 +35819,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35650,7 +35830,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35660,7 +35841,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35670,7 +35852,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35680,7 +35863,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35690,7 +35874,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35700,7 +35885,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35710,7 +35896,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35720,7 +35907,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35730,7 +35918,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35740,7 +35929,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35750,7 +35940,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35760,7 +35951,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35770,7 +35962,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35780,7 +35973,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35790,7 +35984,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"
@@ -35800,7 +35995,8 @@
                             "added": [
                                 "storage_id",
                                 "integrity_checked_at",
-                                "integrity_failed_at"
+                                "integrity_failed_at",
+                                "wrapped_dek"
                             ],
                             "removed": [
                                 "drive_id"

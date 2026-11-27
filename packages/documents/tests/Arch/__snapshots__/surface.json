@@ -14158,6 +14158,15 @@
                             "by_ref": false,
                             "promoted": true,
                             "attributes": []
+                        },
+                        {
+                            "name": "stateFormat",
+                            "type": "null|string",
+                            "default": "null",
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": true,
+                            "attributes": []
                         }
                     ],
                     "return": null,
@@ -14165,7 +14174,8 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": [
-                        "@param array<string, mixed> $content"
+                        "@param array<string, mixed> $content",
+                        "@param string|null $stateFormat"
                     ]
                 },
                 "property:actor": {
@@ -14300,6 +14310,25 @@
                     "deprecated": false,
                     "doc_internal": false,
                     "doc": []
+                },
+                "property:stateFormat": {
+                    "kind": "property",
+                    "name": "stateFormat",
+                    "visibility": "public",
+                    "set_visibility": null,
+                    "internal": false,
+                    "promoted": true,
+                    "static": false,
+                    "readonly": false,
+                    "abstract": false,
+                    "final": false,
+                    "type": "null|string",
+                    "default": null,
+                    "hooks": [],
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
                 }
             }
         },
@@ -14372,6 +14401,50 @@
                         }
                     ],
                     "return": null,
+                    "attributes": [],
+                    "deprecated": false,
+                    "doc_internal": false,
+                    "doc": []
+                },
+                "method:acceptsformat": {
+                    "kind": "method",
+                    "name": "acceptsFormat",
+                    "visibility": "public",
+                    "internal": false,
+                    "static": true,
+                    "abstract": false,
+                    "final": false,
+                    "by_ref": false,
+                    "params": [
+                        {
+                            "name": "protocol",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "expected",
+                            "type": "string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        },
+                        {
+                            "name": "actual",
+                            "type": "null|string",
+                            "default": null,
+                            "variadic": false,
+                            "by_ref": false,
+                            "promoted": false,
+                            "attributes": []
+                        }
+                    ],
+                    "return": "bool",
                     "attributes": [],
                     "deprecated": false,
                     "doc_internal": false,
