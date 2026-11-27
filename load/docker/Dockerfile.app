@@ -9,9 +9,15 @@ FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache nginx gettext postgresql-dev oniguruma-dev python3 \
     && docker-php-ext-install pdo_pgsql mbstring \
-    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
+    && curl -fsSL https://github.com/php/pie/releases/latest/download/pie.phar -o /usr/local/bin/pie \
+    && chmod 0755 /usr/local/bin/pie \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS git \
+    && pie install phpredis/phpredis \
+    && pie install "open-telemetry/ext-opentelemetry:>=1.5.0" \
+    && pie install pie-extensions/protobuf \
+    && php -m | grep -q '^opentelemetry$' \
+    && php -m | grep -q '^protobuf$' \
+    && php -m | grep -q '^redis$' \
     && apk del .build-deps
 
 COPY load/docker/nginx.conf /etc/nginx/nginx.conf

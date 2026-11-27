@@ -33780,6 +33780,17 @@
             ]
         },
         {
+            "id": "migration:0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/0001_01_01_000005_tune_autovacuum_to_v_outbox_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_outbox"
+            ]
+        },
+        {
             "id": "migration:0001_01_01_000101_create_v_blobs_table.php",
             "owner": "media",
             "source": {

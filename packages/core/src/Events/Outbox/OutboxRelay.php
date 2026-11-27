@@ -14,12 +14,14 @@ use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Configuration\OutboxOptions;
 use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\Outbox\Exceptions\LeaseLostException;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Kernel;
 use Vaulter\Modules\SlotContribution;
+use Vaulter\Observability\OtlpOpenTelemetryTraceRecorder;
 
 /**
  * The relay of the outbox, run by `vaulter:relay`. One pass:
@@ -49,6 +51,7 @@ final readonly class OutboxRelay
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private DatabaseOptions $tables,
+        private ?TraceRecorder $tracer = null,
     ) {}
 
     /**
@@ -178,6 +181,9 @@ final readonly class OutboxRelay
         $model = $this->vaulterConfig->outboxModel();
         $events = $model::whereIn('event_id', array_column($claims, 'event_id'))->get()->keyBy('event_id');
 
+        $resolvedTracer = $this->tracer ?? $this->container->make(TraceRecorder::class);
+        $otlpTracer = $resolvedTracer instanceof OtlpOpenTelemetryTraceRecorder ? $resolvedTracer : null;
+
         $finished = 0;
         foreach ($claims as $claim) {
             $event = $events->get($claim['event_id']);
@@ -189,7 +195,20 @@ final readonly class OutboxRelay
             }
             $control = new DeliveryControl($this->database, $this->tables, $claim['event_id'], $id, $claim['generation'], $claim['continuation']);
             try {
-                $result = $consumer->consume($event->toEnvelope(), $control);
+                if ($otlpTracer !== null && ($traceparent = $event->traceparent()) !== null) {
+                    $result = $otlpTracer->linkedSpan(
+                        name: 'vaulter.outbox.deliver',
+                        operation: static fn (): ConsumeResult => $consumer->consume($event->toEnvelope(), $control),
+                        attributes: [
+                            'vaulter.outbox.consumer' => $id,
+                            'vaulter.outbox.event_type' => $event->type,
+                            'vaulter.outbox.event_id' => $event->event_id,
+                        ],
+                        links: [$traceparent],
+                    );
+                } else {
+                    $result = $consumer->consume($event->toEnvelope(), $control);
+                }
             } catch (Throwable $exception) {
                 report($exception);
                 $result = ConsumeResult::retry($exception::class.': '.$exception->getMessage());

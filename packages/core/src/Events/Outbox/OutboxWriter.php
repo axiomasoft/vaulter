@@ -12,12 +12,14 @@ use Vaulter\Configuration\DatabaseOptions;
 use Vaulter\Configuration\IdsOptions;
 use Vaulter\Configuration\VaulterOptions;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
 use Vaulter\Kernel;
+use Vaulter\Observability\OtlpOpenTelemetryTraceRecorder;
 
 /**
  * The synchronous half of the outbox: {@see EventRecorder} calls it last, inside the transaction of the
@@ -38,6 +40,7 @@ final readonly class OutboxWriter
         private Kernel $kernel,
         private Container $container,
         private MetricsRecorder $metrics,
+        private ?TraceRecorder $tracer = null,
     ) {}
 
     public function append(DomainEvent $event, SinkWriter $writer): SinkResult
@@ -51,6 +54,14 @@ final readonly class OutboxWriter
                 $subject = $event->subject();
                 $seq = $writer->shared(SinkWriter::JOURNAL_SEQ);
                 $now = now();
+                $payload = OutboxEnvelope::body($event, is_int($seq) ? $seq : null);
+                $tracer = $this->tracer ?? $this->container->make(TraceRecorder::class);
+                if ($tracer instanceof OtlpOpenTelemetryTraceRecorder) {
+                    $traceparent = $tracer->currentTraceparent();
+                    if ($traceparent !== null) {
+                        $payload['_traceparent'] = $traceparent;
+                    }
+                }
 
                 // The model applies its casts (JSON payload, dates), so the row matches what Eloquent would write.
                 /** @var OutboxEvent $outbox */
@@ -65,7 +76,7 @@ final readonly class OutboxWriter
                     'sequence' => $event->sequence(),
                     'type' => $event->type()->value,
                     'external' => $event->isExternal(),
-                    'payload' => OutboxEnvelope::body($event, is_int($seq) ? $seq : null),
+                    'payload' => $payload,
                     'created_at' => $now,
                 ]);
                 if (!$writer->insertOnce(table: $outbox->getTable(), row: $outbox->getAttributes(), uniqueColumn: 'event_id')) {
