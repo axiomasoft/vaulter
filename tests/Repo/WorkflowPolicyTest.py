@@ -256,7 +256,7 @@ def e2e_job():
         'timeout-minutes': 30,
         'strategy': {'fail-fast': False, 'matrix': {'engine': ['sqlite', 'pgsql']}},
         'services': {'postgres': {'image': 'postgres:18.7-alpine@sha256:' + '0' * 64}},
-        'steps': [{'run': 'PACKMAN_REF="$(git -C ../packman rev-parse --verify \'HEAD^{commit}\')"\nexport PACKMAN_REF\nbash e2e/consumers/documents-basic/run.sh'}],
+        'steps': [{'run': 'PACKMAN_REF="b2fea80d85b1787f0a74d22c0f2563fd411ad132"\ntest "$(git -C ../packman rev-parse --verify "${PACKMAN_REF}^{commit}")" = "${PACKMAN_REF}"\nexport PACKMAN_REF\nbash e2e/consumers/documents-basic/run.sh'}],
     }
 
 
@@ -1320,6 +1320,14 @@ class ScaWorkflowTest(unittest.TestCase):
             'publisher does not need pack': lambda d: d['jobs']['release'].update(needs='route'),
             'route download omits run-id': lambda d: [s['with'].pop('run-id', None) for s in d['jobs']['route']['steps'] if (s.get('with') or {}).get('name') == 'release-qualification'],
             'release download omits run-id': lambda d: [s['with'].pop('run-id', None) for s in d['jobs']['release']['steps'] if (s.get('with') or {}).get('name') == 'release-qualification'],
+            'release downloads npm-pack before checkout': lambda d: d['jobs']['release']['steps'].insert(0, d['jobs']['release']['steps'].pop(1)),
+            'release approval reuses qualification_run_id': lambda d: [s['env'].update(APPROVAL_RUN_ID='${{ inputs.qualification_run_id }}') for s in d['jobs']['release']['steps'] if '--require-approval npm' in str(s.get('run', ''))],
+            'route weekly lookup accepts --extra-workflow': lambda d: [s.update(run=s['run'] + ' --extra-workflow "${TRUSTED_WORKFLOW}"') for s in d['jobs']['route']['steps'] if 'resolve-qualification-run.py' in str(s.get('run', ''))],
+            'pack weekly lookup accepts --extra-workflow': lambda d: [s.update(run=s['run'] + ' --extra-workflow "${TRUSTED_WORKFLOW}"') for s in d['jobs']['pack']['steps'] if 'resolve-qualification-run.py' in str(s.get('run', ''))],
+            'release weekly lookup accepts --extra-workflow': lambda d: [s.update(run=s['run'] + ' --extra-workflow "${TRUSTED_WORKFLOW}"') for s in d['jobs']['release']['steps'] if 'resolve-qualification-run.py' in str(s.get('run', '')) and '--require-line npm-vue' in str(s.get('run', ''))],
+            'release combines --require-line npm-vue into approval lookup': lambda d: [s.update(run=s['run'].replace('--require-approval npm', '--require-line npm-vue --require-approval npm')) for s in d['jobs']['release']['steps'] if '--require-approval npm' in str(s.get('run', ''))],
+            'release verify omits weekly --qualification receipt': lambda d: [s.update(run=s['run'].replace('--qualification "qualification-evidence/${line}.json"', '')) for s in d['jobs']['release']['steps'] if 'artifact-gate.py npm' in str(s.get('run', ''))],
+            'approval_run_id dispatch input removed': lambda d: (d[True] if True in d else d['on'])['workflow_dispatch']['inputs'].pop('approval_run_id', None),
             'resolve-qualification-run removed': lambda d: d['jobs']['route']['steps'].__setitem__(slice(None), [s for s in d['jobs']['route']['steps'] if 'resolve-qualification-run.py' not in str(s.get('run', ''))]),
             'version job holds the registry token': lambda d: d['jobs']['version-pr'].update(env={'NODE_AUTH_TOKEN': '${{ secrets.NPM_TOKEN }}'}),
         }.items():
@@ -1364,6 +1372,17 @@ class ScaWorkflowTest(unittest.TestCase):
             broken['jobs']['vue']['steps'] = [s for s in broken['jobs']['vue']['steps'] if 'budget:check' not in str(s.get('run', ''))]
             errors = policy.check_ci(broken, ROOT) if name == 'ci.yml' else policy.check_weekly(broken, ROOT)
             self.assertTrue(any('budget' in e for e in errors), (name, errors))
+            # Mutable tag or HEAD-only Packman selection must be refused.
+            for bad_cmd in (
+                'PACKMAN_REF="$(git -C ../packman rev-parse --verify \'HEAD^{commit}\')"\nexport PACKMAN_REF\nbash e2e/consumers/documents-basic/run.sh',
+                'PACKMAN_REF="$(git -C ../packman rev-parse --verify refs/tags/v0.1.1)"\nexport PACKMAN_REF\nbash e2e/consumers/documents-basic/run.sh',
+            ):
+                bad_e2e = copy.deepcopy(doc)
+                for step in bad_e2e['jobs']['e2e-documents']['steps']:
+                    if 'e2e/consumers/documents-basic/run.sh' in str(step.get('run', '')):
+                        step['run'] = bad_cmd
+                e2e_errors = policy.check_e2e_documents(name, bad_e2e['jobs']['e2e-documents'])
+                self.assertTrue(any('b2fea80d85b1787f0a74d22c0f2563fd411ad132' in e for e in e2e_errors), (name, e2e_errors))
         self.assertIn('e2e-documents: required lane is failure', policy.gate_errors(needs({'vue': 'success', 'e2e-documents': 'failure'}, has_vue='true')))
         vue_pkg = json.loads((ROOT / 'packages' / 'vue' / 'package.json').read_text(encoding='utf-8'))
         self.assertIs(True, vue_pkg['publishConfig']['provenance'])
@@ -1466,6 +1485,40 @@ class ScaWorkflowTest(unittest.TestCase):
                     self.assertEqual(1, result.returncode, result.stdout)
                     self.assertIn('refused', result.stderr)
 
+    def test_artifact_gate_npm_enforces_weekly_qualification_receipt_identity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tgz, sha, integrity = self.synthetic_tgz(tmp)
+            approval, pin = self.approval_file(tmp, {'npm': {'@vaulter/vue': self.npm_entry(sha, integrity)}})
+            receipt_path = Path(tmp) / 'npm-vue.json'
+            valid_receipt = {
+                'schema': 'vaulter.release-qualification/v1',
+                'source_sha': self.SOURCE,
+                'ci_gate': {'sha': self.SOURCE, 'conclusion': 'success'},
+                'release_line': 'npm-vue',
+                'channel': 'public',
+                'artifacts': {'@vaulter/vue': {'version': '1.0.0', 'tgz_sha256': sha, 'integrity': integrity}},
+            }
+            receipt_path.write_text(json.dumps(valid_receipt))
+            base = ('npm', '--tgz', str(tgz), '--qualification', str(receipt_path), '--release-line', 'npm-vue',
+                    '--approval', str(approval), '--source-sha', self.SOURCE)
+            self.assertEqual(0, self.run_artifact_gate(*base, pin=pin).returncode)
+            for label, mutate in {
+                'different version in weekly receipt': lambda r: r['artifacts']['@vaulter/vue'].update(version='1.0.1'),
+                'missing version in weekly receipt': lambda r: r['artifacts']['@vaulter/vue'].pop('version'),
+                'different sha256 in weekly receipt': lambda r: r['artifacts']['@vaulter/vue'].update(tgz_sha256='0' * 64),
+                'different integrity in weekly receipt': lambda r: r['artifacts']['@vaulter/vue'].update(integrity='sha512-AAAA'),
+                'different source_sha in weekly receipt': lambda r: r.update(source_sha='6' * 40),
+                'failed ci_gate in weekly receipt': lambda r: r['ci_gate'].update(conclusion='failure'),
+                'different release_line in weekly receipt': lambda r: r.update(release_line='php-public'),
+            }.items():
+                with self.subTest(case=label):
+                    bad = copy.deepcopy(valid_receipt)
+                    mutate(bad)
+                    receipt_path.write_text(json.dumps(bad))
+                    res = self.run_artifact_gate(*base, pin=pin)
+                    self.assertEqual(1, res.returncode, res.stdout)
+                    self.assertIn('refused', res.stderr)
+
     def test_artifact_gate_oci_promotes_only_the_digest_the_authenticated_approval_accepted(self):
         digest = 'sha256:' + 'a' * 64
         entry = {
@@ -1523,9 +1576,25 @@ class ScaWorkflowTest(unittest.TestCase):
                     self.assertEqual(1, self.run_artifact_gate(*argv, pin=other_pin).returncode, label)
 
     def test_resolve_qualification_run_enforces_exact_sha_repo_workflow_and_artifact(self):
-        import contextlib, io, runpy
+        import contextlib, io, runpy, urllib.error, urllib.request, zipfile
         from unittest import mock
         resolver = runpy.run_path(str(ROOT / 'scripts/release/resolve-qualification-run.py'))
+        handler = resolver['_CrossHostAuthStrippingRedirectHandler']()
+        origin_req = urllib.request.Request(
+            'https://api.github.com/repos/axiomasoft/vaulter/actions/artifacts/701/zip',
+            headers={'Authorization': 'Bearer tok', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'test'},
+        )
+        cross_req = handler.redirect_request(
+            origin_req, io.BytesIO(), 302, 'Found', {},
+            'https://pipelines.actions.githubusercontent.com/blob?sig=xyz',
+        )
+        self.assertIsNotNone(cross_req)
+        for hdr_map in (cross_req.headers, cross_req.unredirected_hdrs):
+            lower_keys = {k.lower() for k in hdr_map}
+            self.assertNotIn('authorization', lower_keys)
+            self.assertNotIn('x-github-api-version', lower_keys)
+        with self.assertRaises(urllib.error.URLError):
+            handler.redirect_request(origin_req, io.BytesIO(), 302, 'Found', {}, 'http://insecure.example/blob')
         repo = 'axiomasoft/vaulter'
         sha = self.SOURCE
         valid_run = {
@@ -1539,42 +1608,126 @@ class ScaWorkflowTest(unittest.TestCase):
             'head_repository': {'full_name': repo},
             'path': '.github/workflows/weekly-full.yml',
         }
-        artifacts = {'artifacts': [{'name': 'release-qualification', 'expired': False, 'size_in_bytes': 128}]}
+        approval_run = {
+            **valid_run,
+            'id': 987654320,
+            'path': '.github/workflows/external-approval.yml',
+        }
+
+        def make_zip(files):
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, 'w') as zf:
+                for name, body in files.items():
+                    zf.writestr(name, json.dumps(body) if isinstance(body, dict) else body)
+            return buf.getvalue()
+
+        qual_receipt = {
+            'schema': 'vaulter.release-qualification/v1',
+            'source_sha': sha,
+            'ci_gate': {'sha': sha, 'conclusion': 'success'},
+        }
+        npm_line_receipt = {
+            **qual_receipt,
+            'release_line': 'npm-vue',
+            'channel': 'public',
+            'artifacts': {'@vaulter/vue': {'version': '1.0.0', 'tgz_sha256': 'a' * 64, 'integrity': 'sha512-AAAA'}},
+        }
+        oci_approval = {
+            'status': 'approved',
+            'source_sha': sha,
+            'artifacts': {
+                'npm': {'@vaulter/vue': {'kind': 'npm', 'version': '1.0.0'}},
+                'oci': {'kind': 'oci', 'digest': 'sha256:' + 'b' * 64},
+            },
+        }
+        weekly_zip = make_zip({
+            'qualification.json': qual_receipt,
+            'npm-vue.json': npm_line_receipt,
+        })
+        weekly_only_qual_zip = make_zip({'qualification.json': qual_receipt})
+        approval_zip = make_zip({
+            'qualification.json': qual_receipt,
+            'npm-vue.json': npm_line_receipt,
+            'npm-visibility.json': {'@vaulter/vue': 'public'},
+            'artifact-approval.json': oci_approval,
+        })
+        artifacts_meta = {'artifacts': [{'id': 701, 'name': 'release-qualification', 'expired': False, 'size_in_bytes': len(weekly_zip), 'archive_download_url': 'https://api.github.com/repos/axiomasoft/vaulter/actions/artifacts/701/zip'}]}
+        approval_meta = {'artifacts': [{'id': 702, 'name': 'release-qualification', 'expired': False, 'size_in_bytes': len(approval_zip), 'archive_download_url': 'https://api.github.com/repos/axiomasoft/vaulter/actions/artifacts/702/zip'}]}
 
         class FakeResp:
             def __init__(self, payload):
-                self._data = json.dumps(payload).encode('utf-8')
+                self._data = payload if isinstance(payload, bytes) else json.dumps(payload).encode('utf-8')
             def __enter__(self):
                 return self
             def __exit__(self, *exc):
                 return False
-            def read(self):
-                return self._data
+            def read(self, n=-1):
+                return self._data if n < 0 else self._data[:n]
 
         def mock_api(req, timeout=20):
             url = req.full_url
             if url.endswith('/actions/runs/987654321'):
                 return FakeResp(valid_run)
-            if '/artifacts' in url:
-                return FakeResp(artifacts)
+            if url.endswith('/actions/runs/987654320'):
+                return FakeResp(approval_run)
+            if '/runs/987654321/artifacts' in url:
+                return FakeResp(artifacts_meta)
+            if '/runs/987654320/artifacts' in url:
+                return FakeResp(approval_meta)
+            if url.endswith('/artifacts/701/zip'):
+                return FakeResp(weekly_zip)
+            if url.endswith('/artifacts/702/zip'):
+                return FakeResp(approval_zip)
             if f'head_sha={sha}' in url:
-                return FakeResp({'workflow_runs': [valid_run]})
+                return FakeResp({'workflow_runs': [valid_run, approval_run]})
             raise AssertionError(f'unexpected URL {url}')
 
         with tempfile.TemporaryDirectory() as tmp:
             gh_out = Path(tmp) / 'gh_out.txt'
             sink = io.StringIO()
-            with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.urlopen', side_effect=mock_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
-                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha, '--run-id', '987654321', '--github-output', str(gh_out)]))
+            with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.OpenerDirector.open', side_effect=mock_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha, '--run-id', '987654321', '--require-line', 'npm-vue', '--github-output', str(gh_out)]))
                 self.assertIn('run_id=987654321\n', gh_out.read_text())
-                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha]))
+                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha, '--require-line', 'npm-vue']))
+                # --extra-workflow must append to (not replace) DEFAULT_ALLOWED_WORKFLOWS (weekly-full.yml),
+                # so weekly-full run 987654321 remains trusted even when external-approval.yml is configured.
+                self.assertEqual(
+                    ('.github/workflows/weekly-full.yml', '.github/workflows/external-approval.yml'),
+                    resolver['parse_allowed_workflows']([], '.github/workflows/external-approval.yml'),
+                )
+                gh_out_weekly_with_extra = Path(tmp) / 'gh_out_weekly_extra.txt'
+                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha, '--extra-workflow', '.github/workflows/external-approval.yml', '--require-line', 'npm-vue', '--github-output', str(gh_out_weekly_with_extra)]))
+                # Separate weekly receipt run (987654321) vs external approval run (987654320):
+                # weekly-only approval lookup selects 987654320 even when weekly-full.yml has only npm-vue.json.
+                gh_out2 = Path(tmp) / 'gh_out2.txt'
+                self.assertEqual(0, resolver['main'](['--repo', repo, '--sha', sha, '--extra-workflow', '.github/workflows/external-approval.yml', '--require-any-file', 'qualification.json,oci.json', '--require-approval', 'oci', '--github-output', str(gh_out2)]))
+                self.assertIn('run_id=987654320\n', gh_out2.read_text())
+                # Explicitly passing weekly-full run 987654321 for OCI approval MUST refuse.
+                with self.assertRaises(SystemExit) as ctx_unusable:
+                    resolver['main'](['--repo', repo, '--sha', sha, '--run-id', '987654321', '--require-approval', 'oci'])
+                self.assertEqual(1, ctx_unusable.exception.code)
+
+        # Even with a valid weekly-full run, qualification.json alone must refuse when --require-line npm-vue or --require-approval is requested.
+        def only_qual_api(req, timeout=20):
+            url = req.full_url
+            if url.endswith('/artifacts/701/zip'):
+                return FakeResp(weekly_only_qual_zip)
+            return mock_api(req, timeout=timeout)
+
+        for req_args in (['--require-line', 'npm-vue'], ['--require-approval', 'oci'], ['--require-approval', 'npm', '--require-file', 'npm-visibility.json']):
+            with self.subTest(incompatible_weekly_only=req_args):
+                sink = io.StringIO()
+                with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.OpenerDirector.open', side_effect=only_qual_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+                    with self.assertRaises(SystemExit) as ctx:
+                        resolver['main'](['--repo', repo, '--sha', sha, *req_args])
+                    self.assertEqual(1, ctx.exception.code)
 
         for label, bad_run, bad_art in [
-            ('wrong sha', {**valid_run, 'head_sha': '0' * 40}, artifacts),
-            ('failed run', {**valid_run, 'conclusion': 'failure'}, artifacts),
-            ('pull_request event', {**valid_run, 'event': 'pull_request'}, artifacts),
-            ('fork repo', {**valid_run, 'head_repository': {'full_name': 'attacker/vaulter'}}, artifacts),
-            ('untrusted workflow path', {**valid_run, 'path': '.github/workflows/ci.yml'}, artifacts),
+            ('wrong sha', {**valid_run, 'head_sha': '0' * 40}, artifacts_meta),
+            ('failed run', {**valid_run, 'conclusion': 'failure'}, artifacts_meta),
+            ('pull_request event', {**valid_run, 'event': 'pull_request'}, artifacts_meta),
+            ('fork repo', {**valid_run, 'head_repository': {'full_name': 'attacker/vaulter'}}, artifacts_meta),
+            ('untrusted workflow path', {**valid_run, 'path': '.github/workflows/ci.yml'}, artifacts_meta),
             ('expired artifact', valid_run, {'artifacts': [{'name': 'release-qualification', 'expired': True, 'size_in_bytes': 128}]}),
             ('missing artifact', valid_run, {'artifacts': []}),
         ]:
@@ -1583,11 +1736,13 @@ class ScaWorkflowTest(unittest.TestCase):
                     url = req.full_url
                     if url.endswith('/artifacts') or '/artifacts?' in url:
                         return FakeResp(bad_art)
+                    if url.endswith('/artifacts/701/zip'):
+                        return FakeResp(weekly_zip)
                     if '/runs/' in url and 'head_sha=' not in url:
                         return FakeResp(bad_run)
                     return FakeResp({'workflow_runs': [bad_run]})
                 sink = io.StringIO()
-                with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.urlopen', side_effect=bad_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+                with mock.patch.dict('os.environ', {'GH_TOKEN': 'tok'}), mock.patch('urllib.request.OpenerDirector.open', side_effect=bad_api), contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
                     with self.assertRaises(SystemExit) as ctx:
                         resolver['main'](['--repo', repo, '--sha', sha, '--run-id', '987654321'])
                     self.assertEqual(1, ctx.exception.code)

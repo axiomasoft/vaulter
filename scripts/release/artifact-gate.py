@@ -78,6 +78,37 @@ def parse_oci_image_ref(raw):
     return registry, repository
 
 
+def verify_npm_qualification(path, source_sha, channel, release_line, pkg_name, pkg_version, tgz_sha256, tgz_integrity):
+    try:
+        with open(path, 'r', encoding='utf-8') as handle:
+            receipt = json.load(handle)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        refuse(f'the qualification receipt is missing or invalid JSON: {exc}')
+    if not isinstance(receipt, dict) or receipt.get('schema') != 'vaulter.release-qualification/v1':
+        refuse('the qualification receipt schema is invalid')
+    if receipt.get('source_sha') != source_sha:
+        refuse('the qualification receipt is for another source')
+    gate = receipt.get('ci_gate')
+    if not isinstance(gate, dict) or gate.get('sha') != source_sha or gate.get('conclusion') != 'success':
+        refuse('the qualification receipt ci_gate is not a success for this source')
+    if receipt.get('channel') != channel:
+        refuse(f'the qualification receipt channel {receipt.get("channel")!r} differs from {channel!r}')
+    if release_line:
+        if receipt.get('release_line') != release_line:
+            refuse(f'the qualification receipt release_line {receipt.get("release_line")!r} differs from {release_line!r}')
+    elif not isinstance(receipt.get('release_line'), str) or not receipt.get('release_line'):
+        refuse('the qualification receipt lacks release_line')
+    artifacts = receipt.get('artifacts')
+    entry = artifacts.get(pkg_name) if isinstance(artifacts, dict) else None
+    need(entry, ('version', 'tgz_sha256', 'integrity'))
+    if entry['version'] != pkg_version:
+        refuse(f'the weekly qualification accepted {pkg_name}@{entry["version"]}, the tgz is {pkg_name}@{pkg_version}')
+    if entry['tgz_sha256'] != tgz_sha256:
+        refuse('tgz sha256 does not match the weekly qualification receipt')
+    if entry['integrity'] != tgz_integrity:
+        refuse('tgz integrity does not match the weekly qualification receipt')
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest='kind', required=True)
@@ -86,6 +117,8 @@ def main():
     npm.add_argument('--emit-verified')
     npm.add_argument('--channel', required=True)
     npm.add_argument('--visibility', required=True)
+    npm.add_argument('--qualification')
+    npm.add_argument('--release-line', default='')
     oci = sub.add_parser('oci')
     oci.add_argument('--image-ref', required=True)
     oci.add_argument('--emit-verified')
@@ -112,13 +145,26 @@ def main():
         except (OSError, tarfile.TarError, KeyError, ValueError, AttributeError) as exc:
             refuse(f'tgz has no readable package/package.json: {exc}')
         name, version = manifest.get('name'), manifest.get('version')
+        tgz_sha256 = hashlib.sha256(data).hexdigest()
+        tgz_integrity = 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode()
+        if args.qualification:
+            verify_npm_qualification(
+                args.qualification,
+                args.source_sha,
+                args.channel,
+                args.release_line,
+                name,
+                version,
+                tgz_sha256,
+                tgz_integrity,
+            )
         entry = (artifacts.get('npm') or {}).get(name) if isinstance(artifacts.get('npm'), dict) else None
         need(entry, ('kind', 'version', 'tgz_sha256', 'integrity', 'consumer_evidence_sha256', 'channel', 'visibility'))
         if entry['kind'] != 'npm' or entry['version'] != version:
             refuse(f'the approval accepted {name}@{entry["version"]}, the tgz is {name}@{version}')
-        if hashlib.sha256(data).hexdigest() != entry['tgz_sha256']:
+        if tgz_sha256 != entry['tgz_sha256']:
             refuse('tgz sha256 is not the accepted tgz')
-        if 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode() != entry['integrity']:
+        if tgz_integrity != entry['integrity']:
             refuse('tgz integrity is not the accepted tgz')
         if HEX64.fullmatch(str(entry['consumer_evidence_sha256'])) is None:
             refuse('the accepted consumer evidence is not a sha256')

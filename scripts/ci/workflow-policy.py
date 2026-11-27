@@ -297,8 +297,13 @@ def check_e2e_documents(name: str, job: dict, needs_changes: bool = False) -> li
     run_steps = [step for step in job.get('steps') or [] if 'e2e/consumers/documents-basic/run.sh' in str(step.get('run', ''))]
     if not run_steps or any(step.get('if') or str(step.get('continue-on-error', 'false')).lower() != 'false' for step in run_steps):
         errors.append(f'{name}: e2e-documents must run e2e/consumers/documents-basic/run.sh unconditionally and block errors')
-    elif not any('PACKMAN_REF' in str(step.get('run', '')) and 'rev-parse' in str(step.get('run', '')) for step in run_steps):
-        errors.append(f'{name}: e2e-documents must pass resolved PACKMAN_REF from checked-out ../packman HEAD')
+    elif not any(
+        re.search(r'PACKMAN_REF=["\']?b2fea80d85b1787f0a74d22c0f2563fd411ad132["\']?', str(step.get('run', '')))
+        and 'rev-parse' in str(step.get('run', ''))
+        and 'refs/tags/' not in str(step.get('run', ''))
+        for step in run_steps
+    ):
+        errors.append(f'{name}: e2e-documents must pin immutable PACKMAN_REF commit SHA b2fea80d85b1787f0a74d22c0f2563fd411ad132 and verify it')
     return errors
 
 
@@ -448,13 +453,14 @@ def check_weekly(doc: dict, root: Path) -> list[str]:
         errors.append(f'{name}: vue must run npm run budget:check --workspace @vaulter/vue unconditionally')
     errors += check_e2e_documents(name, jobs.get('e2e-documents') or {}, needs_changes=False)
     gate_steps = (jobs.get('full-gate') or {}).get('steps') or []
+    gate_runs = '\n'.join(str(step.get('run', '')) for step in gate_steps)
     uploads_qual = any(
         'actions/upload-artifact@' in str(step.get('uses', ''))
         and (step.get('with') or {}).get('name') == 'release-qualification'
         for step in gate_steps
     )
-    if not uploads_qual or 'qualification.json' not in '\n'.join(str(step.get('run', '')) for step in gate_steps):
-        errors.append(f'{name}: full-gate must produce and upload release-qualification (qualification.json)')
+    if not uploads_qual or any(req not in gate_runs for req in ('qualification.json', 'npm-vue.json', 'php-public.json')):
+        errors.append(f'{name}: full-gate must produce and upload release-qualification (qualification.json, npm-vue.json, php-public.json)')
     return errors
 
 
@@ -570,20 +576,32 @@ def _check_approval_gate(name: str, step: dict, variable: str, credentials: tupl
 def _check_trusted_qualification_download(name: str, job_id: str, job: dict) -> list[str]:
     errors: list[str] = []
     steps = job.get('steps') or []
-    resolver = next((i for i, step in enumerate(steps) if 'resolve-qualification-run.py' in str(step.get('run', ''))), None)
-    download = next(
-        (i for i, step in enumerate(steps)
-         if 'actions/download-artifact@' in str(step.get('uses', ''))
-         and (step.get('with') or {}).get('name') == 'release-qualification'),
-        None,
-    )
-    if download is None:
+    resolvers = [
+        (i, step)
+        for i, step in enumerate(steps)
+        if 'resolve-qualification-run.py' in str(step.get('run', ''))
+    ]
+    downloads = [
+        (i, step)
+        for i, step in enumerate(steps)
+        if 'actions/download-artifact@' in str(step.get('uses', ''))
+        and (step.get('with') or {}).get('name') == 'release-qualification'
+    ]
+    if not downloads:
         return [f'{name}: {job_id} must download release-qualification']
-    dl_with = steps[download].get('with') or {}
-    if not dl_with.get('run-id') or not dl_with.get('github-token'):
-        errors.append(f'{name}: {job_id} must download release-qualification from an explicit verified run-id with github-token')
-    if resolver is None or resolver > download:
-        errors.append(f'{name}: {job_id} must verify trusted qualification run via resolve-qualification-run.py before download-artifact')
+    for dl_idx, dl_step in downloads:
+        dl_with = dl_step.get('with') or {}
+        run_id_expr = str(dl_with.get('run-id', ''))
+        if not run_id_expr or not dl_with.get('github-token'):
+            errors.append(f'{name}: {job_id} must download release-qualification from an explicit verified run-id with github-token')
+        matching_resolvers = [
+            r_idx for r_idx, r_step in resolvers
+            if r_idx < dl_idx and (
+                not r_step.get('id') or f"steps.{r_step.get('id')}.outputs.run_id" in run_id_expr or len(resolvers) == 1
+            )
+        ]
+        if not matching_resolvers:
+            errors.append(f'{name}: {job_id} must verify trusted qualification run via resolve-qualification-run.py before download-artifact')
     return errors
 
 
@@ -595,8 +613,44 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
         route, pack, release, version = jobs.get('route'), jobs.get('pack'), jobs.get('release'), jobs.get('version-pr')
         if not isinstance(route, dict) or not isinstance(pack, dict) or not isinstance(release, dict):
             return [f'{name}: needs route, a credential-free pack job and a release job that publishes the accepted tgz']
+        dispatch_inputs = ((triggers(doc).get('workflow_dispatch') or {}).get('inputs') or {})
+        if 'qualification_run_id' not in dispatch_inputs or 'approval_run_id' not in dispatch_inputs:
+            errors.append(f'{name}: workflow_dispatch must expose separate qualification_run_id and approval_run_id inputs')
         errors += _check_trusted_qualification_download(name, 'route', route)
+        errors += _check_trusted_qualification_download(name, 'pack', pack)
         errors += _check_trusted_qualification_download(name, 'release', release)
+        if '--require-line npm-vue' not in _runs(route):
+            errors.append(f'{name}: route must require per-line npm-vue receipt when resolving qualification run')
+        pack_runs = _runs(pack)
+        if '--require-line npm-vue' not in pack_runs or 'tgz_sha256' not in pack_runs:
+            errors.append(f'{name}: pack must verify packed tarball against the weekly npm-vue qualification receipt')
+        release_runs = _runs(release)
+        if '--require-line npm-vue' not in release_runs:
+            errors.append(f'{name}: release must resolve the weekly npm-vue qualification receipt run')
+        for job_name, job_obj in (('route', route), ('pack', pack), ('release', release)):
+            weekly_resolvers = [
+                step for step in job_obj.get('steps') or []
+                if 'resolve-qualification-run.py' in str(step.get('run', ''))
+                and '--require-approval' not in str(step.get('run', ''))
+            ]
+            if not any('--require-line npm-vue' in str(step.get('run', '')) for step in weekly_resolvers):
+                errors.append(f'{name}: {job_name} weekly qualification lookup must resolve --require-line npm-vue without --require-approval')
+            for step in weekly_resolvers:
+                step_text = json.dumps(step)
+                if '--extra-workflow' in step_text or '--allowed-workflow' in step_text:
+                    errors.append(f'{name}: {job_name} weekly qualification lookup must only allow weekly-full.yml (no --extra-workflow/--allowed-workflow)')
+        for step in release.get('steps') or []:
+            step_run = str(step.get('run', ''))
+            if 'resolve-qualification-run.py' in step_run and '--require-line' in step_run and ('--extra-workflow' in step_run or '--allowed-workflow' in step_run):
+                errors.append(f'{name}: release must not combine --require-line with --extra-workflow/--allowed-workflow')
+        if '--require-approval npm' not in release_runs or '--require-file npm-visibility.json' not in release_runs:
+            errors.append(f'{name}: release must require external npm artifact-approval.json and npm-visibility.json when resolving qualification run')
+        approval_resolver = next(
+            (step for step in release.get('steps') or [] if '--require-approval npm' in str(step.get('run', ''))),
+            None,
+        )
+        if approval_resolver is None or 'inputs.approval_run_id' not in json.dumps(approval_resolver):
+            errors.append(f'{name}: release approval lookup must accept inputs.approval_run_id (separate from qualification_run_id)')
         dumped = json.dumps(pack)
         if any(token in dumped for token in NPM_CREDENTIALS) or 'id-token' in dumped:
             errors.append(f'{name}: pack must hold no registry credential and mint no OIDC token')
@@ -617,10 +671,13 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
             errors.append(f'{name}: release must not pack, install, build or let Changesets publish; it publishes the accepted tgz only')
         if 'download-artifact' not in _uses(release):
             errors.append(f'{name}: release must download the accepted tgz artifact')
-        checkouts = [step for step in release.get('steps') or [] if 'actions/checkout@' in str(step.get('uses', ''))]
-        if not checkouts or any((step.get('with') or {}).get('fetch-depth') != 0 for step in checkouts):
-            errors.append(f'{name}: release checkout must pass fetch-depth: 0 for origin/main lineage verification')
         steps = release.get('steps') or []
+        checkout_indices = [i for i, step in enumerate(steps) if 'actions/checkout@' in str(step.get('uses', ''))]
+        download_indices = [i for i, step in enumerate(steps) if 'actions/download-artifact@' in str(step.get('uses', ''))]
+        if not checkout_indices or any((steps[i].get('with') or {}).get('fetch-depth') != 0 for i in checkout_indices):
+            errors.append(f'{name}: release checkout must pass fetch-depth: 0 for origin/main lineage verification')
+        if not checkout_indices or not download_indices or min(download_indices) < min(checkout_indices):
+            errors.append(f'{name}: release must run actions/checkout before actions/download-artifact so checkout does not wipe downloaded tarballs')
         gate = next((i for i, step in enumerate(steps) if 'artifact-gate.py npm' in str(step.get('run', ''))), None)
         publish = next((i for i, step in enumerate(steps) if 'npm publish' in str(step.get('run', ''))), None)
         lineage = next((i for i, step in enumerate(steps) if 'merge-base --is-ancestor' in str(step.get('run', '')) and 'origin/main' in str(step.get('run', ''))), None)
@@ -635,6 +692,8 @@ def check_artifacts(name: str, doc: dict, text: str = '') -> list[str]:
             verify_run = str(steps[gate].get('run', ''))
             if '--channel' not in verify_run or '--visibility' not in verify_run:
                 errors.append(f'{name}: the verify step must pass --channel and --visibility (private needs a probed private destination)')
+            if '--qualification' not in verify_run:
+                errors.append(f'{name}: the verify step must pass --qualification to match the weekly receipt tarball identity')
             publish_run = str(steps[publish].get('run', ''))
             if '--access "${access}"' not in publish_run or 'public|restricted' not in publish_run:
                 errors.append(f'{name}: npm access is derived from the verified record only (public|restricted)')
@@ -687,6 +746,8 @@ def check_oci(name: str, doc: dict) -> list[str]:
     if (qualify.get('permissions') or {}).get('id-token') == 'write':
         errors.append(f'{name}: qualify must not mint an OIDC id-token')
     errors += _check_trusted_qualification_download(name, 'qualify', qualify)
+    if '--require-approval oci' not in _runs(qualify) or '--require-any-file qualification.json,oci.json' not in _runs(qualify):
+        errors.append(f'{name}: qualify must require external oci approval and qualification receipt when resolving qualification run')
     qualify_gate = next((step for step in qualify.get('steps') or [] if 'artifact-gate.py oci' in str(step.get('run', ''))), None)
     if qualify_gate is None or '--image-ref' not in str(qualify_gate.get('run', '')):
         errors.append(f'{name}: qualify must bind --image-ref in artifact-gate.py oci')
@@ -697,6 +758,8 @@ def check_oci(name: str, doc: dict) -> list[str]:
     if (sign.get('permissions') or {}).get('id-token') != 'write':
         errors.append(f'{name}: sign must grant id-token: write for Sigstore keyless signing')
     errors += _check_trusted_qualification_download(name, 'sign', sign)
+    if '--require-approval oci' not in _runs(sign) or '--require-any-file qualification.json,oci.json' not in _runs(sign):
+        errors.append(f'{name}: sign must require external oci approval and qualification receipt when resolving qualification run')
     steps = sign.get('steps') or []
     installer = [step for step in steps if 'sigstore/cosign-installer@' in str(step.get('uses', ''))]
     if not installer:

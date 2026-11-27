@@ -12,7 +12,11 @@ on:
   workflow_dispatch:
     inputs:
       qualification_run_id:
-        description: 'Optional trusted completed qualification workflow run ID carrying release-qualification for this exact SHA'
+        description: 'Optional trusted completed qualification workflow run ID carrying release-qualification (npm-vue.json) for this exact SHA'
+        type: string
+        required: false
+      approval_run_id:
+        description: 'Optional trusted completed external approval workflow run ID carrying artifact-approval.json and npm-visibility.json for this exact SHA'
         type: string
         required: false
 
@@ -74,13 +78,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_RUN_ID: ${{ inputs.qualification_run_id }}
-          TRUSTED_WORKFLOW: ${{ vars.VAULTER_QUALIFICATION_WORKFLOW }}
         run: |
           python3 -I scripts/release/resolve-qualification-run.py \
             --repo "${GITHUB_REPOSITORY}" \
             --sha "${GITHUB_SHA}" \
             --run-id "${INPUT_RUN_ID}" \
-            --extra-workflow "${TRUSTED_WORKFLOW}" \
+            --require-line npm-vue \
             --github-output "${GITHUB_OUTPUT}"
       - name: Download the qualification evidence of this SHA
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -110,29 +113,72 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify trusted qualification receipt run before downloading evidence
+        id: resolve_qualification_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QUALIFICATION_RUN_ID: ${{ needs.route.outputs.qualification_run_id }}
+        run: |
+          python3 -I scripts/release/resolve-qualification-run.py \
+            --repo "${GITHUB_REPOSITORY}" \
+            --sha "${GITHUB_SHA}" \
+            --run-id "${QUALIFICATION_RUN_ID}" \
+            --require-line npm-vue \
+            --github-output "${GITHUB_OUTPUT}"
+      - name: Download the weekly qualification receipt of this SHA
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-qualification
+          path: qualification-evidence
+          run-id: ${{ steps.resolve_qualification_run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26.13.1'
       - run: npm ci
       - run: npm run build
       - run: npm test
-      - name: Pack every npm line once and record sha256 + integrity
+      - name: Pack every npm line once, record sha256 + integrity, and match weekly qualification receipt
         run: |
           mkdir -p npm-pack
-          while IFS= read -r path; do
+          while IFS=$'\t' read -r path line; do
             name="$(jq -er .name "${path}/package.json")"
             version="$(jq -er .version "${path}/package.json")"
             npm pack --workspace "${name}" --pack-destination npm-pack >/dev/null
             tgz="npm-pack/$(echo "${name#@}" | tr '/' '-')-${version}.tgz"
+            tgz_sha256="$(sha256sum "${tgz}" | cut -d' ' -f1)"
+            tgz_integrity="sha512-$(openssl dgst -sha512 -binary "${tgz}" | base64 -w0)"
             jq -n --arg name "${name}" --arg version "${version}" --arg file "$(basename "${tgz}")" \
-              --arg sha256 "$(sha256sum "${tgz}" | cut -d' ' -f1)" \
-              --arg integrity "sha512-$(openssl dgst -sha512 -binary "${tgz}" | base64 -w0)" \
+              --arg sha256 "${tgz_sha256}" \
+              --arg integrity "${tgz_integrity}" \
               '{name: $name, version: $version, file: $file, sha256: $sha256, integrity: $integrity}' > "${tgz}.json"
-          done < <(jq -r '.npm[].path' release/packages.json)
+            python3 -I - "${tgz}" "qualification-evidence/${line}.json" "${GITHUB_SHA}" "${line}" <<'PY'
+          import base64, hashlib, json, sys, tarfile
+          tgz_path, receipt_path, expected_sha, expected_line = sys.argv[1:5]
+          data = open(tgz_path, 'rb').read()
+          with tarfile.open(tgz_path, 'r:gz') as tar:
+              pkg = json.load(tar.extractfile('package/package.json'))
+          receipt = json.load(open(receipt_path, encoding='utf-8'))
+          if receipt.get('schema') != 'vaulter.release-qualification/v1' or receipt.get('source_sha') != expected_sha:
+              raise SystemExit(f'{receipt_path}: source_sha mismatch')
+          if receipt.get('release_line') != expected_line:
+              raise SystemExit(f'{receipt_path}: release_line mismatch')
+          entry = (receipt.get('artifacts') or {}).get(pkg['name'])
+          if not isinstance(entry, dict):
+              raise SystemExit(f'{receipt_path}: missing artifact entry for {pkg["name"]}')
+          actual_sha256 = hashlib.sha256(data).hexdigest()
+          actual_integrity = 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode()
+          if entry.get('version') != pkg.get('version'):
+              raise SystemExit(f'packed version {pkg.get("version")!r} != weekly qualification version {entry.get("version")!r}')
+          if entry.get('tgz_sha256') != actual_sha256 or entry.get('integrity') != actual_integrity:
+              raise SystemExit(f'packed tarball digest differs from weekly qualification receipt for {pkg["name"]}')
+          PY
+          done < <(jq -r '.npm[] | [.path, .release_line] | @tsv' release/packages.json)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: npm-pack
@@ -152,14 +198,14 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: npm-pack
-          path: npm-pack
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-pack
+          path: npm-pack
       - name: Require source commit on origin/main
         run: |
           git fetch --no-tags origin main
@@ -169,39 +215,68 @@ jobs:
           node-version: '26.13.1'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Verify trusted qualification run before downloading evidence
+      - name: Verify trusted qualification receipt run before downloading evidence
+        id: resolve_qualification_run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ needs.route.outputs.qualification_run_id }}
+          QUALIFICATION_RUN_ID: ${{ needs.route.outputs.qualification_run_id }}
+        run: |
+          python3 -I scripts/release/resolve-qualification-run.py \
+            --repo "${GITHUB_REPOSITORY}" \
+            --sha "${GITHUB_SHA}" \
+            --run-id "${QUALIFICATION_RUN_ID}" \
+            --require-line npm-vue \
+            --github-output "${GITHUB_OUTPUT}"
+
+      - name: Download the weekly qualification receipt of this SHA
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-qualification
+          path: qualification-evidence
+          run-id: ${{ steps.resolve_qualification_run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify trusted approval qualification run before downloading evidence
+        id: resolve_approval_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPROVAL_RUN_ID: ${{ inputs.approval_run_id }}
           TRUSTED_WORKFLOW: ${{ vars.VAULTER_QUALIFICATION_WORKFLOW }}
         run: |
           python3 -I scripts/release/resolve-qualification-run.py \
             --repo "${GITHUB_REPOSITORY}" \
             --sha "${GITHUB_SHA}" \
-            --run-id "${RUN_ID}" \
-            --extra-workflow "${TRUSTED_WORKFLOW}"
+            --run-id "${APPROVAL_RUN_ID}" \
+            --extra-workflow "${TRUSTED_WORKFLOW}" \
+            --require-approval npm \
+            --require-file npm-visibility.json \
+            --github-output "${GITHUB_OUTPUT}"
 
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Download the external approval evidence of this SHA
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-qualification
           path: release-evidence
-          run-id: ${{ needs.route.outputs.qualification_run_id }}
+          run-id: ${{ steps.resolve_approval_run.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Credential-free verify FIRST. The exact bytes of the external approval A must hash to the protected variable
-      # (never computed from the candidate, no default) before A is parsed; each candidate tgz must then be exactly the
-      # tgz A accepted for that package/version/source (sha256, integrity, consumer evidence). Only verified files are
-      # listed for publishing. Registry dist.integrity is compared after the authorized publish; before it the identity is pending.
-      - name: Verify the candidate tgz against the authenticated approval
+      # (never computed from the candidate, no default) before A is parsed; each candidate tgz must then match both
+      # the weekly qualification receipt (version/sha256/integrity) and what A accepted (sha256, integrity, consumer evidence).
+      - name: Verify the candidate tgz against the weekly receipt and authenticated approval
         env:
           VAULTER_ARTIFACT_APPROVAL_SHA256: ${{ vars.VAULTER_ARTIFACT_APPROVAL_SHA256 }}
         run: |
           : > verified.txt
           for tgz in npm-pack/*.tgz; do
             name="$(tar -xOzf "${tgz}" package/package.json | jq -er .name)"
+            channel="$(jq -er --arg n "${name}" '.npm[] | select(.name == $n) | .channel' release/packages.json)"
+            line="$(jq -er --arg n "${name}" '.npm[] | select(.name == $n) | .release_line' release/packages.json)"
             python3 -I scripts/release/artifact-gate.py npm --tgz "${tgz}" \
+              --qualification "qualification-evidence/${line}.json" \
+              --release-line "${line}" \
               --approval release-evidence/artifact-approval.json --source-sha "${GITHUB_SHA}" \
-              --channel "$(jq -er --arg n "${name}" '.npm[] | select(.name == $n) | .channel' release/packages.json)" \
+              --channel "${channel}" \
               --visibility "$(jq -r --arg n "${name}" '.[$n] // "unknown"' release-evidence/npm-visibility.json)" \
               --emit-verified verified.txt
           done

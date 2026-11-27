@@ -26,7 +26,19 @@ case "$MODE" in
     full)
         mkdir -p "$OUT_DIR"
         python3 "$SCRIPT_DIR/bench-storage-cold-wal.py" --mode full --output "$OUT_DIR/cold-wal-full.json"
-        php "$SCRIPT_DIR/bench-octane-rls.php" --mode=full --output "$OUT_DIR/octane-rls-full.json"
+        octane_full_args=(--mode=full --output "$OUT_DIR/octane-rls-full.json")
+        if [[ -n "${OCTANE_URL:-}" ]]; then
+            octane_full_args+=(--url="$OCTANE_URL")
+            [[ -n "${OCTANE_TRACED_URL:-}" ]] && octane_full_args+=(--traced-url="$OCTANE_TRACED_URL")
+            [[ -n "${OCTANE_OTEL_TOGGLE_HEADER:-}" ]] && octane_full_args+=(--otel-toggle-header="$OCTANE_OTEL_TOGGLE_HEADER")
+            [[ -n "${OCTANE_DRIVE_A:-}" ]] && octane_full_args+=(--drive-a="$OCTANE_DRIVE_A")
+            [[ -n "${OCTANE_DRIVE_B:-}" ]] && octane_full_args+=(--drive-b="$OCTANE_DRIVE_B")
+            [[ -n "${OCTANE_WORKER_PID:-}" ]] && octane_full_args+=(--worker-pid="$OCTANE_WORKER_PID")
+            [[ -n "${OCTANE_TRACED_WORKER_PID:-}" ]] && octane_full_args+=(--traced-worker-pid="$OCTANE_TRACED_WORKER_PID")
+            [[ -n "${OCTANE_TRACE_FILE:-}" ]] && octane_full_args+=(--trace-file="$OCTANE_TRACE_FILE")
+            [[ -n "${OCTANE_BASELINE_TRACE_FILE:-}" ]] && octane_full_args+=(--baseline-trace-file="$OCTANE_BASELINE_TRACE_FILE")
+        fi
+        php "$SCRIPT_DIR/bench-octane-rls.php" "${octane_full_args[@]}"
         php "$SCRIPT_DIR/bench-cas-clamav.php" --mode=full --size-mib=1024 --clamd="${CLAMD_TARGET:-tcp://127.0.0.1:3310}" --output "$OUT_DIR/cas-clamav-1gib.json"
         ;;
     *)

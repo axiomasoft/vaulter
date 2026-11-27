@@ -198,7 +198,11 @@ function qualificationErrors(array $route, ?array $evidence, string $sha, ?array
     }
     $rules = [
         'php' => ['split_commit' => '/^[0-9a-f]{40}$/', 'content_sha256' => '/^[0-9a-f]{64}$/'],
-        'npm' => ['tgz_sha256' => '/^[0-9a-f]{64}$/', 'integrity' => '/^sha512-[A-Za-z0-9+\/]+=*$/'],
+        'npm' => [
+            'version' => '/^'.SEMVER_TAIL.'$/',
+            'tgz_sha256' => '/^[0-9a-f]{64}$/',
+            'integrity' => '/^sha512-[A-Za-z0-9+\/]+=*$/',
+        ],
         'images' => ['digest' => '/^sha256:[0-9a-f]{64}$/'],
     ][$route['kind']];
     foreach ($route['entries'] as $entry) {
@@ -212,6 +216,9 @@ function qualificationErrors(array $route, ?array $evidence, string $sha, ?array
             if (!is_string($identity[$field] ?? null) || preg_match($pattern, $identity[$field]) !== 1) {
                 $errors[] = "{$entry['name']}: artifact identity {$field} is missing or malformed";
             }
+        }
+        if ($route['kind'] === 'npm' && ($identity['version'] ?? null) !== $route['version']) {
+            $errors[] = "{$entry['name']}: artifact identity version ".var_export($identity['version'] ?? null, true)." differs from routed version {$route['version']}";
         }
     }
     if ($route['channel'] === 'private') {

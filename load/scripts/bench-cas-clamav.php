@@ -26,8 +26,8 @@ use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Configuration\MediaOptions;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\VaulterServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\VaulterServiceProvider;
 
 require dirname(__DIR__, 2).'/vendor/autoload.php';
 
@@ -71,7 +71,7 @@ function removeDirectory(string $dir): void
     }
     $iter = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::CHILD_FIRST
+        RecursiveIteratorIterator::CHILD_FIRST,
     );
     foreach ($iter as $entry) {
         $entry->isDir() && !$entry->isLink() ? @rmdir($entry->getPathname()) : @unlink($entry->getPathname());
@@ -81,6 +81,9 @@ function removeDirectory(string $dir): void
 
 function resolveMode(array $args): string
 {
+    if (isset($args['self-test']) || ($args['mode'] ?? null) === 'self-test') {
+        return 'self-test';
+    }
     if (isset($args['dry-run']) || ($args['mode'] ?? null) === 'dry-run') {
         return 'dry-run';
     }
@@ -94,6 +97,103 @@ function resolveMode(array $args): string
     return 'dry-run';
 }
 
+/**
+ * Parse a strictly NUL-terminated ClamD `zVERSION\0` reply (no CR/LF before NUL)
+ * and require ClamAV >= 1.5.5.
+ */
+function parseClamdVersionReply(string|false $raw): string
+{
+    if (!is_string($raw) || $raw === '' || !str_ends_with($raw, "\0") || substr_count($raw, "\0") !== 1) {
+        throw new RuntimeException('clamd zVERSION reply is not cleanly NUL-terminated (got: '.var_export($raw, true).')');
+    }
+    $clean = substr($raw, 0, -1);
+    if (strpbrk($clean, "\r\n") !== false
+        || preg_match('~\AClamAV ([0-9]+\.[0-9]+\.[0-9]+)(?:/[^\r\n]+)?\z~', $clean, $match) !== 1
+        || version_compare($match[1], '1.5.5', '<')) {
+        throw new RuntimeException('clamd target did not return a ClamAV >= 1.5.5 zVERSION banner (got: '.var_export($clean, true).')');
+    }
+
+    return $clean;
+}
+
+/**
+ * Strictly parse a ClamD `zINSTREAM\0` reply per ClamdProtocol (exact `stream: OK\0` only;
+ * rejects CR/LF before NUL, any FOUND/ERROR, trailing payload, or unframed substring match).
+ *
+ * @return array{clean: bool, verdict: string, reason: string}
+ */
+function parseClamdInstreamReply(string|false $raw): array
+{
+    if (!is_string($raw) || $raw === '') {
+        return ['clean' => false, 'verdict' => '', 'reason' => 'empty_reply'];
+    }
+    if (!str_ends_with($raw, "\0") || substr_count($raw, "\0") !== 1) {
+        return [
+            'clean' => false,
+            'verdict' => str_replace(["\0", "\r", "\n"], ['\\0', '\\r', '\\n'], $raw),
+            'reason' => 'invalid_framing',
+        ];
+    }
+    $body = substr($raw, 0, -1);
+    if (strpbrk($body, "\r\n") !== false) {
+        return [
+            'clean' => false,
+            'verdict' => str_replace(["\r", "\n"], ['\\r', '\\n'], $body),
+            'reason' => 'invalid_framing',
+        ];
+    }
+    if (preg_match('/\bFOUND\b/i', $body) === 1) {
+        return ['clean' => false, 'verdict' => $body, 'reason' => 'infected'];
+    }
+    if (str_contains($body, 'size limit exceeded')) {
+        return ['clean' => false, 'verdict' => $body, 'reason' => 'too_large'];
+    }
+    if (preg_match('/\bERROR\b/i', $body) === 1) {
+        return ['clean' => false, 'verdict' => $body, 'reason' => 'scanner_error'];
+    }
+    if ($body === 'stream: OK') {
+        return ['clean' => true, 'verdict' => $body, 'reason' => 'clean'];
+    }
+
+    return ['clean' => false, 'verdict' => $body, 'reason' => 'unexpected_reply'];
+}
+
+/**
+ * Drain the full ClamD socket reply until EOF (never stopping early at the first NUL).
+ *
+ * @param resource $sock
+ */
+function readClamdReply($sock, int $timeoutSeconds = 60): string
+{
+    stream_set_timeout($sock, $timeoutSeconds);
+    $reply = '';
+    $maxBytes = 4_096;
+    while (!feof($sock)) {
+        $chunk = @fread($sock, ($maxBytes + 1) - strlen($reply));
+        $meta = stream_get_meta_data($sock);
+        if (($meta['timed_out'] ?? false) === true) {
+            throw new RuntimeException('clamd socket read timed out');
+        }
+        if ($chunk === false) {
+            throw new RuntimeException('clamd socket read failed');
+        }
+        if ($chunk === '') {
+            if (feof($sock)) {
+                break;
+            }
+            usleep(1_000);
+
+            continue;
+        }
+        $reply .= $chunk;
+        if (strlen($reply) > $maxBytes) {
+            throw new RuntimeException('clamd reply exceeded 4096-byte limit');
+        }
+    }
+
+    return $reply;
+}
+
 function probeRealClamd(string $target): string
 {
     $sock = @stream_socket_client($target, $errno, $errstr, 5);
@@ -102,17 +202,12 @@ function probeRealClamd(string $target): string
     }
     try {
         fwrite($sock, "zVERSION\0");
-        stream_set_timeout($sock, 5);
-        $banner = stream_get_contents($sock, 512);
+        $banner = readClamdReply($sock, 5);
     } finally {
         fclose($sock);
     }
-    $clean = is_string($banner) ? trim(str_replace("\0", '', $banner)) : '';
-    if ($clean === '' || !str_starts_with($clean, 'ClamAV ')) {
-        throw new RuntimeException("clamd target {$target} did not return a ClamAV zVERSION banner (got: ".var_export($clean, true).')');
-    }
 
-    return $clean;
+    return parseClamdVersionReply($banner);
 }
 
 function emitReport(?string $outputFile, array $report): void
@@ -127,6 +222,85 @@ function emitReport(?string $outputFile, array $report): void
 
 $args = parseArgs($argv);
 $mode = resolveMode($args);
+if ($mode === 'self-test') {
+    $cases = [
+        ["stream: OK\0", true, 'clean'],
+        ["stream: OK\r\n\0", false, 'invalid_framing'],
+        ["stream: OK\n\0", false, 'invalid_framing'],
+        ["stream: OK\r\0", false, 'invalid_framing'],
+        ["stream: Virus-OK FOUND\0", false, 'infected'],
+        ["stream: Eicar-Test-Signature FOUND\0", false, 'infected'],
+        ["FOUND OK\0", false, 'infected'],
+        ["stream: OK FOUND\0", false, 'infected'],
+        ['stream: OK', false, 'invalid_framing'],
+        ["stream: OK\0extra\0", false, 'invalid_framing'],
+        ["stream: OK\0stream: Eicar-Test-Signature FOUND\0", false, 'invalid_framing'],
+        ["stream: OK trailing\0", false, 'unexpected_reply'],
+        ["stream: size limit exceeded. ERROR\0", false, 'too_large'],
+        ["stream: INSTREAM size limit exceeded. ERROR\0", false, 'too_large'],
+        ["stream: error parsing command. ERROR\0", false, 'scanner_error'],
+        ['', false, 'empty_reply'],
+        [false, false, 'empty_reply'],
+    ];
+    foreach ($cases as [$raw, $expectedClean, $expectedReason]) {
+        $parsed = parseClamdInstreamReply($raw);
+        if ($parsed['clean'] !== $expectedClean || $parsed['reason'] !== $expectedReason) {
+            fwrite(STDERR, 'Self-test failed for '.var_export($raw, true).': '.json_encode($parsed)."\n");
+            exit(1);
+        }
+    }
+    if (parseClamdVersionReply("ClamAV 1.5.5/27432/Mon Nov 24 00:00:00 2026\0") === '') {
+        fwrite(STDERR, "Self-test failed for valid ClamAV 1.5.5 version\n");
+        exit(1);
+    }
+    foreach (["ClamAV 1.5.4/1/x\0", "ClamAV 1.5.5/1/x\r\n\0", 'ClamAV 1.5.5', "LoopbackSmokeScanner 0.0\0"] as $badBanner) {
+        try {
+            parseClamdVersionReply($badBanner);
+            fwrite(STDERR, 'Self-test accepted invalid version banner: '.var_export($badBanner, true)."\n");
+            exit(1);
+        } catch (RuntimeException) {
+        }
+    }
+    // Verify readClamdReply drains until EOF across multiple writes instead of stopping at first NUL.
+    $socketCases = [
+        [['stream: OK'."\0"], true, 'clean'],
+        [['stream: OK'."\0", 'stream: Eicar-Test-Signature FOUND'."\0"], false, 'invalid_framing'],
+        [['stream: OK'."\r\n\0"], false, 'invalid_framing'],
+    ];
+    foreach ($socketCases as [$chunks, $expectedClean, $expectedReason]) {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+        if ($pair === false) {
+            fwrite(STDERR, "Self-test failed to open socket pair\n");
+            exit(1);
+        }
+        [$reader, $writer] = $pair;
+        $child = pcntl_fork();
+        if ($child === 0) {
+            fclose($reader);
+            foreach ($chunks as $idx => $chunk) {
+                fwrite($writer, $chunk);
+                fflush($writer);
+                if ($idx + 1 < count($chunks)) {
+                    usleep(15_000);
+                }
+            }
+            fclose($writer);
+            exit(0);
+        }
+        fclose($writer);
+        $rawReply = readClamdReply($reader, 5);
+        fclose($reader);
+        pcntl_waitpid($child, $st);
+        $parsed = parseClamdInstreamReply($rawReply);
+        if ($parsed['clean'] !== $expectedClean || $parsed['reason'] !== $expectedReason) {
+            fwrite(STDERR, 'Self-test socket framing failed for '.json_encode($chunks).': '.json_encode($parsed).' raw='.var_export($rawReply, true)."\n");
+            exit(1);
+        }
+    }
+    echo json_encode(['status' => 'SELF_TEST_PASS', 'cases' => count($cases) + 5 + count($socketCases)], JSON_PRETTY_PRINT)."\n";
+    exit(0);
+}
+
 $isSmoke = $mode === 'smoke';
 $isFull = $mode === 'full';
 $sizeMiB = (int) ($args['size-mib'] ?? ($isSmoke ? 64 : 1024));
@@ -208,6 +382,7 @@ if ($clamdTarget === 'auto') {
             if ($cmd === 'zVERSION') {
                 fwrite($conn, "LoopbackSmokeScanner 0.0\0");
                 fclose($conn);
+
                 continue;
             }
             if ($cmd === 'zINSTREAM') {
@@ -255,7 +430,8 @@ $casRoot = $workRoot.'/cas-disk';
 @mkdir($casRoot, 0775, true);
 
 /** @var Application $app */
-$app = (new class($casRoot, $casDisk) {
+$app = (new class($casRoot, $casDisk)
+{
     use CreatesApplication;
 
     public function __construct(private readonly string $casRoot, private readonly string $casDisk) {}
@@ -357,10 +533,11 @@ try {
         fclose($stagedStream);
     }
     fwrite($clamSock, pack('N', 0));
-    $verdict = stream_get_contents($clamSock);
+    $verdict = readClamdReply($clamSock, 60);
     fclose($clamSock);
     $scanSec = (hrtime(true) - $scanStart) / 1_000_000_000.0;
-    $clamdOk = is_string($verdict) && preg_match('/\bOK\b/', $verdict) === 1;
+    $clamdParsed = parseClamdInstreamReply($verdict);
+    $clamdOk = $clamdParsed['clean'];
 
     // Phase 3: Promote staged payload to real Flysystem CAS and verify streamed readback.
     $casKey = $store->keyFor(BlobScope::tenant('101'), $staged->sha256());
@@ -397,7 +574,9 @@ try {
     $vmHwm = readVmHwmBytes();
     $budgetOk = $phpPeak <= CEILING_BYTES && $vmHwm <= CEILING_BYTES;
     $casVerified = $casExists && $readSha === $staged->sha256() && $readBytes === $expectedBytes;
-    $clamdVerified = $clamdOk && ($isSmoke || str_starts_with($clamdVersion, 'ClamAV '));
+    $fullClamdValid = preg_match('~\AClamAV ([0-9]+\.[0-9]+\.[0-9]+)(?:/[^\r\n]+)?\z~', $clamdVersion, $vm) === 1
+        && version_compare($vm[1], '1.5.5', '>=');
+    $clamdVerified = $clamdOk && ($isSmoke || $fullClamdValid);
     $pass = $prodExit === 0
         && $staged->sizeBytes() === $expectedBytes
         && $clamdVerified
@@ -414,7 +593,8 @@ try {
         'clamd_target' => $clamdTarget,
         'clamd_version' => $clamdVersion,
         'clamd_loopback' => $clamdTarget !== ($args['clamd'] ?? '') && $isSmoke,
-        'zinstream_verdict' => is_string($verdict) ? rtrim($verdict, "\0\r\n") : '',
+        'zinstream_verdict' => $clamdParsed['verdict'],
+        'zinstream_reason' => $clamdParsed['reason'],
         'cas_driver' => FlysystemStorageDriver::class,
         'cas_disk' => $casDisk,
         'cas_promoted_exists' => $casExists,

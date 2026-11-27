@@ -37,14 +37,16 @@ node -e 'const p=process.versions.node.split(".").map(Number); if (p[0]<26 || (p
 packman="${PACKMAN_DIR:-$src/../packman}"
 vaulter_ref="${VAULTER_REF:-HEAD}"
 packman_version=$(php -r '$c = json_decode((string) file_get_contents($argv[1]), true); foreach ($c["repositories"] ?? [] as $r) { if (($r["url"] ?? null) === "../packman/packages/*" && isset($r["options"]["versions"]["axiomasoft/packman"])) { echo $r["options"]["versions"]["axiomasoft/packman"]; exit(0); } } exit(1);' "$src/composer.json" 2>/dev/null || printf '0.1.1')
-if [[ -n "${PACKMAN_REF:-}" ]]; then
-  packman_ref=$(git -C "$packman" rev-parse --verify "${PACKMAN_REF}^{commit}")
-elif packman_ref=$(git -C "$packman" rev-parse --verify --quiet "refs/tags/v${packman_version}^{commit}" 2>/dev/null); then
-  :
-elif packman_ref=$(git -C "$packman" rev-parse --verify --quiet "b2fea80d85b1787f0a74d22c0f2563fd411ad132^{commit}" 2>/dev/null); then
-  :
-else
-  packman_ref=$(git -C "$packman" rev-parse --verify --quiet "HEAD^{commit}" 2>/dev/null || printf 'b2fea80d85b1787f0a74d22c0f2563fd411ad132')
+pinned_packman_ref='b2fea80d85b1787f0a74d22c0f2563fd411ad132'
+expected_packman_ref="${PACKMAN_REF:-$pinned_packman_ref}"
+if [[ ! "$expected_packman_ref" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "PACKMAN_REF must be a full 40-hex commit SHA, got: $expected_packman_ref" >&2
+  exit 2
+fi
+packman_ref=$(git -C "$packman" rev-parse --verify "${expected_packman_ref}^{commit}")
+if [[ "$packman_ref" != "$expected_packman_ref" ]]; then
+  echo "Resolved packman ref mismatch: expected $expected_packman_ref, got $packman_ref" >&2
+  exit 1
 fi
 evidence="${EVIDENCE_DIR:-}"
 run=$(mktemp -d)

@@ -73,9 +73,14 @@ if ($route['kind'] === 'php') {
 }
 
 // --evidence-dir holds one evidence document per release line (<line>.json) and the probed visibility map.
-$evidenceFile = $o['evidence'] ?? (isset($o['evidence-dir']) ? rtrim($o['evidence-dir'], '/').'/'.$route['line'].'.json' : null);
-$visibilityFile = $o['visibility'] ?? (isset($o['evidence-dir']) ? rtrim($o['evidence-dir'], '/').'/visibility.json' : null);
-$errors = qualificationErrors($route, readOptionalJson($evidenceFile), $o['sha'] ?? '', readOptionalJson($visibilityFile));
+$evidenceDir = isset($o['evidence-dir']) ? rtrim($o['evidence-dir'], '/') : null;
+$evidenceFile = $o['evidence'] ?? ($evidenceDir !== null ? $evidenceDir.'/'.$route['line'].'.json' : null);
+$visibilityFile = $o['visibility'] ?? ($evidenceDir !== null ? $evidenceDir.'/visibility.json' : null);
+$evidence = readOptionalJson($evidenceFile);
+if ($evidence === null && $evidenceDir !== null && is_file($evidenceDir.'/qualification.json')) {
+    refuse("no qualification evidence: {$evidenceDir}/qualification.json is not a per-line receipt ({$route['line']}.json is missing; no SHA-only fallback)");
+}
+$errors = qualificationErrors($route, $evidence, $o['sha'] ?? '', readOptionalJson($visibilityFile));
 if ($errors !== []) {
     refuse(...$errors);
 }

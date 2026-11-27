@@ -286,17 +286,62 @@ not a lint rule.
 
 ### W0–W7 schema parity and backlog closure (Task 0.2)
 
-The internal planning tree was retired in commit `7ad44eeb7`. Normalized column-level verification
-for Task `0.2` (contrasting the canonical PostgreSQL schema snapshot
-`packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json` against the target DDL
-set across all overlapping `v_*` tables, normalizing PostgreSQL type aliases `character varying`/`varchar`,
-`character`/`char`, `timestamp(p) without time zone`/`timestamp(p)`, `int2`/`int4`/`int8`/`bool` and
-stripping `COLLATE "C"` / inline `CHECK` / `::type` casts) measured:
+The internal planning tree was retired in commit `7ad44eeb7` (`chore(repo): retire internal planning archives from package sources`).
+Target DDL comparison records and reproducible verification across the archive and current tree:
 
-- **Shared tables compared:** `33`
-- **Normalized column-type mismatches:** `0`
-- **Nullability (`not_null`) mismatches:** `0`
-- **Default value mismatches:** `0` (intentional structural additions/extractions remain scoped to `v_collaboration_heads`, `v_documents`, and `v_document_revisions`).
+1. **Task `0.2` baseline (`c91c454ea`):** contrasting `c91c454ea:packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json`
+   (`33` snapshot tables) against `c91c454ea:plan/spec/database/sql/*.sql` (`71` target DDL tables) yielded `33` shared tables,
+   `0` normalized column-type mismatches, `0` nullability mismatches, and `0` default-value mismatches (with the planned W1/W2 structural
+   deltas scoped to `v_collaboration_heads`, `v_documents`, and `v_document_revisions`).
+2. **Final pre-retirement target DDL revision (`5bfb4ddce`):** the last revision of `plan/spec/database/sql/*.sql` immediately
+   before `7ad44eeb7` (`5bfb4ddce:plan/spec/database/sql/*.sql`, `71` target tables) compared against
+   `5bfb4ddce:packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json` (`33` snapshot tables) measured:
+   - **Shared tables compared:** `33`
+   - **Column-set deltas:** `0`
+   - **Normalized column-type mismatches:** `0`
+   - **Nullability (`not_null`) mismatches:** `0`
+   - **Default value mismatches:** `0`
+3. **Migrated public DDL set (`96fbefe11` → `HEAD`):** commit `96fbefe11` restored the `33` public package target DDLs
+   to `scripts/ci/sql/schema/{core,documents,drive,media,webhooks}.sql`, matching `packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json`
+   across all `33` public `v_*` tables with `0` nullability/default mismatches and only the post-`7ad44eeb7` `F-03` blob-encryption
+   extension on `v_blobs` (`wrapped_dek`, and `storage_version` widened from `varchar(255)` to `varchar(1024)` in commit `faf021546`).
+
+To reproduce both the PostgreSQL live snapshot parity check and the normalized DDL comparison at revision `5bfb4ddce`:
+
+```bash
+php scripts/schema-snapshot.php --driver=pgsql --preset=uuid7.bigint.v.on --compare=packages/core/tests/Fixtures/Schema/expected
+python3 -c '
+import json, re, subprocess
+norm_t = lambda t: {"integer":"int4","bigint":"int8","smallint":"int2","boolean":"bool"}.get(
+    re.sub(r"\s+", " ", re.sub(r"timestamp\((\d+)\)\s+without time zone", r"timestamp(\1)",
+    re.sub(r"\s+collate\s+\"[^\"]+\"", "", t.strip().lower()).replace("character varying","varchar").replace("character(","char("))), None) or re.sub(r"\s+", " ", re.sub(r"timestamp\((\d+)\)\s+without time zone", r"timestamp(\1)", re.sub(r"\s+collate\s+\"[^\"]+\"", "", t.strip().lower()).replace("character varying","varchar").replace("character(","char(")))
+norm_d = lambda d: None if d is None else re.sub(r"^'\''(\d+)'\''$", r"\1", re.sub(r"::[a-z0-9_ \"\[\]]+", "", str(d).strip(), flags=re.I))
+rev = "5bfb4ddce"
+snap = json.loads(subprocess.check_output(["git", "show", f"{rev}:packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json"], text=True))["tables"]
+sql = {}
+for f in subprocess.check_output(["git", "ls-tree", "--name-only", f"{rev}:plan/spec/database/sql"], text=True).splitlines():
+    if not f.endswith(".sql"): continue
+    txt = subprocess.check_output(["git", "show", f"{rev}:plan/spec/database/sql/{f}"], text=True)
+    for m in re.finditer(r"CREATE TABLE (\w+)\s*\((.*?)\n\);", txt, re.S):
+        cols = {}
+        for raw in m.group(2).splitlines():
+            line = raw.strip().rstrip(",")
+            if not line or line.startswith(("CONSTRAINT ", "PRIMARY KEY", "UNIQUE ", "CHECK ", "FOREIGN KEY")): continue
+            cm = re.match(r"^(\w+)\s+(.+)$", line)
+            if not cm: continue
+            rest = re.sub(r"\s+CHECK\s*\(.*$", "", cm.group(2), flags=re.I)
+            dm = re.search(r"\bDEFAULT\s+(.+)$", rest, flags=re.I)
+            typ = re.sub(r"\s+(?:NOT NULL|NULL|DEFAULT\b.*)$", "", rest, flags=re.I)
+            cols[cm.group(1)] = (norm_t(re.sub(r"\s+NOT NULL\b.*$", "", typ, flags=re.I)), bool(re.search(r"\bNOT NULL\b", rest, re.I)), norm_d(dm.group(1)) if dm else None)
+        sql[m.group(1)] = cols
+errs = []
+for t in sorted(set(snap) & set(sql)):
+    sc = {c["name"]: (norm_t(c["type"]), bool(c["not_null"]), norm_d(c["default"])) for c in snap[t]["columns"]}
+    if sc != sql[t]: errs.append((t, set(sc.items()) ^ set(sql[t].items())))
+assert len(set(snap) & set(sql)) == 33 and not errs, errs
+print(f"OK {rev}: 33 shared tables, 0 column/type/nullability/default mismatches")
+'
+```
 
 All `W0–W7` backlog items across `0.2`, `1.3` (consumer E2E harness), `2.1` (`protocol=2` WebSocket negotiation),
 `5.2` (Office delta cost bench), and `6.2` (workbook reference preview & E2E) are verified closed, and the

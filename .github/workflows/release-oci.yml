@@ -89,6 +89,8 @@ jobs:
             --sha "${GITHUB_SHA}" \
             --run-id "${RUN_ID}" \
             --extra-workflow "${TRUSTED_WORKFLOW}" \
+            --require-any-file qualification.json,oci.json \
+            --require-approval oci \
             --github-output "${GITHUB_OUTPUT}"
 
       - name: Download the qualification evidence of this SHA
@@ -171,6 +173,8 @@ jobs:
             --sha "${GITHUB_SHA}" \
             --run-id "${RUN_ID}" \
             --extra-workflow "${TRUSTED_WORKFLOW}" \
+            --require-any-file qualification.json,oci.json \
+            --require-approval oci \
             --github-output "${GITHUB_OUTPUT}"
 
       - name: Download the qualification evidence of this SHA

@@ -291,6 +291,27 @@ jobs:
       - name: Check @vaulter/vue bundle size budget
         run: npm run budget:check --workspace @vaulter/vue
 
+      - name: Record @vaulter/vue qualification artifact identity
+        run: |
+          mkdir -p npm-evidence
+          name="$(jq -er .name packages/vue/package.json)"
+          version="$(jq -er .version packages/vue/package.json)"
+          npm pack --workspace "${name}" --pack-destination npm-evidence >/dev/null
+          tgz="npm-evidence/$(echo "${name#@}" | tr '/' '-')-${version}.tgz"
+          jq -n --arg name "${name}" --arg version "${version}" \
+            --arg tgz_sha256 "$(sha256sum "${tgz}" | cut -d' ' -f1)" \
+            --arg integrity "sha512-$(openssl dgst -sha512 -binary "${tgz}" | base64 -w0)" \
+            '{($name): {version: $version, tgz_sha256: $tgz_sha256, integrity: $integrity}}' \
+            > npm-evidence/npm-vue-artifacts.json
+
+      - name: Upload @vaulter/vue qualification evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-vue-qualification-input
+          path: npm-evidence/npm-vue-artifacts.json
+          if-no-files-found: error
+          retention-days: 7
+
   e2e-documents:
     name: "E2E documents-basic (${{ matrix.engine }})"
     needs: vue
@@ -356,7 +377,9 @@ jobs:
 
       - name: Run documents-basic consumer E2E (${{ matrix.engine }})
         run: |
-          PACKMAN_REF="$(git -C ../packman rev-parse --verify 'HEAD^{commit}')"
+          PACKMAN_REF="b2fea80d85b1787f0a74d22c0f2563fd411ad132"
+          test "$(git -C ../packman rev-parse --verify "${PACKMAN_REF}^{commit}")" = "${PACKMAN_REF}"
+          test "$(git -C ../packman rev-parse --verify 'HEAD^{commit}')" = "${PACKMAN_REF}"
           export PACKMAN_REF
           bash e2e/consumers/documents-basic/run.sh
 
@@ -408,6 +431,30 @@ jobs:
           export PHP84_BIN
           scripts/t sqlite -p repo --full
 
+      - name: Prepare public PHP qualification artifact identities
+        if: matrix.php == '8.4'
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          ver='0.0.0'
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            ver="${BASH_REMATCH[1]}"
+          fi
+          php scripts/release/build-artifacts.php --version="${ver}" --channel=public \
+            --ref="${GITHUB_SHA}" --manifest-ref="${GITHUB_SHA}" --out=php-evidence
+          jq -s 'map({key: .package, value: {split_commit: .split_commit, content_sha256: .content_manifest_sha256}}) | from_entries' \
+            php-evidence/prepared/*.json > php-evidence/php-public-artifacts.json
+
+      - name: Upload public PHP qualification evidence
+        if: matrix.php == '8.4'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: php-public-qualification-input
+          path: php-evidence/php-public-artifacts.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: actionlint
         if: matrix.php == '8.4'
         run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
@@ -420,7 +467,25 @@ jobs:
     timeout-minutes: 5
     steps:
       # Every lane is required: a failed, cancelled or skipped one (a stand that did not run included) is red.
-      - name: Verdict and qualification receipt
+      - name: Require every qualification job to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          bad="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")"
+          if [[ -n "$bad" ]]; then
+            echo "$bad" >&2
+            exit 1
+          fi
+
+      - name: Download per-line qualification inputs
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: '*-qualification-input'
+          path: release-inputs
+          merge-multiple: true
+
+      - name: Build release qualification receipts
         env:
           NEEDS: ${{ toJSON(needs) }}
           GITHUB_SHA: ${{ github.sha }}
@@ -429,11 +494,6 @@ jobs:
           GITHUB_WORKFLOW: ${{ github.workflow }}
         run: |
           set -euo pipefail
-          bad="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")"
-          if [[ -n "$bad" ]]; then
-            echo "$bad" >&2
-            exit 1
-          fi
           mkdir -p release-evidence
           jq -n \
             --arg sha "${GITHUB_SHA}" \
@@ -443,6 +503,18 @@ jobs:
             --argjson needs "${NEEDS}" \
             '{schema: "vaulter.release-qualification/v1", source_sha: $sha, workflow: ".github/workflows/weekly-full.yml", workflow_name: $workflow, run_id: $run_id, run_attempt: $run_attempt, ci_gate: {sha: $sha, conclusion: "success"}, jobs: ($needs | with_entries(.value = .value.result))}' \
             > release-evidence/qualification.json
+          jq -n \
+            --arg sha "${GITHUB_SHA}" \
+            --arg run_id "${GITHUB_RUN_ID}" \
+            --slurpfile artifacts release-inputs/npm-vue-artifacts.json \
+            '{schema: "vaulter.release-qualification/v1", source_sha: $sha, workflow: ".github/workflows/weekly-full.yml", run_id: $run_id, ci_gate: {sha: $sha, conclusion: "success"}, release_line: "npm-vue", channel: "public", artifacts: $artifacts[0]}' \
+            > release-evidence/npm-vue.json
+          jq -n \
+            --arg sha "${GITHUB_SHA}" \
+            --arg run_id "${GITHUB_RUN_ID}" \
+            --slurpfile artifacts release-inputs/php-public-artifacts.json \
+            '{schema: "vaulter.release-qualification/v1", source_sha: $sha, workflow: ".github/workflows/weekly-full.yml", run_id: $run_id, ci_gate: {sha: $sha, conclusion: "success"}, release_line: "php-public", channel: "public", artifacts: $artifacts[0]}' \
+            > release-evidence/php-public.json
           echo 'full qualification OK'
 
       - name: Upload release qualification evidence

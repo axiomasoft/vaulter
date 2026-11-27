@@ -621,7 +621,9 @@ jobs:
 
       - name: Run documents-basic consumer E2E (${{ matrix.engine }})
         run: |
-          PACKMAN_REF="$(git -C ../packman rev-parse --verify 'HEAD^{commit}')"
+          PACKMAN_REF="b2fea80d85b1787f0a74d22c0f2563fd411ad132"
+          test "$(git -C ../packman rev-parse --verify "${PACKMAN_REF}^{commit}")" = "${PACKMAN_REF}"
+          test "$(git -C ../packman rev-parse --verify 'HEAD^{commit}')" = "${PACKMAN_REF}"
           export PACKMAN_REF
           bash e2e/consumers/documents-basic/run.sh
 
